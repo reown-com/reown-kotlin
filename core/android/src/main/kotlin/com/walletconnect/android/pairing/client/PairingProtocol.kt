@@ -10,16 +10,9 @@ import com.walletconnect.android.pairing.engine.domain.PairingEngine
 import com.walletconnect.android.pairing.engine.model.EngineDO
 import com.walletconnect.android.pairing.model.mapper.toCore
 import com.walletconnect.android.pulse.domain.InsertTelemetryEventUseCase
-import com.walletconnect.android.pulse.model.EventType
-import com.walletconnect.android.pulse.model.properties.Props
 import com.walletconnect.android.relay.RelayConnectionInterface
-import com.walletconnect.android.relay.WSSConnectionState
 import com.walletconnect.foundation.util.Logger
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import org.koin.core.KoinApplication
 
 internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp) : PairingInterface {
@@ -75,24 +68,14 @@ internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp)
         onError: (Core.Model.Error) -> Unit,
     ) {
         checkEngineInitialization()
-
-        scope.launch(Dispatchers.IO) {
-            awaitConnection(
-                {
-                    try {
-                        pairingEngine.pair(
-                            uri = pair.uri,
-                            onSuccess = { onSuccess(pair) },
-                            onFailure = { error -> onError(Core.Model.Error(error)) }
-                        )
-                    } catch (e: Exception) {
-                        onError(Core.Model.Error(e))
-                    }
-                },
-                { throwable ->
-                    logger.error(throwable)
-                    onError(Core.Model.Error(Throwable("Pairing error: ${throwable.message}")))
-                })
+        try {
+            pairingEngine.pair(
+                uri = pair.uri,
+                onSuccess = { onSuccess(pair) },
+                onFailure = { error -> onError(Core.Model.Error(Throwable("Pairing error: ${error.message}"))) }
+            )
+        } catch (e: Exception) {
+            onError(Core.Model.Error(e))
         }
     }
 
@@ -146,31 +129,6 @@ internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp)
             Validator.validateWCUri(uri) != null
         } catch (e: Exception) {
             false
-        }
-    }
-
-    private suspend fun awaitConnection(onConnection: () -> Unit, errorLambda: (Throwable) -> Unit = {}) {
-        try {
-            withTimeout(60000) {
-                while (true) {
-                    if (relayClient.isNetworkAvailable.value != null) {
-                        if (relayClient.isNetworkAvailable.value == true) {
-                            if (relayClient.wssConnectionState.value is WSSConnectionState.Connected) {
-                                onConnection()
-                                return@withTimeout
-                            }
-                        } else {
-                            insertEventUseCase(Props(type = EventType.Error.NO_INTERNET_CONNECTION))
-                            errorLambda(Throwable("No internet connection"))
-                            return@withTimeout
-                        }
-                    }
-                    delay(100)
-                }
-            }
-        } catch (e: Exception) {
-            insertEventUseCase(Props(type = EventType.Error.NO_WSS_CONNECTION))
-            errorLambda(Throwable("Failed to connect: ${e.message}"))
         }
     }
 
