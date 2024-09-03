@@ -17,6 +17,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import kotlin.reflect.KClass
 
+
 @JvmSynthetic
 fun coreJsonRpcModule() = module {
 
@@ -27,6 +28,7 @@ fun coreJsonRpcModule() = module {
             jsonRpcHistory = get(),
             pushMessageStorage = get(),
             logger = get(named(AndroidCommonDITags.LOGGER)),
+            backoffStrategy = get()
         )
     }
 
