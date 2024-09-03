@@ -1,6 +1,4 @@
-![WalletConnect V2](/docs/walletconnect-banner.svg)
-
-# **WalletConnect - Kotlin**
+# **reown - kotlin**
 
 The communications protocol for web3, WalletConnect brings the ecosystem together by enabling hundreds of wallets and apps to securely connect and interact. This repository contains Kotlin implementation of
 WalletConnect v2 protocols for Android applications.
