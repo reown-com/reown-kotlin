@@ -108,7 +108,7 @@ fun WalletSampleHost(
             )
 
             if (connectionState is ConnectionState.Error) {
-                ErrorBanner()
+                ErrorBanner((connectionState as ConnectionState.Error).message)
             } else if (connectionState is ConnectionState.Ok) {
                 RestoredConnectionBanner()
             }
@@ -185,11 +185,11 @@ private fun BoxScope.Loader(initMessage: String, updateMessage: String) {
 }
 
 @Composable
-private fun ErrorBanner() {
+private fun ErrorBanner(message: String) {
     var shouldShow by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = Unit) {
-        delay(2000)
+        delay(5000)
         shouldShow = false
     }
 
@@ -208,7 +208,7 @@ private fun ErrorBanner() {
                 colorFilter = ColorFilter.tint(color = Color.White)
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Network connection lost", color = Color.White)
+            Text(text = "Network connection lost: $message", color = Color.White)
         }
     }
 }

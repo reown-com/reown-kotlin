@@ -83,7 +83,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.merge
@@ -216,22 +215,23 @@ internal class SignEngine(
     }
 
     private fun handleRelayRequestsAndResponses() {
-        jsonRpcInteractor.wssConnectionState
-            .filterIsInstance<WSSConnectionState.Connected>()
+        jsonRpcInteractor.onResubscribe
             .onEach {
-                supervisorScope {
-                    launch(Dispatchers.IO) {
-                        resubscribeToSession()
-                        resubscribeToPendingAuthenticateTopics()
+                scope.launch {
+                    supervisorScope {
+                        launch(Dispatchers.IO) {
+                            resubscribeToSession()
+                            resubscribeToPendingAuthenticateTopics()
+                        }
                     }
-                }
 
-                if (jsonRpcRequestsJob == null) {
-                    jsonRpcRequestsJob = collectJsonRpcRequests()
-                }
+                    if (jsonRpcRequestsJob == null) {
+                        jsonRpcRequestsJob = collectJsonRpcRequests()
+                    }
 
-                if (jsonRpcResponsesJob == null) {
-                    jsonRpcResponsesJob = collectJsonRpcResponses()
+                    if (jsonRpcResponsesJob == null) {
+                        jsonRpcResponsesJob = collectJsonRpcResponses()
+                    }
                 }
             }.launchIn(scope)
     }
@@ -325,9 +325,7 @@ internal class SignEngine(
             listOfExpiredSession
                 .map { session -> session.topic }
                 .onEach { sessionTopic ->
-                    runCatching {
-                        crypto.removeKeys(sessionTopic.value)
-                    }.onFailure { logger.error(it) }
+                    runCatching { crypto.removeKeys(sessionTopic.value) }.onFailure { logger.error(it) }
                     sessionStorageRepository.deleteSession(sessionTopic)
                 }
 

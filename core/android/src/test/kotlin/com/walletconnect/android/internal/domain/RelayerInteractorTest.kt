@@ -1,5 +1,6 @@
 package com.walletconnect.android.internal.domain
 
+import com.walletconnect.android.internal.common.ConditionalExponentialBackoffStrategy
 import com.walletconnect.android.internal.common.JsonRpcResponse
 import com.walletconnect.android.internal.common.crypto.codec.Codec
 import com.walletconnect.android.internal.common.exception.WalletConnectException
@@ -40,6 +41,8 @@ internal class RelayerInteractorTest {
         every { subscriptionRequest } returns flow { }
     }
 
+    private val backoffStrategy: ConditionalExponentialBackoffStrategy = mockk()
+
     private val jsonRpcHistory: JsonRpcHistory = mockk {
         every { setRequest(any(), any(), any(), any(), any()) } returns true
         every { updateRequestWithResponse(any(), any()) } returns mockk()
@@ -70,8 +73,9 @@ internal class RelayerInteractorTest {
     }
 
     private val sut =
-        spyk(RelayJsonRpcInteractor(relay, codec, jsonRpcHistory, pushMessagesRepository, logger), recordPrivateCalls = true) {
-            every { checkConnectionWorking() } answers { }
+        spyk(RelayJsonRpcInteractor(relay, codec, jsonRpcHistory, pushMessagesRepository, logger, backoffStrategy), recordPrivateCalls = true) {
+            every { checkNetworkConnectivity() } answers { }
+            every { relay.onResubscribe } returns flow { }
         }
 
     private val topicVO = Topic("mockkTopic")
@@ -86,7 +90,7 @@ internal class RelayerInteractorTest {
         every { topic } returns topicVO
     }
 
-    val peerError: Error = mockk {
+    private val peerError: Error = mockk {
         every { message } returns "message"
         every { code } returns -1
     }
