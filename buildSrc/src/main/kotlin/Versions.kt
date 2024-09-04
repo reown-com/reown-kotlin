@@ -12,7 +12,6 @@ const val SIGN_VERSION = "2.35.1"
 const val NOTIFY_VERSION = "1.3.10"
 const val WEB_3_WALLET_VERSION = "1.35.1"
 const val WEB_3_MODAL_VERSION = "1.6.5"
-const val WC_MODAL_VERSION = "1.5.10"
 const val MODAL_CORE_VERSION = "1.6.5"
 
 //Artifact ids
@@ -23,7 +22,6 @@ const val SIGN = "sign"
 const val NOTIFY = "notify"
 const val WEB_3_WALLET = "web3wallet"
 const val WEB_3_MODAL = "web3modal"
-const val WC_MODAL = "walletconnect-modal"
 const val MODAL_CORE = "modal-core"
 
 val jvmVersion = JavaVersion.VERSION_11

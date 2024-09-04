@@ -13,8 +13,10 @@ import com.walletconnect.sample.common.getPersonalSignBody
 import com.walletconnect.sample.dapp.domain.DappDelegate
 import com.walletconnect.sample.dapp.ui.DappSampleEvents
 import com.walletconnect.sample.dapp.ui.accountArg
-import com.walletconnect.wcmodal.client.Modal
-import com.walletconnect.wcmodal.client.WalletConnectModal
+import com.walletconnect.web3.modal.client.AppKit
+import com.walletconnect.web3.modal.client.Modal
+import com.walletconnect.web3.modal.client.models.Session
+import com.walletconnect.web3.modal.client.models.request.Request
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -93,21 +95,19 @@ class AccountViewModel(
                     method.equals("eth_signTypedData", true) -> getEthSignTypedData(account)
                     else -> "[]"
                 }
-                val requestParams = Modal.Params.Request(
-                    sessionTopic = requireNotNull(DappDelegate.selectedSessionTopic),
+                val requestParams = Request(
                     method = method,
                     params = params, // stringified JSON
-                    chainId = "$parentChain:$chainId"
                 )
 
-                WalletConnectModal.request(requestParams,
-                    onSuccess = {
-                        WalletConnectModal.getActiveSessionByTopic(requestParams.sessionTopic)?.redirect?.toUri()?.let { deepLinkUri -> sendSessionRequestDeepLink(deepLinkUri) }
+                AppKit.request(requestParams,
+                    onSuccess = { _ ->
+                        (AppKit.getSession() as Session.WalletConnectSession).redirect?.toUri()?.let { deepLinkUri -> sendSessionRequestDeepLink(deepLinkUri) }
                     },
                     onError = {
                         viewModelScope.launch {
                             _awaitResponse.value = false
-                            _events.emit(DappSampleEvents.RequestError(it.throwable.localizedMessage ?: "Error trying to send request"))
+                            _events.emit(DappSampleEvents.RequestError(it.localizedMessage ?: "Error trying to send request"))
                         }
                     })
             } catch (e: Exception) {
@@ -126,23 +126,15 @@ class AccountViewModel(
         }
 
         val listOfMethodsByChainId: List<String> =
-            WalletConnectModal.getListOfActiveSessions()
-                .filter { session -> session.topic == DappDelegate.selectedSessionTopic }
-                .flatMap { session ->
-                    session.namespaces
-                        .filter { (namespaceKey, _) -> namespaceKey == chainDetails.chainId }
-                        .flatMap { (_, namespace) -> namespace.methods }
-                }
+            (AppKit.getSession() as Session.WalletConnectSession).namespaces
+                .filter { (namespaceKey, _) -> namespaceKey == chainDetails.chainId }
+                .flatMap { (_, namespace) -> namespace.methods }
+
 
         val listOfMethodsByNamespace: List<String> =
-            WalletConnectModal.getListOfActiveSessions()
-                .filter { session -> session.topic == DappDelegate.selectedSessionTopic }
-                .flatMap { session ->
-                    session.namespaces
-                        .filter { (namespaceKey, _) -> namespaceKey == chainDetails.chainNamespace }
-                        .flatMap { (_, namespace) -> namespace.methods }
-                }
-
+            (AppKit.getSession() as Session.WalletConnectSession).namespaces
+                .filter { (namespaceKey, _) -> namespaceKey == chainDetails.chainNamespace }
+                .flatMap { (_, namespace) -> namespace.methods }
 
         viewModelScope.launch {
             _uiState.value = AccountUi.AccountData(

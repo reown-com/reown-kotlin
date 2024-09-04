@@ -1,16 +1,13 @@
 package com.walletconnect.sample.dapp.ui.routes.composable_routes.chain_selection
 
 import android.content.Context
-import android.widget.Toast
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
+import android.widget.Toast
 import androidmads.library.qrgenearator.QRGContents
 import androidmads.library.qrgenearator.QRGEncoder
-import java.net.URLEncoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.core.net.toUri
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +56,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.walletconnect.android.utils.isPackageInstalled
@@ -74,16 +72,13 @@ import com.walletconnect.sample.common.ui.toColor
 import com.walletconnect.sample.dapp.BuildConfig
 import com.walletconnect.sample.dapp.ui.DappSampleEvents
 import com.walletconnect.sample.dapp.ui.routes.Route
-import com.walletconnect.sign.client.Sign
-import com.walletconnect.wcmodal.client.Modal
-import com.walletconnect.wcmodal.client.WalletConnectModal
-import com.walletconnect.wcmodal.ui.openWalletConnectModal
-import com.walletconnect.wcmodal.ui.state.rememberModalState
+import com.walletconnect.web3.modal.ui.components.button.rememberAppKitState
+import com.walletconnect.web3.modal.ui.openAppKit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.net.URLEncoder
 
 @Composable
 fun ChainSelectionRoute(navController: NavController, dispatcher: CoroutineDispatcher = Dispatchers.Main) {
@@ -91,7 +86,7 @@ fun ChainSelectionRoute(navController: NavController, dispatcher: CoroutineDispa
     val composableScope = rememberCoroutineScope()
     val viewModel: ChainSelectionViewModel = viewModel()
     val chainsState by viewModel.uiState.collectAsState()
-    rememberModalState(navController = navController)
+    rememberAppKitState(navController = navController)
     val awaitingProposalResponse = viewModel.awaitingSharedFlow.collectAsState(false).value
     var pairingUri by remember { mutableStateOf(PairingUri(uri = "", isReCaps = false)) }
 
@@ -509,8 +504,7 @@ private fun onConnectClick(
     context: Context
 ) {
     if (viewModel.isAnyChainSelected) {
-        WalletConnectModal.setSessionParams(viewModel.getSessionParams())
-        navController.openWalletConnectModal()
+        navController.openAppKit()
     } else {
         Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
     }

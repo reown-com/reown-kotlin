@@ -3,8 +3,8 @@ package com.walletconnect.sample.dapp.domain
 import com.walletconnect.android.Core
 import com.walletconnect.android.CoreClient
 import com.walletconnect.sample.common.tag
-import com.walletconnect.wcmodal.client.Modal
-import com.walletconnect.wcmodal.client.WalletConnectModal
+import com.walletconnect.web3.modal.client.AppKit
+import com.walletconnect.web3.modal.client.Modal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-object DappDelegate : WalletConnectModal.ModalDelegate, CoreClient.CoreDelegate {
+object DappDelegate : AppKit.ModalDelegate, CoreClient.CoreDelegate {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _wcEventModels: MutableSharedFlow<Modal.Model?> = MutableSharedFlow()
     val wcEventModels: SharedFlow<Modal.Model?> = _wcEventModels.asSharedFlow()
@@ -27,7 +27,7 @@ object DappDelegate : WalletConnectModal.ModalDelegate, CoreClient.CoreDelegate 
         private set
 
     init {
-        WalletConnectModal.setDelegate(this)
+        AppKit.setDelegate(this)
         CoreClient.setDelegate(this)
     }
 
@@ -39,7 +39,7 @@ object DappDelegate : WalletConnectModal.ModalDelegate, CoreClient.CoreDelegate 
     }
 
     override fun onSessionApproved(approvedSession: Modal.Model.ApprovedSession) {
-        selectedSessionTopic = approvedSession.topic
+        selectedSessionTopic = (approvedSession as Modal.Model.ApprovedSession.WalletConnectSession).topic
 
         scope.launch {
             _wcEventModels.emit(approvedSession)

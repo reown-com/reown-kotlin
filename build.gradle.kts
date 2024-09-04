@@ -335,6 +335,5 @@ private val repoIdWithVersion = listOf(
     Pair(NOTIFY, NOTIFY_VERSION),
     Pair(WEB_3_WALLET, WEB_3_WALLET_VERSION),
     Pair(WEB_3_MODAL, WEB_3_MODAL_VERSION),
-    Pair(WC_MODAL, WC_MODAL_VERSION),
     Pair(MODAL_CORE, MODAL_CORE_VERSION)
 )

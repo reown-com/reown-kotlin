@@ -7,8 +7,12 @@ import com.google.firebase.ktx.Firebase
 import com.walletconnect.android.Core
 import com.walletconnect.android.CoreClient
 import com.walletconnect.sample.common.tag
-import com.walletconnect.wcmodal.client.Modal
-import com.walletconnect.wcmodal.client.WalletConnectModal
+import com.walletconnect.util.bytesToHex
+import com.walletconnect.util.randomBytes
+import com.walletconnect.web3.modal.client.AppKit
+import com.walletconnect.web3.modal.client.Modal
+import com.walletconnect.web3.modal.presets.AppKitChainsPresets
+import com.walletconnect.web3.modal.utils.EthUtils
 import timber.log.Timber
 import com.walletconnect.sample.common.BuildConfig as CommonBuildConfig
 
@@ -35,11 +39,21 @@ class DappSampleApp : Application() {
             Firebase.crashlytics.recordException(it.throwable)
         }
 
-        WalletConnectModal.initialize(
-            Modal.Params.Init(core = CoreClient)
-        ) { error ->
+        AppKit.initialize(Modal.Params.Init(core = CoreClient)) { error ->
             Timber.e(tag(this), error.throwable.stackTraceToString())
         }
+
+        AppKit.setChains(AppKitChainsPresets.ethChains.values.toList())
+
+        val authParams = Modal.Model.AuthPayloadParams(
+            chains = AppKitChainsPresets.ethChains.values.toList().map { it.id },
+            domain = "sample.kotlin.modal",
+            uri = "https://web3inbox.com/all-apps",
+            nonce = randomBytes(12).bytesToHex(),
+            statement = "I accept the Terms of Service: https://yourDappDomain.com/",
+            methods = EthUtils.ethMethods
+        )
+        AppKit.setAuthRequestParams(authParams)
 
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
     }

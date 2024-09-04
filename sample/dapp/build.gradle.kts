@@ -97,15 +97,15 @@ dependencies {
     implementation(libs.bundles.firebase)
 
     debugImplementation(project(":core:android"))
-    debugImplementation(project(":product:walletconnectmodal"))
+    debugImplementation(project(":product:web3modal"))
     debugImplementation(project(":protocol:sign"))
 
     internalImplementation(project(":core:android"))
-    internalImplementation(project(":product:walletconnectmodal"))
+    internalImplementation(project(":product:web3modal"))
     internalImplementation(project(":protocol:sign"))
 
     releaseImplementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))
     releaseImplementation("com.walletconnect:android-core")
-    releaseImplementation("com.walletconnect:walletconnect-modal")
+    releaseImplementation("com.walletconnect:web3modal")
     releaseImplementation("com.walletconnect:sign")
 }

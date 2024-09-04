@@ -14,8 +14,8 @@ import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.client.SignClient
 import com.walletconnect.util.bytesToHex
 import com.walletconnect.util.randomBytes
-import com.walletconnect.wcmodal.client.Modal
-import com.walletconnect.wcmodal.client.WalletConnectModal
+import com.walletconnect.web3.modal.client.AppKit
+import com.walletconnect.web3.modal.client.Modal
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -72,12 +72,6 @@ class ChainSelectionViewModel : ViewModel() {
         }
     }
 
-    fun getSessionParams() = Modal.Params.SessionParams(
-        requiredNamespaces = getNamespaces(),
-        optionalNamespaces = getOptionalNamespaces(),
-        properties = getProperties()
-    )
-
     fun authenticate(authenticateParams: Sign.Params.Authenticate, appLink: String = "", onAuthenticateSuccess: (String?) -> Unit, onError: (String) -> Unit = {}) {
         viewModelScope.launch {
             _awaitingProposalSharedFlow.emit(true)
@@ -125,7 +119,7 @@ class ChainSelectionViewModel : ViewModel() {
                         pairing = pairing
                     )
 
-                WalletConnectModal.connect(connectParams,
+                AppKit.connect(connectParams,
                     onSuccess = { url ->
                         if (pairingTopicPosition == -1) {
                             viewModelScope.launch {
