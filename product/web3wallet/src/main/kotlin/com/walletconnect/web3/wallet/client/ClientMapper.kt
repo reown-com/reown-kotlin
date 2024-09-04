@@ -1,7 +1,7 @@
 package com.walletconnect.web3.wallet.client
 
 import com.reown.android.internal.common.signing.cacao.CacaoType
-import com.walletconnect.sign.client.Sign
+import com.reown.sign.client.Sign
 
 @JvmSynthetic
 internal fun Map<String, Wallet.Model.Namespace.Session>.toSign(): Map<String, Sign.Model.Namespace.Session> =

@@ -3,9 +3,9 @@ package com.walletconnect.web3.wallet.client
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.internal.common.scope
-import com.walletconnect.sign.client.Sign
-import com.walletconnect.sign.client.SignClient
-import com.walletconnect.sign.common.exceptions.SignClientAlreadyInitializedException
+import com.reown.sign.client.Sign
+import com.reown.sign.client.SignClient
+import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
 import kotlinx.coroutines.*
 import java.util.*
 
@@ -160,7 +160,7 @@ object WalletKit {
 
     @Throws(Exception::class)
     fun generateApprovedNamespaces(sessionProposal: Wallet.Model.SessionProposal, supportedNamespaces: Map<String, Wallet.Model.Namespace.Session>): Map<String, Wallet.Model.Namespace.Session> {
-        return com.walletconnect.sign.client.utils.generateApprovedNamespaces(sessionProposal.toSign(), supportedNamespaces.toSign()).toWallet()
+        return com.reown.sign.client.utils.generateApprovedNamespaces(sessionProposal.toSign(), supportedNamespaces.toSign()).toWallet()
     }
 
     @Throws(IllegalStateException::class)
@@ -195,12 +195,12 @@ object WalletKit {
 
     @Throws(Exception::class)
     fun generateAuthObject(payloadParams: Wallet.Model.PayloadAuthRequestParams, issuer: String, signature: Wallet.Model.Cacao.Signature): Wallet.Model.Cacao {
-        return com.walletconnect.sign.client.utils.generateAuthObject(payloadParams.toSign(), issuer, signature.toSign()).toWallet()
+        return com.reown.sign.client.utils.generateAuthObject(payloadParams.toSign(), issuer, signature.toSign()).toWallet()
     }
 
     @Throws(Exception::class)
     fun generateAuthPayloadParams(payloadParams: Wallet.Model.PayloadAuthRequestParams, supportedChains: List<String>, supportedMethods: List<String>): Wallet.Model.PayloadAuthRequestParams {
-        return com.walletconnect.sign.client.utils.generateAuthPayloadParams(payloadParams.toSign(), supportedChains, supportedMethods).toWallet()
+        return com.reown.sign.client.utils.generateAuthPayloadParams(payloadParams.toSign(), supportedChains, supportedMethods).toWallet()
     }
 
     @Throws(IllegalStateException::class)

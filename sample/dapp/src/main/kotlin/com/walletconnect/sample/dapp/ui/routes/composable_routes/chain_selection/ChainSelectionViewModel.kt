@@ -10,8 +10,8 @@ import com.walletconnect.sample.common.Chains
 import com.walletconnect.sample.common.tag
 import com.walletconnect.sample.dapp.domain.DappDelegate
 import com.walletconnect.sample.dapp.ui.DappSampleEvents
-import com.walletconnect.sign.client.Sign
-import com.walletconnect.sign.client.SignClient
+import com.reown.sign.client.Sign
+import com.reown.sign.client.SignClient
 import com.walletconnect.util.bytesToHex
 import com.walletconnect.util.randomBytes
 import com.walletconnect.web3.modal.client.AppKit

@@ -13,8 +13,8 @@ import com.reown.android.pulse.model.EventType
 import com.reown.android.pulse.model.properties.Properties
 import com.reown.android.pulse.model.properties.Props
 import com.reown.foundation.util.Logger
-import com.walletconnect.sign.client.Sign
-import com.walletconnect.sign.client.SignClient
+import com.reown.sign.client.Sign
+import com.reown.sign.client.SignClient
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.client.AppKit

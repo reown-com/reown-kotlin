@@ -6,9 +6,9 @@ import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pulse.model.EventType
 import com.reown.android.pulse.model.properties.Props
-import com.walletconnect.sign.client.Sign
-import com.walletconnect.sign.client.SignClient
-import com.walletconnect.sign.common.exceptions.SignClientAlreadyInitializedException
+import com.reown.sign.client.Sign
+import com.reown.sign.client.SignClient
+import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.client.models.Account
 import com.walletconnect.web3.modal.client.models.Session

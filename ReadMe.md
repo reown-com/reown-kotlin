@@ -1,6 +1,6 @@
-# **reown-kotlin**
+# **Reown - Kotlin**
 
-The communications protocol for web3, reown brings the ecosystem together by enabling hundreds of wallets and apps to securely connect and interact. This repository contains Kotlin implementation of
+The communications protocol for web3, Reown brings the ecosystem together by enabling hundreds of wallets and apps to securely connect and interact. This repository contains Kotlin implementation of
 reown protocols for Android applications.
 
 ####

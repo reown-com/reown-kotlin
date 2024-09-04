@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.client.models.request
 
-import com.walletconnect.sign.client.Sign
+import com.reown.sign.client.Sign
 import com.walletconnect.web3.modal.engine.coinbase.CoinbaseResult
 
 sealed class SentRequestResult {

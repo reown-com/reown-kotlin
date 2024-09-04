@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.walletconnect.sample.common.ui.theme.WCSampleAppTheme
 import com.walletconnect.sample.dapp.ui.routes.host.DappSampleHost
-import com.walletconnect.sign.client.SignClient
+import com.reown.sign.client.SignClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
