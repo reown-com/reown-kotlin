@@ -3,7 +3,7 @@ package com.walletconnect.web3.modal.di
 import android.content.Context
 import com.walletconnect.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.web3.modal.domain.usecase.ConnectionEventRepository
-import com.walletconnect.web3.modal.engine.Web3ModalEngine
+import com.walletconnect.web3.modal.engine.AppKitEngine
 import com.walletconnect.web3.modal.engine.coinbase.CoinbaseClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
@@ -16,7 +16,7 @@ internal fun engineModule() = module {
     }
 
     single {
-        Web3ModalEngine(
+        AppKitEngine(
             getSessionUseCase = get(),
             getSelectedChainUseCase = get(),
             deleteSessionDataUseCase = get(),

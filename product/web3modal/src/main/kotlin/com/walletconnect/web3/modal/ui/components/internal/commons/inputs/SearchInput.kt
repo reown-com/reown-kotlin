@@ -37,7 +37,7 @@ import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.components.internal.commons.ContentDescription
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -95,24 +95,24 @@ internal fun SearchInput(
 
     when {
         searchState.isFocused -> {
-            borderColor = Web3ModalTheme.colors.accent100
-            backgroundColor = Web3ModalTheme.colors.grayGlass10
+            borderColor = AppKitTheme.colors.accent100
+            backgroundColor = AppKitTheme.colors.grayGlass10
         }
         isEnabled -> {
-            borderColor = Web3ModalTheme.colors.grayGlass05
-            backgroundColor = Web3ModalTheme.colors.grayGlass05
+            borderColor = AppKitTheme.colors.grayGlass05
+            backgroundColor = AppKitTheme.colors.grayGlass05
         }
         else -> {
-            borderColor = Web3ModalTheme.colors.grayGlass10
-            backgroundColor = Web3ModalTheme.colors.grayGlass15
+            borderColor = AppKitTheme.colors.grayGlass10
+            backgroundColor = AppKitTheme.colors.grayGlass15
         }
     }
 
     BasicTextField(
         value = state.searchValue,
         onValueChange = searchState::onSearchValueChange,
-        textStyle = Web3ModalTheme.typo.paragraph400.copy(color = Web3ModalTheme.colors.foreground.color100),
-        cursorBrush = SolidColor(Web3ModalTheme.colors.accent100),
+        textStyle = AppKitTheme.typo.paragraph400.copy(color = AppKitTheme.colors.foreground.color100),
+        cursorBrush = SolidColor(AppKitTheme.colors.accent100),
         singleLine = true,
         keyboardActions = KeyboardActions(onSearch = {
             searchState.onSearchSubmit()
@@ -132,7 +132,7 @@ internal fun SearchInput(
             ) {
                 HorizontalSpacer(width = 10.dp)
                 Icon(
-                    tint = Web3ModalTheme.colors.foreground.color275,
+                    tint = AppKitTheme.colors.foreground.color275,
                     modifier = Modifier.size(14.dp),
                     imageVector = ImageVector.vectorResource(id = R.drawable.ic_search),
                     contentDescription = ContentDescription.SEARCH.description,
@@ -140,7 +140,7 @@ internal fun SearchInput(
                 HorizontalSpacer(width = 6.dp)
                 Box(modifier = Modifier.weight(1f)) {
                     if (state.searchValue.isBlank()) {
-                        Text(text = "Search wallets", style = Web3ModalTheme.typo.paragraph400.copy(color = Web3ModalTheme.colors.foreground.color275))
+                        Text(text = "Search wallets", style = AppKitTheme.typo.paragraph400.copy(color = AppKitTheme.colors.foreground.color275))
                     }
                     innerTextField()
                     if (state.searchValue.isNotBlank()) {

@@ -11,7 +11,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.button.ImageB
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.TextButton
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.ProvideWeb3ModalThemeComposition
+import com.walletconnect.web3.modal.ui.theme.ProvideAppKitThemeComposition
 
 enum class ConnectButtonSize {
     NORMAL, SMALL
@@ -19,7 +19,7 @@ enum class ConnectButtonSize {
 
 @Composable
 fun ConnectButton(
-    state: Web3ModalState,
+    state: AppKitState,
     buttonSize: ConnectButtonSize = ConnectButtonSize.NORMAL
 ) {
     val isLoading: Boolean by state.isOpen.collectAsState(initial = false)
@@ -30,7 +30,7 @@ fun ConnectButton(
         isLoading = isLoading,
         isEnabled = !isConnected
     ) {
-        state.openWeb3Modal()
+        state.openAppKit()
     }
 }
 
@@ -41,7 +41,7 @@ internal fun ConnectButton(
     isEnabled: Boolean = true,
     onClick: () -> Unit,
 ) {
-    ProvideWeb3ModalThemeComposition {
+    ProvideAppKitThemeComposition {
         val buttonSize = when (size) {
             ConnectButtonSize.NORMAL -> ButtonSize.M
             ConnectButtonSize.SMALL -> ButtonSize.S

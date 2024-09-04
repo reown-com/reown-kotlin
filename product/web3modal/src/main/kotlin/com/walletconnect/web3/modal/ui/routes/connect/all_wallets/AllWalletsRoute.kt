@@ -65,11 +65,11 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.walletsGridIt
 import com.walletconnect.modal.ui.model.LoadingState
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.previews.Web3ModalPreview
+import com.walletconnect.web3.modal.ui.previews.AppKitPreview
 import com.walletconnect.web3.modal.ui.previews.testWallets
 import com.walletconnect.web3.modal.ui.routes.connect.ConnectViewModel
 import com.walletconnect.web3.modal.ui.routes.connect.WalletsData
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import com.walletconnect.web3.modal.ui.utils.conditionalModifier
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -141,7 +141,7 @@ private fun WalletsGrid(
     walletsData: WalletsData,
     onWalletItemClick: (Wallet) -> Unit
 ) {
-    val color = Web3ModalTheme.colors.background.color275
+    val color = AppKitTheme.colors.background.color275
     Box {
         LazyVerticalGrid(
             state = gridState,
@@ -178,7 +178,7 @@ private fun LazyGridScope.loadingWalletsItems() {
                 modifier = Modifier
                     .width(76.dp)
                     .height(96.dp)
-                    .background(Web3ModalTheme.colors.grayGlass02),
+                    .background(AppKitTheme.colors.grayGlass02),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -188,13 +188,13 @@ private fun LazyGridScope.loadingWalletsItems() {
                     modifier = Modifier
                         .size(54.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .border(width = 1.dp, color = Web3ModalTheme.colors.grayGlass10, shape = RoundedCornerShape(16.dp))
+                        .border(width = 1.dp, color = AppKitTheme.colors.grayGlass10, shape = RoundedCornerShape(16.dp))
 
                 )
                 VerticalSpacer(height = 8.dp)
                 Text(
                     text = String.Empty,
-                    style = Web3ModalTheme.typo.tiny500,
+                    style = AppKitTheme.typo.tiny500,
                     textAlign = TextAlign.Center,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -214,7 +214,7 @@ private fun SearchInputRow(
     val defaultSpacing: Dp = 12.dp
     val focusBorderWidth: Dp = 4.dp
     val focusedSpacing: Dp = defaultSpacing - focusBorderWidth
-    val focusBorderColor = Web3ModalTheme.colors.accent20
+    val focusBorderColor = AppKitTheme.colors.accent20
     val state by searchState.state.collectAsState()
 
     val paddingValues: PaddingValues
@@ -255,13 +255,13 @@ private fun ColumnScope.NoWalletsFoundItem() {
             contentDescription = ContentDescription.WALLET.description,
             modifier = Modifier
                 .size(40.dp)
-                .background(Web3ModalTheme.colors.grayGlass05, RoundedCornerShape(12.dp))
+                .background(AppKitTheme.colors.grayGlass05, RoundedCornerShape(12.dp))
                 .padding(7.dp)
         )
         VerticalSpacer(height = 20.dp)
         Text(
             text = "No Wallet found",
-            style = TextStyle(color = Web3ModalTheme.colors.foreground.color125, fontSize = 16.sp),
+            style = TextStyle(color = AppKitTheme.colors.foreground.color125, fontSize = 16.sp),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -280,7 +280,7 @@ private fun SearchRowPreview(
 @UiModePreview
 @Composable
 private fun AllWalletsEmptyPreview() {
-    Web3ModalPreview {
+    AppKitPreview {
         AllWalletsContent(WalletsData.empty(), "", {}, {}, {}, {}, {})
     }
 }
@@ -288,7 +288,7 @@ private fun AllWalletsEmptyPreview() {
 @UiModePreview
 @Composable
 private fun AllWalletsPreview() {
-    Web3ModalPreview {
+    AppKitPreview {
         AllWalletsContent(WalletsData.submit(testWallets),"", {}, {}, {}, {}, {})
     }
 }
@@ -296,7 +296,7 @@ private fun AllWalletsPreview() {
 @UiModePreview
 @Composable
 private fun AllWalletsLoadingRefreshPreview() {
-    Web3ModalPreview {
+    AppKitPreview {
         AllWalletsContent(WalletsData.refresh(),"", {}, {}, {}, {}, {})
     }
 }
@@ -304,7 +304,7 @@ private fun AllWalletsLoadingRefreshPreview() {
 @UiModePreview
 @Composable
 private fun AllWalletsLoadingAppendPreview() {
-    Web3ModalPreview {
+    AppKitPreview {
         AllWalletsContent(WalletsData.append(testWallets),"", {}, {}, {}, {}, {})
     }
 }

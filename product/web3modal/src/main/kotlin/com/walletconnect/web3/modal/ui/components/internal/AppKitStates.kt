@@ -15,7 +15,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.LoadingSpinne
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.ButtonSize
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.ButtonStyle
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.TryAgainButton
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun LoadingModalState() {
@@ -38,7 +38,7 @@ internal fun ErrorModalState(retry: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Something went wrong", style = Web3ModalTheme.typo.paragraph400)
+        Text(text = "Something went wrong", style = AppKitTheme.typo.paragraph400)
         VerticalSpacer(height = 10.dp)
         TryAgainButton(
             size = ButtonSize.M,

@@ -22,7 +22,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.TransparentSu
 import com.walletconnect.web3.modal.ui.components.internal.commons.VerticalSpacer
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun ChainNetworkItem(
@@ -41,20 +41,20 @@ internal fun ChainNetworkItem(
     val borderColor: Color?
     when {
         isSelected -> {
-            backgroundColor = Web3ModalTheme.colors.accent10
-            textColor = Web3ModalTheme.colors.accent100
-            borderColor = Web3ModalTheme.colors.accent100
+            backgroundColor = AppKitTheme.colors.accent10
+            textColor = AppKitTheme.colors.accent100
+            borderColor = AppKitTheme.colors.accent100
         }
 
         isEnabled -> {
-            backgroundColor = Web3ModalTheme.colors.grayGlass02
-            textColor = Web3ModalTheme.colors.foreground.color100
+            backgroundColor = AppKitTheme.colors.grayGlass02
+            textColor = AppKitTheme.colors.foreground.color100
             borderColor = null
         }
 
         else -> {
-            backgroundColor = Web3ModalTheme.colors.grayGlass10
-            textColor = Web3ModalTheme.colors.grayGlass15
+            backgroundColor = AppKitTheme.colors.grayGlass10
+            textColor = AppKitTheme.colors.grayGlass15
             borderColor = null
         }
     }
@@ -79,7 +79,7 @@ internal fun ChainNetworkItem(
             VerticalSpacer(height = 8.dp)
             Text(
                 text = networkName,
-                style = Web3ModalTheme.typo.tiny500.copy(textColor),
+                style = AppKitTheme.typo.tiny500.copy(textColor),
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

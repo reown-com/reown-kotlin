@@ -66,7 +66,7 @@ class SendEventUseCaseTest : KoinTest {
         wcKoinApp = app
 
         val props = Props(type = "testEvent")
-        val sdkType = SDKType.WEB3MODAL
+        val sdkType = SDKType.APPKIT
         val event = Event(props = props, bundleId = bundleId)
 
         coEvery { pulseService.sendEvent(body = any(), sdkType = any()) } returns Response.success(Unit)
@@ -92,7 +92,7 @@ class SendEventUseCaseTest : KoinTest {
         wcKoinApp = app
 
         val props = Props(type = "testEvent")
-        val sdkType = SDKType.WEB3MODAL
+        val sdkType = SDKType.APPKIT
         val event = Event(props = props, bundleId = bundleId)
 
         coEvery { pulseService.sendEvent(any(), any()) } returns Response.error(400, "ResponseBody".toResponseBody())
@@ -118,7 +118,7 @@ class SendEventUseCaseTest : KoinTest {
         wcKoinApp = app
 
         val props = Props(type = "testEvent")
-        val sdkType = SDKType.WEB3MODAL
+        val sdkType = SDKType.APPKIT
         val event = Event(props = props, bundleId = bundleId)
         val exception = Exception("Test exception")
 
@@ -145,7 +145,7 @@ class SendEventUseCaseTest : KoinTest {
         wcKoinApp = app2
 
         val props = Props(type = "testEvent")
-        val sdkType = SDKType.WEB3MODAL
+        val sdkType = SDKType.APPKIT
         val event = Event(props = props, bundleId = bundleId)
 
         useCase.send(props, sdkType, event.timestamp, event.eventId)

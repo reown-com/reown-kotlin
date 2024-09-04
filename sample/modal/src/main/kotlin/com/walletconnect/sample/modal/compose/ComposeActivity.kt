@@ -29,7 +29,7 @@ import com.google.accompanist.navigation.material.ExperimentalMaterialNavigation
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.walletconnect.sample.modal.common.Route
 import com.walletconnect.sample.modal.ui.theme.WalletConnectTheme
-import com.walletconnect.web3.modal.ui.web3ModalGraph
+import com.walletconnect.web3.modal.ui.appKitGraph
 
 class ComposeActivity : ComponentActivity() {
 
@@ -66,7 +66,7 @@ class ComposeActivity : ComponentActivity() {
                             composable(Route.Home.path) {
                                 HomeScreen(navController = navController)
                             }
-                            web3ModalGraph(navController)
+                            appKitGraph(navController)
                         }
                     }
                 }

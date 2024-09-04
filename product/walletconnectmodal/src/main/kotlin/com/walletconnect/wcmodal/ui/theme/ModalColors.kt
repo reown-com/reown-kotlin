@@ -21,12 +21,12 @@ internal data class ModalColors(
 internal fun provideModalColors(
     composition: CustomizableComposition
 ): ModalColors = if (isSystemInDarkTheme()) {
-    defaultDarkWeb3ModalColors(composition.accentColor, composition.onAccentColor)
+    defaultDarkAppKitColors(composition.accentColor, composition.onAccentColor)
 } else {
-    defaultLightWeb3ModalColors(composition.accentColor, composition.onAccentColor)
+    defaultLightAppKitColors(composition.accentColor, composition.onAccentColor)
 }
 
-private fun defaultLightWeb3ModalColors(
+private fun defaultLightAppKitColors(
     mainColor: Color,
     onMainColor: Color
 ) = ModalColors(
@@ -41,7 +41,7 @@ private fun defaultLightWeb3ModalColors(
     border = Color(0x32062B2B)
 )
 
-private fun defaultDarkWeb3ModalColors(
+private fun defaultDarkAppKitColors(
     mainColor: Color,
     onMainColor: Color
 ) = ModalColors(

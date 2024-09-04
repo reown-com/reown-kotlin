@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.ui.components.internal.commons.TransparentSurface
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 internal data class EntryColors(
     val background: Color,
@@ -26,13 +26,13 @@ internal fun BaseEntry(
     val textColor: Color
     val secondaryColor: Color
     if (isEnabled) {
-        background = Web3ModalTheme.colors.grayGlass02
-        textColor = Web3ModalTheme.colors.foreground.color100
-        secondaryColor = Web3ModalTheme.colors.foreground.color200
+        background = AppKitTheme.colors.grayGlass02
+        textColor = AppKitTheme.colors.foreground.color100
+        secondaryColor = AppKitTheme.colors.foreground.color200
     } else {
-        background = Web3ModalTheme.colors.grayGlass15
-        textColor = Web3ModalTheme.colors.grayGlass15
-        secondaryColor = Web3ModalTheme.colors.grayGlass15
+        background = AppKitTheme.colors.grayGlass15
+        textColor = AppKitTheme.colors.grayGlass15
+        secondaryColor = AppKitTheme.colors.grayGlass15
     }
     val entryColors = EntryColors(background, textColor, secondaryColor)
 

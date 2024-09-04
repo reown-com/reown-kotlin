@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.ui.components
 
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onEach
 
@@ -15,7 +15,7 @@ internal object ComponentDelegate {
 
     var isModalOpen: Boolean = false
 
-    fun setDelegate(delegate: Web3Modal.ComponentDelegate) {
+    fun setDelegate(delegate: AppKit.ComponentDelegate) {
         modalComponentEvent.onEach { event ->
             when (event) {
                 ComponentEvent.ModalHiddenEvent -> delegate.onModalHidden()

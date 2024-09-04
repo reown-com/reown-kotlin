@@ -17,7 +17,7 @@ import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.components.internal.commons.ContentDescription
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun WalletConnectLogo(
@@ -27,13 +27,13 @@ internal fun WalletConnectLogo(
     val border: Color
     val colorFilter: ColorFilter?
     if (isEnabled) {
-        background = Web3ModalTheme.colors.accent100
-        border = Web3ModalTheme.colors.grayGlass10
+        background = AppKitTheme.colors.accent100
+        border = AppKitTheme.colors.grayGlass10
         colorFilter = null
     } else {
-        background = Web3ModalTheme.colors.background.color300
-        border = Web3ModalTheme.colors.grayGlass05
-        colorFilter = ColorFilter.tint(Web3ModalTheme.colors.grayGlass30)
+        background = AppKitTheme.colors.background.color300
+        border = AppKitTheme.colors.grayGlass05
+        colorFilter = ColorFilter.tint(AppKitTheme.colors.grayGlass30)
     }
 
     Image(

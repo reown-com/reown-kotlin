@@ -17,7 +17,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun BaseTextInput(
@@ -34,25 +34,25 @@ internal fun BaseTextInput(
 
     when {
         state.isFocused -> {
-            borderColor = Web3ModalTheme.colors.accent100
-            backgroundColor = Web3ModalTheme.colors.grayGlass10
+            borderColor = AppKitTheme.colors.accent100
+            backgroundColor = AppKitTheme.colors.grayGlass10
         }
 
         isEnabled -> {
-            borderColor = Web3ModalTheme.colors.grayGlass05
-            backgroundColor = Web3ModalTheme.colors.grayGlass05
+            borderColor = AppKitTheme.colors.grayGlass05
+            backgroundColor = AppKitTheme.colors.grayGlass05
         }
 
         else -> {
-            borderColor = Web3ModalTheme.colors.grayGlass10
-            backgroundColor = Web3ModalTheme.colors.grayGlass15
+            borderColor = AppKitTheme.colors.grayGlass10
+            backgroundColor = AppKitTheme.colors.grayGlass15
         }
     }
 
     BasicTextField(value = state.text,
         onValueChange = inputState::onTextChange,
-        textStyle = Web3ModalTheme.typo.paragraph400.copy(color = Web3ModalTheme.colors.foreground.color100),
-        cursorBrush = SolidColor(Web3ModalTheme.colors.accent100),
+        textStyle = AppKitTheme.typo.paragraph400.copy(color = AppKitTheme.colors.foreground.color100),
+        cursorBrush = SolidColor(AppKitTheme.colors.accent100),
         singleLine = true,
         keyboardActions = KeyboardActions { inputState.submit(state.text) },
         keyboardOptions = keyboardOptions,

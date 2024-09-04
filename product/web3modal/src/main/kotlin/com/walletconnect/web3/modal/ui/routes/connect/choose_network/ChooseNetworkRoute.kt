@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.ui.components.internal.commons.NetworkBottomSection
 import com.walletconnect.web3.modal.ui.components.internal.commons.network.ChainNetworkItem
 import com.walletconnect.web3.modal.ui.routes.connect.ConnectViewModel
@@ -24,7 +24,7 @@ import com.walletconnect.web3.modal.utils.getChainNetworkImageUrl
 internal fun ChooseNetworkRoute(
     connectViewModel: ConnectViewModel
 ) {
-    val chains = Web3Modal.chains
+    val chains = AppKit.chains
     val selectedChain by connectViewModel.selectedChain.collectAsState(initial = null)
 
     ChainNetworkSelector(

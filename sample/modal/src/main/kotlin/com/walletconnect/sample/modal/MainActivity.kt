@@ -76,9 +76,9 @@ import com.walletconnect.sample.modal.ui.predefinedRedDarkTheme
 import com.walletconnect.sample.modal.ui.predefinedRedLightTheme
 import com.walletconnect.sample.modal.ui.theme.WalletConnectTheme
 import com.walletconnect.sample.modal.view.ViewActivity
-import com.walletconnect.web3.modal.client.Web3Modal
-import com.walletconnect.web3.modal.ui.Web3ModalTheme
-import com.walletconnect.web3.modal.ui.web3ModalGraph
+import com.walletconnect.web3.modal.client.AppKit
+import com.walletconnect.web3.modal.ui.AppKitTheme
+import com.walletconnect.web3.modal.ui.appKitGraph
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -93,14 +93,14 @@ class MainActivity : ComponentActivity() {
         var counter = 10
         while (!isRegistered && counter-- > 0) {
             try {
-                Web3Modal.register(this)
+                AppKit.register(this)
                 isRegistered = true
             } catch (e: Exception) {
                 Timber.e(e)
                 runBlocking { delay(100) }
             }
         }
-        if (counter <= 0) throw IllegalStateException("Web3Modal registration failed")
+        if (counter <= 0) throw IllegalStateException("AppKit registration failed")
 
         setContent {
             WalletConnectTheme {
@@ -114,10 +114,10 @@ class MainActivity : ComponentActivity() {
 
                 val isDarkTheme = isSystemInDarkTheme()
                 var isDark by remember { mutableStateOf(isDarkTheme) }
-                var darkColors by remember { mutableStateOf(Web3ModalTheme.provideDarkWeb3ModalColor()) }
-                var lightColors by remember { mutableStateOf(Web3ModalTheme.provideLightWeb3ModalColors()) }
-                Web3ModalTheme(
-                    mode = if (isDark) Web3ModalTheme.Mode.DARK else Web3ModalTheme.Mode.LIGHT,
+                var darkColors by remember { mutableStateOf(AppKitTheme.provideDarkAppKitColor()) }
+                var lightColors by remember { mutableStateOf(AppKitTheme.provideLightAppKitColors()) }
+                AppKitTheme(
+                    mode = if (isDark) AppKitTheme.Mode.DARK else AppKitTheme.Mode.LIGHT,
                     lightColors = lightColors,
                     darkColors = darkColors
                 ) {
@@ -132,7 +132,7 @@ class MainActivity : ComponentActivity() {
                                     TopAppBar(
                                         title = {
                                             Text(
-                                                text = "Web3Modal Lab",
+                                                text = "AppKit Lab",
                                                 modifier = Modifier.fillMaxWidth(),
                                                 textAlign = TextAlign.Center
                                             )
@@ -160,7 +160,7 @@ class MainActivity : ComponentActivity() {
                                 composable(Route.Lab.path) {
                                     LabScreen(navController = navController)
                                 }
-                                web3ModalGraph(navController)
+                                appKitGraph(navController)
                                 dialog(
                                     route = Route.AlertDialog.path + "/{$messageArg}",
                                     arguments = listOf(navArgument(messageArg) { type = NavType.StringType }),
@@ -178,7 +178,7 @@ class MainActivity : ComponentActivity() {
         }
 
         if (intent?.dataString?.contains("wc_ev") == true) {
-            Web3Modal.handleDeepLink(intent.dataString ?: "") {
+            AppKit.handleDeepLink(intent.dataString ?: "") {
                 lifecycleScope.launch(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "Error dispatching envelope: ${it.throwable.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -190,7 +190,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
 
         if (intent?.dataString?.contains("wc_ev") == true) {
-            Web3Modal.handleDeepLink(intent.dataString ?: "") {
+            AppKit.handleDeepLink(intent.dataString ?: "") {
                 lifecycleScope.launch(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "Error dispatching envelope: ${it.throwable.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -200,13 +200,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Web3Modal.unregister()
+        AppKit.unregister()
     }
 }
 
 @Composable
 private fun PredefineThemes(
-    onClick: (Web3ModalTheme.Colors, Web3ModalTheme.Colors) -> Unit,
+    onClick: (AppKitTheme.Colors, AppKitTheme.Colors) -> Unit,
 ) {
     LazyRow(
         modifier = Modifier
@@ -214,7 +214,7 @@ private fun PredefineThemes(
             .padding(horizontal = 18.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.Center
     ) {
-        item { ThemeItem(color = Color(0xFF47A1FF), text = "Default") { onClick(Web3ModalTheme.provideLightWeb3ModalColors(), Web3ModalTheme.provideDarkWeb3ModalColor()) } }
+        item { ThemeItem(color = Color(0xFF47A1FF), text = "Default") { onClick(AppKitTheme.provideLightAppKitColors(), AppKitTheme.provideDarkAppKitColor()) } }
         item { ThemeItem(color = Color(0xFFFFA500), text = "Orange") { onClick(predefinedOrangeLightTheme, predefinedOrangeDarkTheme) } }
         item { ThemeItem(color = Color(0xFFB7342B), text = "Red") { onClick(predefinedRedLightTheme, predefinedRedDarkTheme) } }
         item { ThemeItem(color = Color(0xFF10B124), text = "Green") { onClick(predefinedGreenLightTheme, predefinedGreenDarkTheme) } }

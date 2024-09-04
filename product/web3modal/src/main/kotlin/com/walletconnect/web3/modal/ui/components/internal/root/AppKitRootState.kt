@@ -16,16 +16,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 @Composable
-internal fun rememberWeb3ModalRootState(
+internal fun rememberAppKitRootState(
     coroutineScope: CoroutineScope,
     navController: NavController
-): Web3ModalRootState {
+): AppKitRootState {
     return remember(coroutineScope, navController) {
-        Web3ModalRootState(coroutineScope, navController)
+        AppKitRootState(coroutineScope, navController)
     }
 }
 
-internal class Web3ModalRootState(
+internal class AppKitRootState(
     private val coroutineScope: CoroutineScope,
     private val navController: NavController
 ) {

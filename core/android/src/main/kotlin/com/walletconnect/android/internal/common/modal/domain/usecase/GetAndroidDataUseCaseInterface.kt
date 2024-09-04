@@ -1,6 +1,6 @@
 package com.walletconnect.android.internal.common.modal.domain.usecase
 
-import com.walletconnect.android.internal.common.modal.Web3ModalApiRepository
+import com.walletconnect.android.internal.common.modal.AppKitApiRepository
 
 interface GetInstalledWalletsIdsUseCaseInterface {
     suspend operator fun invoke(
@@ -9,7 +9,7 @@ interface GetInstalledWalletsIdsUseCaseInterface {
 }
 
 internal class GetInstalledWalletsIdsUseCase(
-    private val web3ModalApiRepository: Web3ModalApiRepository
+    private val appKitApiRepository: AppKitApiRepository
 ) : GetInstalledWalletsIdsUseCaseInterface {
-    override suspend fun invoke(sdkType: String): List<String> = web3ModalApiRepository.getAndroidWalletsData(sdkType).map { it.map { walletAppData -> walletAppData.id } }.getOrThrow()
+    override suspend fun invoke(sdkType: String): List<String> = appKitApiRepository.getAndroidWalletsData(sdkType).map { it.map { walletAppData -> walletAppData.id } }.getOrThrow()
 }

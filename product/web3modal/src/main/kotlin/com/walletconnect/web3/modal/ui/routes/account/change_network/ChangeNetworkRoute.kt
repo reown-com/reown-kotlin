@@ -14,13 +14,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.ui.components.internal.commons.NetworkBottomSection
 import com.walletconnect.web3.modal.ui.components.internal.commons.VerticalSpacer
 import com.walletconnect.web3.modal.ui.components.internal.commons.network.ChainNetworkItem
 import com.walletconnect.web3.modal.ui.model.UiStateBuilder
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.previews.Web3ModalPreview
+import com.walletconnect.web3.modal.ui.previews.AppKitPreview
 import com.walletconnect.web3.modal.ui.previews.ethereumChain
 import com.walletconnect.web3.modal.ui.previews.testChains
 import com.walletconnect.web3.modal.ui.routes.account.AccountViewModel
@@ -34,7 +34,7 @@ internal fun ChangeNetworkRoute(
 
     UiStateBuilder(uiStateFlow = accountViewModel.accountState) {
         ChangeNetworkScreen(
-            chains = Web3Modal.chains,
+            chains = AppKit.chains,
             selectedChain = selectedChain,
             onChainItemClick = { accountViewModel.changeActiveChain(it) },
             onWhatIsWalletClick = { accountViewModel.navigateToHelp() }
@@ -93,7 +93,7 @@ private fun ChainNetworkGrid(
 @Composable
 @UiModePreview
 private fun ChangeNetworkPreview() {
-    Web3ModalPreview("Change Network") {
+    AppKitPreview("Change Network") {
         ChangeNetworkScreen(testChains, ethereumChain, {}, {})
     }
 }

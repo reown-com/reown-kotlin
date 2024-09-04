@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun HelpSection(
@@ -48,13 +48,13 @@ internal fun HelpSection(
         Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = title,
-            style = Web3ModalTheme.typo.paragraph400,
+            style = AppKitTheme.typo.paragraph400,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = body,
-            style = Web3ModalTheme.typo.small400.copy(Web3ModalTheme.colors.foreground.color200),
+            style = AppKitTheme.typo.small400.copy(AppKitTheme.colors.foreground.color200),
             textAlign = TextAlign.Center,
         )
     }
@@ -68,7 +68,7 @@ internal fun NetworkBottomSection(
     VerticalSpacer(height = 12.dp)
     Text(
         text = "Your connected wallet may not support some of the networks available for this dApp",
-        style = Web3ModalTheme.typo.small500.copy(color = Web3ModalTheme.colors.foreground.color300),
+        style = AppKitTheme.typo.small500.copy(color = AppKitTheme.colors.foreground.color300),
         textAlign = TextAlign.Center,
         modifier = Modifier.padding(horizontal = 12.dp)
     )
@@ -87,11 +87,11 @@ internal fun WhatIsNetworkLink(onClick: () -> Unit) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            QuestionMarkIcon(tint = Web3ModalTheme.colors.accent100, modifier = Modifier.size(12.dp))
+            QuestionMarkIcon(tint = AppKitTheme.colors.accent100, modifier = Modifier.size(12.dp))
             HorizontalSpacer(width = 4.dp)
             Text(
                 text = "What is a network",
-                style = Web3ModalTheme.typo.small600.copy(color = Web3ModalTheme.colors.accent100)
+                style = AppKitTheme.typo.small600.copy(color = AppKitTheme.colors.accent100)
             )
         }
     }

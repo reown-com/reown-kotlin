@@ -1,7 +1,7 @@
 package com.walletconnect.web3.modal.ui.routes.account
 
 import com.android.resources.NightMode
-import com.walletconnect.web3.modal.presets.Web3ModalChainsPresets
+import com.walletconnect.web3.modal.presets.AppKitChainsPresets
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.routes.account.chain_redirect.ChainRedirectState
 import com.walletconnect.web3.modal.ui.routes.account.chain_redirect.ChainSwitchRedirectScreen
@@ -12,7 +12,7 @@ import org.junit.Test
 @Ignore("This test is not working on CI for Sonar only")
 internal class ChainSwitchRedirectTest : ScreenShotTest("account/" + Route.CHAIN_SWITCH_REDIRECT.path) {
 
-    private val chain = Web3ModalChainsPresets.ethChains["1"]!!
+    private val chain = AppKitChainsPresets.ethChains["1"]!!
 
     @Test
     fun `test ChainSwitchRedirect with Loading in LightMode`() = runRouteScreenShotTest(

@@ -17,7 +17,7 @@ import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.client.SignClient
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.client.models.Account
 import com.walletconnect.web3.modal.client.models.CoinbaseClientAlreadyInitializedException
 import com.walletconnect.web3.modal.client.models.request.Request
@@ -27,7 +27,7 @@ import com.walletconnect.web3.modal.client.toCoinbaseSession
 import com.walletconnect.web3.modal.client.toModal
 import com.walletconnect.web3.modal.client.toSession
 import com.walletconnect.web3.modal.client.toSign
-import com.walletconnect.web3.modal.domain.delegate.Web3ModalDelegate
+import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate
 import com.walletconnect.web3.modal.domain.model.InvalidSessionException
 import com.walletconnect.web3.modal.domain.model.Session
 import com.walletconnect.web3.modal.domain.usecase.ConnectionEventRepository
@@ -44,7 +44,7 @@ import com.walletconnect.web3.modal.utils.toConnectorType
 import com.walletconnect.web3.modal.utils.toSession
 import kotlinx.coroutines.launch
 
-internal class Web3ModalEngine(
+internal class AppKitEngine(
     private val getSessionUseCase: GetSessionUseCase,
     private val getSelectedChainUseCase: GetSelectedChainUseCase,
     private val saveSessionUseCase: SaveSessionUseCase,
@@ -111,9 +111,9 @@ internal class Web3ModalEngine(
         coinbaseClient.connect(
             onSuccess = {
                 scope.launch {
-                    val chain = Web3Modal.chains.getSelectedChain(Web3Modal.selectedChain?.id)
+                    val chain = AppKit.chains.getSelectedChain(AppKit.selectedChain?.id)
                     saveSessionUseCase(it.toSession(chain))
-                    Web3ModalDelegate.emit(it)
+                    AppKitDelegate.emit(it)
                     onSuccess()
                 }
 
@@ -134,7 +134,7 @@ internal class Web3ModalEngine(
 
     fun getConnectorType() = getSessionUseCase()?.toConnectorType()
 
-    internal fun getSelectedChainOrFirst() = getSelectedChain() ?: Web3Modal.chains.first()
+    internal fun getSelectedChainOrFirst() = getSelectedChain() ?: AppKit.chains.first()
 
     fun formatSIWEMessage(authParams: Modal.Model.AuthPayloadParams, issuer: String): String {
         return SignClient.formatAuthMessage(authParams.toSign(issuer))
@@ -236,7 +236,7 @@ internal class Web3ModalEngine(
     }
 
     @Throws(IllegalStateException::class)
-    fun setInternalDelegate(delegate: Web3ModalDelegate) {
+    fun setInternalDelegate(delegate: AppKitDelegate) {
         val signDelegate = object : SignClient.DappDelegate {
             override fun onSessionApproved(approvedSession: Sign.Model.ApprovedSession) {
                 try {

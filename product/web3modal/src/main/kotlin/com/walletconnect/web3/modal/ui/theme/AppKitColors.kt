@@ -3,9 +3,9 @@ package com.walletconnect.web3.modal.ui.theme
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.walletconnect.web3.modal.ui.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.AppKitTheme
 
-internal data class Web3ModalColors(
+internal data class AppKitColors(
     val accent100: Color,
     val accent90: Color,
     val accent80: Color,
@@ -49,8 +49,8 @@ data class ColorPalette(
     val color300: Color,
 )
 @Composable
-internal fun provideWeb3ModalColors(composition: CustomComposition): Web3ModalColors = if (composition.mode.isDarkTheme()) {
-    Web3ModalColors(
+internal fun provideAppKitColors(composition: CustomComposition): AppKitColors = if (composition.mode.isDarkTheme()) {
+    AppKitColors(
         accent100 = composition.darkColors.accent100,
         accent90 = composition.darkColors.accent90,
         accent80 = composition.darkColors.accent80,
@@ -59,14 +59,14 @@ internal fun provideWeb3ModalColors(composition: CustomComposition): Web3ModalCo
         grayGlass = composition.darkColors.grayGlass,
         success = composition.darkColors.success,
         error = composition.darkColors.error,
-        teal = defaultDarkWeb3ModalColors.teal,
-        magenta = defaultDarkWeb3ModalColors.magenta,
-        indigo = defaultDarkWeb3ModalColors.indigo,
-        orange = defaultDarkWeb3ModalColors.orange,
-        purple = defaultDarkWeb3ModalColors.purple
+        teal = defaultDarkAppKitColors.teal,
+        magenta = defaultDarkAppKitColors.magenta,
+        indigo = defaultDarkAppKitColors.indigo,
+        orange = defaultDarkAppKitColors.orange,
+        purple = defaultDarkAppKitColors.purple
     )
 } else {
-    Web3ModalColors(
+    AppKitColors(
         accent100 = composition.lightColors.accent100,
         accent90 = composition.lightColors.accent90,
         accent80 = composition.lightColors.accent80,
@@ -75,22 +75,22 @@ internal fun provideWeb3ModalColors(composition: CustomComposition): Web3ModalCo
         grayGlass = composition.lightColors.grayGlass,
         success = composition.lightColors.success,
         error = composition.lightColors.error,
-        teal = defaultLightWeb3ModalColors.teal,
-        magenta = defaultLightWeb3ModalColors.magenta,
-        indigo = defaultLightWeb3ModalColors.indigo,
-        orange = defaultLightWeb3ModalColors.orange,
-        purple = defaultLightWeb3ModalColors.purple
+        teal = defaultLightAppKitColors.teal,
+        magenta = defaultLightAppKitColors.magenta,
+        indigo = defaultLightAppKitColors.indigo,
+        orange = defaultLightAppKitColors.orange,
+        purple = defaultLightAppKitColors.purple
     )
 }
 
 @Composable
-private fun Web3ModalTheme.Mode.isDarkTheme() = when(this) {
-    Web3ModalTheme.Mode.LIGHT -> false
-    Web3ModalTheme.Mode.DARK -> true
-    Web3ModalTheme.Mode.AUTO -> isSystemInDarkTheme()
+private fun AppKitTheme.Mode.isDarkTheme() = when(this) {
+    AppKitTheme.Mode.LIGHT -> false
+    AppKitTheme.Mode.DARK -> true
+    AppKitTheme.Mode.AUTO -> isSystemInDarkTheme()
 }
 
-internal val defaultDarkWeb3ModalColors = Web3ModalColors(
+internal val defaultDarkAppKitColors = AppKitColors(
     accent100 = Color(0xFF47A1FF),
     accent90 = Color(0xFF59AAFF),
     accent80 = Color(0xFF6CB4FF),
@@ -126,7 +126,7 @@ internal val defaultDarkWeb3ModalColors = Web3ModalColors(
     purple = Color(0xFF9063F7),
 )
 
-internal val defaultLightWeb3ModalColors = Web3ModalColors(
+internal val defaultLightAppKitColors = AppKitColors(
     accent100 = Color(0xFF3396FF),
     accent90 = Color(0xFF2D7DD2),
     accent80 = Color(0xFF2978CC),

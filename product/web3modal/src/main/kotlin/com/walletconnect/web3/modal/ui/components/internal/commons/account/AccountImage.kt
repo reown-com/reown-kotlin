@@ -16,7 +16,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import kotlin.math.roundToInt
 
 @Composable
@@ -26,7 +26,7 @@ internal fun AccountImage(address: String, avatarUrl: String?) {
     } else {
         Box(
             modifier = Modifier
-                .border(width = 8.dp, color = Web3ModalTheme.colors.grayGlass05, shape = CircleShape)
+                .border(width = 8.dp, color = AppKitTheme.colors.grayGlass05, shape = CircleShape)
                 .padding(8.dp)
                 .size(64.dp)
                 .background(brush = Brush.linearGradient(generateAvatarColors(address)), shape = CircleShape)
@@ -38,7 +38,7 @@ internal fun AccountImage(address: String, avatarUrl: String?) {
 private fun AccountAvatar(url: String) {
     Box(
         modifier = Modifier
-            .border(width = 8.dp, color = Web3ModalTheme.colors.grayGlass05, shape = CircleShape)
+            .border(width = 8.dp, color = AppKitTheme.colors.grayGlass05, shape = CircleShape)
             .padding(8.dp)
             .size(64.dp)
     ) {

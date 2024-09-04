@@ -2,7 +2,7 @@ package com.walletconnect.web3.modal.domain.delegate
 
 import com.walletconnect.android.internal.common.wcKoinApp
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.domain.model.Session
 import com.walletconnect.web3.modal.domain.usecase.DeleteSessionDataUseCase
 import com.walletconnect.web3.modal.domain.usecase.SaveChainSelectionUseCase
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-internal object Web3ModalDelegate : Web3Modal.ModalDelegate {
+internal object AppKitDelegate : AppKit.ModalDelegate {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _wcEventModels: MutableSharedFlow<Modal.Model?> = MutableSharedFlow()
     val wcEventModels: SharedFlow<Modal.Model?> = _wcEventModels.asSharedFlow()
@@ -40,7 +40,7 @@ internal object Web3ModalDelegate : Web3Modal.ModalDelegate {
 
     override fun onSessionApproved(approvedSession: Modal.Model.ApprovedSession) {
         scope.launch {
-            val chain = Web3Modal.chains.getSelectedChain(Web3Modal.selectedChain?.id)
+            val chain = AppKit.chains.getSelectedChain(AppKit.selectedChain?.id)
             saveSessionUseCase(approvedSession.toSession(chain))
             _wcEventModels.emit(approvedSession)
         }
@@ -49,7 +49,7 @@ internal object Web3ModalDelegate : Web3Modal.ModalDelegate {
     override fun onSessionAuthenticateResponse(sessionAuthenticateResponse: Modal.Model.SessionAuthenticateResponse) {
         scope.launch {
             if (sessionAuthenticateResponse is Modal.Model.SessionAuthenticateResponse.Result) {
-                val chain = Web3Modal.chains.getSelectedChain(Web3Modal.selectedChain?.id)
+                val chain = AppKit.chains.getSelectedChain(AppKit.selectedChain?.id)
                 saveSessionUseCase(
                     Session.WalletConnect(
                         chain = chain.id,
@@ -77,7 +77,7 @@ internal object Web3ModalDelegate : Web3Modal.ModalDelegate {
 
     override fun onSessionUpdate(updatedSession: Modal.Model.UpdatedSession) {
         scope.launch {
-            val chain = Web3Modal.chains.getSelectedChain(Web3Modal.selectedChain?.id)
+            val chain = AppKit.chains.getSelectedChain(AppKit.selectedChain?.id)
             saveSessionUseCase(updatedSession.toSession(chain))
             _wcEventModels.emit(updatedSession)
         }
@@ -102,12 +102,12 @@ internal object Web3ModalDelegate : Web3Modal.ModalDelegate {
             when (sessionEvent.name) {
                 EthUtils.accountsChanged -> {
                     val (_, chainReference, _) = sessionEvent.data.split(":")
-                    Web3Modal.chains.find { it.chainReference == chainReference }?.let { chain -> saveChainSelectionUseCase(chain.id) }
+                    AppKit.chains.find { it.chainReference == chainReference }?.let { chain -> saveChainSelectionUseCase(chain.id) }
                 }
 
                 EthUtils.chainChanged -> {
                     val (chainReference, _) = sessionEvent.data.split(".")
-                    Web3Modal.chains.find { it.chainReference == chainReference }?.let { chain -> saveChainSelectionUseCase(chain.id) }
+                    AppKit.chains.find { it.chainReference == chainReference }?.let { chain -> saveChainSelectionUseCase(chain.id) }
                 }
             }
         } catch (throwable: Throwable) {
@@ -122,13 +122,13 @@ internal object Web3ModalDelegate : Web3Modal.ModalDelegate {
                 EthUtils.accountsChanged -> {
                     //todo: Can we take chainReference from the event?
                     val (_, chainReference, _) = event.data.split(":")
-                    Web3Modal.chains.find { it.chainReference == chainReference }?.let { chain -> saveChainSelectionUseCase(chain.id) }
+                    AppKit.chains.find { it.chainReference == chainReference }?.let { chain -> saveChainSelectionUseCase(chain.id) }
                 }
 
                 EthUtils.chainChanged -> {
                     //todo: Can we take chainReference from the event?
                     val (chainReference, _) = event.data.split(".")
-                    Web3Modal.chains.find { it.chainReference == chainReference }?.let { chain -> saveChainSelectionUseCase(chain.id) }
+                    AppKit.chains.find { it.chainReference == chainReference }?.let { chain -> saveChainSelectionUseCase(chain.id) }
                 }
             }
         } catch (throwable: Throwable) {

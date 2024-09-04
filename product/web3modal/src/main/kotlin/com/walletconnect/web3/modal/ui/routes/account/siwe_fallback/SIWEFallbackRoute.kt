@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import com.walletconnect.web3.modal.ui.components.internal.commons.VerticalSpacer
 import com.walletconnect.web3.modal.ui.components.internal.commons.WalletImageWithLoader
 import com.walletconnect.web3.modal.ui.routes.connect.ConnectViewModel
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun SIWEFallbackRoute(
@@ -71,20 +71,20 @@ private fun SIWEFallback(
         VerticalSpacer(4.dp)
         Text(
             text = connectViewModel.wallet?.name ?: "",
-            style = Web3ModalTheme.typo.paragraph400,
+            style = AppKitTheme.typo.paragraph400,
             textAlign = TextAlign.Center,
         )
         VerticalSpacer(20.dp)
         Spacer(modifier = Modifier.height(20.dp))
         Text(
-            text = "Web3Modal needs to connect to your wallet",
-            style = Web3ModalTheme.typo.paragraph400,
+            text = "AppKit needs to connect to your wallet",
+            style = AppKitTheme.typo.paragraph400,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Sign this message to prove you own this wallet and proceed.\\n Cancelling will disconnect you.",
-            style = Web3ModalTheme.typo.small400.copy(Web3ModalTheme.colors.foreground.color200),
+            style = AppKitTheme.typo.small400.copy(AppKitTheme.colors.foreground.color200),
             textAlign = TextAlign.Center,
         )
         VerticalSpacer(20.dp)
@@ -114,7 +114,7 @@ fun Buttons(
             buttonColor = Color(0xFFFFFFFF),
             loaderColor = Color(0xFF000000),
             modifier = Modifier
-                .border(width = 1.dp, color = Web3ModalTheme.colors.grayGlass05, shape = RoundedCornerShape(20.dp))
+                .border(width = 1.dp, color = AppKitTheme.colors.grayGlass05, shape = RoundedCornerShape(20.dp))
                 .weight(1f)
                 .height(46.dp)
                 .clickable { onCancel() },

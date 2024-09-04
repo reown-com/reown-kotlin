@@ -5,7 +5,7 @@ import com.walletconnect.android.CoreClient
 import com.walletconnect.android.internal.common.wcKoinApp
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.client.toModel
-import com.walletconnect.web3.modal.engine.Web3ModalEngine
+import com.walletconnect.web3.modal.engine.AppKitEngine
 
 internal interface ParingController {
 
@@ -29,7 +29,7 @@ internal interface ParingController {
 
 internal class PairingControllerImpl : ParingController {
 
-    private val web3ModalEngine: Web3ModalEngine = wcKoinApp.koin.get()
+    private val appKitEngine: AppKitEngine = wcKoinApp.koin.get()
 
     private var _pairing: Core.Model.Pairing? = null
 
@@ -50,7 +50,7 @@ internal class PairingControllerImpl : ParingController {
                 sessionParams.properties,
                 pairing
             )
-            web3ModalEngine.connectWC(
+            appKitEngine.connectWC(
                 name = name, method = method,
                 connect = connectParams,
                 onSuccess = onSuccess,
@@ -71,7 +71,7 @@ internal class PairingControllerImpl : ParingController {
     ) {
         try {
             generateAuthenticatedPairing()
-            web3ModalEngine.authenticate(
+            appKitEngine.authenticate(
                 name = name,
                 method = method,
                 authenticate = authParams.toModel(pairing.topic),

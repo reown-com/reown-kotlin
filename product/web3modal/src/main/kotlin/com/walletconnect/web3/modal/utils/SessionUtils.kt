@@ -4,7 +4,7 @@ import com.walletconnect.android.internal.utils.CoreValidator
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.client.models.Account
 import com.walletconnect.web3.modal.client.toModal
 import com.walletconnect.web3.modal.domain.model.Session
@@ -31,7 +31,7 @@ internal fun Modal.Model.UpdatedSession.toSession(selectedChain: Modal.Model.Cha
     return Session.WalletConnect(getAddress(chain), chain.id, topic)
 }
 
-internal fun String.toChain() = Web3Modal.chains.find { it.id == this }
+internal fun String.toChain() = AppKit.chains.find { it.id == this }
 
 private fun Modal.Model.Session.getAccounts() = namespaces.values.toList().flatMap { it.accounts }
 
@@ -52,8 +52,8 @@ internal fun Modal.Model.ApprovedSession.WalletConnectSession.getAddress(chain: 
     ?.last() ?: String.Empty
 
 internal fun Session.getChains() = when(this) {
-    is Session.Coinbase -> Web3Modal.chains.filter { it.id == this.chain }
-    is Session.WalletConnect -> Web3Modal.getActiveSessionByTopic(topic)?.getChains() ?: Web3Modal.chains
+    is Session.Coinbase -> AppKit.chains.filter { it.id == this.chain }
+    is Session.WalletConnect -> AppKit.getActiveSessionByTopic(topic)?.getChains() ?: AppKit.chains
 }
 
 internal fun Session.toAccount() = Account(address, getChain(chain))
@@ -64,7 +64,7 @@ internal fun Sign.Model.Session.toAccount(session: Session.WalletConnect) = toMo
     Account(address, chain)
 }
 
-internal fun getChain(chainId: String) = Web3Modal.chains.find { it.id == chainId } ?: Web3Modal.chains.first()
+internal fun getChain(chainId: String) = AppKit.chains.find { it.id == chainId } ?: AppKit.chains.first()
 
 internal fun Session.toConnectorType() = when(this) {
     is Session.Coinbase -> Modal.ConnectorType.WALLET_CONNECT

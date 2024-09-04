@@ -25,7 +25,7 @@ import org.koin.dsl.module
 
 private val Context.sessionDataStore: DataStore<Preferences> by preferencesDataStore(name = "session_store")
 
-internal fun web3ModalModule() = module {
+internal fun appKitModule() = module {
 
     single { RecentWalletsRepository(sharedPreferences = get()) }
 
@@ -38,14 +38,14 @@ internal fun web3ModalModule() = module {
             .withSubtype(Session.Coinbase::class.java, "coinbase")
     }
 
-    single<Moshi>(named(Web3ModalDITags.MOSHI)) {
+    single<Moshi>(named(AppKitDITags.MOSHI)) {
         get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI))
             .add(get<PolymorphicJsonAdapterFactory<Session>>())
             .build()
     }
 
-    single(named(Web3ModalDITags.SESSION_DATA_STORE)) { androidContext().sessionDataStore }
-    single { SessionRepository(sessionStore = get(named(Web3ModalDITags.SESSION_DATA_STORE)), moshi = get(named(Web3ModalDITags.MOSHI))) }
+    single(named(AppKitDITags.SESSION_DATA_STORE)) { androidContext().sessionDataStore }
+    single { SessionRepository(sessionStore = get(named(AppKitDITags.SESSION_DATA_STORE)), moshi = get(named(AppKitDITags.MOSHI))) }
 
     single { GetSessionUseCase(repository = get()) }
     single { SaveSessionUseCase(repository = get()) }

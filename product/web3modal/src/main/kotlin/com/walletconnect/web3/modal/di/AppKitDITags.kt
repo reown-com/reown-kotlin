@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.di
 
-internal enum class Web3ModalDITags {
+internal enum class AppKitDITags {
     BALANCE_RPC_RETROFIT,
     BLOCKCHAIN_RETROFIT,
     MOSHI,

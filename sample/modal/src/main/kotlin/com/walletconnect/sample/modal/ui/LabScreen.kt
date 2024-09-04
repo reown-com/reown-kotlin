@@ -20,14 +20,14 @@ import com.walletconnect.sample.common.getPersonalSignBody
 import com.walletconnect.sample.common.ui.commons.BlueButton
 import com.walletconnect.sample.modal.ModalSampleDelegate
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.client.models.request.Request
 import com.walletconnect.web3.modal.client.models.request.SentRequestResult
-import com.walletconnect.web3.modal.ui.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.AppKitTheme
 import com.walletconnect.web3.modal.ui.components.button.AccountButtonType
 import com.walletconnect.web3.modal.ui.components.button.NetworkButton
 import com.walletconnect.web3.modal.ui.components.button.Web3Button
-import com.walletconnect.web3.modal.ui.components.button.rememberWeb3ModalState
+import com.walletconnect.web3.modal.ui.components.button.rememberAppKitState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 fun LabScreen(
     navController: NavController
 ) {
-    val web3ModalState = rememberWeb3ModalState(navController = navController)
+    val web3ModalState = rememberAppKitState(navController = navController)
     val isConnected by web3ModalState.isConnected.collectAsState()
 
     val coroutineScope = rememberCoroutineScope()
@@ -62,8 +62,8 @@ fun LabScreen(
         }
     }
 
-    Web3ModalTheme(
-        mode = Web3ModalTheme.Mode.AUTO
+    AppKitTheme(
+        mode = AppKitTheme.Mode.AUTO
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -73,7 +73,7 @@ fun LabScreen(
             item { Web3Button(state = web3ModalState, accountButtonType = AccountButtonType.MIXED) }
             item { NetworkButton(state = web3ModalState) }
             if (isConnected) {
-                Web3Modal.getAccount()?.let { session ->
+                AppKit.getAccount()?.let { session ->
                     val account = session.address
                     val onError: (Throwable) -> Unit = {
                         coroutineScope.launch(Dispatchers.Main) {
@@ -94,7 +94,7 @@ private fun sendPersonalSignRequest(
     onSuccess: (SentRequestResult) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    Web3Modal.request(
+    AppKit.request(
         request = Request("personal_sign", getPersonalSignBody(account)),
         onSuccess = onSuccess,
         onError = onError,
@@ -106,7 +106,7 @@ private fun sendEthSendTransactionRequest(
     onSuccess: (SentRequestResult) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    Web3Modal.request(
+    AppKit.request(
         request = Request("eth_sendTransaction", getEthSendTransaction(account)),
         onSuccess = onSuccess,
         onError = onError,
@@ -118,7 +118,7 @@ private fun sendEthSignTypedDataRequest(
     onSuccess: (SentRequestResult) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    Web3Modal.request(
+    AppKit.request(
         request = Request("eth_signTypedData", getEthSignTypedData(account)),
         onSuccess = onSuccess,
         onError = onError,

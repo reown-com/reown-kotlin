@@ -19,7 +19,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.ExternalIcon
 import com.walletconnect.web3.modal.ui.components.internal.commons.ListSelectRow
 import com.walletconnect.web3.modal.ui.components.internal.commons.WalletImage
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.previews.Web3ModalPreview
+import com.walletconnect.web3.modal.ui.previews.AppKitPreview
 import com.walletconnect.web3.modal.ui.previews.testWallets
 
 @Composable
@@ -70,7 +70,7 @@ private fun GetAWalletContent(
 @UiModePreview
 @Composable
 private fun PreviewGetAWallet() {
-    Web3ModalPreview(title = "Get a Wallet") {
+    AppKitPreview(title = "Get a Wallet") {
         GetAWalletContent(wallets = testWallets)
     }
 }

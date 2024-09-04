@@ -20,8 +20,8 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.button.Button
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.ButtonStyle
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.ImageButton
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.previews.Web3ModalPreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.previews.AppKitPreview
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun WhatIsNetworkRoute() {
@@ -55,7 +55,7 @@ private fun WhatIsNetwork(
         VerticalSpacer(height = 20.dp)
         ImageButton(
             text = "Learn more",
-            image = { ExternalIcon(Web3ModalTheme.colors.inverse100) },
+            image = { ExternalIcon(AppKitTheme.colors.inverse100) },
             style = ButtonStyle.MAIN,
             size = ButtonSize.S,
             paddingValues = PaddingValues(start = 8.dp, top = 6.dp, end = 12.dp, 6.dp),
@@ -68,7 +68,7 @@ private fun WhatIsNetwork(
 @UiModePreview
 @Composable
 private fun WhatIsNetworkPreview() {
-    Web3ModalPreview {
+    AppKitPreview {
         WhatIsNetworkRoute()
     }
 }

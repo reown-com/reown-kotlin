@@ -23,7 +23,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.TransparentSu
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
 import com.walletconnect.web3.modal.ui.previews.testWallets
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun StoreEntry(
@@ -34,11 +34,11 @@ internal fun StoreEntry(
     val background: Color
     val textColor: Color
     if (isEnabled) {
-        textColor = Web3ModalTheme.colors.foreground.color200
-        background = Web3ModalTheme.colors.grayGlass02
+        textColor = AppKitTheme.colors.foreground.color200
+        background = AppKitTheme.colors.grayGlass02
     } else {
-        textColor = Web3ModalTheme.colors.foreground.color300
-        background = Web3ModalTheme.colors.grayGlass10
+        textColor = AppKitTheme.colors.foreground.color300
+        background = AppKitTheme.colors.grayGlass10
     }
     Surface(
         color = Color.Transparent,
@@ -53,7 +53,7 @@ internal fun StoreEntry(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = text, style = Web3ModalTheme.typo.paragraph500.copy(color = textColor), modifier = Modifier.weight(1f))
+            Text(text = text, style = AppKitTheme.typo.paragraph500.copy(color = textColor), modifier = Modifier.weight(1f))
             HorizontalSpacer(width = 10.dp)
             GetButton(onClick)
         }
@@ -65,15 +65,15 @@ private fun GetButton(onClick: () -> Unit) {
     TransparentSurface(shape = RoundedCornerShape(100)) {
         Row(
             modifier = Modifier
-                .border(width = 1.dp, color = Web3ModalTheme.colors.grayGlass10, shape = CircleShape)
+                .border(width = 1.dp, color = AppKitTheme.colors.grayGlass10, shape = CircleShape)
                 .clickable { onClick() }
                 .padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(text = "Get", style = Web3ModalTheme.typo.small500.copy(color = Web3ModalTheme.colors.accent100))
+            Text(text = "Get", style = AppKitTheme.typo.small500.copy(color = AppKitTheme.colors.accent100))
             HorizontalSpacer(width = 4.dp)
-            ForwardIcon(tint = Web3ModalTheme.colors.accent100)
+            ForwardIcon(tint = AppKitTheme.colors.accent100)
         }
     }
 }

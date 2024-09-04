@@ -36,7 +36,7 @@ import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
 import com.walletconnect.web3.modal.ui.previews.testWallets
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import com.walletconnect.web3.modal.utils.grayColorFilter
 import com.walletconnect.web3.modal.utils.imageHeaders
 
@@ -45,9 +45,9 @@ internal fun MultipleWalletIcon(wallets: List<Wallet>) {
     Column(
         modifier = Modifier
             .size(40.dp)
-            .background(Web3ModalTheme.colors.background.color200, shape = RoundedCornerShape(10.dp))
+            .background(AppKitTheme.colors.background.color200, shape = RoundedCornerShape(10.dp))
             .padding(1.dp)
-            .border(1.dp, Web3ModalTheme.colors.grayGlass10, shape = RoundedCornerShape(10.dp)),
+            .border(1.dp, AppKitTheme.colors.grayGlass10, shape = RoundedCornerShape(10.dp)),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -100,7 +100,7 @@ internal fun RoundedWalletImage(url: String?) {
     WalletImage(
         url = url, modifier = Modifier
             .size(80.dp)
-            .border(width = 1.dp, color = Web3ModalTheme.colors.grayGlass10, shape = RoundedCornerShape(28.dp))
+            .border(width = 1.dp, color = AppKitTheme.colors.grayGlass10, shape = RoundedCornerShape(28.dp))
             .clip(RoundedCornerShape(28.dp))
     )
 }
@@ -126,16 +126,16 @@ internal fun BoxScope.InstalledWalletIcon() {
     Icon(
         modifier = Modifier
             .offset(x = 2.dp, y = 2.dp)
-            .background(Web3ModalTheme.colors.background.color125, shape = CircleShape)
+            .background(AppKitTheme.colors.background.color125, shape = CircleShape)
             .align(Alignment.BottomEnd)
-            .background(Web3ModalTheme.colors.grayGlass02, shape = CircleShape)
+            .background(AppKitTheme.colors.grayGlass02, shape = CircleShape)
             .padding(2.dp)
             .size(12.dp)
-            .background(Web3ModalTheme.colors.success.copy(0.15f), shape = CircleShape)
+            .background(AppKitTheme.colors.success.copy(0.15f), shape = CircleShape)
             .padding(2.dp),
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_check),
         contentDescription = "WalletConnectLogo",
-        tint = Web3ModalTheme.colors.success
+        tint = AppKitTheme.colors.success
     )
 }
 
@@ -152,7 +152,7 @@ internal fun WalletGridItem(
             modifier = Modifier
                 .width(76.dp)
                 .height(96.dp)
-                .background(Web3ModalTheme.colors.grayGlass02)
+                .background(AppKitTheme.colors.grayGlass02)
                 .clickable { onWalletItemClick(wallet) },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -163,7 +163,7 @@ internal fun WalletGridItem(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .border(width = 1.dp, color = Web3ModalTheme.colors.grayGlass10, shape = RoundedCornerShape(16.dp))
+                        .border(width = 1.dp, color = AppKitTheme.colors.grayGlass10, shape = RoundedCornerShape(16.dp))
                 )
                 if (wallet.isWalletInstalled) {
                     InstalledWalletIcon()
@@ -172,7 +172,7 @@ internal fun WalletGridItem(
             VerticalSpacer(height = 8.dp)
             Text(
                 text = wallet.name,
-                style = Web3ModalTheme.typo.tiny500,
+                style = AppKitTheme.typo.tiny500,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

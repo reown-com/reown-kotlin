@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.ui.components.internal.walletconnect.WalletConnectLogo
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun ListSelectRow(
@@ -33,11 +33,11 @@ internal fun ListSelectRow(
     val background: Color
     val textColor: Color
     if (isEnabled) {
-        background = Web3ModalTheme.colors.grayGlass02
-        textColor = Web3ModalTheme.colors.foreground.color100
+        background = AppKitTheme.colors.grayGlass02
+        textColor = AppKitTheme.colors.foreground.color100
     } else {
-        background = Web3ModalTheme.colors.grayGlass15
-        textColor = Web3ModalTheme.colors.foreground.color300
+        background = AppKitTheme.colors.grayGlass15
+        textColor = AppKitTheme.colors.foreground.color300
     }
     Surface(
         color = Color.Transparent,
@@ -57,7 +57,7 @@ internal fun ListSelectRow(
             HorizontalSpacer(width = 10.dp)
             Text(
                 text = text,
-                style = Web3ModalTheme.typo.paragraph500.copy(textColor),
+                style = AppKitTheme.typo.paragraph500.copy(textColor),
                 modifier = Modifier.weight(1f)
             )
             label?.let {

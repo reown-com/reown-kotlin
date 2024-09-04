@@ -6,11 +6,11 @@ import com.android.resources.ScreenOrientation
 import com.walletconnect.android.internal.common.wcKoinApp
 import com.walletconnect.modal.ui.model.UiState
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.domain.model.AccountData
 import com.walletconnect.web3.modal.domain.model.Balance
 import com.walletconnect.web3.modal.domain.usecase.GetSelectedChainUseCase
-import com.walletconnect.web3.modal.presets.Web3ModalChainsPresets
+import com.walletconnect.web3.modal.presets.AppKitChainsPresets
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.routes.account.account.AccountRoute
 import com.walletconnect.web3.modal.utils.ScreenShotTest
@@ -33,19 +33,19 @@ internal class AccountRouteTest: ScreenShotTest("account/${Route.ACCOUNT.path}")
     private val getSelectedChainUseCase: GetSelectedChainUseCase = mockk()
     private val accountData = AccountData(
         address = "0x2765d421FB91182490D602E671a",
-        chains = Web3ModalChainsPresets.ethChains.values.toList()
+        chains = AppKitChainsPresets.ethChains.values.toList()
     )
 
     @Before
     fun setup() {
-        Web3Modal.chains = Web3ModalChainsPresets.ethChains.values.toList()
+        AppKit.chains = AppKitChainsPresets.ethChains.values.toList()
         every { viewModel.accountState } returns uiState
         every { viewModel.selectedChain } returns selectedChain
         every { viewModel.balanceState } returns balance
-        every { selectedChain.value } returns Web3ModalChainsPresets.ethChains["1"]!!
-        every { balance.value } returns Balance(Web3ModalChainsPresets.ethToken, "0x0")
+        every { selectedChain.value } returns AppKitChainsPresets.ethChains["1"]!!
+        every { balance.value } returns Balance(AppKitChainsPresets.ethToken, "0x0")
         every { getSelectedChainUseCase() } returns "1"
-        every { viewModel.getSelectedChainOrFirst() } returns Web3ModalChainsPresets.ethChains.getOrElse("1") { throw IllegalStateException("Chain not found") }
+        every { viewModel.getSelectedChainOrFirst() } returns AppKitChainsPresets.ethChains.getOrElse("1") { throw IllegalStateException("Chain not found") }
 
         val modules = listOf(
             module { single { getSelectedChainUseCase } }

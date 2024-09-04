@@ -18,11 +18,11 @@ import com.walletconnect.modal.ui.components.common.roundedClickable
 import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun BackArrowIcon(
-    tint: Color = Web3ModalTheme.colors.foreground.color100,
+    tint: Color = AppKitTheme.colors.foreground.color100,
     onClick: () -> Unit
 ) {
     Icon(
@@ -39,7 +39,7 @@ internal fun BackArrowIcon(
 @Composable
 internal fun QuestionMarkIcon(
     modifier: Modifier = Modifier,
-    tint: Color = Web3ModalTheme.colors.foreground.color100
+    tint: Color = AppKitTheme.colors.foreground.color100
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_question_mark),
@@ -52,7 +52,7 @@ internal fun QuestionMarkIcon(
 @Composable
 internal fun CloseIcon(
     modifier: Modifier = Modifier,
-    tint: Color = Web3ModalTheme.colors.foreground.color100,
+    tint: Color = AppKitTheme.colors.foreground.color100,
     onClick: () -> Unit
 ) {
     Icon(
@@ -68,7 +68,7 @@ internal fun CloseIcon(
 
 @Composable
 internal fun RetryIcon(
-    tint: Color = Web3ModalTheme.colors.inverse100
+    tint: Color = AppKitTheme.colors.inverse100
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_retry),
@@ -82,18 +82,18 @@ internal fun RetryIcon(
 internal fun DeclinedIcon() {
     Icon(
         imageVector = ImageVector.vectorResource(R.drawable.ic_close),
-        tint = Web3ModalTheme.colors.error,
+        tint = AppKitTheme.colors.error,
         contentDescription = ContentDescription.DECLINED.description,
         modifier = Modifier
             .size(20.dp)
-            .background(Web3ModalTheme.colors.error.copy(alpha = .2f), shape = CircleShape)
+            .background(AppKitTheme.colors.error.copy(alpha = .2f), shape = CircleShape)
             .padding(4.dp)
     )
 }
 
 @Composable
 internal fun WalletIcon(
-    tint: Color = Web3ModalTheme.colors.inverse100
+    tint: Color = AppKitTheme.colors.inverse100
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_wallet),
@@ -105,7 +105,7 @@ internal fun WalletIcon(
 
 @Composable
 internal fun ExternalIcon(
-    tint: Color = Web3ModalTheme.colors.foreground.color200,
+    tint: Color = AppKitTheme.colors.foreground.color200,
     size: Dp = 12.dp,
 ) {
     Icon(
@@ -119,7 +119,7 @@ internal fun ExternalIcon(
 @Composable
 internal fun CopyIcon(
     modifier: Modifier = Modifier,
-    tint: Color = Web3ModalTheme.colors.foreground.color250
+    tint: Color = AppKitTheme.colors.foreground.color250
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_copy),
@@ -131,7 +131,7 @@ internal fun CopyIcon(
 
 @Composable
 internal fun CompassIcon(
-    tint: Color = Web3ModalTheme.colors.foreground.color150
+    tint: Color = AppKitTheme.colors.foreground.color150
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_compass),
@@ -143,7 +143,7 @@ internal fun CompassIcon(
 
 @Composable
 internal fun ChevronRightIcon(
-    tint: Color = Web3ModalTheme.colors.foreground.color200
+    tint: Color = AppKitTheme.colors.foreground.color200
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_chevron_right),
@@ -155,16 +155,16 @@ internal fun ChevronRightIcon(
 
 @Composable
 internal fun RecentTransactionIcon(
-    tint: Color = Web3ModalTheme.colors.accent100
+    tint: Color = AppKitTheme.colors.accent100
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_swap),
         contentDescription = ContentDescription.SWAP.description,
         modifier = Modifier
-            .border(2.dp, Web3ModalTheme.colors.grayGlass02, shape = CircleShape)
+            .border(2.dp, AppKitTheme.colors.grayGlass02, shape = CircleShape)
             .padding(2.dp)
             .size(32.dp)
-            .background(Web3ModalTheme.colors.grayGlass10, shape = CircleShape)
+            .background(AppKitTheme.colors.grayGlass10, shape = CircleShape)
             .padding(8.dp),
         tint = tint
     )
@@ -172,16 +172,16 @@ internal fun RecentTransactionIcon(
 
 @Composable
 internal fun DisconnectIcon(
-    tint: Color = Web3ModalTheme.colors.foreground.color200
+    tint: Color = AppKitTheme.colors.foreground.color200
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_disconnect),
         contentDescription = ContentDescription.DISCONNECT.description,
         modifier = Modifier
-            .border(2.dp, Web3ModalTheme.colors.grayGlass05, shape = CircleShape)
+            .border(2.dp, AppKitTheme.colors.grayGlass05, shape = CircleShape)
             .padding(2.dp)
             .size(32.dp)
-            .background(Web3ModalTheme.colors.grayGlass10, shape = CircleShape)
+            .background(AppKitTheme.colors.grayGlass10, shape = CircleShape)
             .padding(8.dp),
         tint = tint
     )
@@ -189,7 +189,7 @@ internal fun DisconnectIcon(
 
 @Composable
 internal fun ScanQRIcon(
-    tint: Color = Web3ModalTheme.colors.accent100,
+    tint: Color = AppKitTheme.colors.accent100,
     onClick: () -> Unit
 ) {
     Icon(
@@ -199,12 +199,12 @@ internal fun ScanQRIcon(
             .roundedClickable { onClick() }
             .size(40.dp)
             .background(
-                color = Web3ModalTheme.colors.accent10,
+                color = AppKitTheme.colors.accent10,
                 shape = RoundedCornerShape(12.dp)
             )
             .border(
                 width = 1.dp,
-                color = Web3ModalTheme.colors.accent10,
+                color = AppKitTheme.colors.accent10,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(10.dp),
@@ -214,7 +214,7 @@ internal fun ScanQRIcon(
 
 @Composable
 internal fun AllWalletsIcon(
-    tint: Color = Web3ModalTheme.colors.accent100,
+    tint: Color = AppKitTheme.colors.accent100,
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_all_wallets),
@@ -222,12 +222,12 @@ internal fun AllWalletsIcon(
         modifier = Modifier
             .size(40.dp)
             .background(
-                color = Web3ModalTheme.colors.accent10,
+                color = AppKitTheme.colors.accent10,
                 shape = RoundedCornerShape(12.dp)
             )
             .border(
                 width = 1.dp,
-                color = Web3ModalTheme.colors.accent10,
+                color = AppKitTheme.colors.accent10,
                 shape = RoundedCornerShape(12.dp)
             )
             .padding(8.dp),
@@ -237,7 +237,7 @@ internal fun AllWalletsIcon(
 
 @Composable
 internal fun SelectNetworkIcon(
-    tint: Color = Web3ModalTheme.colors.foreground.color100
+    tint: Color = AppKitTheme.colors.foreground.color100
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_select_network),
@@ -245,13 +245,13 @@ internal fun SelectNetworkIcon(
         modifier = Modifier
             .size(24.dp)
             .background(
-                color = Web3ModalTheme.colors.grayGlass25,
+                color = AppKitTheme.colors.grayGlass25,
                 shape = CircleShape
             )
             .padding(5.dp)
             .border(
                 width = 1.dp,
-                color = Web3ModalTheme.colors.grayGlass10,
+                color = AppKitTheme.colors.grayGlass10,
                 shape = CircleShape
             ),
         tint = tint
@@ -260,7 +260,7 @@ internal fun SelectNetworkIcon(
 
 @Composable
 internal fun MobileIcon(
-    tint: Color = Web3ModalTheme.colors.inverse100
+    tint: Color = AppKitTheme.colors.inverse100
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_mobile),
@@ -272,7 +272,7 @@ internal fun MobileIcon(
 
 @Composable
 internal fun WebIcon(
-    tint: Color = Web3ModalTheme.colors.inverse100
+    tint: Color = AppKitTheme.colors.inverse100
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_browser),
@@ -284,7 +284,7 @@ internal fun WebIcon(
 
 @Composable
 internal fun ForwardIcon(
-    tint: Color = Web3ModalTheme.colors.inverse100
+    tint: Color = AppKitTheme.colors.inverse100
 ) {
     Icon(
         imageVector = ImageVector.vectorResource(id = R.drawable.ic_chevron_right),

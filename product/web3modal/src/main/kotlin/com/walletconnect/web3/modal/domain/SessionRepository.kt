@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.squareup.moshi.Moshi
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.domain.model.Session
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -41,7 +41,7 @@ internal class SessionRepository(
                 is Session.WalletConnect -> session.copy(chain = chain)
                 null -> null
             }
-            Web3Modal.selectedChain = Web3Modal.chains.find { it.id == chain }
+            AppKit.selectedChain = AppKit.chains.find { it.id == chain }
             store[SESSION] = adapter.toJson(updatedSession)
         }
     }

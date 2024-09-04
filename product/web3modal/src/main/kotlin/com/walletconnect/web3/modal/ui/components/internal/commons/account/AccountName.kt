@@ -18,7 +18,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.CopyIcon
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
 import com.walletconnect.web3.modal.ui.previews.accountDataPreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import com.walletconnect.web3.modal.utils.toVisibleAddress
 
 @Composable
@@ -28,7 +28,7 @@ internal fun AccountName(accountData: AccountData) {
     ) {
         val clipboardManager: ClipboardManager = LocalClipboardManager.current
         val name = accountData.identity?.name ?: accountData.address.toVisibleAddress()
-        Text(text = name, style = Web3ModalTheme.typo.mediumTitle600)
+        Text(text = name, style = AppKitTheme.typo.mediumTitle600)
         CopyIcon(
             modifier = Modifier
                 .padding(10.dp)

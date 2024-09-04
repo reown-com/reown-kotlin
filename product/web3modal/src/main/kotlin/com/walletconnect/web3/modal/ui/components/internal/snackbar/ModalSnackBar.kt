@@ -24,7 +24,7 @@ import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.components.internal.commons.HorizontalSpacer
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun ModalSnackBar(
@@ -35,16 +35,16 @@ internal fun ModalSnackBar(
         modifier = Modifier
             .height(40.dp)
             .background(
-                color = Web3ModalTheme.colors.background.color125,
+                color = AppKitTheme.colors.background.color125,
                 shape = shape
             )
             .background(
-                color = Web3ModalTheme.colors.grayGlass05,
+                color = AppKitTheme.colors.grayGlass05,
                 shape = shape
             )
             .border(
                 width = 1.dp,
-                color = Web3ModalTheme.colors.grayGlass05,
+                color = AppKitTheme.colors.grayGlass05,
                 shape = shape
             )
             .padding(8.dp)
@@ -59,9 +59,9 @@ internal fun ModalSnackBar(
                 SnackBarEventType.ERROR -> R.drawable.ic_error
             }
             val tint = when (snackBarEvent.type) {
-                SnackBarEventType.SUCCESS -> Web3ModalTheme.colors.success
-                SnackBarEventType.INFO -> Web3ModalTheme.colors.foreground.color200
-                SnackBarEventType.ERROR -> Web3ModalTheme.colors.error
+                SnackBarEventType.SUCCESS -> AppKitTheme.colors.success
+                SnackBarEventType.INFO -> AppKitTheme.colors.foreground.color200
+                SnackBarEventType.ERROR -> AppKitTheme.colors.error
             }
 
             Icon(
@@ -73,7 +73,7 @@ internal fun ModalSnackBar(
             HorizontalSpacer(width = 8.dp)
             Text(
                 text = snackBarEvent.message,
-                style = Web3ModalTheme.typo.paragraph500,
+                style = AppKitTheme.typo.paragraph500,
                 modifier = Modifier.fillMaxHeight()
             )
             HorizontalSpacer(width = 8.dp)

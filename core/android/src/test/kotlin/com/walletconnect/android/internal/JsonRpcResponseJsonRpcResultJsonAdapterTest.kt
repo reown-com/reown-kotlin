@@ -60,60 +60,6 @@ internal class JsonRpcResponseJsonRpcResultJsonAdapterTest {
     }
 
     @Test
-    fun `test auth params to json`() {
-        val moshi = Moshi.Builder().add { type, _, moshi ->
-            return@add if (type.getRawType().name == JsonRpcResponse.JsonRpcResult::class.jvmName) {
-                JsonRpcResultAdapter(moshi = moshi)
-            } else {
-                null
-            }
-        }.build()
-        val adapter = moshi.adapter(JsonRpcResponse.JsonRpcResult::class.java)
-        val authParams = CoreAuthParams.ResponseParams(
-            header = Cacao.Header("t"),
-            payload = Cacao.Payload("iss", "domain", "aud", "version", "nonce", "iat", "nbf", "exp", "statement", "id", listOf("res")),
-            signature = Cacao.Signature("t", "s")
-        )
-        val jsonResult = JsonRpcResponse.JsonRpcResult(
-            id = 1L,
-            jsonrpc = "2.0",
-            result = authParams
-        )
-        val result = adapter.toJson(jsonResult)
-        println()
-        println(result)
-        println()
-    }
-
-    @Test
-    fun `test auth params from json`() {
-        val moshi = Moshi.Builder().add { type, _, moshi ->
-            return@add if (type.getRawType().name == JsonRpcResponse.JsonRpcResult::class.jvmName) {
-                JsonRpcResultAdapter(moshi = moshi)
-            } else {
-                null
-            }
-
-        }.build()
-
-        val adapter = moshi.adapter(JsonRpcResponse.JsonRpcResult::class.java)
-        val authParams = CoreAuthParams.ResponseParams(
-            header = Cacao.Header("t"),
-            payload = Cacao.Payload("iss", "domain", "aud", "version", "nonce", "iat", "nbf", "exp", "statement", "id", listOf("res")),
-            signature = Cacao.Signature("t", "s")
-        )
-
-        val authParamsJsonResult = JsonRpcResponse.JsonRpcResult(id = 11L, result = authParams)
-        val resultString = moshi.adapter(JsonRpcResponse.JsonRpcResult::class.java).toJson(authParamsJsonResult)
-        val result = adapter.fromJson(resultString)
-        result is JsonRpcResponse.JsonRpcResult
-
-        println()
-        println(result)
-        println()
-    }
-
-    @Test
     fun `test chat params to json`() {
         val moshi = Moshi.Builder().add { type, _, moshi ->
             return@add if (type.getRawType().name == JsonRpcResponse.JsonRpcResult::class.jvmName) {

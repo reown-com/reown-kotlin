@@ -4,7 +4,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-internal fun provideDefaultTypography(colors: Web3ModalColors) = Web3ModalTypography(
+internal fun provideDefaultTypography(colors: AppKitColors) = AppKitTypography(
     mediumTitle400 = TextStyle(
         fontWeight = FontWeight.Normal,
         fontSize = 24.sp,
@@ -122,7 +122,7 @@ internal fun provideDefaultTypography(colors: Web3ModalColors) = Web3ModalTypogr
     ),
 )
 
-internal data class Web3ModalTypography(
+internal data class AppKitTypography(
     val mediumTitle400: TextStyle,
     val mediumTitle500: TextStyle,
     val mediumTitle600: TextStyle,

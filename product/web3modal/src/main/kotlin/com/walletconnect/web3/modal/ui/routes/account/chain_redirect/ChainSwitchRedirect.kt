@@ -21,17 +21,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.domain.delegate.Web3ModalDelegate
+import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate
 import com.walletconnect.web3.modal.ui.components.internal.commons.DeclinedIcon
 import com.walletconnect.web3.modal.ui.components.internal.commons.LoadingHexagonBorder
 import com.walletconnect.web3.modal.ui.components.internal.commons.VerticalSpacer
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.TryAgainButton
 import com.walletconnect.web3.modal.ui.components.internal.commons.network.HexagonNetworkImage
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.previews.Web3ModalPreview
+import com.walletconnect.web3.modal.ui.previews.AppKitPreview
 import com.walletconnect.web3.modal.ui.previews.testChains
 import com.walletconnect.web3.modal.ui.routes.account.AccountViewModel
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import com.walletconnect.web3.modal.utils.getImageData
 import com.walletconnect.web3.modal.utils.toSession
 import kotlinx.coroutines.launch
@@ -52,7 +52,7 @@ internal fun ChainSwitchRedirectRoute(
     }
 
     LaunchedEffect(Unit) {
-        Web3ModalDelegate.wcEventModels.collect {
+        AppKitDelegate.wcEventModels.collect {
             when (it) {
                 is Modal.Model.UpdatedSession -> accountViewModel.updatedSessionAfterChainSwitch(it.toSession(chain))
                 is Modal.Model.SessionRequestResponse -> if (it.result is Modal.Model.JsonRpcResponse.JsonRpcError) { onReject() }
@@ -100,11 +100,11 @@ internal fun ChainSwitchRedirectScreen(
 private fun ChainSwitchInfo(redirectState: ChainRedirectState) {
     AnimatedContent(targetState = redirectState, label = "Chain switch info") { state ->
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = state.toTitle(), style = Web3ModalTheme.typo.paragraph500)
+            Text(text = state.toTitle(), style = AppKitTheme.typo.paragraph500)
             VerticalSpacer(height = 8.dp)
             Text(
                 text = state.toInformation(),
-                style = Web3ModalTheme.typo.small400.copy(Web3ModalTheme.colors.foreground.color200, textAlign = TextAlign.Center)
+                style = AppKitTheme.typo.small400.copy(AppKitTheme.colors.foreground.color200, textAlign = TextAlign.Center)
             )
         }
     }
@@ -150,7 +150,7 @@ private fun ChainNetworkImageWrapper(
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .background(Web3ModalTheme.colors.background.color100, shape = CircleShape)
+                            .background(AppKitTheme.colors.background.color100, shape = CircleShape)
                             .padding(2.dp)
                     ) {
                         DeclinedIcon()
@@ -171,7 +171,7 @@ private fun ChainNetworkImageWrapper(
 @UiModePreview
 private fun ChainSwitchRedirectScreenWithLoadingStatePreview() {
     val chain = testChains.first()
-    Web3ModalPreview(title = chain.chainName) {
+    AppKitPreview(title = chain.chainName) {
         ChainSwitchRedirectScreen(chain, ChainRedirectState.Loading, {})
     }
 }
@@ -180,7 +180,7 @@ private fun ChainSwitchRedirectScreenWithLoadingStatePreview() {
 @UiModePreview
 private fun ChainSwitchRedirectScreenWithDeclinedStatePreview() {
     val chain = testChains.first()
-    Web3ModalPreview(title = chain.chainName) {
+    AppKitPreview(title = chain.chainName) {
         ChainSwitchRedirectScreen(chain, ChainRedirectState.Declined, {})
     }
 }

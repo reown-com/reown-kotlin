@@ -11,7 +11,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 internal fun balanceRpcModule() = module {
 
-    single(named(Web3ModalDITags.BALANCE_RPC_RETROFIT)) {
+    single(named(AppKitDITags.BALANCE_RPC_RETROFIT)) {
         Retrofit.Builder()
             // Passing url to google to passing retrofit verification. The correct url to chain RPC is provided on the BalanceService::class
             .baseUrl("https://google.com/")
@@ -20,7 +20,7 @@ internal fun balanceRpcModule() = module {
             .build()
     }
 
-    single { get<Retrofit>(named(Web3ModalDITags.BALANCE_RPC_RETROFIT)).create(BalanceService::class.java) }
+    single { get<Retrofit>(named(AppKitDITags.BALANCE_RPC_RETROFIT)).create(BalanceService::class.java) }
 
     single { BalanceRpcRepository(balanceService = get(), logger = get()) }
 

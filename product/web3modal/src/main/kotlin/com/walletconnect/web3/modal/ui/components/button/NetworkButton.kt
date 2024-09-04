@@ -9,12 +9,12 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.button.Button
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.ButtonStyle
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.ImageButton
 import com.walletconnect.web3.modal.ui.components.internal.commons.network.CircleNetworkImage
-import com.walletconnect.web3.modal.ui.theme.ProvideWeb3ModalThemeComposition
+import com.walletconnect.web3.modal.ui.theme.ProvideAppKitThemeComposition
 import com.walletconnect.web3.modal.utils.getImageData
 
 @Composable
 fun NetworkButton(
-    state: Web3ModalState
+    state: AppKitState
 ) {
     val selectedChain by state.selectedChain.collectAsState(initial = null)
     val image: @Composable () -> Unit = selectedChain?.let { chain ->
@@ -26,7 +26,7 @@ fun NetworkButton(
         text = selectedChain?.chainName ?: "Select Network",
         image = image,
         isEnabled = true,
-        onClick = { state.openWeb3Modal(true, selectedChain != null) }
+        onClick = { state.openAppKit(true, selectedChain != null) }
     )
 }
 
@@ -37,7 +37,7 @@ internal fun NetworkButton(
     onClick: () -> Unit,
     isEnabled: Boolean = true
 ) {
-    ProvideWeb3ModalThemeComposition {
+    ProvideAppKitThemeComposition {
         ImageButton(
             text = text,
             image = { image() },

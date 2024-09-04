@@ -7,9 +7,9 @@ import android.widget.FrameLayout
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.walletconnect.web3.modal.R
-import com.walletconnect.web3.modal.ui.components.internal.Web3ModalComponent
+import com.walletconnect.web3.modal.ui.components.internal.AppKitComponent
 
-class Web3ModalView @JvmOverloads constructor(
+class AppKitView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -38,12 +38,12 @@ class Web3ModalView @JvmOverloads constructor(
             .apply {
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 setContent {
-                    Web3ModalTheme(
+                    AppKitTheme(
                         mode = mode,
                         lightColors = colors.getLightModeColors(),
                         darkColors = colors.getDarkModeColors()
                     ) {
-                        Web3ModalComponent(
+                        AppKitComponent(
                             shouldOpenChooseNetwork = shouldOpenNetwork,
                             closeModal = closeModal
                         )

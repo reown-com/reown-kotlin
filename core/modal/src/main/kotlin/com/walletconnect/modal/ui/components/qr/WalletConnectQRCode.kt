@@ -73,7 +73,7 @@ private fun WalletConnectModalQRCodePreview() {
 
 @Preview
 @Composable
-private fun Web3ModalQRCodePreview() {
+private fun AppKitQRCodePreview() {
     ComponentPreview {
         WalletConnectQRCode(
             "Preview qr code data with wallet connect logo inside",

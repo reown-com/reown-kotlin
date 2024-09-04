@@ -20,9 +20,9 @@ import com.walletconnect.web3.modal.ui.components.internal.walletconnect.allWall
 import com.walletconnect.web3.modal.ui.model.UiStateBuilder
 import com.walletconnect.web3.modal.ui.previews.ConnectYourWalletPreviewProvider
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.previews.Web3ModalPreview
+import com.walletconnect.web3.modal.ui.previews.AppKitPreview
 import com.walletconnect.web3.modal.ui.routes.connect.ConnectViewModel
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun ConnectWalletRoute(
@@ -98,7 +98,7 @@ private fun WalletListSelect(item: Wallet, onWalletItemClick: (Wallet) -> Unit) 
                     url = item.imageUrl,
                     modifier = Modifier
                         .size(40.dp)
-                        .border(width = 1.dp, color = Web3ModalTheme.colors.grayGlass10, shape = RoundedCornerShape(12.dp))
+                        .border(width = 1.dp, color = AppKitTheme.colors.grayGlass10, shape = RoundedCornerShape(12.dp))
                         .clip(RoundedCornerShape(12.dp))
                 )
                 if (item.isWalletInstalled) {
@@ -118,7 +118,7 @@ private fun WalletListSelect(item: Wallet, onWalletItemClick: (Wallet) -> Unit) 
 private fun ConnectYourWalletPreview(
     @PreviewParameter(ConnectYourWalletPreviewProvider::class) wallets: List<Wallet>
 ) {
-    Web3ModalPreview(title = "Connect Wallet") {
+    AppKitPreview(title = "Connect Wallet") {
         ConnectWalletContent(wallets, 200, {}, {})
     }
 }

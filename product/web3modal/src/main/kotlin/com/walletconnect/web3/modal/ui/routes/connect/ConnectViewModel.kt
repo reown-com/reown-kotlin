@@ -13,14 +13,14 @@ import com.walletconnect.foundation.util.Logger
 import com.walletconnect.modal.ui.model.LoadingState
 import com.walletconnect.modal.ui.model.UiState
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.client.models.request.Request
 import com.walletconnect.web3.modal.client.models.request.SentRequestResult
-import com.walletconnect.web3.modal.domain.delegate.Web3ModalDelegate
+import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate
 import com.walletconnect.web3.modal.domain.usecase.ObserveSelectedChainUseCase
 import com.walletconnect.web3.modal.domain.usecase.SaveChainSelectionUseCase
 import com.walletconnect.web3.modal.domain.usecase.SaveRecentWalletUseCase
-import com.walletconnect.web3.modal.engine.Web3ModalEngine
+import com.walletconnect.web3.modal.engine.AppKitEngine
 import com.walletconnect.web3.modal.ui.navigation.Navigator
 import com.walletconnect.web3.modal.ui.navigation.NavigatorImpl
 import com.walletconnect.web3.modal.ui.navigation.Route
@@ -43,11 +43,11 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
     private val saveRecentWalletUseCase: SaveRecentWalletUseCase = wcKoinApp.koin.get()
     private val saveChainSelectionUseCase: SaveChainSelectionUseCase = wcKoinApp.koin.get()
     private val observeSelectedChainUseCase: ObserveSelectedChainUseCase = wcKoinApp.koin.get()
-    private val web3ModalEngine: Web3ModalEngine = wcKoinApp.koin.get()
+    private val appKitEngine: AppKitEngine = wcKoinApp.koin.get()
     private val sendEventUseCase: SendEventInterface = wcKoinApp.koin.get()
-    private var sessionParams = getSessionParamsSelectedChain(Web3Modal.selectedChain?.id)
+    private var sessionParams = getSessionParamsSelectedChain(AppKit.selectedChain?.id)
     val selectedChain = observeSelectedChainUseCase().map { savedChainId ->
-        Web3Modal.chains.find { it.id == savedChainId } ?: web3ModalEngine.getSelectedChainOrFirst()
+        AppKit.chains.find { it.id == savedChainId } ?: appKitEngine.getSelectedChainOrFirst()
     }
     private var _isConfirmLoading: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isConfirmLoading get() = _isConfirmLoading.asStateFlow()
@@ -68,7 +68,7 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
         get() = walletsDataStore.searchPhrase
 
     init {
-        Web3ModalDelegate
+        AppKitDelegate
             .wcEventModels
             .filterIsInstance<Modal.Model.SIWEAuthenticateResponse.Error>()
             .onEach {
@@ -82,7 +82,7 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
 
     fun disconnect() {
         _isCancelLoading.value = true
-        web3ModalEngine.disconnect(
+        appKitEngine.disconnect(
             onSuccess = {
                 _isCancelLoading.value = false
                 closeModal()
@@ -97,21 +97,21 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
 
     fun sendSIWEOverPersonalSign() {
         _isConfirmLoading.value = true
-        web3ModalEngine.shouldDisconnect = false
-        val account = web3ModalEngine.getAccount() ?: throw IllegalStateException("Account is null")
+        appKitEngine.shouldDisconnect = false
+        val account = appKitEngine.getAccount() ?: throw IllegalStateException("Account is null")
         val issuer = "did:pkh:${account.chain.id}:${account.address}"
-        val siweMessage = web3ModalEngine.formatSIWEMessage(Web3Modal.authPayloadParams!!, issuer)
+        val siweMessage = appKitEngine.formatSIWEMessage(AppKit.authPayloadParams!!, issuer)
         val msg = siweMessage.encodeToByteArray().joinToString(separator = "", prefix = "0x") { eachByte -> "%02x".format(eachByte) }
         val body = "[\"$msg\", \"${account.address}\"]"
-        web3ModalEngine.request(
+        appKitEngine.request(
             request = Request("personal_sign", body),
             onSuccess = { sendRequest ->
                 logger.log("SIWE sent successfully")
-                web3ModalEngine.siweRequestIdWithMessage = Pair((sendRequest as SentRequestResult.WalletConnect).requestId, siweMessage)
+                appKitEngine.siweRequestIdWithMessage = Pair((sendRequest as SentRequestResult.WalletConnect).requestId, siweMessage)
             },
             onError = {
-                if (it !is Web3ModalEngine.RedirectMissingThrowable) {
-                    web3ModalEngine.shouldDisconnect = true
+                if (it !is AppKitEngine.RedirectMissingThrowable) {
+                    appKitEngine.shouldDisconnect = true
                 }
 
                 _isConfirmLoading.value = false
@@ -154,11 +154,11 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
     }
 
     fun connectWalletConnect(name: String, method: String, linkMode: String?, onSuccess: (String) -> Unit) {
-        if (Web3Modal.authPayloadParams != null) {
+        if (AppKit.authPayloadParams != null) {
             authenticate(
                 name, method,
                 walletAppLink = linkMode,
-                authParams = if (Web3Modal.selectedChain != null) Web3Modal.authPayloadParams!!.copy(chains = listOf(Web3Modal.selectedChain!!.id)) else Web3Modal.authPayloadParams!!,
+                authParams = if (AppKit.selectedChain != null) AppKit.authPayloadParams!!.copy(chains = listOf(AppKit.selectedChain!!.id)) else AppKit.authPayloadParams!!,
                 onSuccess = { onSuccess(it) },
                 onError = {
                     sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.CONNECT_ERROR, Properties(message = it.message ?: "Relay error while connecting")))
@@ -181,7 +181,7 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
     }
 
     fun connectCoinbase(onSuccess: () -> Unit = {}) {
-        web3ModalEngine.connectCoinbase(
+        appKitEngine.connectCoinbase(
             onSuccess = onSuccess,
             onError = {
                 showError(it.localizedMessage)
@@ -217,7 +217,7 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
         }
     }
 
-    private fun getSessionParamsSelectedChain(chainId: String?) = with(Web3Modal.chains) {
+    private fun getSessionParamsSelectedChain(chainId: String?) = with(AppKit.chains) {
         val selectedChain = getSelectedChain(chainId)
         Modal.Params.SessionParams(
             requiredNamespaces = mapOf(

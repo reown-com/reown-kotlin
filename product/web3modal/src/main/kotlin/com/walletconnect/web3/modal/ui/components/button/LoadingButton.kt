@@ -12,11 +12,11 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.button.Button
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.StyledButton
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.ProvideWeb3ModalThemeComposition
+import com.walletconnect.web3.modal.ui.theme.ProvideAppKitThemeComposition
 
 @Composable
 internal fun LoadingButton() {
-    ProvideWeb3ModalThemeComposition {
+    ProvideAppKitThemeComposition {
         StyledButton(style = ButtonStyle.ACCOUNT, size = ButtonSize.M, onClick = {}) {
             Box(
                 modifier = Modifier.width(100.dp), contentAlignment = Alignment.Center

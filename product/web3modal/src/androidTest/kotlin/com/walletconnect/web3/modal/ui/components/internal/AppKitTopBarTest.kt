@@ -8,12 +8,12 @@ import androidx.compose.ui.test.performClick
 import com.walletconnect.web3.modal.ui.components.internal.commons.BackArrowIcon
 import com.walletconnect.web3.modal.ui.components.internal.commons.ContentDescription
 import com.walletconnect.web3.modal.ui.components.internal.commons.TestTags
-import com.walletconnect.web3.modal.ui.theme.ProvideWeb3ModalThemeComposition
+import com.walletconnect.web3.modal.ui.theme.ProvideAppKitThemeComposition
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
 
-class Web3ModalTopBarTest {
+class AppKitTopBarTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -21,8 +21,8 @@ class Web3ModalTopBarTest {
     @Test
     fun web3ModalTopBar_titleShouldBeShown() {
         composeTestRule.setContent {
-            ProvideWeb3ModalThemeComposition {
-                Web3ModalTopBar(title = "Title", startIcon = { BackArrowIcon { } }, onCloseIconClick = {})
+            ProvideAppKitThemeComposition {
+                AppKitTopBar(title = "Title", startIcon = { BackArrowIcon { } }, onCloseIconClick = {})
             }
         }
 
@@ -35,8 +35,8 @@ class Web3ModalTopBarTest {
         var isClicked = false
 
         composeTestRule.setContent {
-            ProvideWeb3ModalThemeComposition {
-                Web3ModalTopBar(title = "Title", startIcon = { BackArrowIcon { } }, onCloseIconClick = { isClicked = true})
+            ProvideAppKitThemeComposition {
+                AppKitTopBar(title = "Title", startIcon = { BackArrowIcon { } }, onCloseIconClick = { isClicked = true})
             }
 
         }

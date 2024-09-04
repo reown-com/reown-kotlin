@@ -20,7 +20,7 @@ import com.walletconnect.web3.modal.domain.usecase.ObserveSelectedChainUseCase
 import com.walletconnect.web3.modal.domain.usecase.ObserveSessionUseCase
 import com.walletconnect.web3.modal.domain.usecase.SaveChainSelectionUseCase
 import com.walletconnect.web3.modal.domain.usecase.SaveSessionUseCase
-import com.walletconnect.web3.modal.engine.Web3ModalEngine
+import com.walletconnect.web3.modal.engine.AppKitEngine
 import com.walletconnect.web3.modal.engine.coinbase.CoinbaseResult
 import com.walletconnect.web3.modal.ui.navigation.Navigator
 import com.walletconnect.web3.modal.ui.navigation.NavigatorImpl
@@ -48,13 +48,13 @@ internal class AccountViewModel : ViewModel(), Navigator by NavigatorImpl() {
     private val observeSelectedChainUseCase: ObserveSelectedChainUseCase = wcKoinApp.koin.get()
     private val getIdentityUseCase: GetIdentityUseCase = wcKoinApp.koin.get()
     private val getEthBalanceUseCase: GetEthBalanceUseCase = wcKoinApp.koin.get()
-    private val web3ModalEngine: Web3ModalEngine = wcKoinApp.koin.get()
+    private val appKitEngine: AppKitEngine = wcKoinApp.koin.get()
     private val sendEventUseCase: SendEventInterface = wcKoinApp.koin.get()
     private val activeSessionFlow = observeSessionUseCase()
 
     private val accountDataFlow = activeSessionFlow
         .map {
-            if (web3ModalEngine.getAccount() != null) {
+            if (appKitEngine.getAccount() != null) {
                 it
             } else {
                 null
@@ -81,7 +81,7 @@ internal class AccountViewModel : ViewModel(), Navigator by NavigatorImpl() {
 
     val accountState = accountDataFlow.stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = UiState.Loading())
 
-    val selectedChain = observeSelectedChainUseCase().map { web3ModalEngine.getSelectedChainOrFirst() }
+    val selectedChain = observeSelectedChainUseCase().map { appKitEngine.getSelectedChainOrFirst() }
 
     val balanceState = combine(activeSessionFlow, selectedChain) { session, selectedChain ->
         if (session != null && selectedChain.rpcUrl != null) {
@@ -92,7 +92,7 @@ internal class AccountViewModel : ViewModel(), Navigator by NavigatorImpl() {
     }.flowOn(Dispatchers.IO).catch { logger.error(it) }.stateIn(viewModelScope, started = SharingStarted.Lazily, initialValue = null)
 
     fun disconnect() {
-        web3ModalEngine.disconnect(
+        appKitEngine.disconnect(
             onSuccess = { closeModal() },
             onError = {
                 showError(it.localizedMessage)
@@ -161,7 +161,7 @@ internal class AccountViewModel : ViewModel(), Navigator by NavigatorImpl() {
         onSuccess: (SentRequestResult) -> Unit,
         onError: (String?) -> Unit
     ) {
-        web3ModalEngine.request(
+        appKitEngine.request(
             Request(method = EthUtils.walletSwitchEthChain, params = createSwitchChainParams(to)),
             onSuccess
         ) { onError(it.message) }
@@ -170,13 +170,13 @@ internal class AccountViewModel : ViewModel(), Navigator by NavigatorImpl() {
     private fun addEthChain(
         to: Modal.Model.Chain, onSuccess: (SentRequestResult) -> Unit, onError: (String?) -> Unit
     ) {
-        web3ModalEngine.request(
+        appKitEngine.request(
             Request(method = EthUtils.walletAddEthChain, params = createAddEthChainParams(to)),
             onSuccess
         ) { onError(it.message) }
     }
 
-    fun getSelectedChainOrFirst() = web3ModalEngine.getSelectedChainOrFirst()
+    fun getSelectedChainOrFirst() = appKitEngine.getSelectedChainOrFirst()
 
     fun navigateToHelp() {
         sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.CLICK_NETWORK_HELP))

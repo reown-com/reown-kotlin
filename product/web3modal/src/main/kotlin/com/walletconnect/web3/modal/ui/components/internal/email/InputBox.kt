@@ -13,7 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.ui.components.internal.commons.VerticalSpacer
 import com.walletconnect.web3.modal.ui.components.internal.commons.inputs.InputState
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun InputValidationBox(
@@ -33,7 +33,7 @@ internal fun InputValidationBox(
                 modifier = Modifier
                     .padding(horizontal = 14.dp)
                     .fillMaxWidth(),
-                style = Web3ModalTheme.typo.tiny400.copy(color = Web3ModalTheme.colors.error, textAlign = errorAlign)
+                style = AppKitTheme.typo.tiny400.copy(color = AppKitTheme.colors.error, textAlign = errorAlign)
             )
         }
     }

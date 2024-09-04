@@ -9,7 +9,7 @@ import com.google.accompanist.navigation.animation.composable
 import androidx.navigation.navArgument
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.navigation.addTitleArg
 import com.walletconnect.web3.modal.ui.routes.account.AccountViewModel
@@ -28,7 +28,7 @@ internal fun NavGraphBuilder.chainSwitchRoute(
         arguments = listOf(navArgument(CHAIN_ID_KEY) { type = NavType.StringType } )
     ) { backStackEntry ->
         val chainId = backStackEntry.arguments?.getString(CHAIN_ID_KEY, String.Empty)
-        val chain = Web3Modal.chains.find { it.id == chainId }
+        val chain = AppKit.chains.find { it.id == chainId }
         chain?.let { ChainSwitchRedirectRoute(accountViewModel = accountViewModel, chain = it) }
     }
 }

@@ -12,21 +12,21 @@ import com.walletconnect.sign.common.exceptions.SignClientAlreadyInitializedExce
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.client.models.Account
 import com.walletconnect.web3.modal.client.models.Session
-import com.walletconnect.web3.modal.client.models.Web3ModelClientAlreadyInitializedException
+import com.walletconnect.web3.modal.client.models.AppKitClientAlreadyInitializedException
 import com.walletconnect.web3.modal.client.models.request.Request
 import com.walletconnect.web3.modal.client.models.request.SentRequestResult
-import com.walletconnect.web3.modal.di.web3ModalModule
-import com.walletconnect.web3.modal.domain.delegate.Web3ModalDelegate
+import com.walletconnect.web3.modal.di.appKitModule
+import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate
 import com.walletconnect.web3.modal.domain.model.Session.WalletConnect
 import com.walletconnect.web3.modal.domain.model.toModalError
-import com.walletconnect.web3.modal.engine.Web3ModalEngine
+import com.walletconnect.web3.modal.engine.AppKitEngine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.jetbrains.annotations.ApiStatus.Experimental
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
-object Web3Modal {
+object AppKit {
 
     internal var chains: List<Modal.Model.Chain> = listOf()
 
@@ -36,7 +36,7 @@ object Web3Modal {
 
     internal var authPayloadParams: Modal.Model.AuthPayloadParams? = null
 
-    private lateinit var web3ModalEngine: Web3ModalEngine
+    private lateinit var appKitEngine: AppKitEngine
 
     interface ModalDelegate {
         fun onSessionApproved(approvedSession: Modal.Model.ApprovedSession)
@@ -94,19 +94,19 @@ object Web3Modal {
     @Experimental
     fun register(activity: ComponentActivity) {
         checkEngineInitialization()
-        web3ModalEngine.registerCoinbaseLauncher(activity)
+        appKitEngine.registerCoinbaseLauncher(activity)
     }
 
     @Experimental
     fun unregister() {
         checkEngineInitialization()
-        web3ModalEngine.unregisterCoinbase()
+        appKitEngine.unregisterCoinbase()
     }
 
     @Throws(IllegalStateException::class)
     private fun checkEngineInitialization() {
-        check(::web3ModalEngine.isInitialized) {
-            "Web3Modal needs to be initialized first using the initialize function"
+        check(::appKitEngine.isInitialized) {
+            "AppKit needs to be initialized first using the initialize function"
         }
     }
 
@@ -115,23 +115,23 @@ object Web3Modal {
         onSuccess: () -> Unit = {},
         onError: (Modal.Model.Error) -> Unit,
     ) {
-        if (!::web3ModalEngine.isInitialized) {
+        if (!::appKitEngine.isInitialized) {
             runCatching {
-                wcKoinApp.modules(web3ModalModule())
-                web3ModalEngine = wcKoinApp.koin.get()
-                web3ModalEngine.setup(init, onError)
-                web3ModalEngine.setInternalDelegate(Web3ModalDelegate)
+                wcKoinApp.modules(appKitModule())
+                appKitEngine = wcKoinApp.koin.get()
+                appKitEngine.setup(init, onError)
+                appKitEngine.setInternalDelegate(AppKitDelegate)
                 wcKoinApp.modules(
-                    module { single(named(AndroidCommonDITags.ENABLE_WEB_3_MODAL_ANALYTICS)) { init.enableAnalytics ?: web3ModalEngine.fetchAnalyticsConfig() } }
+                    module { single(named(AndroidCommonDITags.ENABLE_WEB_3_MODAL_ANALYTICS)) { init.enableAnalytics ?: appKitEngine.fetchAnalyticsConfig() } }
                 )
             }
                 .onFailure { error -> return@onInitializedClient onError(Modal.Model.Error(error)) }
                 .onSuccess {
                     onSuccess()
-                    web3ModalEngine.send(Props(event = EventType.TRACK, type = EventType.Track.MODAL_LOADED))
+                    appKitEngine.send(Props(event = EventType.TRACK, type = EventType.Track.MODAL_LOADED))
                 }
         } else {
-            onError(Modal.Model.Error(Web3ModelClientAlreadyInitializedException()))
+            onError(Modal.Model.Error(AppKitClientAlreadyInitializedException()))
         }
     }
 
@@ -149,11 +149,11 @@ object Web3Modal {
 
     @Throws(IllegalStateException::class)
     fun setDelegate(delegate: ModalDelegate) {
-        Web3ModalDelegate.connectionState.onEach { connectionState ->
+        AppKitDelegate.connectionState.onEach { connectionState ->
             delegate.onConnectionStateChange(connectionState)
         }.launchIn(scope)
 
-        Web3ModalDelegate.wcEventModels.onEach { event ->
+        AppKitDelegate.wcEventModels.onEach { event ->
             when (event) {
                 is Modal.Model.ApprovedSession -> delegate.onSessionApproved(event)
                 is Modal.Model.DeletedSession.Success -> delegate.onSessionDelete(event)
@@ -229,7 +229,7 @@ object Web3Modal {
         onError: (Modal.Model.Error) -> Unit,
     ) {
         checkEngineInitialization()
-        web3ModalEngine.request(
+        appKitEngine.request(
             request = Request(request.method, request.params, request.expiry),
             onSuccess = { onSuccess(it.sentRequestToModal()) },
             onError = { onError(it.toModalError()) }
@@ -242,7 +242,7 @@ object Web3Modal {
         onError: (Throwable) -> Unit,
     ) {
         checkEngineInitialization()
-        web3ModalEngine.request(request, onSuccess, onError)
+        appKitEngine.request(request, onSuccess, onError)
     }
 
     private fun SentRequestResult.sentRequestToModal() = when (this) {
@@ -256,10 +256,10 @@ object Web3Modal {
         onError: (Throwable) -> Unit,
     ) {
         checkEngineInitialization()
-        web3ModalEngine.request(request, { onSuccess() }, onError)
+        appKitEngine.request(request, { onSuccess() }, onError)
     }
 
-    fun ping(sessionPing: Modal.Listeners.SessionPing? = null) = web3ModalEngine.ping(sessionPing)
+    fun ping(sessionPing: Modal.Listeners.SessionPing? = null) = appKitEngine.ping(sessionPing)
 
     @Deprecated(
         message = "This has become deprecate in favor of the parameterless disconnect function",
@@ -270,12 +270,12 @@ object Web3Modal {
         onError: (Modal.Model.Error) -> Unit,
     ) {
         checkEngineInitialization()
-        val topic = when (val session = web3ModalEngine.getActiveSession()) {
+        val topic = when (val session = appKitEngine.getActiveSession()) {
             is WalletConnect -> session.topic
             else -> String.Empty
         }
 
-        web3ModalEngine.disconnect(
+        appKitEngine.disconnect(
             onSuccess = { onSuccess(Modal.Params.Disconnect(topic)) },
             onError = { onError(it.toModalError()) }
         )
@@ -286,7 +286,7 @@ object Web3Modal {
         onError: (Throwable) -> Unit,
     ) {
         checkEngineInitialization()
-        web3ModalEngine.disconnect(onSuccess, onError)
+        appKitEngine.disconnect(onSuccess, onError)
     }
 
     /**
@@ -302,7 +302,7 @@ object Web3Modal {
      */
     @Deprecated(
         message = "Getting active session is replaced with getAccount()",
-        replaceWith = ReplaceWith("com.walletconnect.web3.modal.client.Web3Modal.getAccount()"),
+        replaceWith = ReplaceWith("com.walletconnect.web3.modal.client.AppKit.getAccount()"),
         level = DeprecationLevel.WARNING
     )
     internal fun getActiveSessionByTopic(topic: String) = SignClient.getActiveSessionByTopic(topic)?.toModal()
@@ -313,12 +313,12 @@ object Web3Modal {
      */
     @Deprecated(
         message = "Getting active session is replaced with getAccount()",
-        replaceWith = ReplaceWith("com.walletconnect.web3.modal.client.Web3Modal.getAccount()"),
+        replaceWith = ReplaceWith("com.walletconnect.web3.modal.client.AppKit.getAccount()"),
         level = DeprecationLevel.WARNING
     )
     fun getActiveSession(): Modal.Model.Session? {
         checkEngineInitialization()
-        return (web3ModalEngine.getActiveSession() as? WalletConnect)?.topic?.let { SignClient.getActiveSessionByTopic(it)?.toModal() }
+        return (appKitEngine.getActiveSession() as? WalletConnect)?.topic?.let { SignClient.getActiveSessionByTopic(it)?.toModal() }
     }
 
     /**
@@ -327,7 +327,7 @@ object Web3Modal {
      */
     fun getAccount(): Account? {
         checkEngineInitialization()
-        return web3ModalEngine.getAccount()
+        return appKitEngine.getAccount()
     }
 
     /**
@@ -336,7 +336,7 @@ object Web3Modal {
      */
     fun getSession(): Session? {
         checkEngineInitialization()
-        return web3ModalEngine.getSession()
+        return appKitEngine.getSession()
     }
 
     /**
@@ -345,6 +345,6 @@ object Web3Modal {
      */
     fun getConnectorType(): Modal.ConnectorType? {
         checkEngineInitialization()
-        return web3ModalEngine.getConnectorType()
+        return appKitEngine.getConnectorType()
     }
 }

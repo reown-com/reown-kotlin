@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun AllLabel(isEnabled: Boolean = true) {
@@ -25,8 +25,8 @@ internal fun TextLabel(text: String, isEnabled: Boolean = true) {
     ListLabel(
         text = text,
         isEnabled = isEnabled,
-        backgroundColor = Web3ModalTheme.colors.grayGlass10,
-        labelTextColor = Web3ModalTheme.colors.foreground.color150
+        backgroundColor = AppKitTheme.colors.grayGlass10,
+        labelTextColor = AppKitTheme.colors.foreground.color150
     )
 }
 
@@ -40,8 +40,8 @@ internal fun RecentLabel(isEnabled: Boolean = true) {
     ListLabel(
         text = "RECENT",
         isEnabled = isEnabled,
-        backgroundColor = Web3ModalTheme.colors.grayGlass10,
-        labelTextColor = Web3ModalTheme.colors.foreground.color150
+        backgroundColor = AppKitTheme.colors.grayGlass10,
+        labelTextColor = AppKitTheme.colors.foreground.color150
     )
 }
 
@@ -50,8 +50,8 @@ internal fun InstalledLabel(isEnabled: Boolean = true) {
     ListLabel(
         text = "INSTALLED",
         isEnabled = isEnabled,
-        backgroundColor = Web3ModalTheme.colors.success15,
-        labelTextColor = Web3ModalTheme.colors.success
+        backgroundColor = AppKitTheme.colors.success15,
+        labelTextColor = AppKitTheme.colors.success
     )
 }
 
@@ -59,8 +59,8 @@ internal fun InstalledLabel(isEnabled: Boolean = true) {
 private fun ListLabel(
     text: String,
     isEnabled: Boolean,
-    backgroundColor: Color = Web3ModalTheme.colors.accent15,
-    labelTextColor: Color = Web3ModalTheme.colors.accent100
+    backgroundColor: Color = AppKitTheme.colors.accent15,
+    labelTextColor: Color = AppKitTheme.colors.accent100
 ) {
     val textColor: Color
     val background: Color
@@ -68,8 +68,8 @@ private fun ListLabel(
         background = backgroundColor
         textColor = labelTextColor
     } else {
-        background = Web3ModalTheme.colors.grayGlass10
-        textColor = Web3ModalTheme.colors.foreground.color300
+        background = AppKitTheme.colors.grayGlass10
+        textColor = AppKitTheme.colors.foreground.color300
     }
     Box(
         modifier = Modifier
@@ -78,7 +78,7 @@ private fun ListLabel(
             .padding( horizontal = 5.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = text, style = Web3ModalTheme.typo.micro700.copy(textColor))
+        Text(text = text, style = AppKitTheme.typo.micro700.copy(textColor))
     }
 }
 

@@ -4,7 +4,7 @@ package com.walletconnect.web3.modal.ui.navigation
 
 enum class Route(val path: String, val title: String? = null) {
     //Common
-    WEB3MODAL("web3_modal"),
+    APPKIT("web3_modal"),
     CHOOSE_NETWORK("choose_network", "Select network"),
     //Connect routes
     CONNECT_YOUR_WALLET("connect_your_wallet", "Connect wallet"),

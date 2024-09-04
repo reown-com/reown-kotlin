@@ -22,7 +22,7 @@ import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.components.internal.commons.ContentDescription
 import com.walletconnect.web3.modal.ui.components.internal.commons.LoadingSpinner
 import com.walletconnect.web3.modal.ui.components.internal.commons.inputs.BaseTextInput
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun EmailInput(
@@ -45,7 +45,7 @@ internal fun EmailInput(
         ) {
             HorizontalSpacer(width = 10.dp)
             Icon(
-                tint = Web3ModalTheme.colors.foreground.color275,
+                tint = AppKitTheme.colors.foreground.color275,
                 modifier = Modifier.size(14.dp),
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_email),
                 contentDescription = ContentDescription.EMAIL.description,
@@ -53,7 +53,7 @@ internal fun EmailInput(
             HorizontalSpacer(width = 6.dp)
             Box(modifier = Modifier.weight(1f)) {
                 if (inputData.text.isBlank()) {
-                    Text(text = "Email", style = Web3ModalTheme.typo.paragraph400.copy(color = Web3ModalTheme.colors.foreground.color275))
+                    Text(text = "Email", style = AppKitTheme.typo.paragraph400.copy(color = AppKitTheme.colors.foreground.color275))
                 }
                 innerTextField()
             }
@@ -70,7 +70,7 @@ internal fun EmailInput(
 @Composable
 private fun ForwardIcon(onClick: () -> Unit) {
     Icon(
-        tint = Web3ModalTheme.colors.accent100,
+        tint = AppKitTheme.colors.accent100,
         modifier = Modifier
             .size(14.dp)
             .roundedClickable { onClick() },

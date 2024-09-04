@@ -20,7 +20,7 @@ fun pulseModule(bundleId: String) = module {
     single(named(AndroidCommonDITags.PULSE_RETROFIT)) {
         Retrofit.Builder()
             .baseUrl(get<String>(named(AndroidCommonDITags.PULSE_URL)))
-            .client(get(named(AndroidCommonDITags.WEB3MODAL_OKHTTP)))
+            .client(get(named(AndroidCommonDITags.APPKIT_OKHTTP)))
             .addConverterFactory(MoshiConverterFactory.create(get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)).build()))
             .build()
     }

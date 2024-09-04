@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 
 @Composable
 fun Web3Button(
-    state: Web3ModalState,
+    state: AppKitState,
     accountButtonType: AccountButtonType = AccountButtonType.NORMAL,
     connectButtonSize: ConnectButtonSize = ConnectButtonSize.NORMAL
 ) {

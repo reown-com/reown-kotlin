@@ -16,11 +16,11 @@ import com.walletconnect.web3.modal.ui.components.button.ConnectButton
 import com.walletconnect.web3.modal.ui.components.button.ConnectButtonSize
 import com.walletconnect.web3.modal.ui.components.button.NetworkButton
 import com.walletconnect.web3.modal.ui.components.button.Web3Button
-import com.walletconnect.web3.modal.ui.components.button.rememberWeb3ModalState
+import com.walletconnect.web3.modal.ui.components.button.rememberAppKitState
 
 @Composable
 fun HomeScreen(navController: NavController) {
-    val web3ModalState = rememberWeb3ModalState(navController = navController)
+    val web3ModalState = rememberAppKitState(navController = navController)
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,

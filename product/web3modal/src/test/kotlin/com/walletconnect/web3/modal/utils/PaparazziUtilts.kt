@@ -25,11 +25,11 @@ import com.android.resources.NightMode
 import com.android.resources.ScreenOrientation
 import com.walletconnect.android.internal.common.model.ProjectId
 import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.web3.modal.ui.components.internal.root.Web3ModalRoot
-import com.walletconnect.web3.modal.ui.components.internal.root.rememberWeb3ModalRootState
+import com.walletconnect.web3.modal.ui.components.internal.root.AppKitRoot
+import com.walletconnect.web3.modal.ui.components.internal.root.rememberAppKitRootState
 import com.walletconnect.web3.modal.ui.components.internal.snackbar.rememberSnackBarState
-import com.walletconnect.web3.modal.ui.theme.ProvideWeb3ModalThemeComposition
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.ProvideAppKitThemeComposition
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import org.junit.Rule
 import org.koin.dsl.module
 import java.io.File
@@ -82,14 +82,14 @@ internal abstract class ScreenShotTest(
         )
         snapshot {
             val scope = rememberCoroutineScope()
-            val rootState = rememberWeb3ModalRootState(coroutineScope = scope, navController = rememberNavController())
+            val rootState = rememberAppKitRootState(coroutineScope = scope, navController = rememberNavController())
             val snackBarState = rememberSnackBarState(coroutineScope = scope)
-            ProvideWeb3ModalThemeComposition {
+            ProvideAppKitThemeComposition {
                 Surface(
                     color = Color.Transparent,
                     shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                 ) {
-                    Web3ModalRoot(
+                    AppKitRoot(
                         rootState = rootState,
                         snackBarState = snackBarState,
                         closeModal = {},
@@ -113,8 +113,8 @@ internal abstract class ScreenShotTest(
             DeviceConfig(nightMode = nightMode, orientation = orientation, keyboardState = keyboardState)
         )
         snapshot {
-            ProvideWeb3ModalThemeComposition {
-                Box(modifier = Modifier.background(Web3ModalTheme.colors.background.color100)) {
+            ProvideAppKitThemeComposition {
+                Box(modifier = Modifier.background(AppKitTheme.colors.background.color100)) {
                     Column(modifier = Modifier.padding(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         content()
                     }

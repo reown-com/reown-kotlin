@@ -4,25 +4,25 @@ import android.content.Context
 import com.walletconnect.android.internal.common.modal.data.model.Wallet
 import com.walletconnect.android.internal.common.modal.data.model.WalletAppData
 import com.walletconnect.android.internal.common.modal.data.model.WalletListing
-import com.walletconnect.android.internal.common.modal.data.network.Web3ModalService
+import com.walletconnect.android.internal.common.modal.data.network.AppKitService
 import com.walletconnect.android.internal.common.modal.data.network.model.WalletDTO
 import com.walletconnect.android.internal.common.modal.data.network.model.WalletDataDTO
 import com.walletconnect.android.utils.isWalletInstalled
 
-internal class Web3ModalApiRepository(
+internal class AppKitApiRepository(
     private val context: Context,
     private val web3ModalApiUrl: String,
-    private val web3ModalService: Web3ModalService
+    private val appKitService: AppKitService
 ) {
 
     suspend fun getAndroidWalletsData(sdkType: String) = runCatching {
-        web3ModalService.getAndroidData(sdkType = sdkType)
+        appKitService.getAndroidData(sdkType = sdkType)
     }.mapCatching { response ->
         response.body()!!.data.toWalletsAppData().filter { it.isInstalled }
     }
 
     suspend fun getAnalyticsConfig(sdkType: String = "w3m") = runCatching {
-        web3ModalService.getAnalyticsConfig(sdkType = sdkType)
+        appKitService.getAnalyticsConfig(sdkType = sdkType)
     }.mapCatching { response ->
         response.body()!!.isAnalyticsEnabled
     }
@@ -34,7 +34,7 @@ internal class Web3ModalApiRepository(
         excludeIds: List<String>? = null,
         includeWallets: List<String>? = null
     ) = runCatching {
-        web3ModalService.getWallets(
+        appKitService.getWallets(
             sdkType = sdkType,
             page = page,
             search = search,

@@ -3,7 +3,7 @@ package com.walletconnect.web3.modal.presets
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.utils.EthUtils
 
-object Web3ModalChainsPresets {
+object AppKitChainsPresets {
     val ethToken = Modal.Model.Token(name = "Ether", symbol = "ETH", decimal = 18)
 
     val ethChains: Map<String, Modal.Model.Chain> = mapOf(

@@ -11,12 +11,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
-class Web3ModalRootStateTest {
+class AppKitRootStateTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private lateinit var state: Web3ModalRootState
+    private lateinit var state: AppKitRootState
 
     @Test
     fun web3modalRootState_currentDestination() = runTest {
@@ -25,7 +25,7 @@ class Web3ModalRootStateTest {
         composeTestRule.setContent {
             val navController = rememberTestNavController()
             state = remember(navController) {
-                Web3ModalRootState(
+                AppKitRootState(
                     coroutineScope = backgroundScope,
                     navController = navController
                 )
@@ -45,7 +45,7 @@ class Web3ModalRootStateTest {
     fun web3ModalRootState_canPopup_fromInitDestination() = runTest {
         composeTestRule.setContent {
             val navController = rememberTestNavController()
-            state = rememberWeb3ModalRootState(coroutineScope = backgroundScope, navController = navController)
+            state = rememberAppKitRootState(coroutineScope = backgroundScope, navController = navController)
         }
 
         assertEquals(false, state.canPopUp)
@@ -55,7 +55,7 @@ class Web3ModalRootStateTest {
     fun web3ModalRootState_canPopup_fromQRCode() = runTest {
         composeTestRule.setContent {
             val navController = rememberTestNavController()
-            state = rememberWeb3ModalRootState(coroutineScope = backgroundScope, navController = navController)
+            state = rememberAppKitRootState(coroutineScope = backgroundScope, navController = navController)
 
             LaunchedEffect(Unit) {
                 navController.setCurrentDestination(Route.QR_CODE.path)
@@ -71,7 +71,7 @@ class Web3ModalRootStateTest {
 
         composeTestRule.setContent {
             val navController = rememberTestNavController()
-            state = rememberWeb3ModalRootState(coroutineScope = backgroundScope, navController = navController)
+            state = rememberAppKitRootState(coroutineScope = backgroundScope, navController = navController)
 
             currentDestinationPath = state.currentDestinationFlow.collectAsState(null).value?.destination?.route
 
@@ -90,7 +90,7 @@ class Web3ModalRootStateTest {
 
         composeTestRule.setContent {
             val navController = rememberTestNavController()
-            state = rememberWeb3ModalRootState(coroutineScope = backgroundScope, navController = navController)
+            state = rememberAppKitRootState(coroutineScope = backgroundScope, navController = navController)
 
             title = state.title.collectAsState(initial = null).value
         }
@@ -104,7 +104,7 @@ class Web3ModalRootStateTest {
 
         composeTestRule.setContent {
             val navController = rememberTestNavController()
-            state = rememberWeb3ModalRootState(coroutineScope = backgroundScope, navController = navController)
+            state = rememberAppKitRootState(coroutineScope = backgroundScope, navController = navController)
 
             title = state.title.collectAsState(initial = null).value
 
@@ -122,7 +122,7 @@ class Web3ModalRootStateTest {
 
         composeTestRule.setContent {
             val navController = rememberTestNavController()
-            state = rememberWeb3ModalRootState(coroutineScope = backgroundScope, navController = navController)
+            state = rememberAppKitRootState(coroutineScope = backgroundScope, navController = navController)
 
             currentDestinationPath = state.currentDestinationFlow.collectAsState(null).value?.destination?.route
 

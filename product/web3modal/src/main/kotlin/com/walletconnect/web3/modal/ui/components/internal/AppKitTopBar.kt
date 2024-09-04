@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import com.walletconnect.web3.modal.ui.components.internal.commons.BackArrowIcon
 import com.walletconnect.web3.modal.ui.components.internal.commons.CloseIcon
 import com.walletconnect.web3.modal.ui.components.internal.commons.QuestionMarkIcon
@@ -17,7 +17,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.TestTags
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 
 @Composable
-internal fun Web3ModalTopBar(
+internal fun AppKitTopBar(
     title: String,
     startIcon: @Composable () -> Unit,
     onCloseIconClick: () -> Unit
@@ -34,8 +34,8 @@ internal fun Web3ModalTopBar(
         }
         Text(
             text = title,
-            style = Web3ModalTheme.typo.paragraph600.copy(
-                color = Web3ModalTheme.colors.foreground.color100,
+            style = AppKitTheme.typo.paragraph600.copy(
+                color = AppKitTheme.colors.foreground.color100,
                 textAlign = TextAlign.Center
             ),
             modifier = Modifier.weight(1f).testTag(TestTags.TITLE)
@@ -46,9 +46,9 @@ internal fun Web3ModalTopBar(
 
 @Composable
 @UiModePreview
-private fun PreviewWeb3ModalTopBar() {
+private fun PreviewAppKitTopBar() {
     MultipleComponentsPreview(
-        { Web3ModalTopBar(title = "WalletConnect", startIcon = { BackArrowIcon {} }, {}) },
-        { Web3ModalTopBar(title = "WalletConnect", startIcon = { QuestionMarkIcon() }, {}) }
+        { AppKitTopBar(title = "WalletConnect", startIcon = { BackArrowIcon {} }, {}) },
+        { AppKitTopBar(title = "WalletConnect", startIcon = { QuestionMarkIcon() }, {}) }
     )
 }

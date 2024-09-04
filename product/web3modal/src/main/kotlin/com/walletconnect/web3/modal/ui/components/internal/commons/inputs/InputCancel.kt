@@ -17,7 +17,7 @@ import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.components.internal.commons.ContentDescription
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun InputCancel(
@@ -29,11 +29,11 @@ internal fun InputCancel(
     val tint: Color
 
     if (isEnabled) {
-        tint = Web3ModalTheme.colors.background.color100
-        background = Web3ModalTheme.colors.grayGlass20
+        tint = AppKitTheme.colors.background.color100
+        background = AppKitTheme.colors.grayGlass20
     } else {
-        tint = Web3ModalTheme.colors.background.color100
-        background = Web3ModalTheme.colors.grayGlass10
+        tint = AppKitTheme.colors.background.color100
+        background = AppKitTheme.colors.grayGlass10
     }
 
     Surface(

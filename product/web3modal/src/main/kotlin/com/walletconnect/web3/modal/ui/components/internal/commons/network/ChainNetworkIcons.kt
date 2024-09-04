@@ -31,7 +31,7 @@ import coil.request.ImageRequest
 import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import com.walletconnect.web3.modal.utils.grayColorFilter
 import com.walletconnect.web3.modal.utils.imageHeaders
 import kotlin.math.cos
@@ -47,7 +47,7 @@ internal fun CircleNetworkImage(
     Box(
         modifier = Modifier
             .size(size)
-            .border(width = 2.dp, color = Web3ModalTheme.colors.grayGlass05, shape = CircleShape)
+            .border(width = 2.dp, color = AppKitTheme.colors.grayGlass05, shape = CircleShape)
             .padding(2.dp)
     ) {
         AsyncImage(
@@ -72,7 +72,7 @@ internal fun HexagonNetworkImage(
     borderColor: Color? = null,
     placeholder: Drawable? = null
 ) {
-    val overlayColor = Web3ModalTheme.colors.grayGlass10
+    val overlayColor = AppKitTheme.colors.grayGlass10
     AsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
             .data(data)

@@ -10,11 +10,11 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.ContentDescri
 import com.walletconnect.web3.modal.ui.components.internal.commons.TestTags
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.rememberTestNavController
-import com.walletconnect.web3.modal.ui.theme.ProvideWeb3ModalThemeComposition
+import com.walletconnect.web3.modal.ui.theme.ProvideAppKitThemeComposition
 import org.junit.Rule
 import org.junit.Test
 
-class Web3ModalRootTest {
+class AppKitRootTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -23,8 +23,8 @@ class Web3ModalRootTest {
     fun web3ModalRoot_shouldShowTitleFromEnumRoute() {
         composeTestRule.setContent {
             val controller = rememberTestNavController()
-            ProvideWeb3ModalThemeComposition {
-                Web3ModalRoot(navController = controller, closeModal = { }) {
+            ProvideAppKitThemeComposition {
+                AppKitRoot(navController = controller, closeModal = { }) {
                     Box {}
                 }
             }
@@ -38,8 +38,8 @@ class Web3ModalRootTest {
     fun web3ModalRoot_shouldShowTitleFromNavArg() {
         composeTestRule.setContent {
             val controller = rememberTestNavController()
-            ProvideWeb3ModalThemeComposition {
-                Web3ModalRoot(navController = controller, closeModal = { }) {
+            ProvideAppKitThemeComposition {
+                AppKitRoot(navController = controller, closeModal = { }) {
                     Box {}
                 }
             }
@@ -57,8 +57,8 @@ class Web3ModalRootTest {
     fun web3ModalRoot_shouldShowWithoutTitle() {
         composeTestRule.setContent {
             val controller = rememberTestNavController()
-            ProvideWeb3ModalThemeComposition {
-                Web3ModalRoot(navController = controller, closeModal = { }) {
+            ProvideAppKitThemeComposition {
+                AppKitRoot(navController = controller, closeModal = { }) {
                     Box {}
                 }
             }
@@ -75,8 +75,8 @@ class Web3ModalRootTest {
     fun web3ModalRoot_QuestionMarkIcon() {
         composeTestRule.setContent {
             val controller = rememberTestNavController()
-            ProvideWeb3ModalThemeComposition {
-                Web3ModalRoot(navController = controller, closeModal = { }) {
+            ProvideAppKitThemeComposition {
+                AppKitRoot(navController = controller, closeModal = { }) {
                     Box {}
                 }
             }
@@ -89,8 +89,8 @@ class Web3ModalRootTest {
     fun web3ModalRoot_BackIcon() {
         composeTestRule.setContent {
             val controller = rememberTestNavController()
-            ProvideWeb3ModalThemeComposition {
-                Web3ModalRoot(navController = controller, closeModal = { }) {
+            ProvideAppKitThemeComposition {
+                AppKitRoot(navController = controller, closeModal = { }) {
                     Box {}
                 }
             }
@@ -103,8 +103,8 @@ class Web3ModalRootTest {
     fun web3ModalRoot_closeIsCalled() {
         composeTestRule.setContent {
             val controller = rememberTestNavController()
-            ProvideWeb3ModalThemeComposition {
-                Web3ModalRoot(navController = controller, closeModal = { }) {
+            ProvideAppKitThemeComposition {
+                AppKitRoot(navController = controller, closeModal = { }) {
                     Box {}
                 }
             }

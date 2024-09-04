@@ -38,7 +38,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.walletconnect.util.Empty
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun CodeInput(codeInputState: CodeInputState) {
@@ -52,8 +52,8 @@ internal fun CodeInput(codeInputState: CodeInputState) {
     BasicTextField(
         value = state.text,
         onValueChange = codeInputState::onTextChange,
-        textStyle = Web3ModalTheme.typo.paragraph400.copy(color = Web3ModalTheme.colors.foreground.color100),
-        cursorBrush = SolidColor(Web3ModalTheme.colors.accent100),
+        textStyle = AppKitTheme.typo.paragraph400.copy(color = AppKitTheme.colors.foreground.color100),
+        cursorBrush = SolidColor(AppKitTheme.colors.accent100),
         singleLine = true,
         keyboardActions = KeyboardActions { codeInputState.submit(state.text) },
         keyboardOptions = KeyboardOptions(
@@ -91,15 +91,15 @@ private fun CodeDigitText(
     val borderColor: Color
 
     if (isFocused) {
-        background = Web3ModalTheme.colors.grayGlass10
-        borderColor = Web3ModalTheme.colors.accent100
+        background = AppKitTheme.colors.grayGlass10
+        borderColor = AppKitTheme.colors.accent100
         shadowModifier = Modifier
             .size(54.dp)
-            .border(4.dp, Web3ModalTheme.colors.accent20, RoundedCornerShape(20.dp))
+            .border(4.dp, AppKitTheme.colors.accent20, RoundedCornerShape(20.dp))
             .padding(4.dp)
     } else {
-        background = Web3ModalTheme.colors.grayGlass05
-        borderColor = Web3ModalTheme.colors.grayGlass05
+        background = AppKitTheme.colors.grayGlass05
+        borderColor = AppKitTheme.colors.grayGlass05
         shadowModifier = Modifier
             .size(54.dp)
             .padding(4.dp)
@@ -126,13 +126,13 @@ private fun CodeDigitText(
                     Box(
                         modifier = Modifier
                             .size(2.dp, 20.dp)
-                            .background(Web3ModalTheme.colors.accent100)
+                            .background(AppKitTheme.colors.accent100)
                     )
                 }
             } else {
                 Text(
                     text = value,
-                    style = Web3ModalTheme.typo.large400.copy(color = Web3ModalTheme.colors.grayGlass)
+                    style = AppKitTheme.typo.large400.copy(color = AppKitTheme.colors.grayGlass)
                 )
             }
         }

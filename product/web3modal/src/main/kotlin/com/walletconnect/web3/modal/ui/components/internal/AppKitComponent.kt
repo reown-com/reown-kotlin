@@ -21,11 +21,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
-import com.walletconnect.web3.modal.domain.delegate.Web3ModalDelegate
-import com.walletconnect.web3.modal.ui.Web3ModalState
-import com.walletconnect.web3.modal.ui.Web3ModalViewModel
-import com.walletconnect.web3.modal.ui.components.internal.root.Web3ModalRoot
+import com.walletconnect.web3.modal.client.AppKit
+import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate
+import com.walletconnect.web3.modal.ui.AppKitState
+import com.walletconnect.web3.modal.ui.AppKitViewModel
+import com.walletconnect.web3.modal.ui.components.internal.root.AppKitRoot
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.routes.account.AccountNavGraph
 import com.walletconnect.web3.modal.ui.routes.connect.ConnectionNavGraph
@@ -36,11 +36,11 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @Composable
-fun Web3ModalComponent(
+fun AppKitComponent(
     shouldOpenChooseNetwork: Boolean,
     closeModal: () -> Unit
 ) {
-    Web3ModalComponent(
+    AppKitComponent(
         navController = rememberAnimatedNavController(),
         shouldOpenChooseNetwork = shouldOpenChooseNetwork,
         closeModal = closeModal
@@ -49,24 +49,24 @@ fun Web3ModalComponent(
 
 @SuppressLint("RestrictedApi")
 @Composable
-internal fun Web3ModalComponent(
+internal fun AppKitComponent(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberAnimatedNavController(),
     shouldOpenChooseNetwork: Boolean,
     closeModal: () -> Unit
 ) {
-    val web3ModalViewModel: Web3ModalViewModel = viewModel()
-    val state by web3ModalViewModel.modalState.collectAsState()
+    val appKitViewModel: AppKitViewModel = viewModel()
+    val state by appKitViewModel.modalState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        Web3ModalDelegate
+        AppKitDelegate
             .wcEventModels
             .onEach { event ->
                 when (event) {
                     is Modal.Model.SIWEAuthenticateResponse.Result, is Modal.Model.SessionAuthenticateResponse.Result -> closeModal()
                     is Modal.Model.ApprovedSession -> {
-                        if (Web3Modal.authPayloadParams != null) {
+                        if (AppKit.authPayloadParams != null) {
                             navController.navigate(Route.SIWE_FALLBACK.path)
                         } else {
                             closeModal()
@@ -84,15 +84,15 @@ internal fun Web3ModalComponent(
         onEvent = { _, event ->
             coroutineScope.launch {
                 event.toComponentEvent(onClosed = {
-                    if (navController.currentDestination?.route == Route.SIWE_FALLBACK.path && web3ModalViewModel.shouldDisconnect) {
-                        web3ModalViewModel.disconnect()
+                    if (navController.currentDestination?.route == Route.SIWE_FALLBACK.path && appKitViewModel.shouldDisconnect) {
+                        appKitViewModel.disconnect()
                     }
                 })
             }
         }
     )
 
-    Web3ModalRoot(
+    AppKitRoot(
         modifier = modifier,
         navController = navController,
         closeModal = closeModal
@@ -107,20 +107,20 @@ internal fun Web3ModalComponent(
             label = "Root Animated content"
         ) { state ->
             when (state) {
-                is Web3ModalState.Connect -> ConnectionNavGraph(
+                is AppKitState.Connect -> ConnectionNavGraph(
                     navController = navController,
                     closeModal = closeModal,
                     shouldOpenChooseNetwork = shouldOpenChooseNetwork
                 )
 
-                is Web3ModalState.AccountState -> AccountNavGraph(
+                is AppKitState.AccountState -> AccountNavGraph(
                     navController = navController,
                     closeModal = closeModal,
                     shouldOpenChangeNetwork = shouldOpenChooseNetwork
                 )
 
-                Web3ModalState.Loading -> LoadingModalState()
-                is Web3ModalState.Error -> ErrorModalState(retry = web3ModalViewModel::initModalState)
+                AppKitState.Loading -> LoadingModalState()
+                is AppKitState.Error -> ErrorModalState(retry = appKitViewModel::initModalState)
             }
         }
     }

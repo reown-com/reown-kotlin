@@ -20,7 +20,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.LoadingSpinne
 import com.walletconnect.web3.modal.ui.components.internal.commons.network.CircleNetworkImage
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 internal enum class AccountEntryState {
     LOADING, NEXT, INFO
@@ -62,7 +62,7 @@ internal fun AccountEntry(
 @UiModePreview
 @Composable
 private fun AccountEntryPreview() {
-    val content: @Composable (EntryColors) -> Unit = { Text(text = "Account entry", style = Web3ModalTheme.typo.paragraph500.copy(color = it.textColor))}
+    val content: @Composable (EntryColors) -> Unit = { Text(text = "Account entry", style = AppKitTheme.typo.paragraph500.copy(color = it.textColor))}
     MultipleComponentsPreview(
         {
             AccountEntry(

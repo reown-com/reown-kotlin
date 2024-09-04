@@ -2,7 +2,7 @@ package com.walletconnect.sample.modal
 
 import com.walletconnect.sample.common.tag
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -12,14 +12,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-object ModalSampleDelegate : Web3Modal.ModalDelegate {
+object ModalSampleDelegate : AppKit.ModalDelegate {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _wcEventModels: MutableSharedFlow<Modal.Model?> = MutableSharedFlow()
     val wcEventModels: SharedFlow<Modal.Model?> =  _wcEventModels.asSharedFlow()
 
     init {
-        Web3Modal.setDelegate(this)
+        AppKit.setDelegate(this)
     }
 
     override fun onSessionApproved(approvedSession: Modal.Model.ApprovedSession) {

@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.navigation.findNavController
 import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.components.button.Web3Button
-import com.walletconnect.web3.modal.ui.components.button.rememberWeb3ModalState
+import com.walletconnect.web3.modal.ui.components.button.rememberAppKitState
 import com.walletconnect.web3.modal.utils.toAccountButtonType
 import com.walletconnect.web3.modal.utils.toConnectButtonSize
 
@@ -29,9 +29,9 @@ class Web3Button @JvmOverloads constructor(
             .apply {
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 setContent {
-                    val web3ModalState = rememberWeb3ModalState(navController = findNavController())
+                    val appKitState = rememberAppKitState(navController = findNavController())
                     Web3Button(
-                        state = web3ModalState,
+                        state = appKitState,
                         accountButtonType = accountButtonType,
                         connectButtonSize = connectButtonSize
                     )

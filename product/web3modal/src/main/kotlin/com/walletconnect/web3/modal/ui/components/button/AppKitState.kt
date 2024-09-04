@@ -11,16 +11,16 @@ import com.walletconnect.android.pulse.model.properties.Properties
 import com.walletconnect.android.pulse.model.properties.Props
 import com.walletconnect.foundation.util.Logger
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.Web3Modal
+import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.domain.model.Session
 import com.walletconnect.web3.modal.domain.usecase.GetEthBalanceUseCase
 import com.walletconnect.web3.modal.domain.usecase.GetSessionUseCase
 import com.walletconnect.web3.modal.domain.usecase.ObserveSelectedChainUseCase
 import com.walletconnect.web3.modal.domain.usecase.ObserveSessionUseCase
-import com.walletconnect.web3.modal.engine.Web3ModalEngine
+import com.walletconnect.web3.modal.engine.AppKitEngine
 import com.walletconnect.web3.modal.ui.components.ComponentDelegate
 import com.walletconnect.web3.modal.ui.components.ComponentEvent
-import com.walletconnect.web3.modal.ui.openWeb3Modal
+import com.walletconnect.web3.modal.ui.openAppKit
 import com.walletconnect.web3.modal.utils.getChainNetworkImageUrl
 import com.walletconnect.web3.modal.utils.getChains
 import com.walletconnect.web3.modal.utils.getSelectedChain
@@ -32,16 +32,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @Composable
-fun rememberWeb3ModalState(
+fun rememberAppKitState(
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
     navController: NavController
-): Web3ModalState {
+): AppKitState {
     return remember(navController) {
-        Web3ModalState(coroutineScope, navController)
+        AppKitState(coroutineScope, navController)
     }
 }
 
-class Web3ModalState(
+class AppKitState(
     coroutineScope: CoroutineScope,
     private val navController: NavController
 ) {
@@ -50,7 +50,7 @@ class Web3ModalState(
     private val observeSessionTopicUseCase: ObserveSessionUseCase = wcKoinApp.koin.get()
     private val getSessionUseCase: GetSessionUseCase = wcKoinApp.koin.get()
     private val getEthBalanceUseCase: GetEthBalanceUseCase = wcKoinApp.koin.get()
-    private val web3ModalEngine: Web3ModalEngine = wcKoinApp.koin.get()
+    private val appKitEngine: AppKitEngine = wcKoinApp.koin.get()
     private val sendEventUseCase: SendEventInterface = wcKoinApp.koin.get()
     private val sessionTopicFlow = observeSessionTopicUseCase()
 
@@ -63,11 +63,11 @@ class Web3ModalState(
 
     val isConnected = sessionTopicFlow
         .map { it != null && getSessionUseCase() != null }
-        .map { Web3Modal.getAccount() != null }
+        .map { AppKit.getAccount() != null }
         .stateIn(coroutineScope, started = SharingStarted.Lazily, initialValue = false)
 
     internal val selectedChain = observeSelectedChainUseCase().map { savedChainId ->
-        Web3Modal.chains.find { it.id == savedChainId }
+        AppKit.chains.find { it.id == savedChainId }
     }
 
     internal val accountNormalButtonState = sessionTopicFlow.combine(selectedChain) { session, chain -> session to chain }
@@ -79,7 +79,7 @@ class Web3ModalState(
         .stateIn(coroutineScope, started = SharingStarted.Lazily, initialValue = AccountButtonState.Loading)
 
     private fun Flow<Pair<Session?, Modal.Model.Chain?>>.mapOrAccountState(accountButtonType: AccountButtonType) =
-        map { web3ModalEngine.getActiveSession()?.mapToAccountButtonState(accountButtonType) ?: AccountButtonState.Invalid }
+        map { appKitEngine.getActiveSession()?.mapToAccountButtonState(accountButtonType) ?: AccountButtonState.Invalid }
 
     private fun sendModalCloseOrOpenEvents(event: ComponentEvent) {
         when {
@@ -113,12 +113,12 @@ class Web3ModalState(
     private suspend fun getBalance(selectedChain: Modal.Model.Chain, address: String) =
         selectedChain.rpcUrl?.let { url -> getEthBalanceUseCase(selectedChain.token, url, address)?.valueWithSymbol }
 
-    internal fun openWeb3Modal(shouldOpenChooseNetwork: Boolean = false, isActiveNetwork: Boolean = false) {
+    internal fun openAppKit(shouldOpenChooseNetwork: Boolean = false, isActiveNetwork: Boolean = false) {
         if (shouldOpenChooseNetwork && isActiveNetwork) {
             sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.CLICK_NETWORKS))
         }
 
-        navController.openWeb3Modal(
+        navController.openAppKit(
             shouldOpenChooseNetwork = shouldOpenChooseNetwork,
             onError = { logger.error(it) }
         )

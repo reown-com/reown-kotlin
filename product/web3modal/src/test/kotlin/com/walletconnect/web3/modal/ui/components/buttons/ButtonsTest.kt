@@ -2,7 +2,7 @@ package com.walletconnect.web3.modal.ui.components.buttons
 
 import com.android.resources.NightMode
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.presets.Web3ModalChainsPresets
+import com.walletconnect.web3.modal.presets.AppKitChainsPresets
 import com.walletconnect.web3.modal.ui.components.button.AccountButtonState
 import com.walletconnect.web3.modal.ui.components.button.ConnectButton
 import com.walletconnect.web3.modal.ui.components.button.ConnectButtonSize
@@ -33,7 +33,7 @@ internal class ButtonsTest : ScreenShotTest("component/button") {
 
     @Test
     fun `test AccountButton in LightMode`() = runComponentScreenShotTest {
-        val chain = Web3ModalChainsPresets.ethChains["1"]!!
+        val chain = AppKitChainsPresets.ethChains["1"]!!
         AccountButtonState(AccountButtonState.Invalid) {}
         AccountButtonState(AccountButtonState.Loading) {}
         AccountButtonState(AccountButtonState.Normal("0x2765d421FB91182490D602E671a")) {}
@@ -42,7 +42,7 @@ internal class ButtonsTest : ScreenShotTest("component/button") {
 
     @Test
     fun `test AccountButton in DarkMode`() = runComponentScreenShotTest(nightMode = NightMode.NIGHT) {
-        val chain = Web3ModalChainsPresets.ethChains["1"]!!
+        val chain = AppKitChainsPresets.ethChains["1"]!!
         AccountButtonState(AccountButtonState.Invalid) {}
         AccountButtonState(AccountButtonState.Loading) {}
         AccountButtonState(AccountButtonState.Normal("0x2765d421FB91182490D602E671a")) {}

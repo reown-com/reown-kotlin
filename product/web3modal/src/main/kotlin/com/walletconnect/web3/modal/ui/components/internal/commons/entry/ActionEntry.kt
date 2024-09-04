@@ -23,7 +23,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.button.Button
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.LinkButton
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun ActionEntry(
@@ -50,7 +50,7 @@ internal fun ActionEntry(
                 it(colors.textColor)
                 HorizontalSpacer(width = 8.dp)
             }
-            Text(text = text, style = Web3ModalTheme.typo.paragraph500.copy(color = colors.textColor))
+            Text(text = text, style = AppKitTheme.typo.paragraph500.copy(color = colors.textColor))
         }
     }
 }

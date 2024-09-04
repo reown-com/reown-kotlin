@@ -30,10 +30,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.walletconnect.modal.utils.theme.toComposeColor
 import com.walletconnect.web3.modal.R
-import com.walletconnect.web3.modal.ui.components.internal.Web3ModalComponent
+import com.walletconnect.web3.modal.ui.components.internal.AppKitComponent
 import com.walletconnect.web3.modal.ui.theme.ColorPalette
 
-class Web3ModalSheet : BottomSheetDialogFragment() {
+class AppKitSheet : BottomSheetDialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requireContext().setTheme(R.style.Web3ModalTheme_DialogTheme)
@@ -53,36 +53,36 @@ class Web3ModalSheet : BottomSheetDialogFragment() {
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                Web3ModalTheme(
+                AppKitTheme(
                     mode = mode,
                     lightColors = colors.getLightModeColors(),
                     darkColors = colors.getDarkModeColors()
                 ) {
-                    Web3ModalComposeView(shouldOpenChooseNetwork)
+                    AppKitComposeView(shouldOpenChooseNetwork)
                 }
             }
         }
     }
 
     @Composable
-    private fun Web3ModalComposeView(
+    private fun AppKitComposeView(
         shouldOpenChooseNetwork: Boolean
     ) {
         val navController = rememberAnimatedNavController()
         dialog?.setupDialog(navController)
 
         Surface(shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp)) {
-            Web3ModalComponent(
+            AppKitComponent(
                 modifier = Modifier.nestedScroll(rememberNestedScrollInteropConnection()),
                 navController = navController,
                 shouldOpenChooseNetwork = shouldOpenChooseNetwork,
-                closeModal = { this@Web3ModalSheet.dismiss() })
+                closeModal = { this@AppKitSheet.dismiss() })
         }
     }
 
     private fun Dialog.setupDialog(navController: NavHostController) {
         (this as? ComponentDialog)?.onBackPressedDispatcher?.addCallback(
-            this@Web3ModalSheet, onBackPressedCallback(navController)
+            this@AppKitSheet, onBackPressedCallback(navController)
         )
         findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)?.let {
             val behavior = BottomSheetBehavior.from(it)
@@ -100,10 +100,10 @@ class Web3ModalSheet : BottomSheetDialogFragment() {
 }
 
 @Composable
-internal fun Map<Int, Color?>.getLightModeColors(): Web3ModalTheme.Colors {
-    val defaultColors = Web3ModalTheme.provideLightWeb3ModalColors()
+internal fun Map<Int, Color?>.getLightModeColors(): AppKitTheme.Colors {
+    val defaultColors = AppKitTheme.provideLightAppKitColors()
     val (foreground, background) = provideColorPallets(defaultColors)
-    return Web3ModalTheme.provideLightWeb3ModalColors(
+    return AppKitTheme.provideLightAppKitColors(
         accent100 = get(R.attr.modalAccent100) ?: defaultColors.accent100,
         accent90 = get(R.attr.modalAccent90) ?: defaultColors.accent90,
         accent80 = get(R.attr.modalAccent80) ?: defaultColors.accent80,
@@ -116,10 +116,10 @@ internal fun Map<Int, Color?>.getLightModeColors(): Web3ModalTheme.Colors {
 }
 
 @Composable
-internal fun Map<Int, Color?>.getDarkModeColors(): Web3ModalTheme.Colors {
-    val defaultColors = Web3ModalTheme.provideDarkWeb3ModalColor()
+internal fun Map<Int, Color?>.getDarkModeColors(): AppKitTheme.Colors {
+    val defaultColors = AppKitTheme.provideDarkAppKitColor()
     val (foreground, background) = provideColorPallets(defaultColors)
-    return Web3ModalTheme.provideDarkWeb3ModalColor(
+    return AppKitTheme.provideDarkAppKitColor(
         accent100 = get(R.attr.modalAccent100) ?: defaultColors.accent100,
         accent90 = get(R.attr.modalAccent90) ?: defaultColors.accent90,
         accent80 = get(R.attr.modalAccent80) ?: defaultColors.accent80,
@@ -131,7 +131,7 @@ internal fun Map<Int, Color?>.getDarkModeColors(): Web3ModalTheme.Colors {
     )
 }
 
-private fun Map<Int, Color?>.provideColorPallets(defaultColors: Web3ModalTheme.Colors): Pair<ColorPalette, ColorPalette> {
+private fun Map<Int, Color?>.provideColorPallets(defaultColors: AppKitTheme.Colors): Pair<ColorPalette, ColorPalette> {
     val foreground = ColorPalette(
         color100 = this[R.attr.modalForeground100] ?: defaultColors.foreground.color100,
         color125 = this[R.attr.modalForeground125] ?: defaultColors.foreground.color125,
@@ -157,10 +157,10 @@ private fun Map<Int, Color?>.provideColorPallets(defaultColors: Web3ModalTheme.C
     return (foreground to background)
 }
 
-private fun Int.toThemeMode(): Web3ModalTheme.Mode = when (this) {
-    1 -> Web3ModalTheme.Mode.DARK
-    2 -> Web3ModalTheme.Mode.LIGHT
-    else -> Web3ModalTheme.Mode.AUTO
+private fun Int.toThemeMode(): AppKitTheme.Mode = when (this) {
+    1 -> AppKitTheme.Mode.DARK
+    2 -> AppKitTheme.Mode.LIGHT
+    else -> AppKitTheme.Mode.AUTO
 }
 
 private val themeColorsAttributesMap = mapOf(

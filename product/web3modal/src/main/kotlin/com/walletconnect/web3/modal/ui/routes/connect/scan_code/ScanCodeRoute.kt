@@ -30,15 +30,15 @@ import com.walletconnect.android.pulse.model.ConnectionMethod
 import com.walletconnect.modal.ui.components.qr.QrCodeType
 import com.walletconnect.modal.ui.components.qr.WalletConnectQRCode
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.domain.delegate.Web3ModalDelegate
+import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate
 import com.walletconnect.web3.modal.ui.components.internal.OrientationBox
 import com.walletconnect.web3.modal.ui.components.internal.commons.entry.CopyActionEntry
 import com.walletconnect.web3.modal.ui.components.internal.snackbar.LocalSnackBarHandler
 import com.walletconnect.web3.modal.ui.previews.Landscape
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.previews.Web3ModalPreview
+import com.walletconnect.web3.modal.ui.previews.AppKitPreview
 import com.walletconnect.web3.modal.ui.routes.connect.ConnectViewModel
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import kotlinx.coroutines.flow.filter
 
 @Composable
@@ -48,7 +48,7 @@ internal fun ScanQRCodeRoute(connectViewModel: ConnectViewModel) {
     var uri by remember { mutableStateOf(connectViewModel.uri) }
 
     LaunchedEffect(Unit) {
-        Web3ModalDelegate
+        AppKitDelegate
             .wcEventModels
             .filter { event -> event is Modal.Model.RejectedSession || event is Modal.Model.SessionAuthenticateResponse.Error }
             .collect {
@@ -131,7 +131,7 @@ private fun PortraitContent(
 private fun ScanQrCodeLabel() {
     Text(
         text = "Scan this QR code with your phone",
-        modifier = Modifier.fillMaxWidth(), style = Web3ModalTheme.typo.paragraph400, textAlign = TextAlign.Center
+        modifier = Modifier.fillMaxWidth(), style = AppKitTheme.typo.paragraph400, textAlign = TextAlign.Center
     )
 }
 
@@ -140,21 +140,21 @@ private fun QRCode(uri: String) {
     if (isSystemInDarkTheme()) {
         Box(
             modifier = Modifier
-                .background(Web3ModalTheme.colors.inverse100, shape = RoundedCornerShape(36.dp))
+                .background(AppKitTheme.colors.inverse100, shape = RoundedCornerShape(36.dp))
                 .padding(16.dp)
         ) {
             WalletConnectQRCode(
                 qrData = uri,
-                primaryColor = Web3ModalTheme.colors.inverse000,
-                logoColor = Web3ModalTheme.colors.accent100,
+                primaryColor = AppKitTheme.colors.inverse000,
+                logoColor = AppKitTheme.colors.accent100,
                 type = QrCodeType.W3M
             )
         }
     } else {
         WalletConnectQRCode(
             qrData = uri,
-            primaryColor = Web3ModalTheme.colors.inverse000,
-            logoColor = Web3ModalTheme.colors.accent100,
+            primaryColor = AppKitTheme.colors.inverse000,
+            logoColor = AppKitTheme.colors.accent100,
             type = QrCodeType.W3M
         )
     }
@@ -164,7 +164,7 @@ private fun QRCode(uri: String) {
 @Landscape
 @Composable
 private fun ScanQRCodePreview() {
-    Web3ModalPreview("Mobile Wallets") {
+    AppKitPreview("Mobile Wallets") {
         ScanQRCodeContent("47442c19ea7c6a7a836fa3e53af1ddd375438daaeea9acdbf595e989a731b73249a10a7cc0e343ca627e536609", {})
     }
 }

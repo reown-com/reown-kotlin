@@ -38,13 +38,13 @@ import androidx.compose.ui.unit.dp
 import com.walletconnect.web3.modal.ui.components.internal.commons.network.HexagonShape
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 @Composable
 internal fun LoadingSpinner(
     strokeWidth: Dp = 4.dp,
     size: Dp = 24.dp,
-    tint: Color = Web3ModalTheme.colors.accent100
+    tint: Color = AppKitTheme.colors.accent100
 ) {
     CircularProgressIndicator(
         strokeWidth = strokeWidth,
@@ -93,7 +93,7 @@ private fun Modifier.drawAnimatedBorder(
     shape: Shape,
     durationMillis: Int
 ) = composed {
-    val loaderColor = Web3ModalTheme.colors.accent100
+    val loaderColor = AppKitTheme.colors.accent100
     var pathLenght by remember { mutableFloatStateOf(0f) }
     val infiniteTransition = rememberInfiniteTransition(label = "rotation")
     val loaderProgress by infiniteTransition.animateFloat(

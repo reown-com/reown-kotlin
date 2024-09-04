@@ -22,8 +22,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.walletconnect.modal.ui.components.common.roundedClickable
 import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.domain.delegate.Web3ModalDelegate
-import com.walletconnect.web3.modal.ui.components.internal.Web3ModalTopBar
+import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate
+import com.walletconnect.web3.modal.ui.components.internal.AppKitTopBar
 import com.walletconnect.web3.modal.ui.components.internal.commons.BackArrowIcon
 import com.walletconnect.web3.modal.ui.components.internal.commons.FullWidthDivider
 import com.walletconnect.web3.modal.ui.components.internal.commons.QuestionMarkIcon
@@ -33,26 +33,26 @@ import com.walletconnect.web3.modal.ui.components.internal.snackbar.rememberSnac
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.ProvideWeb3ModalThemeComposition
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.ProvideAppKitThemeComposition
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.onEach
 
 @Composable
-internal fun Web3ModalRoot(
+internal fun AppKitRoot(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     closeModal: () -> Unit,
     content: @Composable () -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val rootState = rememberWeb3ModalRootState(coroutineScope = scope, navController = navController)
+    val rootState = rememberAppKitRootState(coroutineScope = scope, navController = navController)
     val snackBarState = rememberSnackBarState(coroutineScope = scope)
     val title by rootState.title.collectAsState(null)
 
     LaunchedEffect(Unit) {
-        Web3ModalDelegate
+        AppKitDelegate
             .wcEventModels
             .filterIsInstance<Modal.Model.Error>()
             .onEach { event ->
@@ -65,15 +65,15 @@ internal fun Web3ModalRoot(
         verticalArrangement = Arrangement.Bottom,
         modifier = modifier
     ) {
-        ProvideWeb3ModalThemeComposition {
-            Web3ModalRoot(rootState, snackBarState, title, closeModal, content)
+        ProvideAppKitThemeComposition {
+            AppKitRoot(rootState, snackBarState, title, closeModal, content)
         }
     }
 }
 
 @Composable
-internal fun Web3ModalRoot(
-    rootState: Web3ModalRootState,
+internal fun AppKitRoot(
+    rootState: AppKitRootState,
     snackBarState: SnackBarState,
     title: String?,
     closeModal: () -> Unit,
@@ -83,10 +83,10 @@ internal fun Web3ModalRoot(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Web3ModalTheme.colors.background.color125)
+                .background(AppKitTheme.colors.background.color125)
         ) {
             title?.let { title ->
-                Web3ModalTopBar(
+                AppKitTopBar(
                     title = title,
                     startIcon = { TopBarStartIcon(rootState) },
                     onCloseIconClick = closeModal
@@ -100,7 +100,7 @@ internal fun Web3ModalRoot(
 
 @Composable
 private fun TopBarStartIcon(
-    rootState: Web3ModalRootState
+    rootState: AppKitRootState
 ) {
     if (rootState.currentDestinationRoute == Route.SIWE_FALLBACK.path) {
         questionMark(rootState)
@@ -120,7 +120,7 @@ private fun TopBarStartIcon(
 }
 
 @Composable
-private fun questionMark(rootState: Web3ModalRootState) {
+private fun questionMark(rootState: AppKitRootState) {
     QuestionMarkIcon(
         modifier = Modifier
             .size(36.dp)
@@ -131,16 +131,16 @@ private fun questionMark(rootState: Web3ModalRootState) {
 
 @Composable
 @UiModePreview
-private fun PreviewWeb3ModalRoot() {
+private fun PreviewAppKitRoot() {
     val content: @Composable () -> Unit = { Box(modifier = Modifier.size(200.dp)) }
     val scope = rememberCoroutineScope()
     val navController = rememberNavController()
-    val rootState = rememberWeb3ModalRootState(coroutineScope = scope, navController = navController)
+    val rootState = rememberAppKitRootState(coroutineScope = scope, navController = navController)
     val snackBarState = rememberSnackBarState(coroutineScope = scope)
 
     MultipleComponentsPreview(
-        { Web3ModalRoot(rootState, snackBarState, null, {}, { content() }) },
-        { Web3ModalRoot(rootState, snackBarState, "Top Bar Title", {}, { content() }) }
+        { AppKitRoot(rootState, snackBarState, null, {}, { content() }) },
+        { AppKitRoot(rootState, snackBarState, "Top Bar Title", {}, { content() }) }
     )
 }
 

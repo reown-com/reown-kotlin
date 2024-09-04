@@ -14,7 +14,7 @@ import com.walletconnect.android.internal.common.di.explorerModule
 import com.walletconnect.android.internal.common.di.keyServerModule
 import com.walletconnect.android.internal.common.di.pulseModule
 import com.walletconnect.android.internal.common.di.pushModule
-import com.walletconnect.android.internal.common.di.web3ModalModule
+import com.walletconnect.android.internal.common.di.appKitModule
 import com.walletconnect.android.internal.common.explorer.ExplorerInterface
 import com.walletconnect.android.internal.common.explorer.ExplorerProtocol
 import com.walletconnect.android.internal.common.model.AppMetaData
@@ -180,7 +180,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 corePairingModule(Pairing, PairingController),
                 keyServerModule(keyServerUrl),
                 explorerModule(),
-                web3ModalModule(),
+                appKitModule(),
                 pulseModule(bundleId)
             )
         }

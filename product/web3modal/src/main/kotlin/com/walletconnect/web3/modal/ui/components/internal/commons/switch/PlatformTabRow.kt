@@ -15,12 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
 import androidx.compose.material.Tab
 import androidx.compose.material.TabPosition
 import androidx.compose.material.TabRow
@@ -31,21 +29,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.walletconnect.web3.modal.R
-import com.walletconnect.web3.modal.ui.components.internal.commons.ContentDescription
 import com.walletconnect.web3.modal.ui.components.internal.commons.HorizontalSpacer
 import com.walletconnect.web3.modal.ui.components.internal.commons.MobileIcon
 import com.walletconnect.web3.modal.ui.components.internal.commons.WebIcon
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 
 internal enum class PlatformTab(
     val value: Int, val label: String
@@ -70,13 +63,13 @@ internal fun PlatformTabRow(
     TabRow(
         selectedTabIndex = platformTab.value,
         backgroundColor = Color.Transparent,
-        contentColor = Web3ModalTheme.colors.foreground.color200,
+        contentColor = AppKitTheme.colors.foreground.color200,
         indicator = indicator,
         divider = {},
         modifier = Modifier
             .width(210.dp)
             .height(32.dp)
-            .background(color = Web3ModalTheme.colors.grayGlass02, shape = RoundedCornerShape(80f))
+            .background(color = AppKitTheme.colors.grayGlass02, shape = RoundedCornerShape(80f))
     ) {
         PlatformTab.values().forEach {
             val isSelected = platformTab == it
@@ -94,7 +87,7 @@ internal fun PlatformTabRow(
 
 @Composable
 private fun TabContent(platform: PlatformTab, isSelected: Boolean) {
-    val color = if (isSelected) Web3ModalTheme.colors.foreground.color100 else Web3ModalTheme.colors.foreground.color200
+    val color = if (isSelected) AppKitTheme.colors.foreground.color100 else AppKitTheme.colors.foreground.color200
     Row(
         modifier = Modifier.fillMaxHeight(),
         verticalAlignment = Alignment.CenterVertically,
@@ -104,7 +97,7 @@ private fun TabContent(platform: PlatformTab, isSelected: Boolean) {
         HorizontalSpacer(width = 4.dp)
         Text(
             text = platform.label,
-            style = Web3ModalTheme.typo.small500.copy(color = color, textAlign = TextAlign.Center),
+            style = AppKitTheme.typo.small500.copy(color = color, textAlign = TextAlign.Center),
             modifier = Modifier.wrapContentHeight()
         )
     }
@@ -147,8 +140,8 @@ private fun CustomIndicatorWithAnimation(
             .width(indicatorEnd - indicatorStart)
             .padding(3.dp)
             .fillMaxSize()
-            .background(color = Web3ModalTheme.colors.grayGlass02, RoundedCornerShape(50))
-            .border(BorderStroke(1.dp, Web3ModalTheme.colors.grayGlass02), RoundedCornerShape(50))
+            .background(color = AppKitTheme.colors.grayGlass02, RoundedCornerShape(50))
+            .border(BorderStroke(1.dp, AppKitTheme.colors.grayGlass02), RoundedCornerShape(50))
             .zIndex(1f)
     )
 }

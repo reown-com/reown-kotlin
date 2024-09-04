@@ -43,5 +43,5 @@ class SendEventUseCase(
 }
 
 interface SendEventInterface {
-    fun send(props: Props, sdkType: SDKType = SDKType.WEB3MODAL, timestamp: Long? = currentTimeInSeconds, id: Long? = generateId())
+    fun send(props: Props, sdkType: SDKType = SDKType.APPKIT, timestamp: Long? = currentTimeInSeconds, id: Long? = generateId())
 }

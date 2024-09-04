@@ -34,11 +34,11 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.network.Circl
 import com.walletconnect.web3.modal.ui.model.UiStateBuilder
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.previews.Web3ModalPreview
+import com.walletconnect.web3.modal.ui.previews.AppKitPreview
 import com.walletconnect.web3.modal.ui.previews.ethereumChain
 import com.walletconnect.web3.modal.ui.routes.account.AccountViewModel
 import com.walletconnect.web3.modal.ui.previews.accountDataPreview
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import com.walletconnect.web3.modal.utils.getImageData
 
 @Composable
@@ -95,7 +95,7 @@ private fun AccountScreen(
             VerticalSpacer(height = 4.dp)
             Text(
                 text = balance.valueWithSymbol,
-                style = Web3ModalTheme.typo.paragraph400.copy(Web3ModalTheme.colors.foreground.color200)
+                style = AppKitTheme.typo.paragraph400.copy(AppKitTheme.colors.foreground.color200)
             )
         }
         selectedChain.blockExplorerUrl?.let { url ->
@@ -115,14 +115,14 @@ private fun AccountScreen(
             onClick = onChangeNetworkClick,
             state = AccountEntryState.NEXT
         ) {
-            Text(text = selectedChain.chainName, style = Web3ModalTheme.typo.paragraph500.copy(color = it.textColor))
+            Text(text = selectedChain.chainName, style = AppKitTheme.typo.paragraph500.copy(color = it.textColor))
         }
         VerticalSpacer(height = 8.dp)
         AccountEntry(
             startIcon = { DisconnectIcon() },
             onClick = onDisconnectClick
         ) {
-            Text(text = "Disconnect", style = Web3ModalTheme.typo.paragraph500.copy(color = it.textColor))
+            Text(text = "Disconnect", style = AppKitTheme.typo.paragraph500.copy(color = it.textColor))
         }
     }
 }
@@ -130,7 +130,7 @@ private fun AccountScreen(
 @UiModePreview
 @Composable
 private fun PreviewAccountScreen() {
-    Web3ModalPreview {
+    AppKitPreview {
         AccountScreen(accountDataPreview, ethereumChain,null, {}, {}, {})
     }
 }
@@ -138,7 +138,7 @@ private fun PreviewAccountScreen() {
 @UiModePreview
 @Composable
 private fun PreviewAccountScreenWithBalance() {
-    Web3ModalPreview {
+    AppKitPreview {
         AccountScreen(accountDataPreview, ethereumChain, Balance(ethereumChain.token, "0000000"), {}, {}, {})
     }
 }

@@ -35,8 +35,8 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.network.Circl
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
-import com.walletconnect.web3.modal.ui.theme.ProvideWeb3ModalThemeComposition
-import com.walletconnect.web3.modal.ui.theme.Web3ModalTheme
+import com.walletconnect.web3.modal.ui.theme.ProvideAppKitThemeComposition
+import com.walletconnect.web3.modal.ui.theme.AppKitTheme
 import com.walletconnect.web3.modal.utils.getImageData
 import com.walletconnect.web3.modal.utils.toVisibleAddress
 
@@ -61,7 +61,7 @@ internal sealed class AccountButtonState {
 
 @Composable
 fun AccountButton(
-    state: Web3ModalState,
+    state: AppKitState,
     accountButtonType: AccountButtonType = AccountButtonType.NORMAL
 ) {
     val accountState by when (accountButtonType) {
@@ -70,7 +70,7 @@ fun AccountButton(
     }
     AccountButtonState(
         state = accountState,
-        onClick = state::openWeb3Modal
+        onClick = state::openAppKit
     )
 }
 
@@ -100,19 +100,19 @@ private fun AccountButtonMixed(
     onClick: () -> Unit,
     isEnabled: Boolean = true
 ) {
-    ProvideWeb3ModalThemeComposition {
+    ProvideAppKitThemeComposition {
         val backgroundColor: Color
         val borderColor: Color
         val textColor: Color
 
         if (isEnabled) {
-            backgroundColor = Web3ModalTheme.colors.grayGlass02
-            borderColor = Web3ModalTheme.colors.grayGlass05
-            textColor = Web3ModalTheme.colors.foreground.color100
+            backgroundColor = AppKitTheme.colors.grayGlass02
+            borderColor = AppKitTheme.colors.grayGlass05
+            textColor = AppKitTheme.colors.foreground.color100
         } else {
-            backgroundColor = Web3ModalTheme.colors.grayGlass15
-            borderColor = Web3ModalTheme.colors.grayGlass05
-            textColor = Web3ModalTheme.colors.grayGlass15
+            backgroundColor = AppKitTheme.colors.grayGlass15
+            borderColor = AppKitTheme.colors.grayGlass05
+            textColor = AppKitTheme.colors.grayGlass15
         }
 
         TransparentSurface(shape = RoundedCornerShape(100)) {
@@ -130,14 +130,14 @@ private fun AccountButtonMixed(
                 ) {
                     CircleNetworkImage(data = chainImage.getImageData(), size = 24.dp, isEnabled = isEnabled)
                     HorizontalSpacer(width = 4.dp)
-                    Text(text = chainData, style = Web3ModalTheme.typo.paragraph600.copy(color = textColor))
+                    Text(text = chainData, style = AppKitTheme.typo.paragraph600.copy(color = textColor))
                     HorizontalSpacer(width = 8.dp)
                     ImageButton(
                         text = address.toVisibleAddress(), image = {
                             Box(
                                 modifier = Modifier
                                     .size(22.dp)
-                                    .border(width = 2.dp, color = Web3ModalTheme.colors.grayGlass05, shape = CircleShape)
+                                    .border(width = 2.dp, color = AppKitTheme.colors.grayGlass05, shape = CircleShape)
                                     .padding(2.dp)
                                     .background(brush = Brush.linearGradient(generateAvatarColors(address)), shape = CircleShape)
                             )
@@ -160,13 +160,13 @@ private fun AccountButtonNormal(
     onClick: () -> Unit,
     isEnabled: Boolean = true
 ) {
-    ProvideWeb3ModalThemeComposition {
+    ProvideAppKitThemeComposition {
         ImageButton(
             text = address.toVisibleAddress(), image = {
                 Box(
                     modifier = Modifier
                         .size(22.dp)
-                        .border(width = 2.dp, color = Web3ModalTheme.colors.grayGlass05, shape = CircleShape)
+                        .border(width = 2.dp, color = AppKitTheme.colors.grayGlass05, shape = CircleShape)
                         .padding(2.dp)
                         .background(brush = Brush.linearGradient(generateAvatarColors(address)), shape = CircleShape)
                 )
@@ -183,7 +183,7 @@ private fun AccountButtonNormal(
 
 @Composable
 private fun UnavailableSession() {
-    ProvideWeb3ModalThemeComposition {
+    ProvideAppKitThemeComposition {
         TextButton(text = "Session Unavailable", style = ButtonStyle.ACCOUNT, size = ButtonSize.M, isEnabled = false, onClick = {})
     }
 }

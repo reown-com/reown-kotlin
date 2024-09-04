@@ -6,6 +6,6 @@
 
     <dialog
         android:id="@+id/web3ModalSheet"
-        android:name="com.walletconnect.web3.modal.ui.Web3ModalSheet" />
+        android:name="com.walletconnect.web3.modal.ui.AppKitSheet" />
 
 </navigation>

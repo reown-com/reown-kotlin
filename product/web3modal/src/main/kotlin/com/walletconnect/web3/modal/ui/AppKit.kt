@@ -14,19 +14,19 @@ import androidx.navigation.navArgument
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.bottomSheet
 import com.walletconnect.web3.modal.R
-import com.walletconnect.web3.modal.ui.components.internal.Web3ModalComponent
+import com.walletconnect.web3.modal.ui.components.internal.AppKitComponent
 import com.walletconnect.web3.modal.ui.navigation.Route
 
 internal const val CHOOSE_NETWORK_KEY = "chooseNetwork"
 private const val CHOOSE_NETWORK_ARG = "{chooseNetwork}"
-private val web3ModalPath = Route.WEB3MODAL.path + "/" + CHOOSE_NETWORK_ARG
+private val appKitPath = Route.APPKIT.path + "/" + CHOOSE_NETWORK_ARG
 
-fun NavGraphBuilder.web3Modal() {
-    dialog<Web3ModalSheet>(web3ModalPath) { argument(CHOOSE_NETWORK_KEY) { type = NavType.BoolType } }
+fun NavGraphBuilder.appKit() {
+    dialog<AppKitSheet>(appKitPath) { argument(CHOOSE_NETWORK_KEY) { type = NavType.BoolType } }
 }
 
 @SuppressLint("RestrictedApi")
-fun NavController.openWeb3Modal(
+fun NavController.openAppKit(
     shouldOpenChooseNetwork: Boolean = false,
     onError: (Throwable) -> Unit = {}
 ) {
@@ -34,39 +34,39 @@ fun NavController.openWeb3Modal(
         findDestination(R.id.web3ModalGraph) != null -> {
             navigate(R.id.web3ModalGraph, args = Bundle().apply {
                 putBoolean(CHOOSE_NETWORK_KEY, shouldOpenChooseNetwork)
-            }, navOptions = buildWeb3ModalNavOptions())
+            }, navOptions = buildAppKitNavOptions())
         }
-        findDestination(web3ModalPath) != null -> {
+        findDestination(appKitPath) != null -> {
             navigate(
-                route = Route.WEB3MODAL.path + "/$shouldOpenChooseNetwork",
-                navOptions = buildWeb3ModalNavOptions()
+                route = Route.APPKIT.path + "/$shouldOpenChooseNetwork",
+                navOptions = buildAppKitNavOptions()
             )
         }
-        else -> onError(IllegalStateException("Invalid web3Modal path"))
+        else -> onError(IllegalStateException("Invalid AppKit path"))
     }
 }
 
-fun NavGraphBuilder.web3ModalGraph(navController: NavController) {
+fun NavGraphBuilder.appKitGraph(navController: NavController) {
     bottomSheet(
-        route = web3ModalPath,
+        route = appKitPath,
         arguments = listOf(navArgument(CHOOSE_NETWORK_KEY) { type = NavType.BoolType })
     ) {
         val shouldOpenChooseNetwork = it.arguments?.getBoolean(CHOOSE_NETWORK_KEY) ?: false
-        Web3Modal(
+        AppKit(
             navController = navController,
             shouldOpenChooseNetwork = shouldOpenChooseNetwork
         )
     }
 }
 
-private fun buildWeb3ModalNavOptions() = NavOptions.Builder().setLaunchSingleTop(true).build()
+private fun buildAppKitNavOptions() = NavOptions.Builder().setLaunchSingleTop(true).build()
 
 @Composable
-internal fun Web3Modal(
+internal fun AppKit(
     navController: NavController,
     shouldOpenChooseNetwork: Boolean
 ) {
-    Web3ModalComponent(
+    AppKitComponent(
         closeModal = navController::popBackStack,
         shouldOpenChooseNetwork = shouldOpenChooseNetwork
     )
