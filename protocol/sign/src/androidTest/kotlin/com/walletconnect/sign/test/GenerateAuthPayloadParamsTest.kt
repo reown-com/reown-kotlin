@@ -1,7 +1,7 @@
 package com.walletconnect.sign.test
 
-import com.walletconnect.android.internal.common.signing.cacao.getChains
-import com.walletconnect.android.internal.common.signing.cacao.getMethods
+import com.reown.android.internal.common.signing.cacao.getChains
+import com.reown.android.internal.common.signing.cacao.getMethods
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.client.utils.generateAuthPayloadParams
 import org.junit.Test

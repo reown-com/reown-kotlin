@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.walletconnect.modal.ui.components.common.roundedClickable
+import com.reown.modal.ui.components.common.roundedClickable
 import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview

@@ -1,12 +1,12 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.internal.common.crypto.kmr.KeyManagementRepository
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.walletconnect.android.internal.common.storage.verify.VerifyContextStorageRepository
-import com.walletconnect.android.pulse.domain.InsertTelemetryEventUseCase
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
+import com.reown.android.pulse.domain.InsertTelemetryEventUseCase
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger

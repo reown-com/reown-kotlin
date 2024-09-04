@@ -1,11 +1,11 @@
 package com.walletconnect.sign.validator
 
-import com.walletconnect.android.internal.common.model.RelayProtocolOptions
-import com.walletconnect.android.internal.common.model.SymmetricKey
-import com.walletconnect.android.internal.utils.dayInSeconds
-import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
-import com.walletconnect.android.internal.utils.monthInSeconds
-import com.walletconnect.android.internal.utils.weekInSeconds
+import com.reown.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.SymmetricKey
+import com.reown.android.internal.utils.dayInSeconds
+import com.reown.android.internal.utils.fiveMinutesInSeconds
+import com.reown.android.internal.utils.monthInSeconds
+import com.reown.android.internal.utils.weekInSeconds
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.exceptions.EMPTY_NAMESPACES_MESSAGE
 import com.walletconnect.sign.common.exceptions.INVALID_EVENT_MESSAGE
@@ -23,7 +23,7 @@ import com.walletconnect.sign.common.exceptions.NAMESPACE_KEYS_MISSING_MESSAGE
 import com.walletconnect.sign.common.exceptions.NAMESPACE_METHODS_MISSING_MESSAGE
 import com.walletconnect.sign.common.exceptions.UNAUTHORIZED_EVENT_MESSAGE
 import com.walletconnect.sign.common.exceptions.UNAUTHORIZED_METHOD_MESSAGE
-import com.walletconnect.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.Namespace
 import com.walletconnect.sign.common.validator.SignValidator
 import com.walletconnect.sign.engine.model.EngineDO
 import com.walletconnect.sign.engine.model.mapper.toAbsoluteString

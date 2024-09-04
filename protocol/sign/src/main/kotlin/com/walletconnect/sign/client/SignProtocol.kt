@@ -2,15 +2,15 @@
 
 package com.walletconnect.sign.client
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
-import com.walletconnect.android.internal.common.di.DatabaseConfig
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.scope
-import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.android.pairing.model.mapper.toPairing
-import com.walletconnect.android.relay.WSSConnectionState
+import com.reown.android.Core
+import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.di.DatabaseConfig
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.wcKoinApp
+import com.reown.android.pairing.model.mapper.toPairing
+import com.reown.android.relay.WSSConnectionState
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.client.mapper.*
 import com.walletconnect.sign.common.exceptions.SignClientAlreadyInitializedException
@@ -526,7 +526,7 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
 
     @Deprecated(
         "Getting a list of Pairings will be moved to CoreClient to make pairing SDK agnostic",
-        replaceWith = ReplaceWith("CoreClient.Pairing.getPairings()", "com.walletconnect.android.CoreClient")
+        replaceWith = ReplaceWith("CoreClient.Pairing.getPairings()", "com.reown.android.CoreClient")
     )
     @Throws(IllegalStateException::class)
     override fun getListOfSettledPairings(): List<Sign.Model.Pairing> {

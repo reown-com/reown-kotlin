@@ -2,13 +2,13 @@
 
 package com.walletconnect.notify.engine.responses
 
-import com.walletconnect.android.internal.common.JsonRpcResponse
-import com.walletconnect.android.internal.common.jwt.did.extractVerifiedDidJwtClaims
-import com.walletconnect.android.internal.common.model.WCResponse
-import com.walletconnect.android.internal.common.model.params.ChatNotifyResponseAuthParams
-import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
-import com.walletconnect.android.internal.common.model.type.EngineEvent
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.JsonRpcResponse
+import com.reown.android.internal.common.jwt.did.extractVerifiedDidJwtClaims
+import com.reown.android.internal.common.model.WCResponse
+import com.reown.android.internal.common.model.params.ChatNotifyResponseAuthParams
+import com.reown.android.internal.common.model.params.CoreNotifyParams
+import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.foundation.util.Logger
 import com.reown.foundation.util.jwt.decodeDidPkh
 import com.walletconnect.notify.common.model.DeleteSubscription

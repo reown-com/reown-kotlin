@@ -16,7 +16,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.toBitmap
 import coil.ImageLoader
 import coil.request.ImageRequest
-import com.walletconnect.android.Core
+import com.reown.android.Core
 import com.walletconnect.notify.client.Notify
 import com.walletconnect.notify.client.NotifyClient
 import com.walletconnect.sample.wallet.R

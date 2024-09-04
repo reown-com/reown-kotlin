@@ -1,14 +1,14 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.common.model.IrnParams
-import com.walletconnect.android.internal.common.model.Tags
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.scope
-import com.walletconnect.android.internal.common.storage.verify.VerifyContextStorageRepository
-import com.walletconnect.android.internal.utils.CoreValidator.isExpired
-import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
-import com.walletconnect.android.pairing.handler.PairingControllerInterface
+import com.reown.android.Core
+import com.reown.android.internal.common.model.IrnParams
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
+import com.reown.android.internal.utils.CoreValidator.isExpired
+import com.reown.android.internal.utils.fiveMinutesInSeconds
+import com.reown.android.pairing.handler.PairingControllerInterface
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.exceptions.PeerError

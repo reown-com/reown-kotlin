@@ -28,7 +28,7 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.walletconnect.modal.utils.theme.toComposeColor
+import com.reown.modal.utils.theme.toComposeColor
 import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.components.internal.AppKitComponent
 import com.walletconnect.web3.modal.ui.theme.ColorPalette

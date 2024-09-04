@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.walletconnect.modal.ui.components.common.VerticalSpacer
+import com.reown.modal.ui.components.common.VerticalSpacer
 import com.walletconnect.web3.modal.ui.components.internal.commons.LoadingSpinner
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.ButtonSize
 import com.walletconnect.web3.modal.ui.components.internal.commons.button.ButtonStyle

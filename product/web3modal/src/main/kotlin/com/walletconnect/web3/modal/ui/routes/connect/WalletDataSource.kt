@@ -1,15 +1,15 @@
 package com.walletconnect.web3.modal.ui.routes.connect
 
-import com.walletconnect.android.internal.common.modal.data.model.Wallet
-import com.walletconnect.android.internal.common.modal.domain.usecase.GetInstalledWalletsIdsUseCaseInterface
-import com.walletconnect.android.internal.common.modal.domain.usecase.GetSampleWalletsUseCaseInterface
-import com.walletconnect.android.internal.common.modal.domain.usecase.GetWalletsUseCaseInterface
-import com.walletconnect.android.internal.common.wcKoinApp
+import com.reown.android.internal.common.modal.data.model.Wallet
+import com.reown.android.internal.common.modal.domain.usecase.GetInstalledWalletsIdsUseCaseInterface
+import com.reown.android.internal.common.modal.domain.usecase.GetSampleWalletsUseCaseInterface
+import com.reown.android.internal.common.modal.domain.usecase.GetWalletsUseCaseInterface
+import com.reown.android.internal.common.wcKoinApp
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.domain.usecase.GetRecentWalletUseCase
 import com.walletconnect.web3.modal.engine.AppKitEngine
 import com.walletconnect.web3.modal.engine.coinbase.COINBASE_WALLET_ID
-import com.walletconnect.modal.ui.model.LoadingState
+import com.reown.modal.ui.model.LoadingState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 

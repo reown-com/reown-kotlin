@@ -26,9 +26,9 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.walletconnect.android.pulse.model.ConnectionMethod
-import com.walletconnect.modal.ui.components.qr.QrCodeType
-import com.walletconnect.modal.ui.components.qr.WalletConnectQRCode
+import com.reown.android.pulse.model.ConnectionMethod
+import com.reown.modal.ui.components.qr.QrCodeType
+import com.reown.modal.ui.components.qr.WalletConnectQRCode
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate
 import com.walletconnect.web3.modal.ui.components.internal.OrientationBox

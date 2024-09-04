@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.data
 
-import com.walletconnect.android.internal.common.model.ProjectId
+import com.reown.android.internal.common.model.ProjectId
 import com.walletconnect.web3.modal.data.model.IdentityDTO
 import com.walletconnect.web3.modal.data.network.BlockchainService
 import com.walletconnect.web3.modal.domain.model.Identity

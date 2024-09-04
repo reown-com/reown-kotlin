@@ -3,7 +3,7 @@ package com.walletconnect.sample.wallet.ui.routes.composable_routes.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
-import com.walletconnect.android.CoreClient
+import com.reown.android.CoreClient
 import com.walletconnect.sample.wallet.domain.EthAccountDelegate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

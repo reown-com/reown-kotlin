@@ -2,9 +2,9 @@
 
 package com.walletconnect.notify.engine.calls
 
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.internal.common.model.AppMetaDataType
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.walletconnect.notify.common.model.Subscription
 import com.walletconnect.notify.data.storage.SubscriptionRepository
 import com.walletconnect.notify.engine.validateTimeout

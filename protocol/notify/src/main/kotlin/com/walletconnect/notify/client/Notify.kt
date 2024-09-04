@@ -2,9 +2,9 @@ package com.walletconnect.notify.client
 
 import android.net.Uri
 import androidx.annotation.Keep
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreInterface
-import com.walletconnect.android.cacao.SignatureInterface
+import com.reown.android.Core
+import com.reown.android.CoreInterface
+import com.reown.android.cacao.SignatureInterface
 import com.reown.foundation.common.model.PrivateKey
 import kotlin.time.Duration
 

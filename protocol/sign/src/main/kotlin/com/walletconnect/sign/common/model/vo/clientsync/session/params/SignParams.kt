@@ -4,10 +4,10 @@ package com.walletconnect.sign.common.model.vo.clientsync.session.params
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.model.RelayProtocolOptions
-import com.walletconnect.android.internal.common.model.SessionProposer
-import com.walletconnect.android.internal.common.model.params.CoreSignParams
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.SessionProposer
+import com.reown.android.internal.common.model.params.CoreSignParams
 import com.walletconnect.sign.common.model.vo.clientsync.common.PayloadParams
 import com.walletconnect.sign.common.model.vo.clientsync.common.Requester
 import com.walletconnect.sign.common.model.vo.clientsync.common.SessionParticipant

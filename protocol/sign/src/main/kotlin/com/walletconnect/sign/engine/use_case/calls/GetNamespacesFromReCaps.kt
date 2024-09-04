@@ -1,7 +1,7 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.utils.CoreValidator
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.utils.CoreValidator
 import com.walletconnect.sign.common.validator.SignValidator
 
 class GetNamespacesFromReCaps {

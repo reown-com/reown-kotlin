@@ -2,7 +2,7 @@
 
 package com.walletconnect.notify.di
 
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.notify.engine.responses.OnDeleteResponseUseCase
 import com.walletconnect.notify.engine.responses.OnGetNotificationsResponseUseCase
 import com.walletconnect.notify.engine.responses.OnSubscribeResponseUseCase

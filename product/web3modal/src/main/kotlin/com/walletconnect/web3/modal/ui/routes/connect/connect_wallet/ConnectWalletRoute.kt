@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import com.walletconnect.android.internal.common.modal.data.model.Wallet
+import com.reown.android.internal.common.modal.data.model.Wallet
 import com.walletconnect.web3.modal.ui.components.internal.ErrorModalState
 import com.walletconnect.web3.modal.ui.components.internal.commons.InstalledWalletIcon
 import com.walletconnect.web3.modal.ui.components.internal.commons.ListSelectRow

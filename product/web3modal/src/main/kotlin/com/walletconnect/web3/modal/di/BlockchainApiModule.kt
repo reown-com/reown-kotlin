@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.di
 
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.web3.modal.data.BlockchainRepository
 import com.walletconnect.web3.modal.data.network.BlockchainService
 import com.walletconnect.web3.modal.domain.usecase.GetIdentityUseCase

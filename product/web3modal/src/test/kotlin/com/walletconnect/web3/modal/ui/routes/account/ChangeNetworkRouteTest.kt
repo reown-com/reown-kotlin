@@ -2,8 +2,8 @@ package com.walletconnect.web3.modal.ui.routes.account
 
 import com.android.resources.NightMode
 import com.android.resources.ScreenOrientation
-import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.modal.ui.model.UiState
+import com.reown.android.internal.common.wcKoinApp
+import com.reown.modal.ui.model.UiState
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.domain.model.AccountData

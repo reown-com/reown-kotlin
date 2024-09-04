@@ -19,9 +19,9 @@ import com.coinbase.android.nativesdk.message.request.WALLET_WATCH_ASSET
 import com.coinbase.android.nativesdk.message.request.Web3JsonRPC
 import com.coinbase.android.nativesdk.message.response.ActionResult
 import com.coinbase.android.nativesdk.message.response.ResponseResult
-import com.walletconnect.android.internal.common.modal.data.model.Wallet
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.wcKoinApp
+import com.reown.android.internal.common.modal.data.model.Wallet
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.wcKoinApp
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.client.models.Account

@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.domain.delegate
 
-import com.walletconnect.android.internal.common.wcKoinApp
+import com.reown.android.internal.common.wcKoinApp
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.domain.model.Session

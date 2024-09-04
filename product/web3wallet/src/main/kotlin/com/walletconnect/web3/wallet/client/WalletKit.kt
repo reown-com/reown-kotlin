@@ -1,8 +1,8 @@
 package com.walletconnect.web3.wallet.client
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreInterface
-import com.walletconnect.android.internal.common.scope
+import com.reown.android.Core
+import com.reown.android.CoreInterface
+import com.reown.android.internal.common.scope
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.client.SignClient
 import com.walletconnect.sign.common.exceptions.SignClientAlreadyInitializedException

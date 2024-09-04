@@ -2,18 +2,18 @@
 
 package com.walletconnect.notify.engine.calls
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.common.crypto.codec.Codec
-import com.walletconnect.android.internal.common.crypto.sha256
-import com.walletconnect.android.internal.common.json_rpc.data.JsonRpcSerializer
-import com.walletconnect.android.internal.common.jwt.did.extractVerifiedDidJwtClaims
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.AppMetaDataType
-import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
-import com.walletconnect.android.internal.common.model.sync.ClientJsonRpc
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.walletconnect.android.internal.common.storage.rpc.JsonRpcHistory
-import com.walletconnect.android.push.notifications.DecryptMessageUseCaseInterface
+import com.reown.android.Core
+import com.reown.android.internal.common.crypto.codec.Codec
+import com.reown.android.internal.common.crypto.sha256
+import com.reown.android.internal.common.json_rpc.data.JsonRpcSerializer
+import com.reown.android.internal.common.jwt.did.extractVerifiedDidJwtClaims
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.model.params.CoreNotifyParams
+import com.reown.android.internal.common.model.sync.ClientJsonRpc
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.common.storage.rpc.JsonRpcHistory
+import com.reown.android.push.notifications.DecryptMessageUseCaseInterface
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger
 import com.walletconnect.notify.common.model.Notification

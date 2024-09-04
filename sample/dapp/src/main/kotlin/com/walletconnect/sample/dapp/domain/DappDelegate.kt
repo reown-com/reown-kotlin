@@ -1,7 +1,7 @@
 package com.walletconnect.sample.dapp.domain
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreClient
+import com.reown.android.Core
+import com.reown.android.CoreClient
 import com.walletconnect.sample.common.tag
 import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.client.Modal

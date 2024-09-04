@@ -1,6 +1,6 @@
 package com.walletconnect.sign.test.client
 
-import com.walletconnect.android.Core
+import com.reown.android.Core
 import com.walletconnect.sign.BuildConfig
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.client.SignClient

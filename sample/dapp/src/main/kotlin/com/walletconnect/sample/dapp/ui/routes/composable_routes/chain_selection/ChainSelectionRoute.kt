@@ -59,7 +59,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.walletconnect.android.utils.isPackageInstalled
+import com.reown.android.utils.isPackageInstalled
 import com.walletconnect.sample.common.Chains
 import com.walletconnect.sample.common.CompletePreviews
 import com.walletconnect.sample.common.ui.WCTopAppBarLegacy

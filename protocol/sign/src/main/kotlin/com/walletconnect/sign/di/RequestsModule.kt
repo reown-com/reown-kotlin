@@ -1,7 +1,7 @@
 package com.walletconnect.sign.di
 
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
-import com.walletconnect.android.pulse.domain.InsertEventUseCase
+import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.pulse.domain.InsertEventUseCase
 import com.walletconnect.sign.engine.use_case.requests.OnPingUseCase
 import com.walletconnect.sign.engine.use_case.requests.OnSessionAuthenticateUseCase
 import com.walletconnect.sign.engine.use_case.requests.OnSessionDeleteUseCase

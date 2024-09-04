@@ -2,8 +2,8 @@
 
 package com.walletconnect.sign.json_rpc.model
 
-import com.walletconnect.android.internal.common.json_rpc.model.JsonRpcHistoryRecord
-import com.walletconnect.android.internal.common.model.Expiry
+import com.reown.android.internal.common.json_rpc.model.JsonRpcHistoryRecord
+import com.reown.android.internal.common.model.Expiry
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.model.Request
 import com.walletconnect.sign.common.model.vo.clientsync.session.SignRpc

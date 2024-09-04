@@ -1,8 +1,8 @@
 package com.walletconnect.sign.mappers
 
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.RelayProtocolOptions
-import com.walletconnect.android.internal.common.model.SessionProposer
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.SessionProposer
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams
 import com.walletconnect.sign.engine.model.mapper.toEngineDO

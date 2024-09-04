@@ -1,10 +1,10 @@
-import com.walletconnect.android.cacao.signature.SignatureType;
-import com.walletconnect.android.internal.common.model.ProjectId;
-import com.walletconnect.android.internal.common.signing.cacao.Cacao;
-import com.walletconnect.android.internal.common.signing.cacao.CacaoKt;
-import com.walletconnect.android.internal.common.signing.cacao.CacaoType;
-import com.walletconnect.android.internal.common.signing.cacao.CacaoVerifier;
-import com.walletconnect.android.utils.cacao.CacaoSignerUtil;
+import com.reown.android.cacao.signature.SignatureType;
+import com.reown.android.internal.common.model.ProjectId;
+import com.reown.android.internal.common.signing.cacao.Cacao;
+import com.reown.android.internal.common.signing.cacao.CacaoKt;
+import com.reown.android.internal.common.signing.cacao.CacaoType;
+import com.reown.android.internal.common.signing.cacao.CacaoVerifier;
+import com.reown.android.utils.cacao.CacaoSignerUtil;
 import com.walletconnect.util.UtilFunctionsKt;
 
 import org.junit.Assert;

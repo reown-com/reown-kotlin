@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.client
 
-import com.walletconnect.android.internal.common.signing.cacao.Cacao
+import com.reown.android.internal.common.signing.cacao.Cacao
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.web3.modal.client.models.Account
 import com.walletconnect.web3.modal.client.models.Session

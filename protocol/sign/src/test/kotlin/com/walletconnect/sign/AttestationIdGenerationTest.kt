@@ -2,11 +2,11 @@ package com.walletconnect.sign
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.walletconnect.android.internal.common.crypto.sha256
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.model.RelayProtocolOptions
-import com.walletconnect.android.internal.common.model.SessionProposer
+import com.reown.android.internal.common.crypto.sha256
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.SessionProposer
 import com.walletconnect.sign.common.model.vo.clientsync.session.SignRpc
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams
 import junit.framework.TestCase.assertEquals

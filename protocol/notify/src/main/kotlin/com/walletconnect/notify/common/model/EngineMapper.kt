@@ -2,11 +2,11 @@
 
 package com.walletconnect.notify.common.model
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.common.model.RelayProtocolOptions
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.signing.cacao.Cacao
-import com.walletconnect.android.utils.toClient
+import com.reown.android.Core
+import com.reown.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.signing.cacao.Cacao
+import com.reown.android.utils.toClient
 import com.walletconnect.notify.client.Notify
 
 @JvmSynthetic

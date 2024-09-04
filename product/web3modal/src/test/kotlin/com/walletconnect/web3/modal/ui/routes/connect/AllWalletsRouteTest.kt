@@ -2,7 +2,7 @@ package com.walletconnect.web3.modal.ui.routes.connect
 
 import com.android.resources.NightMode
 import com.android.resources.ScreenOrientation
-import com.walletconnect.modal.ui.model.LoadingState
+import com.reown.modal.ui.model.LoadingState
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.previews.testWallets

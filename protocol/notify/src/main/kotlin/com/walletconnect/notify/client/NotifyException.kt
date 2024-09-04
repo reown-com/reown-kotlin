@@ -1,6 +1,6 @@
 package com.walletconnect.notify.client
 
-import com.walletconnect.android.internal.common.exception.WalletConnectException
+import com.reown.android.internal.common.exception.WalletConnectException
 
 class InvalidDidJsonFileException(override val message: String?) : WalletConnectException(message)
 class AccountIsNotRegisteredException(val account: String) : WalletConnectException("Account: $account is not registered")

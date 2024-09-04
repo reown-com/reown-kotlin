@@ -2,13 +2,13 @@ package com.walletconnect.web3.modal.ui.routes.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.android.pulse.domain.SendEventInterface
-import com.walletconnect.android.pulse.model.EventType
-import com.walletconnect.android.pulse.model.properties.Properties
-import com.walletconnect.android.pulse.model.properties.Props
+import com.reown.android.internal.common.wcKoinApp
+import com.reown.android.pulse.domain.SendEventInterface
+import com.reown.android.pulse.model.EventType
+import com.reown.android.pulse.model.properties.Properties
+import com.reown.android.pulse.model.properties.Props
 import com.reown.foundation.util.Logger
-import com.walletconnect.modal.ui.model.UiState
+import com.reown.modal.ui.model.UiState
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.client.models.request.Request
 import com.walletconnect.web3.modal.client.models.request.SentRequestResult

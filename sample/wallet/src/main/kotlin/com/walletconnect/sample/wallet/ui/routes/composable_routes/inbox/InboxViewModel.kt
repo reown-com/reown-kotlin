@@ -6,8 +6,8 @@ import android.app.Application
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.walletconnect.android.CoreClient
-import com.walletconnect.android.internal.common.explorer.data.model.Project
+import com.reown.android.CoreClient
+import com.reown.android.internal.common.explorer.data.model.Project
 import com.walletconnect.notify.client.Notify
 import com.walletconnect.notify.client.NotifyClient
 import com.walletconnect.sample.wallet.domain.EthAccountDelegate
@@ -38,7 +38,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
-import com.walletconnect.android.internal.common.explorer.data.model.ImageUrl as WCImageUrl
+import com.reown.android.internal.common.explorer.data.model.ImageUrl as WCImageUrl
 
 class InboxViewModel(application: Application) : AndroidViewModel(application) {
 

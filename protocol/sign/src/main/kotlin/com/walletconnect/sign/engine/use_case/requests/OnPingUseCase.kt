@@ -1,10 +1,10 @@
 package com.walletconnect.sign.engine.use_case.requests
 
-import com.walletconnect.android.internal.common.model.IrnParams
-import com.walletconnect.android.internal.common.model.Tags
-import com.walletconnect.android.internal.common.model.WCRequest
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.utils.thirtySeconds
+import com.reown.android.internal.common.model.IrnParams
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.internal.common.model.WCRequest
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.utils.thirtySeconds
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import kotlinx.coroutines.supervisorScope

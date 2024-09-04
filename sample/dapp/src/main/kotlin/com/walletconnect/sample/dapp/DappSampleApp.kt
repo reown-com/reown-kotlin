@@ -4,8 +4,8 @@ import android.app.Application
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreClient
+import com.reown.android.Core
+import com.reown.android.CoreClient
 import com.walletconnect.sample.common.tag
 import com.walletconnect.util.bytesToHex
 import com.walletconnect.util.randomBytes

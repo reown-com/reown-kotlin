@@ -2,9 +2,9 @@
 
 package com.walletconnect.notify.engine.calls
 
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.keyserver.domain.IdentitiesInteractor
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.keyserver.domain.IdentitiesInteractor
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.notify.data.storage.NotificationsRepository
 import com.walletconnect.notify.data.storage.RegisteredAccountsRepository

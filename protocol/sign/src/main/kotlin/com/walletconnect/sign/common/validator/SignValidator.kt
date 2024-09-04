@@ -3,13 +3,13 @@
 package com.walletconnect.sign.common.validator
 
 import android.annotation.SuppressLint
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.model.RelayProtocolOptions
-import com.walletconnect.android.internal.common.model.SymmetricKey
-import com.walletconnect.android.internal.utils.CoreValidator.isAccountIdCAIP10Compliant
-import com.walletconnect.android.internal.utils.CoreValidator.isChainIdCAIP2Compliant
-import com.walletconnect.android.internal.utils.CoreValidator.isNamespaceRegexCompliant
-import com.walletconnect.android.internal.utils.weekInSeconds
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.SymmetricKey
+import com.reown.android.internal.utils.CoreValidator.isAccountIdCAIP10Compliant
+import com.reown.android.internal.utils.CoreValidator.isChainIdCAIP2Compliant
+import com.reown.android.internal.utils.CoreValidator.isNamespaceRegexCompliant
+import com.reown.android.internal.utils.weekInSeconds
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.exceptions.NAMESPACE_ACCOUNTS_CAIP_10_MESSAGE
 import com.walletconnect.sign.common.exceptions.NAMESPACE_ACCOUNTS_WRONG_NAMESPACE_MESSAGE

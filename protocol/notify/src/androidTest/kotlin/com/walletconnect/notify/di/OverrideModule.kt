@@ -1,14 +1,14 @@
 package com.walletconnect.notify.di
 
-import com.walletconnect.android.di.coreStorageModule
-import com.walletconnect.android.internal.common.di.coreAndroidNetworkModule
-import com.walletconnect.android.internal.common.di.coreCryptoModule
-import com.walletconnect.android.internal.common.di.coreJsonRpcModule
-import com.walletconnect.android.internal.common.di.corePairingModule
-import com.walletconnect.android.pairing.client.PairingInterface
-import com.walletconnect.android.pairing.handler.PairingControllerInterface
-import com.walletconnect.android.relay.ConnectionType
-import com.walletconnect.android.relay.RelayConnectionInterface
+import com.reown.android.di.coreStorageModule
+import com.reown.android.internal.common.di.coreAndroidNetworkModule
+import com.reown.android.internal.common.di.coreCryptoModule
+import com.reown.android.internal.common.di.coreJsonRpcModule
+import com.reown.android.internal.common.di.corePairingModule
+import com.reown.android.pairing.client.PairingInterface
+import com.reown.android.pairing.handler.PairingControllerInterface
+import com.reown.android.relay.ConnectionType
+import com.reown.android.relay.RelayConnectionInterface
 import org.koin.dsl.module
 
 private const val SHARED_PREFS_FILE = "wc_key_store"

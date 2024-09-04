@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.NavController
-import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.android.pulse.domain.SendEventInterface
-import com.walletconnect.android.pulse.model.EventType
-import com.walletconnect.android.pulse.model.properties.Properties
-import com.walletconnect.android.pulse.model.properties.Props
+import com.reown.android.internal.common.wcKoinApp
+import com.reown.android.pulse.domain.SendEventInterface
+import com.reown.android.pulse.model.EventType
+import com.reown.android.pulse.model.properties.Properties
+import com.reown.android.pulse.model.properties.Props
 import com.reown.foundation.util.Logger
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.client.AppKit

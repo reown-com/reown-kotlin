@@ -2,8 +2,8 @@
 
 package com.walletconnect.sign.di
 
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
-import com.walletconnect.android.internal.common.signing.cacao.CacaoVerifier
+import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.signing.cacao.CacaoVerifier
 import com.walletconnect.sign.engine.domain.SignEngine
 import com.walletconnect.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCase
 import com.walletconnect.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCaseInterface

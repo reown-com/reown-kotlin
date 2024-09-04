@@ -2,7 +2,7 @@
 
 package com.walletconnect.notify.engine.calls
 
-import com.walletconnect.android.internal.common.explorer.domain.usecase.GetNotifyConfigUseCase
+import com.reown.android.internal.common.explorer.domain.usecase.GetNotifyConfigUseCase
 import com.walletconnect.notify.common.model.NotificationType
 import com.walletconnect.notify.engine.validateTimeout
 import kotlinx.coroutines.TimeoutCancellationException

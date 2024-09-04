@@ -2,10 +2,10 @@
 
 package com.walletconnect.notify.engine.calls
 
-import com.walletconnect.android.internal.common.crypto.kmr.KeyManagementRepository
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.internal.common.signing.cacao.toCAIP222Message
-import com.walletconnect.android.keyserver.domain.IdentitiesInteractor
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.internal.common.signing.cacao.toCAIP222Message
+import com.reown.android.keyserver.domain.IdentitiesInteractor
 import com.reown.foundation.util.Logger
 import com.walletconnect.notify.common.model.CacaoPayloadWithIdentityPrivateKey
 import com.walletconnect.notify.engine.domain.createAuthorizationReCaps

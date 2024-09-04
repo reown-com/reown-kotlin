@@ -1,7 +1,7 @@
 package com.walletconnect.web3.modal.di
 
 import android.content.Context
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.web3.modal.domain.usecase.ConnectionEventRepository
 import com.walletconnect.web3.modal.engine.AppKitEngine
 import com.walletconnect.web3.modal.engine.coinbase.CoinbaseClient

@@ -1,7 +1,7 @@
 package com.walletconnect.notify.engine.domain
 
-import com.walletconnect.android.internal.common.model.AppMetaDataType
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.foundation.util.jwt.encodeEd25519DidKey
 import com.walletconnect.notify.common.model.Subscription
 import kotlinx.coroutines.supervisorScope

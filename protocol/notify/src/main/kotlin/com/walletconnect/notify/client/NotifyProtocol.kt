@@ -1,10 +1,10 @@
 package com.walletconnect.notify.client
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.common.di.DatabaseConfig
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.scope
-import com.walletconnect.android.internal.common.wcKoinApp
+import com.reown.android.Core
+import com.reown.android.internal.common.di.DatabaseConfig
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.wcKoinApp
 import com.walletconnect.notify.common.model.Notification
 import com.walletconnect.notify.common.model.SubscriptionChanged
 import com.walletconnect.notify.common.model.toClient

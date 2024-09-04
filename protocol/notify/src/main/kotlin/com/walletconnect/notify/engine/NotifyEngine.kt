@@ -2,15 +2,15 @@
 
 package com.walletconnect.notify.engine
 
-import com.walletconnect.android.internal.common.model.ConnectionState
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
-import com.walletconnect.android.internal.common.model.type.EngineEvent
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.scope
-import com.walletconnect.android.pairing.handler.PairingControllerInterface
-import com.walletconnect.android.push.notifications.DecryptMessageUseCaseInterface
-import com.walletconnect.android.relay.WSSConnectionState
+import com.reown.android.internal.common.model.ConnectionState
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.params.CoreNotifyParams
+import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.scope
+import com.reown.android.pairing.handler.PairingControllerInterface
+import com.reown.android.push.notifications.DecryptMessageUseCaseInterface
+import com.reown.android.relay.WSSConnectionState
 import com.walletconnect.notify.common.JsonRpcMethod
 import com.walletconnect.notify.engine.calls.DeleteSubscriptionUseCaseInterface
 import com.walletconnect.notify.engine.calls.GetActiveSubscriptionsUseCaseInterface

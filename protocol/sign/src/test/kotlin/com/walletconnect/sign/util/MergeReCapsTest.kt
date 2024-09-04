@@ -1,6 +1,6 @@
 package com.walletconnect.sign.util
 
-import com.walletconnect.android.internal.common.signing.cacao.mergeReCaps
+import com.reown.android.internal.common.signing.cacao.mergeReCaps
 import org.json.JSONObject
 import org.junit.Test
 

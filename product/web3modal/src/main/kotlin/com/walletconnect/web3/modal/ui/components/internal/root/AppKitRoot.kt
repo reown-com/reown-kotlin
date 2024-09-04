@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.walletconnect.modal.ui.components.common.roundedClickable
+import com.reown.modal.ui.components.common.roundedClickable
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate
 import com.walletconnect.web3.modal.ui.components.internal.AppKitTopBar

@@ -2,8 +2,8 @@
 
 package com.walletconnect.notify.common.model
 
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.type.EngineEvent
 
 internal data class Notification(
     val id: String,

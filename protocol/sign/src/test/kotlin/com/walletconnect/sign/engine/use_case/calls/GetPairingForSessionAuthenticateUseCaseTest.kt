@@ -1,9 +1,9 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.utils.currentTimeInSeconds
-import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
-import com.walletconnect.android.pairing.client.PairingInterface
+import com.reown.android.Core
+import com.reown.android.internal.utils.currentTimeInSeconds
+import com.reown.android.internal.utils.fiveMinutesInSeconds
+import com.reown.android.pairing.client.PairingInterface
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertThrows

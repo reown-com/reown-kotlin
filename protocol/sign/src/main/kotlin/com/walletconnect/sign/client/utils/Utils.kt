@@ -3,14 +3,14 @@
 package com.walletconnect.sign.client.utils
 
 import android.util.Base64
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.signing.cacao.Cacao.Payload.Companion.RECAPS_PREFIX
-import com.walletconnect.android.internal.common.signing.cacao.CacaoType
-import com.walletconnect.android.internal.common.signing.cacao.RECAPS_STATEMENT
-import com.walletconnect.android.internal.common.signing.cacao.decodeReCaps
-import com.walletconnect.android.internal.common.signing.cacao.getStatement
-import com.walletconnect.android.internal.common.signing.cacao.parseReCaps
-import com.walletconnect.android.internal.utils.CoreValidator
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.signing.cacao.Cacao.Payload.Companion.RECAPS_PREFIX
+import com.reown.android.internal.common.signing.cacao.CacaoType
+import com.reown.android.internal.common.signing.cacao.RECAPS_STATEMENT
+import com.reown.android.internal.common.signing.cacao.decodeReCaps
+import com.reown.android.internal.common.signing.cacao.getStatement
+import com.reown.android.internal.common.signing.cacao.parseReCaps
+import com.reown.android.internal.utils.CoreValidator
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.client.mapper.toCacaoPayload
 import com.walletconnect.sign.client.mapper.toCore

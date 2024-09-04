@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.client.models
 
-import com.walletconnect.android.Core
+import com.reown.android.Core
 import com.walletconnect.web3.modal.client.Modal
 
 sealed class Session {

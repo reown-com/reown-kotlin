@@ -2,20 +2,20 @@
 
 package com.walletconnect.sign.engine.model.mapper
 
-import com.walletconnect.android.internal.common.JsonRpcResponse
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.model.RelayProtocolOptions
-import com.walletconnect.android.internal.common.model.SessionProposer
-import com.walletconnect.android.internal.common.model.TransportType
-import com.walletconnect.android.internal.common.model.WCRequest
-import com.walletconnect.android.internal.common.model.params.CoreSignParams
-import com.walletconnect.android.internal.common.signing.cacao.Cacao
-import com.walletconnect.android.internal.common.signing.cacao.CacaoType
-import com.walletconnect.android.internal.common.signing.cacao.Issuer
-import com.walletconnect.android.internal.common.signing.cacao.toCAIP222Message
-import com.walletconnect.android.verify.model.VerifyContext
+import com.reown.android.internal.common.JsonRpcResponse
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.SessionProposer
+import com.reown.android.internal.common.model.TransportType
+import com.reown.android.internal.common.model.WCRequest
+import com.reown.android.internal.common.model.params.CoreSignParams
+import com.reown.android.internal.common.signing.cacao.Cacao
+import com.reown.android.internal.common.signing.cacao.CacaoType
+import com.reown.android.internal.common.signing.cacao.Issuer
+import com.reown.android.internal.common.signing.cacao.toCAIP222Message
+import com.reown.android.verify.model.VerifyContext
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.exceptions.PeerError

@@ -2,9 +2,9 @@
 
 package com.walletconnect.notify.engine.domain
 
-import com.walletconnect.android.internal.common.crypto.kmr.KeyManagementRepository
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.internal.utils.getPeerTag
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.internal.utils.getPeerTag
 import com.reown.foundation.common.model.Topic
 
 internal class GetSelfKeyForWatchSubscriptionUseCase(

@@ -2,10 +2,10 @@ package com.walletconnect.web3.modal.client
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.Keep
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreInterface
-import com.walletconnect.android.cacao.SignatureInterface
-import com.walletconnect.android.internal.common.signing.cacao.Issuer
+import com.reown.android.Core
+import com.reown.android.CoreInterface
+import com.reown.android.cacao.SignatureInterface
+import com.reown.android.internal.common.signing.cacao.Issuer
 
 object Modal {
 

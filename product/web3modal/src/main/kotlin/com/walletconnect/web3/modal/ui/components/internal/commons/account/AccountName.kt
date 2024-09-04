@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import com.walletconnect.modal.ui.components.common.roundedClickable
+import com.reown.modal.ui.components.common.roundedClickable
 import com.walletconnect.web3.modal.domain.model.AccountData
 import com.walletconnect.web3.modal.domain.model.Identity
 import com.walletconnect.web3.modal.ui.components.internal.commons.CopyIcon

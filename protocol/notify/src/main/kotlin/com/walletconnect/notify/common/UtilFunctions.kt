@@ -2,8 +2,8 @@
 
 package com.walletconnect.notify.common
 
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.utils.monthInSeconds
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.utils.monthInSeconds
 import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 

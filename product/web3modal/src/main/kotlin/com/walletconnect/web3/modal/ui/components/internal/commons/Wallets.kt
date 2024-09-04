@@ -31,7 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.walletconnect.android.internal.common.modal.data.model.Wallet
+import com.reown.android.internal.common.modal.data.model.Wallet
 import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.previews.MultipleComponentsPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview

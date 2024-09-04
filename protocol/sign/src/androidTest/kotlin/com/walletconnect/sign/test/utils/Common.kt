@@ -1,6 +1,6 @@
 package com.walletconnect.sign.test.utils
 
-import com.walletconnect.android.Core
+import com.reown.android.Core
 import com.walletconnect.sign.client.Sign
 import junit.framework.TestCase.fail
 import timber.log.Timber

@@ -14,7 +14,7 @@ project.apply {
 }
 
 android {
-    namespace = "com.walletconnect.android"
+    namespace = "com.reown.android"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
@@ -80,7 +80,7 @@ android {
 sqldelight {
     databases {
         create("AndroidCoreDatabase") {
-            packageName.set("com.walletconnect.android.sdk.core")
+            packageName.set("com.reown.android.sdk.core")
             schemaOutputDirectory.set(file("src/main/sqldelight/databases"))
 //            generateAsync.set(true) // TODO: Enable once all repository methods have been converted to suspend functions
             verifyMigrations.set(true)

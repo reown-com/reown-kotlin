@@ -31,7 +31,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.walletconnect.modal.ui.components.common.HorizontalSpacer
+import com.reown.modal.ui.components.common.HorizontalSpacer
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.components.internal.commons.ContentDescription

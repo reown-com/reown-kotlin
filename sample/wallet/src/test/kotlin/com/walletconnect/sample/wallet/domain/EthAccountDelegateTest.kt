@@ -1,9 +1,9 @@
 package com.walletconnect.sample.wallet.domain
 
-import com.walletconnect.android.cacao.signature.SignatureType
-import com.walletconnect.android.internal.common.model.ProjectId
-import com.walletconnect.android.internal.common.signing.message.MessageSignatureVerifier
-import com.walletconnect.android.utils.cacao.sign
+import com.reown.android.cacao.signature.SignatureType
+import com.reown.android.internal.common.model.ProjectId
+import com.reown.android.internal.common.signing.message.MessageSignatureVerifier
+import com.reown.android.utils.cacao.sign
 import com.walletconnect.util.hexToBytes
 import com.walletconnect.web3.wallet.utils.CacaoSigner
 import junit.framework.TestCase.assertEquals

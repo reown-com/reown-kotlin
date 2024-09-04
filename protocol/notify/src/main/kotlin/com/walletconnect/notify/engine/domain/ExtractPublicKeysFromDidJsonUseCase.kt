@@ -4,7 +4,7 @@ package com.walletconnect.notify.engine.domain
 
 import android.net.Uri
 import android.util.Base64
-import com.walletconnect.android.internal.common.json_rpc.data.JsonRpcSerializer
+import com.reown.android.internal.common.json_rpc.data.JsonRpcSerializer
 import com.reown.foundation.common.model.PublicKey
 import com.walletconnect.notify.client.InvalidDidJsonFileException
 import com.walletconnect.notify.data.wellknown.did.DidJsonDTO

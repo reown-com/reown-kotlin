@@ -1,8 +1,8 @@
 package com.walletconnect.web3.modal.ui.routes.connect
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreClient
-import com.walletconnect.android.internal.common.wcKoinApp
+import com.reown.android.Core
+import com.reown.android.CoreClient
+import com.reown.android.internal.common.wcKoinApp
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.client.toModel
 import com.walletconnect.web3.modal.engine.AppKitEngine

@@ -1,14 +1,14 @@
 package com.walletconnect.sign.engine.use_case.requests
 
-import com.walletconnect.android.internal.common.crypto.kmr.KeyManagementRepository
-import com.walletconnect.android.internal.common.exception.Uncategorized
-import com.walletconnect.android.internal.common.model.IrnParams
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.model.Tags
-import com.walletconnect.android.internal.common.model.WCRequest
-import com.walletconnect.android.internal.common.model.type.EngineEvent
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.utils.dayInSeconds
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
+import com.reown.android.internal.common.exception.Uncategorized
+import com.reown.android.internal.common.model.IrnParams
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.internal.common.model.WCRequest
+import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.utils.dayInSeconds
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.model.type.Sequences

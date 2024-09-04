@@ -41,7 +41,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.walletconnect.android.internal.common.exception.NoConnectivityException
+import com.reown.android.internal.common.exception.NoConnectivityException
 import com.walletconnect.sample.common.Chains
 import com.walletconnect.sample.common.CompletePreviews
 import com.walletconnect.sample.common.sendResponseDeepLink

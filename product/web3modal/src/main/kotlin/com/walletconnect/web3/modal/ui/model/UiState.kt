@@ -8,7 +8,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.walletconnect.modal.ui.model.UiState
+import com.reown.modal.ui.model.UiState
 import com.walletconnect.web3.modal.ui.components.internal.ErrorModalState
 import com.walletconnect.web3.modal.ui.components.internal.LoadingModalState
 import kotlinx.coroutines.flow.StateFlow

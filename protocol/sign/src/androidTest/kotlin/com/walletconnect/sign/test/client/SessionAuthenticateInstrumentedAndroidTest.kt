@@ -1,8 +1,8 @@
 package com.walletconnect.sign.test.client
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.cacao.signature.SignatureType
-import com.walletconnect.android.utils.cacao.signHex
+import com.reown.android.Core
+import com.reown.android.cacao.signature.SignatureType
+import com.reown.android.utils.cacao.signHex
 import com.walletconnect.sign.BuildConfig
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.client.SignClient

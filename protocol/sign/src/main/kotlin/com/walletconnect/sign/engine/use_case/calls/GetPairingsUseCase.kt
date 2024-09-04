@@ -1,7 +1,7 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.pairing.client.PairingInterface
-import com.walletconnect.android.pairing.model.mapper.toPairing
+import com.reown.android.pairing.client.PairingInterface
+import com.reown.android.pairing.model.mapper.toPairing
 import com.walletconnect.sign.engine.model.EngineDO
 import kotlinx.coroutines.supervisorScope
 

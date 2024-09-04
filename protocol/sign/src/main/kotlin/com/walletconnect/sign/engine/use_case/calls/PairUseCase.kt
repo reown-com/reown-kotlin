@@ -1,7 +1,7 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.pairing.client.PairingInterface
+import com.reown.android.Core
+import com.reown.android.pairing.client.PairingInterface
 import kotlinx.coroutines.supervisorScope
 
 internal class PairUseCase(private val pairingInterface: PairingInterface) : PairUseCaseInterface {

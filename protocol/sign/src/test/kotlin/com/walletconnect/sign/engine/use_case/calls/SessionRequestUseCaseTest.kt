@@ -1,10 +1,10 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.internal.common.exception.CannotFindSequenceForTopic
-import com.walletconnect.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.walletconnect.android.pulse.domain.InsertEventUseCase
+import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
+import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.pulse.domain.InsertEventUseCase
 import com.reown.foundation.util.Logger
 import com.walletconnect.sign.engine.model.EngineDO
 import com.walletconnect.sign.storage.sequence.SessionStorageRepository

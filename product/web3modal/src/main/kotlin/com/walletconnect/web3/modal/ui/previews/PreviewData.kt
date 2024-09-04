@@ -1,7 +1,7 @@
 package com.walletconnect.web3.modal.ui.previews
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import com.walletconnect.android.internal.common.modal.data.model.Wallet
+import com.reown.android.internal.common.modal.data.model.Wallet
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.domain.model.AccountData
 

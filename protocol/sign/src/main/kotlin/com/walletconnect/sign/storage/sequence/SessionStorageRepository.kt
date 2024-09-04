@@ -3,9 +3,9 @@
 package com.walletconnect.sign.storage.sequence
 
 import android.database.sqlite.SQLiteException
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.model.TransportType
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.TransportType
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.model.vo.sequence.SessionVO

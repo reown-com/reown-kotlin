@@ -2,9 +2,9 @@
 
 package com.walletconnect.notify.data.storage
 
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.RelayProtocolOptions
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.notify.common.model.Scope

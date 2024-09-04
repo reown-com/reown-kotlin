@@ -12,8 +12,8 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
-import com.walletconnect.android.internal.common.model.ProjectId
-import com.walletconnect.android.internal.common.wcKoinApp
+import com.reown.android.internal.common.model.ProjectId
+import com.reown.android.internal.common.wcKoinApp
 import com.walletconnect.web3.modal.ui.components.internal.root.AppKitRoot
 import com.walletconnect.web3.modal.ui.components.internal.commons.VerticalSpacer
 import com.walletconnect.web3.modal.ui.components.internal.root.rememberAppKitRootState

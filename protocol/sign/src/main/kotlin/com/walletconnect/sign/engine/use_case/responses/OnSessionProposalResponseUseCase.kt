@@ -1,15 +1,15 @@
 package com.walletconnect.sign.engine.use_case.responses
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.common.JsonRpcResponse
-import com.walletconnect.android.internal.common.crypto.kmr.KeyManagementRepository
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.model.WCResponse
-import com.walletconnect.android.internal.common.model.params.CoreSignParams
-import com.walletconnect.android.internal.common.model.type.EngineEvent
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.scope
-import com.walletconnect.android.pairing.handler.PairingControllerInterface
+import com.reown.android.Core
+import com.reown.android.internal.common.JsonRpcResponse
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.WCResponse
+import com.reown.android.internal.common.model.params.CoreSignParams
+import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.scope
+import com.reown.android.pairing.handler.PairingControllerInterface
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams

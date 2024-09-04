@@ -2,7 +2,7 @@
 
 package com.walletconnect.notify.di
 
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.notify.common.NotifyServerUrl
 import com.walletconnect.notify.engine.NotifyEngine
 import com.walletconnect.notify.engine.calls.GetAllActiveSubscriptionsUseCase

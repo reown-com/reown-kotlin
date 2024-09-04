@@ -29,11 +29,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.walletconnect.android.internal.common.modal.data.model.Wallet
-import com.walletconnect.android.pulse.model.ConnectionMethod
-import com.walletconnect.modal.utils.openMobileLink
-import com.walletconnect.modal.utils.openPlayStore
-import com.walletconnect.modal.utils.openWebAppLink
+import com.reown.android.internal.common.modal.data.model.Wallet
+import com.reown.android.pulse.model.ConnectionMethod
+import com.reown.modal.utils.openMobileLink
+import com.reown.modal.utils.openPlayStore
+import com.reown.modal.utils.openWebAppLink
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.domain.delegate.AppKitDelegate

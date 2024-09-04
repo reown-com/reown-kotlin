@@ -1,9 +1,9 @@
 package com.walletconnect.sign.test
 
-import com.walletconnect.android.internal.common.signing.cacao.decodeReCaps
-import com.walletconnect.android.internal.common.signing.cacao.getChains
-import com.walletconnect.android.internal.common.signing.cacao.getMethods
-import com.walletconnect.android.internal.common.signing.cacao.parseReCaps
+import com.reown.android.internal.common.signing.cacao.decodeReCaps
+import com.reown.android.internal.common.signing.cacao.getChains
+import com.reown.android.internal.common.signing.cacao.getMethods
+import com.reown.android.internal.common.signing.cacao.parseReCaps
 import org.junit.Test
 
 class CacaoUtilsTests {

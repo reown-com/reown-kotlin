@@ -3,9 +3,9 @@
 package com.walletconnect.notify.engine.domain
 
 import android.net.Uri
-import com.walletconnect.android.internal.common.explorer.data.model.ImageUrl
-import com.walletconnect.android.internal.common.explorer.domain.usecase.GetNotifyConfigUseCase
-import com.walletconnect.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.explorer.data.model.ImageUrl
+import com.reown.android.internal.common.explorer.domain.usecase.GetNotifyConfigUseCase
+import com.reown.android.internal.common.model.AppMetaData
 import com.walletconnect.notify.common.model.Scope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

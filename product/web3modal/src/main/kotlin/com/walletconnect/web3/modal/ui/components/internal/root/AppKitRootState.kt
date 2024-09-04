@@ -5,10 +5,10 @@ import androidx.compose.runtime.remember
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
-import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.android.pulse.domain.SendEventInterface
-import com.walletconnect.android.pulse.model.EventType
-import com.walletconnect.android.pulse.model.properties.Props
+import com.reown.android.internal.common.wcKoinApp
+import com.reown.android.pulse.domain.SendEventInterface
+import com.reown.android.pulse.model.EventType
+import com.reown.android.pulse.model.properties.Props
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.navigation.getTitleArg
 import kotlinx.coroutines.CoroutineScope

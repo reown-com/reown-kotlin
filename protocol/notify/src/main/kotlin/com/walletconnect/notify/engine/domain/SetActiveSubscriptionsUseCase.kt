@@ -1,16 +1,16 @@
 package com.walletconnect.notify.engine.domain
 
 import androidx.core.net.toUri
-import com.walletconnect.android.internal.common.crypto.sha256
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.internal.common.model.AppMetaDataType
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.model.SymmetricKey
-import com.walletconnect.android.internal.common.model.type.EngineEvent
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.storage.key_chain.KeyStore
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.common.crypto.sha256
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.SymmetricKey
+import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.storage.key_chain.KeyStore
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.jwt.decodeEd25519DidKey
 import com.walletconnect.notify.common.model.Scope

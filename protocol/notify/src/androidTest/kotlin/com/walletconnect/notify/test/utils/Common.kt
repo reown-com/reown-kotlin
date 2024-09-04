@@ -1,6 +1,6 @@
 package com.walletconnect.notify.test.utils
 
-import com.walletconnect.android.Core
+import com.reown.android.Core
 import com.walletconnect.notify.client.Notify
 import junit.framework.TestCase.fail
 import timber.log.Timber

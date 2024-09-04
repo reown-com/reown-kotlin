@@ -23,8 +23,8 @@ import com.android.ide.common.rendering.api.SessionParams
 import com.android.resources.KeyboardState
 import com.android.resources.NightMode
 import com.android.resources.ScreenOrientation
-import com.walletconnect.android.internal.common.model.ProjectId
-import com.walletconnect.android.internal.common.wcKoinApp
+import com.reown.android.internal.common.model.ProjectId
+import com.reown.android.internal.common.wcKoinApp
 import com.walletconnect.web3.modal.ui.components.internal.root.AppKitRoot
 import com.walletconnect.web3.modal.ui.components.internal.root.rememberAppKitRootState
 import com.walletconnect.web3.modal.ui.components.internal.snackbar.rememberSnackBarState

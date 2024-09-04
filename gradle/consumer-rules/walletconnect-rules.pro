@@ -1,4 +1,4 @@
--keep class com.walletconnect.android.** { *; }
+-keep class com.reown.android.** { *; }
 -keep interface com.walletconnect.** { *; }
 -keep class kotlinx.coroutines.** { *; }
 

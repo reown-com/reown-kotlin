@@ -1,13 +1,13 @@
 package com.walletconnect.sign.engine.use_case.responses
 
-import com.walletconnect.android.internal.common.JsonRpcResponse
-import com.walletconnect.android.internal.common.crypto.kmr.KeyManagementRepository
-import com.walletconnect.android.internal.common.model.AppMetaDataType
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.model.WCResponse
-import com.walletconnect.android.internal.common.model.type.EngineEvent
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.common.JsonRpcResponse
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
+import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.WCResponse
+import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.foundation.util.Logger
 import com.walletconnect.sign.engine.model.EngineDO
 import com.walletconnect.sign.engine.model.mapper.toEngineDO

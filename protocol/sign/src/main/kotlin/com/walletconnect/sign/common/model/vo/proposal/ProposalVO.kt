@@ -1,9 +1,9 @@
 package com.walletconnect.sign.common.model.vo.proposal
 
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.model.Redirect
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.Redirect
 import com.reown.foundation.common.model.Topic
 
 internal data class ProposalVO(

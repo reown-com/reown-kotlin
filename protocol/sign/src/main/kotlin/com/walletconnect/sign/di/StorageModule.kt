@@ -2,9 +2,9 @@
 
 package com.walletconnect.sign.di
 
-import com.walletconnect.android.di.sdkBaseStorageModule
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
-import com.walletconnect.android.internal.common.di.deleteDatabase
+import com.reown.android.di.sdkBaseStorageModule
+import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.di.deleteDatabase
 import com.walletconnect.sign.SignDatabase
 import com.walletconnect.sign.storage.authenticate.AuthenticateResponseTopicRepository
 import com.walletconnect.sign.storage.data.dao.namespace.NamespaceDao
@@ -21,7 +21,7 @@ import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
 import org.koin.dsl.module
-import com.walletconnect.android.internal.common.scope as wcScope
+import com.reown.android.internal.common.scope as wcScope
 
 @JvmSynthetic
 internal fun storageModule(dbName: String): Module = module {

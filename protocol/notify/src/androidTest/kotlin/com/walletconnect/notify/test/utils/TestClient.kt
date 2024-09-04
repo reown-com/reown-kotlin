@@ -2,13 +2,13 @@ package com.walletconnect.notify.test.utils
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreClient
-import com.walletconnect.android.CoreProtocol
-import com.walletconnect.android.cacao.signature.SignatureType
-import com.walletconnect.android.relay.ConnectionType
-import com.walletconnect.android.relay.RelayClient
-import com.walletconnect.android.utils.cacao.sign
+import com.reown.android.Core
+import com.reown.android.CoreClient
+import com.reown.android.CoreProtocol
+import com.reown.android.cacao.signature.SignatureType
+import com.reown.android.relay.ConnectionType
+import com.reown.android.relay.RelayClient
+import com.reown.android.utils.cacao.sign
 import com.reown.foundation.common.model.PrivateKey
 import com.walletconnect.notify.client.Notify
 import com.walletconnect.notify.client.NotifyClient

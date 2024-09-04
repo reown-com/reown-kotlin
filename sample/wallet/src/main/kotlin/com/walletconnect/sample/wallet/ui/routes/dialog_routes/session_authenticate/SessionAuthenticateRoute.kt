@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.walletconnect.android.internal.common.exception.NoConnectivityException
+import com.reown.android.internal.common.exception.NoConnectivityException
 import com.walletconnect.sample.common.sendResponseDeepLink
 import com.walletconnect.sample.common.ui.theme.mismatch_color
 import com.walletconnect.sample.common.ui.themedColor

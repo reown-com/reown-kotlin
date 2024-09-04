@@ -1,9 +1,9 @@
 package com.walletconnect.web3.wallet.client
 
 import androidx.annotation.Keep
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreInterface
-import com.walletconnect.android.cacao.SignatureInterface
+import com.reown.android.Core
+import com.reown.android.CoreInterface
+import com.reown.android.cacao.SignatureInterface
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds

@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.utils
 
-import com.walletconnect.android.internal.utils.CoreValidator
+import com.reown.android.internal.utils.CoreValidator
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.client.Modal

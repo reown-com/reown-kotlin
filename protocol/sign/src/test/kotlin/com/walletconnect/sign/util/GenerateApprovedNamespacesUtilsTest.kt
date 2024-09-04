@@ -1,6 +1,6 @@
 package com.walletconnect.sign.util
 
-import com.walletconnect.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.Namespace
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.client.utils.generateApprovedNamespaces
 import com.walletconnect.sign.client.utils.normalizeNamespaces

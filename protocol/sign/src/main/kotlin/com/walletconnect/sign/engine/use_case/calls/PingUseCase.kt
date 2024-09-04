@@ -1,11 +1,11 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.internal.common.JsonRpcResponse
-import com.walletconnect.android.internal.common.model.IrnParams
-import com.walletconnect.android.internal.common.model.Tags
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.scope
-import com.walletconnect.android.internal.utils.thirtySeconds
+import com.reown.android.internal.common.JsonRpcResponse
+import com.reown.android.internal.common.model.IrnParams
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.scope
+import com.reown.android.internal.utils.thirtySeconds
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger

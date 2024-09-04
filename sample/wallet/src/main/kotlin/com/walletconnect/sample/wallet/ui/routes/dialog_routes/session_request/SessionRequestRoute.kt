@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.walletconnect.android.internal.common.exception.NoConnectivityException
+import com.reown.android.internal.common.exception.NoConnectivityException
 import com.walletconnect.sample.common.CompletePreviews
 import com.walletconnect.sample.common.sendResponseDeepLink
 import com.walletconnect.sample.common.ui.theme.PreviewTheme

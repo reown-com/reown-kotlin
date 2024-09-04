@@ -2,15 +2,15 @@
 
 package com.walletconnect.notify.engine.calls
 
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.AppMetaDataType
-import com.walletconnect.android.internal.common.model.IrnParams
-import com.walletconnect.android.internal.common.model.Tags
-import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.scope
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.model.IrnParams
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.internal.common.model.params.CoreNotifyParams
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.utils.fiveMinutesInSeconds
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger

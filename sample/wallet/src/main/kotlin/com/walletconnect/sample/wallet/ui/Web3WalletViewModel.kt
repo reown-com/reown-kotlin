@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.common.exception.InvalidProjectIdException
-import com.walletconnect.android.internal.common.exception.ProjectIdDoesNotExistException
+import com.reown.android.Core
+import com.reown.android.internal.common.exception.InvalidProjectIdException
+import com.reown.android.internal.common.exception.ProjectIdDoesNotExistException
 import com.walletconnect.sample.wallet.domain.ISSUER
 import com.walletconnect.sample.wallet.domain.WCDelegate
 import com.walletconnect.sample.wallet.ui.state.ConnectionState

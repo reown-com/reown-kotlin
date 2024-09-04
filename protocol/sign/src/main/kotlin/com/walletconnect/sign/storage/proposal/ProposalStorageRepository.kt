@@ -4,9 +4,9 @@ package com.walletconnect.sign.storage.proposal
 
 import android.database.sqlite.SQLiteException
 import app.cash.sqldelight.async.coroutines.awaitAsList
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.scope
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.scope
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.model.vo.proposal.ProposalVO
 import com.walletconnect.sign.storage.data.dao.optionalnamespaces.OptionalNamespaceDaoQueries

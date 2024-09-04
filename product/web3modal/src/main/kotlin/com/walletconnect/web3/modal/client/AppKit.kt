@@ -1,11 +1,11 @@
 package com.walletconnect.web3.modal.client
 
 import androidx.activity.ComponentActivity
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
-import com.walletconnect.android.internal.common.scope
-import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.android.pulse.model.EventType
-import com.walletconnect.android.pulse.model.properties.Props
+import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.wcKoinApp
+import com.reown.android.pulse.model.EventType
+import com.reown.android.pulse.model.properties.Props
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.client.SignClient
 import com.walletconnect.sign.common.exceptions.SignClientAlreadyInitializedException

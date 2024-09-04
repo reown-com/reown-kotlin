@@ -1,7 +1,7 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.internal.common.signing.cacao.Issuer
-import com.walletconnect.android.internal.utils.CoreValidator
+import com.reown.android.internal.common.signing.cacao.Issuer
+import com.reown.android.internal.utils.CoreValidator
 import com.walletconnect.sign.engine.model.EngineDO
 import com.walletconnect.sign.engine.model.mapper.toCAIP222Message
 import kotlinx.coroutines.supervisorScope

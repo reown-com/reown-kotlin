@@ -1,8 +1,8 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.internal.common.exception.CannotFindSequenceForTopic
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger

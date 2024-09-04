@@ -2,17 +2,17 @@
 
 package com.walletconnect.notify.engine.requests
 
-import com.walletconnect.android.internal.common.jwt.did.extractVerifiedDidJwtClaims
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.internal.common.model.IrnParams
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.model.Tags
-import com.walletconnect.android.internal.common.model.WCRequest
-import com.walletconnect.android.internal.common.model.params.ChatNotifyResponseAuthParams
-import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
-import com.walletconnect.android.internal.common.model.type.EngineEvent
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
+import com.reown.android.internal.common.jwt.did.extractVerifiedDidJwtClaims
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.internal.common.model.IrnParams
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.internal.common.model.WCRequest
+import com.reown.android.internal.common.model.params.ChatNotifyResponseAuthParams
+import com.reown.android.internal.common.model.params.CoreNotifyParams
+import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.utils.fiveMinutesInSeconds
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.reown.foundation.util.jwt.decodeDidPkh

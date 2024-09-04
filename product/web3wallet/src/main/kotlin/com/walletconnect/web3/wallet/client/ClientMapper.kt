@@ -1,6 +1,6 @@
 package com.walletconnect.web3.wallet.client
 
-import com.walletconnect.android.internal.common.signing.cacao.CacaoType
+import com.reown.android.internal.common.signing.cacao.CacaoType
 import com.walletconnect.sign.client.Sign
 
 @JvmSynthetic

@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.web3.modal.domain.RecentWalletsRepository
 import com.walletconnect.web3.modal.domain.SessionRepository
 import com.walletconnect.web3.modal.domain.model.Session

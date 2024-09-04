@@ -1,7 +1,7 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.pairing.client.PairingInterface
+import com.reown.android.Core
+import com.reown.android.pairing.client.PairingInterface
 import com.walletconnect.sign.json_rpc.model.JsonRpcMethod
 
 internal class GetPairingForSessionAuthenticateUseCase(private var pairingProtocol: PairingInterface) {

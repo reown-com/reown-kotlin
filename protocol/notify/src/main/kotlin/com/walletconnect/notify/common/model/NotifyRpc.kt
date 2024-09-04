@@ -4,8 +4,8 @@ package com.walletconnect.notify.common.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
-import com.walletconnect.android.internal.common.model.type.JsonRpcClientSync
+import com.reown.android.internal.common.model.params.CoreNotifyParams
+import com.reown.android.internal.common.model.type.JsonRpcClientSync
 import com.walletconnect.notify.common.JsonRpcMethod
 import com.walletconnect.util.generateId
 

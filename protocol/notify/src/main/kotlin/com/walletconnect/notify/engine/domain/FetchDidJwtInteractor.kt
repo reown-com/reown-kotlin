@@ -2,11 +2,11 @@
 
 package com.walletconnect.notify.engine.domain
 
-import com.walletconnect.android.internal.common.jwt.did.EncodeDidJwtPayloadUseCase
-import com.walletconnect.android.internal.common.jwt.did.encodeDidJwt
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.internal.common.model.DidJwt
-import com.walletconnect.android.keyserver.domain.IdentitiesInteractor
+import com.reown.android.internal.common.jwt.did.EncodeDidJwtPayloadUseCase
+import com.reown.android.internal.common.jwt.did.encodeDidJwt
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.internal.common.model.DidJwt
+import com.reown.android.keyserver.domain.IdentitiesInteractor
 import com.reown.foundation.common.model.PrivateKey
 import com.reown.foundation.common.model.PublicKey
 import com.walletconnect.notify.data.jwt.delete.EncodeDeleteRequestJwtUseCase

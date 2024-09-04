@@ -1,8 +1,8 @@
 package com.walletconnect.sample.wallet.domain
 
 import android.util.Log
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreClient
+import com.reown.android.Core
+import com.reown.android.CoreClient
 import com.walletconnect.web3.wallet.client.Wallet
 import com.walletconnect.web3.wallet.client.WalletKit
 import kotlinx.coroutines.CoroutineScope

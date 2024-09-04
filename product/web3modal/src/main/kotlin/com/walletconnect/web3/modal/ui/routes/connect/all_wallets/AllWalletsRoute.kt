@@ -48,8 +48,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.walletconnect.android.internal.common.modal.data.model.Wallet
-import com.walletconnect.modal.utils.isLandscape
+import com.reown.android.internal.common.modal.data.model.Wallet
+import com.reown.modal.utils.isLandscape
 import com.walletconnect.util.Empty
 import com.walletconnect.web3.modal.R
 import com.walletconnect.web3.modal.ui.components.internal.commons.ContentDescription
@@ -62,7 +62,7 @@ import com.walletconnect.web3.modal.ui.components.internal.commons.inputs.Search
 import com.walletconnect.web3.modal.ui.components.internal.commons.inputs.SearchState
 import com.walletconnect.web3.modal.ui.components.internal.commons.inputs.SearchStatePreviewProvider
 import com.walletconnect.web3.modal.ui.components.internal.commons.walletsGridItems
-import com.walletconnect.modal.ui.model.LoadingState
+import com.reown.modal.ui.model.LoadingState
 import com.walletconnect.web3.modal.ui.previews.ComponentPreview
 import com.walletconnect.web3.modal.ui.previews.UiModePreview
 import com.walletconnect.web3.modal.ui.previews.AppKitPreview

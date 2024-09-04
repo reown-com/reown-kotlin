@@ -1,7 +1,7 @@
 package com.walletconnect.sign.test
 
-import com.walletconnect.android.internal.common.signing.cacao.getChains
-import com.walletconnect.android.internal.common.signing.cacao.getMethods
+import com.reown.android.internal.common.signing.cacao.getChains
+import com.reown.android.internal.common.signing.cacao.getMethods
 import org.bouncycastle.util.encoders.Base64
 import org.junit.Test
 

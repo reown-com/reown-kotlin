@@ -1,7 +1,7 @@
 package com.walletconnect.sign
 
-import com.walletconnect.android.internal.common.storage.rpc.JsonRpcHistory
-import com.walletconnect.android.internal.common.storage.verify.VerifyContextStorageRepository
+import com.reown.android.internal.common.storage.rpc.JsonRpcHistory
+import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
 import com.walletconnect.sign.json_rpc.domain.DeleteRequestByIdUseCase
 import io.mockk.coVerify
 import io.mockk.mockk

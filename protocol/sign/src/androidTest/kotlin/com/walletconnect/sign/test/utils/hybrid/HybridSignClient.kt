@@ -1,6 +1,6 @@
 package com.walletconnect.sign.test.utils.hybrid
 
-import com.walletconnect.android.Core
+import com.reown.android.Core
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.test.utils.TestClient
 import com.walletconnect.sign.test.utils.globalOnError

@@ -2,8 +2,8 @@
 
 package com.walletconnect.notify.engine.calls
 
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.keyserver.domain.IdentitiesInteractor
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.keyserver.domain.IdentitiesInteractor
 import com.walletconnect.notify.data.storage.RegisteredAccountsRepository
 import com.walletconnect.notify.engine.domain.createAuthorizationReCaps
 

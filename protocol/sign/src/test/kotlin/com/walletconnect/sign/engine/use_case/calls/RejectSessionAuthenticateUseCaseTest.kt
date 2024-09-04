@@ -1,15 +1,15 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.internal.common.crypto.kmr.KeyManagementRepository
-import com.walletconnect.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.EnvelopeType
-import com.walletconnect.android.internal.common.model.SymmetricKey
-import com.walletconnect.android.internal.common.model.TransportType
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.storage.verify.VerifyContextStorageRepository
-import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
-import com.walletconnect.android.pulse.domain.InsertEventUseCase
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
+import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.EnvelopeType
+import com.reown.android.internal.common.model.SymmetricKey
+import com.reown.android.internal.common.model.TransportType
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
+import com.reown.android.internal.utils.fiveMinutesInSeconds
+import com.reown.android.pulse.domain.InsertEventUseCase
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger

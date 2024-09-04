@@ -1,8 +1,8 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.AppMetaDataType
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.walletconnect.sign.engine.model.EngineDO
 import com.walletconnect.sign.engine.model.mapper.toEngineDO
 import com.walletconnect.sign.storage.sequence.SessionStorageRepository

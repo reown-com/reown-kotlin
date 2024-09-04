@@ -2,8 +2,8 @@
 
 package com.walletconnect.notify.engine.domain
 
-import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.model.AccountId
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.walletconnect.notify.data.storage.RegisteredAccountsRepository
 import kotlinx.coroutines.supervisorScope
 

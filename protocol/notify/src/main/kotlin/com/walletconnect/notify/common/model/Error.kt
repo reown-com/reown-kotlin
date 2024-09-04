@@ -2,7 +2,7 @@
 
 package com.walletconnect.notify.common.model
 
-import com.walletconnect.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.type.EngineEvent
 
 internal data class Error(
     val requestId: Long,

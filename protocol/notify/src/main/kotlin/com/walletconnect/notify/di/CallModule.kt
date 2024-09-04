@@ -2,9 +2,9 @@
 
 package com.walletconnect.notify.di
 
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
-import com.walletconnect.android.internal.common.model.Tags
-import com.walletconnect.android.push.notifications.DecryptMessageUseCaseInterface
+import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.push.notifications.DecryptMessageUseCaseInterface
 import com.walletconnect.notify.engine.calls.DecryptNotifyMessageUseCase
 import com.walletconnect.notify.engine.calls.DeleteSubscriptionUseCase
 import com.walletconnect.notify.engine.calls.DeleteSubscriptionUseCaseInterface

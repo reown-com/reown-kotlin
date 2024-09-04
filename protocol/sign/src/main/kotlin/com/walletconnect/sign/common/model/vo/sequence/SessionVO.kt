@@ -2,12 +2,12 @@
 
 package com.walletconnect.sign.common.model.vo.sequence
 
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.model.TransportType
-import com.walletconnect.android.internal.common.model.type.Sequence
-import com.walletconnect.android.internal.utils.ACTIVE_SESSION
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.TransportType
+import com.reown.android.internal.common.model.type.Sequence
+import com.reown.android.internal.utils.ACTIVE_SESSION
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.model.vo.clientsync.common.SessionParticipant

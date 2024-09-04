@@ -5,9 +5,9 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.walletconnect.android.cacao.signature.SignatureType
-import com.walletconnect.android.internal.common.exception.NoConnectivityException
-import com.walletconnect.android.utils.cacao.sign
+import com.reown.android.cacao.signature.SignatureType
+import com.reown.android.internal.common.exception.NoConnectivityException
+import com.reown.android.utils.cacao.sign
 import com.walletconnect.sample.common.Chains
 import com.walletconnect.sample.wallet.domain.EthAccountDelegate
 import com.walletconnect.sample.wallet.domain.WCDelegate

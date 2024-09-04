@@ -1,16 +1,16 @@
 package com.walletconnect.sign.engine.use_case.responses
 
-import com.walletconnect.android.internal.common.JsonRpcResponse
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.model.Tags
-import com.walletconnect.android.internal.common.model.TransportType
-import com.walletconnect.android.internal.common.model.WCResponse
-import com.walletconnect.android.internal.common.model.type.EngineEvent
-import com.walletconnect.android.pulse.domain.InsertEventUseCase
-import com.walletconnect.android.pulse.model.Direction
-import com.walletconnect.android.pulse.model.EventType
-import com.walletconnect.android.pulse.model.properties.Properties
-import com.walletconnect.android.pulse.model.properties.Props
+import com.reown.android.internal.common.JsonRpcResponse
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.internal.common.model.TransportType
+import com.reown.android.internal.common.model.WCResponse
+import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.pulse.domain.InsertEventUseCase
+import com.reown.android.pulse.model.Direction
+import com.reown.android.pulse.model.EventType
+import com.reown.android.pulse.model.properties.Properties
+import com.reown.android.pulse.model.properties.Props
 import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams
 import com.walletconnect.sign.engine.model.EngineDO

@@ -1,7 +1,7 @@
 package com.walletconnect.sign.json_rpc.domain
 
-import com.walletconnect.android.internal.common.storage.rpc.JsonRpcHistory
-import com.walletconnect.android.internal.common.storage.verify.VerifyContextStorageRepository
+import com.reown.android.internal.common.storage.rpc.JsonRpcHistory
+import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
 import kotlinx.coroutines.supervisorScope
 
 internal class DeleteRequestByIdUseCase(

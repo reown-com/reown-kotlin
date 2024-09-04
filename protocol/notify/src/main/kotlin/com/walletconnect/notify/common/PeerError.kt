@@ -2,7 +2,7 @@
 
 package com.walletconnect.notify.common
 
-import com.walletconnect.android.internal.common.model.type.Error
+import com.reown.android.internal.common.model.type.Error
 
 // Documentation: https://github.com/WalletConnect/walletconnect-docs/blob/main/docs/specs/clients/notify/error-codes.md
 internal sealed class PeerError : Error {

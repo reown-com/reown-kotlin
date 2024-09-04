@@ -1,9 +1,9 @@
 package com.walletconnect.sign.json_rpc.domain
 
-import com.walletconnect.android.internal.common.json_rpc.data.JsonRpcSerializer
-import com.walletconnect.android.internal.common.model.AppMetaDataType
-import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.walletconnect.android.internal.common.storage.rpc.JsonRpcHistory
+import com.reown.android.internal.common.json_rpc.data.JsonRpcSerializer
+import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.common.storage.rpc.JsonRpcHistory
 import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.model.vo.clientsync.session.SignRpc
 import com.walletconnect.sign.engine.model.EngineDO

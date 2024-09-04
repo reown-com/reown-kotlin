@@ -2,18 +2,18 @@
 
 package com.walletconnect.sign.client.mapper
 
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.common.JsonRpcResponse
-import com.walletconnect.android.internal.common.model.ConnectionState
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.Namespace
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.model.Validation
-import com.walletconnect.android.internal.common.signing.cacao.Cacao
-import com.walletconnect.android.internal.common.signing.cacao.CacaoType
-import com.walletconnect.android.internal.common.signing.cacao.RECAPS_STATEMENT
-import com.walletconnect.android.internal.common.signing.cacao.getStatement
-import com.walletconnect.android.utils.toClient
+import com.reown.android.Core
+import com.reown.android.internal.common.JsonRpcResponse
+import com.reown.android.internal.common.model.ConnectionState
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.Validation
+import com.reown.android.internal.common.signing.cacao.Cacao
+import com.reown.android.internal.common.signing.cacao.CacaoType
+import com.reown.android.internal.common.signing.cacao.RECAPS_STATEMENT
+import com.reown.android.internal.common.signing.cacao.getStatement
+import com.reown.android.utils.toClient
 import com.walletconnect.sign.client.Sign
 import com.walletconnect.sign.common.model.Request
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams

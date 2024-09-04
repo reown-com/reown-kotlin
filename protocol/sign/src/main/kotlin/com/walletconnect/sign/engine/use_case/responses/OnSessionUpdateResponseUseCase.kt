@@ -1,9 +1,9 @@
 package com.walletconnect.sign.engine.use_case.responses
 
-import com.walletconnect.android.internal.common.JsonRpcResponse
-import com.walletconnect.android.internal.common.model.SDKError
-import com.walletconnect.android.internal.common.model.WCResponse
-import com.walletconnect.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.JsonRpcResponse
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.WCResponse
+import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.foundation.util.Logger
 import com.walletconnect.sign.engine.model.EngineDO
 import com.walletconnect.sign.engine.model.mapper.toMapOfEngineNamespacesSession

@@ -2,7 +2,7 @@ package com.walletconnect.web3.modal.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.walletconnect.android.internal.common.wcKoinApp
+import com.reown.android.internal.common.wcKoinApp
 import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.engine.AppKitEngine
 import kotlinx.coroutines.flow.MutableStateFlow

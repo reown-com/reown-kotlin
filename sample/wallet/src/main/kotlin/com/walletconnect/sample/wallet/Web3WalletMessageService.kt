@@ -2,10 +2,10 @@ package com.walletconnect.sample.wallet
 
 import android.annotation.SuppressLint
 import com.google.firebase.messaging.RemoteMessage
-import com.walletconnect.android.Core
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
-import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.android.push.notifications.PushMessagingService
+import com.reown.android.Core
+import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.wcKoinApp
+import com.reown.android.push.notifications.PushMessagingService
 import com.reown.foundation.util.Logger
 import com.walletconnect.sample.wallet.domain.NotificationHandler
 import kotlinx.coroutines.runBlocking

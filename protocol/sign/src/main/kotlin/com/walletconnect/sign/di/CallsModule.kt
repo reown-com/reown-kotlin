@@ -1,9 +1,9 @@
 package com.walletconnect.sign.di
 
-import com.walletconnect.android.internal.common.di.AndroidCommonDITags
-import com.walletconnect.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
-import com.walletconnect.android.internal.common.model.Tags
-import com.walletconnect.android.push.notifications.DecryptMessageUseCaseInterface
+import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.push.notifications.DecryptMessageUseCaseInterface
 import com.walletconnect.sign.engine.use_case.calls.ApproveSessionAuthenticateUseCase
 import com.walletconnect.sign.engine.use_case.calls.ApproveSessionAuthenticateUseCaseInterface
 import com.walletconnect.sign.engine.use_case.calls.ApproveSessionUseCase

@@ -1,8 +1,8 @@
 package com.walletconnect.web3.modal.ui.routes.connect
 
 import com.android.resources.NightMode
-import com.walletconnect.android.internal.common.modal.data.model.Wallet
-import com.walletconnect.modal.ui.model.UiState
+import com.reown.android.internal.common.modal.data.model.Wallet
+import com.reown.modal.ui.model.UiState
 import com.walletconnect.web3.modal.ui.navigation.Route
 import com.walletconnect.web3.modal.ui.previews.testWallets
 import com.walletconnect.web3.modal.ui.routes.connect.connect_wallet.ConnectWalletRoute

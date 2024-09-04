@@ -1,11 +1,11 @@
 package com.walletconnect.sign.engine.use_case.calls
 
-import com.walletconnect.android.internal.common.crypto.kmr.KeyManagementRepository
-import com.walletconnect.android.internal.common.model.AppMetaData
-import com.walletconnect.android.internal.common.model.Expiry
-import com.walletconnect.android.internal.common.model.RelayProtocolOptions
-import com.walletconnect.android.internal.common.model.SymmetricKey
-import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.SymmetricKey
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.exceptions.InvalidNamespaceException
@@ -40,7 +40,7 @@ class ProposeSessionUseCaseTest {
             requiredNamespaces = mapOf("required" to EngineDO.Namespace.Proposal(listOf("required"), listOf("required"), listOf("required"))),
             optionalNamespaces = mapOf("optional" to EngineDO.Namespace.Proposal(listOf("optional"), listOf("optional"), listOf("optional"))),
             properties = mapOf("key" to "value"),
-            pairing = com.walletconnect.android.internal.common.model.Pairing(
+            pairing = com.reown.android.internal.common.model.Pairing(
                 topic = Topic("topic"),
                 relay = RelayProtocolOptions(),
                 symmetricKey = SymmetricKey("symmetricKey"),
