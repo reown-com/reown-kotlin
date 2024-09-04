@@ -35,8 +35,6 @@ fun compileListOfSDKs(): List<Triple<String, String?, String>> = mutableListOf(
     Triple("core", "android", "android"),
     Triple("core", "modal", "android"),
     Triple("protocol", "sign", "android"),
-    Triple("protocol", "auth", "android"),
-    Triple("protocol", "chat", "android"),
     Triple("protocol", "notify", "android"),
     Triple("product", "web3wallet", "android"),
     Triple("product", "web3modal", "android"),

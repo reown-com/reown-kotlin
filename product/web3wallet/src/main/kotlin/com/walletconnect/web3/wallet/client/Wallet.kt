@@ -66,14 +66,15 @@ object Wallet {
             data class Success(val topic: String) : Ping()
             data class Error(val error: Throwable) : Ping()
         }
+
         data class Error(val throwable: Throwable) : Model()
 
-		data class ConnectionState(val isAvailable: Boolean, val reason: Reason? = null) : Model() {
-			sealed class Reason : Model() {
-				data class ConnectionClosed(val message: String) : Reason()
-				data class ConnectionFailed(val throwable: Throwable) : Reason()
-			}
-		}
+        data class ConnectionState(val isAvailable: Boolean, val reason: Reason? = null) : Model() {
+            sealed class Reason : Model() {
+                data class ConnectionClosed(val message: String) : Reason()
+                data class ConnectionFailed(val throwable: Throwable) : Reason()
+            }
+        }
 
         data class ExpiredProposal(val pairingTopic: String, val proposerPublicKey: String) : Model()
         data class ExpiredRequest(val topic: String, val id: Long) : Model()
@@ -130,12 +131,6 @@ object Wallet {
                 val params: String,
             ) : Model()
         }
-
-        data class AuthRequest(
-            val id: Long,
-            val pairingTopic: String,
-            val payloadParams: PayloadParams,
-        ) : Model()
 
         sealed class SettledSessionResponse : Model() {
             data class Result(val session: Session) : SettledSessionResponse()
@@ -277,12 +272,6 @@ object Wallet {
             val params: String,
         ) : Model()
 
-        data class PendingAuthRequest(
-            val id: Long,
-            val pairingTopic: String,
-            val payloadParams: PayloadParams,
-        ) : Model()
-
         sealed class Message : Model() {
 
             data class Simple(
@@ -317,28 +306,6 @@ object Wallet {
                     val method: String,
                     val params: String,
                 ) : Message()
-            }
-
-            data class AuthRequest(
-                val id: Long,
-                val pairingTopic: String,
-                val metadata: Core.Model.AppMetaData,
-                val payloadParams: PayloadParams,
-            ) : Message() {
-                data class PayloadParams(
-                    val type: String,
-                    val chainId: String,
-                    val domain: String,
-                    val aud: String,
-                    val version: String,
-                    val nonce: String,
-                    val iat: String,
-                    val nbf: String?,
-                    val exp: String?,
-                    val statement: String?,
-                    val requestId: String?,
-                    val resources: List<String>?,
-                )
             }
         }
     }

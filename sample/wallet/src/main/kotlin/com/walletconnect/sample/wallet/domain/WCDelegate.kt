@@ -4,7 +4,7 @@ import android.util.Log
 import com.walletconnect.android.Core
 import com.walletconnect.android.CoreClient
 import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.Web3Wallet
+import com.walletconnect.web3.wallet.client.WalletKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-object WCDelegate : Web3Wallet.WalletDelegate, CoreClient.CoreDelegate {
+object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _coreEvents: MutableSharedFlow<Core.Model> = MutableSharedFlow()
     val coreEvents: SharedFlow<Core.Model> = _coreEvents.asSharedFlow()
@@ -23,7 +23,6 @@ object WCDelegate : Web3Wallet.WalletDelegate, CoreClient.CoreDelegate {
     val walletEvents: SharedFlow<Wallet.Model> = _walletEvents.asSharedFlow()
     private val _connectionState: MutableSharedFlow<Wallet.Model.ConnectionState> = MutableSharedFlow(replay = 1)
     val connectionState: SharedFlow<Wallet.Model.ConnectionState> = _connectionState.asSharedFlow()
-    var authRequestEvent: Pair<Wallet.Model.AuthRequest, Wallet.Model.VerifyContext>? = null
     var sessionProposalEvent: Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>? = null
     var sessionAuthenticateEvent: Pair<Wallet.Model.SessionAuthenticate, Wallet.Model.VerifyContext>? = null
     var sessionRequestEvent: Pair<Wallet.Model.SessionRequest, Wallet.Model.VerifyContext>? = null
@@ -31,15 +30,7 @@ object WCDelegate : Web3Wallet.WalletDelegate, CoreClient.CoreDelegate {
 
     init {
         CoreClient.setDelegate(this)
-        Web3Wallet.setWalletDelegate(this)
-    }
-
-    override fun onAuthRequest(authRequest: Wallet.Model.AuthRequest, verifyContext: Wallet.Model.VerifyContext) {
-        authRequestEvent = Pair(authRequest, verifyContext)
-
-        scope.launch {
-            _walletEvents.emit(authRequest)
-        }
+        WalletKit.setWalletDelegate(this)
     }
 
     override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {

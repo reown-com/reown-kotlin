@@ -6,7 +6,6 @@ import com.squareup.moshi.*
 import com.squareup.moshi.internal.Util
 import com.walletconnect.android.internal.common.JsonRpcResponse
 import com.walletconnect.android.internal.common.model.params.ChatNotifyResponseAuthParams
-import com.walletconnect.android.internal.common.model.params.CoreAuthParams
 import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
 import com.walletconnect.android.internal.common.model.params.CoreSignParams
 import org.json.JSONArray
@@ -26,8 +25,6 @@ internal class JsonRpcResultAdapter(val moshi: Moshi) : JsonAdapter<JsonRpcRespo
         moshi.adapter(CoreSignParams.ApprovalParams::class.java, emptySet(), "result")
     private val approveSessionAuthenticateParamsAdapter: JsonAdapter<CoreSignParams.SessionAuthenticateApproveParams> =
         moshi.adapter(CoreSignParams.SessionAuthenticateApproveParams::class.java, emptySet(), "result")
-    private val cacaoAdapter: JsonAdapter<CoreAuthParams.ResponseParams> =
-        moshi.adapter(CoreAuthParams.ResponseParams::class.java, emptySet(), "result")
     private val notifySubscribeUpdateParamsAdapter: JsonAdapter<CoreNotifyParams.UpdateParams> =
         moshi.adapter(CoreNotifyParams.UpdateParams::class.java, emptySet(), "result")
     private val chatNotifyResponseAuthParamsAdapter: JsonAdapter<ChatNotifyResponseAuthParams.ResponseAuth> =
@@ -66,11 +63,6 @@ internal class JsonRpcResultAdapter(val moshi: Moshi) : JsonAdapter<JsonRpcRespo
 
                         runCatching { approveSessionAuthenticateParamsAdapter.fromJson(reader.peekJson()) }.isSuccess -> {
                             approveSessionAuthenticateParamsAdapter.fromJson(reader)
-                        }
-
-
-                        runCatching { cacaoAdapter.fromJson(reader.peekJson()) }.isSuccess -> {
-                            cacaoAdapter.fromJson(reader)
                         }
 
                         runCatching { notifySubscribeUpdateParamsAdapter.fromJson(reader.peekJson()) }.isSuccess -> {
@@ -151,14 +143,6 @@ internal class JsonRpcResultAdapter(val moshi: Moshi) : JsonAdapter<JsonRpcRespo
                     approveSessionAuthenticateParamsAdapter.toJson(value_.result)
                 writer.valueSink().use {
                     it.writeUtf8(approveSessionAuthenticateParamsString)
-                }
-            }
-
-            (value_.result as? CoreAuthParams.ResponseParams) != null -> {
-                val responseParamsString =
-                    cacaoAdapter.toJson(value_.result)
-                writer.valueSink().use {
-                    it.writeUtf8(responseParamsString)
                 }
             }
 

@@ -35,7 +35,7 @@ import com.walletconnect.sample.wallet.ui.state.ConnectionState
 import com.walletconnect.sample.wallet.ui.state.connectionStateFlow
 import com.walletconnect.util.hexToBytes
 import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.Web3Wallet
+import com.walletconnect.web3.wallet.client.WalletKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -90,7 +90,7 @@ class Web3WalletApplication : Application() {
         logger = wcKoinApp.koin.get(named(AndroidCommonDITags.LOGGER))
         logger.log("Account: ${EthAccountDelegate.account}")
 
-        Web3Wallet.initialize(Wallet.Params.Init(core = CoreClient),
+        WalletKit.initialize(Wallet.Params.Init(core = CoreClient),
             onSuccess = {
                 logger.log("Web3Wallet initialized")
             },
@@ -127,7 +127,7 @@ class Web3WalletApplication : Application() {
         // For testing purposes only
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
             addFirebaseBeagleModules = {
-                Web3Wallet.registerDeviceToken(firebaseAccessToken = token, enableEncrypted = true,
+                WalletKit.registerDeviceToken(firebaseAccessToken = token, enableEncrypted = true,
                     onSuccess = {
                         Timber.tag(tag(this)).e("Successfully registered firebase token for Web3Wallet")
                     },

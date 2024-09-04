@@ -15,7 +15,7 @@ import com.walletconnect.sample.wallet.ui.common.peer.PeerUI
 import com.walletconnect.sample.wallet.ui.common.peer.toPeerUI
 import com.walletconnect.util.hexToBytes
 import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.Web3Wallet
+import com.walletconnect.web3.wallet.client.WalletKit
 import com.walletconnect.web3.wallet.utils.CacaoSigner
 import org.json.JSONArray
 import org.web3j.utils.Numeric.hexStringToByteArray
@@ -41,8 +41,8 @@ class SessionRequestViewModel : ViewModel() {
                         message = "Kotlin Wallet Error"
                     )
                 )
-                val redirect = Web3Wallet.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                Web3Wallet.respondSessionRequest(result,
+                val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
+                WalletKit.respondSessionRequest(result,
                     onSuccess = {
                         clearSessionRequest()
                         onSuccess(redirect)
@@ -107,8 +107,8 @@ class SessionRequestViewModel : ViewModel() {
                     )
                 )
 
-                val redirect = Web3Wallet.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                Web3Wallet.respondSessionRequest(response,
+                val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
+                WalletKit.respondSessionRequest(response,
                     onSuccess = {
                         clearSessionRequest()
                         onSuccess(redirect)

@@ -89,16 +89,6 @@ object NotificationHandler {
             val url: String?,
             val iconUrl: String?,
         ) : Notification
-
-        data class AuthRequest(
-            override val messageId: Int,
-            override val channelId: String,
-            override val title: String,
-            override val body: String,
-            val topic: String,
-            val url: String?,
-            val iconUrl: String?,
-        ) : Notification
     }
 
     private data class NotificationsWithMetadata(val notifications: List<Notification>, val channelName: String, val iconUrl: String?)
@@ -233,16 +223,6 @@ object NotificationHandler {
         val notification = when (message) {
             is Core.Model.Message.Simple -> Notification.Simple(message.hashCode(), W3W_CHANNEL_ID, message.title, message.body)
             is Core.Model.Message.Notify -> Notification.Decrypted(message.hashCode(), message.type, message.title, message.body, message.topic, message.url)
-            is Core.Model.Message.AuthRequest -> Notification.AuthRequest(
-                message.hashCode(),
-                W3W_CHANNEL_ID,
-                "New Authentication Request!",
-                "A new authentication request arrived from ${message.metadata.name}, please check your wallet",
-                message.pairingTopic,
-                message.metadata.url,
-                message.metadata.icons.firstOrNull()
-            )
-
             is Core.Model.Message.SessionRequest -> Notification.SessionRequest(
                 message.hashCode(),
                 W3W_CHANNEL_ID,
@@ -253,7 +233,6 @@ object NotificationHandler {
                 message.peerMetaData?.url,
                 message.peerMetaData?.icons?.firstOrNull()
             )
-
             is Core.Model.Message.SessionProposal ->
                 Notification.SessionProposal(
                     message.hashCode(),
@@ -266,7 +245,6 @@ object NotificationHandler {
                     message.icons.firstOrNull(),
                     message.redirect
                 )
-
             is Core.Model.Message.SessionAuthenticate -> Notification.SessionAuthenticate(
                 message.hashCode(),
                 W3W_CHANNEL_ID,
@@ -302,5 +280,4 @@ object NotificationHandler {
             .buildAndShowNotification(context, 5000)
             .launchIn(scope)
     }
-
 }

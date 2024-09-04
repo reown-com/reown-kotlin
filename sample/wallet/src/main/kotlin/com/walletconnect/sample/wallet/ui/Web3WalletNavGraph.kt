@@ -41,7 +41,6 @@ import com.walletconnect.sample.wallet.ui.routes.composable_routes.inbox.InboxRo
 import com.walletconnect.sample.wallet.ui.routes.composable_routes.inbox.InboxViewModel
 import com.walletconnect.sample.wallet.ui.routes.composable_routes.notifications.NotificationsScreenRoute
 import com.walletconnect.sample.wallet.ui.routes.composable_routes.settings.SettingsRoute
-import com.walletconnect.sample.wallet.ui.routes.dialog_routes.auth_request.AuthRequestRoute
 import com.walletconnect.sample.wallet.ui.routes.dialog_routes.paste_uri.PasteUriRoute
 import com.walletconnect.sample.wallet.ui.routes.dialog_routes.session_authenticate.SessionAuthenticateRoute
 import com.walletconnect.sample.wallet.ui.routes.dialog_routes.session_proposal.SessionProposalRoute
@@ -154,9 +153,6 @@ fun Web3WalletNavGraph(
             }
             dialog(Route.SessionProposal.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 SessionProposalRoute(navController)
-            }
-            dialog(Route.AuthRequest.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                AuthRequestRoute(navController)
             }
             dialog(Route.SessionAuthenticate.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 SessionAuthenticateRoute(navController, connectionsViewModel)

@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.walletconnect.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.walletconnect.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
 import com.walletconnect.sample.wallet.domain.WCDelegate
-import com.walletconnect.web3.wallet.client.Web3Wallet
+import com.walletconnect.web3.wallet.client.WalletKit
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -65,7 +65,7 @@ class ConnectionsViewModel : ViewModel() {
 
     private fun getLatestActiveSignSessions(): List<ConnectionUI> {
         return try {
-            Web3Wallet.getListOfActiveSessions().filter { wcSession ->
+            WalletKit.getListOfActiveSessions().filter { wcSession ->
                 wcSession.metaData != null
             }.mapIndexed { index, wcSession ->
                 ConnectionUI(

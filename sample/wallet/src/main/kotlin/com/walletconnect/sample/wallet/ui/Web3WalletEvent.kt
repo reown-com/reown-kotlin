@@ -12,8 +12,3 @@ interface SignEvent : Web3WalletEvent {
     object Disconnect : SignEvent
     data class ConnectionState(val isAvailable: Boolean) : SignEvent
 }
-
-interface AuthEvent : Web3WalletEvent {
-    data class OnRequest(val id: Long, val message: String) : AuthEvent
-}
-

@@ -32,7 +32,7 @@ import com.walletconnect.sample.wallet.domain.NotifyDelegate
 import com.walletconnect.sample.wallet.ui.routes.Route
 import com.walletconnect.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.walletconnect.sample.wallet.ui.routes.host.WalletSampleHost
-import com.walletconnect.web3.wallet.client.Web3Wallet
+import com.walletconnect.web3.wallet.client.WalletKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
@@ -131,7 +131,6 @@ class Web3WalletActivity : AppCompatActivity() {
                         }
                     }
 
-                    is AuthEvent.OnRequest -> navController.navigate(Route.AuthRequest.path)
                     else -> Unit
                 }
             }
@@ -149,7 +148,7 @@ class Web3WalletActivity : AppCompatActivity() {
 
     private fun handleAppLink(intent: Intent?) {
         if (intent?.dataString?.contains("wc_ev") == true) {
-            Web3Wallet.dispatchEnvelope(intent.dataString ?: "") {
+            WalletKit.dispatchEnvelope(intent.dataString ?: "") {
                 lifecycleScope.launch(Dispatchers.Main) {
                     Toast.makeText(this@Web3WalletActivity, "Error dispatching envelope: ${it.throwable.message}", Toast.LENGTH_SHORT).show()
                 }

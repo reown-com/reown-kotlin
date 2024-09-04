@@ -9,7 +9,7 @@ import com.walletconnect.sign.common.exceptions.SignClientAlreadyInitializedExce
 import kotlinx.coroutines.*
 import java.util.*
 
-object Web3Wallet {
+object WalletKit {
     private lateinit var coreClient: CoreInterface
 
     interface WalletDelegate {
@@ -18,12 +18,6 @@ object Web3Wallet {
         fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext)
         fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete)
         fun onSessionExtend(session: Wallet.Model.Session)
-
-        @Deprecated(
-            "AuthSDK has been deprecated. Please use updated Web3Wallet and Sign SDKs instead.",
-            replaceWith = ReplaceWith("fun onSessionAuthenticated(sessionAuthenticate: Wallet.Model.SessionAuthenticate, verifyContext: Wallet.Model.VerifyContext)")
-        )
-        fun onAuthRequest(authRequest: Wallet.Model.AuthRequest, verifyContext: Wallet.Model.VerifyContext)
 
         //Responses
         fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse)

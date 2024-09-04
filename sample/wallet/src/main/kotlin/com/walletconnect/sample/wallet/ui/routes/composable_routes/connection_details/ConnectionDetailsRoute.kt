@@ -64,7 +64,7 @@ import com.walletconnect.sample.wallet.ui.routes.composable_routes.connections.C
 import com.walletconnect.sample.wallet.ui.routes.composable_routes.connections.ConnectionUI
 import com.walletconnect.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.Web3Wallet
+import com.walletconnect.web3.wallet.client.WalletKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -91,7 +91,7 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                 val lastDelimiterIndex = account.indexOfLast { it == ':' }
                                 val chainId = account.dropLast(account.lastIndex - lastDelimiterIndex + 1)
                                 val event = getAllEventsByChainId(uiConnection.type.namespaces.values.first(), account).first()
-                                Web3Wallet.emitSessionEvent(
+                                WalletKit.emitSessionEvent(
                                     Wallet.Params.SessionEmit(uiConnection.type.topic, Wallet.Model.SessionEvent(event, "someData"), chainId),
                                     onSuccess = {
                                         isEmitLoading = false
@@ -133,7 +133,7 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                         )
                                     ).toMutableMap()
                                 val params = Wallet.Params.SessionUpdate(uiConnection.type.topic, newNamespaces)
-                                Web3Wallet.updateSession(params,
+                                WalletKit.updateSession(params,
                                     onSuccess = {
                                         isUpdateLoading = false
                                         connectionsViewModel.refreshConnections()
@@ -169,7 +169,7 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                         is ConnectionType.Sign -> {
                             try {
                                 isDeleteLoading = true
-                                Web3Wallet.disconnectSession(Wallet.Params.SessionDisconnect(uiConnection.type.topic),
+                                WalletKit.disconnectSession(Wallet.Params.SessionDisconnect(uiConnection.type.topic),
                                     onSuccess = {
                                         isDeleteLoading = false
                                         connectionsViewModel.refreshConnections()
@@ -208,7 +208,7 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
 
                             val chainId = "$namespace:$reference"
                             val accountsToChange = connectionsViewModel.getAccountsToChange()
-                            Web3Wallet.emitSessionEvent(Wallet.Params.SessionEmit(uiConnection.type.topic, Wallet.Model.SessionEvent("accountsChanged", accountsToChange), chainId),
+                            WalletKit.emitSessionEvent(Wallet.Params.SessionEmit(uiConnection.type.topic, Wallet.Model.SessionEvent("accountsChanged", accountsToChange), chainId),
                                 onSuccess = {
                                     composableScope.launch(Dispatchers.Main) {
                                         Toast.makeText(context, "Switching account", Toast.LENGTH_SHORT).show()

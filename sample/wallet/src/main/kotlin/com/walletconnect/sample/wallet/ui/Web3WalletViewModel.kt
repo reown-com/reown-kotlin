@@ -13,7 +13,7 @@ import com.walletconnect.sample.wallet.domain.WCDelegate
 import com.walletconnect.sample.wallet.ui.state.ConnectionState
 import com.walletconnect.sample.wallet.ui.state.PairingEvent
 import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.Web3Wallet
+import com.walletconnect.web3.wallet.client.WalletKit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -115,13 +115,6 @@ class Web3WalletViewModel : ViewModel() {
                 }
             }
 
-            is Wallet.Model.AuthRequest -> {
-                _isLoadingFlow.value = false
-                val message = Web3Wallet.formatMessage(Wallet.Params.FormatMessage(wcEvent.payloadParams, ISSUER))
-                    ?: throw Exception("Error formatting message")
-                AuthEvent.OnRequest(wcEvent.id, message)
-            }
-
             is Wallet.Model.SessionAuthenticate -> {
                 _isLoadingFlow.value = false
                 SignEvent.SessionAuthenticate
@@ -152,7 +145,7 @@ class Web3WalletViewModel : ViewModel() {
 
         try {
             val pairingParams = Wallet.Params.Pair(pairingUri.removePrefix("kotlin-web3wallet://wc?uri="))
-            Web3Wallet.pair(pairingParams) { error ->
+            WalletKit.pair(pairingParams) { error ->
                 Firebase.crashlytics.recordException(error.throwable)
                 viewModelScope.launch {
                     _isLoadingFlow.value = false

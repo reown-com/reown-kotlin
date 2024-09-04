@@ -13,7 +13,7 @@ import com.walletconnect.sample.wallet.ui.common.peer.PeerUI
 import com.walletconnect.sample.wallet.ui.common.peer.toPeerUI
 import com.walletconnect.util.hexToBytes
 import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.Web3Wallet
+import com.walletconnect.web3.wallet.client.WalletKit
 import com.walletconnect.web3.wallet.utils.CacaoSigner
 
 class SessionAuthenticateViewModel : ViewModel() {
@@ -26,7 +26,7 @@ class SessionAuthenticateViewModel : ViewModel() {
                 val auths = mutableListOf<Wallet.Model.Cacao>()
 
                 val authPayloadParams =
-                    Web3Wallet.generateAuthPayloadParams(
+                    WalletKit.generateAuthPayloadParams(
                         sessionAuthenticate.payloadParams,
                         supportedChains = listOf("eip155:1", "eip155:137", "eip155:56"),
                         supportedMethods = listOf("personal_sign", "eth_signTypedData", "eth_signTypedData_v4", "eth_sign")
@@ -35,14 +35,14 @@ class SessionAuthenticateViewModel : ViewModel() {
                 authPayloadParams.chains
                     .forEach { chain ->
                         val issuer = "did:pkh:$chain:$ACCOUNTS_1_EIP155_ADDRESS"
-                        val message = Web3Wallet.formatAuthMessage(Wallet.Params.FormatAuthMessage(authPayloadParams, issuer))
+                        val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authPayloadParams, issuer))
                         val signature = CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191)
-                        val auth = Web3Wallet.generateAuthObject(authPayloadParams, issuer, signature)
+                        val auth = WalletKit.generateAuthObject(authPayloadParams, issuer, signature)
                         auths.add(auth)
                     }
 
                 val approveProposal = Wallet.Params.ApproveSessionAuthenticate(id = sessionAuthenticate.id, auths = auths)
-                Web3Wallet.approveSessionAuthenticate(approveProposal,
+                WalletKit.approveSessionAuthenticate(approveProposal,
                     onSuccess = {
                         WCDelegate.sessionAuthenticateEvent = null
                         onSuccess(sessionAuthenticate.participant.metadata?.redirect ?: "")
@@ -75,7 +75,7 @@ class SessionAuthenticateViewModel : ViewModel() {
                     reason = rejectionReason
                 )
 
-                Web3Wallet.rejectSessionAuthenticate(reject,
+                WalletKit.rejectSessionAuthenticate(reject,
                     onSuccess = {
                         WCDelegate.sessionAuthenticateEvent = null
                         onSuccess(sessionAuthenticate.participant.metadata?.redirect ?: "")
@@ -105,7 +105,7 @@ class SessionAuthenticateViewModel : ViewModel() {
                 .forEach { chain ->
                     val issuer = "did:pkh:$chain:$ACCOUNTS_1_EIP155_ADDRESS"
                     val message = try {
-                        Web3Wallet.formatAuthMessage(Wallet.Params.FormatAuthMessage(sessionAuthenticate.payloadParams, issuer))
+                        WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(sessionAuthenticate.payloadParams, issuer))
                     } catch (e: Exception) {
                         "Invalid message, error: ${e.message}"
                     }

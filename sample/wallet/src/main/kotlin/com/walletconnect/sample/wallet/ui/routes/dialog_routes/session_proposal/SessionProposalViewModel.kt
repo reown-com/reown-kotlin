@@ -7,20 +7,20 @@ import com.walletconnect.sample.wallet.domain.WCDelegate
 import com.walletconnect.sample.wallet.ui.common.peer.PeerUI
 import com.walletconnect.sample.wallet.ui.common.peer.toPeerUI
 import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.Web3Wallet
+import com.walletconnect.web3.wallet.client.WalletKit
 import timber.log.Timber
 
 class SessionProposalViewModel : ViewModel() {
     val sessionProposal: SessionProposalUI? = generateSessionProposalUI()
     fun approve(proposalPublicKey: String, onSuccess: (String) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
-        val proposal = Web3Wallet.getSessionProposals().find { it.proposerPublicKey == proposalPublicKey }
+        val proposal = WalletKit.getSessionProposals().find { it.proposerPublicKey == proposalPublicKey }
         if (proposal != null) {
             try {
                 Timber.d("Approving session proposal: $proposalPublicKey")
-                val sessionNamespaces = Web3Wallet.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
+                val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
                 val approveProposal = Wallet.Params.SessionApprove(proposerPublicKey = proposal.proposerPublicKey, namespaces = sessionNamespaces)
 
-                Web3Wallet.approveSession(approveProposal,
+                WalletKit.approveSession(approveProposal,
                     onError = { error ->
                         Firebase.crashlytics.recordException(error.throwable)
                         WCDelegate.sessionProposalEvent = null
@@ -41,7 +41,7 @@ class SessionProposalViewModel : ViewModel() {
     }
 
     fun reject(proposalPublicKey: String, onSuccess: (String) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
-        val proposal = Web3Wallet.getSessionProposals().find { it.proposerPublicKey == proposalPublicKey }
+        val proposal = WalletKit.getSessionProposals().find { it.proposerPublicKey == proposalPublicKey }
         if (proposal != null) {
             try {
                 val rejectionReason = "Reject Session"
@@ -50,7 +50,7 @@ class SessionProposalViewModel : ViewModel() {
                     reason = rejectionReason
                 )
 
-                Web3Wallet.rejectSession(reject,
+                WalletKit.rejectSession(reject,
                     onSuccess = {
                         WCDelegate.sessionProposalEvent = null
                         onSuccess(proposal.redirect)
