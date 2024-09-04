@@ -7,8 +7,8 @@ import com.walletconnect.android.internal.common.jwt.did.encodeDidJwt
 import com.walletconnect.android.internal.common.model.AccountId
 import com.walletconnect.android.internal.common.model.DidJwt
 import com.walletconnect.android.keyserver.domain.IdentitiesInteractor
-import com.walletconnect.foundation.common.model.PrivateKey
-import com.walletconnect.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.PrivateKey
+import com.reown.foundation.common.model.PublicKey
 import com.walletconnect.notify.data.jwt.delete.EncodeDeleteRequestJwtUseCase
 import com.walletconnect.notify.data.jwt.getNotifications.EncodeGetNotificationsRequestJwtUseCase
 import com.walletconnect.notify.data.jwt.message.EncodeMessageResponseJwtUseCase

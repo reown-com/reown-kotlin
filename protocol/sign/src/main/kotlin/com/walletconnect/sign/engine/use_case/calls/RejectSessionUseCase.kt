@@ -9,8 +9,8 @@ import com.walletconnect.android.internal.common.storage.verify.VerifyContextSto
 import com.walletconnect.android.internal.utils.CoreValidator.isExpired
 import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
 import com.walletconnect.android.pairing.handler.PairingControllerInterface
-import com.walletconnect.foundation.common.model.Ttl
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.exceptions.PeerError
 import com.walletconnect.sign.common.exceptions.SessionProposalExpiredException
 import com.walletconnect.sign.engine.model.mapper.toSessionProposeRequest

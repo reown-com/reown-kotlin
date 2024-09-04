@@ -1,6 +1,6 @@
 package com.walletconnect.android.internal.common.model
 
-import com.walletconnect.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.PublicKey
 
 data class Participants(
     val senderPublicKey: PublicKey,

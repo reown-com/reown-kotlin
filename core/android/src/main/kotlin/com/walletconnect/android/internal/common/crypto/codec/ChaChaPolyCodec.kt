@@ -10,8 +10,8 @@ import com.walletconnect.android.internal.common.model.Participants
 import com.walletconnect.android.internal.common.model.SymmetricKey
 import com.walletconnect.android.internal.common.model.UnknownEnvelopeTypeException
 import com.walletconnect.android.internal.utils.getParticipantTag
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.util.bytesToHex
 import com.walletconnect.util.hexToBytes
 import com.walletconnect.util.randomBytes

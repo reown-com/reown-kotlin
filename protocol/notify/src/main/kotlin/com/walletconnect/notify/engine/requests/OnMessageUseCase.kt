@@ -15,10 +15,10 @@ import com.walletconnect.android.internal.common.model.type.EngineEvent
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.walletconnect.android.internal.utils.monthInSeconds
-import com.walletconnect.foundation.common.model.Ttl
-import com.walletconnect.foundation.util.Logger
-import com.walletconnect.foundation.util.jwt.decodeDidWeb
-import com.walletconnect.foundation.util.jwt.decodeEd25519DidKey
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.util.Logger
+import com.reown.foundation.util.jwt.decodeDidWeb
+import com.reown.foundation.util.jwt.decodeEd25519DidKey
 import com.walletconnect.notify.common.convertToUTF8
 import com.walletconnect.notify.common.model.Notification
 import com.walletconnect.notify.common.model.NotificationMessage

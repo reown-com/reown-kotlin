@@ -6,9 +6,9 @@ import com.walletconnect.android.internal.common.model.Tags
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.walletconnect.android.internal.common.scope
 import com.walletconnect.android.internal.utils.thirtySeconds
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.common.model.Ttl
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.model.vo.clientsync.session.SignRpc
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams
 import com.walletconnect.sign.storage.sequence.SessionStorageRepository

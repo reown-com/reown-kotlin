@@ -8,8 +8,8 @@ import com.walletconnect.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.android.internal.common.scope
 import com.walletconnect.android.relay.ConnectionType
 import com.walletconnect.android.relay.RelayClient
-import com.walletconnect.foundation.network.data.service.RelayService
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.network.data.service.RelayService
+import com.reown.foundation.util.Logger
 import io.mockk.clearAllMocks
 import io.mockk.coVerify
 import io.mockk.every

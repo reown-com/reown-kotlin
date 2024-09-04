@@ -5,7 +5,7 @@ import com.walletconnect.android.internal.common.storage.events.EventsRepository
 import com.walletconnect.android.pulse.data.PulseService
 import com.walletconnect.android.pulse.model.Event
 import com.walletconnect.android.pulse.model.SDKType
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

@@ -9,9 +9,9 @@ import com.walletconnect.android.internal.common.model.params.ChatNotifyResponse
 import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
 import com.walletconnect.android.internal.common.model.type.EngineEvent
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.util.Logger
-import com.walletconnect.foundation.util.jwt.decodeDidPkh
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.util.Logger
+import com.reown.foundation.util.jwt.decodeDidPkh
 import com.walletconnect.notify.common.model.CreateSubscription
 import com.walletconnect.notify.data.jwt.subscription.SubscriptionRequestJwtClaim
 import com.walletconnect.notify.data.jwt.subscription.SubscriptionResponseJwtClaim

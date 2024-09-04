@@ -7,9 +7,9 @@ import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteract
 import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.walletconnect.android.internal.common.storage.verify.VerifyContextStorageRepository
 import com.walletconnect.android.pulse.domain.InsertTelemetryEventUseCase
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.exceptions.InvalidNamespaceException
 import com.walletconnect.sign.common.exceptions.SessionProposalExpiredException
 import com.walletconnect.sign.common.model.vo.proposal.ProposalVO

@@ -19,7 +19,7 @@ import com.walletconnect.android.internal.common.di.DatabaseConfig
 import com.walletconnect.android.internal.common.di.baseStorageModule
 import com.walletconnect.android.internal.common.di.deleteDatabases
 import com.walletconnect.android.sdk.core.AndroidCoreDatabase
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import com.walletconnect.util.randomBytes
 import com.walletconnect.utils.Empty
 import net.sqlcipher.database.SQLiteDatabaseHook

@@ -4,8 +4,8 @@
 package com.walletconnect.android.internal.common.jwt.did
 
 import com.walletconnect.android.internal.common.model.DidJwt
-import com.walletconnect.foundation.common.model.PrivateKey
-import com.walletconnect.foundation.util.jwt.*
+import com.reown.foundation.common.model.PrivateKey
+import com.reown.foundation.util.jwt.*
 
 fun <R : JwtClaims> encodeDidJwt(
     identityPrivateKey: PrivateKey,

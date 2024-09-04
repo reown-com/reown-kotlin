@@ -9,7 +9,7 @@ import com.walletconnect.android.pulse.domain.SendEventInterface
 import com.walletconnect.android.pulse.model.EventType
 import com.walletconnect.android.pulse.model.properties.Properties
 import com.walletconnect.android.pulse.model.properties.Props
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.client.AppKit
 import com.walletconnect.web3.modal.domain.model.Session

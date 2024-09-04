@@ -4,10 +4,10 @@ package com.walletconnect.notify.data.jwt.watchSubscriptions
 
 import com.walletconnect.android.internal.common.jwt.did.EncodeDidJwtPayloadUseCase
 import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.util.jwt.encodeDidPkh
-import com.walletconnect.foundation.util.jwt.encodeDidWeb
-import com.walletconnect.foundation.util.jwt.encodeEd25519DidKey
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.util.jwt.encodeDidPkh
+import com.reown.foundation.util.jwt.encodeDidWeb
+import com.reown.foundation.util.jwt.encodeEd25519DidKey
 
 internal class EncodeWatchSubscriptionsRequestJwtUseCase(
     private val accountId: AccountId,

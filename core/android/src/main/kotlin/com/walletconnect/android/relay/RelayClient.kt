@@ -11,8 +11,8 @@ import com.walletconnect.android.internal.common.exception.WRONG_CONNECTION_TYPE
 import com.walletconnect.android.internal.common.scope
 import com.walletconnect.android.internal.common.wcKoinApp
 import com.walletconnect.android.utils.toWalletConnectException
-import com.walletconnect.foundation.network.BaseRelayClient
-import com.walletconnect.foundation.network.model.Relay
+import com.reown.foundation.network.BaseRelayClient
+import com.reown.foundation.network.model.Relay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

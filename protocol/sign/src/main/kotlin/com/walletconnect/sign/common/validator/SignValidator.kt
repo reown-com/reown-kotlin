@@ -10,7 +10,7 @@ import com.walletconnect.android.internal.utils.CoreValidator.isAccountIdCAIP10C
 import com.walletconnect.android.internal.utils.CoreValidator.isChainIdCAIP2Compliant
 import com.walletconnect.android.internal.utils.CoreValidator.isNamespaceRegexCompliant
 import com.walletconnect.android.internal.utils.weekInSeconds
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.exceptions.NAMESPACE_ACCOUNTS_CAIP_10_MESSAGE
 import com.walletconnect.sign.common.exceptions.NAMESPACE_ACCOUNTS_WRONG_NAMESPACE_MESSAGE
 import com.walletconnect.sign.common.exceptions.NAMESPACE_CHAINS_CAIP_2_MESSAGE

@@ -6,7 +6,7 @@ import com.walletconnect.android.Core
 import com.walletconnect.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.android.internal.common.wcKoinApp
 import com.walletconnect.android.push.notifications.PushMessagingService
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import com.walletconnect.sample.wallet.domain.NotificationHandler
 import kotlinx.coroutines.runBlocking
 import org.koin.core.qualifier.named

@@ -4,7 +4,7 @@ package com.walletconnect.android.internal.common.connection
 
 import com.tinder.scarlet.Lifecycle
 import com.tinder.scarlet.lifecycle.LifecycleRegistry
-import com.walletconnect.foundation.network.ConnectionLifecycle
+import com.reown.foundation.network.ConnectionLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

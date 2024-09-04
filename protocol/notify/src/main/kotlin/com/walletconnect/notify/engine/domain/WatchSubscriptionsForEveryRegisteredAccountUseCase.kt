@@ -2,7 +2,7 @@
 
 package com.walletconnect.notify.engine.domain
 
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import com.walletconnect.notify.data.storage.RegisteredAccountsRepository
 import kotlinx.coroutines.supervisorScope
 

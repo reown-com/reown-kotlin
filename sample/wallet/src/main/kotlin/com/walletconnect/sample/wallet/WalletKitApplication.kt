@@ -21,7 +21,7 @@ import com.walletconnect.android.cacao.signature.SignatureType
 import com.walletconnect.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.android.internal.common.wcKoinApp
 import com.walletconnect.android.utils.cacao.sign
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import com.walletconnect.notify.client.Notify
 import com.walletconnect.notify.client.NotifyClient
 import com.walletconnect.notify.client.cacao.CacaoSigner

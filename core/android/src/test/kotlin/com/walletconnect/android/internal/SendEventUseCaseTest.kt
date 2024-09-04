@@ -7,7 +7,7 @@ import com.walletconnect.android.pulse.domain.SendEventUseCase
 import com.walletconnect.android.pulse.model.Event
 import com.walletconnect.android.pulse.model.SDKType
 import com.walletconnect.android.pulse.model.properties.Props
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify

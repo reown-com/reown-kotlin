@@ -13,7 +13,7 @@ import com.walletconnect.android.internal.common.model.sync.ClientJsonRpc
 import com.walletconnect.android.internal.common.model.type.JsonRpcClientSync
 import com.walletconnect.android.internal.common.storage.rpc.JsonRpcHistory
 import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

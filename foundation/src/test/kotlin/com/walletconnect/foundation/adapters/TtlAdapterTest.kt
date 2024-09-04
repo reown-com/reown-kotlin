@@ -1,9 +1,9 @@
-package com.walletconnect.foundation.adapters
+package com.reown.foundation.adapters
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.walletconnect.foundation.common.adapters.TtlAdapter
-import com.walletconnect.foundation.common.model.Ttl
+import com.reown.foundation.common.adapters.TtlAdapter
+import com.reown.foundation.common.model.Ttl
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 

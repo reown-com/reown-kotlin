@@ -1,13 +1,13 @@
-package com.walletconnect.foundation
+package com.reown.foundation
 
-import com.walletconnect.foundation.crypto.data.repository.ClientIdJwtRepository
-import com.walletconnect.foundation.di.FoundationDITags
-import com.walletconnect.foundation.di.cryptoModule
-import com.walletconnect.foundation.di.foundationCommonModule
-import com.walletconnect.foundation.di.networkModule
-import com.walletconnect.foundation.network.BaseRelayClient
-import com.walletconnect.foundation.network.RelayInterface
-import com.walletconnect.foundation.network.model.Relay
+import com.reown.foundation.crypto.data.repository.ClientIdJwtRepository
+import com.reown.foundation.di.FoundationDITags
+import com.reown.foundation.di.cryptoModule
+import com.reown.foundation.di.foundationCommonModule
+import com.reown.foundation.di.networkModule
+import com.reown.foundation.network.BaseRelayClient
+import com.reown.foundation.network.RelayInterface
+import com.reown.foundation.network.model.Relay
 import com.walletconnect.util.addUserAgent
 import com.walletconnect.util.bytesToHex
 import junit.framework.TestCase.assertEquals

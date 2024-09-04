@@ -2,7 +2,7 @@ package com.walletconnect.android.internal
 import com.walletconnect.android.internal.common.storage.events.EventsRepository
 import com.walletconnect.android.pulse.domain.InsertEventUseCase
 import com.walletconnect.android.pulse.model.properties.Props
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

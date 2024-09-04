@@ -7,7 +7,7 @@ import com.walletconnect.android.internal.common.model.Expiry
 import com.walletconnect.android.internal.common.model.Pairing
 import com.walletconnect.android.internal.common.model.Redirect
 import com.walletconnect.android.sdk.storage.data.dao.PairingQueries
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.utils.Empty
 
 class PairingStorageRepository(private val pairingQueries: PairingQueries) : PairingStorageRepositoryInterface {

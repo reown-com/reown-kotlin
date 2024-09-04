@@ -8,9 +8,9 @@ import com.walletconnect.android.internal.common.model.SDKError
 import com.walletconnect.android.internal.common.model.WCResponse
 import com.walletconnect.android.internal.common.model.params.ChatNotifyResponseAuthParams
 import com.walletconnect.android.internal.common.model.type.EngineEvent
-import com.walletconnect.foundation.util.Logger
-import com.walletconnect.foundation.util.jwt.decodeDidPkh
-import com.walletconnect.foundation.util.jwt.decodeEd25519DidKey
+import com.reown.foundation.util.Logger
+import com.reown.foundation.util.jwt.decodeDidPkh
+import com.reown.foundation.util.jwt.decodeEd25519DidKey
 import com.walletconnect.notify.common.NotifyServerUrl
 import com.walletconnect.notify.common.model.SubscriptionChanged
 import com.walletconnect.notify.data.jwt.watchSubscriptions.WatchSubscriptionsResponseJwtClaim

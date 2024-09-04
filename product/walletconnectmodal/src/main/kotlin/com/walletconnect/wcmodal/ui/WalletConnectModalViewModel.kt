@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.walletconnect.android.CoreClient
 import com.walletconnect.android.internal.common.modal.data.model.Wallet
 import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import com.walletconnect.modal.ui.model.LoadingState
 import com.walletconnect.modal.ui.model.UiState
 import com.walletconnect.wcmodal.client.Modal

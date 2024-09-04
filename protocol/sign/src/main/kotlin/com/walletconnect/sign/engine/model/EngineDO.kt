@@ -10,7 +10,7 @@ import com.walletconnect.android.internal.common.model.Validation
 import com.walletconnect.android.internal.common.model.type.EngineEvent
 import com.walletconnect.android.internal.common.model.type.Sequence
 import com.walletconnect.android.internal.common.signing.cacao.Cacao
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 import java.net.URI
 import com.walletconnect.android.internal.common.model.RelayProtocolOptions as CoreRelayProtocolOptions
 

@@ -1,15 +1,15 @@
-package com.walletconnect.foundation
+package com.reown.foundation
 
 import com.tinder.scarlet.WebSocket
-import com.walletconnect.foundation.common.model.SubscriptionId
-import com.walletconnect.foundation.network.BaseRelayClient
-import com.walletconnect.foundation.network.ConnectionLifecycle
-import com.walletconnect.foundation.network.ConnectionState
-import com.walletconnect.foundation.network.data.service.RelayService
-import com.walletconnect.foundation.network.model.Relay
-import com.walletconnect.foundation.network.model.RelayDTO
-import com.walletconnect.foundation.util.Logger
-import com.walletconnect.foundation.util.scope
+import com.reown.foundation.common.model.SubscriptionId
+import com.reown.foundation.network.BaseRelayClient
+import com.reown.foundation.network.ConnectionLifecycle
+import com.reown.foundation.network.ConnectionState
+import com.reown.foundation.network.data.service.RelayService
+import com.reown.foundation.network.model.Relay
+import com.reown.foundation.network.model.RelayDTO
+import com.reown.foundation.util.Logger
+import com.reown.foundation.util.scope
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify

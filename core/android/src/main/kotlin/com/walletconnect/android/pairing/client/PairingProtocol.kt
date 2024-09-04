@@ -11,7 +11,7 @@ import com.walletconnect.android.pairing.engine.model.EngineDO
 import com.walletconnect.android.pairing.model.mapper.toCore
 import com.walletconnect.android.pulse.domain.InsertTelemetryEventUseCase
 import com.walletconnect.android.relay.RelayConnectionInterface
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import kotlinx.coroutines.flow.*
 import org.koin.core.KoinApplication
 

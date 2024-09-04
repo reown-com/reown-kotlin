@@ -3,8 +3,8 @@
 package com.walletconnect.notify.data.storage
 
 import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.notify.common.model.RegisteredAccount
 import com.walletconnect.notify.common.storage.data.dao.RegisteredAccountsQueries
 import kotlinx.coroutines.Dispatchers

@@ -5,7 +5,7 @@ import androidx.test.core.app.ActivityScenario
 import com.walletconnect.android.BuildConfig
 import com.walletconnect.android.internal.common.scope
 import com.walletconnect.android.test.utils.TestClient
-import com.walletconnect.foundation.network.model.Relay
+import com.reown.foundation.network.model.Relay
 import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.CoroutineScope

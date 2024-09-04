@@ -1,6 +1,6 @@
 package com.walletconnect.android.test.utils
 
-import com.walletconnect.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.PublicKey
 import io.ipfs.multibase.Multibase
 import org.web3j.crypto.Keys
 

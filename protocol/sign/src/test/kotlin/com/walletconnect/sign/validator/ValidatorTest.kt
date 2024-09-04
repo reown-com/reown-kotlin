@@ -6,7 +6,7 @@ import com.walletconnect.android.internal.utils.dayInSeconds
 import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
 import com.walletconnect.android.internal.utils.monthInSeconds
 import com.walletconnect.android.internal.utils.weekInSeconds
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.exceptions.EMPTY_NAMESPACES_MESSAGE
 import com.walletconnect.sign.common.exceptions.INVALID_EVENT_MESSAGE
 import com.walletconnect.sign.common.exceptions.INVALID_EXTEND_TIME

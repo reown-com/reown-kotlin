@@ -2,7 +2,7 @@ package com.walletconnect.android.internal.common.storage.metadata
 
 import com.walletconnect.android.internal.common.model.AppMetaData
 import com.walletconnect.android.internal.common.model.AppMetaDataType
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 
 interface MetadataStorageRepositoryInterface {
 

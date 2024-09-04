@@ -6,9 +6,9 @@ import com.walletconnect.android.internal.common.model.Tags
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.walletconnect.android.internal.utils.dayInSeconds
 import com.walletconnect.android.internal.utils.weekInSeconds
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.common.model.Ttl
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.exceptions.NO_SEQUENCE_FOR_TOPIC_MESSAGE
 import com.walletconnect.sign.common.exceptions.NotSettledSessionException
 import com.walletconnect.sign.common.exceptions.SESSION_IS_NOT_ACKNOWLEDGED_MESSAGE

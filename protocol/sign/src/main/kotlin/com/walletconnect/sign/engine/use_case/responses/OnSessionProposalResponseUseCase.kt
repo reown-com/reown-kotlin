@@ -10,8 +10,8 @@ import com.walletconnect.android.internal.common.model.type.EngineEvent
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.walletconnect.android.internal.common.scope
 import com.walletconnect.android.pairing.handler.PairingControllerInterface
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams
 import com.walletconnect.sign.engine.model.EngineDO
 import com.walletconnect.sign.storage.proposal.ProposalStorageRepository

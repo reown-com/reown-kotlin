@@ -2,9 +2,9 @@ package com.walletconnect.android.internal
 
 import com.walletconnect.android.internal.common.crypto.kmr.BouncyCastleKeyManagementRepository
 import com.walletconnect.android.internal.common.storage.key_chain.KeyStore
-import com.walletconnect.foundation.common.model.PrivateKey
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.PrivateKey
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.utils.Empty
 import io.mockk.spyk
 import junit.framework.TestCase.assertEquals

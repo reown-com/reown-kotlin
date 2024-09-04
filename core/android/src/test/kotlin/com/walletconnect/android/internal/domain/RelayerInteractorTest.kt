@@ -16,11 +16,11 @@ import com.walletconnect.android.internal.common.storage.push_messages.PushMessa
 import com.walletconnect.android.internal.common.storage.rpc.JsonRpcHistory
 import com.walletconnect.android.internal.common.wcKoinApp
 import com.walletconnect.android.relay.RelayConnectionInterface
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.common.model.Ttl
-import com.walletconnect.foundation.network.model.Relay
-import com.walletconnect.foundation.network.model.RelayDTO
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.network.model.Relay
+import com.reown.foundation.network.model.RelayDTO
+import com.reown.foundation.util.Logger
 import com.walletconnect.utils.Empty
 import io.mockk.Called
 import io.mockk.every

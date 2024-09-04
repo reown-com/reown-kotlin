@@ -10,9 +10,9 @@ import com.walletconnect.android.internal.common.adapter.TagsAdapter
 import com.walletconnect.android.internal.common.model.Expiry
 import com.walletconnect.android.internal.common.model.Tags
 import com.walletconnect.android.pulse.model.properties.Props
-import com.walletconnect.foundation.di.FoundationDITags
-import com.walletconnect.foundation.di.foundationCommonModule
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.di.FoundationDITags
+import com.reown.foundation.di.foundationCommonModule
+import com.reown.foundation.util.Logger
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import timber.log.Timber

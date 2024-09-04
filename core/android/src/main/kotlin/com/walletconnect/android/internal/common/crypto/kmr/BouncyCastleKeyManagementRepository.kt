@@ -6,10 +6,10 @@ import com.walletconnect.android.internal.common.crypto.sha256
 import com.walletconnect.android.internal.common.model.MissingKeyException
 import com.walletconnect.android.internal.common.model.SymmetricKey
 import com.walletconnect.android.internal.common.storage.key_chain.KeyStore
-import com.walletconnect.foundation.common.model.Key
-import com.walletconnect.foundation.common.model.PrivateKey
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Key
+import com.reown.foundation.common.model.PrivateKey
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.util.bytesToHex
 import com.walletconnect.util.hexToBytes
 import org.bouncycastle.crypto.digests.SHA256Digest

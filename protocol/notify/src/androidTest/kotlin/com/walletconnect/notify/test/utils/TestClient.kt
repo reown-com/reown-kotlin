@@ -9,7 +9,7 @@ import com.walletconnect.android.cacao.signature.SignatureType
 import com.walletconnect.android.relay.ConnectionType
 import com.walletconnect.android.relay.RelayClient
 import com.walletconnect.android.utils.cacao.sign
-import com.walletconnect.foundation.common.model.PrivateKey
+import com.reown.foundation.common.model.PrivateKey
 import com.walletconnect.notify.client.Notify
 import com.walletconnect.notify.client.NotifyClient
 import com.walletconnect.notify.client.NotifyProtocol

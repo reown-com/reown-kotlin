@@ -30,10 +30,10 @@ import com.walletconnect.android.internal.common.wcKoinApp
 import com.walletconnect.android.internal.utils.ObservableMap
 import com.walletconnect.android.relay.RelayConnectionInterface
 import com.walletconnect.android.relay.WSSConnectionState
-import com.walletconnect.foundation.common.model.SubscriptionId
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.network.model.Relay
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.SubscriptionId
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.network.model.Relay
+import com.reown.foundation.util.Logger
 import com.walletconnect.utils.Empty
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow

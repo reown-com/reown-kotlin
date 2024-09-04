@@ -7,7 +7,7 @@ import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteract
 import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.walletconnect.android.internal.common.storage.verify.VerifyContextStorageRepository
 import com.walletconnect.android.pulse.domain.InsertEventUseCase
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.json_rpc.domain.GetPendingJsonRpcHistoryEntryByIdUseCase
 import com.walletconnect.sign.storage.sequence.SessionStorageRepository
 import io.mockk.every

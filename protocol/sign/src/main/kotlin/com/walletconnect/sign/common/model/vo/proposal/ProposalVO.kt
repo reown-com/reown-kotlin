@@ -4,7 +4,7 @@ import com.walletconnect.android.internal.common.model.AppMetaData
 import com.walletconnect.android.internal.common.model.Expiry
 import com.walletconnect.android.internal.common.model.Namespace
 import com.walletconnect.android.internal.common.model.Redirect
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 
 internal data class ProposalVO(
     val requestId: Long,

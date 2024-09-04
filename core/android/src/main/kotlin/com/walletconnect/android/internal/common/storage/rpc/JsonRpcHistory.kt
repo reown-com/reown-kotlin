@@ -3,8 +3,8 @@ package com.walletconnect.android.internal.common.storage.rpc
 import com.walletconnect.android.internal.common.json_rpc.model.JsonRpcHistoryRecord
 import com.walletconnect.android.internal.common.model.TransportType
 import com.walletconnect.android.sdk.storage.data.dao.JsonRpcHistoryQueries
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.util.Logger
 
 class JsonRpcHistory(
     private val jsonRpcHistoryQueries: JsonRpcHistoryQueries,

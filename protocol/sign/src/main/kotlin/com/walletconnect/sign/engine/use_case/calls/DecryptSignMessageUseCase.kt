@@ -13,7 +13,7 @@ import com.walletconnect.android.internal.common.storage.metadata.MetadataStorag
 import com.walletconnect.android.internal.common.storage.push_messages.PushMessagesRepository
 import com.walletconnect.android.push.notifications.DecryptMessageUseCaseInterface
 import com.walletconnect.android.utils.toClient
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.exceptions.InvalidSignParamsType
 import com.walletconnect.sign.common.model.vo.clientsync.common.PayloadParams
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams

@@ -2,10 +2,10 @@
 
 package com.walletconnect.android.internal.common.jwt.did
 
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.util.jwt.JwtClaims
-import com.walletconnect.foundation.util.jwt.encodeEd25519DidKey
-import com.walletconnect.foundation.util.jwt.jwtIatAndExp
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.util.jwt.JwtClaims
+import com.reown.foundation.util.jwt.encodeEd25519DidKey
+import com.reown.foundation.util.jwt.jwtIatAndExp
 import java.util.concurrent.TimeUnit
 
 interface EncodeDidJwtPayloadUseCase<R : JwtClaims> {

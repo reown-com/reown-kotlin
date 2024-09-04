@@ -2,7 +2,7 @@
 
 package com.walletconnect.notify.data.jwt
 
-import com.walletconnect.foundation.util.jwt.JwtClaims
+import com.reown.foundation.util.jwt.JwtClaims
 import java.util.concurrent.TimeUnit
 
 internal interface NotifyJwtBase : JwtClaims {

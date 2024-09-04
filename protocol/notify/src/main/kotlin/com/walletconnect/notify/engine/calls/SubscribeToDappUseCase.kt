@@ -18,10 +18,10 @@ import com.walletconnect.android.internal.common.scope
 import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.walletconnect.android.internal.utils.monthInSeconds
 import com.walletconnect.android.internal.utils.thirtySeconds
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.common.model.Ttl
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.util.Logger
 import com.walletconnect.notify.common.model.CreateSubscription
 import com.walletconnect.notify.common.model.NotifyRpc
 import com.walletconnect.notify.common.model.Scope

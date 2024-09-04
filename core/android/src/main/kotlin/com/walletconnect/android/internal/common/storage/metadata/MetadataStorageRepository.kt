@@ -7,7 +7,7 @@ import com.walletconnect.android.internal.common.model.AppMetaData
 import com.walletconnect.android.internal.common.model.AppMetaDataType
 import com.walletconnect.android.internal.common.model.Redirect
 import com.walletconnect.android.sdk.storage.data.dao.MetaDataQueries
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 
 internal class MetadataStorageRepository(private val metaDataQueries: MetaDataQueries) : MetadataStorageRepositoryInterface {
 

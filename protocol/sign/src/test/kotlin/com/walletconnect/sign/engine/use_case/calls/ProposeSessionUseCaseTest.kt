@@ -6,8 +6,8 @@ import com.walletconnect.android.internal.common.model.Expiry
 import com.walletconnect.android.internal.common.model.RelayProtocolOptions
 import com.walletconnect.android.internal.common.model.SymmetricKey
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.exceptions.InvalidNamespaceException
 import com.walletconnect.sign.engine.model.EngineDO
 import com.walletconnect.sign.storage.proposal.ProposalStorageRepository

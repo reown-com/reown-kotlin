@@ -2,7 +2,7 @@ package com.walletconnect.android.internal.common.model
 
 import com.walletconnect.android.internal.common.model.type.Sequence
 import com.walletconnect.android.pairing.model.pairingExpiry
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 
 data class Pairing(
     override val topic: Topic,

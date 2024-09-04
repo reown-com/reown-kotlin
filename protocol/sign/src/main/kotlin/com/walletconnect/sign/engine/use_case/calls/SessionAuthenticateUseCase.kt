@@ -26,10 +26,10 @@ import com.walletconnect.android.pulse.model.Direction
 import com.walletconnect.android.pulse.model.EventType
 import com.walletconnect.android.pulse.model.properties.Properties
 import com.walletconnect.android.pulse.model.properties.Props
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.common.model.Ttl
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.model.vo.clientsync.common.Requester
 import com.walletconnect.sign.common.model.vo.clientsync.session.SignRpc
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams

@@ -1,8 +1,8 @@
-package com.walletconnect.foundation.crypto.data.repository
+package com.reown.foundation.crypto.data.repository
 
-import com.walletconnect.foundation.common.model.PrivateKey
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.util.jwt.jwtIatAndExp
+import com.reown.foundation.common.model.PrivateKey
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.util.jwt.jwtIatAndExp
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.spyk

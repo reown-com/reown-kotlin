@@ -1,7 +1,7 @@
 package com.walletconnect.android.verify.domain
 
 import com.walletconnect.android.verify.model.JWK
-import com.walletconnect.foundation.util.jwt.JWT_DELIMITER
+import com.reown.foundation.util.jwt.JWT_DELIMITER
 import com.walletconnect.util.bytesToHex
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.params.ECDomainParameters

@@ -2,7 +2,7 @@ package com.walletconnect.android.pulse.domain
 
 import com.walletconnect.android.internal.common.storage.events.EventsRepository
 import com.walletconnect.android.pulse.model.properties.Props
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

@@ -3,8 +3,8 @@ package com.walletconnect.android.internal.common.jwt.did
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.foundation.util.jwt.JwtClaims
-import com.walletconnect.foundation.util.jwt.encodeDidPkh
+import com.reown.foundation.util.jwt.JwtClaims
+import com.reown.foundation.util.jwt.encodeDidPkh
 
 internal class EncodeIdentityKeyDidJwtPayloadUseCase(
     private val accountId: AccountId,

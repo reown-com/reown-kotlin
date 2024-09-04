@@ -8,7 +8,7 @@ import android.os.Bundle
 import com.tinder.scarlet.Lifecycle
 import com.tinder.scarlet.ShutdownReason
 import com.tinder.scarlet.lifecycle.LifecycleRegistry
-import com.walletconnect.foundation.network.ConnectionLifecycle
+import com.reown.foundation.network.ConnectionLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

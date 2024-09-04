@@ -16,8 +16,8 @@ import com.walletconnect.android.internal.common.connection.ManualConnectionLife
 import com.walletconnect.android.internal.common.jwt.clientid.GenerateJwtStoreClientIdUseCase
 import com.walletconnect.android.relay.ConnectionType
 import com.walletconnect.android.relay.NetworkClientTimeout
-import com.walletconnect.foundation.network.data.adapter.FlowStreamAdapter
-import com.walletconnect.foundation.network.data.service.RelayService
+import com.reown.foundation.network.data.adapter.FlowStreamAdapter
+import com.reown.foundation.network.data.service.RelayService
 import okhttp3.Authenticator
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient

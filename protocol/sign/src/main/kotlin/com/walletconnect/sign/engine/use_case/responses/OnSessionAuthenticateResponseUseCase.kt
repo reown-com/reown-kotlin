@@ -27,9 +27,9 @@ import com.walletconnect.android.pulse.model.EventType
 import com.walletconnect.android.pulse.model.properties.Properties
 import com.walletconnect.android.pulse.model.properties.Props
 import com.walletconnect.android.utils.toClient
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.model.vo.clientsync.session.params.SignParams
 import com.walletconnect.sign.common.model.vo.sequence.SessionVO
 import com.walletconnect.sign.common.validator.SignValidator

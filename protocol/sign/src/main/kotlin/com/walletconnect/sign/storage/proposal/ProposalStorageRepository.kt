@@ -7,7 +7,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import com.walletconnect.android.internal.common.model.Expiry
 import com.walletconnect.android.internal.common.model.Namespace
 import com.walletconnect.android.internal.common.scope
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.sign.common.model.vo.proposal.ProposalVO
 import com.walletconnect.sign.storage.data.dao.optionalnamespaces.OptionalNamespaceDaoQueries
 import com.walletconnect.sign.storage.data.dao.proposal.ProposalDaoQueries

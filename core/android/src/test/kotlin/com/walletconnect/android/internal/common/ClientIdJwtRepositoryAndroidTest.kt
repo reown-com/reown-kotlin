@@ -2,9 +2,9 @@ package com.walletconnect.android.internal.common
 
 import com.walletconnect.android.internal.KeyChainMock
 import com.walletconnect.android.internal.common.jwt.clientid.ClientIdJwtRepositoryAndroid
-import com.walletconnect.foundation.common.model.PrivateKey
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.util.jwt.jwtIatAndExp
+import com.reown.foundation.common.model.PrivateKey
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.util.jwt.jwtIatAndExp
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.spyk

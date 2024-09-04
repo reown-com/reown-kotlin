@@ -5,7 +5,7 @@ import androidx.annotation.Keep
 import com.walletconnect.android.Core
 import com.walletconnect.android.CoreInterface
 import com.walletconnect.android.cacao.SignatureInterface
-import com.walletconnect.foundation.common.model.PrivateKey
+import com.reown.foundation.common.model.PrivateKey
 import kotlin.time.Duration
 
 object Notify {

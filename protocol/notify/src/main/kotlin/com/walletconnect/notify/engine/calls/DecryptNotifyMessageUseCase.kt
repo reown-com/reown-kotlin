@@ -14,8 +14,8 @@ import com.walletconnect.android.internal.common.model.sync.ClientJsonRpc
 import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.walletconnect.android.internal.common.storage.rpc.JsonRpcHistory
 import com.walletconnect.android.push.notifications.DecryptMessageUseCaseInterface
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.util.Logger
 import com.walletconnect.notify.common.model.Notification
 import com.walletconnect.notify.common.model.NotificationMessage
 import com.walletconnect.notify.common.model.toCore

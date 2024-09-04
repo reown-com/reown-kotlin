@@ -10,7 +10,7 @@ import com.walletconnect.android.verify.client.VerifyInterface
 import com.walletconnect.android.verify.domain.ResolveAttestationIdUseCase
 import com.walletconnect.android.verify.domain.VerifyResult
 import com.walletconnect.android.verify.model.VerifyContext
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 import com.walletconnect.utils.Empty
 import io.mockk.Runs
 import io.mockk.coEvery

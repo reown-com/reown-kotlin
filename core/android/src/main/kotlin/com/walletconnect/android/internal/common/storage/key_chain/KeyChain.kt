@@ -3,7 +3,7 @@
 package com.walletconnect.android.internal.common.storage.key_chain
 
 import android.content.SharedPreferences
-import com.walletconnect.foundation.common.model.Key
+import com.reown.foundation.common.model.Key
 import com.walletconnect.util.bytesToHex
 import com.walletconnect.util.hexToBytes
 

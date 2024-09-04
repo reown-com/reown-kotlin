@@ -11,7 +11,7 @@ import com.walletconnect.android.internal.common.model.Tags
 import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.walletconnect.android.internal.utils.thirtySeconds
-import com.walletconnect.foundation.common.model.Ttl
+import com.reown.foundation.common.model.Ttl
 import com.walletconnect.notify.common.NotifyServerUrl
 import com.walletconnect.notify.common.model.NotifyRpc
 import com.walletconnect.notify.data.storage.RegisteredAccountsRepository

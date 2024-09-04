@@ -10,8 +10,8 @@ import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteract
 import com.walletconnect.android.internal.common.scope
 import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.walletconnect.android.internal.utils.monthInSeconds
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.common.model.Ttl
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.common.model.Ttl
 import com.walletconnect.notify.common.model.DeleteSubscription
 import com.walletconnect.notify.common.model.NotifyRpc
 import com.walletconnect.notify.common.model.Subscription

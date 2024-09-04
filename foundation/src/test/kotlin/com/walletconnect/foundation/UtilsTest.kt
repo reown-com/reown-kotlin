@@ -1,4 +1,4 @@
-package com.walletconnect.foundation
+package com.reown.foundation
 
 import com.walletconnect.util.generateClientToServerId
 import com.walletconnect.util.generateId

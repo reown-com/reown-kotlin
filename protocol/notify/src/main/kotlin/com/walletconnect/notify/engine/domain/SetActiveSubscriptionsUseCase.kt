@@ -11,8 +11,8 @@ import com.walletconnect.android.internal.common.model.type.EngineEvent
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.walletconnect.android.internal.common.storage.key_chain.KeyStore
 import com.walletconnect.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.walletconnect.foundation.common.model.Topic
-import com.walletconnect.foundation.util.jwt.decodeEd25519DidKey
+import com.reown.foundation.common.model.Topic
+import com.reown.foundation.util.jwt.decodeEd25519DidKey
 import com.walletconnect.notify.common.model.Scope
 import com.walletconnect.notify.common.model.ServerSubscription
 import com.walletconnect.notify.common.model.Subscription

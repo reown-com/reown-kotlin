@@ -6,7 +6,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.walletconnect.android.internal.common.di.KEY_CLIENT_ID
 import com.walletconnect.android.utils.strippedUrl
-import com.walletconnect.foundation.crypto.data.repository.ClientIdJwtRepository
+import com.reown.foundation.crypto.data.repository.ClientIdJwtRepository
 
 internal class GenerateJwtStoreClientIdUseCase(private val clientIdJwtRepository: ClientIdJwtRepository, private val sharedPreferences: SharedPreferences) {
 

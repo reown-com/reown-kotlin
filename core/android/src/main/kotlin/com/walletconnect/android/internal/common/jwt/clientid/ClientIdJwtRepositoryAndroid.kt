@@ -4,9 +4,9 @@ package com.walletconnect.android.internal.common.jwt.clientid
 
 import com.walletconnect.android.internal.common.exception.CannotFindKeyPairException
 import com.walletconnect.android.internal.common.storage.key_chain.KeyStore
-import com.walletconnect.foundation.common.model.PrivateKey
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.crypto.data.repository.BaseClientIdJwtRepository
+import com.reown.foundation.common.model.PrivateKey
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.crypto.data.repository.BaseClientIdJwtRepository
 
 internal class ClientIdJwtRepositoryAndroid(private val keyChain: KeyStore) : BaseClientIdJwtRepository() {
 

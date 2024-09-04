@@ -1,7 +1,7 @@
 package com.walletconnect.android.internal.utils
 
 import com.walletconnect.android.internal.common.model.AccountId
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 
 private const val SELF_PARTICIPANT_CONTEXT = "self_participant/"
 private const val SELF_INVITE_PUBLIC_KEY_CONTEXT = "self_inviteKey/"

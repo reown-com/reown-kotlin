@@ -12,8 +12,8 @@ import com.walletconnect.android.test.utils.TestClient
 import com.walletconnect.android.test.utils.globalOnError
 import com.walletconnect.android.utils.cacao.CacaoSignerInterface
 import com.walletconnect.android.utils.cacao.sign
-import com.walletconnect.foundation.common.model.PrivateKey
-import com.walletconnect.foundation.util.jwt.encodeEd25519DidKey
+import com.reown.foundation.common.model.PrivateKey
+import com.reown.foundation.util.jwt.encodeEd25519DidKey
 import org.junit.Rule
 import org.junit.Test
 import timber.log.Timber

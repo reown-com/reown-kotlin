@@ -1,6 +1,6 @@
 package com.walletconnect.web3.modal.data
 
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import com.walletconnect.web3.modal.client.Modal
 import com.walletconnect.web3.modal.data.json_rpc.balance.BalanceRequest
 import com.walletconnect.web3.modal.data.json_rpc.balance.BalanceRpcResponse

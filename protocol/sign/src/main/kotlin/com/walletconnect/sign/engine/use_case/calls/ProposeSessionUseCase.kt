@@ -10,9 +10,9 @@ import com.walletconnect.android.internal.common.model.Tags
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.walletconnect.android.internal.utils.PROPOSAL_EXPIRY
 import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
-import com.walletconnect.foundation.common.model.PublicKey
-import com.walletconnect.foundation.common.model.Ttl
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.util.Logger
 import com.walletconnect.sign.common.exceptions.InvalidNamespaceException
 import com.walletconnect.sign.common.exceptions.InvalidPropertiesException
 import com.walletconnect.sign.common.model.vo.clientsync.session.SignRpc

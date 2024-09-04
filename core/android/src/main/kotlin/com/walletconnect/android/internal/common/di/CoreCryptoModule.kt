@@ -13,8 +13,8 @@ import com.walletconnect.android.internal.common.crypto.kmr.BouncyCastleKeyManag
 import com.walletconnect.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.walletconnect.android.internal.common.jwt.clientid.ClientIdJwtRepositoryAndroid
 import com.walletconnect.android.internal.common.storage.key_chain.KeyChain
-import com.walletconnect.foundation.crypto.data.repository.ClientIdJwtRepository
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.crypto.data.repository.ClientIdJwtRepository
+import com.reown.foundation.util.Logger
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope

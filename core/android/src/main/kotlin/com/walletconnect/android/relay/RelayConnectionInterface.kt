@@ -1,7 +1,7 @@
 package com.walletconnect.android.relay
 
 import com.walletconnect.android.Core
-import com.walletconnect.foundation.network.RelayInterface
+import com.reown.foundation.network.RelayInterface
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 

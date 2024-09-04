@@ -1,7 +1,7 @@
 package com.walletconnect.sign.test.scenario
 
 import com.walletconnect.android.internal.common.scope
-import com.walletconnect.foundation.network.model.Relay
+import com.reown.foundation.network.model.Relay
 import com.walletconnect.sign.test.BuildConfig
 import com.walletconnect.sign.test.utils.TestClient
 import junit.framework.TestCase

@@ -3,7 +3,7 @@ package com.walletconnect.notify.test.scenario
 import com.walletconnect.android.Core
 import com.walletconnect.android.internal.common.scope
 import com.walletconnect.android.relay.WSSConnectionState
-import com.walletconnect.foundation.network.model.Relay
+import com.reown.foundation.network.model.Relay
 import com.walletconnect.notify.client.Notify
 import com.walletconnect.notify.test.BuildConfig
 import com.walletconnect.notify.test.utils.TestClient

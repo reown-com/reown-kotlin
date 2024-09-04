@@ -4,7 +4,7 @@ import com.walletconnect.android.internal.common.di.AndroidCommonDITags
 import com.walletconnect.android.internal.common.explorer.data.model.Project
 import com.walletconnect.android.internal.common.explorer.domain.usecase.GetProjectsWithPaginationUseCase
 import com.walletconnect.android.internal.common.wcKoinApp
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import org.koin.core.KoinApplication
 import org.koin.core.qualifier.named
 

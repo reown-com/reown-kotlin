@@ -8,7 +8,7 @@ import com.walletconnect.android.pulse.data.PulseService
 import com.walletconnect.android.pulse.model.Event
 import com.walletconnect.android.pulse.model.SDKType
 import com.walletconnect.android.pulse.model.properties.Props
-import com.walletconnect.foundation.util.Logger
+import com.reown.foundation.util.Logger
 import com.walletconnect.util.generateId
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope

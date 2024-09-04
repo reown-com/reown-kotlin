@@ -13,10 +13,10 @@ import com.walletconnect.android.internal.common.model.params.CoreNotifyParams
 import com.walletconnect.android.internal.common.model.type.EngineEvent
 import com.walletconnect.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.walletconnect.android.internal.utils.fiveMinutesInSeconds
-import com.walletconnect.foundation.common.model.Ttl
-import com.walletconnect.foundation.util.Logger
-import com.walletconnect.foundation.util.jwt.decodeDidPkh
-import com.walletconnect.foundation.util.jwt.decodeEd25519DidKey
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.util.Logger
+import com.reown.foundation.util.jwt.decodeDidPkh
+import com.reown.foundation.util.jwt.decodeEd25519DidKey
 import com.walletconnect.notify.common.NotifyServerUrl
 import com.walletconnect.notify.common.model.SubscriptionChanged
 import com.walletconnect.notify.data.jwt.subscriptionsChanged.SubscriptionsChangedRequestJwtClaim

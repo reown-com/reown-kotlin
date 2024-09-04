@@ -2,7 +2,7 @@ package com.walletconnect.android.internal.common.storage.pairing
 
 import com.walletconnect.android.internal.common.model.Expiry
 import com.walletconnect.android.internal.common.model.Pairing
-import com.walletconnect.foundation.common.model.Topic
+import com.reown.foundation.common.model.Topic
 
 interface PairingStorageRepositoryInterface {
 
