@@ -76,5 +76,4 @@ dependencies {
     api(libs.bundles.androidxNavigation)
     implementation(libs.qrCodeGenerator)
     api(libs.timber)
-
 }

@@ -1,18 +1,18 @@
-# **WalletConnect Web3Modal - Kotlin**
+# **AppKit - Kotlin**
 
 # Installation
 
 :::caution
-**The Web3Modal SDK is currently in Alpha and is not production-ready**.
+**The AppKit SDK is currently in Alpha and is not production-ready**.
 
 It's public API and associated documentation may still see significant and breaking changes.
 :::
 
-Kotlin implementation of Web3Modal for Android applications.
+Kotlin implementation of AppKit for Android applications.
 
 Android Core ![Maven Central](https://img.shields.io/maven-central/v/com.walletconnect/android-core)
 
-Web3Modal ![Maven Central](https://img.shields.io/maven-central/v/com.walletconnect/web3modal)
+AppKit ![Maven Central](https://img.shields.io/maven-central/v/com.walletconnect/web3modal)
 
 ## Requirements
 
@@ -33,8 +33,8 @@ allprojects {
 app/build.gradle.kts
 
 ```gradle
-implementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))
-implementation("com.walletconnect:android-core")
-implementation("com.walletconnect:web3modal")
+implementation(platform("com.reown:android-bom:$BOM_VERSION"))
+implementation("com.reown:android-core")
+implementation("com.reown:appkit")
 ```
 

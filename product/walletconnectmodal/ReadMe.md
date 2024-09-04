@@ -37,8 +37,8 @@ allprojects {
 app/build.gradle.kts
 
 ```gradle
-implementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))
-implementation("com.walletconnect:android-core")
-implementation("com.walletconnect:walletconnect-modal")
+implementation(platform("com.reown:android-bom:$BOM_VERSION"))
+implementation("com.reown:android-core")
+implementation("com.reown:walletconnect-modal")
 ```
 
