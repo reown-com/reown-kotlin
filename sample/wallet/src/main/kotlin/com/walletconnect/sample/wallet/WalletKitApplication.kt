@@ -47,7 +47,7 @@ import org.koin.core.qualifier.named
 import timber.log.Timber
 import com.walletconnect.sample.common.BuildConfig as CommonBuildConfig
 
-class Web3WalletApplication : Application() {
+class WalletKitApplication : Application() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var addFirebaseBeagleModules: () -> Unit = {}
     private lateinit var logger: Logger
@@ -155,7 +155,7 @@ class Web3WalletApplication : Application() {
 
     private fun initializeBeagle() {
         initBeagle(
-            this@Web3WalletApplication,
+            this@WalletKitApplication,
             HeaderModule(
                 title = getString(R.string.app_name),
                 subtitle = BuildConfig.APPLICATION_ID,

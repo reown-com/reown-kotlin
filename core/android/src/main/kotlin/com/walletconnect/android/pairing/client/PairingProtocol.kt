@@ -103,7 +103,7 @@ internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp)
         }
     }
 
-    @Deprecated(message = "Ping method has been deprecated. It will be removed soon. Please use Ping from Web3Wallet or Sign clients.")
+    @Deprecated(message = "Ping method has been deprecated. It will be removed soon. Please use Ping from WalletKit or Sign clients.")
     @Throws(IllegalStateException::class)
     override fun ping(ping: Core.Params.Ping, pairingPing: Core.Listeners.PairingPing?) {
         checkEngineInitialization()

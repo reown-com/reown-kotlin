@@ -20,7 +20,7 @@ import com.walletconnect.android.Core
 import com.walletconnect.notify.client.Notify
 import com.walletconnect.notify.client.NotifyClient
 import com.walletconnect.sample.wallet.R
-import com.walletconnect.sample.wallet.ui.Web3WalletActivity
+import com.walletconnect.sample.wallet.ui.WalletKitActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -171,7 +171,7 @@ object NotificationHandler {
         }
 
     private fun buildPendingIntent(context: Context): PendingIntent {
-        val intent = Intent(context, Web3WalletActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP) }
+        val intent = Intent(context, WalletKitActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP) }
         return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     }
 

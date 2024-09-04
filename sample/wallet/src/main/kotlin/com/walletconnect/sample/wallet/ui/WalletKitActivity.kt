@@ -41,7 +41,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.net.URLEncoder
 
-class Web3WalletActivity : AppCompatActivity() {
+class WalletKitActivity : AppCompatActivity() {
     private lateinit var navController: NavHostController
     private val web3walletViewModel = Web3WalletViewModel()
     private val connectionsViewModel = ConnectionsViewModel()
@@ -150,7 +150,7 @@ class Web3WalletActivity : AppCompatActivity() {
         if (intent?.dataString?.contains("wc_ev") == true) {
             WalletKit.dispatchEnvelope(intent.dataString ?: "") {
                 lifecycleScope.launch(Dispatchers.Main) {
-                    Toast.makeText(this@Web3WalletActivity, "Error dispatching envelope: ${it.throwable.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@WalletKitActivity, "Error dispatching envelope: ${it.throwable.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
