@@ -1,7 +1,6 @@
 package com.walletconnect.web3.wallet.client
 
 import com.walletconnect.android.internal.common.signing.cacao.CacaoType
-import com.walletconnect.auth.client.Auth
 import com.walletconnect.sign.client.Sign
 
 @JvmSynthetic
@@ -44,15 +43,6 @@ internal fun Wallet.Model.JsonRpcResponse.JsonRpcError.toSign(): Sign.Model.Json
     Sign.Model.JsonRpcResponse.JsonRpcError(id, code, message)
 
 @JvmSynthetic
-internal fun Wallet.Params.AuthRequestResponse.toAuth(): Auth.Params.Respond = when (this) {
-    is Wallet.Params.AuthRequestResponse.Result -> Auth.Params.Respond.Result(id, signature.toAuth(), issuer)
-    is Wallet.Params.AuthRequestResponse.Error -> Auth.Params.Respond.Error(id, code, message)
-}
-
-@JvmSynthetic
-internal fun Wallet.Model.Cacao.Signature.toAuth(): Auth.Model.Cacao.Signature = Auth.Model.Cacao.Signature(t, s, m)
-
-@JvmSynthetic
 internal fun Wallet.Model.Cacao.Signature.toSign(): Sign.Model.Cacao.Signature = Sign.Model.Cacao.Signature(t, s, m)
 
 @JvmSynthetic
@@ -60,23 +50,6 @@ internal fun Wallet.Model.SessionEvent.toSign(): Sign.Model.SessionEvent = Sign.
 
 @JvmSynthetic
 internal fun Wallet.Model.Event.toSign(): Sign.Model.Event = Sign.Model.Event(topic, name, data, chainId)
-
-@JvmSynthetic
-internal fun Wallet.Model.PayloadParams.toAuth(): Auth.Model.PayloadParams =
-    Auth.Model.PayloadParams(
-        type = type,
-        chainId = chainId,
-        domain = domain,
-        aud = aud,
-        version = version,
-        nonce = nonce,
-        iat = iat,
-        nbf = nbf,
-        exp = exp,
-        statement = statement,
-        requestId = requestId,
-        resources = resources,
-    )
 
 @JvmSynthetic
 internal fun Wallet.Model.PayloadAuthRequestParams.toSign(): Sign.Model.PayloadParams =
@@ -119,32 +92,6 @@ internal fun List<Sign.Model.SessionRequest>.mapToPendingSessionRequests(): List
         Wallet.Model.SessionRequest.JSONRPCRequest(request.request.id, request.request.method, request.request.params)
     )
 }
-
-internal fun Auth.Model.PayloadParams.toWallet(): Wallet.Model.PayloadParams =
-    Wallet.Model.PayloadParams(
-        type = type,
-        chainId = chainId,
-        domain = domain,
-        aud = aud,
-        version = version,
-        nonce = nonce,
-        iat = iat,
-        nbf = nbf,
-        exp = exp,
-        statement = statement,
-        requestId = requestId,
-        resources = resources,
-    )
-
-@JvmSynthetic
-internal fun List<Auth.Model.PendingRequest>.toWallet(): List<Wallet.Model.PendingAuthRequest> =
-    map { request ->
-        Wallet.Model.PendingAuthRequest(
-            request.id,
-            request.pairingTopic,
-            request.payloadParams.toWallet()
-        )
-    }
 
 @JvmSynthetic
 internal fun Sign.Model.SessionProposal.toWallet(): Wallet.Model.SessionProposal =
@@ -196,13 +143,6 @@ internal fun Sign.Model.Validation.toWallet(): Wallet.Model.Validation =
         Sign.Model.Validation.UNKNOWN -> Wallet.Model.Validation.UNKNOWN
     }
 
-internal fun Auth.Model.Validation.toWallet(): Wallet.Model.Validation =
-    when (this) {
-        Auth.Model.Validation.VALID -> Wallet.Model.Validation.VALID
-        Auth.Model.Validation.INVALID -> Wallet.Model.Validation.INVALID
-        Auth.Model.Validation.UNKNOWN -> Wallet.Model.Validation.UNKNOWN
-    }
-
 @JvmSynthetic
 internal fun Sign.Model.SessionRequest.toWallet(): Wallet.Model.SessionRequest =
     Wallet.Model.SessionRequest(
@@ -242,15 +182,6 @@ internal fun Sign.Model.ExpiredProposal.toWallet(): Wallet.Model.ExpiredProposal
 
 @JvmSynthetic
 internal fun Sign.Model.ExpiredRequest.toWallet(): Wallet.Model.ExpiredRequest = Wallet.Model.ExpiredRequest(topic, id)
-
-@JvmSynthetic
-internal fun Auth.Event.AuthRequest.toWallet(): Wallet.Model.AuthRequest = Wallet.Model.AuthRequest(id, pairingTopic, payloadParams.toWallet())
-
-@JvmSynthetic
-internal fun Auth.Event.VerifyContext.toWallet(): Wallet.Model.VerifyContext = Wallet.Model.VerifyContext(id, origin, this.validation.toWallet(), verifyUrl, isScam)
-
-@JvmSynthetic
-internal fun Auth.Model.VerifyContext.toWallet(): Wallet.Model.VerifyContext = Wallet.Model.VerifyContext(id, origin, this.validation.toWallet(), verifyUrl, isScam)
 
 @JvmSynthetic
 internal fun Wallet.Model.SessionProposal.toSign(): Sign.Model.SessionProposal =
@@ -295,16 +226,6 @@ internal fun Sign.Model.Message.SessionRequest.toWallet(): Wallet.Model.Message.
         peerMetaData,
         Wallet.Model.Message.SessionRequest.JSONRPCRequest(request.id, request.method, request.params)
     )
-
-@JvmSynthetic
-internal fun Auth.Model.Message.AuthRequest.toWallet(): Wallet.Model.Message.AuthRequest = with(payloadParams) {
-    Wallet.Model.Message.AuthRequest(
-        id,
-        pairingTopic,
-        metadata,
-        Wallet.Model.Message.AuthRequest.PayloadParams(type, chainId, domain, aud, version, nonce, iat, nbf, exp, statement, requestId, resources)
-    )
-}
 
 @JvmSynthetic
 internal fun List<Wallet.Model.Cacao>.toSign(): List<Sign.Model.Cacao> = mutableListOf<Sign.Model.Cacao>().apply {
