@@ -36,9 +36,8 @@ fun compileListOfSDKs(): List<Triple<String, String?, String>> = mutableListOf(
     Triple("core", "modal", "android"),
     Triple("protocol", "sign", "android"),
     Triple("protocol", "notify", "android"),
-    Triple("product", "web3wallet", "android"),
-    Triple("product", "web3modal", "android"),
-    Triple("product", "walletconnectmodal", "android"),
+    Triple("product", "walletkit", "android"),
+    Triple("product", "appkit", "android")
 ).apply {
     // The BOM has to be last artifact
     add(Triple("core", "bom", "jvm"))

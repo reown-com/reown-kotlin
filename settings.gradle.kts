@@ -1,4 +1,4 @@
-rootProject.name = "reown kotlin"
+rootProject.name = "Reown Kotlin"
 
 val excludedDirs = listOf(
     "undefined",

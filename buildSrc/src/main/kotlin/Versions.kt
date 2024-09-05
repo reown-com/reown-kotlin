@@ -6,14 +6,14 @@ const val KEY_SDK_NAME = "SDK_NAME"
 
 //Latest versions
 //TODO: should reset all versions? or only wallet and app kits
-const val BOM_VERSION = "1.35.1"
-const val FOUNDATION_VERSION = "1.18.3"
-const val CORE_VERSION = "1.35.1"
-const val SIGN_VERSION = "2.35.1"
-const val NOTIFY_VERSION = "1.3.10"
-const val WALLETKIT_VERSION = "1.35.1"
-const val APPKIT_VERSION = "1.6.5"
-const val MODAL_CORE_VERSION = "1.6.5"
+const val BOM_VERSION = "1.0.0"
+const val FOUNDATION_VERSION = "1.0.0"
+const val CORE_VERSION = "1.0.0"
+const val SIGN_VERSION = "1.0.0"
+const val NOTIFY_VERSION = "1.0.0"
+const val WALLETKIT_VERSION = "1.0.0"
+const val APPKIT_VERSION = "1.0.0"
+const val MODAL_CORE_VERSION = "1.0.0"
 
 //Artifact ids
 const val ANDROID_BOM = "android-bom"
