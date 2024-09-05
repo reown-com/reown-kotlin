@@ -4,7 +4,7 @@ import com.walletconnect.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.walletconnect.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
 import com.walletconnect.sample.wallet.ui.common.peer.PeerContextUI
 import com.walletconnect.sample.wallet.ui.common.peer.PeerUI
-import com.walletconnect.web3.wallet.client.Wallet
+import com.reown.walletkit.client.Wallet
 
 data class SessionProposalUI(
     val peerUI: PeerUI,

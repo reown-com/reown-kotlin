@@ -12,8 +12,8 @@ import com.walletconnect.sample.wallet.domain.ISSUER
 import com.walletconnect.sample.wallet.domain.WCDelegate
 import com.walletconnect.sample.wallet.ui.state.ConnectionState
 import com.walletconnect.sample.wallet.ui.state.PairingEvent
-import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.WalletKit
+import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

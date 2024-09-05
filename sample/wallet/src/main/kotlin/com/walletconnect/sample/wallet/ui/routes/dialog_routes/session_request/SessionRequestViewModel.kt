@@ -14,9 +14,9 @@ import com.walletconnect.sample.wallet.domain.WCDelegate
 import com.walletconnect.sample.wallet.ui.common.peer.PeerUI
 import com.walletconnect.sample.wallet.ui.common.peer.toPeerUI
 import com.walletconnect.util.hexToBytes
-import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.WalletKit
-import com.walletconnect.web3.wallet.utils.CacaoSigner
+import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit
+import com.reown.walletkit.utils.CacaoSigner
 import org.json.JSONArray
 import org.web3j.utils.Numeric.hexStringToByteArray
 

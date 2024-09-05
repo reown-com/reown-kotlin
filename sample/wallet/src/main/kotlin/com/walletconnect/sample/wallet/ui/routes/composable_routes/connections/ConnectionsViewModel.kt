@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.walletconnect.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.walletconnect.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
 import com.walletconnect.sample.wallet.domain.WCDelegate
-import com.walletconnect.web3.wallet.client.WalletKit
+import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow

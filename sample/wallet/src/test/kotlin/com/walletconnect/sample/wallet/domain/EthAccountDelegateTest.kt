@@ -5,7 +5,7 @@ import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.signing.message.MessageSignatureVerifier
 import com.reown.android.utils.cacao.sign
 import com.walletconnect.util.hexToBytes
-import com.walletconnect.web3.wallet.utils.CacaoSigner
+import com.reown.walletkit.utils.CacaoSigner
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue

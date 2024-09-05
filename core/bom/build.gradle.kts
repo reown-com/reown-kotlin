@@ -17,6 +17,6 @@ dependencies {
         api(project(":protocol:sign"))
         api(project(":protocol:notify"))
         api(project(":product:web3modal"))
-        api(project(":product:web3wallet"))
+        api(project(":product:walletkit"))
     }
 }

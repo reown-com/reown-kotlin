@@ -5,7 +5,7 @@ import com.walletconnect.sample.common.ui.theme.mismatch_color
 import com.walletconnect.sample.common.ui.theme.unverified_color
 import com.walletconnect.sample.common.ui.theme.verified_color
 import com.walletconnect.sample.wallet.R
-import com.walletconnect.web3.wallet.client.Wallet
+import com.reown.walletkit.client.Wallet
 
 
 data class PeerUI(

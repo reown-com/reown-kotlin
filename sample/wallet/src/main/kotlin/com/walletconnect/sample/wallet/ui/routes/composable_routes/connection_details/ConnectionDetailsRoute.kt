@@ -63,8 +63,8 @@ import com.walletconnect.sample.wallet.ui.common.getAllMethodsByChainId
 import com.walletconnect.sample.wallet.ui.routes.composable_routes.connections.ConnectionType
 import com.walletconnect.sample.wallet.ui.routes.composable_routes.connections.ConnectionUI
 import com.walletconnect.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
-import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.WalletKit
+import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

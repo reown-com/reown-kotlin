@@ -1,10 +1,10 @@
 @file:JvmSynthetic
 
-package com.walletconnect.web3.wallet.utils
+package com.reown.walletkit.utils
 
 import com.reown.android.cacao.signature.ISignatureType
 import com.reown.android.utils.cacao.CacaoSignerInterface
-import com.walletconnect.web3.wallet.client.Wallet
+import com.reown.walletkit.client.Wallet
 
 
 /// Only added to have backwards compatibility. Newer SDKs should only add CacaoSigner object below.

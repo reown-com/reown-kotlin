@@ -123,11 +123,11 @@ dependencies {
 
     // WalletConnect
     debugImplementation(project(":core:android"))
-    debugImplementation(project(":product:web3wallet"))
+    debugImplementation(project(":product:walletkit"))
     debugImplementation(project(":protocol:notify"))
 
     internalImplementation(project(":core:android"))
-    internalImplementation(project(":product:web3wallet"))
+    internalImplementation(project(":product:walletkit"))
     internalImplementation(project(":protocol:notify"))
 
     releaseImplementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))

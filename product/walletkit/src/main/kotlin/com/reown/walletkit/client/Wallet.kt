@@ -1,4 +1,4 @@
-package com.walletconnect.web3.wallet.client
+package com.reown.walletkit.client
 
 import androidx.annotation.Keep
 import com.reown.android.Core

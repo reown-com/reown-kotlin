@@ -6,8 +6,8 @@ import com.google.firebase.ktx.Firebase
 import com.walletconnect.sample.wallet.domain.WCDelegate
 import com.walletconnect.sample.wallet.ui.common.peer.PeerUI
 import com.walletconnect.sample.wallet.ui.common.peer.toPeerUI
-import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.WalletKit
+import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit
 import timber.log.Timber
 
 class SessionProposalViewModel : ViewModel() {

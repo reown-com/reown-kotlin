@@ -34,8 +34,8 @@ import com.walletconnect.sample.wallet.domain.mixPanel
 import com.walletconnect.sample.wallet.ui.state.ConnectionState
 import com.walletconnect.sample.wallet.ui.state.connectionStateFlow
 import com.walletconnect.util.hexToBytes
-import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.WalletKit
+import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

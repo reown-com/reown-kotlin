@@ -1,4 +1,4 @@
-package com.walletconnect.web3.wallet.client
+package com.reown.walletkit.client
 
 import com.reown.android.internal.common.signing.cacao.CacaoType
 import com.reown.sign.client.Sign

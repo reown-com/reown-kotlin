@@ -13,7 +13,7 @@ project.apply {
 }
 
 android {
-    namespace = "com.walletconnect.web3.wallet"
+    namespace = "com.reown.walletkit"
     compileSdk = COMPILE_SDK
 
     defaultConfig {

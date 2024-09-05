@@ -1,6 +1,6 @@
 package com.walletconnect.sample.wallet.ui.common
 
-import com.walletconnect.web3.wallet.client.Wallet
+import com.reown.walletkit.client.Wallet
 
 fun getAllMethodsByChainId(namespace: Wallet.Model.Namespace.Proposal, chainId: String): List<String> {
     return namespace.methods.takeIf { namespace.chains != null && namespace.chains!!.contains(chainId) } ?: emptyList()
