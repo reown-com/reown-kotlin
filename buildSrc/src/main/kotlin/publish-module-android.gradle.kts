@@ -36,7 +36,7 @@ afterEvaluate {
                 artifact(tasks.getByName("javadocJar"))
                 artifact(tasks.getByName("sourcesJar"))
 
-                groupId = "com.walletconnect"
+                groupId = "com.reown"
                 artifactId = requireNotNull(project.extra[KEY_PUBLISH_ARTIFACT_ID]).toString()
                 version = requireNotNull(project.extra[KEY_PUBLISH_VERSION]).toString()
 

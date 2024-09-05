@@ -32,7 +32,7 @@ afterEvaluate {
                     from(components["javaPlatform"])
                 }
 
-                groupId = "com.walletconnect"
+                groupId = "com.reown"
                 artifactId = requireNotNull(extra.get(KEY_PUBLISH_ARTIFACT_ID)).toString()
                 version = requireNotNull(extra.get(KEY_PUBLISH_VERSION)).toString()
 
