@@ -1,6 +1,6 @@
 package com.walletconnect.sample.wallet.ui.common.subscriptions
 
-import com.walletconnect.notify.client.Notify
+import com.reown.notify.client.Notify
 import com.walletconnect.sample.wallet.ui.common.ImageUrl
 import com.walletconnect.sample.wallet.ui.common.toImageUrl
 

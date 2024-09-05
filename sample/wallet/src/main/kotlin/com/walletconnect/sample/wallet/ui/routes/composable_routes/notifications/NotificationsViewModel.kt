@@ -5,8 +5,8 @@ package com.walletconnect.sample.wallet.ui.routes.composable_routes.notification
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.walletconnect.notify.client.Notify
-import com.walletconnect.notify.client.NotifyClient
+import com.reown.notify.client.Notify
+import com.reown.notify.client.NotifyClient
 import com.walletconnect.sample.wallet.domain.EthAccountDelegate
 import com.walletconnect.sample.wallet.domain.NotifyDelegate
 import com.walletconnect.sample.wallet.domain.model.NotificationUI

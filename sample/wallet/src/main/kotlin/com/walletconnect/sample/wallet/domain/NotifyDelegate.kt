@@ -1,7 +1,7 @@
 package com.walletconnect.sample.wallet.domain
 
-import com.walletconnect.notify.client.Notify
-import com.walletconnect.notify.client.NotifyClient
+import com.reown.notify.client.Notify
+import com.reown.notify.client.NotifyClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

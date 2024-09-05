@@ -14,7 +14,7 @@ project.apply {
 }
 
 android {
-    namespace = "com.walletconnect.notify"
+    namespace = "com.reown.notify"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
@@ -74,7 +74,7 @@ android {
 sqldelight {
     databases {
         create("NotifyDatabase") {
-            packageName.set("com.walletconnect.notify")
+            packageName.set("com.reown.notify")
             schemaOutputDirectory.set(file("src/main/sqldelight/databases"))
 //            generateAsync.set(true) TODO uncomment once all SDKs have this flag enabled
             verifyMigrations.set(true)

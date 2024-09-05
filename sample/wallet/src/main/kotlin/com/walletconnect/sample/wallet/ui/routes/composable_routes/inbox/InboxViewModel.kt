@@ -8,8 +8,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.reown.android.CoreClient
 import com.reown.android.internal.common.explorer.data.model.Project
-import com.walletconnect.notify.client.Notify
-import com.walletconnect.notify.client.NotifyClient
+import com.reown.notify.client.Notify
+import com.reown.notify.client.NotifyClient
 import com.walletconnect.sample.wallet.domain.EthAccountDelegate
 import com.walletconnect.sample.wallet.domain.NotifyDelegate
 import com.walletconnect.sample.wallet.ui.common.ImageUrl

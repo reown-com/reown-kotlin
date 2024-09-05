@@ -22,9 +22,9 @@ import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.utils.cacao.sign
 import com.reown.foundation.util.Logger
-import com.walletconnect.notify.client.Notify
-import com.walletconnect.notify.client.NotifyClient
-import com.walletconnect.notify.client.cacao.CacaoSigner
+import com.reown.notify.client.Notify
+import com.reown.notify.client.NotifyClient
+import com.reown.notify.client.cacao.CacaoSigner
 import com.walletconnect.sample.common.initBeagle
 import com.walletconnect.sample.common.tag
 import com.walletconnect.sample.wallet.domain.EthAccountDelegate

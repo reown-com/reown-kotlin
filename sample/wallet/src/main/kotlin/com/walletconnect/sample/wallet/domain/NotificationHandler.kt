@@ -17,8 +17,8 @@ import androidx.core.graphics.drawable.toBitmap
 import coil.ImageLoader
 import coil.request.ImageRequest
 import com.reown.android.Core
-import com.walletconnect.notify.client.Notify
-import com.walletconnect.notify.client.NotifyClient
+import com.reown.notify.client.Notify
+import com.reown.notify.client.NotifyClient
 import com.walletconnect.sample.wallet.R
 import com.walletconnect.sample.wallet.ui.WalletKitActivity
 import kotlinx.coroutines.CoroutineScope
