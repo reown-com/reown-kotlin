@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp.ui.routes.composable_routes.session
+package com.reown.sample.dapp.ui.routes.composable_routes.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,8 +6,8 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.walletconnect.sample.common.Chains
 import com.walletconnect.sample.common.tag
-import com.walletconnect.sample.dapp.domain.DappDelegate
-import com.walletconnect.sample.dapp.ui.DappSampleEvents
+import com.reown.sample.dapp.domain.DappDelegate
+import com.reown.sample.dapp.ui.DappSampleEvents
 import com.walletconnect.wcmodal.client.Modal
 import com.walletconnect.wcmodal.client.WalletConnectModal
 import kotlinx.coroutines.flow.MutableSharedFlow

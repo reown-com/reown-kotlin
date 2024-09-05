@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.walletconnect.sample.dapp"
+    namespace = "com.reown.sample.dapp"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
-        applicationId = "com.walletconnect.sample.dapp"
+        applicationId = "com.reown.sample.dapp"
         minSdk = MIN_SDK
         targetSdk = TARGET_SDK
         versionName = SAMPLE_VERSION_NAME

@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp.ui.routes.composable_routes.session
+package com.reown.sample.dapp.ui.routes.composable_routes.session
 
 data class SessionUi(
     val icon: Int,

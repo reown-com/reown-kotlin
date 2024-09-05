@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp.ui.routes.composable_routes.chain_selection
+package com.reown.sample.dapp.ui.routes.composable_routes.chain_selection
 
 import android.content.Context
 import android.content.Intent
@@ -69,9 +69,9 @@ import com.walletconnect.sample.common.ui.conditionalModifier
 import com.walletconnect.sample.common.ui.theme.PreviewTheme
 import com.walletconnect.sample.common.ui.themedColor
 import com.walletconnect.sample.common.ui.toColor
-import com.walletconnect.sample.dapp.BuildConfig
-import com.walletconnect.sample.dapp.ui.DappSampleEvents
-import com.walletconnect.sample.dapp.ui.routes.Route
+import com.reown.sample.dapp.BuildConfig
+import com.reown.sample.dapp.ui.DappSampleEvents
+import com.reown.sample.dapp.ui.routes.Route
 import com.reown.appkit.ui.components.button.rememberAppKitState
 import com.reown.appkit.ui.openAppKit
 import kotlinx.coroutines.CoroutineDispatcher

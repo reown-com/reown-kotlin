@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp.ui.routes.composable_routes.account
+package com.reown.sample.dapp.ui.routes.composable_routes.account
 
 sealed class AccountUi {
 

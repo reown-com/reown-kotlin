@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp.ui.routes.composable_routes.account
+package com.reown.sample.dapp.ui.routes.composable_routes.account
 
 import android.content.Intent
 import android.net.Uri
@@ -35,8 +35,8 @@ import coil.compose.AsyncImage
 import com.walletconnect.sample.common.ui.commons.BlueButton
 import com.walletconnect.sample.common.ui.commons.FullScreenLoader
 import com.walletconnect.sample.common.ui.commons.Loader
-import com.walletconnect.sample.dapp.ui.DappSampleEvents
-import com.walletconnect.sample.dapp.ui.routes.Route
+import com.reown.sample.dapp.ui.DappSampleEvents
+import com.reown.sample.dapp.ui.routes.Route
 import timber.log.Timber
 
 @Composable

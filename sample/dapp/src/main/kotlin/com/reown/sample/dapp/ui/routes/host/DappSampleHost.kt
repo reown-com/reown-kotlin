@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialNavigationApi::class)
 
-package com.walletconnect.sample.dapp.ui.routes.host
+package com.reown.sample.dapp.ui.routes.host
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,10 +34,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.walletconnect.sample.dapp.R
-import com.walletconnect.sample.dapp.ui.DappSampleEvents
-import com.walletconnect.sample.dapp.ui.DappSampleNavGraph
-import com.walletconnect.sample.dapp.ui.routes.Route
+import com.reown.sample.dapp.R
+import com.reown.sample.dapp.ui.DappSampleEvents
+import com.reown.sample.dapp.ui.DappSampleNavGraph
+import com.reown.sample.dapp.ui.routes.Route
 import kotlinx.coroutines.delay
 
 @Composable

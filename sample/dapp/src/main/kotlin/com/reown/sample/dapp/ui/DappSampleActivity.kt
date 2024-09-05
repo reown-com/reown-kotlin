@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterialApi::class)
 
-package com.walletconnect.sample.dapp.ui
+package com.reown.sample.dapp.ui
 
 import android.content.Intent
 import android.os.Bundle
@@ -11,7 +11,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.lifecycle.lifecycleScope
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.walletconnect.sample.common.ui.theme.WCSampleAppTheme
-import com.walletconnect.sample.dapp.ui.routes.host.DappSampleHost
+import com.reown.sample.dapp.ui.routes.host.DappSampleHost
 import com.reown.sign.client.SignClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

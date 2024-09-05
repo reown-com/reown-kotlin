@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp
+package com.reown.sample.dapp
 
 import android.app.Application
 import com.google.firebase.appdistribution.FirebaseAppDistribution

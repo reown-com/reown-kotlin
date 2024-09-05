@@ -1,9 +1,9 @@
-package com.walletconnect.sample.dapp.ui.routes.host
+package com.reown.sample.dapp.ui.routes.host
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.walletconnect.sample.dapp.domain.DappDelegate
-import com.walletconnect.sample.dapp.ui.DappSampleEvents
+import com.reown.sample.dapp.domain.DappDelegate
+import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.appkit.client.Modal
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map

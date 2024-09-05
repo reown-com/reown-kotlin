@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp.domain
+package com.reown.sample.dapp.domain
 
 import com.reown.android.Core
 import com.reown.android.CoreClient

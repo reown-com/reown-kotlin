@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp.ui
+package com.reown.sample.dapp.ui
 
 sealed class DappSampleEvents {
 

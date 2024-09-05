@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalFoundationApi::class)
 
-package com.walletconnect.sample.dapp.ui.routes.composable_routes.session
+package com.reown.sample.dapp.ui.routes.composable_routes.session
 
 import android.widget.Toast
 import androidx.compose.animation.animateContentSize
@@ -51,10 +51,10 @@ import coil.compose.AsyncImage
 import com.walletconnect.sample.common.ui.WCTopAppBarLegacy
 import com.walletconnect.sample.common.ui.commons.ButtonWithLoader
 import com.walletconnect.sample.common.ui.themedColor
-import com.walletconnect.sample.dapp.R
-import com.walletconnect.sample.dapp.ui.DappSampleEvents
-import com.walletconnect.sample.dapp.ui.navigateToAccount
-import com.walletconnect.sample.dapp.ui.routes.Route
+import com.reown.sample.dapp.R
+import com.reown.sample.dapp.ui.DappSampleEvents
+import com.reown.sample.dapp.ui.navigateToAccount
+import com.reown.sample.dapp.ui.routes.Route
 
 @Composable
 fun SessionRoute(

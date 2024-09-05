@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp.ui.routes.composable_routes.chain_selection
+package com.reown.sample.dapp.ui.routes.composable_routes.chain_selection
 
 import com.walletconnect.sample.common.Chains
 

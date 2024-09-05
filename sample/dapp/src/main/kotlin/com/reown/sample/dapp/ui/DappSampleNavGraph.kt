@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterialNavigationApi::class)
 
-package com.walletconnect.sample.dapp.ui
+package com.reown.sample.dapp.ui
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,10 +17,10 @@ import androidx.navigation.navArgument
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
-import com.walletconnect.sample.dapp.ui.routes.Route
-import com.walletconnect.sample.dapp.ui.routes.composable_routes.account.AccountRoute
-import com.walletconnect.sample.dapp.ui.routes.composable_routes.chain_selection.ChainSelectionRoute
-import com.walletconnect.sample.dapp.ui.routes.composable_routes.session.SessionRoute
+import com.reown.sample.dapp.ui.routes.Route
+import com.reown.sample.dapp.ui.routes.composable_routes.account.AccountRoute
+import com.reown.sample.dapp.ui.routes.composable_routes.chain_selection.ChainSelectionRoute
+import com.reown.sample.dapp.ui.routes.composable_routes.session.SessionRoute
 import com.reown.appkit.ui.appKitGraph
 
 @SuppressLint("RestrictedApi")

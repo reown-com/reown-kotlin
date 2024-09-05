@@ -1,4 +1,4 @@
-package com.walletconnect.sample.dapp.ui.routes
+package com.reown.sample.dapp.ui.routes
 
 sealed class Route(val path: String) {
     object ChainSelection : Route("chain_selection")
