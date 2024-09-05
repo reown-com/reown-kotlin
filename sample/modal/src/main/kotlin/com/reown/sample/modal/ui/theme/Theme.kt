@@ -1,4 +1,4 @@
-package com.walletconnect.sample.modal.ui.theme
+package com.reown.sample.modal.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme

@@ -1,4 +1,4 @@
-package com.walletconnect.sample.modal.ui
+package com.reown.sample.modal.ui
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +18,7 @@ import com.reown.sample.common.getEthSendTransaction
 import com.reown.sample.common.getEthSignTypedData
 import com.reown.sample.common.getPersonalSignBody
 import com.reown.sample.common.ui.commons.BlueButton
-import com.walletconnect.sample.modal.ModalSampleDelegate
+import com.reown.sample.modal.ModalSampleDelegate
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.client.models.request.Request

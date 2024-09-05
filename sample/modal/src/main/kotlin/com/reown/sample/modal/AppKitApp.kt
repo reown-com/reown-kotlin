@@ -1,4 +1,4 @@
-package com.walletconnect.sample.modal
+package com.reown.sample.modal
 
 import android.app.Application
 import com.google.firebase.appdistribution.FirebaseAppDistribution

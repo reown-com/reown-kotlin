@@ -1,4 +1,4 @@
-package com.walletconnect.sample.modal.compose
+package com.reown.sample.modal.compose
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalMaterialApi::class)
 
-package com.walletconnect.sample.modal
+package com.reown.sample.modal
 
 import android.content.Intent
 import android.os.Bundle
@@ -61,21 +61,21 @@ import androidx.navigation.navArgument
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
-import com.walletconnect.sample.modal.common.Route
-import com.walletconnect.sample.modal.common.messageArg
-import com.walletconnect.sample.modal.compose.ComposeActivity
-import com.walletconnect.sample.modal.kotlindsl.KotlinDSLActivity
-import com.walletconnect.sample.modal.navComponent.NavComponentActivity
-import com.walletconnect.sample.modal.ui.AlertDialogRoute
-import com.walletconnect.sample.modal.ui.LabScreen
-import com.walletconnect.sample.modal.ui.predefinedGreenDarkTheme
-import com.walletconnect.sample.modal.ui.predefinedGreenLightTheme
-import com.walletconnect.sample.modal.ui.predefinedOrangeDarkTheme
-import com.walletconnect.sample.modal.ui.predefinedOrangeLightTheme
-import com.walletconnect.sample.modal.ui.predefinedRedDarkTheme
-import com.walletconnect.sample.modal.ui.predefinedRedLightTheme
-import com.walletconnect.sample.modal.ui.theme.WalletConnectTheme
-import com.walletconnect.sample.modal.view.ViewActivity
+import com.reown.sample.modal.common.Route
+import com.reown.sample.modal.common.messageArg
+import com.reown.sample.modal.compose.ComposeActivity
+import com.reown.sample.modal.kotlindsl.KotlinDSLActivity
+import com.reown.sample.modal.navComponent.NavComponentActivity
+import com.reown.sample.modal.ui.AlertDialogRoute
+import com.reown.sample.modal.ui.LabScreen
+import com.reown.sample.modal.ui.predefinedGreenDarkTheme
+import com.reown.sample.modal.ui.predefinedGreenLightTheme
+import com.reown.sample.modal.ui.predefinedOrangeDarkTheme
+import com.reown.sample.modal.ui.predefinedOrangeLightTheme
+import com.reown.sample.modal.ui.predefinedRedDarkTheme
+import com.reown.sample.modal.ui.predefinedRedLightTheme
+import com.reown.sample.modal.ui.theme.WalletConnectTheme
+import com.reown.sample.modal.view.ViewActivity
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.ui.AppKitTheme
 import com.reown.appkit.ui.appKitGraph

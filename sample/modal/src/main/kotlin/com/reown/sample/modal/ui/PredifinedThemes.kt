@@ -1,4 +1,4 @@
-package com.walletconnect.sample.modal.ui
+package com.reown.sample.modal.ui
 
 import androidx.compose.ui.graphics.Color
 import com.reown.appkit.ui.AppKitTheme

@@ -1,4 +1,4 @@
-package com.walletconnect.sample.modal.ui
+package com.reown.sample.modal.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

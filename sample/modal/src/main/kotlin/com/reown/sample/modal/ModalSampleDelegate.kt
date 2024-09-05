@@ -1,4 +1,4 @@
-package com.walletconnect.sample.modal
+package com.reown.sample.modal
 
 import com.reown.sample.common.tag
 import com.reown.appkit.client.Modal

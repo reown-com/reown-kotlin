@@ -1,8 +1,8 @@
-package com.walletconnect.sample.modal.navComponent
+package com.reown.sample.modal.navComponent
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
-import com.walletconnect.sample.modal.R
+import com.reown.sample.modal.R
 
 class NavComponentActivity: AppCompatActivity(R.layout.activity_nav_component) {
 

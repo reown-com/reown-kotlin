@@ -1,4 +1,4 @@
-package com.walletconnect.sample.modal.common
+package com.reown.sample.modal.common
 
 const val messageArg = "messageArg"
 

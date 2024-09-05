@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalMaterialApi::class)
 
-package com.walletconnect.sample.modal.compose
+package com.reown.sample.modal.compose
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -27,8 +27,8 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
-import com.walletconnect.sample.modal.common.Route
-import com.walletconnect.sample.modal.ui.theme.WalletConnectTheme
+import com.reown.sample.modal.common.Route
+import com.reown.sample.modal.ui.theme.WalletConnectTheme
 import com.reown.appkit.ui.appKitGraph
 
 class ComposeActivity : ComponentActivity() {
