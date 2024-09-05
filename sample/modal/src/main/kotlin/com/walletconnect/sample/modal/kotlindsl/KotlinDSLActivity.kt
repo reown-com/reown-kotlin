@@ -7,7 +7,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.fragment
 import com.walletconnect.sample.modal.common.Route
 import com.walletconnect.sample.modal.R
-import com.walletconnect.web3.modal.ui.appKit
+import com.reown.appkit.ui.appKit
 
 class KotlinDSLActivity : AppCompatActivity(R.layout.activity_kotlin_dsl) {
 

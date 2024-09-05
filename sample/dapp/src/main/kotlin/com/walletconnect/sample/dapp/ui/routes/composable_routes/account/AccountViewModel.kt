@@ -13,10 +13,10 @@ import com.walletconnect.sample.common.getPersonalSignBody
 import com.walletconnect.sample.dapp.domain.DappDelegate
 import com.walletconnect.sample.dapp.ui.DappSampleEvents
 import com.walletconnect.sample.dapp.ui.accountArg
-import com.walletconnect.web3.modal.client.AppKit
-import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.models.Session
-import com.walletconnect.web3.modal.client.models.request.Request
+import com.reown.appkit.client.AppKit
+import com.reown.appkit.client.Modal
+import com.reown.appkit.client.models.Session
+import com.reown.appkit.client.models.request.Request
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow

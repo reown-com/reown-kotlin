@@ -19,15 +19,15 @@ import com.walletconnect.sample.common.getEthSignTypedData
 import com.walletconnect.sample.common.getPersonalSignBody
 import com.walletconnect.sample.common.ui.commons.BlueButton
 import com.walletconnect.sample.modal.ModalSampleDelegate
-import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.AppKit
-import com.walletconnect.web3.modal.client.models.request.Request
-import com.walletconnect.web3.modal.client.models.request.SentRequestResult
-import com.walletconnect.web3.modal.ui.AppKitTheme
-import com.walletconnect.web3.modal.ui.components.button.AccountButtonType
-import com.walletconnect.web3.modal.ui.components.button.NetworkButton
-import com.walletconnect.web3.modal.ui.components.button.Web3Button
-import com.walletconnect.web3.modal.ui.components.button.rememberAppKitState
+import com.reown.appkit.client.Modal
+import com.reown.appkit.client.AppKit
+import com.reown.appkit.client.models.request.Request
+import com.reown.appkit.client.models.request.SentRequestResult
+import com.reown.appkit.ui.AppKitTheme
+import com.reown.appkit.ui.components.button.AccountButtonType
+import com.reown.appkit.ui.components.button.NetworkButton
+import com.reown.appkit.ui.components.button.Web3Button
+import com.reown.appkit.ui.components.button.rememberAppKitState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

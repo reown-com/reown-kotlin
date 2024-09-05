@@ -9,10 +9,10 @@ import com.reown.android.CoreClient
 import com.walletconnect.sample.common.tag
 import com.walletconnect.util.bytesToHex
 import com.walletconnect.util.randomBytes
-import com.walletconnect.web3.modal.client.AppKit
-import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.presets.AppKitChainsPresets
-import com.walletconnect.web3.modal.utils.EthUtils
+import com.reown.appkit.client.AppKit
+import com.reown.appkit.client.Modal
+import com.reown.appkit.presets.AppKitChainsPresets
+import com.reown.appkit.utils.EthUtils
 import timber.log.Timber
 import com.walletconnect.sample.common.BuildConfig as CommonBuildConfig
 

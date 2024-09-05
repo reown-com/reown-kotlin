@@ -6,17 +6,17 @@
     android:gravity="center"
     android:orientation="vertical">
 
-    <com.walletconnect.web3.modal.ui.components.button.views.Web3Button
+    <com.reown.appkit.ui.components.button.views.Web3Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp" />
 
-    <com.walletconnect.web3.modal.ui.components.button.views.AccountButton
+    <com.reown.appkit.ui.components.button.views.AccountButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp" />
 
-    <com.walletconnect.web3.modal.ui.components.button.views.ConnectButton
+    <com.reown.appkit.ui.components.button.views.ConnectButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp" />

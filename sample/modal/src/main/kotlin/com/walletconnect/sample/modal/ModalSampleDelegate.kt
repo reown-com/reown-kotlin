@@ -1,8 +1,8 @@
 package com.walletconnect.sample.modal
 
 import com.walletconnect.sample.common.tag
-import com.walletconnect.web3.modal.client.Modal
-import com.walletconnect.web3.modal.client.AppKit
+import com.reown.appkit.client.Modal
+import com.reown.appkit.client.AppKit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

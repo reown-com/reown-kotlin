@@ -76,9 +76,9 @@ import com.walletconnect.sample.modal.ui.predefinedRedDarkTheme
 import com.walletconnect.sample.modal.ui.predefinedRedLightTheme
 import com.walletconnect.sample.modal.ui.theme.WalletConnectTheme
 import com.walletconnect.sample.modal.view.ViewActivity
-import com.walletconnect.web3.modal.client.AppKit
-import com.walletconnect.web3.modal.ui.AppKitTheme
-import com.walletconnect.web3.modal.ui.appKitGraph
+import com.reown.appkit.client.AppKit
+import com.reown.appkit.ui.AppKitTheme
+import com.reown.appkit.ui.appKitGraph
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

@@ -90,10 +90,10 @@ dependencies {
     api(libs.bundles.androidxNavigation)
 
     debugImplementation(project(":core:android"))
-    debugImplementation(project(":product:web3modal"))
+    debugImplementation(project(":product:appkit"))
 
     internalImplementation(project(":core:android"))
-    internalImplementation(project(":product:web3modal"))
+    internalImplementation(project(":product:appkit"))
 
     releaseImplementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))
     releaseImplementation("com.walletconnect:android-core")

@@ -10,13 +10,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.walletconnect.web3.modal.ui.components.button.AccountButton
-import com.walletconnect.web3.modal.ui.components.button.AccountButtonType
-import com.walletconnect.web3.modal.ui.components.button.ConnectButton
-import com.walletconnect.web3.modal.ui.components.button.ConnectButtonSize
-import com.walletconnect.web3.modal.ui.components.button.NetworkButton
-import com.walletconnect.web3.modal.ui.components.button.Web3Button
-import com.walletconnect.web3.modal.ui.components.button.rememberAppKitState
+import com.reown.appkit.ui.components.button.AccountButton
+import com.reown.appkit.ui.components.button.AccountButtonType
+import com.reown.appkit.ui.components.button.ConnectButton
+import com.reown.appkit.ui.components.button.ConnectButtonSize
+import com.reown.appkit.ui.components.button.NetworkButton
+import com.reown.appkit.ui.components.button.Web3Button
+import com.reown.appkit.ui.components.button.rememberAppKitState
 
 @Composable
 fun HomeScreen(navController: NavController) {

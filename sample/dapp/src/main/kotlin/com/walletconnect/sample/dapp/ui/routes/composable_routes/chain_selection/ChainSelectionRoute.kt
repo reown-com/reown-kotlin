@@ -72,8 +72,8 @@ import com.walletconnect.sample.common.ui.toColor
 import com.walletconnect.sample.dapp.BuildConfig
 import com.walletconnect.sample.dapp.ui.DappSampleEvents
 import com.walletconnect.sample.dapp.ui.routes.Route
-import com.walletconnect.web3.modal.ui.components.button.rememberAppKitState
-import com.walletconnect.web3.modal.ui.openAppKit
+import com.reown.appkit.ui.components.button.rememberAppKitState
+import com.reown.appkit.ui.openAppKit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

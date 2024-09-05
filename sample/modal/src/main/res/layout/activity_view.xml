@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.walletconnect.web3.modal.ui.AppKitView
+    <com.reown.appkit.ui.AppKitView
         android:id="@+id/web3Modal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -29,7 +29,7 @@ import com.google.accompanist.navigation.material.ExperimentalMaterialNavigation
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.walletconnect.sample.modal.common.Route
 import com.walletconnect.sample.modal.ui.theme.WalletConnectTheme
-import com.walletconnect.web3.modal.ui.appKitGraph
+import com.reown.appkit.ui.appKitGraph
 
 class ComposeActivity : ComponentActivity() {
 

@@ -14,8 +14,8 @@ import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.walletconnect.util.bytesToHex
 import com.walletconnect.util.randomBytes
-import com.walletconnect.web3.modal.client.AppKit
-import com.walletconnect.web3.modal.client.Modal
+import com.reown.appkit.client.AppKit
+import com.reown.appkit.client.Modal
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

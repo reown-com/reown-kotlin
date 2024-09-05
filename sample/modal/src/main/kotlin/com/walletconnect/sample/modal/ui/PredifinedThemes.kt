@@ -1,7 +1,7 @@
 package com.walletconnect.sample.modal.ui
 
 import androidx.compose.ui.graphics.Color
-import com.walletconnect.web3.modal.ui.AppKitTheme
+import com.reown.appkit.ui.AppKitTheme
 
 val predefinedOrangeLightTheme = AppKitTheme.provideLightAppKitColors(
     accent100 = Color(0xFFFFA500),

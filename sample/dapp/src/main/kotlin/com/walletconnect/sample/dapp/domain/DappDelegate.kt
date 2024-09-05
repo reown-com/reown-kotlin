@@ -3,8 +3,8 @@ package com.walletconnect.sample.dapp.domain
 import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.walletconnect.sample.common.tag
-import com.walletconnect.web3.modal.client.AppKit
-import com.walletconnect.web3.modal.client.Modal
+import com.reown.appkit.client.AppKit
+import com.reown.appkit.client.Modal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

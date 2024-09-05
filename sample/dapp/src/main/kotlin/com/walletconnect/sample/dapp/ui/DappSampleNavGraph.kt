@@ -21,7 +21,7 @@ import com.walletconnect.sample.dapp.ui.routes.Route
 import com.walletconnect.sample.dapp.ui.routes.composable_routes.account.AccountRoute
 import com.walletconnect.sample.dapp.ui.routes.composable_routes.chain_selection.ChainSelectionRoute
 import com.walletconnect.sample.dapp.ui.routes.composable_routes.session.SessionRoute
-import com.walletconnect.web3.modal.ui.appKitGraph
+import com.reown.appkit.ui.appKitGraph
 
 @SuppressLint("RestrictedApi")
 @Composable
