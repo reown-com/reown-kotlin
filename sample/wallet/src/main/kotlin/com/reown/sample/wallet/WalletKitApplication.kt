@@ -25,8 +25,8 @@ import com.reown.foundation.util.Logger
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.notify.client.cacao.CacaoSigner
-import com.walletconnect.sample.common.initBeagle
-import com.walletconnect.sample.common.tag
+import com.reown.sample.common.initBeagle
+import com.reown.sample.common.tag
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
@@ -45,7 +45,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.qualifier.named
 import timber.log.Timber
-import com.walletconnect.sample.common.BuildConfig as CommonBuildConfig
+import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
 class WalletKitApplication : Application() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

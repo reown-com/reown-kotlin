@@ -48,9 +48,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.walletconnect.sample.common.ui.WCTopAppBarLegacy
-import com.walletconnect.sample.common.ui.commons.ButtonWithLoader
-import com.walletconnect.sample.common.ui.themedColor
+import com.reown.sample.common.ui.WCTopAppBarLegacy
+import com.reown.sample.common.ui.commons.ButtonWithLoader
+import com.reown.sample.common.ui.themedColor
 import com.reown.sample.dapp.R
 import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sample.dapp.ui.navigateToAccount

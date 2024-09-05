@@ -58,10 +58,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.walletconnect.sample.common.ui.commons.ButtonWithLoader
-import com.walletconnect.sample.common.ui.theme.PreviewTheme
-import com.walletconnect.sample.common.ui.theme.UiModePreview
-import com.walletconnect.sample.common.ui.theme.blue_accent
+import com.reown.sample.common.ui.commons.ButtonWithLoader
+import com.reown.sample.common.ui.theme.PreviewTheme
+import com.reown.sample.common.ui.theme.UiModePreview
+import com.reown.sample.common.ui.theme.blue_accent
 import com.reown.sample.wallet.domain.model.NotificationUI
 import com.reown.sample.wallet.ui.common.ImageUrl
 import com.reown.sample.wallet.ui.common.subscriptions.ActiveSubscriptionsUI

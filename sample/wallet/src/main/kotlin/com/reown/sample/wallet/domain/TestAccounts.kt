@@ -1,6 +1,6 @@
 package com.reown.sample.wallet.domain
 
-import com.walletconnect.sample.common.Chains
+import com.reown.sample.common.Chains
 import com.walletconnect.util.hexToBytes
 import io.ipfs.multibase.Base16
 

@@ -49,7 +49,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.pandulapeter.beagle.DebugMenuView
-import com.walletconnect.sample.common.ui.themedColor
+import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.Web3WalletNavGraph
 import com.reown.sample.wallet.ui.Web3WalletViewModel

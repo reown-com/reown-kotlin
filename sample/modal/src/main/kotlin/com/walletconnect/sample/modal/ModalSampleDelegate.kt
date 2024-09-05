@@ -1,6 +1,6 @@
 package com.walletconnect.sample.modal
 
-import com.walletconnect.sample.common.tag
+import com.reown.sample.common.tag
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.AppKit
 import kotlinx.coroutines.CoroutineScope

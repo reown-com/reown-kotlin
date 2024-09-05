@@ -1,4 +1,4 @@
-package com.walletconnect.sample.common
+package com.reown.sample.common
 
 import androidx.annotation.DrawableRes
 

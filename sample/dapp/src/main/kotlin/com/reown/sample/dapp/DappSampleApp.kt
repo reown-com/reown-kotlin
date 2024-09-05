@@ -6,7 +6,7 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.Core
 import com.reown.android.CoreClient
-import com.walletconnect.sample.common.tag
+import com.reown.sample.common.tag
 import com.walletconnect.util.bytesToHex
 import com.walletconnect.util.randomBytes
 import com.reown.appkit.client.AppKit
@@ -14,7 +14,7 @@ import com.reown.appkit.client.Modal
 import com.reown.appkit.presets.AppKitChainsPresets
 import com.reown.appkit.utils.EthUtils
 import timber.log.Timber
-import com.walletconnect.sample.common.BuildConfig as CommonBuildConfig
+import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
 class DappSampleApp : Application() {
 

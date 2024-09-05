@@ -5,11 +5,11 @@ import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.walletconnect.sample.common.Chains
-import com.walletconnect.sample.common.getEthSendTransaction
-import com.walletconnect.sample.common.getEthSignBody
-import com.walletconnect.sample.common.getEthSignTypedData
-import com.walletconnect.sample.common.getPersonalSignBody
+import com.reown.sample.common.Chains
+import com.reown.sample.common.getEthSendTransaction
+import com.reown.sample.common.getEthSignBody
+import com.reown.sample.common.getEthSignTypedData
+import com.reown.sample.common.getPersonalSignBody
 import com.reown.sample.dapp.domain.DappDelegate
 import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sample.dapp.ui.accountArg

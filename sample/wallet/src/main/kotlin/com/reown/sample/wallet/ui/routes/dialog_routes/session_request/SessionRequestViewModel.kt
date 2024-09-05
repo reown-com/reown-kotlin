@@ -8,7 +8,7 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.android.utils.cacao.sign
-import com.walletconnect.sample.common.Chains
+import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI

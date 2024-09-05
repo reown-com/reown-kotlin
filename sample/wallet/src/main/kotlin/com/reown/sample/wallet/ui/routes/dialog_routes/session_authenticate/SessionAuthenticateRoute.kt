@@ -37,9 +37,9 @@ import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.reown.android.internal.common.exception.NoConnectivityException
-import com.walletconnect.sample.common.sendResponseDeepLink
-import com.walletconnect.sample.common.ui.theme.mismatch_color
-import com.walletconnect.sample.common.ui.themedColor
+import com.reown.sample.common.sendResponseDeepLink
+import com.reown.sample.common.ui.theme.mismatch_color
+import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.common.Buttons
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog

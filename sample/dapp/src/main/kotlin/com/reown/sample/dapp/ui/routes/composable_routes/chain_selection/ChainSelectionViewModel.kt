@@ -6,8 +6,8 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.Core
 import com.reown.android.CoreClient
-import com.walletconnect.sample.common.Chains
-import com.walletconnect.sample.common.tag
+import com.reown.sample.common.Chains
+import com.reown.sample.common.tag
 import com.reown.sample.dapp.domain.DappDelegate
 import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sign.client.Sign

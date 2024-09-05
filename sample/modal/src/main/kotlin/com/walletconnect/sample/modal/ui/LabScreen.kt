@@ -14,10 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.walletconnect.sample.common.getEthSendTransaction
-import com.walletconnect.sample.common.getEthSignTypedData
-import com.walletconnect.sample.common.getPersonalSignBody
-import com.walletconnect.sample.common.ui.commons.BlueButton
+import com.reown.sample.common.getEthSendTransaction
+import com.reown.sample.common.getEthSignTypedData
+import com.reown.sample.common.getPersonalSignBody
+import com.reown.sample.common.ui.commons.BlueButton
 import com.walletconnect.sample.modal.ModalSampleDelegate
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.AppKit

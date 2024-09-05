@@ -10,7 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.lifecycle.lifecycleScope
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.walletconnect.sample.common.ui.theme.WCSampleAppTheme
+import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.dapp.ui.routes.host.DappSampleHost
 import com.reown.sign.client.SignClient
 import kotlinx.coroutines.Dispatchers

@@ -40,10 +40,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.walletconnect.sample.common.ui.TopBarActionImage
-import com.walletconnect.sample.common.ui.WCTopAppBar
-import com.walletconnect.sample.common.ui.findActivity
-import com.walletconnect.sample.common.ui.themedColor
+import com.reown.sample.common.ui.TopBarActionImage
+import com.reown.sample.common.ui.WCTopAppBar
+import com.reown.sample.common.ui.findActivity
+import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.Web3WalletViewModel
 import com.reown.sample.wallet.ui.routes.Route
@@ -147,7 +147,7 @@ fun Connection(
                     .data(connectionUI.icon)
                     .size(60)
                     .crossfade(true)
-                    .error(com.walletconnect.sample.common.R.drawable.ic_walletconnect_circle_blue)
+                    .error(com.reown.sample.common.R.drawable.ic_walletconnect_circle_blue)
                     .listener(
                         onSuccess = { request, metadata -> println("onSuccess: $request, $metadata") },
                         onError = { _, throwable ->

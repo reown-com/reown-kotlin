@@ -20,7 +20,7 @@ import com.reown.sample.wallet.ui.common.generated.GetStarted
 import com.reown.sample.wallet.ui.common.generated.Welcome
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.R
-import com.walletconnect.sample.common.ui.findActivity
+import com.reown.sample.common.ui.findActivity
 import timber.log.Timber
 
 @Composable

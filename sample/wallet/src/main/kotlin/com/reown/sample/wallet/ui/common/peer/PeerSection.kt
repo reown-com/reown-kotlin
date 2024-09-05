@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.walletconnect.sample.common.ui.themedColor
+import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
 
 
@@ -51,7 +51,7 @@ fun Peer(peerUI: PeerUI, actionText: String?, peerContextUI: PeerContextUI? = nu
                         .data(peerUI.peerIcon)
                         .size(60)
                         .crossfade(true)
-                        .error(com.walletconnect.sample.common.R.drawable.ic_walletconnect_circle_blue)
+                        .error(com.reown.sample.common.R.drawable.ic_walletconnect_circle_blue)
                         .listener(
                             onSuccess = { request, metadata -> println("onSuccess: $request, $metadata") },
                             onError = { _, throwable -> println("Error loading image: ${throwable.throwable.message}") })

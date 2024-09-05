@@ -1,4 +1,4 @@
-package com.walletconnect.sample.common.ui.theme
+package com.reown.sample.common.ui.theme
 
 import androidx.compose.material.Typography
 

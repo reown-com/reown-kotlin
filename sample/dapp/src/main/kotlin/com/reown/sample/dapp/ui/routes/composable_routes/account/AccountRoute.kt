@@ -32,9 +32,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.walletconnect.sample.common.ui.commons.BlueButton
-import com.walletconnect.sample.common.ui.commons.FullScreenLoader
-import com.walletconnect.sample.common.ui.commons.Loader
+import com.reown.sample.common.ui.commons.BlueButton
+import com.reown.sample.common.ui.commons.FullScreenLoader
+import com.reown.sample.common.ui.commons.Loader
 import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sample.dapp.ui.routes.Route
 import timber.log.Timber

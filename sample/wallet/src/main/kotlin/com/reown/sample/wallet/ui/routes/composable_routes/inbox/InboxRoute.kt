@@ -35,10 +35,10 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.reown.notify.client.InvalidDidJsonFileException
-import com.walletconnect.sample.common.ui.WCTopAppBar
-import com.walletconnect.sample.common.ui.theme.PreviewTheme
-import com.walletconnect.sample.common.ui.theme.UiModePreview
-import com.walletconnect.sample.common.ui.theme.blue_accent
+import com.reown.sample.common.ui.WCTopAppBar
+import com.reown.sample.common.ui.theme.PreviewTheme
+import com.reown.sample.common.ui.theme.UiModePreview
+import com.reown.sample.common.ui.theme.blue_accent
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.common.ImageUrl
 import com.reown.sample.wallet.ui.common.subscriptions.ActiveSubscriptionsUI

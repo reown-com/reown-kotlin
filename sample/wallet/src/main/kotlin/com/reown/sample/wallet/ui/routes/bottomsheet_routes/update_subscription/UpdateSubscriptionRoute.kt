@@ -44,7 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.accompanist.navigation.material.BottomSheetNavigatorSheetState
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.walletconnect.sample.common.ui.theme.blue_accent
+import com.reown.sample.common.ui.theme.blue_accent
 import com.reown.sample.wallet.ui.routes.showSnackbar
 import kotlinx.coroutines.launch
 

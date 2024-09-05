@@ -1,4 +1,4 @@
-package com.walletconnect.sample.common.ui.commons
+package com.reown.sample.common.ui.commons
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +23,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.walletconnect.sample.common.ui.themedColor
+import com.reown.sample.common.ui.themedColor
 
 @Composable
 fun FullScreenLoader(

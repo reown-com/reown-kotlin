@@ -27,7 +27,7 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.walletconnect.sample.common.ui.theme.WCSampleAppTheme
+import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel

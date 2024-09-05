@@ -45,7 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.walletconnect.sample.common.ui.theme.blue_accent
+import com.reown.sample.common.ui.theme.blue_accent
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.common.subscriptions.SubscriptionIcon
 import com.reown.sample.wallet.ui.routes.composable_routes.inbox.DiscoverState

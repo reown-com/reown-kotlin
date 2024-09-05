@@ -1,9 +1,9 @@
 package com.reown.sample.wallet.ui.common.peer
 
 import androidx.compose.ui.graphics.Color
-import com.walletconnect.sample.common.ui.theme.mismatch_color
-import com.walletconnect.sample.common.ui.theme.unverified_color
-import com.walletconnect.sample.common.ui.theme.verified_color
+import com.reown.sample.common.ui.theme.mismatch_color
+import com.reown.sample.common.ui.theme.unverified_color
+import com.reown.sample.common.ui.theme.verified_color
 import com.reown.sample.wallet.R
 import com.reown.walletkit.client.Wallet
 

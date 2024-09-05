@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.walletconnect.sample.common.ui.themedColor
+import com.reown.sample.common.ui.themedColor
 
 @Composable
 fun SemiTransparentDialog(backgroundColor: Color = themedColor(Color(0xFF242425), Color(0xFFFFFFFF)), content: @Composable () -> Unit) {

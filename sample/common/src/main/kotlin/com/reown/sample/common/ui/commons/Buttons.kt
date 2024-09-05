@@ -1,4 +1,4 @@
-package com.walletconnect.sample.common.ui.commons
+package com.reown.sample.common.ui.commons
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi

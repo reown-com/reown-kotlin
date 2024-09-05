@@ -2,7 +2,7 @@ package com.reown.sample.dapp.domain
 
 import com.reown.android.Core
 import com.reown.android.CoreClient
-import com.walletconnect.sample.common.tag
+import com.reown.sample.common.tag
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.client.Modal
 import kotlinx.coroutines.CoroutineScope

@@ -1,4 +1,4 @@
-package com.walletconnect.sample.common.ui
+package com.reown.sample.common.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.walletconnect.sample.common.BuildConfig
-import com.walletconnect.sample.common.R
+import com.reown.sample.common.BuildConfig
+import com.reown.sample.common.R
 
 @Composable
 fun WCTopAppBarLegacy(

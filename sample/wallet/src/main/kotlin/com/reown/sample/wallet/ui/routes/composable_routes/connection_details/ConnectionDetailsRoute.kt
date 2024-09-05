@@ -53,7 +53,7 @@ import com.google.accompanist.pager.HorizontalPagerIndicator
 import com.google.accompanist.pager.rememberPagerState
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.walletconnect.sample.common.ui.themedColor
+import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.common.Content
 import com.reown.sample.wallet.ui.common.InnerContent
@@ -354,7 +354,7 @@ fun Connection(connectionUI: ConnectionUI) {
                     .data(connectionUI.icon)
                     .size(60)
                     .crossfade(true)
-                    .error(com.walletconnect.sample.common.R.drawable.ic_walletconnect_circle_blue)
+                    .error(com.reown.sample.common.R.drawable.ic_walletconnect_circle_blue)
                     .listener(
                         onSuccess = { request, metadata -> println("onSuccess: $request, $metadata") },
                         onError = { _, throwable -> println("Error loading image: ${throwable.throwable.message}") })
@@ -391,7 +391,7 @@ fun TopButtons(navController: NavController, isEmitAndUpdateVisible: Boolean, is
             .clickable(interactionSource = interactionSourceRow, indication = null) { navController.popBackStack() }
             .padding(5.dp)
         ) {
-            Icon(tint = color, imageVector = ImageVector.vectorResource(id = com.walletconnect.sample.common.R.drawable.chevron_left), contentDescription = "Go back")
+            Icon(tint = color, imageVector = ImageVector.vectorResource(id = com.reown.sample.common.R.drawable.chevron_left), contentDescription = "Go back")
             Spacer(modifier = Modifier.width(5.dp))
             Text(text = "Connections", style = style)
         }

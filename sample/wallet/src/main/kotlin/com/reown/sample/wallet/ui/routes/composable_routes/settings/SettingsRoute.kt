@@ -40,9 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.walletconnect.sample.common.ui.WCTopAppBar
-import com.walletconnect.sample.common.ui.theme.PreviewTheme
-import com.walletconnect.sample.common.ui.theme.UiModePreview
+import com.reown.sample.common.ui.WCTopAppBar
+import com.reown.sample.common.ui.theme.PreviewTheme
+import com.reown.sample.common.ui.theme.UiModePreview
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 

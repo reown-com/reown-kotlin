@@ -5,7 +5,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import com.walletconnect.sample.modal.R
 import com.walletconnect.sample.modal.databinding.FragmentHomeBinding
-import com.walletconnect.sample.common.viewBinding
+import com.reown.sample.common.viewBinding
 
 class HomeFragment : Fragment(R.layout.fragment_home) {
 

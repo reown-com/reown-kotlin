@@ -1,4 +1,4 @@
-package com.walletconnect.sample.common.ui
+package com.reown.sample.common.ui
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -22,9 +22,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.walletconnect.sample.common.R
-import com.walletconnect.sample.common.ui.theme.PreviewTheme
-import com.walletconnect.sample.common.ui.theme.UiModePreview
+import com.reown.sample.common.R
+import com.reown.sample.common.ui.theme.PreviewTheme
+import com.reown.sample.common.ui.theme.UiModePreview
 
 
 @Composable

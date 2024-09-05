@@ -7,8 +7,8 @@ import com.google.firebase.ktx.Firebase
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.models.Session
-import com.walletconnect.sample.common.Chains
-import com.walletconnect.sample.common.tag
+import com.reown.sample.common.Chains
+import com.reown.sample.common.tag
 import com.reown.sample.dapp.domain.DappDelegate
 import com.reown.sample.dapp.ui.DappSampleEvents
 import kotlinx.coroutines.flow.MutableSharedFlow

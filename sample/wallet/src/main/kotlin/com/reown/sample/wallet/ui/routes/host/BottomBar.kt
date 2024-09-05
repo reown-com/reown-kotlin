@@ -22,7 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.walletconnect.sample.common.ui.theme.blue_accent
+import com.reown.sample.common.ui.theme.blue_accent
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.Route
 

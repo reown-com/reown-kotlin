@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.walletconnect.sample.common"
+    namespace = "com.reown.sample.common"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
