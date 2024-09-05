@@ -13,9 +13,9 @@ internal class GetSampleWalletsUseCase(
 ) : GetSampleWalletsUseCaseInterface {
     override suspend fun invoke(): List<Wallet> {
         val samples = mapOf(
-            "com.walletconnect.sample.wallet.debug" to SampleWalletDebug,
-            "com.walletconnect.sample.wallet.internal" to SampleWalletInternal,
-            "com.walletconnect.sample.wallet" to SampleWalletRelease,
+            "com.reown.sample.wallet.debug" to SampleWalletDebug,
+            "com.reown.sample.wallet.internal" to SampleWalletInternal,
+            "com.reown.sample.wallet" to SampleWalletRelease,
             "com.walletconnect.web3wallet.rnsample.internal" to RNSampleWallet,
             "com.walletconnect.flutterwallet" to FLSampleWallet,
             "com.walletconnect.flutterwallet.internal" to FLSampleWalletInternal

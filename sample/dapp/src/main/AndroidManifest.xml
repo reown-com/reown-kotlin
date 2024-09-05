@@ -14,9 +14,9 @@
         <package android:name="com.frontierwallet"/>
         <package android:name="com.bitkeep.wallet"/>
         <package android:name="im.argent.contractwalletclient"/>
-        <package android:name="com.walletconnect.sample.wallet"/>
-        <package android:name="com.walletconnect.sample.wallet.debug"/>
-        <package android:name="com.walletconnect.sample.wallet.internal"/>
+        <package android:name="com.reown.sample.wallet"/>
+        <package android:name="com.reown.sample.wallet.debug"/>
+        <package android:name="com.reown.sample.wallet.internal"/>
         <package android:name="com.walletconnect.web3wallet.rnsample.internal"/>
         <package android:name="com.walletconnect.flutterwallet"/>
         <package android:name="com.walletconnect.flutterwallet.internal"/>

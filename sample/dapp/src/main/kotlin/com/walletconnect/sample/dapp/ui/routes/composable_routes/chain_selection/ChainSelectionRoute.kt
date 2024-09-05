@@ -619,9 +619,9 @@ private class ChainSelectionStateProvider : PreviewParameterProvider<List<ChainS
         )
 }
 
-private const val SAMPLE_WALLET_DEBUG_PACKAGE = "com.walletconnect.sample.wallet.debug"
-private const val SAMPLE_WALLET_INTERNAL_PACKAGE = "com.walletconnect.sample.wallet.internal"
-private const val SAMPLE_WALLET_RELEASE_PACKAGE = "com.walletconnect.sample.wallet"
+private const val SAMPLE_WALLET_DEBUG_PACKAGE = "com.reown.sample.wallet.debug"
+private const val SAMPLE_WALLET_INTERNAL_PACKAGE = "com.reown.sample.wallet.internal"
+private const val SAMPLE_WALLET_RELEASE_PACKAGE = "com.reown.sample.wallet"
 
 data class PairingUri(
     val uri: String,

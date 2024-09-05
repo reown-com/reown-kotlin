@@ -8,12 +8,12 @@ plugins {
 }
 
 android {
-    namespace = "com.walletconnect.sample.wallet"
+    namespace = "com.reown.sample.wallet"
     compileSdk = COMPILE_SDK
     // hash of all sdk versions from Versions.kt
 
     defaultConfig {
-        applicationId = "com.walletconnect.sample.wallet"
+        applicationId = "com.reown.sample.wallet"
         minSdk = MIN_SDK
         targetSdk = TARGET_SDK
         versionName = SAMPLE_VERSION_NAME
