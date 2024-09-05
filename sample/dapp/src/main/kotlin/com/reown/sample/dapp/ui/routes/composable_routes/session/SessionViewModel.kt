@@ -4,12 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.reown.appkit.client.AppKit
+import com.reown.appkit.client.Modal
+import com.reown.appkit.client.models.Session
 import com.walletconnect.sample.common.Chains
 import com.walletconnect.sample.common.tag
 import com.reown.sample.dapp.domain.DappDelegate
 import com.reown.sample.dapp.ui.DappSampleEvents
-import com.walletconnect.wcmodal.client.Modal
-import com.walletconnect.wcmodal.client.WalletConnectModal
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -50,13 +51,8 @@ class SessionViewModel : ViewModel() {
     }
 
     private fun getSessions(topic: String? = null): List<SessionUi> {
-        return WalletConnectModal.getListOfActiveSessions().filter {
-            if (topic != null) {
-                it.topic == topic
-            } else {
-                it.topic == DappDelegate.selectedSessionTopic
-            }
-        }.flatMap { settledSession -> settledSession.namespaces.values.flatMap { it.accounts } }
+        return (AppKit.getSession() as Session.WalletConnectSession).namespaces.values
+            .flatMap { it.accounts }
             .map { caip10Account ->
                 val (chainNamespace, chainReference, account) = caip10Account.split(":")
                 val chain = Chains.values().first { chain ->
@@ -64,14 +60,15 @@ class SessionViewModel : ViewModel() {
                 }
                 SessionUi(chain.icon, chain.name, account, chain.chainNamespace, chain.chainReference)
             }
+
+
     }
 
     fun ping() {
-        val pingParams = Modal.Params.Ping(topic = requireNotNull(DappDelegate.selectedSessionTopic))
         viewModelScope.launch { _sessionEvents.emit(DappSampleEvents.PingLoading) }
 
         try {
-            WalletConnectModal.ping(pingParams, object : Modal.Listeners.SessionPing {
+            AppKit.ping(object : Modal.Listeners.SessionPing {
                 override fun onSuccess(pingSuccess: Modal.Model.Ping.Success) {
                     viewModelScope.launch {
                         _sessionEvents.emit(DappSampleEvents.PingSuccess(pingSuccess.topic))
@@ -95,19 +92,18 @@ class SessionViewModel : ViewModel() {
         if (DappDelegate.selectedSessionTopic != null) {
             try {
                 viewModelScope.launch { _sessionEvents.emit(DappSampleEvents.DisconnectLoading) }
-                val disconnectParams = Modal.Params.Disconnect(sessionTopic = requireNotNull(DappDelegate.selectedSessionTopic))
-                WalletConnectModal.disconnect(disconnectParams,
+                AppKit.disconnect(
                     onSuccess = {
                         DappDelegate.deselectAccountDetails()
                         viewModelScope.launch {
                             _sessionEvents.emit(DappSampleEvents.Disconnect)
                         }
                     },
-                    onError = { error ->
-                        Timber.tag(tag(this)).e(error.throwable.stackTraceToString())
-                        Firebase.crashlytics.recordException(error.throwable)
+                    onError = { throwable: Throwable ->
+                        Timber.tag(tag(this)).e(throwable.stackTraceToString())
+                        Firebase.crashlytics.recordException(throwable)
                         viewModelScope.launch {
-                            _sessionEvents.emit(DappSampleEvents.DisconnectError(error.throwable.message ?: "Unknown error, please try again or contact support"))
+                            _sessionEvents.emit(DappSampleEvents.DisconnectError(throwable.message ?: "Unknown error, please try again or contact support"))
                         }
                     })
 
