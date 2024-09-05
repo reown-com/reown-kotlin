@@ -27,8 +27,8 @@ import com.reown.sign.common.model.vo.clientsync.common.Requester
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.json_rpc.domain.GetPendingSessionAuthenticateRequest
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.randomBytes
+import com.reown.util.bytesToHex
+import com.reown.util.randomBytes
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify

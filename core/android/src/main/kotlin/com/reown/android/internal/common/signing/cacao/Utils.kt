@@ -2,7 +2,7 @@ package com.reown.android.internal.common.signing.cacao
 
 import android.util.Base64
 import com.reown.android.internal.common.signing.cacao.Cacao.Payload.Companion.RECAPS_PREFIX
-import com.walletconnect.utils.HexPrefix
+import com.reown.utils.HexPrefix
 import org.json.JSONArray
 import org.json.JSONObject
 

@@ -6,7 +6,7 @@ import com.reown.android.internal.common.storage.metadata.MetadataStorageReposit
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toEngineDO
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.walletconnect.utils.isSequenceValid
+import com.reown.utils.isSequenceValid
 import kotlinx.coroutines.supervisorScope
 
 internal class GetSessionsUseCase(

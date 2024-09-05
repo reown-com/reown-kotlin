@@ -4,7 +4,7 @@ import com.coinbase.android.nativesdk.message.request.AddChainNativeCurrency
 import com.coinbase.android.nativesdk.message.request.WatchAssetOptions
 import com.coinbase.android.nativesdk.message.request.Web3JsonRPC
 import com.coinbase.android.nativesdk.message.response.ActionResult
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import org.json.JSONArray
 import org.json.JSONObject
 import java.math.BigDecimal

@@ -34,7 +34,7 @@ import com.reown.foundation.common.model.SubscriptionId
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.network.model.Relay
 import com.reown.foundation.util.Logger
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow

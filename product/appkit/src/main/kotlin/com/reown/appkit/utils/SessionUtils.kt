@@ -2,7 +2,7 @@ package com.reown.appkit.utils
 
 import com.reown.android.internal.utils.CoreValidator
 import com.reown.sign.client.Sign
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.client.models.Account

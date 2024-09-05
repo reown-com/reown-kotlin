@@ -7,7 +7,7 @@ import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
 import com.reown.android.verify.client.VerifyInterface
 import com.reown.android.verify.model.VerifyContext
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 

@@ -8,9 +8,9 @@ import com.reown.sign.common.model.vo.clientsync.session.SignRpc
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionEventVO
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestVO
 import com.reown.sign.json_rpc.model.JsonRpcMethod
-import com.walletconnect.utils.addDeserializerEntry
-import com.walletconnect.utils.addJsonAdapter
-import com.walletconnect.utils.addSerializerEntry
+import com.reown.utils.addDeserializerEntry
+import com.reown.utils.addJsonAdapter
+import com.reown.utils.addSerializerEntry
 import org.koin.dsl.module
 
 @JvmSynthetic

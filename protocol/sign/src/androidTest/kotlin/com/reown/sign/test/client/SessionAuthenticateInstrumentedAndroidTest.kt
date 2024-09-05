@@ -20,7 +20,7 @@ import com.reown.sign.test.utils.globalOnError
 import com.reown.sign.test.utils.wallet.WalletDelegate
 import com.reown.sign.test.utils.wallet.WalletSignClient
 import com.reown.sign.test.utils.wallet.walletClientRespondToRequest
-import com.walletconnect.util.hexToBytes
+import com.reown.util.hexToBytes
 import org.junit.Rule
 import org.junit.Test
 import org.web3j.utils.Numeric

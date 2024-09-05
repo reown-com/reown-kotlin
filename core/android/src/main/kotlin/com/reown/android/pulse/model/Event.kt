@@ -4,7 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.reown.android.internal.utils.currentTimeInSeconds
 import com.reown.android.pulse.model.properties.Props
-import com.walletconnect.util.generateId
+import com.reown.util.generateId
 
 @JsonClass(generateAdapter = true)
 data class Event(

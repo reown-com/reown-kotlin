@@ -100,7 +100,7 @@ sqldelight {
 
 dependencies {
     debugImplementation(project(":core:android"))
-    releaseImplementation("com.walletconnect:android-core:$CORE_VERSION")
+    releaseImplementation("com.reown:android-core:$CORE_VERSION")
 
     ksp(libs.moshi.ksp)
     implementation(libs.bundles.sqlDelight)

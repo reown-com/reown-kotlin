@@ -9,7 +9,7 @@ import com.reown.android.pulse.model.properties.Props
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.client.models.Account
 import com.reown.appkit.client.models.Session
 import com.reown.appkit.client.models.AppKitClientAlreadyInitializedException

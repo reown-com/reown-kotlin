@@ -10,7 +10,7 @@ import com.reown.notify.client.InvalidDidJsonFileException
 import com.reown.notify.data.wellknown.did.DidJsonDTO
 import com.reown.notify.data.wellknown.did.VerificationMethodDTO
 import com.reown.notify.engine.calls.DidJsonPublicKeyPair
-import com.walletconnect.util.bytesToHex
+import com.reown.util.bytesToHex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.URL

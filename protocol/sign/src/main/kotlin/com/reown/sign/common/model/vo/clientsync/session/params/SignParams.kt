@@ -13,7 +13,7 @@ import com.reown.sign.common.model.vo.clientsync.common.Requester
 import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionEventVO
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestVO
-import com.walletconnect.utils.DefaultId
+import com.reown.utils.DefaultId
 
 internal sealed class SignParams : CoreSignParams() {
 

@@ -35,6 +35,7 @@ allprojects {
     }
 }
 
+//todo: change sonar cloud
 sonar {
     properties {
         properties(
@@ -333,7 +334,7 @@ private val repoIdWithVersion = listOf(
     Pair(ANDROID_CORE, CORE_VERSION),
     Pair(SIGN, SIGN_VERSION),
     Pair(NOTIFY, NOTIFY_VERSION),
-    Pair(WEB_3_WALLET, WEB_3_WALLET_VERSION),
-    Pair(WEB_3_MODAL, WEB_3_MODAL_VERSION),
+    Pair(WALLETKIT, WALLETKIT_VERSION),
+    Pair(APPKIT, APPKIT_VERSION),
     Pair(MODAL_CORE, MODAL_CORE_VERSION)
 )

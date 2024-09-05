@@ -7,9 +7,9 @@ import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.signing.cacao.guaranteeNoHexPrefix
 import com.reown.android.internal.common.signing.eip1271.EIP1271Verifier
 import com.reown.android.internal.common.signing.eip191.EIP191Verifier
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.hexToBytes
-import com.walletconnect.utils.HexPrefix
+import com.reown.util.bytesToHex
+import com.reown.util.hexToBytes
+import com.reown.utils.HexPrefix
 import org.web3j.crypto.Sign
 
 @JvmSynthetic

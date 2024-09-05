@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
 import com.reown.android.internal.common.model.params.CoreNotifyParams
 import com.reown.android.internal.common.model.type.JsonRpcClientSync
 import com.reown.notify.common.JsonRpcMethod
-import com.walletconnect.util.generateId
+import com.reown.util.generateId
 
 internal sealed class NotifyRpc : JsonRpcClientSync<CoreNotifyParams> {
 

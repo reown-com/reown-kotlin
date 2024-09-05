@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.reown.sample.common.ui.themedColor
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import kotlinx.coroutines.delay
 
 @Composable

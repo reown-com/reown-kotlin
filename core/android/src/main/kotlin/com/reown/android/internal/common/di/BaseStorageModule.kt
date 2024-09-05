@@ -21,7 +21,7 @@ import com.reown.android.sdk.storage.data.dao.EventDao
 import com.reown.android.sdk.storage.data.dao.JsonRpcHistoryDao
 import com.reown.android.sdk.storage.data.dao.MetaData
 import com.reown.android.sdk.storage.data.dao.VerifyContext
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import kotlinx.coroutines.launch
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope

@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonClass
 import com.reown.android.internal.common.model.type.JsonRpcClientSync
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.json_rpc.model.JsonRpcMethod
-import com.walletconnect.util.generateId
+import com.reown.util.generateId
 
 internal sealed class SignRpc : JsonRpcClientSync<SignParams> {
 

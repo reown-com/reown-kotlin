@@ -26,7 +26,7 @@ import com.github.alexzhirkevich.customqrgenerator.vector.style.QrVectorLogoPadd
 import com.github.alexzhirkevich.customqrgenerator.vector.style.QrVectorPixelShape
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.reown.modal.ui.ComponentPreview
-import com.walletconnect.modalcore.R
+import com.reown.modalcore.R
 import androidx.compose.ui.graphics.Color as ComposeColor
 
 enum class QrCodeType {

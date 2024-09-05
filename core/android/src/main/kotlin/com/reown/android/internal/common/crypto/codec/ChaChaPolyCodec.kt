@@ -12,9 +12,9 @@ import com.reown.android.internal.common.model.UnknownEnvelopeTypeException
 import com.reown.android.internal.utils.getParticipantTag
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.hexToBytes
-import com.walletconnect.util.randomBytes
+import com.reown.util.bytesToHex
+import com.reown.util.hexToBytes
+import com.reown.util.randomBytes
 import org.bouncycastle.crypto.modes.ChaCha20Poly1305
 import org.bouncycastle.crypto.params.KeyParameter
 import org.bouncycastle.crypto.params.ParametersWithIV

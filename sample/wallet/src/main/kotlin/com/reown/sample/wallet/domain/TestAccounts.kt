@@ -1,7 +1,7 @@
 package com.reown.sample.wallet.domain
 
 import com.reown.sample.common.Chains
-import com.walletconnect.util.hexToBytes
+import com.reown.util.hexToBytes
 import io.ipfs.multibase.Base16
 
 val ACCOUNTS_1_EIP155_ADDRESS by lazy { EthAccountDelegate.account }

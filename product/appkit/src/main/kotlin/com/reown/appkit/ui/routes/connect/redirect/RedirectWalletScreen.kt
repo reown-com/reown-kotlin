@@ -34,7 +34,7 @@ import com.reown.android.pulse.model.ConnectionMethod
 import com.reown.modal.utils.openMobileLink
 import com.reown.modal.utils.openPlayStore
 import com.reown.modal.utils.openWebAppLink
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.client.Modal
 import com.reown.appkit.domain.delegate.AppKitDelegate
 import com.reown.appkit.engine.coinbase.isCoinbaseWallet

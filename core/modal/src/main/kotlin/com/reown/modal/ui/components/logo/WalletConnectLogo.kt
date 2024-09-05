@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.reown.modal.ui.ComponentPreview
 import com.reown.modal.ui.components.common.HorizontalSpacer
-import com.walletconnect.modalcore.R
+import com.reown.modalcore.R
 
 @Composable
 fun WalletConnectLogo(modifier: Modifier = Modifier, color: Color) {

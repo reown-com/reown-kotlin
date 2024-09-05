@@ -18,7 +18,7 @@ import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toMapOfEngineNamespacesSession
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.walletconnect.utils.extractTimestamp
+import com.reown.utils.extractTimestamp
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow

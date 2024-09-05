@@ -20,8 +20,8 @@ import com.reown.android.internal.common.di.baseStorageModule
 import com.reown.android.internal.common.di.deleteDatabases
 import com.reown.android.sdk.core.AndroidCoreDatabase
 import com.reown.foundation.util.Logger
-import com.walletconnect.util.randomBytes
-import com.walletconnect.utils.Empty
+import com.reown.util.randomBytes
+import com.reown.utils.Empty
 import net.sqlcipher.database.SQLiteDatabaseHook
 import net.sqlcipher.database.SupportFactory
 import org.koin.android.ext.koin.androidContext

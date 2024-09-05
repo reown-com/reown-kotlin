@@ -49,8 +49,8 @@ import com.reown.android.pulse.model.properties.Props
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.randomBytes
+import com.reown.util.bytesToHex
+import com.reown.util.randomBytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException

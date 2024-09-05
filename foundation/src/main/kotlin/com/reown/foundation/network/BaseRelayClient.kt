@@ -12,7 +12,7 @@ import com.reown.foundation.network.model.Relay
 import com.reown.foundation.network.model.RelayDTO
 import com.reown.foundation.util.Logger
 import com.reown.foundation.util.scope
-import com.walletconnect.util.generateClientToServerId
+import com.reown.util.generateClientToServerId
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi

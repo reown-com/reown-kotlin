@@ -29,7 +29,7 @@ import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.ValidationError
 import com.reown.sign.json_rpc.model.JsonRpcMethod
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Calendar

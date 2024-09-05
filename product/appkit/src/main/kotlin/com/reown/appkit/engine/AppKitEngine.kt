@@ -15,7 +15,7 @@ import com.reown.android.pulse.model.properties.Props
 import com.reown.foundation.util.Logger
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.client.models.Account

@@ -5,7 +5,7 @@ import com.reown.android.internal.common.modal.domain.usecase.GetInstalledWallet
 import com.reown.android.internal.common.modal.domain.usecase.GetSampleWalletsUseCaseInterface
 import com.reown.android.internal.common.modal.domain.usecase.GetWalletsUseCaseInterface
 import com.reown.android.internal.common.wcKoinApp
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.domain.usecase.GetRecentWalletUseCase
 import com.reown.appkit.engine.AppKitEngine
 import com.reown.appkit.engine.coinbase.COINBASE_WALLET_ID

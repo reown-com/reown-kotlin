@@ -9,9 +9,7 @@ import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterf
 import com.reown.android.internal.common.model.type.SerializableJsonRpc
 import com.reown.android.pairing.model.PairingJsonRpcMethod
 import com.reown.android.pairing.model.PairingRpc
-import com.walletconnect.utils.JsonAdapterEntry
-import com.walletconnect.utils.addDeserializerEntry
-import com.walletconnect.utils.addSerializerEntry
+import com.reown.utils.*
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module

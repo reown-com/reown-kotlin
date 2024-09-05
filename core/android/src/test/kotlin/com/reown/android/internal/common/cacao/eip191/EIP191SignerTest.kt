@@ -12,8 +12,8 @@ import com.reown.android.internal.common.signing.model.HexString
 import com.reown.android.internal.common.signing.signature.Signature
 import com.reown.android.utils.cacao.CacaoSignerInterface
 import com.reown.android.utils.cacao.sign
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.hexToBytes
+import com.reown.util.bytesToHex
+import com.reown.util.hexToBytes
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import org.junit.Test

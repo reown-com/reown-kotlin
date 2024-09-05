@@ -12,8 +12,8 @@ import com.reown.sample.dapp.domain.DappDelegate
 import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.randomBytes
+import com.reown.util.bytesToHex
+import com.reown.util.randomBytes
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.client.Modal
 import kotlinx.coroutines.flow.MutableSharedFlow

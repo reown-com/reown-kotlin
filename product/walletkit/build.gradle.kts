@@ -7,9 +7,9 @@ plugins {
 }
 
 project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = WEB_3_WALLET
-    extra[KEY_PUBLISH_VERSION] = WEB_3_WALLET_VERSION
-    extra[KEY_SDK_NAME] = "web3wallet"
+    extra[KEY_PUBLISH_ARTIFACT_ID] = WALLETKIT
+    extra[KEY_PUBLISH_VERSION] = WALLETKIT_VERSION
+    extra[KEY_SDK_NAME] = "walletkit"
 }
 
 android {
@@ -60,6 +60,6 @@ dependencies {
     debugImplementation(project(":core:android"))
     debugImplementation(project(":protocol:sign"))
 
-    releaseImplementation("com.walletconnect:android-core:$CORE_VERSION")
-    releaseImplementation("com.walletconnect:sign:$SIGN_VERSION")
+    releaseImplementation("com.reown:android-core:$CORE_VERSION")
+    releaseImplementation("com.reown:sign:$SIGN_VERSION")
 }

@@ -37,7 +37,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.ui.theme.AppKitTheme
 
 @Composable

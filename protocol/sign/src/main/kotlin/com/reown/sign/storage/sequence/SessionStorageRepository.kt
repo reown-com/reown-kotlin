@@ -15,8 +15,8 @@ import com.reown.sign.storage.data.dao.optionalnamespaces.OptionalNamespaceDaoQu
 import com.reown.sign.storage.data.dao.proposalnamespace.ProposalNamespaceDaoQueries
 import com.reown.sign.storage.data.dao.session.SessionDaoQueries
 import com.reown.sign.storage.data.dao.temp.TempNamespaceDaoQueries
-import com.walletconnect.utils.Empty
-import com.walletconnect.utils.isSequenceValid
+import com.reown.utils.Empty
+import com.reown.utils.isSequenceValid
 
 internal class SessionStorageRepository(
     private val sessionDaoQueries: SessionDaoQueries,

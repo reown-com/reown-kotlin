@@ -10,7 +10,7 @@ import com.reown.android.internal.common.model.EnvelopeType
 import com.reown.android.internal.utils.getParticipantTag
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals

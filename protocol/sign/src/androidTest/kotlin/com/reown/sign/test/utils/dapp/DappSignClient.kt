@@ -7,8 +7,8 @@ import com.reown.sign.test.utils.globalOnError
 import com.reown.sign.test.utils.proposalNamespaces
 import com.reown.sign.test.utils.sessionChains
 import com.reown.sign.test.utils.sessionMethods
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.randomBytes
+import com.reown.util.bytesToHex
+import com.reown.util.randomBytes
 import timber.log.Timber
 
 val DappSignClient = TestClient.Dapp.signClient

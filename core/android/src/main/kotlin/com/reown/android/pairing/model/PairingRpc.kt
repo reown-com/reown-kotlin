@@ -3,7 +3,7 @@ package com.reown.android.pairing.model
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.reown.android.internal.common.model.type.JsonRpcClientSync
-import com.walletconnect.util.generateId
+import com.reown.util.generateId
 
 internal sealed class PairingRpc : JsonRpcClientSync<PairingParams> {
 

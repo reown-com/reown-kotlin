@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.reown.android.internal.common.modal.data.model.Wallet
 import com.reown.modal.utils.isLandscape
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.R
 import com.reown.appkit.ui.components.internal.commons.ContentDescription
 import com.reown.appkit.ui.components.internal.commons.HorizontalSpacer

@@ -21,7 +21,7 @@ import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.network.model.Relay
 import com.reown.foundation.network.model.RelayDTO
 import com.reown.foundation.util.Logger
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk

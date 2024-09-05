@@ -2,7 +2,7 @@ package com.reown.android.verify.domain
 
 import com.reown.android.verify.model.JWK
 import com.reown.foundation.util.jwt.JWT_DELIMITER
-import com.walletconnect.util.bytesToHex
+import com.reown.util.bytesToHex
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.params.ECDomainParameters
 import org.bouncycastle.crypto.params.ECPublicKeyParameters

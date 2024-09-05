@@ -4,8 +4,8 @@ package com.reown.android.internal.common.storage.key_chain
 
 import android.content.SharedPreferences
 import com.reown.foundation.common.model.Key
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.hexToBytes
+import com.reown.util.bytesToHex
+import com.reown.util.hexToBytes
 
 internal class KeyChain(private val sharedPreferences: SharedPreferences) : KeyStore {
 

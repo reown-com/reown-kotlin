@@ -8,8 +8,8 @@ import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.relay.ConnectionType
 import com.reown.sample.common.tag
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.randomBytes
+import com.reown.util.bytesToHex
+import com.reown.util.randomBytes
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.presets.AppKitChainsPresets

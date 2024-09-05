@@ -10,7 +10,7 @@ import com.reown.android.internal.common.exception.ProjectIdDoesNotExistExceptio
 import com.reown.android.internal.common.exception.UnableToConnectToWebsocketException
 import com.reown.android.internal.common.exception.WalletConnectException
 import com.reown.android.internal.common.model.AppMetaData
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import java.net.HttpURLConnection
 
 @JvmSynthetic

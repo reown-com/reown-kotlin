@@ -32,8 +32,8 @@ import com.reown.foundation.util.jwt.DID_DELIMITER
 import com.reown.foundation.util.jwt.decodeDidPkh
 import com.reown.foundation.util.jwt.encodeDidPkh
 import com.reown.foundation.util.jwt.encodeEd25519DidKey
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.randomBytes
+import com.reown.util.bytesToHex
+import com.reown.util.randomBytes
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale

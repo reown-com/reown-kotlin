@@ -11,7 +11,7 @@ import com.reown.android.verify.domain.ResolveAttestationIdUseCase
 import com.reown.android.verify.domain.VerifyResult
 import com.reown.android.verify.model.VerifyContext
 import com.reown.foundation.common.model.Topic
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify

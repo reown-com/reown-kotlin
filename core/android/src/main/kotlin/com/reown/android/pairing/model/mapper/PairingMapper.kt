@@ -7,7 +7,7 @@ import com.reown.android.internal.common.model.Pairing
 import com.reown.android.internal.common.model.Redirect
 import com.reown.android.pairing.engine.model.EngineDO
 import com.reown.foundation.common.model.Topic
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 
 @JvmSynthetic
 @Deprecated("This mapper has been deprecated. It will be removed soon.")

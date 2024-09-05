@@ -2,7 +2,7 @@ package com.reown.android.internal
 
 import com.reown.android.verify.domain.JWTRepository
 import com.reown.android.verify.model.JWK
-import com.walletconnect.util.hexToBytes
+import com.reown.util.hexToBytes
 import io.mockk.spyk
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull

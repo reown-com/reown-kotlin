@@ -1,6 +1,6 @@
 @file:Suppress("PackageDirectoryMismatch")
 
-package com.walletconnect.util
+package com.reown.util
 
 import java.security.SecureRandom
 import kotlin.math.pow

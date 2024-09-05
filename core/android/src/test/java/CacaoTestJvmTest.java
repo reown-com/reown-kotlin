@@ -5,7 +5,7 @@ import com.reown.android.internal.common.signing.cacao.CacaoKt;
 import com.reown.android.internal.common.signing.cacao.CacaoType;
 import com.reown.android.internal.common.signing.cacao.CacaoVerifier;
 import com.reown.android.utils.cacao.CacaoSignerUtil;
-import com.walletconnect.util.UtilFunctionsKt;
+import com.reown.util.UtilFunctionsKt;
 
 import org.junit.Assert;
 import org.junit.Test;

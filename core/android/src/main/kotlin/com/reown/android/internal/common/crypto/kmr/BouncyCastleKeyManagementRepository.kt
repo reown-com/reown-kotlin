@@ -10,8 +10,8 @@ import com.reown.foundation.common.model.Key
 import com.reown.foundation.common.model.PrivateKey
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.hexToBytes
+import com.reown.util.bytesToHex
+import com.reown.util.hexToBytes
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.generators.HKDFBytesGenerator
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters

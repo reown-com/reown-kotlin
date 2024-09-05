@@ -1,6 +1,6 @@
 package com.reown.android.internal.common.di
 
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.scope.Scope
 

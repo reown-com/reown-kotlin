@@ -1,7 +1,7 @@
 # **Reown - Kotlin**
 
 The communications protocol for web3, Reown brings the ecosystem together by enabling hundreds of wallets and apps to securely connect and interact. This repository contains Kotlin implementation of
-reown protocols for Android applications.
+Reown protocols for Android applications.
 
 ####
 
@@ -78,4 +78,4 @@ dependencies {
 
 ## License
 
-reown is released under the Apache 2.0 license. [See LICENSE](/LICENSE) for details.
+Reown is released under the Apache 2.0 license. [See LICENSE](/LICENSE) for details.

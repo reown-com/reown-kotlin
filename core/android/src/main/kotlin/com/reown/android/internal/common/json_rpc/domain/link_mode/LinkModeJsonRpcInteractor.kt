@@ -22,7 +22,7 @@ import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.rpc.JsonRpcHistory
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.foundation.common.model.Topic
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow

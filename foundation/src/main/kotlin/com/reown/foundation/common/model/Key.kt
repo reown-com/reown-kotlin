@@ -1,6 +1,6 @@
 package com.reown.foundation.common.model
 
-import com.walletconnect.util.hexToBytes
+import com.reown.util.hexToBytes
 
 interface Key {
     val keyAsHex: String

@@ -8,7 +8,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.composable
 import com.reown.android.internal.common.modal.data.model.Wallet
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.ui.navigation.Route
 import com.reown.appkit.ui.navigation.addTitleArg
 import com.reown.appkit.ui.routes.connect.ConnectViewModel

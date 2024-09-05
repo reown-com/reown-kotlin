@@ -1,6 +1,6 @@
 package com.reown.android.internal.common.crypto
 
-import com.walletconnect.util.bytesToHex
+import com.reown.util.bytesToHex
 import java.security.MessageDigest
 
 

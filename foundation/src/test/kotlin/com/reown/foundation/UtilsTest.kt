@@ -1,7 +1,6 @@
 package com.reown.foundation
 
-import com.walletconnect.util.generateClientToServerId
-import com.walletconnect.util.generateId
+import com.reown.util.*
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
 

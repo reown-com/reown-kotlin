@@ -19,7 +19,7 @@ import com.reown.sign.common.model.vo.clientsync.session.payload.SessionEventVO
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.walletconnect.util.generateId
+import com.reown.util.generateId
 import kotlinx.coroutines.supervisorScope
 
 internal class EmitEventUseCase(

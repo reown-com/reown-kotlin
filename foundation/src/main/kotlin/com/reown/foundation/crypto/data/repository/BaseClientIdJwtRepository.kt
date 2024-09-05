@@ -9,9 +9,7 @@ import com.reown.foundation.util.jwt.encodeEd25519DidKey
 import com.reown.foundation.util.jwt.encodeJWT
 import com.reown.foundation.util.jwt.jwtIatAndExp
 import com.reown.foundation.util.jwt.signJwt
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.hexToBytes
-import com.walletconnect.util.randomBytes
+import com.reown.util.*
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair
 import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
 import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters

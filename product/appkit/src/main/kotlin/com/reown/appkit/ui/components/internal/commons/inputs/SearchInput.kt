@@ -32,7 +32,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.reown.modal.ui.components.common.HorizontalSpacer
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.R
 import com.reown.appkit.ui.components.internal.commons.ContentDescription
 import com.reown.appkit.ui.previews.ComponentPreview

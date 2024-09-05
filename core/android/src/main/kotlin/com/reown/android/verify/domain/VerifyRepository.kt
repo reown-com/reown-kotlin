@@ -5,7 +5,7 @@ import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.utils.currentTimeInSeconds
 import com.reown.android.verify.data.VerifyService
 import com.reown.android.verify.model.VerifyClaims
-import com.walletconnect.util.hexToBytes
+import com.reown.util.hexToBytes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

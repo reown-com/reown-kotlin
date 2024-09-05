@@ -4,8 +4,8 @@ package com.reown.notify.di
 
 import com.reown.notify.common.JsonRpcMethod
 import com.reown.notify.common.model.NotifyRpc
-import com.walletconnect.utils.addDeserializerEntry
-import com.walletconnect.utils.addSerializerEntry
+import com.reown.utils.addDeserializerEntry
+import com.reown.utils.addSerializerEntry
 import org.koin.dsl.module
 
 @JvmSynthetic

@@ -2,8 +2,8 @@ package com.reown.android.internal
 
 import com.reown.android.internal.common.storage.key_chain.KeyStore
 import com.reown.foundation.common.model.Key
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.hexToBytes
+import com.reown.util.bytesToHex
+import com.reown.util.hexToBytes
 
 internal class KeyChainMock : KeyStore {
     private val mapOfKeys = mutableMapOf<String, String>()

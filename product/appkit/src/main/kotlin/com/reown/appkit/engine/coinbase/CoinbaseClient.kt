@@ -22,7 +22,7 @@ import com.coinbase.android.nativesdk.message.response.ResponseResult
 import com.reown.android.internal.common.modal.data.model.Wallet
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.wcKoinApp
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.models.Account
 import com.reown.appkit.client.models.request.Request

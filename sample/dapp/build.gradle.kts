@@ -104,8 +104,8 @@ dependencies {
     internalImplementation(project(":product:appkit"))
     internalImplementation(project(":protocol:sign"))
 
-    releaseImplementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))
-    releaseImplementation("com.walletconnect:android-core")
-    releaseImplementation("com.walletconnect:web3modal")
-    releaseImplementation("com.walletconnect:sign")
+    releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
+    releaseImplementation("com.reown:android-core")
+    releaseImplementation("com.reown:web3modal")
+    releaseImplementation("com.reown:sign")
 }

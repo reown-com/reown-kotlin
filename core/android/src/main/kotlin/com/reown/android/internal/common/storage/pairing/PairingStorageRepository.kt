@@ -8,7 +8,7 @@ import com.reown.android.internal.common.model.Pairing
 import com.reown.android.internal.common.model.Redirect
 import com.reown.android.sdk.storage.data.dao.PairingQueries
 import com.reown.foundation.common.model.Topic
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 
 class PairingStorageRepository(private val pairingQueries: PairingQueries) : PairingStorageRepositoryInterface {
 

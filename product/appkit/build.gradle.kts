@@ -8,9 +8,9 @@ plugins {
 }
 
 project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = WEB_3_MODAL
-    extra[KEY_PUBLISH_VERSION] = WEB_3_MODAL_VERSION
-    extra[KEY_SDK_NAME] = "web3modal"
+    extra[KEY_PUBLISH_ARTIFACT_ID] = APPKIT
+    extra[KEY_PUBLISH_VERSION] = APPKIT_VERSION
+    extra[KEY_SDK_NAME] = "appkit"
 }
 
 android {
@@ -92,9 +92,9 @@ dependencies {
     testImplementation(libs.coroutines.test)
     testImplementation(libs.turbine)
 
-    releaseImplementation("com.walletconnect:android-core:$CORE_VERSION")
-    releaseImplementation("com.walletconnect:sign:$SIGN_VERSION")
-    releaseImplementation("com.walletconnect:modal-core:$MODAL_CORE_VERSION")
+    releaseImplementation("com.reown:android-core:$CORE_VERSION")
+    releaseImplementation("com.reown:sign:$SIGN_VERSION")
+    releaseImplementation("com.reown:modal-core:$MODAL_CORE_VERSION")
 
     debugImplementation(project(":core:android"))
     debugImplementation(project(":protocol:sign"))

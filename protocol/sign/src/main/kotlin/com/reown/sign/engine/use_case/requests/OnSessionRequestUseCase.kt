@@ -34,7 +34,7 @@ import com.reown.sign.engine.model.mapper.toEngineDO
 import com.reown.sign.engine.model.mapper.toPeerError
 import com.reown.sign.engine.sessionRequestEventsQueue
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow

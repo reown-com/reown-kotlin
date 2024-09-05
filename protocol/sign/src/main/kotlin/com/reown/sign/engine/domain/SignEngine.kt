@@ -73,8 +73,8 @@ import com.reown.sign.json_rpc.model.JsonRpcMethod
 import com.reown.sign.storage.authenticate.AuthenticateResponseTopicRepository
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.walletconnect.utils.Empty
-import com.walletconnect.utils.isSequenceValid
+import com.reown.utils.Empty
+import com.reown.utils.isSequenceValid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

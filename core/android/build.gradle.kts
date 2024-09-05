@@ -90,7 +90,7 @@ sqldelight {
 
 dependencies {
     debugApi(project(":foundation"))
-    releaseApi("com.walletconnect:foundation:$FOUNDATION_VERSION")
+    releaseApi("com.reown:foundation:$FOUNDATION_VERSION")
 
     api(libs.coroutines)
     implementation(libs.scarlet.android)

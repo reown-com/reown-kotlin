@@ -2,7 +2,7 @@ package com.reown.android.internal.common.model
 
 import com.reown.android.internal.common.model.type.ClientParams
 import com.reown.foundation.common.model.Topic
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 
 data class WCRequest(
     val topic: Topic,

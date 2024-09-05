@@ -2,7 +2,7 @@ package com.reown.appkit.data.json_rpc.balance
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
-import com.walletconnect.util.generateId
+import com.reown.util.generateId
 import com.reown.appkit.data.json_rpc.JsonRpcMethod
 
 @JsonClass(generateAdapter = true)

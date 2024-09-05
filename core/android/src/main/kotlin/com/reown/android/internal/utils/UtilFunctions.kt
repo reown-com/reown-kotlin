@@ -1,6 +1,6 @@
 @file:Suppress("PackageDirectoryMismatch")
 
-package com.walletconnect.utils
+package com.reown.utils
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi

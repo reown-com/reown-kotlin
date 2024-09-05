@@ -3,7 +3,7 @@ package com.reown.appkit.ui.routes.connect
 import com.android.resources.NightMode
 import com.android.resources.ScreenOrientation
 import com.reown.modal.ui.model.LoadingState
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import com.reown.appkit.ui.navigation.Route
 import com.reown.appkit.ui.previews.testWallets
 import com.reown.appkit.ui.routes.connect.all_wallets.AllWalletsRoute

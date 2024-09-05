@@ -1,7 +1,7 @@
 package com.reown.appkit.ui.components.internal.commons.inputs
 
 import androidx.compose.ui.focus.FocusManager
-import com.walletconnect.util.Empty
+import com.reown.util.Empty
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

@@ -8,8 +8,7 @@ import com.reown.foundation.di.networkModule
 import com.reown.foundation.network.BaseRelayClient
 import com.reown.foundation.network.RelayInterface
 import com.reown.foundation.network.model.Relay
-import com.walletconnect.util.addUserAgent
-import com.walletconnect.util.bytesToHex
+import com.reown.util.*
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.CompletableJob

@@ -1,7 +1,7 @@
 package com.reown.android.internal
 
 import com.google.common.net.InternetDomainName
-import com.walletconnect.utils.compareDomains
+import com.reown.utils.compareDomains
 import org.junit.Test
 import java.net.URI
 

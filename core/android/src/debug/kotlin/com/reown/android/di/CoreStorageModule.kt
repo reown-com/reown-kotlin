@@ -7,7 +7,7 @@ import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import com.reown.android.internal.common.di.DatabaseConfig
 import com.reown.android.internal.common.di.baseStorageModule
 import com.reown.android.sdk.core.AndroidCoreDatabase
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module

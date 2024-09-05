@@ -8,7 +8,7 @@ import com.reown.foundation.common.adapters.TtlAdapter
 import com.reown.foundation.common.model.SubscriptionId
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
-import com.walletconnect.util.generateClientToServerId
+import com.reown.util.generateClientToServerId
 
 sealed class RelayDTO {
     abstract val id: Long

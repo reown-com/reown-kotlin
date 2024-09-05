@@ -5,7 +5,7 @@ import com.reown.android.internal.common.JsonRpcResponse
 import com.reown.android.internal.common.model.type.ClientParams
 import com.reown.android.internal.common.model.type.JsonRpcClientSync
 import com.reown.android.internal.common.model.type.SerializableJsonRpc
-import com.walletconnect.utils.JsonAdapterEntry
+import com.reown.utils.JsonAdapterEntry
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 

@@ -2,8 +2,8 @@ package com.reown.android.internal.common.signing.eip1271
 
 import com.reown.android.internal.common.signing.signature.Signature
 import com.reown.android.internal.common.signing.signature.toCacaoSignature
-import com.walletconnect.util.bytesToHex
-import com.walletconnect.util.generateId
+import com.reown.util.bytesToHex
+import com.reown.util.generateId
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient

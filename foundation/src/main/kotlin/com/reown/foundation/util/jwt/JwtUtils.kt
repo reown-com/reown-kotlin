@@ -7,7 +7,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.reown.foundation.common.model.PrivateKey
 import com.reown.foundation.common.model.PublicKey
-import com.walletconnect.util.bytesToHex
+import com.reown.util.bytesToHex
 import io.ipfs.multibase.Base58
 import io.ipfs.multibase.Multibase
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters

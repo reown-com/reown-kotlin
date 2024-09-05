@@ -9,7 +9,7 @@ import com.reown.android.pulse.model.Event
 import com.reown.android.pulse.model.SDKType
 import com.reown.android.pulse.model.properties.Props
 import com.reown.foundation.util.Logger
-import com.walletconnect.util.generateId
+import com.reown.util.generateId
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named

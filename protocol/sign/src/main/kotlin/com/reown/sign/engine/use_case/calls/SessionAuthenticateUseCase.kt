@@ -39,7 +39,7 @@ import com.reown.sign.engine.model.mapper.toCommon
 import com.reown.sign.engine.model.mapper.toMapOfEngineNamespacesOptional
 import com.reown.sign.storage.authenticate.AuthenticateResponseTopicRepository
 import com.reown.sign.storage.link_mode.LinkModeStorageRepository
-import com.walletconnect.utils.Empty
+import com.reown.utils.Empty
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch

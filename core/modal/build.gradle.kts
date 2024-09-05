@@ -12,7 +12,7 @@ project.apply {
 }
 
 android {
-    namespace = "com.walletconnect.modalcore"
+    namespace = "com.reown.modalcore"
     compileSdk = COMPILE_SDK
 
     defaultConfig {

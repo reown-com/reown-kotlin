@@ -8,7 +8,7 @@ import com.reown.android.internal.common.signing.cacao.CacaoVerifier
 import com.reown.android.internal.common.signing.cacao.toCAIP222Message
 import com.reown.android.utils.cacao.CacaoSignerInterface
 import com.reown.android.utils.cacao.sign
-import com.walletconnect.util.hexToBytes
+import com.reown.util.hexToBytes
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
