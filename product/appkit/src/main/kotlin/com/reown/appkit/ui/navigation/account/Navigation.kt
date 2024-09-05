@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalAnimationApi::class)
-
 package com.reown.appkit.ui.navigation.account
 
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -20,12 +18,13 @@ private const val CHAIN_ID_ARG = "{chainId}"
 
 internal fun Modal.Model.Chain.toChainSwitchPath() = Route.CHAIN_SWITCH_REDIRECT.path + "/${id}&${chainName}"
 
+@OptIn(ExperimentalAnimationApi::class)
 internal fun NavGraphBuilder.chainSwitchRoute(
     accountViewModel: AccountViewModel
 ) {
     composable(
         route = Route.CHAIN_SWITCH_REDIRECT.path + "/" + CHAIN_ID_ARG + addTitleArg(),
-        arguments = listOf(navArgument(CHAIN_ID_KEY) { type = NavType.StringType } )
+        arguments = listOf(navArgument(CHAIN_ID_KEY) { type = NavType.StringType })
     ) { backStackEntry ->
         val chainId = backStackEntry.arguments?.getString(CHAIN_ID_KEY, String.Empty)
         val chain = AppKit.chains.find { it.id == chainId }

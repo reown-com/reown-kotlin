@@ -132,6 +132,6 @@ dependencies {
 
     releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
     releaseImplementation("com.reown:android-core")
-    releaseImplementation("com.reown:web3wallet")
+    releaseImplementation("com.reown:walletkit")
     releaseImplementation("com.reown:notify")
 }

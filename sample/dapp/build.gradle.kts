@@ -106,6 +106,6 @@ dependencies {
 
     releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
     releaseImplementation("com.reown:android-core")
-    releaseImplementation("com.reown:web3modal")
+    releaseImplementation("com.reown:appkit")
     releaseImplementation("com.reown:sign")
 }
