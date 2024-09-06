@@ -2,10 +2,8 @@ package com.reown.sample.dapp.ui.routes.composable_routes.chain_selection
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.widget.Toast
-import androidmads.library.qrgenearator.QRGContents
-import androidmads.library.qrgenearator.QRGEncoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -59,7 +56,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.github.alexzhirkevich.customqrgenerator.QrData
+import com.github.alexzhirkevich.customqrgenerator.vector.QrCodeDrawable
+import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import com.reown.android.utils.isPackageInstalled
+import com.reown.appkit.ui.components.button.rememberAppKitState
+import com.reown.appkit.ui.openAppKit
 import com.reown.sample.common.Chains
 import com.reown.sample.common.CompletePreviews
 import com.reown.sample.common.ui.WCTopAppBarLegacy
@@ -72,8 +74,6 @@ import com.reown.sample.common.ui.toColor
 import com.reown.sample.dapp.BuildConfig
 import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sample.dapp.ui.routes.Route
-import com.reown.appkit.ui.components.button.rememberAppKitState
-import com.reown.appkit.ui.openAppKit
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -325,7 +325,7 @@ private fun ChainSelectionScreen(
 
 @Composable
 private fun QRDialog(composableScope: CoroutineScope, dispatcher: CoroutineDispatcher, pairingUri: PairingUri, onDismissRequest: () -> Unit, context: Context) {
-    val qrBitmap = generateQRCode(pairingUri.uri)
+    val qrDrawable = generateQRCode(pairingUri.uri)
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
@@ -337,9 +337,9 @@ private fun QRDialog(composableScope: CoroutineScope, dispatcher: CoroutineDispa
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                qrBitmap?.let {
+                qrDrawable?.let {
                     Image(
-                        bitmap = it.asImageBitmap(),
+                        painter = rememberDrawablePainter(drawable = it),
                         contentDescription = "QR Code",
                         modifier = Modifier
                             .fillMaxWidth()
@@ -442,10 +442,10 @@ private fun onDynamicSwitcher(
     }
 }
 
-fun generateQRCode(content: String): Bitmap? {
-    val qrgEncoder = QRGEncoder(content, null, QRGContents.Type.TEXT, 400)
+fun generateQRCode(content: String): Drawable? {
+    val qrgEncoder = QrCodeDrawable(QrData.Url(content))
     return try {
-        qrgEncoder.bitmap
+        qrgEncoder
     } catch (e: Exception) {
         e.printStackTrace()
         null
