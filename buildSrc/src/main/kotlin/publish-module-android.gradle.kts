@@ -41,9 +41,9 @@ afterEvaluate {
                 version = requireNotNull(project.extra[KEY_PUBLISH_VERSION]).toString()
 
                 pom {
-                    name.set("WalletConnect ${requireNotNull(extra.get(KEY_SDK_NAME))}")
-                    description.set("${requireNotNull(extra.get(KEY_SDK_NAME))} SDK for WalletConnect")
-                    url.set("https://github.com/WalletConnect/WalletConnectKotlinV2")
+                    name.set("Reown ${requireNotNull(extra.get(KEY_SDK_NAME))}")
+                    description.set("${requireNotNull(extra.get(KEY_SDK_NAME))} SDK for Reown")
+                    url.set("https://github.com/reown-com/reown-kotlin")
                     licenses {
                         license {
                             name.set("The Apache License, Version 2.0")
@@ -58,15 +58,15 @@ afterEvaluate {
                     developers {
                         developer {
                             id.set("KotlinSDKTeam")
-                            name.set("WalletConnect Kotlin")
+                            name.set("Reown Kotlin")
                             email.set("Kotlin@WalletConnect.com")
                         }
                     }
 
                     scm {
-                        connection.set("scm:git:git://github.com/WalletConnect/WalletConnectKotlinV2.git")
-                        developerConnection.set("scm:git:ssh://github.com/WalletConnect/WalletConnectKotlinV2.git")
-                        url.set("https://github.com/WalletConnect/WalletConnectKotlinV2")
+                        connection.set("scm:git:git://github.com/reown-com/reown-kotlin.git")
+                        developerConnection.set("scm:git:ssh://github.com/reown-com/reown-kotlin.git")
+                        url.set("https://github.com/reown-com/reown-kotlin")
                     }
                 }
             }
