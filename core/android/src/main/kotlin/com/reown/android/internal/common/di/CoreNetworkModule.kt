@@ -47,7 +47,7 @@ fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, 
     }
 
     factory(named(AndroidCommonDITags.USER_AGENT)) {
-        """wc-2/Reown-kotlin-${sdkVersion}/android-${Build.VERSION.RELEASE}"""
+        """wc-2/reown-kotlin-${sdkVersion}/android-${Build.VERSION.RELEASE}"""
     }
 
     single {
