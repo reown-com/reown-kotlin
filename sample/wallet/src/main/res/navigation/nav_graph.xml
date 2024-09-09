@@ -6,7 +6,7 @@
 
     <activity
         android:id="@+id/web3walletActivity"
-        android:name="com.walletconnect.sample.wallet.ui.Web3WalletActivity"
+        android:name="com.reown.sample.wallet.ui.WalletKitActivity"
         android:fitsSystemWindows="true"
         android:label="Web3WalletActivity" />
 

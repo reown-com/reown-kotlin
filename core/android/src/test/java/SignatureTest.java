@@ -1,4 +1,4 @@
-import com.walletconnect.android.cacao.SignatureInterface;
+import com.reown.android.cacao.SignatureInterface;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -44,16 +44,16 @@
         <package android:name="com.ripio.android" />
         <package android:name="kh.com.sabay.sabaywallet" />
         <package android:name="com.tokoin.wallet" />
-        <package android:name="com.walletconnect.sample.wallet"/>
-        <package android:name="com.walletconnect.sample.wallet.debug"/>
-        <package android:name="com.walletconnect.sample.wallet.internal"/>
+        <package android:name="com.reown.sample.wallet"/>
+        <package android:name="com.reown.sample.wallet.debug"/>
+        <package android:name="com.reown.sample.wallet.internal"/>
         <package android:name="com.walletconnect.web3wallet.rnsample.internal"/>
         <package android:name="com.walletconnect.flutterwallet"/>
         <package android:name="com.walletconnect.flutterwallet.internal"/>
     </queries>
 
     <application
-        android:name=".ModalSampleApp"
+        android:name=".AppKitApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"

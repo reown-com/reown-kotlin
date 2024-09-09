@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name="com.walletconnect.sample.wallet.Web3WalletApplication"
+        android:name="com.reown.sample.wallet.WalletKitApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -21,11 +21,11 @@
         tools:replace="android:dataExtractionRules"
         tools:targetApi="31">
         <activity
-            android:name="com.walletconnect.sample.wallet.ui.Web3WalletActivity"
+            android:name="com.reown.sample.wallet.ui.WalletKitActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:taskAffinity="com.walletconnect.sample.wallet.activity"
+            android:taskAffinity="com.reown.sample.wallet.activity"
             android:theme="@style/Theme.Wallet"
             android:windowSoftInputMode="adjustResize">
             <nav-graph android:value="@navigation/nav_graph" />
@@ -64,7 +64,7 @@
         </activity>
 
         <service
-            android:name="com.walletconnect.sample.wallet.Web3WalletMessageService"
+            android:name="com.reown.sample.wallet.WalletKitMessageService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

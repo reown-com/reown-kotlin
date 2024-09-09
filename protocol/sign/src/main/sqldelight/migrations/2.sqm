@@ -1,4 +1,4 @@
-import com.walletconnect.android.internal.common.model.AppMetaDataType;
+import com.reown.android.internal.common.model.AppMetaDataType;
 import kotlin.Boolean;
 import kotlin.String;
 import kotlin.collections.List;

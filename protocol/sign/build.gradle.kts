@@ -14,7 +14,7 @@ project.apply {
 }
 
 android {
-    namespace = "com.walletconnect.sign"
+    namespace = "com.reown.sign"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
@@ -89,7 +89,7 @@ android {
 sqldelight {
     databases {
         create("SignDatabase") {
-            packageName.set("com.walletconnect.sign")
+            packageName.set("com.reown.sign")
             schemaOutputDirectory.set(file("src/main/sqldelight/databases"))
 //            generateAsync.set(true) // TODO: Enable once all repository methods have been converted to suspend functions
             verifyMigrations.set(true)
@@ -100,7 +100,7 @@ sqldelight {
 
 dependencies {
     debugImplementation(project(":core:android"))
-    releaseImplementation("com.walletconnect:android-core:$CORE_VERSION")
+    releaseImplementation("com.reown:android-core:$CORE_VERSION")
 
     ksp(libs.moshi.ksp)
     implementation(libs.bundles.sqlDelight)

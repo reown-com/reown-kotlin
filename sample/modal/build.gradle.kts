@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.walletconnect.sample.modal"
+    namespace = "com.reown.sample.modal"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
-        applicationId = "com.walletconnect.sample.modal"
+        applicationId = "com.reown.sample.modal"
         minSdk = MIN_SDK
         targetSdk = TARGET_SDK
         versionName = SAMPLE_VERSION_NAME
@@ -90,12 +90,12 @@ dependencies {
     api(libs.bundles.androidxNavigation)
 
     debugImplementation(project(":core:android"))
-    debugImplementation(project(":product:web3modal"))
+    debugImplementation(project(":product:appkit"))
 
     internalImplementation(project(":core:android"))
-    internalImplementation(project(":product:web3modal"))
+    internalImplementation(project(":product:appkit"))
 
-    releaseImplementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))
-    releaseImplementation("com.walletconnect:android-core")
-    releaseImplementation("com.walletconnect:web3modal")
+    releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
+    releaseImplementation("com.reown:android-core")
+    releaseImplementation("com.reown:appkit")
 }

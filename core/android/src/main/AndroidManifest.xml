@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.walletconnect.android">
+    package="com.reown.android">
 
     <queries>
-        <package android:name="com.walletconnect.sample.wallet" />
-        <package android:name="com.walletconnect.sample.wallet.debug" />
-        <package android:name="com.walletconnect.sample.wallet.internal" />
+        <package android:name="com.reown.sample.wallet" />
+        <package android:name="com.reown.sample.wallet.debug" />
+        <package android:name="com.reown.sample.wallet.internal" />
     </queries>
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

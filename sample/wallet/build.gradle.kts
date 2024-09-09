@@ -8,12 +8,12 @@ plugins {
 }
 
 android {
-    namespace = "com.walletconnect.sample.wallet"
+    namespace = "com.reown.sample.wallet"
     compileSdk = COMPILE_SDK
     // hash of all sdk versions from Versions.kt
 
     defaultConfig {
-        applicationId = "com.walletconnect.sample.wallet"
+        applicationId = "com.reown.sample.wallet"
         minSdk = MIN_SDK
         targetSdk = TARGET_SDK
         versionName = SAMPLE_VERSION_NAME
@@ -123,15 +123,15 @@ dependencies {
 
     // WalletConnect
     debugImplementation(project(":core:android"))
-    debugImplementation(project(":product:web3wallet"))
+    debugImplementation(project(":product:walletkit"))
     debugImplementation(project(":protocol:notify"))
 
     internalImplementation(project(":core:android"))
-    internalImplementation(project(":product:web3wallet"))
+    internalImplementation(project(":product:walletkit"))
     internalImplementation(project(":protocol:notify"))
 
-    releaseImplementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))
-    releaseImplementation("com.walletconnect:android-core")
-    releaseImplementation("com.walletconnect:web3wallet")
-    releaseImplementation("com.walletconnect:notify")
+    releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
+    releaseImplementation("com.reown:android-core")
+    releaseImplementation("com.reown:walletkit")
+    releaseImplementation("com.reown:notify")
 }

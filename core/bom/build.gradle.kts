@@ -15,10 +15,8 @@ dependencies {
         api(project(":core:android"))
         api(project(":core:modal"))
         api(project(":protocol:sign"))
-        api(project(":protocol:auth"))
         api(project(":protocol:notify"))
-        api(project(":product:walletconnectmodal"))
-        api(project(":product:web3modal"))
-        api(project(":product:web3wallet"))
+        api(project(":product:appkit"))
+        api(project(":product:walletkit"))
     }
 }
