@@ -247,6 +247,31 @@ object AppKit {
      * Caution: This function is blocking and runs on the current thread.
      * It is advised that this function be called from background operation
      */
+    @Deprecated(
+        message = "Getting active session is replaced with getAccount()",
+        replaceWith = ReplaceWith("com.reown.appkit.client.AppKit.getAccount()"),
+        level = DeprecationLevel.WARNING
+    )
+    internal fun getActiveSessionByTopic(topic: String) = SignClient.getActiveSessionByTopic(topic)?.toModal()
+
+    /**
+     * Caution: This function is blocking and runs on the current thread.
+     * It is advised that this function be called from background operation
+     */
+    @Deprecated(
+        message = "Getting active session is replaced with getAccount()",
+        replaceWith = ReplaceWith("com.reown.appkit.client.AppKit.getAccount()"),
+        level = DeprecationLevel.WARNING
+    )
+    fun getActiveSession(): Modal.Model.Session? {
+        checkEngineInitialization()
+        return (appKitEngine.getActiveSession() as? WalletConnect)?.topic?.let { SignClient.getActiveSessionByTopic(it)?.toModal() }
+    }
+
+    /**
+     * Caution: This function is blocking and runs on the current thread.
+     * It is advised that this function be called from background operation
+     */
     fun getAccount(): Account? {
         checkEngineInitialization()
         return appKitEngine.getAccount()
