@@ -174,21 +174,6 @@ object AppKit {
         }.launchIn(scope)
     }
 
-    @Deprecated(
-        message = "Replaced with the same name method but onSuccess callback returns a Pairing URL",
-        replaceWith = ReplaceWith(expression = "fun connect(connect: Modal.Params.Connect, onSuccess: (String) -> Unit, onError: (Modal.Model.Error) -> Unit)")
-    )
-    internal fun connect(
-        connect: Modal.Params.Connect,
-        onSuccess: () -> Unit,
-        onError: (Modal.Model.Error) -> Unit
-    ) {
-        SignClient.connect(
-            connect.toSign(),
-            onSuccess
-        ) { onError(it.toModal()) }
-    }
-
     fun connect(
         connect: Modal.Params.Connect,
         onSuccess: (String) -> Unit,
@@ -219,23 +204,6 @@ object AppKit {
         }
     }
 
-    @Deprecated(
-        message = "Modal.Params.Request is deprecated",
-        replaceWith = ReplaceWith("com.reown.appkit.client.models.Request")
-    )
-    fun request(
-        request: Modal.Params.Request,
-        onSuccess: (Modal.Model.SentRequest) -> Unit = {},
-        onError: (Modal.Model.Error) -> Unit,
-    ) {
-        checkEngineInitialization()
-        appKitEngine.request(
-            request = Request(request.method, request.params, request.expiry),
-            onSuccess = { onSuccess(it.sentRequestToModal()) },
-            onError = { onError(it.toModalError()) }
-        )
-    }
-
     fun request(
         request: Request,
         onSuccess: (SentRequestResult) -> Unit = {},
@@ -261,26 +229,6 @@ object AppKit {
 
     fun ping(sessionPing: Modal.Listeners.SessionPing? = null) = appKitEngine.ping(sessionPing)
 
-    @Deprecated(
-        message = "This has become deprecate in favor of the parameterless disconnect function",
-        level = DeprecationLevel.WARNING
-    )
-    fun disconnect(
-        onSuccess: (Modal.Params.Disconnect) -> Unit = {},
-        onError: (Modal.Model.Error) -> Unit,
-    ) {
-        checkEngineInitialization()
-        val topic = when (val session = appKitEngine.getActiveSession()) {
-            is WalletConnect -> session.topic
-            else -> String.Empty
-        }
-
-        appKitEngine.disconnect(
-            onSuccess = { onSuccess(Modal.Params.Disconnect(topic)) },
-            onError = { onError(it.toModalError()) }
-        )
-    }
-
     fun disconnect(
         onSuccess: () -> Unit,
         onError: (Throwable) -> Unit,
@@ -294,32 +242,6 @@ object AppKit {
      * It is advised that this function be called from background operation
      */
     fun getSelectedChain() = selectedChain
-//    fun getSelectedChain() = getSelectedChainUseCase()?.toChain()
-
-    /**
-     * Caution: This function is blocking and runs on the current thread.
-     * It is advised that this function be called from background operation
-     */
-    @Deprecated(
-        message = "Getting active session is replaced with getAccount()",
-        replaceWith = ReplaceWith("com.reown.appkit.client.AppKit.getAccount()"),
-        level = DeprecationLevel.WARNING
-    )
-    internal fun getActiveSessionByTopic(topic: String) = SignClient.getActiveSessionByTopic(topic)?.toModal()
-
-    /**
-     * Caution: This function is blocking and runs on the current thread.
-     * It is advised that this function be called from background operation
-     */
-    @Deprecated(
-        message = "Getting active session is replaced with getAccount()",
-        replaceWith = ReplaceWith("com.reown.appkit.client.AppKit.getAccount()"),
-        level = DeprecationLevel.WARNING
-    )
-    fun getActiveSession(): Modal.Model.Session? {
-        checkEngineInitialization()
-        return (appKitEngine.getActiveSession() as? WalletConnect)?.topic?.let { SignClient.getActiveSessionByTopic(it)?.toModal() }
-    }
 
     /**
      * Caution: This function is blocking and runs on the current thread.
