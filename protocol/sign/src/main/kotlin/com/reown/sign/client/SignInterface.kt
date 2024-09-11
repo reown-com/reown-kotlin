@@ -54,16 +54,6 @@ interface SignInterface {
     fun initialize(init: Sign.Params.Init, onSuccess: () -> Unit = {}, onError: (Sign.Model.Error) -> Unit)
     fun setWalletDelegate(delegate: WalletDelegate)
     fun setDappDelegate(delegate: DappDelegate)
-
-    @Deprecated(
-        message = "Replaced with the same name method but onSuccess callback returns a Pairing URL",
-        replaceWith = ReplaceWith(expression = "fun connect(connect: Sign.Params.Connect, onSuccess: (String) -> Unit, onError: (Sign.Model.Error) -> Unit)")
-    )
-    fun connect(
-        connect: Sign.Params.Connect, onSuccess: () -> Unit,
-        onError: (Sign.Model.Error) -> Unit,
-    )
-
     fun connect(
         connect: Sign.Params.Connect, onSuccess: (String) -> Unit,
         onError: (Sign.Model.Error) -> Unit,
@@ -71,28 +61,11 @@ interface SignInterface {
 
     fun authenticate(authenticate: Sign.Params.Authenticate, walletAppLink: String? = null, onSuccess: (String) -> Unit, onError: (Sign.Model.Error) -> Unit)
     fun dispatchEnvelope(urlWithEnvelope: String, onError: (Sign.Model.Error) -> Unit)
-
-    @Deprecated(
-        message = "Creating a pairing will be moved to CoreClient to make pairing SDK agnostic",
-        replaceWith = ReplaceWith(expression = "CoreClient.Pairing.pair()", imports = ["com.reown.android.CoreClient"])
-    )
-    fun pair(pair: Sign.Params.Pair, onSuccess: (Sign.Params.Pair) -> Unit = {}, onError: (Sign.Model.Error) -> Unit)
     fun approveSession(approve: Sign.Params.Approve, onSuccess: (Sign.Params.Approve) -> Unit = {}, onError: (Sign.Model.Error) -> Unit)
     fun rejectSession(reject: Sign.Params.Reject, onSuccess: (Sign.Params.Reject) -> Unit = {}, onError: (Sign.Model.Error) -> Unit)
     fun approveAuthenticate(approve: Sign.Params.ApproveAuthenticate, onSuccess: (Sign.Params.ApproveAuthenticate) -> Unit, onError: (Sign.Model.Error) -> Unit)
     fun rejectAuthenticate(reject: Sign.Params.RejectAuthenticate, onSuccess: (Sign.Params.RejectAuthenticate) -> Unit, onError: (Sign.Model.Error) -> Unit)
     fun formatAuthMessage(formatMessage: Sign.Params.FormatMessage): String
-
-    @Deprecated(
-        message = "The onSuccess callback has been replaced with a new callback that returns Sign.Model.SentRequest",
-        replaceWith = ReplaceWith(expression = "this.request(request, onSuccessWithSentRequest, onError)", imports = ["com.reown.sign.client"])
-    )
-    fun request(
-        request: Sign.Params.Request,
-        onSuccess: (Sign.Params.Request) -> Unit = {},
-        onSuccessWithSentRequest: (Sign.Model.SentRequest) -> Unit = { it: Sign.Model.SentRequest -> Unit },
-        onError: (Sign.Model.Error) -> Unit,
-    )
 
     fun request(request: Sign.Params.Request, onSuccess: (Sign.Model.SentRequest) -> Unit = {}, onError: (Sign.Model.Error) -> Unit)
     fun respond(response: Sign.Params.Response, onSuccess: (Sign.Params.Response) -> Unit = {}, onError: (Sign.Model.Error) -> Unit)
@@ -114,46 +87,6 @@ interface SignInterface {
      * It is advised that this function be called from background operation
      */
     fun getActiveSessionByTopic(topic: String): Sign.Model.Session?
-
-    /**
-     * Caution: This function is blocking and runs on the current thread.
-     * It is advised that this function be called from background operation
-     */
-    @Deprecated(
-        message = "Getting a list of settled sessions is replaced with getListOfActiveSessions()",
-        replaceWith = ReplaceWith(expression = "SignClient.getListOfActiveSessions()")
-    )
-    fun getListOfSettledSessions(): List<Sign.Model.Session>
-
-    /**
-     * Caution: This function is blocking and runs on the current thread.
-     * It is advised that this function be called from background operation
-     */
-    @Deprecated(
-        message = "Getting a list of settled sessions by topic is replaced with getSettledSessionByTopic()",
-        replaceWith = ReplaceWith(expression = "SignClient.getSettledSessionByTopic()")
-    )
-    fun getSettledSessionByTopic(topic: String): Sign.Model.Session?
-
-    /**
-     * Caution: This function is blocking and runs on the current thread.
-     * It is advised that this function be called from background operation
-     */
-    @Deprecated(
-        message = "Getting a list of Pairings will be moved to CoreClient to make pairing SDK agnostic",
-        replaceWith = ReplaceWith(expression = "CoreClient.Pairing.getPairings()")
-    )
-    fun getListOfSettledPairings(): List<Sign.Model.Pairing>
-
-    /**
-     * Caution: This function is blocking and runs on the current thread.
-     * It is advised that this function be called from background operation
-     */
-    @Deprecated(
-        "The return type of getPendingRequests methods has been replaced with SessionRequest list",
-        replaceWith = ReplaceWith("getPendingSessionRequests(topic: String): List<Sign.Model.SessionRequest>")
-    )
-    fun getPendingRequests(topic: String): List<Sign.Model.PendingRequest>
 
     /**
      * Caution: This function is blocking and runs on the current thread.

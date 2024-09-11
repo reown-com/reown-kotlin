@@ -173,27 +173,6 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
     }
 
     @Throws(IllegalStateException::class)
-    override fun pair(
-        pair: Sign.Params.Pair,
-        onSuccess: (Sign.Params.Pair) -> Unit,
-        onError: (Sign.Model.Error) -> Unit,
-    ) {
-        checkEngineInitialization()
-
-        scope.launch {
-            try {
-                signEngine.pair(
-                    uri = pair.uri,
-                    onSuccess = { onSuccess(pair) },
-                    onFailure = { throwable -> onError(Sign.Model.Error(throwable)) }
-                )
-            } catch (error: Exception) {
-                onError(Sign.Model.Error(error))
-            }
-        }
-    }
-
-    @Throws(IllegalStateException::class)
     override fun approveSession(approve: Sign.Params.Approve, onSuccess: (Sign.Params.Approve) -> Unit, onError: (Sign.Model.Error) -> Unit) {
         checkEngineInitialization()
 
@@ -425,23 +404,6 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
     }
 
     @Throws(IllegalStateException::class)
-    override fun getListOfSettledSessions(): List<Sign.Model.Session> {
-        checkEngineInitialization()
-        return runBlocking {
-            signEngine.getListOfSettledSessions().map(EngineDO.Session::toClientActiveSession)
-        }
-    }
-
-    @Throws(IllegalStateException::class)
-    override fun getSettledSessionByTopic(topic: String): Sign.Model.Session? {
-        checkEngineInitialization()
-        return runBlocking {
-            signEngine.getListOfSettledSessions().map(EngineDO.Session::toClientActiveSession)
-                .find { session -> session.topic == topic }
-        }
-    }
-
-    @Throws(IllegalStateException::class)
     override fun getPendingSessionRequests(topic: String): List<Sign.Model.SessionRequest> {
         checkEngineInitialization()
         return runBlocking { signEngine.getPendingSessionRequests(Topic(topic)).mapToPendingSessionRequests() }
@@ -469,79 +431,6 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
     override fun getListOfVerifyContexts(): List<Sign.Model.VerifyContext> {
         checkEngineInitialization()
         return runBlocking { signEngine.getListOfVerifyContexts().map { verifyContext -> verifyContext.toCore() } }
-    }
-
-    @Deprecated(
-        message = "Replaced with the same name method but onSuccess callback returns a Pairing URL",
-        replaceWith = ReplaceWith(expression = "fun connect(connect: Sign.Params.Connect, onSuccess: (String) -> Unit, onError: (Sign.Model.Error) -> Unit)")
-    )
-    @Throws(IllegalStateException::class)
-    override fun connect(
-        connect: Sign.Params.Connect,
-        onSuccess: () -> Unit,
-        onError: (Sign.Model.Error) -> Unit,
-    ) {
-        checkEngineInitialization()
-        scope.launch {
-            try {
-                signEngine.proposeSession(
-                    connect.namespaces?.toMapOfEngineNamespacesRequired(),
-                    connect.optionalNamespaces?.toMapOfEngineNamespacesOptional(),
-                    connect.properties,
-                    connect.pairing.toPairing(),
-                    onSuccess = { onSuccess() },
-                    onFailure = { error -> onError(Sign.Model.Error(error)) }
-                )
-            } catch (error: Exception) {
-                onError(Sign.Model.Error(error))
-            }
-        }
-    }
-
-    @Deprecated(
-        "The onSuccess callback has been replaced with a new callback that returns Sign.Model.SentRequest",
-        replaceWith = ReplaceWith("this.request(request, onSuccessWithSentRequest, onError)", "com.reown.sign.client")
-    )
-    @Throws(IllegalStateException::class)
-    override fun request(
-        request: Sign.Params.Request,
-        onSuccess: (Sign.Params.Request) -> Unit,
-        onSuccessWithSentRequest: (Sign.Model.SentRequest) -> Unit,
-        onError: (Sign.Model.Error) -> Unit,
-    ) {
-        checkEngineInitialization()
-
-        scope.launch {
-            try {
-                signEngine.sessionRequest(
-                    request = request.toEngineDORequest(),
-                    onSuccess = { onSuccess(request) },
-                    onFailure = { error -> onError(Sign.Model.Error(error)) }
-                )
-            } catch (error: Exception) {
-                onError(Sign.Model.Error(error))
-            }
-        }
-    }
-
-    @Deprecated(
-        "Getting a list of Pairings will be moved to CoreClient to make pairing SDK agnostic",
-        replaceWith = ReplaceWith("CoreClient.Pairing.getPairings()", "com.reown.android.CoreClient")
-    )
-    @Throws(IllegalStateException::class)
-    override fun getListOfSettledPairings(): List<Sign.Model.Pairing> {
-        checkEngineInitialization()
-        return runBlocking { signEngine.getListOfSettledPairings().map(EngineDO.PairingSettle::toClientSettledPairing) }
-    }
-
-    @Deprecated(
-        "The return type of getPendingRequests methods has been replaced with SessionRequest list",
-        replaceWith = ReplaceWith("getPendingSessionRequests(topic: String): List<Sign.Model.SessionRequest>")
-    )
-    @Throws(IllegalStateException::class)
-    override fun getPendingRequests(topic: String): List<Sign.Model.PendingRequest> {
-        checkEngineInitialization()
-        return runBlocking { signEngine.getPendingRequests(Topic(topic)).mapToPendingRequests() }
     }
 
 // TODO: Uncomment once reinit scope logic is added
