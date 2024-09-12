@@ -202,7 +202,7 @@ class WalletKitActivity : AppCompatActivity() {
             ) {
                 lifecycleScope.launch {
                     navigateWhenReady {
-                        navController.handleDeepLink(intent)
+                        web3walletViewModel.pair(intent.dataString.toString())
                     }
                 }
             }
@@ -286,6 +286,8 @@ class WalletKitActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+
+        println("kobe: WalletKitActivity.newIntent ${intent?.dataString}")
         handleAppLink(intent)
     }
 

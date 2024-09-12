@@ -109,7 +109,7 @@ fun Web3WalletNavGraph(
             composable(Route.GetStarted.path) {
                 GetStartedRoute(navController)
             }
-            composable(Route.Connections.path,) {
+            composable(Route.Connections.path) {
                 ConnectionsRoute(navController, connectionsViewModel, web3walletViewModel)
             }
             composable("${Route.ConnectionDetails.path}/{connectionId}", arguments = listOf(
@@ -156,7 +156,9 @@ fun Web3WalletNavGraph(
             dialog(Route.SessionAuthenticate.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 SessionAuthenticateRoute(navController, connectionsViewModel)
             }
-            dialog(Route.SessionRequest.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
+            dialog(
+                Route.SessionRequest.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
                 SessionRequestRoute(navController)
             }
             dialog(Route.PasteUri.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
