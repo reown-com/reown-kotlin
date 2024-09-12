@@ -39,7 +39,7 @@ private val SampleWalletDebug = Wallet(
     mobileLink = "kotlin-web3wallet://",
     playStore = null,
     webAppLink = null,
-    linkMode = "https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/wallet_debug",
+    linkMode = "https://dev.lab.web3modal.com/wallet_debug",
     true
 )
 
@@ -52,7 +52,7 @@ private val SampleWalletInternal = Wallet(
     mobileLink = "kotlin-web3wallet://",
     playStore = null,
     webAppLink = null,
-    linkMode = "https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/wallet_internal",
+    linkMode = "https://dev.lab.web3modal.com/wallet_internal",
     true
 )
 
@@ -65,7 +65,7 @@ private val SampleWalletRelease = Wallet(
     mobileLink = "kotlin-web3wallet://",
     playStore = null,
     webAppLink = null,
-    linkMode = "https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/wallet_release",
+    linkMode = "https://dev.lab.web3modal.com/wallet_release",
     true
 )
 

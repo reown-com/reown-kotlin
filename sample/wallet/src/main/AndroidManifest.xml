@@ -57,14 +57,14 @@
                     android:scheme="kotlin-web3wallet" />
             </intent-filter>
 
-            <intent-filter>
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app"
+                    android:host="dev.lab.web3modal.com"
                     android:pathPrefix="${pathPrefix}"
                     android:scheme="https" />
             </intent-filter>

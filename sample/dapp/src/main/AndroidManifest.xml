@@ -47,7 +47,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app"
+                    android:host="dev.lab.web3modal.com"
                     android:scheme="https"
                     android:pathPrefix="${pathPrefix}"/>
             </intent-filter>

@@ -271,9 +271,9 @@ private fun ChainSelectionScreen(
                 text = "1-CA Link Mode (Kotlin Sample Wallet)",
                 onClick = {
                     val applink = when {
-                        context.packageManager.isPackageInstalled(SAMPLE_WALLET_DEBUG_PACKAGE) -> "https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/wallet_debug"
-                        context.packageManager.isPackageInstalled(SAMPLE_WALLET_INTERNAL_PACKAGE) -> "https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/wallet_internal"
-                        context.packageManager.isPackageInstalled(SAMPLE_WALLET_RELEASE_PACKAGE) -> "https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/wallet_release"
+                        context.packageManager.isPackageInstalled(SAMPLE_WALLET_DEBUG_PACKAGE) -> "https://dev.lab.web3modal.com/wallet_debug"
+                        context.packageManager.isPackageInstalled(SAMPLE_WALLET_INTERNAL_PACKAGE) -> "https://dev.lab.web3modal.com/wallet_internal"
+                        context.packageManager.isPackageInstalled(SAMPLE_WALLET_RELEASE_PACKAGE) -> "https://dev.lab.web3modal.com/wallet_release"
                         else -> ""
                     }
                     onAuthenticateLinkMode(applink)
