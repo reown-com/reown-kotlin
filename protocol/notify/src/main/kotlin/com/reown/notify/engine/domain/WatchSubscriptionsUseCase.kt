@@ -35,7 +35,7 @@ internal class WatchSubscriptionsUseCase(
         val selfPublicKey = getSelfKeyForWatchSubscriptionUseCase(requestTopic, accountId)
         val responseTopic = keyManagementRepository.generateTopicFromKeyAgreement(selfPublicKey, peerPublicKey)
 
-        jsonRpcInteractor.subscribe(responseTopic) { error -> onFailure(error) }
+//        jsonRpcInteractor.subscribe(responseTopic) { error -> onFailure(error) }
 
         val account = registeredAccountsRepository.getAccountByAccountId(accountId.value)
         val didJwt = fetchDidJwtInteractor.watchSubscriptionsRequest(accountId, authenticationPublicKey, account.appDomain)
@@ -46,14 +46,14 @@ internal class WatchSubscriptionsUseCase(
         val request = NotifyRpc.NotifyWatchSubscriptions(params = watchSubscriptionsParams)
         val irnParams = IrnParams(Tags.NOTIFY_WATCH_SUBSCRIPTIONS, Ttl(thirtySeconds))
 
-        jsonRpcInteractor.publishJsonRpcRequest(
-            topic = requestTopic,
-            params = irnParams,
-            payload = request,
-            envelopeType = EnvelopeType.ONE,
-            participants = Participants(selfPublicKey, peerPublicKey),
-            onSuccess = onSuccess,
-            onFailure = onFailure
-        )
+//        jsonRpcInteractor.publishJsonRpcRequest(
+//            topic = requestTopic,
+//            params = irnParams,
+//            payload = request,
+//            envelopeType = EnvelopeType.ONE,
+//            participants = Participants(selfPublicKey, peerPublicKey),
+//            onSuccess = onSuccess,
+//            onFailure = onFailure
+//        )
     }
 }

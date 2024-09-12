@@ -45,7 +45,7 @@ internal class RejectSessionUseCase(
                 scope.launch {
                     proposalStorageRepository.deleteProposal(proposerPublicKey)
                     verifyContextStorageRepository.delete(proposal.requestId)
-                    pairingController.deleteAndUnsubscribePairing(Core.Params.Delete(proposal.pairingTopic.value))
+                    jsonRpcInteractor.unsubscribe(proposal.pairingTopic)
                 }
                 onSuccess()
             },

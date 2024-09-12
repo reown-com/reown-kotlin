@@ -35,27 +35,38 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <intent-filter android:autoVerify="true">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="wc"
+                    android:scheme="kotlin-web3wallet" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="request"
+                    android:scheme="kotlin-web3wallet" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
                     android:host="web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app"
-                    android:scheme="https"
-                    android:pathPrefix="${pathPrefix}"/>
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-
-                <data
-                    android:host="wc"
-                    android:scheme="kotlin-web3wallet" />
-                <data
-                    android:host="request"
-                    android:scheme="kotlin-web3wallet" />
+                    android:pathPrefix="${pathPrefix}"
+                    android:scheme="https" />
             </intent-filter>
 
             <meta-data

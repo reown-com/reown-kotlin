@@ -95,7 +95,6 @@ class Web3WalletViewModel : ViewModel() {
                 viewModelScope.launch {
                     _eventsSharedFlow.emit(PairingEvent.ProposalExpired("Proposal expired, please pair again"))
                 }
-
             }
 
             is Wallet.Model.ExpiredRequest -> SignEvent.ExpiredRequest
@@ -124,6 +123,16 @@ class Web3WalletViewModel : ViewModel() {
             is Wallet.Model.SessionProposal -> {
                 _isLoadingFlow.value = false
                 SignEvent.SessionProposal
+            }
+            is Wallet.Model.Error -> {
+                if (wcEvent.throwable.message?.contains("No proposal or pending session authenticate request for pairing topic") == true){
+                    viewModelScope.launch {
+                        _isLoadingFlow.value = false
+                        _eventsSharedFlow.emit(PairingEvent.ProposalExpired("No proposal or pending session authenticate request for pairing topic: Proposal already consumed"))
+                    }
+                } else {
+                    println(wcEvent.throwable)
+                }
             }
 
             else -> NoAction

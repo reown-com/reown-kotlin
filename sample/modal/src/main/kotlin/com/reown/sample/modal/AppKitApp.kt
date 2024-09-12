@@ -22,7 +22,7 @@ class AppKitApp : Application() {
         super.onCreate()
 
         val appMetaData = Core.Model.AppMetaData(
-            name = "reown Modals",
+            name = "AppKit Lab Sample",
             description = "Kotlin AppKit Lab Sample",
             url = "https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app",
             icons = listOf("https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media"),

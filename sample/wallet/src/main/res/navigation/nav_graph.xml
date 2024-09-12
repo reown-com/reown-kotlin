@@ -8,17 +8,17 @@
         android:id="@+id/web3walletActivity"
         android:name="com.reown.sample.wallet.ui.WalletKitActivity"
         android:fitsSystemWindows="true"
-        android:label="Web3WalletActivity" />
+        android:label="WalletKitActivity" />
 
-    <deepLink
-        app:action="android.intent.action.VIEW"
-        app:uri="kotlin-web3wallet:/wc" />
+<!--    <deepLink-->
+<!--        app:action="android.intent.action.VIEW"-->
+<!--        app:uri="kotlin-web3wallet:/wc" />-->
 
     <deepLink
         app:action="android.intent.action.VIEW"
         app:uri="wc:/{topic}@2" />
 
-    <deepLink
-        app:action="android.intent.action.VIEW"
-        app:uri="kotlin-web3wallet://request" />
+<!--    <deepLink-->
+<!--        app:action="android.intent.action.VIEW"-->
+<!--        app:uri="kotlin-web3wallet://request" />-->
 </navigation>

@@ -44,7 +44,7 @@ fun DappSampleNavGraph(
             composable(Route.ChainSelection.path) {
                 ChainSelectionRoute(navController)
             }
-            composable(Route.Session.path, deepLinks = listOf(NavDeepLink("kotlin-dapp-wc://request"))) {
+            composable(Route.Session.path) {
                 SessionRoute(navController)
             }
             composable(
@@ -58,7 +58,7 @@ fun DappSampleNavGraph(
     }
 }
 
-const val accountArg= "accountArg"
+const val accountArg = "accountArg"
 fun NavController.navigateToAccount(selectedAccount: String) {
     navigate(Route.Account.path + "/$selectedAccount")
 }

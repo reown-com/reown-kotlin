@@ -259,7 +259,7 @@ private fun ChainSelectionScreen(
                 onChainClick,
             )
             BlueButton(
-                text = "Connect via WalletConnect Modal",
+                text = "Connect via AppKit",
                 onClick = onConnectClick,
                 modifier = Modifier
                     .padding(vertical = 10.dp)

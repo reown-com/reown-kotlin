@@ -30,13 +30,4 @@ fun initBeagle(app: Application, header: HeaderModule, vararg modules: Module<*>
             networkLogBehavior = Behavior.NetworkLogBehavior(networkLoggers = listOf(BeagleOkHttpLogger))
         )
     )
-    Beagle.set(
-        header,
-        ScreenCaptureToolboxModule(),
-        DividerModule(),
-        TextModule("Logs", TextModule.Type.SECTION_HEADER),
-        NetworkLogListModule(),
-        LogListModule(),
-        *modules
-    )
 }

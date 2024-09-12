@@ -6,6 +6,8 @@
 
 package com.reown.sample.wallet.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -27,11 +29,30 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.pandulapeter.beagle.Beagle
+import com.pandulapeter.beagle.modules.DividerModule
+import com.pandulapeter.beagle.modules.HeaderModule
+import com.pandulapeter.beagle.modules.LogListModule
+import com.pandulapeter.beagle.modules.NetworkLogListModule
+import com.pandulapeter.beagle.modules.PaddingModule
+import com.pandulapeter.beagle.modules.ScreenCaptureToolboxModule
+import com.pandulapeter.beagle.modules.TextInputModule
+import com.pandulapeter.beagle.modules.TextModule
+import com.reown.android.CoreClient
+import com.reown.android.cacao.signature.SignatureType
+import com.reown.android.utils.cacao.sign
+import com.reown.notify.client.Notify
+import com.reown.notify.client.NotifyClient
+import com.reown.notify.client.cacao.CacaoSigner
 import com.reown.sample.common.ui.theme.WCSampleAppTheme
+import com.reown.sample.wallet.BuildConfig
+import com.reown.sample.wallet.R
+import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
+import com.reown.util.hexToBytes
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -56,12 +77,13 @@ class WalletKitActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
         askNotificationPermission()
         handleErrors()
         handleAppLink(intent)
+        registerAccount()
+        setBeagle()
     }
 
     private fun setContent(
@@ -139,7 +161,7 @@ class WalletKitActivity : AppCompatActivity() {
 
     private suspend fun navigateWhenReady(navigate: () -> Unit) {
         if (!::navController.isInitialized) {
-            delay(300)
+            delay(400)
             navigate()
         } else {
             navigate()
@@ -187,9 +209,83 @@ class WalletKitActivity : AppCompatActivity() {
         }
     }
 
+    private fun setBeagle() {
+        Beagle.set(
+            HeaderModule(
+                title = getString(R.string.app_name),
+                subtitle = BuildConfig.APPLICATION_ID,
+                text = "${BuildConfig.BUILD_TYPE} v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+            ),
+            ScreenCaptureToolboxModule(),
+            DividerModule(),
+            TextModule("Logs", TextModule.Type.SECTION_HEADER),
+            NetworkLogListModule(),
+            LogListModule(),
+            DividerModule(),
+            TextModule(text = EthAccountDelegate.ethAddress) {
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Account", EthAccountDelegate.ethAddress))
+            },
+            PaddingModule(size = PaddingModule.Size.LARGE),
+            TextModule(text = EthAccountDelegate.privateKey) {
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Private Key", EthAccountDelegate.privateKey))
+            },
+            PaddingModule(size = PaddingModule.Size.LARGE),
+            TextModule(text = CoreClient.Push.clientId, id = CoreClient.Push.clientId) {
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("ClientId", CoreClient.Push.clientId))
+            },
+            DividerModule(),
+            TextInputModule(
+                text = "Import Private Key",
+                areRealTimeUpdatesEnabled = false,
+                validator = { text ->
+                    !text.startsWith("0x") && text.length == 64
+                },
+                onValueChanged = { text ->
+                    NotifyClient.unregister(
+                        params = Notify.Params.Unregister(
+                            EthAccountDelegate.ethAddress,
+                        ),
+                        onSuccess = {
+                            println("Unregister Success")
+                            EthAccountDelegate.privateKey = text
+                            registerAccount()
+                        },
+                        onError = { println(it.throwable.stackTraceToString()) }
+                    )
+                }
+            )
+        )
+    }
+
+    private fun registerAccount() {
+        val account = EthAccountDelegate.ethAddress
+        val domain = BuildConfig.APPLICATION_ID
+        val isRegistered = NotifyClient.isRegistered(params = Notify.Params.IsRegistered(account = account, domain = domain))
+
+        if (!isRegistered) {
+            NotifyClient.prepareRegistration(
+                params = Notify.Params.PrepareRegistration(account = account, domain = domain),
+                onSuccess = { cacaoPayloadWithIdentityPrivateKey, message ->
+                    println("PrepareRegistration Success: $cacaoPayloadWithIdentityPrivateKey")
+
+                    val signature = CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191)
+
+                    NotifyClient.register(
+                        params = Notify.Params.Register(cacaoPayloadWithIdentityPrivateKey = cacaoPayloadWithIdentityPrivateKey, signature = signature),
+                        onSuccess = { println("Register Success") },
+                        onError = { println(it.throwable.stackTraceToString()) }
+                    )
+
+                },
+                onError = { println(it.throwable.stackTraceToString()) }
+            )
+        } else {
+            println("$account is already registered")
+        }
+    }
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-
         handleAppLink(intent)
     }
 
