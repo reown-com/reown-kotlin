@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavDeepLink
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -44,7 +43,7 @@ fun DappSampleNavGraph(
             composable(Route.ChainSelection.path) {
                 ChainSelectionRoute(navController)
             }
-            composable(Route.Session.path, deepLinks = listOf(NavDeepLink("kotlin-dapp-wc://request"))) {
+            composable(Route.Session.path) {
                 SessionRoute(navController)
             }
             composable(
@@ -58,7 +57,7 @@ fun DappSampleNavGraph(
     }
 }
 
-const val accountArg= "accountArg"
+const val accountArg = "accountArg"
 fun NavController.navigateToAccount(selectedAccount: String) {
     navigate(Route.Account.path + "/$selectedAccount")
 }

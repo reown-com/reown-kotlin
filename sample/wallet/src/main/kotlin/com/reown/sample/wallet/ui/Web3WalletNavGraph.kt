@@ -109,10 +109,7 @@ fun Web3WalletNavGraph(
             composable(Route.GetStarted.path) {
                 GetStartedRoute(navController)
             }
-            composable(
-                Route.Connections.path,
-                deepLinks = listOf(NavDeepLink("kotlin-web3wallet://wc"))
-            ) {
+            composable(Route.Connections.path) {
                 ConnectionsRoute(navController, connectionsViewModel, web3walletViewModel)
             }
             composable("${Route.ConnectionDetails.path}/{connectionId}", arguments = listOf(
@@ -139,7 +136,9 @@ fun Web3WalletNavGraph(
             bottomSheet(Route.ScanUri.path) {
                 web3walletViewModel.showLoader(false)
                 scrimColor = Color.Unspecified
-                ScanUriRoute(navController, sheetState, onScanSuccess = { web3walletViewModel.pair(it) })
+                ScanUriRoute(navController, sheetState, onScanSuccess = {
+                    web3walletViewModel.pair(it)
+                })
             }
             bottomSheet(
                 "${Route.UpdateSubscription.path}/{topic}", arguments = listOf(
@@ -157,7 +156,9 @@ fun Web3WalletNavGraph(
             dialog(Route.SessionAuthenticate.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 SessionAuthenticateRoute(navController, connectionsViewModel)
             }
-            dialog(Route.SessionRequest.path, deepLinks = listOf(NavDeepLink("kotlin-web3wallet://request")), dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
+            dialog(
+                Route.SessionRequest.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
                 SessionRequestRoute(navController)
             }
             dialog(Route.PasteUri.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {

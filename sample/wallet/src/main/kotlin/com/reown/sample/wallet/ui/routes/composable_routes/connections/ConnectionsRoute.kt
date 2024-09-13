@@ -50,15 +50,6 @@ import com.reown.sample.wallet.ui.routes.Route
 
 @Composable
 fun ConnectionsRoute(navController: NavController, connectionsViewModel: ConnectionsViewModel, web3WalletViewModel: Web3WalletViewModel) {
-    val context = LocalContext.current
-    val activity = context.findActivity()
-
-    activity?.intent.takeIf { intent -> intent?.action == Intent.ACTION_VIEW && !intent.dataString.isNullOrBlank() }?.let { intent ->
-        if (intent.dataString?.startsWith("kotlin-web3wallet://wc?uri=wc") == true) {
-            web3WalletViewModel.pair(intent.dataString.toString())
-        }
-        intent.data = null
-    }
     connectionsViewModel.refreshConnections()
     val connections by connectionsViewModel.connections.collectAsState(initial = emptyList())
 
