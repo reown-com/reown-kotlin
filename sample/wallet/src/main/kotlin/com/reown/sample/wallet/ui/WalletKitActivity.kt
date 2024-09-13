@@ -287,7 +287,6 @@ class WalletKitActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-        println("kobe: WalletKitActivity.newIntent ${intent?.dataString}")
         handleAppLink(intent)
     }
 

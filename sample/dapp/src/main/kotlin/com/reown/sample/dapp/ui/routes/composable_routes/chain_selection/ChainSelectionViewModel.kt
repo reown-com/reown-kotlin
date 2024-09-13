@@ -10,8 +10,6 @@ import com.reown.sample.common.Chains
 import com.reown.sample.common.tag
 import com.reown.sample.dapp.domain.DappDelegate
 import com.reown.sample.dapp.ui.DappSampleEvents
-import com.reown.sign.client.Sign
-import com.reown.sign.client.SignClient
 import com.reown.util.bytesToHex
 import com.reown.util.randomBytes
 import com.reown.appkit.client.AppKit
@@ -72,12 +70,12 @@ class ChainSelectionViewModel : ViewModel() {
         }
     }
 
-    fun authenticate(authenticateParams: Sign.Params.Authenticate, appLink: String = "", onAuthenticateSuccess: (String?) -> Unit, onError: (String) -> Unit = {}) {
+    fun authenticate(authenticateParams: Modal.Params.Authenticate, appLink: String = "", onAuthenticateSuccess: (String?) -> Unit, onError: (String) -> Unit = {}) {
         viewModelScope.launch {
             _awaitingProposalSharedFlow.emit(true)
         }
 
-        SignClient.authenticate(authenticateParams, walletAppLink = appLink,
+        AppKit.authenticate(authenticateParams, walletAppLink = appLink,
             onSuccess = { url ->
                 viewModelScope.launch {
                     _awaitingProposalSharedFlow.emit(false)
@@ -190,7 +188,7 @@ class ChainSelectionViewModel : ViewModel() {
 
 
     val authenticateParams
-        get() = Sign.Params.Authenticate(
+        get() = Modal.Params.Authenticate(
             chains = uiState.value.filter { it.isSelected }.map { it.chainId },
             domain = "sample.kotlin.dapp",
             uri = "https://web3inbox.com/all-apps",
@@ -208,7 +206,7 @@ class ChainSelectionViewModel : ViewModel() {
         )
 
     val siweParams
-        get() = Sign.Params.Authenticate(
+        get() = Modal.Params.Authenticate(
             chains = uiState.value.filter { it.isSelected }.map { it.chainId },
             domain = "sample.kotlin.dapp",
             uri = "https://web3inbox.com/all-apps",

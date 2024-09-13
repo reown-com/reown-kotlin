@@ -82,7 +82,11 @@ fun SessionRoute(
                 is DappSampleEvents.PingLoading -> isPingLoading = true
                 is DappSampleEvents.Disconnect -> {
                     isDisconnectLoading = false
-                    navController.popBackStack(Route.ChainSelection.path, inclusive = false)
+                    navController.navigate(Route.ChainSelection.path) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                    }
                     Toast.makeText(context, "Disconnected successfully", Toast.LENGTH_SHORT).show()
                 }
 
@@ -99,7 +103,6 @@ fun SessionRoute(
 
     SessionScreen(
         uiState = state,
-        onBackPressed = navController::popBackStack,
         onSessionClick = navController::navigateToAccount,
         onPingClick = viewModel::ping,
         onDisconnectClick = viewModel::disconnect,
@@ -111,7 +114,6 @@ fun SessionRoute(
 @Composable
 private fun SessionScreen(
     uiState: List<SessionUi>,
-    onBackPressed: () -> Unit,
     onSessionClick: (String) -> Unit,
     onPingClick: () -> Unit,
     onDisconnectClick: () -> Unit,
@@ -119,10 +121,7 @@ private fun SessionScreen(
     isPingLoading: Boolean,
 ) {
     Column {
-        WCTopAppBarLegacy(
-            titleText = "Session Chains",
-            onBackIconClick = onBackPressed,
-        )
+        WCTopAppBarLegacy(titleText = "Session Chains",)
         ChainsAction(onPingClick, onDisconnectClick, isDisconnectLoading, isPingLoading)
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item {
