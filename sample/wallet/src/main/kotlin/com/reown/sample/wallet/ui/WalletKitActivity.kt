@@ -148,7 +148,11 @@ class WalletKitActivity : AppCompatActivity() {
 
                     is SignEvent.Disconnect -> {
                         connectionsViewModel.refreshConnections()
-                        if (navController.currentDestination?.route != Route.Connections.path) {
+
+                        if (navController.currentDestination?.route != Route.Connections.path &&
+                            navController.currentDestination?.route != Route.SessionProposal.path &&
+                            navController.currentDestination?.route != Route.SessionAuthenticate.path
+                        ) {
                             navController.navigate(Route.Connections.path)
                         }
                     }
@@ -287,7 +291,6 @@ class WalletKitActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
-        println("kobe: WalletKitActivity.newIntent ${intent?.dataString}")
         handleAppLink(intent)
     }
 

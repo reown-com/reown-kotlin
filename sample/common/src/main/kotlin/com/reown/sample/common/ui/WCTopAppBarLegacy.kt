@@ -48,22 +48,12 @@ fun WCTopAppBarLegacy(
     ),
     @DrawableRes icon: Int? = null,
     onIconClick: (() -> Unit)? = null,
-    onBackIconClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Spacer(modifier = Modifier.width(8.dp))
-        onBackIconClick?.let {
-            Icon(
-                tint = Color(0xFF3496ff),
-                imageVector = ImageVector.vectorResource(id = R.drawable.chevron_left),
-                contentDescription = "BackArrow",
-                modifier = Modifier.clickable { onBackIconClick() }
-            )
-            Spacer(modifier = Modifier.width(32.dp))
-        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()

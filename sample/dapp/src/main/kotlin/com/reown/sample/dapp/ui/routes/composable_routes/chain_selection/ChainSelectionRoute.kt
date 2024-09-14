@@ -464,7 +464,12 @@ private fun handleSignEvents(
             when (event) {
                 DappSampleEvents.SessionApproved -> {
                     viewModel.awaitingProposalResponse(false)
-                    navController.navigate(Route.Session.path)
+                    navController.navigate(Route.Session.path) {
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
                 }
 
                 DappSampleEvents.SessionRejected -> {
@@ -482,7 +487,12 @@ private fun handleSignEvents(
                     if (event.message != null) {
                         Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                     } else {
-                        navController.navigate(Route.Session.path)
+                        navController.navigate(Route.Session.path) {
+                            popUpTo(0) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
                     }
                 }
 

@@ -63,7 +63,12 @@ fun AccountRoute(navController: NavController) {
                     Toast.makeText(context, "Error: ${event.exceptionMsg}", Toast.LENGTH_LONG).show()
                 }
 
-                is DappSampleEvents.Disconnect -> navController.popBackStack(Route.ChainSelection.path, false)
+                is DappSampleEvents.Disconnect -> navController.navigate(Route.ChainSelection.path) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true
+                    }
+                }
+
                 else -> Unit
             }
         }

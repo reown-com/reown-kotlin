@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.reown.appkit.client.AppKit
 import com.reown.sample.dapp.R
 import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sample.dapp.ui.DappSampleNavGraph
@@ -48,15 +49,22 @@ fun DappSampleHost() {
         initialValue = ModalBottomSheetValue.Hidden,
         skipHalfExpanded = true
     )
+
     val bottomSheetNavigator = BottomSheetNavigator(sheetState)
     val navController = rememberNavController(bottomSheetNavigator)
     val viewModel: DappSampleViewModel = viewModel()
+    val isConnected = AppKit.getAccount() != null
+    val startDestination = if (isConnected) Route.Session.path else Route.ChainSelection.path
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is DappSampleEvents.ConnectionEvent -> isOfflineState = !event.isAvailable
-                is DappSampleEvents.Disconnect -> navController.navigate(Route.ChainSelection.path)
+                is DappSampleEvents.Disconnect -> navController.navigate(Route.ChainSelection.path) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true
+                    }
+                }
                 is DappSampleEvents.RequestError -> scaffoldState.snackbarHostState.showSnackbar(event.exceptionMsg)
                 is DappSampleEvents.SessionExtend -> scaffoldState.snackbarHostState.showSnackbar("Session extended")
                 else -> Unit
@@ -71,7 +79,7 @@ fun DappSampleHost() {
             DappSampleNavGraph(
                 bottomSheetNavigator = bottomSheetNavigator,
                 navController = navController,
-                startDestination = Route.ChainSelection.path,
+                startDestination = startDestination,
             )
 
             if (isOfflineState != null) {

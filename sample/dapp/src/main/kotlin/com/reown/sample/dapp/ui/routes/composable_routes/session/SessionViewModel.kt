@@ -89,28 +89,26 @@ class SessionViewModel : ViewModel() {
     }
 
     fun disconnect() {
-        if (DappDelegate.selectedSessionTopic != null) {
-            try {
-                viewModelScope.launch { _sessionEvents.emit(DappSampleEvents.DisconnectLoading) }
-                AppKit.disconnect(
-                    onSuccess = {
-                        DappDelegate.deselectAccountDetails()
-                        viewModelScope.launch {
-                            _sessionEvents.emit(DappSampleEvents.Disconnect)
-                        }
-                    },
-                    onError = { throwable: Throwable ->
-                        Timber.tag(tag(this)).e(throwable.stackTraceToString())
-                        Firebase.crashlytics.recordException(throwable)
-                        viewModelScope.launch {
-                            _sessionEvents.emit(DappSampleEvents.DisconnectError(throwable.message ?: "Unknown error, please try again or contact support"))
-                        }
-                    })
+        try {
+            viewModelScope.launch { _sessionEvents.emit(DappSampleEvents.DisconnectLoading) }
+            AppKit.disconnect(
+                onSuccess = {
+                    DappDelegate.deselectAccountDetails()
+                    viewModelScope.launch {
+                        _sessionEvents.emit(DappSampleEvents.Disconnect)
+                    }
+                },
+                onError = { throwable: Throwable ->
+                    Timber.tag(tag(this)).e(throwable.stackTraceToString())
+                    Firebase.crashlytics.recordException(throwable)
+                    viewModelScope.launch {
+                        _sessionEvents.emit(DappSampleEvents.DisconnectError(throwable.message ?: "Unknown error, please try again or contact support"))
+                    }
+                })
 
-            } catch (e: Exception) {
-                viewModelScope.launch {
-                    _sessionEvents.emit(DappSampleEvents.DisconnectError(e.message ?: "Unknown error, please try again or contact support"))
-                }
+        } catch (e: Exception) {
+            viewModelScope.launch {
+                _sessionEvents.emit(DappSampleEvents.DisconnectError(e.message ?: "Unknown error, please try again or contact support"))
             }
         }
     }

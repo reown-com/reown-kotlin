@@ -98,14 +98,11 @@ dependencies {
 
     debugImplementation(project(":core:android"))
     debugImplementation(project(":product:appkit"))
-    debugImplementation(project(":protocol:sign"))
 
     internalImplementation(project(":core:android"))
     internalImplementation(project(":product:appkit"))
-    internalImplementation(project(":protocol:sign"))
 
     releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
     releaseImplementation("com.reown:android-core")
     releaseImplementation("com.reown:appkit")
-    releaseImplementation("com.reown:sign")
 }

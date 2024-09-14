@@ -10,9 +10,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.lifecycle.lifecycleScope
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.reown.appkit.client.AppKit
 import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.dapp.ui.routes.host.DappSampleHost
-import com.reown.sign.client.SignClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -20,14 +20,14 @@ class DappSampleActivity : ComponentActivity() {
     @ExperimentalMaterialNavigationApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent() {
+        setContent {
             WCSampleAppTheme {
                 DappSampleHost()
             }
         }
 
         if (intent?.dataString?.contains("wc_ev") == true) {
-            SignClient.dispatchEnvelope(intent.dataString ?: "") {
+            AppKit.handleDeepLink(intent.dataString ?: "") {
                 lifecycleScope.launch(Dispatchers.Main) {
                     Toast.makeText(this@DappSampleActivity, "Error dispatching envelope: ${it.throwable.message}", Toast.LENGTH_SHORT).show()
                 }
@@ -39,7 +39,7 @@ class DappSampleActivity : ComponentActivity() {
         super.onNewIntent(intent)
 
         if (intent?.dataString?.contains("wc_ev") == true) {
-            SignClient.dispatchEnvelope(intent.dataString ?: "") {
+            AppKit.handleDeepLink(intent.dataString ?: "") {
                 lifecycleScope.launch(Dispatchers.Main) {
                     Toast.makeText(this@DappSampleActivity, "Error dispatching envelope: ${it.throwable.message}", Toast.LENGTH_SHORT).show()
                 }
