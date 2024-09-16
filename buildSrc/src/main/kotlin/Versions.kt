@@ -5,7 +5,6 @@ const val KEY_PUBLISH_ARTIFACT_ID = "PUBLISH_ARTIFACT_ID"
 const val KEY_SDK_NAME = "SDK_NAME"
 
 //Latest versions
-//TODO: should reset all versions? or only wallet and app kits
 const val BOM_VERSION = "1.0.0"
 const val FOUNDATION_VERSION = "1.0.0"
 const val CORE_VERSION = "1.0.0"

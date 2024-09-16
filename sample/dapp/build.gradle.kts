@@ -78,6 +78,7 @@ dependencies {
 
     implementation("io.insert-koin:koin-androidx-compose:3.4.3")
     implementation("io.coil-kt:coil-compose:2.3.0")
+    implementation("androidx.compose.material:material-icons-core:1.7.1")
 
     implementation(libs.qrCodeGenerator)
     implementation(platform(libs.androidx.compose.bom))

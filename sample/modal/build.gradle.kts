@@ -69,6 +69,7 @@ android {
 
 dependencies {
     implementation(project(":sample:common"))
+    implementation("androidx.compose.material:material-icons-core:1.7.1")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
