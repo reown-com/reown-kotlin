@@ -9,14 +9,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import com.reown.appkit.R
 import com.reown.appkit.ui.components.internal.commons.CopyIcon
 import com.reown.appkit.ui.components.internal.commons.HorizontalSpacer
 import com.reown.appkit.ui.components.internal.commons.button.ButtonSize
@@ -74,8 +75,8 @@ private fun ActionEntryPreview() {
     MultipleComponentsPreview(
         { ActionEntry(text = "Action without icon") {} },
         { ActionEntry(text = "Action without icon", isEnabled = false) {} },
-        { ActionEntry(icon = { Image(imageVector = Icons.Default.Done, contentDescription = null, colorFilter = ColorFilter.tint(it)) }, text = "Action with icon") {} },
-        { ActionEntry(isEnabled = false, icon = { Image(imageVector = Icons.Default.Done, contentDescription = null, colorFilter = ColorFilter.tint(it)) }, text = "Action with icon") {} },
+        { ActionEntry(icon = { Image(imageVector = ImageVector.vectorResource(R.drawable.ic_check), contentDescription = null, colorFilter = ColorFilter.tint(it)) }, text = "Action with icon") {} },
+        { ActionEntry(isEnabled = false, icon = { Image(imageVector = ImageVector.vectorResource(R.drawable.ic_check), contentDescription = null, colorFilter = ColorFilter.tint(it)) }, text = "Action with icon") {} },
     )
 }
 

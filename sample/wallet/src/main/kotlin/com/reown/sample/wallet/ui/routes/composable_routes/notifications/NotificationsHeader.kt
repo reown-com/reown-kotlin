@@ -64,7 +64,7 @@ fun NotificationsHeader(
                 modifier = Modifier
                     .width(20.dp)
                     .height(28.dp)
-                    .clickable(indication = rememberRipple(bounded = false, radius = 20.dp), interactionSource = remember { MutableInteractionSource() }, onClick = onBackIconClick)
+                    .clickable(onClick = onBackIconClick)
                     .padding(vertical = 8.dp),
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_chevron_left),
                 contentDescription = "Back arrow",

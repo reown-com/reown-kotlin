@@ -257,10 +257,7 @@ private fun ThemeModeIcon(
         modifier = Modifier
             .padding(12.dp)
             .size(20.dp)
-            .clickable(
-                indication = rememberRipple(bounded = false),
-                interactionSource = remember { MutableInteractionSource() },
-            ) { onClick(!isDarkTheme) }
+            .clickable { onClick(!isDarkTheme) }
     )
 }
 

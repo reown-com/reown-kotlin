@@ -54,7 +54,7 @@ fun NotificationsOptionsMenu(
         Icon(
             modifier = Modifier
                 .size(20.dp)
-                .clickable(indication = rememberRipple(bounded = false, radius = 20.dp), interactionSource = remember { MutableInteractionSource() }, onClick = onMoreIconClick),
+                .clickable(onClick = onMoreIconClick),
             painter = painterResource(id = R.drawable.ic_more),
             contentDescription = "More",
         )

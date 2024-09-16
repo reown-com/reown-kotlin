@@ -59,7 +59,7 @@ afterEvaluate {
                         developer {
                             id.set("KotlinSDKTeam")
                             name.set("Reown Kotlin")
-                            email.set("Kotlin@WalletConnect.com")
+                            email.set("mobile@reown.com ")
                         }
                     }
 

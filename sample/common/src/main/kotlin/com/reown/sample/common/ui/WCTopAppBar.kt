@@ -45,7 +45,7 @@ fun WCTopAppBar(
             Image(
                 modifier = Modifier
                     .size(24.dp)
-                    .clickable(indication = rememberRipple(bounded = false, radius = 24.dp), interactionSource = remember { MutableInteractionSource() }, onClick = actionImage.onClick),
+                    .clickable(onClick = actionImage.onClick),
                 painter = painterResource(id = actionImage.resource),
                 contentDescription = null,
             )

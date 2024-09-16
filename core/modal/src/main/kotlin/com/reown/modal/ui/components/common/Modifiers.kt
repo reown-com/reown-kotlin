@@ -17,7 +17,5 @@ fun Modifier.roundedClickable(
     onClick: () -> Unit
 ) = composed { clickable(
     enabled = enabled,
-    indication = rememberRipple(bounded = bounded, radius = radius),
-    interactionSource = remember { MutableInteractionSource() },
     onClick = onClick
 ) }
