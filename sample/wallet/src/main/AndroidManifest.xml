@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name="com.walletconnect.sample.wallet.Web3WalletApplication"
+        android:name="com.reown.sample.wallet.WalletKitApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -21,11 +21,11 @@
         tools:replace="android:dataExtractionRules"
         tools:targetApi="31">
         <activity
-            android:name="com.walletconnect.sample.wallet.ui.Web3WalletActivity"
+            android:name="com.reown.sample.wallet.ui.WalletKitActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:taskAffinity="com.walletconnect.sample.wallet.activity"
+            android:taskAffinity="com.reown.sample.wallet.activity"
             android:theme="@style/Theme.Wallet"
             android:windowSoftInputMode="adjustResize">
             <nav-graph android:value="@navigation/nav_graph" />
@@ -35,27 +35,38 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <intent-filter android:autoVerify="true">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app"
-                    android:scheme="https"
-                    android:pathPrefix="${pathPrefix}"/>
+                    android:host="wc"
+                    android:scheme="kotlin-web3wallet" />
             </intent-filter>
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
 
-                <data
-                    android:host="wc"
-                    android:scheme="kotlin-web3wallet" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                     android:host="request"
                     android:scheme="kotlin-web3wallet" />
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="dev.lab.web3modal.com"
+                    android:pathPrefix="${pathPrefix}"
+                    android:scheme="https" />
             </intent-filter>
 
             <meta-data
@@ -64,7 +75,7 @@
         </activity>
 
         <service
-            android:name="com.walletconnect.sample.wallet.Web3WalletMessageService"
+            android:name="com.reown.sample.wallet.WalletKitMessageService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

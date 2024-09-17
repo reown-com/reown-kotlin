@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.walletconnect.sample.modal"
+    namespace = "com.reown.sample.modal"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
-        applicationId = "com.walletconnect.sample.modal"
+        applicationId = "com.reown.sample.modal"
         minSdk = MIN_SDK
         targetSdk = TARGET_SDK
         versionName = SAMPLE_VERSION_NAME
@@ -28,18 +28,18 @@ android {
     buildTypes {
         getByName("release") {
             manifestPlaceholders["pathPrefix"] = "/lab_release"
-            buildConfigField("String", "LAB_APP_LINK", "\"https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/lab_release\"")
+            buildConfigField("String", "LAB_APP_LINK", "\"https://dev.lab.web3modal.com/lab_release\"")
         }
 
         getByName("internal") {
             manifestPlaceholders["pathPrefix"] = "/lab_internal"
-            buildConfigField("String", "LAB_APP_LINK", "\"https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/lab_internal\"")
+            buildConfigField("String", "LAB_APP_LINK", "\"https://dev.lab.web3modal.com/lab_internal\"")
 
         }
 
         getByName("debug") {
             manifestPlaceholders["pathPrefix"] = "/lab_debug"
-            buildConfigField("String", "LAB_APP_LINK", "\"https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/lab_debug\"")
+            buildConfigField("String", "LAB_APP_LINK", "\"https://dev.lab.web3modal.com/lab_debug\"")
         }
     }
 
@@ -69,6 +69,7 @@ android {
 
 dependencies {
     implementation(project(":sample:common"))
+    implementation("androidx.compose.material:material-icons-core:1.7.1")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
@@ -90,12 +91,12 @@ dependencies {
     api(libs.bundles.androidxNavigation)
 
     debugImplementation(project(":core:android"))
-    debugImplementation(project(":product:web3modal"))
+    debugImplementation(project(":product:appkit"))
 
     internalImplementation(project(":core:android"))
-    internalImplementation(project(":product:web3modal"))
+    internalImplementation(project(":product:appkit"))
 
-    releaseImplementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))
-    releaseImplementation("com.walletconnect:android-core")
-    releaseImplementation("com.walletconnect:web3modal")
+    releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
+    releaseImplementation("com.reown:android-core")
+    releaseImplementation("com.reown:appkit")
 }

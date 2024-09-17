@@ -1,6 +1,6 @@
-# **WalletConnect Core - Android**
+# **Core - Android**
 
-Kotlin implementation of WalletConnect Core SDK for Android applications.
+Kotlin implementation of reown Core SDK for Android applications.
 
 ![Maven Central](https://img.shields.io/maven-central/v/com.walletconnect/android-core)
 
@@ -33,7 +33,7 @@ allprojects {
 app/build.gradle.kts
 
 ```gradle
-implementation("com.walletconnect:android-core:release_version")
+implementation("com.reown:android-core:release_version")
 ```
 
 ## Project ID

@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.walletconnect.sample.dapp"
+    namespace = "com.reown.sample.dapp"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
-        applicationId = "com.walletconnect.sample.dapp"
+        applicationId = "com.reown.sample.dapp"
         minSdk = MIN_SDK
         targetSdk = TARGET_SDK
         versionName = SAMPLE_VERSION_NAME
@@ -23,24 +23,24 @@ android {
             useSupportLibrary = true
         }
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
-        buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION ?: ""}\"")
+        buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
     }
 
     buildTypes {
         getByName("release") {
             manifestPlaceholders["pathPrefix"] = "/dapp_release"
-            buildConfigField("String", "DAPP_APP_LINK", "\"https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/dapp_release\"")
+            buildConfigField("String", "DAPP_APP_LINK", "\"https://dev.lab.web3modal.com/dapp_release\"")
         }
 
         getByName("internal") {
             manifestPlaceholders["pathPrefix"] = "/dapp_internal"
-            buildConfigField("String", "DAPP_APP_LINK", "\"https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/dapp_internal\"")
+            buildConfigField("String", "DAPP_APP_LINK", "\"https://dev.lab.web3modal.com/dapp_internal\"")
 
         }
 
         getByName("debug") {
             manifestPlaceholders["pathPrefix"] = "/dapp_debug"
-            buildConfigField("String", "DAPP_APP_LINK", "\"https://web3modal-laboratory-git-chore-kotlin-assetlinks-walletconnect1.vercel.app/dapp_debug\"")
+            buildConfigField("String", "DAPP_APP_LINK", "\"https://dev.lab.web3modal.com/dapp_debug\"")
         }
     }
 
@@ -78,8 +78,9 @@ dependencies {
 
     implementation("io.insert-koin:koin-androidx-compose:3.4.3")
     implementation("io.coil-kt:coil-compose:2.3.0")
-    implementation("androidmads.library.qrgenearator:QRGenearator:1.0.4")
+    implementation("androidx.compose.material:material-icons-core:1.7.1")
 
+    implementation(libs.qrCodeGenerator)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -97,15 +98,12 @@ dependencies {
     implementation(libs.bundles.firebase)
 
     debugImplementation(project(":core:android"))
-    debugImplementation(project(":product:walletconnectmodal"))
-    debugImplementation(project(":protocol:sign"))
+    debugImplementation(project(":product:appkit"))
 
     internalImplementation(project(":core:android"))
-    internalImplementation(project(":product:walletconnectmodal"))
-    internalImplementation(project(":protocol:sign"))
+    internalImplementation(project(":product:appkit"))
 
-    releaseImplementation(platform("com.walletconnect:android-bom:$BOM_VERSION"))
-    releaseImplementation("com.walletconnect:android-core")
-    releaseImplementation("com.walletconnect:walletconnect-modal")
-    releaseImplementation("com.walletconnect:sign")
+    releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
+    releaseImplementation("com.reown:android-core")
+    releaseImplementation("com.reown:appkit")
 }

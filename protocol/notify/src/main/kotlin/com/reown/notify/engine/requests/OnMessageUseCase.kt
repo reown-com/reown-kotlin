@@ -1,0 +1,100 @@
+@file:JvmSynthetic
+
+package com.reown.notify.engine.requests
+
+import com.reown.android.internal.common.jwt.did.extractVerifiedDidJwtClaims
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.model.IrnParams
+import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.Tags
+import com.reown.android.internal.common.model.WCRequest
+import com.reown.android.internal.common.model.params.ChatNotifyResponseAuthParams
+import com.reown.android.internal.common.model.params.CoreNotifyParams
+import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.utils.monthInSeconds
+import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.util.Logger
+import com.reown.foundation.util.jwt.decodeDidWeb
+import com.reown.foundation.util.jwt.decodeEd25519DidKey
+import com.reown.notify.common.convertToUTF8
+import com.reown.notify.common.model.Notification
+import com.reown.notify.common.model.NotificationMessage
+import com.reown.notify.data.jwt.message.MessageRequestJwtClaim
+import com.reown.notify.data.storage.NotificationsRepository
+import com.reown.notify.data.storage.SubscriptionRepository
+import com.reown.notify.engine.domain.FetchDidJwtInteractor
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.supervisorScope
+import java.net.URI
+
+internal class OnMessageUseCase(
+    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+    private val notificationsRepository: NotificationsRepository,
+    private val subscriptionRepository: SubscriptionRepository,
+    private val fetchDidJwtInteractor: FetchDidJwtInteractor,
+    private val metadataStorageRepository: MetadataStorageRepositoryInterface,
+    private val logger: Logger,
+) {
+    private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
+    val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
+
+    suspend operator fun invoke(request: WCRequest, params: CoreNotifyParams.MessageParams) = supervisorScope {
+        try {
+            val activeSubscription =
+                subscriptionRepository.getActiveSubscriptionByNotifyTopic(request.topic.value) ?: throw IllegalStateException("No active subscription for topic: ${request.topic.value}")
+
+            val metadata: AppMetaData = metadataStorageRepository.getByTopicAndType(activeSubscription.topic, AppMetaDataType.PEER)
+                ?: throw IllegalStateException("No metadata found for topic ${activeSubscription.topic}")
+
+            val messageJwt = extractVerifiedDidJwtClaims<MessageRequestJwtClaim>(params.messageAuth).getOrThrow()
+            messageJwt.throwIfIsInvalid(URI(metadata.url).host, activeSubscription.authenticationPublicKey.keyAsHex)
+
+            with(messageJwt.serverNotification) {
+                if (!notificationsRepository.doesNotificationsExistsByNotificationId(id)) {
+
+                    val notification = Notification(
+                        id = id, topic = request.topic.value, sentAt = sentAt, metadata = metadata,
+                        notificationMessage = NotificationMessage(title = convertToUTF8(title), body = convertToUTF8(body), icon = icon, url = url, type = type),
+                    )
+
+                    notificationsRepository.insertOrReplaceNotification(notification)
+                    _events.emit(notification)
+                } else {
+                    logger.log("OnMessageUseCase - notification already exists $id")
+                }
+            }
+
+            val messageResponseJwt =
+                fetchDidJwtInteractor.messageResponse(account = activeSubscription.account, app = metadata.url, authenticationKey = activeSubscription.authenticationPublicKey).getOrThrow()
+            val messageResponseParams = ChatNotifyResponseAuthParams.ResponseAuth(responseAuth = messageResponseJwt.value)
+            val irnParams = IrnParams(Tags.NOTIFY_MESSAGE_RESPONSE, Ttl(monthInSeconds))
+
+            jsonRpcInteractor.respondWithParams(request.id, request.topic, messageResponseParams, irnParams, onFailure = { error -> logger.error(error) })
+        } catch (e: Exception) {
+            logger.error(e)
+            _events.emit(SDKError(e))
+        }
+    }
+
+    private fun MessageRequestJwtClaim.throwIfIsInvalid(expectedApp: String, expectedIssuer: String) {
+        throwIfBaseIsInvalid()
+        throwIfAppIsInvalid(expectedApp)
+        throwIfIssuerIsInvalid(expectedIssuer)
+    }
+
+    private fun MessageRequestJwtClaim.throwIfAppIsInvalid(expectedAppDomain: String) {
+        val decodedAppDomain = decodeDidWeb(app)
+        if (decodedAppDomain != expectedAppDomain) throw IllegalStateException("Invalid app claim was $decodedAppDomain instead of $expectedAppDomain")
+    }
+
+
+    private fun MessageRequestJwtClaim.throwIfIssuerIsInvalid(expectedIssuerAsHex: String) {
+        val decodedIssuerAsHex = decodeEd25519DidKey(issuer).keyAsHex
+        if (decodedIssuerAsHex != expectedIssuerAsHex) throw IllegalStateException("Invalid issuer claim was $decodedIssuerAsHex instead of $expectedIssuerAsHex")
+    }
+}

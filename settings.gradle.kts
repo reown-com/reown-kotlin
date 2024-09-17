@@ -1,4 +1,4 @@
-rootProject.name = "WalletConnect Kotlin"
+rootProject.name = "Reown Kotlin"
 
 val excludedDirs = listOf(
     "undefined",

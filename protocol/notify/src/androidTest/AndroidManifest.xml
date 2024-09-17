@@ -7,7 +7,7 @@
 
     <application>
         <activity
-            android:name="com.walletconnect.notify.test.activity.InstrumentedTestActivity"
+            android:name="com.reown.notify.test.activity.InstrumentedTestActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

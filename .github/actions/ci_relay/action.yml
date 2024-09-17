@@ -33,6 +33,5 @@ runs:
       run: echo $SECRETS_PROPERTIES | base64 --decode > secrets.properties
 
     - name: Relay integration tests
-      # TODO: Add SDK_VERSION env var
       shell: bash
-      run: ./gradlew :foundation:test --tests "com.walletconnect.foundation.RelayTest" -i
+      run: ./gradlew :foundation:test --tests "com.reown.foundation.RelayTest" -i

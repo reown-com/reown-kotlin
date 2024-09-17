@@ -35,38 +35,40 @@ allprojects {
     }
 }
 
-sonar {
-    properties {
-        properties(
-            mapOf(
-                "sonar.projectKey" to "WalletConnect_WalletConnectKotlinV2",
-                "sonar.organization" to "walletconnect",
-                "sonar.host.url" to "https://sonarcloud.io",
-                "sonar.gradle.skipCompile" to true,
-                "sonar.coverage.exclusions" to "sample/**,**/di/**,/buildSrc/**,**/gradle/**,**/test/**,**/androidTest/**,**/build.gradle.kts",
-            )
-        )
-    }
-}
+////todo: user sonar cloud after repos are public
+//sonar {
+//    properties {
+//        properties(
+//            mapOf(
+//                "sonar.projectKey" to "WalletConnect_WalletConnectKotlinV2",
+//                "sonar.organization" to "walletconnect",
+//                "sonar.host.url" to "https://sonarcloud.io",
+//                "sonar.gradle.skipCompile" to true,
+//                "sonar.coverage.exclusions" to "sample/**,**/di/**,/buildSrc/**,**/gradle/**,**/test/**,**/androidTest/**,**/build.gradle.kts",
+//            )
+//        )
+//    }
+//}
 
 subprojects {
     apply(plugin = rootProject.libs.plugins.sonarqube.get().pluginId)
 
-    extensions.configure<SonarExtension> {
-        setAndroidVariant("debug")
-
-        isSkipProject = name == "bom"
-        properties {
-            properties(
-                mapOf(
-                    "sonar.gradle.skipCompile" to true,
-                    "sonar.sources" to "${projectDir}/src/main/kotlin",
-                    "sonar.java.binaries" to layout.buildDirectory,
-                    "sonar.coverage.jacoco.xmlReportPaths" to "${layout.buildDirectory}/reports/jacoco/xml/jacoco.xml"
-                )
-            )
-        }
-    }
+////todo: user sonar cloud after repos are public
+//    extensions.configure<SonarExtension> {
+//        setAndroidVariant("debug")
+//
+//        isSkipProject = name == "bom"
+//        properties {
+//            properties(
+//                mapOf(
+//                    "sonar.gradle.skipCompile" to true,
+//                    "sonar.sources" to "${projectDir}/src/main/kotlin",
+//                    "sonar.java.binaries" to layout.buildDirectory,
+//                    "sonar.coverage.jacoco.xmlReportPaths" to "${layout.buildDirectory}/reports/jacoco/xml/jacoco.xml"
+//                )
+//            )
+//        }
+//    }
 
     afterEvaluate {
         if (hasProperty("android")) {
@@ -332,11 +334,8 @@ private val repoIdWithVersion = listOf(
     Pair(FOUNDATION, FOUNDATION_VERSION),
     Pair(ANDROID_CORE, CORE_VERSION),
     Pair(SIGN, SIGN_VERSION),
-    Pair(AUTH, AUTH_VERSION),
-    Pair(CHAT, CHAT_VERSION),
     Pair(NOTIFY, NOTIFY_VERSION),
-    Pair(WEB_3_WALLET, WEB_3_WALLET_VERSION),
-    Pair(WEB_3_MODAL, WEB_3_MODAL_VERSION),
-    Pair(WC_MODAL, WC_MODAL_VERSION),
+    Pair(WALLETKIT, WALLETKIT_VERSION),
+    Pair(APPKIT, APPKIT_VERSION),
     Pair(MODAL_CORE, MODAL_CORE_VERSION)
 )

@@ -14,7 +14,7 @@ project.apply {
 }
 
 android {
-    namespace = "com.walletconnect.notify"
+    namespace = "com.reown.notify"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
@@ -74,7 +74,7 @@ android {
 sqldelight {
     databases {
         create("NotifyDatabase") {
-            packageName.set("com.walletconnect.notify")
+            packageName.set("com.reown.notify")
             schemaOutputDirectory.set(file("src/main/sqldelight/databases"))
 //            generateAsync.set(true) TODO uncomment once all SDKs have this flag enabled
             verifyMigrations.set(true)
@@ -85,7 +85,7 @@ sqldelight {
 
 dependencies {
     debugImplementation(project(":core:android"))
-    releaseImplementation("com.walletconnect:android-core:$CORE_VERSION")
+    releaseImplementation("com.reown:android-core:$CORE_VERSION")
 
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
     ksp(libs.moshi.ksp)

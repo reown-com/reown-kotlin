@@ -1,12 +1,15 @@
 name: SonarCloud
 
 on:
-  push:
-    branches:
-      - develop
-      - master
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+#TODO: user sonar when repos are public
+#on:
+#  push:
+#    branches:
+#      - develop
+#      - master
+#  pull_request:
+#    types: [opened, synchronize, reopened]
 
 concurrency:
   # Support push/pr as event types with different behaviors each:

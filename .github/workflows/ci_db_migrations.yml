@@ -23,7 +23,6 @@ jobs:
         conf: [
           { name: Android-Core SDK, command: ":core:android:verifyDebugAndroidCoreDatabaseMigration" },
           { name: Sign SDK, command: ":protocol:sign:verifyDebugSignDatabaseMigration" },
-          { name: Auth SDK, command: ":protocol:auth:verifyDebugAuthDatabaseMigration" },
           { name: Notify SDK, command: ":protocol:notify:verifyDebugNotifyDatabaseMigration" },
         ]
     name: ${{ matrix.conf.name }}
