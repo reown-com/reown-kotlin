@@ -44,16 +44,16 @@ class DappSampleApp : Application() {
         }
 
         AppKit.setChains(AppKitChainsPresets.ethChains.values.toList())
-
-        val authParams = Modal.Model.AuthPayloadParams(
-            chains = AppKitChainsPresets.ethChains.values.toList().map { it.id },
-            domain = "sample.kotlin.modal",
-            uri = "https://web3inbox.com/all-apps",
-            nonce = randomBytes(12).bytesToHex(),
-            statement = "I accept the Terms of Service: https://yourDappDomain.com/",
-            methods = EthUtils.ethMethods
-        )
-        AppKit.setAuthRequestParams(authParams)
+//
+//        val authParams = Modal.Model.AuthPayloadParams(
+//            chains = AppKitChainsPresets.ethChains.values.toList().map { it.id },
+//            domain = "sample.kotlin.modal",
+//            uri = "https://web3inbox.com/all-apps",
+//            nonce = randomBytes(12).bytesToHex(),
+//            statement = "I accept the Terms of Service: https://yourDappDomain.com/",
+//            methods = EthUtils.ethMethods
+//        )
+//        AppKit.setAuthRequestParams(authParams)
 
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
     }

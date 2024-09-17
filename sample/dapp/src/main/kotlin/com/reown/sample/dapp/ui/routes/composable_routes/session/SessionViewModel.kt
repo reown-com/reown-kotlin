@@ -53,15 +53,20 @@ class SessionViewModel : ViewModel() {
     private fun getSessions(topic: String? = null): List<SessionUi> {
         return (AppKit.getSession() as Session.WalletConnectSession).namespaces.values
             .flatMap { it.accounts }
+            .filter {
+                val (chainNamespace, chainReference, account) = it.split(":")
+                val chain = Chains.values().find { chain ->
+                    chain.chainNamespace == chainNamespace && chain.chainReference == chainReference
+                }
+                chain != null
+            }
             .map { caip10Account ->
                 val (chainNamespace, chainReference, account) = caip10Account.split(":")
-                val chain = Chains.values().first { chain ->
+                val chain = Chains.values().first() { chain ->
                     chain.chainNamespace == chainNamespace && chain.chainReference == chainReference
                 }
                 SessionUi(chain.icon, chain.name, account, chain.chainNamespace, chain.chainReference)
             }
-
-
     }
 
     fun ping() {
