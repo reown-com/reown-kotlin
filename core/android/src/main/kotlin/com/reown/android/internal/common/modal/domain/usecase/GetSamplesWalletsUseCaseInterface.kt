@@ -16,7 +16,8 @@ internal class GetSampleWalletsUseCase(
             "com.reown.sample.wallet.debug" to SampleWalletDebug,
             "com.reown.sample.wallet.internal" to SampleWalletInternal,
             "com.reown.sample.wallet" to SampleWalletRelease,
-            "com.walletconnect.web3wallet.rnsample.internal" to RNSampleWallet,
+            "com.walletconnect.web3wallet.rnsample.internal" to RNSampleWalletInternal,
+            "com.walletconnect.web3wallet.rnsample" to RNSampleWallet,
             "com.walletconnect.flutterwallet" to FLSampleWallet,
             "com.walletconnect.flutterwallet.internal" to FLSampleWalletInternal
         )
@@ -39,7 +40,7 @@ private val SampleWalletDebug = Wallet(
     mobileLink = "kotlin-web3wallet://",
     playStore = null,
     webAppLink = null,
-    linkMode = "https://dev.lab.web3modal.com/wallet_debug",
+    linkMode = "https://appkit-lab.reown.com/wallet_debug",
     true
 )
 
@@ -52,7 +53,7 @@ private val SampleWalletInternal = Wallet(
     mobileLink = "kotlin-web3wallet://",
     playStore = null,
     webAppLink = null,
-    linkMode = "https://dev.lab.web3modal.com/wallet_internal",
+    linkMode = "https://appkit-lab.reown.com/wallet_internal",
     true
 )
 
@@ -65,11 +66,11 @@ private val SampleWalletRelease = Wallet(
     mobileLink = "kotlin-web3wallet://",
     playStore = null,
     webAppLink = null,
-    linkMode = "https://dev.lab.web3modal.com/wallet_release",
+    linkMode = "https://appkit-lab.reown.com/wallet_release",
     true
 )
 
-private val RNSampleWallet = Wallet(
+private val RNSampleWalletInternal = Wallet(
     id = "RNSampleWallet",
     name = "RN Sample",
     homePage = "https://walletconnect.com",
@@ -78,7 +79,20 @@ private val RNSampleWallet = Wallet(
     mobileLink = "rn-web3wallet://",
     playStore = null,
     webAppLink = null,
-    linkMode = "https://lab.web3modal.com/rn_walletkit",
+    linkMode = "https://appkit-lab.reown.com/rn_walletkit_internal",
+    true
+)
+
+private val RNSampleWallet = Wallet(
+    id = "RNSampleWalletInternal",
+    name = "RN Sample Internal",
+    homePage = "https://walletconnect.com",
+    imageUrl = "https://raw.githubusercontent.com/WalletConnect/WalletConnectKotlinV2/develop/sample/wallet/src/main/res/drawable-xxxhdpi/wc_icon.png",
+    order = "5",
+    mobileLink = "rn-web3wallet://",
+    playStore = null,
+    webAppLink = null,
+    linkMode = "https://appkit-lab.reown.com/rn_walletkit",
     true
 )
 
@@ -87,11 +101,11 @@ private val FLSampleWallet = Wallet(
     name = "FL Sample",
     homePage = "https://walletconnect.com",
     imageUrl = "https://raw.githubusercontent.com/WalletConnect/WalletConnectKotlinV2/develop/sample/wallet/src/main/res/drawable-xxxhdpi/wc_icon.png",
-    order = "5",
+    order = "6",
     mobileLink = "wcflutterwallet://",
     playStore = null,
     webAppLink = null,
-    linkMode = "https://lab.web3modal.com/flutter_walletkit",
+    linkMode = "https://appkit-lab.reown.com/flutter_walletkit",
     true
 )
 
@@ -100,10 +114,10 @@ private val FLSampleWalletInternal = Wallet(
     name = "FL Sample Internal",
     homePage = "https://walletconnect.com",
     imageUrl = "https://raw.githubusercontent.com/WalletConnect/WalletConnectKotlinV2/develop/sample/wallet/src/main/res/drawable-xxxhdpi/wc_icon.png",
-    order = "6",
+    order = "7",
     mobileLink = "wcflutterwallet-internal://",
     playStore = null,
     webAppLink = null,
-    linkMode = "https://dev.lab.web3modal.com/flutter_walletkit_internal",
+    linkMode = "https://appkit-lab.reown.com/flutter_walletkit_internal",
     true
 )

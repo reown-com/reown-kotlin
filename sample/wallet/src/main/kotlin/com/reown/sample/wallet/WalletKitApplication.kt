@@ -47,7 +47,7 @@ class WalletKitApplication : Application() {
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Wallet",
             description = "Kotlin Wallet Implementation",
-            url = "https://dev.lab.web3modal.com",
+            url = "https://appkit-lab.reown.com",
             icons = listOf("https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Icon/Gradient/Icon.png"),
             redirect = "kotlin-web3wallet://request",
             appLink = BuildConfig.WALLET_APP_LINK,

@@ -29,18 +29,18 @@ android {
     buildTypes {
         getByName("release") {
             manifestPlaceholders["pathPrefix"] = "/dapp_release"
-            buildConfigField("String", "DAPP_APP_LINK", "\"https://dev.lab.web3modal.com/dapp_release\"")
+            buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_release\"")
         }
 
         getByName("internal") {
             manifestPlaceholders["pathPrefix"] = "/dapp_internal"
-            buildConfigField("String", "DAPP_APP_LINK", "\"https://dev.lab.web3modal.com/dapp_internal\"")
+            buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_internal\"")
 
         }
 
         getByName("debug") {
             manifestPlaceholders["pathPrefix"] = "/dapp_debug"
-            buildConfigField("String", "DAPP_APP_LINK", "\"https://dev.lab.web3modal.com/dapp_debug\"")
+            buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_debug\"")
         }
     }
 
