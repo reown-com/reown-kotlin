@@ -14,6 +14,7 @@ import com.reown.android.CoreClient
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.foundation.util.Logger
+import com.reown.kotlin.ffi.yttrium.add
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.domain.EthAccountDelegate
@@ -84,6 +85,10 @@ class WalletKitApplication : Application() {
             Firebase.crashlytics.recordException(error.throwable)
             println(error.throwable.stackTraceToString())
         }
+
+        val result = add(1u,2u)
+        println("kobe; Result: $result")
+
 
         mixPanel = MixpanelAPI.getInstance(this, CommonBuildConfig.MIX_PANEL, true).apply {
             identify(CoreClient.Push.clientId)
