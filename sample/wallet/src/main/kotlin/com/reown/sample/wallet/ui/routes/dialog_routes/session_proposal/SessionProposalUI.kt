@@ -2,6 +2,8 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
 import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.yttrium.accountClient
+import com.reown.sample.wallet.domain.yttrium.smartAccountAddress
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.walletkit.client.Wallet
@@ -29,7 +31,7 @@ val walletMetaData = WalletMetaData(
     ),
     namespaces = mapOf(
         "eip155" to Wallet.Model.Namespace.Session(
-            chains = listOf("eip155:1", "eip155:137", "eip155:56"),
+            chains = listOf("eip155:11155111"), //"eip155:1", "eip155:137", "eip155:56",
             methods = listOf(
                 "eth_sendTransaction",
                 "personal_sign",
@@ -43,17 +45,20 @@ val walletMetaData = WalletMetaData(
                 "eth_signTypedData",
                 "eth_signTypedData_v4",
                 "wallet_switchEthereumChain",
-                "wallet_addEthereumChain"
+                "wallet_addEthereumChain",
+                "wallet_sendCalls",
+                "wallet_getCallsStatus"
             ),
             events = listOf("chainChanged", "accountsChanged", "connect", "disconnect"),
             accounts = listOf(
-                "eip155:1:$ACCOUNTS_1_EIP155_ADDRESS",
-                "eip155:1:$ACCOUNTS_2_EIP155_ADDRESS",
-                "eip155:137:$ACCOUNTS_1_EIP155_ADDRESS",
-                "eip155:137:$ACCOUNTS_2_EIP155_ADDRESS",
-                "eip155:56:$ACCOUNTS_1_EIP155_ADDRESS",
-                "eip155:56:$ACCOUNTS_2_EIP155_ADDRESS"
+                "eip155:11155111:$smartAccountAddress"
             )
+//            "eip155:1:$ACCOUNTS_1_EIP155_ADDRESS",
+//            "eip155:1:$ACCOUNTS_2_EIP155_ADDRESS",
+//            "eip155:137:$ACCOUNTS_1_EIP155_ADDRESS",
+//            "eip155:137:$ACCOUNTS_2_EIP155_ADDRESS",
+//            "eip155:56:$ACCOUNTS_1_EIP155_ADDRESS",
+//            "eip155:56:$ACCOUNTS_2_EIP155_ADDRESS",
         ),
         "cosmos" to Wallet.Model.Namespace.Session(
             chains = listOf("cosmos:cosmoshub-4", "cosmos:cosmoshub-1"),

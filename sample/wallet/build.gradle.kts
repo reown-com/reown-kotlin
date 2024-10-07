@@ -59,6 +59,12 @@ android {
         freeCompilerArgs = listOf("-Xcontext-receivers")
     }
 
+    sourceSets {
+        getByName("main") {
+            jniLibs.srcDirs("src/main/jniLibs")
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -70,6 +76,8 @@ android {
 }
 
 dependencies {
+    implementation("net.java.dev.jna:jna:5.12.0@aar")
+
     implementation(project(":sample:common"))
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 
