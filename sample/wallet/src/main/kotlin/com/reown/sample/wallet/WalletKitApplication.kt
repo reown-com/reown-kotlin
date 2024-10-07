@@ -14,13 +14,16 @@ import com.reown.android.CoreClient
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.foundation.util.Logger
-import com.reown.kotlin.ffi.yttrium.add
+import com.reown.kotlin.ffi.yttrium.AccountClient
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.domain.mixPanel
+import com.reown.sample.wallet.domain.yttrium.accountClient
+import com.reown.sample.wallet.domain.yttrium.accountConfig
+import com.reown.sample.wallet.domain.yttrium.smartAccountAddress
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
@@ -79,16 +82,19 @@ class WalletKitApplication : Application() {
 
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
 
+        //Yttrium Account Client init
+        accountClient = AccountClient(accountConfig)
+        scope.launch {
+            smartAccountAddress = accountClient.getAddress()
+            println("kobe: SmartAccountAddress: $smartAccountAddress")
+        }
+
         NotifyClient.initialize(
             init = Notify.Params.Init(CoreClient)
         ) { error ->
             Firebase.crashlytics.recordException(error.throwable)
             println(error.throwable.stackTraceToString())
         }
-
-        val result = add(1u,2u)
-        println("kobe; Result: $result")
-
 
         mixPanel = MixpanelAPI.getInstance(this, CommonBuildConfig.MIX_PANEL, true).apply {
             identify(CoreClient.Push.clientId)

@@ -3,21 +3,33 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_request
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.android.utils.cacao.sign
+import com.reown.kotlin.ffi.yttrium.Transaction
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.yttrium.accountClient
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.util.hexToBytes
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.reown.walletkit.utils.CacaoSigner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONObject
 import org.web3j.utils.Numeric.hexStringToByteArray
 
 class SessionRequestViewModel : ViewModel() {
@@ -78,57 +90,90 @@ class SessionRequestViewModel : ViewModel() {
     }
 
     fun approve(onSuccess: (Uri?) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
-        try {
-            val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
-            if (sessionRequest != null) {
-                val result: String = when {
-                    sessionRequest.method == PERSONAL_SIGN_METHOD -> CacaoSigner.sign(
-                        sessionRequest.param,
-                        EthAccountDelegate.privateKey.hexToBytes(),
-                        SignatureType.EIP191
-                    ).s
+        viewModelScope.launch {
+            try {
+                val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
+                if (sessionRequest != null) {
+                    val result: String = when {
+                        sessionRequest.method == "wallet_sendCalls" -> {
+                            val transactions: MutableList<Transaction> = mutableListOf()
+                            println("kobe: wallet_sendCalls: ${sessionRequest.param}")
+                            val callsArray = JSONArray(sessionRequest.param).getJSONObject(0).getJSONArray("calls")
 
-                    sessionRequest.chain?.contains(Chains.Info.Eth.chain, true) == true ->
-                        """0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"""
+                            for (i in 0 until callsArray.length()) {
+                                val call = callsArray.getJSONObject(0)
+                                val to = call.getString("to")
+                                val value = call.getString("value")
+                                val data = call.getString("data")
+                                transactions.add(Transaction(to, value, data))
+                            }
+                            println("kobe: Transactions: $transactions")
+                            val userOpHash = sendAsync(transactions)
 
-                    sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
-                        """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
-                    //Note: Only for testing purposes - it will always fail on Dapp side
-                    sessionRequest.chain?.contains(Chains.Info.Solana.chain, true) == true ->
-                        """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
-
-                    else -> throw Exception("Unsupported Chain")
-                }
-                val response = Wallet.Params.SessionRequestResponse(
-                    sessionTopic = sessionRequest.topic,
-                    jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
-                        sessionRequest.requestId,
-                        result
-                    )
-                )
-
-                val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                WalletKit.respondSessionRequest(response,
-                    onSuccess = {
-                        clearSessionRequest()
-                        onSuccess(redirect)
-                    },
-                    onError = { error ->
-                        Firebase.crashlytics.recordException(error.throwable)
-                        if (error.throwable !is NoConnectivityException) {
-                            clearSessionRequest()
+                            println("kobe: userOpHash: $userOpHash")
+                            userOpHash
                         }
-                        onError(error.throwable)
-                    })
-            } else {
-                onError(Throwable("Approve - Cannot find session request"))
+
+                        sessionRequest.method == PERSONAL_SIGN_METHOD -> CacaoSigner.sign(
+                            sessionRequest.param,
+                            EthAccountDelegate.privateKey.hexToBytes(),
+                            SignatureType.EIP191
+                        ).s
+
+                        sessionRequest.chain?.contains(Chains.Info.Eth.chain, true) == true ->
+                            """0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"""
+
+                        sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
+                            """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+                        //Note: Only for testing purposes - it will always fail on Dapp side
+                        sessionRequest.chain?.contains(Chains.Info.Solana.chain, true) == true ->
+                            """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+
+                        else -> throw Exception("Unsupported Chain")
+                    }
+
+
+                    println("kobe: Result: $result")
+                    val response = Wallet.Params.SessionRequestResponse(
+                        sessionTopic = sessionRequest.topic,
+                        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
+                            sessionRequest.requestId,
+                            result
+                        )
+                    )
+
+                    val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
+                    WalletKit.respondSessionRequest(response,
+                        onSuccess = {
+                            clearSessionRequest()
+                            onSuccess(redirect)
+                        },
+                        onError = { error ->
+                            Firebase.crashlytics.recordException(error.throwable)
+                            if (error.throwable !is NoConnectivityException) {
+                                clearSessionRequest()
+                            }
+                            onError(error.throwable)
+                        })
+                } else {
+                    onError(Throwable("Approve - Cannot find session request"))
+                }
+            } catch (e: Exception) {
+
+                println("kobe: Approve Error: $e")
+
+                Firebase.crashlytics.recordException(e)
+                clearSessionRequest()
+                onError(e.cause ?: Throwable("Undefined error, please check your Internet connection"))
             }
-        } catch (e: Exception) {
-            Firebase.crashlytics.recordException(e)
-            clearSessionRequest()
-            onError(e.cause ?: Throwable("Undefined error, please check your Internet connection"))
         }
     }
+
+    private suspend fun sendAsync(transactions: List<Transaction>): String =
+        withContext(Dispatchers.IO) {
+            val userOpHash: String = async { accountClient.sendTransactions(transactions) }.await()
+            return@withContext userOpHash
+        }
 
     private fun generateSessionRequestUI(): SessionRequestUI {
         return if (WCDelegate.sessionRequestEvent != null) {
