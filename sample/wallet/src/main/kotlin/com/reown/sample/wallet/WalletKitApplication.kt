@@ -1,9 +1,11 @@
 package com.reown.sample.wallet
 
 import android.app.Application
+import com.google.firebase.FirebaseApp
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.mixpanel.android.mpmetrics.MixpanelAPI
 import com.pandulapeter.beagle.Beagle
 import com.pandulapeter.beagle.common.configuration.Behavior
@@ -91,6 +93,17 @@ class WalletKitApplication : Application() {
         }
 
         initializeBeagle()
+
+        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+            WalletKit.registerDeviceToken(firebaseAccessToken = token, enableEncrypted = true,
+                onSuccess = {
+                    println("kobe; Successfully registered firebase token for Web3Wallet: $token")
+                },
+                onError = {
+                    println("kobe; Error while registering firebase token for Web3Wallet: ${it.throwable}")
+                }
+            )
+        }
 
         scope.launch {
             supervisorScope {
