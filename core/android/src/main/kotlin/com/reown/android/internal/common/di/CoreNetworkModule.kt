@@ -34,7 +34,7 @@ internal const val KEY_CLIENT_ID = "clientId"
 
 @Suppress("LocalVariableName")
 @JvmSynthetic
-fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, sdkVersion: String, timeout: NetworkClientTimeout? = null, bundleId: String) = module {
+fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, sdkVersion: String, timeout: NetworkClientTimeout? = null, packageName: String) = module {
     val networkClientTimeout = timeout ?: NetworkClientTimeout.getDefaultTimeout()
     factory(named(AndroidCommonDITags.RELAY_URL)) {
         val jwt = get<GenerateJwtStoreClientIdUseCase>().invoke(serverUrl)
@@ -58,7 +58,7 @@ fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, 
         Interceptor { chain ->
             val updatedRequest = chain.request().newBuilder()
                 .addHeader("User-Agent", get(named(AndroidCommonDITags.USER_AGENT)))
-                .addHeader("Origin", bundleId)
+                .addHeader("packageName", packageName)
                 .build()
 
             chain.proceed(updatedRequest)
