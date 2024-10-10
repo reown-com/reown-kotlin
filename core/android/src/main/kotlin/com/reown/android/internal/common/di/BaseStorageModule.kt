@@ -28,7 +28,7 @@ import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import com.reown.android.internal.common.scope as wcScope
 
-fun baseStorageModule(storagePrefix: String = String.Empty, bundleId: String) = module {
+fun baseStorageModule(storagePrefix: String = String.Empty, packageName: String) = module {
     single<ColumnAdapter<List<String>, String>>(named(AndroidCommonDITags.COLUMN_ADAPTER_LIST)) {
         object : ColumnAdapter<List<String>, String> {
             override fun decode(databaseValue: String): List<String> =
@@ -128,7 +128,7 @@ fun baseStorageModule(storagePrefix: String = String.Empty, bundleId: String) = 
 
     single { PushMessagesRepository(pushMessageQueries = get()) }
 
-    single { EventsRepository(eventQueries = get(), bundleId = bundleId, telemetryEnabled = get(named(AndroidCommonDITags.TELEMETRY_ENABLED))) }
+    single { EventsRepository(eventQueries = get(), bundleId = packageName, telemetryEnabled = get(named(AndroidCommonDITags.TELEMETRY_ENABLED))) }
 
     single { DatabaseConfig(storagePrefix = storagePrefix) }
 }
