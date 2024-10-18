@@ -14,7 +14,6 @@ import com.reown.android.CoreClient
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.foundation.util.Logger
-import com.reown.kotlin.ffi.yttrium.AccountClient
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.domain.EthAccountDelegate
@@ -38,6 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named
 import timber.log.Timber
+import uniffi.uniffi_yttrium.AccountClient
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
 class WalletKitApplication : Application() {

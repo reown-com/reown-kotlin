@@ -1,14 +1,13 @@
 package com.reown.sample.wallet.domain.yttrium
 
-import com.reown.android.internal.common.scope
-import com.reown.kotlin.ffi.yttrium.AccountClient
-import com.reown.kotlin.ffi.yttrium.AccountClientConfig
-import com.reown.kotlin.ffi.yttrium.Config
-import com.reown.kotlin.ffi.yttrium.Endpoint
-import com.reown.kotlin.ffi.yttrium.Endpoints
+
 import com.reown.sample.wallet.domain.EthAccountDelegate
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import uniffi.uniffi_yttrium.AccountClient
+import uniffi.uniffi_yttrium.AccountClientConfig
+import uniffi.yttrium.Config
+import uniffi.yttrium.Endpoint
+import uniffi.yttrium.Endpoints
+
 
 lateinit var accountClient: AccountClient
 

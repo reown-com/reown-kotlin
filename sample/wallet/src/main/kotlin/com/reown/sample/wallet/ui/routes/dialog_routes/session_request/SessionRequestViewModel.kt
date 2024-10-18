@@ -10,7 +10,6 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.android.utils.cacao.sign
-import com.reown.kotlin.ffi.yttrium.Transaction
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
@@ -31,6 +30,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import org.web3j.utils.Numeric.hexStringToByteArray
+import uniffi.uniffi_yttrium.Transaction
 
 class SessionRequestViewModel : ViewModel() {
     var sessionRequestUI: SessionRequestUI = generateSessionRequestUI()
@@ -102,9 +102,9 @@ class SessionRequestViewModel : ViewModel() {
 
                             for (i in 0 until callsArray.length()) {
                                 val call = callsArray.getJSONObject(0)
-                                val to = call.getString("to")
-                                val value = call.getString("value")
-                                val data = call.getString("data")
+                                val to = call.getString("to") ?: ""
+                                val value = call.getString("value") ?: ""
+                                val data = call.getString("data") ?: ""
                                 transactions.add(Transaction(to, value, data))
                             }
                             println("kobe: Transactions: $transactions")

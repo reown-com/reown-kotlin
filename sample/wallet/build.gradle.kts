@@ -1,3 +1,5 @@
+import java.net.URL
+
 plugins {
     id(libs.plugins.android.application.get().pluginId)
     id(libs.plugins.kotlin.android.get().pluginId)
@@ -61,7 +63,8 @@ android {
 
     sourceSets {
         getByName("main") {
-            jniLibs.srcDirs("src/main/jniLibs")
+            java.srcDirs("$buildDir/yttrium/kotlin-bindings")
+            jniLibs.srcDirs("$buildDir/yttrium/libs")
         }
     }
 
@@ -73,6 +76,35 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
+}
+
+tasks.register("downloadArtifacts") {
+    doLast {
+        val tagName = "0.2.1" // Replace with the version you want to fetch
+        val downloadUrl = "https://github.com/reown-com/yttrium/releases/download/$tagName/kotlin-artifacts.zip"
+
+        println("kobe: 1 Extracting artifacts to $buildDir")
+        println("kobe: 2 Extracting artifacts to ${layout.buildDirectory}")
+
+        val outputFile = file("$buildDir/kotlin-artifacts.zip")
+
+        URL(downloadUrl).openStream().use { input ->
+            outputFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        println("kobe: Extracting artifacts to $buildDir")
+
+        copy {
+            from(zipTree(outputFile))
+            into("${buildDir}")
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("downloadArtifacts")
 }
 
 dependencies {
