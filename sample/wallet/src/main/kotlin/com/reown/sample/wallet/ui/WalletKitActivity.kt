@@ -173,6 +173,8 @@ class WalletKitActivity : AppCompatActivity() {
     }
 
     private fun handleAppLink(intent: Intent?) {
+        println("kobe: URI: ${intent?.dataString}")
+
         if (intent?.dataString?.contains("wc_ev") == true) {
             WalletKit.dispatchEnvelope(intent.dataString ?: "") {
                 lifecycleScope.launch(Dispatchers.Main) {
