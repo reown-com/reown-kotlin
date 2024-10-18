@@ -80,13 +80,9 @@ android {
 
 tasks.register("downloadArtifacts") {
     doLast {
-        val tagName = "0.2.1" // Replace with the version you want to fetch
-        val downloadUrl = "https://github.com/reown-com/yttrium/releases/download/$tagName/kotlin-artifacts.zip"
-
-        println("kobe: 1 Extracting artifacts to $buildDir")
-        println("kobe: 2 Extracting artifacts to ${layout.buildDirectory}")
-
-        val outputFile = file("$buildDir/kotlin-artifacts.zip")
+        val tagName = "0.2.1" //todo: extract to Versions
+        val downloadUrl = "https://github.com/reown-com/yttrium/releases/download/$tagName/kotlin-artifacts.zip" //todo: extract to Versions
+        val outputFile = file("${file(layout.buildDirectory)}/kotlin-artifacts.zip")
 
         URL(downloadUrl).openStream().use { input ->
             outputFile.outputStream().use { output ->
@@ -94,11 +90,9 @@ tasks.register("downloadArtifacts") {
             }
         }
 
-        println("kobe: Extracting artifacts to $buildDir")
-
         copy {
             from(zipTree(outputFile))
-            into("${buildDir}")
+            into("${file(layout.buildDirectory)}")
         }
     }
 }
