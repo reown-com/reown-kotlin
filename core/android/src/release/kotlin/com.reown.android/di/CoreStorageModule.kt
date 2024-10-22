@@ -187,7 +187,7 @@ fun coreStorageModule(storagePrefix: String = String.Empty, bundleId: String) = 
             schema = AndroidCoreDatabase.Schema,
             context = androidContext(),
             name = get<DatabaseConfig>().ANDROID_CORE_DB_NAME,
-            factory = getSupportFactory(androidContext(), get(named(AndroidBuildVariantDITags.DB_PASSPHRASE)), null, false) //todo: create a separate DB_PASSHPHRASE
+            factory = getSupportFactory(androidContext(), get(named(AndroidBuildVariantDITags.DB_PASSPHRASE))) //todo: create a separate DB_PASSHPHRASE
         )
     }
 }
@@ -200,7 +200,7 @@ fun sdkBaseStorageModule(databaseSchema: SqlSchema<QueryResult.Value<Unit>>, dat
             schema = databaseSchema,
             context = androidContext(),
             name = databaseName,
-            factory = getSupportFactory(androidContext(), get(named(AndroidBuildVariantDITags.DB_PASSPHRASE)), null, false)
+            factory = getSupportFactory(androidContext(), get(named(AndroidBuildVariantDITags.DB_PASSPHRASE)))
         )
     }
 }
