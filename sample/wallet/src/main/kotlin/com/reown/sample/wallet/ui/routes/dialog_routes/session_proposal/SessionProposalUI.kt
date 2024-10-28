@@ -1,9 +1,6 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
-import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
-import com.reown.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
-import com.reown.sample.wallet.domain.yttrium.accountClient
-import com.reown.sample.wallet.domain.yttrium.smartAccountAddress
+import smartAccountAddress
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.walletkit.client.Wallet

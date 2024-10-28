@@ -1,3 +1,5 @@
+import java.net.URL
+
 plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
@@ -43,6 +45,14 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
+
+    sourceSets {
+        getByName("main") {
+            java.srcDirs("${file(layout.buildDirectory)}/yttrium/kotlin-bindings")
+            jniLibs.srcDirs("${file(layout.buildDirectory)}/yttrium/libs")
+        }
+    }
+
     kotlinOptions {
         jvmTarget = jvmVersion.toString()
         freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.time.ExperimentalTime"
@@ -53,7 +63,42 @@ android {
     }
 }
 
+tasks.register("downloadArtifacts") {
+    doLast {
+        val tagName = YTTRIUM_VERSION
+        val downloadUrl = "https://github.com/reown-com/yttrium/releases/download/$tagName/kotlin-artifacts.zip"
+        val outputFile = file("${file(layout.buildDirectory)}/kotlin-artifacts.zip")
+
+        // Download the kotlin-artifacts.zip from GitHub Releases
+        URL(downloadUrl).openStream().use { input ->
+            outputFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        // Extract the kotlin-artifacts.zip to the build directory
+        copy {
+            from(zipTree(outputFile))
+            into("${file(layout.buildDirectory)}")
+        }
+
+        // Delete the zip file after extraction
+        if (outputFile.exists()) {
+            outputFile.delete()
+            println("Deleted $outputFile")
+        } else {
+            println("File $outputFile does not exist")
+        }
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("downloadArtifacts")
+}
+
 dependencies {
+    implementation("net.java.dev.jna:jna:5.12.0@aar") //todo: extract to toml
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 

@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.cacao.signature.SignatureType
@@ -13,24 +12,20 @@ import com.reown.android.utils.cacao.sign
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
-import com.reown.sample.wallet.domain.yttrium.accountClient
+import accountClient
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.util.hexToBytes
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.reown.walletkit.utils.CacaoSigner
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
-import org.json.JSONObject
 import org.web3j.utils.Numeric.hexStringToByteArray
-import uniffi.uniffi_yttrium.Transaction
+//import uniffi.uniffi_yttrium.Transaction
 
 class SessionRequestViewModel : ViewModel() {
     var sessionRequestUI: SessionRequestUI = generateSessionRequestUI()
@@ -95,24 +90,24 @@ class SessionRequestViewModel : ViewModel() {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
                     val result: String = when {
-                        sessionRequest.method == "wallet_sendCalls" -> {
-                            val transactions: MutableList<Transaction> = mutableListOf()
-                            println("kobe: wallet_sendCalls: ${sessionRequest.param}")
-                            val callsArray = JSONArray(sessionRequest.param).getJSONObject(0).getJSONArray("calls")
-
-                            for (i in 0 until callsArray.length()) {
-                                val call = callsArray.getJSONObject(0)
-                                val to = call.getString("to") ?: ""
-                                val value = call.getString("value") ?: ""
-                                val data = call.getString("data") ?: ""
-                                transactions.add(Transaction(to, value, data))
-                            }
-                            println("kobe: Transactions: $transactions")
-                            val userOpHash = sendAsync(transactions)
-
-                            println("kobe: userOpHash: $userOpHash")
-                            userOpHash
-                        }
+//                        sessionRequest.method == "wallet_sendCalls" -> {
+//                            val transactions: MutableList<Transaction> = mutableListOf()
+//                            println("kobe: wallet_sendCalls: ${sessionRequest.param}")
+//                            val callsArray = JSONArray(sessionRequest.param).getJSONObject(0).getJSONArray("calls")
+//
+//                            for (i in 0 until callsArray.length()) {
+//                                val call = callsArray.getJSONObject(i)
+//                                val to = call.getString("to") ?: ""
+//                                val value = call.getString("value") ?: ""
+//                                val data = call.getString("data") ?: ""
+//                                transactions.add(Transaction(to, value, data))
+//                            }
+//                            println("kobe: Transactions: $transactions")
+//                            val userOpHash = sendAsync(transactions)
+//
+//                            println("kobe: userOpHash: $userOpHash")
+//                            userOpHash
+//                        }
 
                         sessionRequest.method == PERSONAL_SIGN_METHOD -> CacaoSigner.sign(
                             sessionRequest.param,
@@ -169,11 +164,11 @@ class SessionRequestViewModel : ViewModel() {
         }
     }
 
-    private suspend fun sendAsync(transactions: List<Transaction>): String =
-        withContext(Dispatchers.IO) {
-            val userOpHash: String = async { accountClient.sendTransactions(transactions) }.await()
-            return@withContext userOpHash
-        }
+//    private suspend fun sendAsync(transactions: List<Transaction>): String =
+//        withContext(Dispatchers.IO) {
+//            val userOpHash: String = async { accountClient.sendTransactions(transactions) }.await()
+//            return@withContext userOpHash
+//        }
 
     private fun generateSessionRequestUI(): SessionRequestUI {
         return if (WCDelegate.sessionRequestEvent != null) {

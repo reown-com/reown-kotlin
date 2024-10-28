@@ -1,5 +1,3 @@
-import java.net.URL
-
 plugins {
     id(libs.plugins.android.application.get().pluginId)
     id(libs.plugins.kotlin.android.get().pluginId)
@@ -61,13 +59,6 @@ android {
         freeCompilerArgs = listOf("-Xcontext-receivers")
     }
 
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("$buildDir/yttrium/kotlin-bindings")
-            jniLibs.srcDirs("$buildDir/yttrium/libs")
-        }
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -78,32 +69,7 @@ android {
     }
 }
 
-tasks.register("downloadArtifacts") {
-    doLast {
-        val tagName = "0.2.1" //todo: extract to Versions
-        val downloadUrl = "https://github.com/reown-com/yttrium/releases/download/$tagName/kotlin-artifacts.zip" //todo: extract to Versions
-        val outputFile = file("${file(layout.buildDirectory)}/kotlin-artifacts.zip")
-
-        URL(downloadUrl).openStream().use { input ->
-            outputFile.outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
-
-        copy {
-            from(zipTree(outputFile))
-            into("${file(layout.buildDirectory)}")
-        }
-    }
-}
-
-tasks.named("preBuild") {
-    dependsOn("downloadArtifacts")
-}
-
 dependencies {
-    implementation("net.java.dev.jna:jna:5.12.0@aar")
-
     implementation(project(":sample:common"))
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 

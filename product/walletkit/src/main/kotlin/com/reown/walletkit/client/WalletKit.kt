@@ -1,5 +1,6 @@
 package com.reown.walletkit.client
 
+import accountClient
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.internal.common.scope
@@ -113,6 +114,10 @@ object WalletKit {
     @Throws(IllegalStateException::class)
     fun registerDeviceToken(firebaseAccessToken: String, enableEncrypted: Boolean = false, onSuccess: () -> Unit, onError: (Wallet.Model.Error) -> Unit) {
         coreClient.Echo.register(firebaseAccessToken, enableEncrypted, onSuccess) { error -> onError(Wallet.Model.Error(error)) }
+    }
+
+    fun sendTransactions() {
+
     }
 
     @Throws(IllegalStateException::class)

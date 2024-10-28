@@ -1,17 +1,14 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.sample.wallet.domain.WCDelegate
-import com.reown.sample.wallet.domain.yttrium.accountClient
-import com.reown.sample.wallet.domain.yttrium.smartAccountAddress
+import smartAccountAddress
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class SessionProposalViewModel : ViewModel() {

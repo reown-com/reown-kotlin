@@ -20,9 +20,6 @@ import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.domain.mixPanel
-import com.reown.sample.wallet.domain.yttrium.accountClient
-import com.reown.sample.wallet.domain.yttrium.accountConfig
-import com.reown.sample.wallet.domain.yttrium.smartAccountAddress
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
@@ -37,7 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named
 import timber.log.Timber
-import uniffi.uniffi_yttrium.AccountClient
+//import uniffi.uniffi_yttrium.AccountClient
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
 class WalletKitApplication : Application() {
@@ -82,12 +79,12 @@ class WalletKitApplication : Application() {
 
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
 
-        //Yttrium Account Client init
-        accountClient = AccountClient(accountConfig)
-        scope.launch {
-            smartAccountAddress = accountClient.getAddress()
-            println("kobe: SmartAccountAddress: $smartAccountAddress")
-        }
+//        //Yttrium Account Client init
+//        accountClient = AccountClient(accountConfig)
+//        scope.launch {
+//            smartAccountAddress = accountClient.getAddress()
+//            println("kobe: SmartAccountAddress: $smartAccountAddress")
+//        }
 
         NotifyClient.initialize(
             init = Notify.Params.Init(CoreClient)
