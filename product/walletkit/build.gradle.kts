@@ -79,7 +79,7 @@ tasks.register("downloadYttriumArtifacts") {
                 }
             }
         } catch (e: Exception) {
-            println("kobe: Failed to download $downloadUrl")
+            println("kobe: Failed to download $downloadUrl; error: $e")
             throw  e
         }
 
