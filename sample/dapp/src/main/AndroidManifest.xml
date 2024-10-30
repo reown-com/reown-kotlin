@@ -47,7 +47,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="dev.lab.web3modal.com"
+                    android:host="appkit-lab.reown.com"
                     android:scheme="https"
                     android:pathPrefix="${pathPrefix}"/>
             </intent-filter>

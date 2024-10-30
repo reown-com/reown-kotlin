@@ -98,17 +98,13 @@ object WalletKit {
     @Throws(IllegalStateException::class)
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
         coreClient = params.core
-        var clientInitCounter = 0
-        val onSuccessfulInitialization: () -> Unit = { clientInitCounter++ }
-
-        SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccessfulInitialization) { error ->
+        SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
             if (error.throwable is SignClientAlreadyInitializedException) {
-                onSuccessfulInitialization()
+                onSuccess()
             } else {
                 onError(Wallet.Model.Error(error.throwable))
             }
         }
-        validateInitializationCount(clientInitCounter, onSuccess, onError)
     }
 
     @Throws(IllegalStateException::class)
@@ -345,24 +341,4 @@ object WalletKit {
     fun getListOfVerifyContexts(): List<Wallet.Model.VerifyContext> {
         return SignClient.getListOfVerifyContexts().map { verifyContext -> verifyContext.toWallet() }
     }
-
-    private fun validateInitializationCount(clientInitCounter: Int, onSuccess: () -> Unit, onError: (Wallet.Model.Error) -> Unit) {
-        scope.launch {
-            try {
-                withTimeout(TIMEOUT) {
-                    while (true) {
-                        if (clientInitCounter == 2) {
-                            onSuccess()
-                            return@withTimeout
-                        }
-                        delay(100)
-                    }
-                }
-            } catch (e: Exception) {
-                onError(Wallet.Model.Error(e))
-            }
-        }
-    }
-
-    private const val TIMEOUT: Long = 10000
 }

@@ -113,7 +113,7 @@ nexusPublishing {
     repositories {
 //        project.version = "-SNAPSHOT"
         sonatype {
-            stagingProfileId.set(System.getenv("SONATYPE_STAGING_PROFILE_ID"))
+            stagingProfileId.set(System.getenv("REOWN_SONATYPE_STAGING_PROFILE_ID"))
             username.set(System.getenv("OSSRH_USERNAME"))
             password.set(System.getenv("OSSRH_PASSWORD"))
             nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))

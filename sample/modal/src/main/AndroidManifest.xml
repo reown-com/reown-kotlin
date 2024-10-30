@@ -48,6 +48,7 @@
         <package android:name="com.reown.sample.wallet.debug"/>
         <package android:name="com.reown.sample.wallet.internal"/>
         <package android:name="com.walletconnect.web3wallet.rnsample.internal"/>
+        <package android:name="com.walletconnect.web3wallet.rnsample"/>
         <package android:name="com.walletconnect.flutterwallet"/>
         <package android:name="com.walletconnect.flutterwallet.internal"/>
     </queries>
@@ -77,7 +78,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="dev.lab.web3modal.com"
+                    android:host="appkit-lab.reown.com"
                     android:scheme="https"
                     android:pathPrefix="${pathPrefix}"/>
             </intent-filter>

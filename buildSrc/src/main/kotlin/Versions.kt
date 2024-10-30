@@ -5,15 +5,14 @@ const val KEY_PUBLISH_ARTIFACT_ID = "PUBLISH_ARTIFACT_ID"
 const val KEY_SDK_NAME = "SDK_NAME"
 
 //Latest versions
-const val BOM_VERSION = "1.0.0"
-const val FOUNDATION_VERSION = "1.0.0"
-const val CORE_VERSION = "1.0.0"
-const val SIGN_VERSION = "1.0.0"
-const val NOTIFY_VERSION = "1.0.0"
-const val WALLETKIT_VERSION = "1.0.0"
-const val APPKIT_VERSION = "1.0.0"
-const val MODAL_CORE_VERSION = "1.0.0"
-const val YTTRIUM_VERSION = "0.2.3"
+const val BOM_VERSION = "1.0.1"
+const val FOUNDATION_VERSION = "1.0.1"
+const val CORE_VERSION = "1.0.1"
+const val SIGN_VERSION = "1.0.1"
+const val NOTIFY_VERSION = "1.0.1"
+const val WALLETKIT_VERSION = "1.0.1"
+const val APPKIT_VERSION = "1.0.1"
+const val MODAL_CORE_VERSION = "1.0.1"
 
 //Artifact ids
 const val ANDROID_BOM = "android-bom"

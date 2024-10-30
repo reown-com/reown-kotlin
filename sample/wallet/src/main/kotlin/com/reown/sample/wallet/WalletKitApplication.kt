@@ -1,9 +1,11 @@
 package com.reown.sample.wallet
 
 import android.app.Application
+import com.google.firebase.FirebaseApp
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.mixpanel.android.mpmetrics.MixpanelAPI
 import com.pandulapeter.beagle.Beagle
 import com.pandulapeter.beagle.common.configuration.Behavior
@@ -48,7 +50,7 @@ class WalletKitApplication : Application() {
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Wallet",
             description = "Kotlin Wallet Implementation",
-            url = "https://dev.lab.web3modal.com",
+            url = "https://appkit-lab.reown.com",
             icons = listOf("https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Icon/Gradient/Icon.png"),
             redirect = "kotlin-web3wallet://request",
             appLink = BuildConfig.WALLET_APP_LINK,
@@ -99,6 +101,17 @@ class WalletKitApplication : Application() {
         }
 
         initializeBeagle()
+
+        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+            WalletKit.registerDeviceToken(firebaseAccessToken = token, enableEncrypted = true,
+                onSuccess = {
+                    println("Successfully registered firebase token for Web3Wallet: $token")
+                },
+                onError = {
+                    println("Error while registering firebase token for Web3Wallet: ${it.throwable}")
+                }
+            )
+        }
 
         scope.launch {
             supervisorScope {
