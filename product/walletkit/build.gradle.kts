@@ -63,7 +63,7 @@ android {
     }
 }
 
-tasks.register("downloadArtifacts") {
+tasks.register("downloadYttriumArtifacts") {
     doLast {
         val tagName = YTTRIUM_VERSION
         val downloadUrl = "https://github.com/reown-com/yttrium/releases/download/$tagName/kotlin-artifacts.zip"
@@ -93,7 +93,7 @@ tasks.register("downloadArtifacts") {
 }
 
 tasks.named("preBuild") {
-    dependsOn("downloadArtifacts")
+    dependsOn("downloadYttriumArtifacts")
 }
 
 dependencies {
