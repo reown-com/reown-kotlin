@@ -69,6 +69,9 @@ tasks.register("downloadYttriumArtifacts") {
         val downloadUrl = "https://github.com/reown-com/yttrium/releases/download/$tagName/kotlin-artifacts.zip"
         val outputFile = file("${file(layout.buildDirectory)}/kotlin-artifacts.zip")
 
+
+        outputFile.parentFile.mkdirs()
+
         println("kobe: downloading $downloadUrl to: $outputFile")
 
         try {
