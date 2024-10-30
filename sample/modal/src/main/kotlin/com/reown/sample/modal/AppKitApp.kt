@@ -24,7 +24,7 @@ class AppKitApp : Application() {
         val appMetaData = Core.Model.AppMetaData(
             name = "AppKit Lab Sample",
             description = "Kotlin AppKit Lab Sample",
-            url = "https://dev.lab.web3modal.com",
+            url = "https://appkit-lab.reown.com",
             icons = listOf("https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media"),
             redirect = "kotlin-modal-wc://request",
             linkMode = true,

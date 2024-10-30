@@ -24,7 +24,7 @@ class DappSampleApp : Application() {
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Dapp",
             description = "Kotlin Dapp Implementation",
-            url = "https://dev.lab.web3modal.com",
+            url = "https://appkit-lab.reown.com",
             icons = listOf("https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media"),
             redirect = "kotlin-dapp-wc://request",
             appLink = BuildConfig.DAPP_APP_LINK,
@@ -44,7 +44,7 @@ class DappSampleApp : Application() {
         }
 
         AppKit.setChains(AppKitChainsPresets.ethChains.values.toList())
-//
+
 //        val authParams = Modal.Model.AuthPayloadParams(
 //            chains = AppKitChainsPresets.ethChains.values.toList().map { it.id },
 //            domain = "sample.kotlin.modal",

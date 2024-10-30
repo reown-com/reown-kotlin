@@ -28,18 +28,18 @@ android {
     buildTypes {
         getByName("release") {
             manifestPlaceholders["pathPrefix"] = "/lab_release"
-            buildConfigField("String", "LAB_APP_LINK", "\"https://dev.lab.web3modal.com/lab_release\"")
+            buildConfigField("String", "LAB_APP_LINK", "\"https://appkit-lab.reown.com/lab_release\"")
         }
 
         getByName("internal") {
             manifestPlaceholders["pathPrefix"] = "/lab_internal"
-            buildConfigField("String", "LAB_APP_LINK", "\"https://dev.lab.web3modal.com/lab_internal\"")
+            buildConfigField("String", "LAB_APP_LINK", "\"https://appkit-lab.reown.com/lab_internal\"")
 
         }
 
         getByName("debug") {
             manifestPlaceholders["pathPrefix"] = "/lab_debug"
-            buildConfigField("String", "LAB_APP_LINK", "\"https://dev.lab.web3modal.com/lab_debug\"")
+            buildConfigField("String", "LAB_APP_LINK", "\"https://appkit-lab.reown.com/lab_debug\"")
         }
     }
 
