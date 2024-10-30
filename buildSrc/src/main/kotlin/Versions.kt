@@ -13,7 +13,7 @@ const val NOTIFY_VERSION = "1.0.1"
 const val WALLETKIT_VERSION = "1.0.1"
 const val APPKIT_VERSION = "1.0.1"
 const val MODAL_CORE_VERSION = "1.0.1"
-const val YTTRIUM_VERSION = "0.2.3"
+const val YTTRIUM_VERSION = "0.2.4"
 
 //Artifact ids
 const val ANDROID_BOM = "android-bom"
