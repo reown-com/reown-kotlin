@@ -97,10 +97,10 @@ class WalletKitApplication : Application() {
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
             WalletKit.registerDeviceToken(firebaseAccessToken = token, enableEncrypted = true,
                 onSuccess = {
-                    println("kobe; Successfully registered firebase token for Web3Wallet: $token")
+                    println("Successfully registered firebase token for Web3Wallet: $token")
                 },
                 onError = {
-                    println("kobe; Error while registering firebase token for Web3Wallet: ${it.throwable}")
+                    println("Error while registering firebase token for Web3Wallet: ${it.throwable}")
                 }
             )
         }
