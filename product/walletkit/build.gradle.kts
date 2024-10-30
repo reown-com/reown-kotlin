@@ -35,6 +35,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "${rootDir.path}/gradle/proguard-rules/sdk-rules.pro", "${projectDir}/web3wallet-rules.pro")
         }
     }
+
     lint {
         abortOnError = true
         ignoreWarnings = true
@@ -85,7 +86,7 @@ tasks.register("downloadYttriumArtifacts") {
             }
         } catch (e: Exception) {
             println("kobe: Failed to download $downloadUrl error: $e")
-            throw  e
+            throw e
         }
 
 
