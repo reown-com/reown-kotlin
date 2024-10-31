@@ -72,7 +72,7 @@ class WalletKitApplication : Application() {
 
         println("Account: ${EthAccountDelegate.account}")
 
-        WalletKit.initialize(Wallet.Params.Init(core = CoreClient),
+        WalletKit.initialize(Wallet.Params.Init(core = CoreClient, pimlicoApiKey = BuildConfig.PIMLICO_API_KEY),
             onSuccess = { println("Web3Wallet initialized") },
             onError = { error ->
                 Firebase.crashlytics.recordException(error.throwable)
@@ -81,12 +81,8 @@ class WalletKitApplication : Application() {
 
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
 
-//        //Yttrium Account Client init
-//        accountClient = AccountClient(accountConfig)
-//        scope.launch {
-//            smartAccountAddress = accountClient.getAddress()
-//            println("kobe: SmartAccountAddress: $smartAccountAddress")
-//        }
+        val smartAccountAddress = WalletKit.getSmartAccount(owner = Wallet.Params.Account(EthAccountDelegate.ethAddress))
+        println("kobe: SmartAccountAddress: $smartAccountAddress")
 
         NotifyClient.initialize(
             init = Notify.Params.Init(CoreClient)

@@ -12,7 +12,6 @@ import com.reown.android.utils.cacao.sign
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
-import accountClient
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.util.hexToBytes

@@ -24,7 +24,7 @@ class SafeInteractor(private val pimlicoApiKey: String) {
 
 
     private fun createSafeAccount(owner: String): AccountClient {
-        val (namespace: String, reference: String, _) = owner.split(":")
+        val (namespace: String, reference: String, address: String) = owner.split(":")
         val pimlicoUrl = "https://api.pimlico.io/v2/$reference/rpc?apikey=$pimlicoApiKey"
         val endpoints = Endpoints(
             rpc = Endpoint(baseUrl = "https://rpc.walletconnect.com/v1?chainId=$namespace:$reference&projectId=$projectId", apiKey = ""),
@@ -34,13 +34,14 @@ class SafeInteractor(private val pimlicoApiKey: String) {
         val config = Config(endpoints)
 
         val accountConfig = AccountClientConfig(
-            ownerAddress = owner,
+            ownerAddress = address,
             chainId = reference.toULong(),
             config = config,
-            privateKey = "", //todo: remove
+            privateKey = "ff89825a799afce0d5deaa079cdde227072ec3f62973951683ac8cc033092156", //todo: remove sign service
             safe = true,
-            signerType = "PrivateKey" //todo: remove
+            signerType = "PrivateKey" //todo: remove sign service
         )
+        println("kobe: init Safe Account")
         return AccountClient(accountConfig)
     }
 }

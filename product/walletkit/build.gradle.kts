@@ -69,29 +69,20 @@ tasks.register("downloadYttriumArtifacts") {
         val tagName = YTTRIUM_VERSION
         val downloadUrl = "https://github.com/reown-com/yttrium/releases/download/$tagName/kotlin-artifacts.zip"
         val outputFile = file("${file(layout.buildDirectory)}/kotlin-artifacts.zip")
-
-
         outputFile.parentFile.mkdirs()
-
-        println("kobe: downloading $downloadUrl to: $outputFile")
 
         try {
             // Download the kotlin-artifacts.zip from GitHub Releases
             URL(downloadUrl).openStream().use { input ->
-                println("kobe: input: $input")
                 outputFile.outputStream().use { output ->
-                    println("kobe: output: $output")
                     input.copyTo(output)
                 }
             }
         } catch (e: Exception) {
-            println("kobe: Failed to download $downloadUrl error: $e")
+            println("Failed to download $downloadUrl error: $e")
             throw e
         }
 
-
-
-        println("kobe: extracting from $outputFile: to: ${file(layout.buildDirectory)}")
         // Extract the kotlin-artifacts.zip to the build directory
         copy {
             from(zipTree(outputFile))
@@ -101,7 +92,6 @@ tasks.register("downloadYttriumArtifacts") {
         // Delete the zip file after extraction
         if (outputFile.exists()) {
             outputFile.delete()
-            println("Deleted $outputFile")
         } else {
             println("File $outputFile does not exist")
         }

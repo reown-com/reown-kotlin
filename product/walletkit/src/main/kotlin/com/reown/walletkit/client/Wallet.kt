@@ -18,7 +18,7 @@ object Wallet {
     }
 
     sealed class Params {
-        data class Init(val core: CoreInterface) : Params()
+        data class Init(val core: CoreInterface, val pimlicoApiKey: String? = null) : Params()
 
         data class Pair(val uri: String) : Params()
 
@@ -59,6 +59,12 @@ object Wallet {
         }
 
         data class DecryptMessage(val topic: String, val encryptedMessage: String) : Params()
+
+        data class Transaction(val to: String, val value: String, val data: String) : Params()
+
+        data class Account(val address: String) : Params()
+
+        data class OwnerSignature(val address: String, val signature: String) : Params()
     }
 
     sealed class Model {
@@ -309,5 +315,10 @@ object Wallet {
                 ) : Message()
             }
         }
+
+        data class PreparedSendTransaction(
+            var hash: String,
+            var doSendTransactionParams: String
+        ) : Model()
     }
 }

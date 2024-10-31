@@ -3,8 +3,8 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 import androidx.lifecycle.ViewModel
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.WCDelegate
-import smartAccountAddress
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.walletkit.client.Wallet
@@ -20,7 +20,7 @@ class SessionProposalViewModel : ViewModel() {
                 Timber.d("Approving session proposal: $proposalPublicKey")
                 val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
 
-                val capability = "{\"$smartAccountAddress\":{\"0xaa36a7\":{\"atomicBatch\":{\"supported\":true}}}}"
+                val capability = "{\"eip155:11155111:$ACCOUNTS_1_EIP155_ADDRESS\":{\"0xaa36a7\":{\"atomicBatch\":{\"supported\":true}}}}"
 
 //                "[{\"from\":\"$account\",\"to\":\"0x70012948c348CBF00806A3C79E3c5DAdFaAa347B\",\"data\":\"0x\",\"gasLimit\":\"0x5208\",\"gasPrice\":\"0x0649534e00\",\"value\":\"0x01\",\"nonce\":\"0x07\"}]"
                 val sessionProperties = mapOf(

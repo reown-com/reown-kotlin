@@ -2,6 +2,9 @@ package com.reown.walletkit.client
 
 import com.reown.android.internal.common.signing.cacao.CacaoType
 import com.reown.sign.client.Sign
+import uniffi.uniffi_yttrium.OwnerSignature
+import uniffi.uniffi_yttrium.PreparedSendTransaction
+import uniffi.uniffi_yttrium.Transaction
 
 @JvmSynthetic
 internal fun Map<String, Wallet.Model.Namespace.Session>.toSign(): Map<String, Sign.Model.Namespace.Session> =
@@ -277,6 +280,15 @@ internal fun Sign.Model.Cacao.toWallet(): Wallet.Model.Cacao = with(this) {
 
 @JvmSynthetic
 internal fun Sign.Model.ConnectionState.Reason.toWallet(): Wallet.Model.ConnectionState.Reason = when (this) {
-	is Sign.Model.ConnectionState.Reason.ConnectionClosed -> Wallet.Model.ConnectionState.Reason.ConnectionClosed(this.message)
-	is Sign.Model.ConnectionState.Reason.ConnectionFailed -> Wallet.Model.ConnectionState.Reason.ConnectionFailed(this.throwable)
+    is Sign.Model.ConnectionState.Reason.ConnectionClosed -> Wallet.Model.ConnectionState.Reason.ConnectionClosed(this.message)
+    is Sign.Model.ConnectionState.Reason.ConnectionFailed -> Wallet.Model.ConnectionState.Reason.ConnectionFailed(this.throwable)
 }
+
+@JvmSynthetic
+internal fun PreparedSendTransaction.toWallet(): Wallet.Model.PreparedSendTransaction = Wallet.Model.PreparedSendTransaction(hash, doSendTransactionParams)
+
+@JvmSynthetic
+internal fun Wallet.Params.Transaction.toYttrium(): Transaction = Transaction(to, data, value)
+
+@JvmSynthetic
+internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(address, signature)

@@ -22,6 +22,7 @@ android {
             useSupportLibrary = true
         }
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
+        buildConfigField("String", "PIMLICO_API_KEY", "\"${System.getenv("PIMLICO_API_KEY") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
     }
 

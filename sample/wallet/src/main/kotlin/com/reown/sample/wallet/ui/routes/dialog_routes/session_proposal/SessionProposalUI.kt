@@ -1,6 +1,6 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
-import smartAccountAddress
+import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.walletkit.client.Wallet
@@ -48,7 +48,7 @@ val walletMetaData = WalletMetaData(
             ),
             events = listOf("chainChanged", "accountsChanged", "connect", "disconnect"),
             accounts = listOf(
-                "eip155:11155111:$smartAccountAddress"
+                "eip155:11155111:$ACCOUNTS_1_EIP155_ADDRESS"
             )
 //            "eip155:1:$ACCOUNTS_1_EIP155_ADDRESS",
 //            "eip155:1:$ACCOUNTS_2_EIP155_ADDRESS",
