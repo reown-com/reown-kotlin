@@ -7,11 +7,13 @@ import com.reown.android.internal.common.scope
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
+import com.reown.walletkit.smart_account.SafeInteractor
 import kotlinx.coroutines.*
 import java.util.*
 
 object WalletKit {
     private lateinit var coreClient: CoreInterface
+    private lateinit var safeInteractor: SafeInteractor
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -98,6 +100,9 @@ object WalletKit {
     @Throws(IllegalStateException::class)
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
         coreClient = params.core
+
+        //todo: init safeInteractor
+
         SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
             if (error.throwable is SignClientAlreadyInitializedException) {
                 onSuccess()
@@ -110,10 +115,6 @@ object WalletKit {
     @Throws(IllegalStateException::class)
     fun registerDeviceToken(firebaseAccessToken: String, enableEncrypted: Boolean = false, onSuccess: () -> Unit, onError: (Wallet.Model.Error) -> Unit) {
         coreClient.Echo.register(firebaseAccessToken, enableEncrypted, onSuccess) { error -> onError(Wallet.Model.Error(error)) }
-    }
-
-    fun sendTransactions() {
-
     }
 
     @Throws(IllegalStateException::class)
@@ -272,6 +273,23 @@ object WalletKit {
         }
 
         SignClient.ping(signParams, signPingLister)
+    }
+
+    //Yttrium
+    fun prepareSendTransactions() {
+
+    }
+
+    fun doSendTransaction() {
+
+    }
+
+    fun getSmartAccount() {
+
+    }
+
+    fun waitForUserOperationReceipt() {
+
     }
 
     /**
