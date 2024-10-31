@@ -8,7 +8,6 @@ import uniffi.yttrium.Config
 import uniffi.yttrium.Endpoint
 import uniffi.yttrium.Endpoints
 
-//todo: use Object instead of class?
 class SafeInteractor(private val pimlicoApiKey: String) {
     private val projectId: String = wcKoinApp.koin.get<ProjectId>().value
     private val ownerToAccountClient = mutableMapOf<String, AccountClient>()
@@ -25,6 +24,9 @@ class SafeInteractor(private val pimlicoApiKey: String) {
 
     private fun createSafeAccount(owner: String): AccountClient {
         val (namespace: String, reference: String, address: String) = owner.split(":")
+
+        println("kobe: namespace: $namespace; reference: $reference; address: $address; pimlicoApiKey: $pimlicoApiKey; projectId: $projectId")
+
         val pimlicoUrl = "https://api.pimlico.io/v2/$reference/rpc?apikey=$pimlicoApiKey"
         val endpoints = Endpoints(
             rpc = Endpoint(baseUrl = "https://rpc.walletconnect.com/v1?chainId=$namespace:$reference&projectId=$projectId", apiKey = ""),
@@ -32,6 +34,8 @@ class SafeInteractor(private val pimlicoApiKey: String) {
             paymaster = Endpoint(baseUrl = pimlicoUrl, apiKey = ""),
         )
         val config = Config(endpoints)
+
+        println("kobe: Init with address: $address")
 
         val accountConfig = AccountClientConfig(
             ownerAddress = address,
@@ -41,7 +45,6 @@ class SafeInteractor(private val pimlicoApiKey: String) {
             safe = true,
             signerType = "PrivateKey" //todo: remove sign service
         )
-        println("kobe: init Safe Account")
         return AccountClient(accountConfig)
     }
 }

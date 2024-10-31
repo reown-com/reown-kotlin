@@ -3,12 +3,14 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_request
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
+import org.web3j.crypto.ECKeyPair
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.android.utils.cacao.sign
+import com.reown.android.utils.cacao.signHex
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
@@ -23,7 +25,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.web3j.crypto.Sign
+import org.web3j.utils.Numeric
 import org.web3j.utils.Numeric.hexStringToByteArray
+import java.math.BigInteger
+
 //import uniffi.uniffi_yttrium.Transaction
 
 class SessionRequestViewModel : ViewModel() {
@@ -89,24 +95,41 @@ class SessionRequestViewModel : ViewModel() {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
                     val result: String = when {
-//                        sessionRequest.method == "wallet_sendCalls" -> {
-//                            val transactions: MutableList<Transaction> = mutableListOf()
-//                            println("kobe: wallet_sendCalls: ${sessionRequest.param}")
-//                            val callsArray = JSONArray(sessionRequest.param).getJSONObject(0).getJSONArray("calls")
-//
-//                            for (i in 0 until callsArray.length()) {
-//                                val call = callsArray.getJSONObject(i)
-//                                val to = call.getString("to") ?: ""
-//                                val value = call.getString("value") ?: ""
-//                                val data = call.getString("data") ?: ""
-//                                transactions.add(Transaction(to, value, data))
-//                            }
-//                            println("kobe: Transactions: $transactions")
-//                            val userOpHash = sendAsync(transactions)
-//
-//                            println("kobe: userOpHash: $userOpHash")
-//                            userOpHash
-//                        }
+                        sessionRequest.method == "wallet_sendCalls" -> {
+                            val transactions: MutableList<Wallet.Params.Transaction> = mutableListOf()
+                            println("kobe: wallet_sendCalls: ${sessionRequest.param}")
+                            val callsArray = JSONArray(sessionRequest.param).getJSONObject(0).getJSONArray("calls")
+
+                            for (i in 0 until callsArray.length()) {
+                                val call = callsArray.getJSONObject(i)
+                                val to = call.getString("to") ?: ""
+                                val value = call.getString("value") ?: ""
+                                val data = call.getString("data") ?: ""
+                                transactions.add(Wallet.Params.Transaction(to, value, data))
+                            }
+                            println("kobe: Transactions: $transactions")
+
+                            val prepSendTx =
+                                async { WalletKit.prepareSendTransactions(transactions, Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)) }.await()
+
+                            println("kobe: TX params: ${prepSendTx.hash}; ${prepSendTx.doSendTransactionParams}")
+
+                            val signature = signHash(prepSendTx.hash, EthAccountDelegate.privateKey)//CacaoSigner.signHex(prepSendTx.hash, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191).s
+
+                            println("kobe: signature: $signature")
+
+                            val userOpHash = async {
+                                WalletKit.doSendTransactions(
+                                    Wallet.Params.Account(EthAccountDelegate.sepoliaAddress),
+                                    listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.sepoliaAddress, signature = signature)),
+                                    prepSendTx.doSendTransactionParams
+                                )
+                            }.await()
+
+                            println("kobe: userOpHash: $userOpHash")
+
+                            userOpHash
+                        }
 
                         sessionRequest.method == PERSONAL_SIGN_METHOD -> CacaoSigner.sign(
                             sessionRequest.param,
@@ -163,11 +186,34 @@ class SessionRequestViewModel : ViewModel() {
         }
     }
 
-//    private suspend fun sendAsync(transactions: List<Transaction>): String =
-//        withContext(Dispatchers.IO) {
-//            val userOpHash: String = async { accountClient.sendTransactions(transactions) }.await()
-//            return@withContext userOpHash
-//        }
+    fun signHash(hashToSign: String, privateKeyHex: String): String {
+        val dataToSign: ByteArray = if (hashToSign.startsWith("0x")) {
+            // Hex-encoded message, remove "0x" and convert
+            Numeric.hexStringToByteArray(hashToSign)
+        } else {
+            // Plain text message, convert directly to data
+            hashToSign.toByteArray(Charsets.UTF_8)
+        }
+
+        // Create ECKeyPair from private key
+        val privateKeyBigInt = BigInteger(privateKeyHex, 16)
+        val ecKeyPair = ECKeyPair.create(privateKeyBigInt)
+
+        // Sign the data
+        val signatureData = Sign.signMessage(dataToSign, ecKeyPair, false)
+
+        val rHex = Numeric.toHexStringNoPrefix(signatureData.r)
+        val sHex = Numeric.toHexStringNoPrefix(signatureData.s)
+//        val v = signatureData.v.toInt() - 27 // Adjust v value to be 0 or 1
+
+        val vByte = signatureData.v[0]
+        val v = (vByte.toInt() and 0xFF) - 27
+
+        val vHex = v.toString(16)
+        val result = "0x$rHex$sHex$vHex"
+
+        return result
+    }
 
     private fun generateSessionRequestUI(): SessionRequestUI {
         return if (WCDelegate.sessionRequestEvent != null) {

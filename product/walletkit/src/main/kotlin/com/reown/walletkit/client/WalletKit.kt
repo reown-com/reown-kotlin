@@ -100,7 +100,6 @@ object WalletKit {
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
         coreClient = params.core
         if (params.pimlicoApiKey != null) {
-            println("kobe: SafeInteractor initialized")
             safeInteractor = SafeInteractor(params.pimlicoApiKey)
         }
 
@@ -286,19 +285,19 @@ object WalletKit {
     }
 
     @Throws(IllegalStateException::class)
-    fun prepareSendTransactions(transactions: List<Wallet.Params.Transaction>, owner: Wallet.Params.Account): Wallet.Model.PreparedSendTransaction {
+    suspend fun prepareSendTransactions(transactions: List<Wallet.Params.Transaction>, owner: Wallet.Params.Account): Wallet.Model.PreparedSendTransaction {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
         val client = safeInteractor.getOrCreate(owner.address)
-        return runBlocking { client.prepareSendTransactions(transactions.map { it.toYttrium() }).toWallet() }
+        return client.prepareSendTransactions(transactions.map { it.toYttrium() }).toWallet()
     }
 
     @Throws(IllegalStateException::class)
-    fun doSendTransactions(owner: Wallet.Params.Account, signatures: List<Wallet.Params.OwnerSignature>, doSendTransactionParams: String): String {
+    suspend fun doSendTransactions(owner: Wallet.Params.Account, signatures: List<Wallet.Params.OwnerSignature>, doSendTransactionParams: String): String {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
         val client = safeInteractor.getOrCreate(owner.address)
-        return runBlocking { client.doSendTransactions(signatures.map { it.toYttrium() }, doSendTransactionParams) }
+        return client.doSendTransactions(signatures.map { it.toYttrium() }, doSendTransactionParams)
     }
 
     @Throws(IllegalStateException::class)
