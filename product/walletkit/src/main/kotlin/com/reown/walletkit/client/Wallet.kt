@@ -59,15 +59,18 @@ object Wallet {
         }
 
         data class DecryptMessage(val topic: String, val encryptedMessage: String) : Params()
-
-        data class Transaction(val to: String, val value: String, val data: String) : Params()
-
-        data class Account(val address: String) : Params()
-
-        data class OwnerSignature(val address: String, val signature: String) : Params()
+        data class GetSmartAccountAddress(val owner: Model.Account) : Params()
+        data class PrepareSendTransactions(val transactions: List<Model.Transaction>, val owner: Model.Account) : Params()
+        data class DoSendTransactions(val owner: Model.Account, val signatures: List<Model.OwnerSignature>, val doSendTransactionParams: String) : Params()
+        data class PrepareSendTransactionsResult(var hash: String, var doSendTransactionParams: String) : Params()
+        data class DoSendTransactionsResult(var userOperationHash: String)
+        data class WaitForUserOperationReceipt(var owner: Model.Account, var userOperationHash: String)
     }
 
     sealed class Model {
+        data class OwnerSignature(val address: String, val signature: String) : Params()
+        data class Account(val address: String) : Params()
+        data class Transaction(val to: String, val value: String, val data: String) : Params()
 
         sealed class Ping : Model() {
             data class Success(val topic: String) : Ping()
@@ -315,10 +318,5 @@ object Wallet {
                 ) : Message()
             }
         }
-
-        data class PreparedSendTransaction(
-            var hash: String,
-            var doSendTransactionParams: String
-        ) : Model()
     }
 }

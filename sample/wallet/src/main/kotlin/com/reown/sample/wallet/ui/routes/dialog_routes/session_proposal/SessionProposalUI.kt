@@ -49,7 +49,7 @@ val walletMetaData = WalletMetaData(
             ),
             events = listOf("chainChanged", "accountsChanged", "connect", "disconnect"),
             accounts = listOf(
-                "eip155:11155111:${WalletKit.getSmartAccount(Wallet.Params.Account(EthAccountDelegate.sepoliaAddress))}"
+                "eip155:11155111:${WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(Wallet.Model.Account(EthAccountDelegate.sepoliaAddress)))}"
             )
 //            "eip155:1:$ACCOUNTS_1_EIP155_ADDRESS",
 //            "eip155:1:$ACCOUNTS_2_EIP155_ADDRESS",

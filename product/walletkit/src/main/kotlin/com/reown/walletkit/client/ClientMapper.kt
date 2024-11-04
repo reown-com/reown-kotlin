@@ -285,10 +285,10 @@ internal fun Sign.Model.ConnectionState.Reason.toWallet(): Wallet.Model.Connecti
 }
 
 @JvmSynthetic
-internal fun PreparedSendTransaction.toWallet(): Wallet.Model.PreparedSendTransaction = Wallet.Model.PreparedSendTransaction(hash, doSendTransactionParams)
+internal fun PreparedSendTransaction.toWallet(): Wallet.Params.PrepareSendTransactionsResult = Wallet.Params.PrepareSendTransactionsResult(hash, doSendTransactionParams)
 
 @JvmSynthetic
-internal fun Wallet.Params.Transaction.toYttrium(): Transaction = Transaction(to = to, value = value, data = data)
+internal fun Wallet.Model.Transaction.toYttrium(): Transaction = Transaction(to = to, value = value, data = data)
 
 @JvmSynthetic
-internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)
+internal fun Wallet.Model.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)

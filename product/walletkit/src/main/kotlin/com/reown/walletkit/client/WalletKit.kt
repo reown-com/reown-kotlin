@@ -277,36 +277,49 @@ object WalletKit {
     }
 
     //Yttrium
-    @Throws(IllegalStateException::class)
-    fun getSmartAccount(owner: Wallet.Params.Account): String {
+    @Throws(Throwable::class)
+    fun getSmartAccount(params: Wallet.Params.GetSmartAccountAddress): String {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
-        val client = safeInteractor.getOrCreate(Account(owner.address))
+        val client = safeInteractor.getOrCreate(Account(params.owner.address))
         return runBlocking { client.getAddress() }
     }
 
-    @Throws(IllegalStateException::class)
-    suspend fun prepareSendTransactions(transactions: List<Wallet.Params.Transaction>, owner: Wallet.Params.Account): Wallet.Model.PreparedSendTransaction {
+    @Throws(Throwable::class)
+    fun prepareSendTransactions(params: Wallet.Params.PrepareSendTransactions, onSuccess: (Wallet.Params.PrepareSendTransactionsResult) -> Unit) {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
-        val client = safeInteractor.getOrCreate(Account(owner.address))
-        return client.prepareSendTransactions(transactions.map { it.toYttrium() }).toWallet()
+        val client = safeInteractor.getOrCreate(Account(params.owner.address))
+        scope.launch {
+            async { client.prepareSendTransactions(params.transactions.map { it.toYttrium() }).toWallet() }
+                .await()
+                .let(onSuccess)
+        }
     }
 
-    @Throws(IllegalStateException::class)
-    suspend fun doSendTransactions(owner: Wallet.Params.Account, signatures: List<Wallet.Params.OwnerSignature>, doSendTransactionParams: String): String {
+    @Throws(Throwable::class)
+    fun doSendTransactions(params: Wallet.Params.DoSendTransactions, onSuccess: (Wallet.Params.DoSendTransactionsResult) -> Unit) {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
-        val client = safeInteractor.getOrCreate(Account(owner.address))
-        return client.doSendTransactions(signatures.map { it.toYttrium() }, doSendTransactionParams)
+        val client = safeInteractor.getOrCreate(Account(params.owner.address))
+        scope.launch {
+            async { client.doSendTransactions(params.signatures.map { it.toYttrium() }, params.doSendTransactionParams) }
+                .await()
+                .let { userOpHash -> onSuccess(Wallet.Params.DoSendTransactionsResult(userOpHash)) }
+        }
     }
 
-    @Throws(IllegalStateException::class)
-    fun waitForUserOperationReceipt(owner: Wallet.Params.Account, userOperationHash: String): String {
+    @Throws(Throwable::class)
+    //TODO: should return string or type? test it
+    fun waitForUserOperationReceipt(params: Wallet.Params.WaitForUserOperationReceipt, onSuccess: (String) -> Unit) {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
-        val client = safeInteractor.getOrCreate(Account(owner.address))
-        return runBlocking { client.waitForUserOperationReceipt(userOperationHash) }
+        val client = safeInteractor.getOrCreate(Account(params.owner.address))
+        scope.launch {
+            async { client.waitForUserOperationReceipt(params.userOperationHash) }
+                .await()
+                .let(onSuccess)
+        }
     }
 
     /**

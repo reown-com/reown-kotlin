@@ -20,8 +20,8 @@ class SessionProposalViewModel : ViewModel() {
             try {
                 Timber.d("Approving session proposal: $proposalPublicKey")
                 val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
-
-                val smartAccountAddress = WalletKit.getSmartAccount(Wallet.Params.Account(EthAccountDelegate.sepoliaAddress))
+                val ownerAccount = Wallet.Model.Account(EthAccountDelegate.sepoliaAddress)
+                val smartAccountAddress = WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(ownerAccount))
                 println("kobe: smartAccountAddress: $smartAccountAddress")
                 val capability = "{\"$smartAccountAddress\":{\"0xaa36a7\":{\"atomicBatch\":{\"supported\":true}}}}"
 //                "[{\"from\":\"$account\",\"to\":\"0x70012948c348CBF00806A3C79E3c5DAdFaAa347B\",\"data\":\"0x\",\"gasLimit\":\"0x5208\",\"gasPrice\":\"0x0649534e00\",\"value\":\"0x01\",\"nonce\":\"0x07\"}]"
