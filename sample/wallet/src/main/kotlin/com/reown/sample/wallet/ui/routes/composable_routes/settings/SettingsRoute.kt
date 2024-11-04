@@ -21,9 +21,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,14 +55,14 @@ import com.reown.sample.wallet.R
 @Composable
 fun SettingsRoute(navController: NavHostController) {
     val viewModel: SettingsViewModel = viewModel()
-
     val deviceToken = viewModel.deviceToken.collectAsState().value
 
     val sections = listOf(
         Section.SettingsSection(
             "Account", listOf(
                 Item.SettingCopyableItem("CAIP-10", viewModel.caip10),
-                Item.SettingCopyableItem("Private key", viewModel.privateKey)
+                Item.SettingCopyableItem("Safe Smart Account Address", viewModel.getSmartAccount()),
+                Item.SettingCopyableItem("Private key", viewModel.privateKey),
             )
         ),
         Section.SettingsSection(
@@ -77,29 +83,66 @@ fun SettingsRoute(navController: NavHostController) {
     })
 }
 
-
 @Composable
 private fun SettingsScreen(
     sections: List<Section>,
     onLogoutClicked: () -> Unit,
     onSettingClicked: (String) -> Unit,
 ) {
+    Divider()
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         WCTopAppBar(titleText = "Settings")
         Divider()
-        LazyColumn() {
+        FeaturesSection()
+        Divider()
+        LazyColumn {
             itemsIndexed(sections) { index, section ->
                 when (section) {
-                    is Section.SettingsSection -> {
-                        SettingsSection(section.title, section.items, onSettingClicked)
-                    }
-
-                    is Section.LogoutSection -> {
-                        LogoutSection(onLogoutClicked)
-                    }
+                    is Section.SettingsSection -> SettingsSection(section.title, section.items, onSettingClicked)
+                    is Section.LogoutSection -> LogoutSection(onLogoutClicked)
                 }
                 if (index != sections.lastIndex) Divider()
             }
+        }
+    }
+}
+
+@Composable
+private fun FeaturesSection() {
+    var isSafeEnabled by remember { mutableStateOf(false) }
+    Column(
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.Start,
+    ) {
+        Text(text = "Features", style = TextStyle(fontSize = 15.sp), fontWeight = FontWeight(700))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Safe Smart Account", style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight(400),
+                    color = MaterialTheme.colors.onBackground.copy(0.75f)
+                )
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Switch(
+                checked = isSafeEnabled,
+                onCheckedChange = { isChecked ->
+                    isSafeEnabled = isChecked
+//                // Perform actions based on the new state
+//                if (isFeatureEnabled) {
+//                    // Enable the feature
+//                } else {
+//                    // Disable the feature
+//                }
+                },
+                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
+            )
         }
     }
 }
@@ -119,7 +162,6 @@ fun SettingsSection(title: String, items: List<Item>, onSettingClicked: (String)
         }
     }
 }
-
 
 @Composable
 fun SettingCopyableItem(key: String, value: String, onSettingClicked: (String) -> Unit) {
