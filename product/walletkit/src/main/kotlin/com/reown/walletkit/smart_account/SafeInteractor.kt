@@ -12,34 +12,27 @@ class SafeInteractor(private val pimlicoApiKey: String) {
     private val projectId: String = wcKoinApp.koin.get<ProjectId>().value
     private val ownerToAccountClient = mutableMapOf<String, AccountClient>()
 
-    fun getOrCreate(owner: String): AccountClient =
-        if (ownerToAccountClient.containsKey(owner)) {
-            ownerToAccountClient[owner]!!
+    fun getOrCreate(account: Account): AccountClient {
+        return if (ownerToAccountClient.containsKey(account.owner)) {
+            ownerToAccountClient[account.owner]!!
         } else {
-            val safeAccount = createSafeAccount(owner)
-            ownerToAccountClient[owner] = safeAccount
+            val safeAccount = createSafeAccount(account)
+            ownerToAccountClient[account.owner] = safeAccount
             safeAccount
         }
+    }
 
-
-    private fun createSafeAccount(owner: String): AccountClient {
-        val (namespace: String, reference: String, address: String) = owner.split(":")
-
-        println("kobe: namespace: $namespace; reference: $reference; address: $address; pimlicoApiKey: $pimlicoApiKey; projectId: $projectId")
-
-        val pimlicoUrl = "https://api.pimlico.io/v2/$reference/rpc?apikey=$pimlicoApiKey"
+    private fun createSafeAccount(account: Account): AccountClient {
+        val pimlicoUrl = "https://api.pimlico.io/v2/${account.reference}/rpc?apikey=$pimlicoApiKey"
         val endpoints = Endpoints(
-            rpc = Endpoint(baseUrl = "https://rpc.walletconnect.com/v1?chainId=$namespace:$reference&projectId=$projectId", apiKey = ""),
+            rpc = Endpoint(baseUrl = "https://rpc.walletconnect.com/v1?chainId=${account.namespace}:${account.reference}&projectId=$projectId", apiKey = ""),
             bundler = Endpoint(baseUrl = pimlicoUrl, apiKey = ""), //todo: remove apiKet from bindings
             paymaster = Endpoint(baseUrl = pimlicoUrl, apiKey = ""),
         )
         val config = Config(endpoints)
-
-        println("kobe: Init with address: $address")
-
         val accountConfig = AccountClientConfig(
-            ownerAddress = address,
-            chainId = reference.toULong(),
+            ownerAddress = account.address,
+            chainId = account.reference.toULong(),
             config = config,
             privateKey = "ff89825a799afce0d5deaa079cdde227072ec3f62973951683ac8cc033092156", //todo: remove sign service
             safe = true,

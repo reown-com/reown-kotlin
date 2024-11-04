@@ -72,7 +72,6 @@ class WalletKitApplication : Application() {
 
         println("Account: ${EthAccountDelegate.account}")
 
-        println("kobe: PIM ${BuildConfig.PIMLICO_API_KEY}")
         WalletKit.initialize(Wallet.Params.Init(core = CoreClient, pimlicoApiKey = BuildConfig.PIMLICO_API_KEY),
             onSuccess = { println("Web3Wallet initialized") },
             onError = { error ->
@@ -81,10 +80,6 @@ class WalletKitApplication : Application() {
             })
 
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
-
-//        val smartAccountAddress = WalletKit.getSmartAccount(owner = Wallet.Params.Account(EthAccountDelegate.ethAddress))
-//        println("kobe: SmartAccountAddress: $smartAccountAddress")
-
         NotifyClient.initialize(
             init = Notify.Params.Init(CoreClient)
         ) { error ->

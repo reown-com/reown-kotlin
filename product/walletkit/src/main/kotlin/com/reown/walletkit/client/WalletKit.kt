@@ -6,6 +6,7 @@ import com.reown.android.internal.common.scope
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
+import com.reown.walletkit.smart_account.Account
 import com.reown.walletkit.smart_account.SafeInteractor
 import kotlinx.coroutines.*
 import java.util.*
@@ -280,7 +281,7 @@ object WalletKit {
     fun getSmartAccount(owner: Wallet.Params.Account): String {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
-        val client = safeInteractor.getOrCreate(owner.address)
+        val client = safeInteractor.getOrCreate(Account(owner.address))
         return runBlocking { client.getAddress() }
     }
 
@@ -288,7 +289,7 @@ object WalletKit {
     suspend fun prepareSendTransactions(transactions: List<Wallet.Params.Transaction>, owner: Wallet.Params.Account): Wallet.Model.PreparedSendTransaction {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
-        val client = safeInteractor.getOrCreate(owner.address)
+        val client = safeInteractor.getOrCreate(Account(owner.address))
         return client.prepareSendTransactions(transactions.map { it.toYttrium() }).toWallet()
     }
 
@@ -296,7 +297,7 @@ object WalletKit {
     suspend fun doSendTransactions(owner: Wallet.Params.Account, signatures: List<Wallet.Params.OwnerSignature>, doSendTransactionParams: String): String {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
-        val client = safeInteractor.getOrCreate(owner.address)
+        val client = safeInteractor.getOrCreate(Account(owner.address))
         return client.doSendTransactions(signatures.map { it.toYttrium() }, doSendTransactionParams)
     }
 
@@ -304,7 +305,7 @@ object WalletKit {
     fun waitForUserOperationReceipt(owner: Wallet.Params.Account, userOperationHash: String): String {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
-        val client = safeInteractor.getOrCreate(owner.address)
+        val client = safeInteractor.getOrCreate(Account(owner.address))
         return runBlocking { client.waitForUserOperationReceipt(userOperationHash) }
     }
 

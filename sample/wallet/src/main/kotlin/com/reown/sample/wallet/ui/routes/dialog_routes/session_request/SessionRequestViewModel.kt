@@ -13,6 +13,7 @@ import com.reown.android.utils.cacao.sign
 import com.reown.android.utils.cacao.signHex
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.EthSigner
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
@@ -111,23 +112,21 @@ class SessionRequestViewModel : ViewModel() {
 
                             val prepSendTx =
                                 async { WalletKit.prepareSendTransactions(transactions, Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)) }.await()
-
-                            println("kobe: TX params: ${prepSendTx.hash}; ${prepSendTx.doSendTransactionParams}")
-
-                            val signature = signHash(prepSendTx.hash, EthAccountDelegate.privateKey)//CacaoSigner.signHex(prepSendTx.hash, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191).s
-
-                            println("kobe: signature: $signature")
+                            val signature = EthSigner.signHash(
+                                prepSendTx.hash,
+                                EthAccountDelegate.privateKey
+                            )
 
                             val userOpHash = async {
                                 WalletKit.doSendTransactions(
                                     Wallet.Params.Account(EthAccountDelegate.sepoliaAddress),
-                                    listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.sepoliaAddress, signature = signature)),
+                                    listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
                                     prepSendTx.doSendTransactionParams
                                 )
+
                             }.await()
 
                             println("kobe: userOpHash: $userOpHash")
-
                             userOpHash
                         }
 
@@ -176,43 +175,11 @@ class SessionRequestViewModel : ViewModel() {
                     onError(Throwable("Approve - Cannot find session request"))
                 }
             } catch (e: Exception) {
-
-                println("kobe: Approve Error: $e")
-
                 Firebase.crashlytics.recordException(e)
                 clearSessionRequest()
                 onError(e.cause ?: Throwable("Undefined error, please check your Internet connection"))
             }
         }
-    }
-
-    fun signHash(hashToSign: String, privateKeyHex: String): String {
-        val dataToSign: ByteArray = if (hashToSign.startsWith("0x")) {
-            // Hex-encoded message, remove "0x" and convert
-            Numeric.hexStringToByteArray(hashToSign)
-        } else {
-            // Plain text message, convert directly to data
-            hashToSign.toByteArray(Charsets.UTF_8)
-        }
-
-        // Create ECKeyPair from private key
-        val privateKeyBigInt = BigInteger(privateKeyHex, 16)
-        val ecKeyPair = ECKeyPair.create(privateKeyBigInt)
-
-        // Sign the data
-        val signatureData = Sign.signMessage(dataToSign, ecKeyPair, false)
-
-        val rHex = Numeric.toHexStringNoPrefix(signatureData.r)
-        val sHex = Numeric.toHexStringNoPrefix(signatureData.s)
-//        val v = signatureData.v.toInt() - 27 // Adjust v value to be 0 or 1
-
-        val vByte = signatureData.v[0]
-        val v = (vByte.toInt() and 0xFF) - 27
-
-        val vHex = v.toString(16)
-        val result = "0x$rHex$sHex$vHex"
-
-        return result
     }
 
     private fun generateSessionRequestUI(): SessionRequestUI {
