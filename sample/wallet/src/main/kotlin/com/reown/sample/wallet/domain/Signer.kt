@@ -10,8 +10,8 @@ import kotlin.coroutines.suspendCoroutine
 
 object Signer {
     suspend fun sign(sessionRequest: SessionRequestUI.Content) = when {
-        SmartAccountEnabler.isSmartAccountEnabled.value -> when {
-            sessionRequest.method == "wallet_sendCalls" -> {
+        SmartAccountEnabler.isSmartAccountEnabled.value -> when (sessionRequest.method) {
+            "wallet_sendCalls" -> {
                 val transactions: MutableList<Wallet.Model.Transaction> = mutableListOf()
                 val callsArray = JSONArray(sessionRequest.param).getJSONObject(0).getJSONArray("calls")
                 for (i in 0 until callsArray.length()) {
@@ -40,8 +40,7 @@ object Signer {
                     }
                 }
             }
-
-            sessionRequest.method == "eth_sendTransaction" -> {
+            "eth_sendTransaction" -> {
                 val transactions: MutableList<Wallet.Model.Transaction> = mutableListOf()
                 val params = JSONArray(sessionRequest.param).getJSONObject(0)
                 val to = params.getString("to") ?: ""
@@ -68,7 +67,6 @@ object Signer {
                     }
                 }
             }
-
             else -> throw Exception("Unsupported Method")
         }
 

@@ -10,6 +10,7 @@ import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.android.utils.cacao.sign
 import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.Signer.PERSONAL_SIGN_METHOD
+import com.reown.sample.wallet.domain.SmartAccountEnabler
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI

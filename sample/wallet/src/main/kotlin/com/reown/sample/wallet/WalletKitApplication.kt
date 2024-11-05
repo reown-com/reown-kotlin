@@ -1,7 +1,6 @@
 package com.reown.sample.wallet
 
 import android.app.Application
-import com.google.firebase.FirebaseApp
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
@@ -21,6 +20,7 @@ import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
+import com.reown.sample.wallet.domain.SmartAccountEnabler
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
@@ -45,6 +45,8 @@ class WalletKitApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         EthAccountDelegate.application = this
+
+        SmartAccountEnabler.init(this)
 
         val projectId = BuildConfig.PROJECT_ID
         val appMetaData = Core.Model.AppMetaData(

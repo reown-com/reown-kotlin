@@ -5,13 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
 import com.reown.android.CoreClient
 import com.reown.sample.wallet.domain.EthAccountDelegate
-import com.reown.sample.wallet.domain.SmartAccountEnabler
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.web3j.abi.datatypes.Bool
 
 class SettingsViewModel : ViewModel() {
     val caip10 = EthAccountDelegate.ethAddress
