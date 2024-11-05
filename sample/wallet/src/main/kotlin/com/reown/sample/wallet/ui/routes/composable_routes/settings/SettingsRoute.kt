@@ -51,6 +51,7 @@ import com.reown.sample.common.ui.theme.PreviewTheme
 import com.reown.sample.common.ui.theme.UiModePreview
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.domain.SmartAccountEnabler
 
 @Composable
 fun SettingsRoute(navController: NavHostController) {
@@ -109,7 +110,7 @@ private fun SettingsScreen(
 
 @Composable
 private fun FeaturesSection() {
-    var isSafeEnabled by remember { mutableStateOf(false) }
+    val isSafeEnabled by SmartAccountEnabler.isSmartAccountEnabled.collectAsState()
     Column(
         modifier =
         Modifier
@@ -132,15 +133,7 @@ private fun FeaturesSection() {
             Spacer(modifier = Modifier.width(6.dp))
             Switch(
                 checked = isSafeEnabled,
-                onCheckedChange = { isChecked ->
-                    isSafeEnabled = isChecked
-//                // Perform actions based on the new state
-//                if (isFeatureEnabled) {
-//                    // Enable the feature
-//                } else {
-//                    // Disable the feature
-//                }
-                },
+                onCheckedChange = { isChecked -> SmartAccountEnabler.enableSmartAccount(isChecked) },
                 colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
             )
         }
