@@ -5,6 +5,7 @@ package com.reown.appkit.ui
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,10 +35,23 @@ import com.reown.appkit.ui.components.internal.AppKitComponent
 import com.reown.appkit.ui.theme.ColorPalette
 
 class AppKitSheet : BottomSheetDialogFragment() {
+    private val appTheme: Int by lazy { getApplicationTheme() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requireContext().setTheme(R.style.Web3ModalTheme_DialogTheme)
+
         super.onCreate(savedInstanceState)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        requireContext().setTheme(appTheme)
+    }
+
+    private fun getApplicationTheme(): Int {
+        val typedValue = TypedValue()
+        requireContext().theme.resolveAttribute(android.R.attr.theme, typedValue, true)
+        return typedValue.resourceId
     }
 
     override fun onCreateView(
