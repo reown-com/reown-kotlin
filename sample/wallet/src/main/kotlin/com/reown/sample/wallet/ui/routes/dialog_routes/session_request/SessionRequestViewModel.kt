@@ -8,39 +8,27 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
-import com.reown.android.utils.cacao.sign
 import com.reown.sample.wallet.BuildConfig
+import com.reown.sample.wallet.blockchain.JsonRpcRequest
+import com.reown.sample.wallet.blockchain.createBlockChainApiService
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.Signer.PERSONAL_SIGN_METHOD
-import com.reown.sample.wallet.domain.SmartAccountEnabler
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.future.await
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.RawTransaction
 import org.web3j.crypto.TransactionEncoder
-import org.web3j.crypto.exception.CryptoWeb3jException
-import org.web3j.protocol.Web3j
-import org.web3j.protocol.http.HttpService
-import org.web3j.utils.Convert
 import org.web3j.utils.Numeric
 import org.web3j.utils.Numeric.hexStringToByteArray
 import org.web3j.utils.Numeric.toBigInt
 import java.math.BigInteger
-import java.util.concurrent.CompletableFuture
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class SessionRequestViewModel : ViewModel() {
     var sessionRequestUI: SessionRequestUI = generateSessionRequestUI()
@@ -61,13 +49,9 @@ class SessionRequestViewModel : ViewModel() {
                     val transactions = WCDelegate.fulfilmentAvailable!!.transactions
                     val initialTransaction = WCDelegate.initTransaction
                     val signedTransactions = mutableListOf<Pair<String, String>>()
-                    val web3js = mutableMapOf<String, Web3j>()
-
 
                     transactions.forEach { transaction ->
                         val chainId = transaction.chainId.split(":")[1].toLong()
-                        web3js[transaction.chainId] = Web3j.build(HttpService("https://rpc.walletconnect.com/v1?chainId=${transaction.chainId}&projectId=${BuildConfig.PROJECT_ID}"))
-
                         println("kobe: chainId: $chainId")
                         println("kobe: nonce: ${toBigInt(transaction.nonce)}")
                         println("kobe: gas: ${toBigInt(transaction.gas)}")
@@ -91,28 +75,23 @@ class SessionRequestViewModel : ViewModel() {
                     }
                     println("kobe: signedTransactions: $signedTransactions")
 
-                    val txHashes = mutableListOf<String>()
-
+                    //0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD
                     //execute to eth_sendRawTransaction
                     signedTransactions.forEach { (chainId, signedTx) ->
-                        withContext(Dispatchers.IO) {
-                            val resultTx = web3js[chainId]!!.ethSendRawTransaction(signedTx).sendAsync().await()
-                            if (resultTx.error != null) {
-
-                                println("kobe: result: ${resultTx.transactionHash}; ${resultTx.rawResponse}")
-                            } else {
-                                println("kobe: error: ${resultTx.error.message}")
-                            }
+                        val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId) //todo: 1 per chain
+                        val request = JsonRpcRequest(
+                            method = "eth_sendRawTransaction",
+                            params = listOf(signedTx),
+                            id = generateId()
+                        )
+                        val resultTx = async { service.sendJsonRpcRequest(request) }.await()
+                        if (resultTx.error != null) {
+                            //todo: what should happen here when one of the route tx fails - stop executing and show the error?
+                            println("kobe: tx error: ${resultTx.error}")
+                            return@launch onError(Throwable("Route transaction failed: ${resultTx.error.message}"))
+                        } else {
+                            println("kobe: tx hash: ${resultTx.result}")
                         }
-
-
-//                                .flowable()
-//                            .subscribeOn(Schedulers.io())
-//                            .observeOn(AndroidSchedulers.mainThread())
-//                                .map {
-//                                    println("kobe: result tx: $it")
-//                                }
-
                     }
 
                     //call WK for the status
@@ -151,20 +130,7 @@ class SessionRequestViewModel : ViewModel() {
         }
     }
 
-//    suspend fun <T> CompletableFuture<T>.await(): T {
-//        return suspendCancellableCoroutine { cont ->
-//            this.whenComplete { result, exception ->
-//                if (exception == null) {
-//                    cont.resume(result)
-//                } else {
-//                    cont.resumeWithException(exception)
-//                }
-//            }
-//            cont.invokeOnCancellation {
-//                this.cancel(true)
-//            }
-//        }
-//    }
+    private fun generateId(): Int = ("${(100..999).random()}").toInt()
 
     fun reject(onSuccess: (Uri?) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
         try {

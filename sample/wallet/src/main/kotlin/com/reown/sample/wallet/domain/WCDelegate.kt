@@ -105,24 +105,28 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
                     maxFeePerGas = "0"
                 )
 
-            WalletKit.canFulfil(
-                initTransaction!!,
-                onSuccess = { result ->
-                    //todo: if fulfilment success amit fulfilment even to UI, if fulfilment not required proceed with the normal flow
-                    println("kobe: fulfil success: $result")
-                    if (result is Wallet.Model.FulfilmentSuccess.Available) {
-                        fulfilmentAvailable = result
-                        emitSessionRequest(sessionRequest, verifyContext)
-                    } else if (result is Wallet.Model.FulfilmentSuccess.NotRequired) {
-                        emitSessionRequest(sessionRequest, verifyContext)
+            try {
+                WalletKit.canFulfil(
+                    initTransaction!!,
+                    onSuccess = { result ->
+                        //todo: if fulfilment success amit fulfilment even to UI, if fulfilment not required proceed with the normal flow
+                        println("kobe: fulfil success: $result")
+                        if (result is Wallet.Model.FulfilmentSuccess.Available) {
+                            fulfilmentAvailable = result
+                            emitSessionRequest(sessionRequest, verifyContext)
+                        } else if (result is Wallet.Model.FulfilmentSuccess.NotRequired) {
+                            emitSessionRequest(sessionRequest, verifyContext)
+                        }
+                    },
+                    onError = { error ->
+                        //todo: show error to the user and send response error to a dapp
+                        println("kobe: fulfil error: $error")
+                    emitSessionRequest(sessionRequest, verifyContext)
                     }
-                },
-                onError = { error ->
-                    //todo: show error to the user and send response error to a dapp
-                    println("kobe: fulfil error: $error")
-//                    emitSessionRequest(sessionRequest, verifyContext)
-                }
-            )
+                )
+            } catch (e: Exception) {
+                println("kobe: try error: $e")
+            }
         } else {
             emitSessionRequest(sessionRequest, verifyContext)
         }

@@ -338,7 +338,14 @@ object WalletKit {
         scope.launch {
             try {
                 println("kobe: ${transaction.toYttrium()}")
-                val result = async { chainAbstractionClient.route(transaction.toYttrium()) }.await()
+                val result = async {
+                    try {
+                        chainAbstractionClient.route(transaction.toYttrium())
+                    } catch (e: Exception) {
+                        onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
+                    }
+                }.await()
+
                 when (result) {
                     is RouteResponse.Success -> {
                         when (result.v1) {
@@ -364,7 +371,13 @@ object WalletKit {
     fun fulfillmentStatus(fulfilmentId: String, onSuccess: (Wallet.Model.FulfilmentStatus) -> Unit, onError: (Wallet.Model.Error) -> Unit) {
         scope.launch {
             try {
-                val result = async { chainAbstractionClient.status(fulfilmentId) }.await()
+                val result = async {
+                    try {
+                        chainAbstractionClient.status(fulfilmentId)
+                    } catch (e: Exception) {
+                        onError(Wallet.Model.Error(e))
+                    }
+                }.await()
 
                 when (result) {
                     is StatusResponse.Success -> {
