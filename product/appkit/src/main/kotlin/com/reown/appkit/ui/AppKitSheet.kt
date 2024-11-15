@@ -5,6 +5,8 @@ package com.reown.appkit.ui
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -84,7 +86,18 @@ class AppKitSheet : BottomSheetDialogFragment() {
                 modifier = Modifier.nestedScroll(rememberNestedScrollInteropConnection()),
                 navController = navController,
                 shouldOpenChooseNetwork = shouldOpenChooseNetwork,
-                closeModal = { this@AppKitSheet.dismiss() })
+                closeModal = {
+                    if (isAdded) {
+                        if (!isStateSaved) {
+                            this@AppKitSheet.dismiss()
+                        } else {
+                            Handler(Looper.getMainLooper()).post {
+                                this@AppKitSheet.dismissAllowingStateLoss()
+                            }
+                        }
+                    }
+                }
+            )
         }
     }
 
