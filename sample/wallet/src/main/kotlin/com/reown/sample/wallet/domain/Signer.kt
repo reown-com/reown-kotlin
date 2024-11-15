@@ -21,7 +21,7 @@ object Signer {
         when {
             SmartAccountEnabler.isSmartAccountEnabled.value -> when (sessionRequest.method) {
                 "wallet_sendCalls" -> {
-                    val transactions: MutableList<Wallet.Model.Transaction> = mutableListOf()
+                    val transactions: MutableList<Wallet.Params.Transaction> = mutableListOf()
                     val callsArray = JSONArray(sessionRequest.param).getJSONObject(0).getJSONArray("calls")
                     for (i in 0 until callsArray.length()) {
                         val call = callsArray.getJSONObject(i)
@@ -32,16 +32,16 @@ object Signer {
                         } catch (e: Exception) {
                             ""
                         }
-                        transactions.add(Wallet.Model.Transaction(to, value, data))
+                        transactions.add(Wallet.Params.Transaction(to, value, data))
                     }
-                    val ownerAccount = Wallet.Model.Account(EthAccountDelegate.sepoliaAddress)
+                    val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
                     val prepareSendTxsParams = Wallet.Params.PrepareSendTransactions(transactions = transactions, owner = ownerAccount)
 
                     val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await()
                     val signature = EthSigner.signHash(prepareTxsResult.hash, EthAccountDelegate.privateKey)
                     val doSendTxsParams = Wallet.Params.DoSendTransactions(
                         owner = ownerAccount,
-                        signatures = listOf(Wallet.Model.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
+                        signatures = listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
                         doSendTransactionParams = prepareTxsResult.doSendTransactionParams
                     )
                     val doTxsResult = async { doTransactions(doSendTxsParams) }.await()
@@ -54,7 +54,7 @@ object Signer {
                 }
 
                 "eth_sendTransaction" -> {
-                    val transactions: MutableList<Wallet.Model.Transaction> = mutableListOf()
+                    val transactions: MutableList<Wallet.Params.Transaction> = mutableListOf()
                     val params = JSONArray(sessionRequest.param).getJSONObject(0)
                     val to = params.getString("to") ?: ""
                     val value = params.getString("value") ?: ""
@@ -64,14 +64,14 @@ object Signer {
                         ""
                     }
 
-                    transactions.add(Wallet.Model.Transaction(to, value, data))
-                    val ownerAccount = Wallet.Model.Account(EthAccountDelegate.sepoliaAddress)
+                    transactions.add(Wallet.Params.Transaction(to, value, data))
+                    val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
                     val prepareSendTxsParams = Wallet.Params.PrepareSendTransactions(transactions = transactions, owner = ownerAccount)
                     val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await()
                     val signature = EthSigner.signHash(prepareTxsResult.hash, EthAccountDelegate.privateKey)
                     val doSendTxsParams = Wallet.Params.DoSendTransactions(
                         owner = ownerAccount,
-                        signatures = listOf(Wallet.Model.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
+                        signatures = listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
                         doSendTransactionParams = prepareTxsResult.doSendTransactionParams
                     )
                     val doTxsResult = async { doTransactions(doSendTxsParams) }.await()

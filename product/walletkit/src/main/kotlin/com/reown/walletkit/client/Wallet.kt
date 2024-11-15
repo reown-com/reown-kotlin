@@ -59,18 +59,18 @@ object Wallet {
         }
 
         data class DecryptMessage(val topic: String, val encryptedMessage: String) : Params()
-        data class GetSmartAccountAddress(val owner: Model.Account) : Params()
-        data class PrepareSendTransactions(val transactions: List<Model.Transaction>, val owner: Model.Account) : Params()
-        data class DoSendTransactions(val owner: Model.Account, val signatures: List<Model.OwnerSignature>, val doSendTransactionParams: String) : Params()
+        data class GetSmartAccountAddress(val owner: Account) : Params()
+        data class PrepareSendTransactions(val transactions: List<Transaction>, val owner: Account) : Params()
+        data class DoSendTransactions(val owner: Account, val signatures: List<OwnerSignature>, val doSendTransactionParams: String) : Params()
         data class PrepareSendTransactionsResult(var hash: String, var doSendTransactionParams: String) : Params()
-        data class DoSendTransactionsResult(var userOperationHash: String)
-        data class WaitForUserOperationReceipt(var owner: Model.Account, var userOperationHash: String)
-    }
-
-    sealed class Model {
+        data class DoSendTransactionsResult(var userOperationHash: String) : Params()
+        data class WaitForUserOperationReceipt(var owner: Account, var userOperationHash: String) : Params()
         data class OwnerSignature(val address: String, val signature: String) : Params()
         data class Account(val address: String) : Params()
         data class Transaction(val to: String, val value: String, val data: String) : Params()
+    }
+
+    sealed class Model {
 
         sealed class Ping : Model() {
             data class Success(val topic: String) : Ping()
@@ -78,6 +78,44 @@ object Wallet {
         }
 
         data class Error(val throwable: Throwable) : Model()
+
+        data class Transaction(
+            var from: String,
+            var to: String,
+            var value: String,
+            var gas: String,
+            var gasPrice: String,
+            var data: String,
+            var nonce: String,
+            var maxFeePerGas: String,
+            var maxPriorityFeePerGas: String,
+            var chainId: String
+        ) : Model()
+
+        data class FundingMetadata(
+            var chainId: String,
+            var tokenContract: String,
+            var symbol: String,
+            var amount: String
+        ) : Model()
+
+        sealed class FulfilmentSuccess : Model() {
+            data class Available(val fulfilmentId: String, val transactions: List<Transaction>, val funding: List<FundingMetadata>) : FulfilmentSuccess()
+            data object NotRequired : FulfilmentSuccess()
+        }
+
+        sealed class FulfilmentError : Model() {
+            data object NoRoutesAvailable : FulfilmentError()
+            data object InsufficientFunds : FulfilmentError()
+            data object InsufficientGasFunds : FulfilmentError()
+            data class Unknown(val message: String) : FulfilmentError()
+        }
+
+        sealed class FulfilmentStatus : Model() {
+            data class Pending(val createdAt: Long, val checkIn: Long) : FulfilmentStatus()
+            data class Completed(val createdAt: Long) : FulfilmentStatus()
+            data class Error(val createdAt: Long, val reason: String) : FulfilmentStatus()
+        }
 
         data class ConnectionState(val isAvailable: Boolean, val reason: Reason? = null) : Model() {
             sealed class Reason : Model() {

@@ -46,7 +46,7 @@ class SessionProposalViewModel : ViewModel() {
         return if (SmartAccountEnabler.isSmartAccountEnabled.value) {
             val sessionNamespaces =
                 WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = smartAccountWalletMetadata.namespaces)
-            val ownerAccount = Wallet.Model.Account(EthAccountDelegate.sepoliaAddress)
+            val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
             val smartAccountAddress = WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(ownerAccount))
             val capability = "{\"$smartAccountAddress\":{\"0xaa36a7\":{\"atomicBatch\":{\"supported\":true}}}}"
             val sessionProperties = mapOf("bundler_name" to "pimlico", "capabilities" to capability)

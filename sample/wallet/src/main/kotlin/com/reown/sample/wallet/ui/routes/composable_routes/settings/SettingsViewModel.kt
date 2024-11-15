@@ -17,7 +17,7 @@ class SettingsViewModel : ViewModel() {
     val clientId = CoreClient.Echo.clientId
 
     fun getSmartAccount(): String {
-        val params = Wallet.Params.GetSmartAccountAddress(Wallet.Model.Account(address = EthAccountDelegate.sepoliaAddress))
+        val params = Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(address = EthAccountDelegate.sepoliaAddress))
         val smartAccountAddress = WalletKit.getSmartAccount(params)
         return "eip155:11155111:$smartAccountAddress"
     }

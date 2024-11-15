@@ -2,9 +2,13 @@ package com.reown.walletkit.client
 
 import com.reown.android.internal.common.signing.cacao.CacaoType
 import com.reown.sign.client.Sign
+import uniffi.uniffi_yttrium.InitTransaction
 import uniffi.uniffi_yttrium.OwnerSignature
 import uniffi.uniffi_yttrium.PreparedSendTransaction
 import uniffi.uniffi_yttrium.Transaction
+import uniffi.yttrium.FundingMetadata
+import uniffi.yttrium.Transaction as CATransaction
+import uniffi.yttrium.RouteResponseAvailable
 
 @JvmSynthetic
 internal fun Map<String, Wallet.Model.Namespace.Session>.toSign(): Map<String, Sign.Model.Namespace.Session> =
@@ -288,7 +292,16 @@ internal fun Sign.Model.ConnectionState.Reason.toWallet(): Wallet.Model.Connecti
 internal fun PreparedSendTransaction.toWallet(): Wallet.Params.PrepareSendTransactionsResult = Wallet.Params.PrepareSendTransactionsResult(hash, doSendTransactionParams)
 
 @JvmSynthetic
-internal fun Wallet.Model.Transaction.toYttrium(): Transaction = Transaction(to = to, value = value, data = data)
+internal fun Wallet.Params.Transaction.toYttrium(): Transaction = Transaction(to = to, value = value, data = data)
 
 @JvmSynthetic
-internal fun Wallet.Model.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)
+internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)
+
+@JvmSynthetic
+internal fun RouteResponseAvailable.toWallet(): Wallet.Model.FulfilmentSuccess.Available =
+    Wallet.Model.FulfilmentSuccess.Available(orchestrationId, transactions.map { it.toWallet() }, metadata.fundingFrom.map { it.toWallet() })
+
+@JvmSynthetic fun Wallet.Model.Transaction.toYttrium(): InitTransaction = InitTransaction(from, to, value, gas, gasPrice, data, nonce, maxFeePerGas, maxPriorityFeePerGas, chainId)
+private fun CATransaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(from, to, value, gas, gasPrice, data, nonce, maxFeePerGas, maxPriorityFeePerGas, chainId)
+
+private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Model.FundingMetadata(chainId, tokenContract, symbol, amount)

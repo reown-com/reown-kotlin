@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import org.json.JSONObject
 
 object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
@@ -74,12 +75,47 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
         }
 
     override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
-        if (currentId != sessionRequest.request.id) {
-            sessionRequestEvent = Pair(sessionRequest, verifyContext)
+        println("kobe: session request: $sessionRequest")
 
-            scope.launch {
-                _walletEvents.emit(sessionRequest)
+        if (sessionRequest.request.method == "eth_sendTransaction") {
+            val requestParams = JSONArray(sessionRequest.request.params).getJSONObject(0)
+            val from = requestParams.getString("from")
+            val to = requestParams.getString("to")
+            val data = requestParams.getString("data")
+            val value = try {
+                requestParams.getString("value")
+            } catch (e: Exception) {
+                "0"
             }
+
+            val transaction =
+                Wallet.Model.Transaction(
+                    from = from,
+                    to = to,
+                    value = value,
+                    data = data,
+                    nonce = "0",
+                    gas = "0",
+                    gasPrice = "0",
+                    chainId = sessionRequest.chainId!!,
+                    maxPriorityFeePerGas = "0",
+                    maxFeePerGas = "0"
+                )
+
+            WalletKit.canFulfil(transaction,
+                onSuccess = {
+                    //todo: if fulfilment success amit fulfilment even to UI, if fulfilment not required proceed with the normal flow
+                    println("kobe: fulfil success: $it")
+                },
+                onError = {
+                    //todo: show error to the user and send response to a dapp
+                    println("kobe: fulfil error: $it")
+                }
+            )
+
+            emitSessionRequest(sessionRequest, verifyContext)
+        } else {
+            emitSessionRequest(sessionRequest, verifyContext)
         }
     }
 
@@ -108,7 +144,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     }
 
     override fun onPairingDelete(deletedPairing: Core.Model.DeletedPairing) {
-       //Deprecated - pairings are automatically deleted
+        //Deprecated - pairings are automatically deleted
     }
 
     override fun onPairingExpired(expiredPairing: Core.Model.ExpiredPairing) {
@@ -118,6 +154,16 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     override fun onPairingState(pairingState: Core.Model.PairingState) {
         scope.launch {
             _coreEvents.emit(pairingState)
+        }
+    }
+
+    private fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
+        if (currentId != sessionRequest.request.id) {
+            sessionRequestEvent = Pair(sessionRequest, verifyContext)
+
+            scope.launch {
+                _walletEvents.emit(sessionRequest)
+            }
         }
     }
 }
