@@ -11,10 +11,7 @@ import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
 import com.reown.walletkit.smart_account.Account
 import com.reown.walletkit.smart_account.SafeInteractor
 import kotlinx.coroutines.*
-import org.json.JSONArray
-import org.json.JSONObject
 import uniffi.uniffi_yttrium.ChainAbstractionClient
-import uniffi.uniffi_yttrium.InitTransaction
 import uniffi.yttrium.BridgingError
 import uniffi.yttrium.RouteResponse
 import uniffi.yttrium.RouteResponseSuccess
