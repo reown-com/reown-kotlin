@@ -74,6 +74,8 @@ dependencies {
     implementation(project(":sample:common"))
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 
+    implementation("org.web3j:core:4.9.4")
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
 
