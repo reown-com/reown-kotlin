@@ -35,7 +35,7 @@ import com.reown.appkit.ui.components.internal.AppKitComponent
 import com.reown.appkit.ui.theme.ColorPalette
 
 class AppKitSheet : BottomSheetDialogFragment() {
-    private val appTheme: Int by lazy { getApplicationTheme() }
+    private val appTheme: Int by lazy { requireContext().applicationInfo.theme }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requireContext().setTheme(R.style.Web3ModalTheme_DialogTheme)
@@ -46,12 +46,6 @@ class AppKitSheet : BottomSheetDialogFragment() {
     override fun onDestroy() {
         super.onDestroy()
         requireContext().setTheme(appTheme)
-    }
-
-    private fun getApplicationTheme(): Int {
-        val typedValue = TypedValue()
-        requireContext().theme.resolveAttribute(android.R.attr.theme, typedValue, true)
-        return typedValue.resourceId
     }
 
     override fun onCreateView(
