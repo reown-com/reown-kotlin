@@ -396,6 +396,10 @@ object WalletKit {
         }
     }
 
+    fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
+        return runBlocking { chainAbstractionClient.estimateFees(chainId).toWallet() }
+    }
+
     /**
      * Caution: This function is blocking and runs on the current thread.
      * It is advised that this function be called from background operation

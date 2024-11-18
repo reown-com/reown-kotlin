@@ -99,6 +99,11 @@ object Wallet {
             var amount: String
         ) : Model()
 
+        data class EstimatedFees(
+            val maxFeePerGas: Long,
+            val maxPriorityFeePerGas: Long
+        ) : Model()
+
         sealed class FulfilmentSuccess : Model() {
             data class Available(val fulfilmentId: String, val transactions: List<Transaction>, val funding: List<FundingMetadata>) : FulfilmentSuccess()
             data object NotRequired : FulfilmentSuccess()

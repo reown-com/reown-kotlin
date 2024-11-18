@@ -22,12 +22,16 @@ import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.json.JSONArray
+import org.kethereum.DEFAULT_GAS_LIMIT
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.RawTransaction
 import org.web3j.crypto.TransactionEncoder
+import org.web3j.tx.gas.DefaultGasProvider
+import org.web3j.utils.Convert
 import org.web3j.utils.Numeric
 import org.web3j.utils.Numeric.hexStringToByteArray
 import org.web3j.utils.Numeric.toBigInt
+import java.math.BigDecimal
 import java.math.BigInteger
 
 class SessionRequestViewModel : ViewModel() {
@@ -52,22 +56,34 @@ class SessionRequestViewModel : ViewModel() {
 
                     transactions.forEach { transaction ->
                         val chainId = transaction.chainId.split(":")[1].toLong()
+                        val fees = WalletKit.estimateFees(transaction.chainId)
+
+                        println("kobe: fees: $fees")
+
+                        val max = Convert.toWei(BigDecimal(fees.maxFeePerGas), Convert.Unit.GWEI).toBigInteger()
+                        val priority = Convert.toWei(BigDecimal(fees.maxPriorityFeePerGas), Convert.Unit.GWEI).toBigInteger()
+
                         println("kobe: chainId: $chainId")
                         println("kobe: nonce: ${toBigInt(transaction.nonce)}")
-                        println("kobe: gas: ${toBigInt(transaction.gas)}")
+                        println("kobe: gas: ${transaction.gas}")
+                        println("kobe: gasPrice: ${transaction.gasPrice}")
+                        println("kobe: to: ${transaction.to}")
                         println("kobe: value: ${toBigInt(transaction.value)}")
+                        println("kobe: data: ${transaction.data}")
+                        println("kobe: maxPriorityFeePerGas: $priority")
+                        println("kobe: maxFeePerGas: $max")
 
-                        //todo: get gas
                         val rawTransaction = RawTransaction.createTransaction(
                             chainId,
                             toBigInt(transaction.nonce),
-                            toBigInt(transaction.gas),
+                            DefaultGasProvider.GAS_LIMIT,//toBigInt(transaction.gas),
                             transaction.to,
                             toBigInt(transaction.value),
                             transaction.data,
-                            BigInteger.valueOf(5678),//transaction.maxPriorityFeePerGas.toBigInteger(),
-                            BigInteger.valueOf(1100000) //transaction.maxFeePerGas.toBigInteger()
+                            BigInteger.valueOf(1_000_000_000),//priority, //9 799 990 000
+                            BigInteger.valueOf(20_000_000_000)//max
                         )
+
 
                         //sign fulfilment txs
                         val signedTransaction = Numeric.toHexString(TransactionEncoder.signMessage(rawTransaction, Credentials.create(EthAccountDelegate.privateKey)))
@@ -95,6 +111,7 @@ class SessionRequestViewModel : ViewModel() {
                     }
 
                     //call WK for the status
+
                     //if status completed, execute init tx
                     //send back the response with the tx hash of init to a dapp
 

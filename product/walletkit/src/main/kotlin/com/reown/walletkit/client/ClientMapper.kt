@@ -2,6 +2,7 @@ package com.reown.walletkit.client
 
 import com.reown.android.internal.common.signing.cacao.CacaoType
 import com.reown.sign.client.Sign
+import uniffi.uniffi_yttrium.Eip1559Estimation
 import uniffi.uniffi_yttrium.InitTransaction
 import uniffi.uniffi_yttrium.OwnerSignature
 import uniffi.uniffi_yttrium.PreparedSendTransaction
@@ -305,3 +306,6 @@ internal fun RouteResponseAvailable.toWallet(): Wallet.Model.FulfilmentSuccess.A
 private fun CATransaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(from, to, value, gas, gasPrice, data, nonce, maxFeePerGas, maxPriorityFeePerGas, chainId)
 
 private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Model.FundingMetadata(chainId, tokenContract, symbol, amount)
+
+@JvmSynthetic
+internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.Model.EstimatedFees(maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas)
