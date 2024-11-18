@@ -205,9 +205,11 @@ internal class AppKitEngine(
                 SignClient.disconnect(Sign.Params.Disconnect(session.topic),
                     onSuccess = {
                         sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.DISCONNECT_SUCCESS))
-                        scope.launch { deleteSessionDataUseCase() }
-                        shouldDisconnect = true
-                        onSuccess()
+                        scope.launch {
+                            deleteSessionDataUseCase()
+                            shouldDisconnect = true
+                            onSuccess()
+                        }
                     },
                     onError = {
                         sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.DISCONNECT_ERROR))
