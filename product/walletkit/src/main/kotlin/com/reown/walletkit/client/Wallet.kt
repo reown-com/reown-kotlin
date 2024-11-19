@@ -105,7 +105,7 @@ object Wallet {
         ) : Model()
 
         sealed class FulfilmentSuccess : Model() {
-            data class Available(val fulfilmentId: String, val transactions: List<Transaction>, val funding: List<FundingMetadata>) : FulfilmentSuccess()
+            data class Available(val fulfilmentId: String, val checkIn: Long, val transactions: List<Transaction>, val funding: List<FundingMetadata>) : FulfilmentSuccess()
             data object NotRequired : FulfilmentSuccess()
         }
 

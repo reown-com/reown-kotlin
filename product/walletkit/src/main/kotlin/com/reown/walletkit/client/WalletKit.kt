@@ -8,9 +8,14 @@ import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
+import com.reown.walletkit.di.walletKitModule
 import com.reown.walletkit.smart_account.Account
 import com.reown.walletkit.smart_account.SafeInteractor
+import com.reown.walletkit.use_cases.CanFulfilUseCase
+import com.reown.walletkit.use_cases.EstimateGasUseCase
+import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.flow
 import uniffi.uniffi_yttrium.ChainAbstractionClient
 import uniffi.yttrium.BridgingError
 import uniffi.yttrium.RouteResponse
@@ -22,8 +27,9 @@ import java.util.*
 object WalletKit {
     private lateinit var coreClient: CoreInterface
     private lateinit var safeInteractor: SafeInteractor
-    private lateinit var chainAbstractionClient: ChainAbstractionClient
-    private val projectId: ProjectId by lazy { wcKoinApp.koin.get<ProjectId>() }
+    private val canFulfilUseCase: CanFulfilUseCase by wcKoinApp.koin.inject()
+    private val fulfilmentStatusUseCase: FulfilmentStatusUseCase by wcKoinApp.koin.inject()
+    private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -109,8 +115,8 @@ object WalletKit {
 
     @Throws(IllegalStateException::class)
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
+        wcKoinApp.modules(walletKitModule())
         coreClient = params.core
-        chainAbstractionClient = ChainAbstractionClient(projectId.value)
         if (params.pimlicoApiKey != null) {
             safeInteractor = SafeInteractor(params.pimlicoApiKey)
         }
@@ -333,71 +339,25 @@ object WalletKit {
     }
 
     //Chain Abstraction
-    //todo: keep onError or throw?
     fun canFulfil(transaction: Wallet.Model.Transaction, onSuccess: (Wallet.Model.FulfilmentSuccess) -> Unit, onError: (Wallet.Model.FulfilmentError) -> Unit) {
-        scope.launch {
-            try {
-                println("kobe: ${transaction.toYttrium()}")
-                val result = async {
-                    try {
-                        chainAbstractionClient.route(transaction.toYttrium())
-                    } catch (e: Exception) {
-                        onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
-                    }
-                }.await()
-
-                when (result) {
-                    is RouteResponse.Success -> {
-                        when (result.v1) {
-                            is RouteResponseSuccess.Available -> onSuccess(result.v1.v1.toWallet())
-                            is RouteResponseSuccess.NotRequired -> onSuccess(Wallet.Model.FulfilmentSuccess.NotRequired)
-                        }
-                    }
-
-                    is RouteResponse.Error -> {
-                        when (result.v1.error) {
-                            BridgingError.NO_ROUTES_AVAILABLE -> onError(Wallet.Model.FulfilmentError.NoRoutesAvailable)
-                            BridgingError.INSUFFICIENT_FUNDS -> onError(Wallet.Model.FulfilmentError.InsufficientFunds)
-                            BridgingError.INSUFFICIENT_GAS_FUNDS -> onError(Wallet.Model.FulfilmentError.InsufficientGasFunds)
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
-            }
+        try {
+            canFulfilUseCase(transaction, onSuccess, onError)
+        } catch (e: Exception) {
+            onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
         }
     }
 
     fun fulfillmentStatus(fulfilmentId: String, onSuccess: (Wallet.Model.FulfilmentStatus) -> Unit, onError: (Wallet.Model.Error) -> Unit) {
-        scope.launch {
-            try {
-                val result = async {
-                    try {
-                        chainAbstractionClient.status(fulfilmentId)
-                    } catch (e: Exception) {
-                        onError(Wallet.Model.Error(e))
-                    }
-                }.await()
-
-                when (result) {
-                    is StatusResponse.Success -> {
-                        when (result.v1) {
-                            is StatusResponseSuccess.Completed -> onSuccess(Wallet.Model.FulfilmentStatus.Completed(result.v1.v1.createdAt.toLong()))
-                            is StatusResponseSuccess.Error -> onSuccess(Wallet.Model.FulfilmentStatus.Error(result.v1.v1.createdAt.toLong(), result.v1.v1.errorReason))
-                            is StatusResponseSuccess.Pending -> onSuccess(Wallet.Model.FulfilmentStatus.Pending(result.v1.v1.createdAt.toLong(), result.v1.v1.checkIn.toLong()))
-                        }
-                    }
-
-                    is StatusResponse.Error -> onError(Wallet.Model.Error(Throwable(result.v1.error)))
-                }
-            } catch (e: Exception) {
-                onError(Wallet.Model.Error(e))
-            }
+        try {
+            fulfilmentStatusUseCase(fulfilmentId, onSuccess, onError)
+        } catch (e: Exception) {
+            onError(Wallet.Model.Error(e))
         }
     }
 
+    @Throws(Exception::class)
     fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
-        return runBlocking { chainAbstractionClient.estimateFees(chainId).toWallet() }
+        return estimateGasUseCase(chainId)
     }
 
     /**

@@ -20,19 +20,24 @@ import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
-import org.kethereum.DEFAULT_GAS_LIMIT
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.RawTransaction
 import org.web3j.crypto.TransactionEncoder
 import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Convert
 import org.web3j.utils.Numeric
+import org.web3j.utils.Numeric.cleanHexPrefix
 import org.web3j.utils.Numeric.hexStringToByteArray
 import org.web3j.utils.Numeric.toBigInt
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class SessionRequestViewModel : ViewModel() {
     var sessionRequestUI: SessionRequestUI = generateSessionRequestUI()
@@ -60,28 +65,31 @@ class SessionRequestViewModel : ViewModel() {
 
                         println("kobe: fees: $fees")
 
-                        val max = Convert.toWei(BigDecimal(fees.maxFeePerGas), Convert.Unit.GWEI).toBigInteger()
-                        val priority = Convert.toWei(BigDecimal(fees.maxPriorityFeePerGas), Convert.Unit.GWEI).toBigInteger()
+//                        val max = Convert.toWei(BigDecimal(fees.maxFeePerGas), Convert.Unit.GWEI).toBigInteger()
+//                        val priority = Convert.toWei(BigDecimal(fees.maxPriorityFeePerGas), Convert.Unit.GWEI).toBigInteger()
+                        val gas = hexToBigDecimal(transaction.gas)
+                        val gasPrice = hexToBigDecimal(transaction.gasPrice)
 
                         println("kobe: chainId: $chainId")
                         println("kobe: nonce: ${toBigInt(transaction.nonce)}")
-                        println("kobe: gas: ${transaction.gas}")
-                        println("kobe: gasPrice: ${transaction.gasPrice}")
+                        println("kobe: gas: $gas")
+                        println("kobe: gasPrice: $gasPrice")
                         println("kobe: to: ${transaction.to}")
                         println("kobe: value: ${toBigInt(transaction.value)}")
                         println("kobe: data: ${transaction.data}")
-                        println("kobe: maxPriorityFeePerGas: $priority")
-                        println("kobe: maxFeePerGas: $max")
+                        println("kobe: maxFeePerGas: ${fees.maxFeePerGas}")
+                        println("kobe: maxPriorityFeePerGas: ${fees.maxPriorityFeePerGas}")
+                        println("kobe: //////////////////////////////////////")
 
                         val rawTransaction = RawTransaction.createTransaction(
                             chainId,
                             toBigInt(transaction.nonce),
-                            DefaultGasProvider.GAS_LIMIT,//toBigInt(transaction.gas),
+                            DefaultGasProvider.GAS_LIMIT,
                             transaction.to,
                             toBigInt(transaction.value),
                             transaction.data,
-                            BigInteger.valueOf(1_000_000_000),//priority, //9 799 990 000
-                            BigInteger.valueOf(20_000_000_000)//max
+                            BigInteger.valueOf(fees.maxPriorityFeePerGas),
+                            BigInteger.valueOf(fees.maxFeePerGas),
                         )
 
 
@@ -110,30 +118,96 @@ class SessionRequestViewModel : ViewModel() {
                         }
                     }
 
+                    println("kobe: Delay status: ${WCDelegate.fulfilmentAvailable!!.checkIn}")
                     //call WK for the status
+                    delay(WCDelegate.fulfilmentAvailable!!.checkIn)
+                    while (true) {
+                        println("kobe: Fulfilment status check")
+                        val fulfilmentResult = async { fulfillmentStatus() }.await()
 
-                    //if status completed, execute init tx
-                    //send back the response with the tx hash of init to a dapp
-
-
-                    val response = Wallet.Params.SessionRequestResponse(
-                        sessionTopic = sessionRequest.topic,
-                        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, result)
-                    )
-                    val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-
-                    WalletKit.respondSessionRequest(response,
-                        onSuccess = {
-                            clearSessionRequest()
-                            onSuccess(redirect)
-                        },
-                        onError = { error ->
-                            Firebase.crashlytics.recordException(error.throwable)
-                            if (error.throwable !is NoConnectivityException) {
-                                clearSessionRequest()
+                        when (fulfilmentResult) {
+                            is Wallet.Model.FulfilmentStatus.Error -> {
+                                println("kobe: Fulfilment error: ${fulfilmentResult.reason}")
+                                onError(Throwable(fulfilmentResult.reason))
                             }
-                            onError(error.throwable)
-                        })
+
+                            is Wallet.Model.FulfilmentStatus.Pending -> {
+                                //TODO: use value from the response
+                                println("kobe: Fulfilment pending: ${fulfilmentResult.checkIn}")
+
+                                delay(fulfilmentResult.checkIn)
+                            }
+
+                            is Wallet.Model.FulfilmentStatus.Completed -> {
+                                println("kobe: Fulfilment completed")
+
+                                //if status completed, execute init tx
+                                val rawTransaction = with(initialTransaction!!) {
+                                    val fees = WalletKit.estimateFees(chainId)
+                                    val reference = chainId.split(":")[1].toLong()
+
+                                    println("kobe: init chainId: $chainId")
+                                    println("kobe: init once: ${toBigInt(nonce)}")
+                                    println("kobe: init gas: $gas")
+                                    println("kobe: init gasPrice: $gasPrice")
+                                    println("kobe: init to: $to")
+                                    println("kobe: init value: ${toBigInt(value)}")
+                                    println("kobe: init data: $data")
+                                    println("kobe: init maxFeePerGas: ${fees.maxFeePerGas}")
+                                    println("kobe: initmaxPriorityFeePerGas: ${fees.maxPriorityFeePerGas}")
+                                    println("kobe: //////////////////////////////////////")
+
+                                    RawTransaction.createTransaction(
+                                        reference,
+                                        toBigInt(nonce),
+                                        toBigInt(gas),//DefaultGasProvider.GAS_LIMIT,
+                                        to,
+                                        toBigInt(value),
+                                        data,
+                                        BigInteger.valueOf(fees.maxPriorityFeePerGas),
+                                        BigInteger.valueOf(fees.maxFeePerGas), 
+                                    )
+                                }
+
+                                val signedTransaction = Numeric.toHexString(TransactionEncoder.signMessage(rawTransaction, Credentials.create(EthAccountDelegate.privateKey)))
+
+                                val service = createBlockChainApiService(BuildConfig.PROJECT_ID, initialTransaction.chainId) //todo: 1 per chain
+                                val request = JsonRpcRequest(
+                                    method = "eth_sendRawTransaction",
+                                    params = listOf(signedTransaction),
+                                    id = generateId()
+                                )
+                                val resultTx = async { service.sendJsonRpcRequest(request) }.await()
+                                if (resultTx.error != null) {
+                                    //todo: what should happen here when one of the route tx fails - stop executing and show the error?
+                                    println("kobe: INIT tx error: ${resultTx.error}")
+                                    return@launch onError(Throwable("Init transaction failed: ${resultTx.error.message}"))
+                                } else {
+                                    println("kobe: INIT tx hash: ${resultTx.result}")
+
+                                    //send back the response with the tx hash of init to a dapp
+                                    val response = Wallet.Params.SessionRequestResponse(
+                                        sessionTopic = sessionRequest.topic,
+                                        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, result)
+                                    )
+                                    val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
+
+                                    WalletKit.respondSessionRequest(response,
+                                        onSuccess = {
+                                            clearSessionRequest()
+                                            onSuccess(redirect)
+                                        },
+                                        onError = { error ->
+                                            Firebase.crashlytics.recordException(error.throwable)
+                                            if (error.throwable !is NoConnectivityException) {
+                                                clearSessionRequest()
+                                            }
+                                            onError(error.throwable)
+                                        })
+                                }
+                            }
+                        }
+                    }
                 } else {
                     onError(Throwable("Approve - Cannot find session request"))
                 }
@@ -146,6 +220,47 @@ class SessionRequestViewModel : ViewModel() {
             }
         }
     }
+
+    private suspend fun fulfillmentStatus(): Wallet.Model.FulfilmentStatus =
+        suspendCoroutine { continuation ->
+            try {
+                WalletKit.fulfillmentStatus(WCDelegate.fulfilmentAvailable!!.fulfilmentId,
+                    onSuccess = {
+                        println("kobe: Fulfilment status SUCCESS: $it")
+                        continuation.resume(it)
+                    },
+                    onError = {
+                        println("kobe: Fulfilment status ERROR: $it")
+                        continuation.resumeWithException(it.throwable)
+                    }
+                )
+            } catch (e: Exception) {
+                continuation.resumeWithException(e)
+            }
+        }
+
+    private fun hexToBigDecimal(input: String): BigDecimal? {
+        val trimmedInput = input.trim()
+        var hex = trimmedInput
+        return if (hex.isEmpty()) {
+            null
+        } else try {
+            val isHex: Boolean = containsHexPrefix(hex)
+            if (isHex) {
+                hex = cleanHexPrefix(trimmedInput)
+            }
+            BigInteger(hex, if (isHex) HEX else DEC).toBigDecimal()
+        } catch (ex: NullPointerException) {
+            null
+        } catch (ex: NumberFormatException) {
+            null
+        }
+    }
+
+    private val HEX = 16
+    private val DEC = 10
+
+    fun containsHexPrefix(input: String): Boolean = input.startsWith("0x")
 
     private fun generateId(): Int = ("${(100..999).random()}").toInt()
 
