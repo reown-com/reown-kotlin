@@ -20,7 +20,6 @@ import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -28,7 +27,6 @@ import org.web3j.crypto.Credentials
 import org.web3j.crypto.RawTransaction
 import org.web3j.crypto.TransactionEncoder
 import org.web3j.tx.gas.DefaultGasProvider
-import org.web3j.utils.Convert
 import org.web3j.utils.Numeric
 import org.web3j.utils.Numeric.cleanHexPrefix
 import org.web3j.utils.Numeric.hexStringToByteArray
@@ -56,7 +54,7 @@ class SessionRequestViewModel : ViewModel() {
                     val fulfilmentId = WCDelegate.fulfilmentAvailable!!.fulfilmentId
                     val funding = WCDelegate.fulfilmentAvailable!!.funding
                     val transactions = WCDelegate.fulfilmentAvailable!!.transactions
-                    val initialTransaction = WCDelegate.initTransaction
+                    val initialTransaction = WCDelegate.originalTransaction
                     val signedTransactions = mutableListOf<Pair<String, String>>()
 
                     transactions.forEach { transaction ->
@@ -84,14 +82,13 @@ class SessionRequestViewModel : ViewModel() {
                         val rawTransaction = RawTransaction.createTransaction(
                             chainId,
                             toBigInt(transaction.nonce),
-                            DefaultGasProvider.GAS_LIMIT,
+                            gas!!.toBigInteger(),//DefaultGasProvider.GAS_LIMIT,// gas!!.toBigInteger(), //gasLimit
                             transaction.to,
                             toBigInt(transaction.value),
                             transaction.data,
-                            BigInteger.valueOf(fees.maxPriorityFeePerGas),
-                            BigInteger.valueOf(fees.maxFeePerGas),
+                            toBigInt(fees.maxPriorityFeePerGas), //BigInteger.valueOf(1000000000),//fees.maxPriorityFeePerGas), //BigInteger.valueOf(790704L),//,
+                            toBigInt(fees.maxFeePerGas),
                         )
-
 
                         //sign fulfilment txs
                         val signedTransaction = Numeric.toHexString(TransactionEncoder.signMessage(rawTransaction, Credentials.create(EthAccountDelegate.privateKey)))
@@ -129,6 +126,7 @@ class SessionRequestViewModel : ViewModel() {
                             is Wallet.Model.FulfilmentStatus.Error -> {
                                 println("kobe: Fulfilment error: ${fulfilmentResult.reason}")
                                 onError(Throwable(fulfilmentResult.reason))
+                                break
                             }
 
                             is Wallet.Model.FulfilmentStatus.Pending -> {
@@ -141,9 +139,12 @@ class SessionRequestViewModel : ViewModel() {
                             is Wallet.Model.FulfilmentStatus.Completed -> {
                                 println("kobe: Fulfilment completed")
 
+                                val service = createBlockChainApiService(BuildConfig.PROJECT_ID, initialTransaction!!.chainId)
+                                
                                 //if status completed, execute init tx
-                                val rawTransaction = with(initialTransaction!!) {
+                                val rawTransaction = with(initialTransaction) {
                                     val fees = WalletKit.estimateFees(chainId)
+                                    println("kobe: init fees: $fees")
                                     val reference = chainId.split(":")[1].toLong()
 
                                     println("kobe: init chainId: $chainId")
@@ -154,24 +155,32 @@ class SessionRequestViewModel : ViewModel() {
                                     println("kobe: init value: ${toBigInt(value)}")
                                     println("kobe: init data: $data")
                                     println("kobe: init maxFeePerGas: ${fees.maxFeePerGas}")
-                                    println("kobe: initmaxPriorityFeePerGas: ${fees.maxPriorityFeePerGas}")
+                                    println("kobe: ini maxPriorityFeePerGas: ${fees.maxPriorityFeePerGas}")
                                     println("kobe: //////////////////////////////////////")
+                                    val nonceRequest = JsonRpcRequest(
+                                        method = "eth_getTransactionCount",
+                                        params = listOf(initialTransaction.from, "latest"),
+                                        id = generateId()
+                                    )
+                                    val nonceResult = async { service.sendJsonRpcRequest(nonceRequest) }.await()
+                                    
+                                    println("kobe: nonceResult: ${nonceResult.result as String}")
 
                                     RawTransaction.createTransaction(
                                         reference,
-                                        toBigInt(nonce),
-                                        toBigInt(gas),//DefaultGasProvider.GAS_LIMIT,
+                                        toBigInt(nonceResult.result),
+                                        DefaultGasProvider.GAS_LIMIT,
                                         to,
                                         toBigInt(value),
                                         data,
-                                        BigInteger.valueOf(fees.maxPriorityFeePerGas),
-                                        BigInteger.valueOf(fees.maxFeePerGas), 
+                                        toBigInt(fees.maxPriorityFeePerGas),//toBigInt(fees.maxPriorityFeePerGas), //BigInteger.valueOf(790704L),//toBigInt(fees.maxPriorityFeePerGas),
+                                        toBigInt(fees.maxFeePerGas), 
                                     )
                                 }
 
                                 val signedTransaction = Numeric.toHexString(TransactionEncoder.signMessage(rawTransaction, Credentials.create(EthAccountDelegate.privateKey)))
 
-                                val service = createBlockChainApiService(BuildConfig.PROJECT_ID, initialTransaction.chainId) //todo: 1 per chain
+                                
                                 val request = JsonRpcRequest(
                                     method = "eth_sendRawTransaction",
                                     params = listOf(signedTransaction),
@@ -204,6 +213,8 @@ class SessionRequestViewModel : ViewModel() {
                                             }
                                             onError(error.throwable)
                                         })
+                                    
+                                    break //todo: clean up: return status, break, execute init tx
                                 }
                             }
                         }

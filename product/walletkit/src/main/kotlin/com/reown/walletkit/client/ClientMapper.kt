@@ -302,9 +302,13 @@ internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSig
 internal fun RouteResponseAvailable.toWallet(): Wallet.Model.FulfilmentSuccess.Available =
     Wallet.Model.FulfilmentSuccess.Available(orchestrationId, metadata.checkIn.toLong(), transactions.map { it.toWallet() }, metadata.fundingFrom.map { it.toWallet() })
 
-@JvmSynthetic fun Wallet.Model.Transaction.toYttrium(): InitTransaction = InitTransaction(from, to, value, gas, gasPrice, data, nonce, maxFeePerGas, maxPriorityFeePerGas, chainId)
+@JvmSynthetic
+fun Wallet.Model.Transaction.toYttrium(): InitTransaction = InitTransaction(from, to, value, gas, gasPrice, data, nonce, maxFeePerGas, maxPriorityFeePerGas, chainId)
+
+@JvmSynthetic
 private fun CATransaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(from, to, value, gas, gasPrice, data, nonce, maxFeePerGas, maxPriorityFeePerGas, chainId)
 
+@JvmSynthetic
 private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Model.FundingMetadata(chainId, tokenContract, symbol, amount)
 
 @JvmSynthetic

@@ -348,6 +348,7 @@ object WalletKit {
     }
 
     fun fulfillmentStatus(fulfilmentId: String, onSuccess: (Wallet.Model.FulfilmentStatus) -> Unit, onError: (Wallet.Model.Error) -> Unit) {
+        //todo: do polling internally via Yttrium
         try {
             fulfilmentStatusUseCase(fulfilmentId, onSuccess, onError)
         } catch (e: Exception) {

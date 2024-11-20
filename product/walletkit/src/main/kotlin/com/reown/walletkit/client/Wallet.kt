@@ -100,8 +100,8 @@ object Wallet {
         ) : Model()
 
         data class EstimatedFees(
-            val maxFeePerGas: Long,
-            val maxPriorityFeePerGas: Long
+            val maxFeePerGas: String,
+            val maxPriorityFeePerGas: String
         ) : Model()
 
         sealed class FulfilmentSuccess : Model() {
