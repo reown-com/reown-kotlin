@@ -1,15 +1,10 @@
 package com.reown.sample.wallet.domain
 
 import com.reown.sample.common.Chains
-import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.SessionRequestUI
+import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
 import kotlin.coroutines.resume

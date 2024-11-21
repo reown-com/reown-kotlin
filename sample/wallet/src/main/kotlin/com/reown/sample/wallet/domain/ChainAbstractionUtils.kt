@@ -18,45 +18,60 @@ fun getOriginalTransaction(sessionRequest: Wallet.Model.SessionRequest): Wallet.
     } catch (e: Exception) {
         "0"
     }
+    val nonce = try {
+        requestParams.getString("nonce")
+    } catch (e: Exception) {
+        "0"
+    }
+    val gas = try {
+        requestParams.getString("gas")
+    } catch (e: Exception) {
+        "0"
+    }
+
 
     return Wallet.Model.Transaction(
         from = from,
         to = to,
         value = value,
         data = data,
-        nonce = "0",
-        gas = "0",
-        gasPrice = "0",
+        nonce = nonce,
+        gas = gas,
+        gasPrice = "0", //todo: will be removed
         chainId = sessionRequest.chainId!!,
-        maxPriorityFeePerGas = "0",
-        maxFeePerGas = "0"
+        maxPriorityFeePerGas = "0", //todo: will be removed
+        maxFeePerGas = "0" //todo: will be removed
     )
 }
 
-fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
+fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, originalTransaction: Wallet.Model.Transaction, verifyContext: Wallet.Model.VerifyContext) {
     try {
         WalletKit.canFulfil(
-            WCDelegate.originalTransaction!!,
+            originalTransaction,
             onSuccess = { result ->
-                //todo: if fulfilment success amit fulfilment even to UI, if fulfilment not required proceed with the normal flow
-                println("kobe: fulfil success: $result")
-                if (result is Wallet.Model.FulfilmentSuccess.Available) {
-                    fulfilmentAvailable = result
-                    emitSessionRequest(sessionRequest, verifyContext)
-                } else if (result is Wallet.Model.FulfilmentSuccess.NotRequired) {
-                    //todo: proceed with normal flow
-                    emitSessionRequest(sessionRequest, verifyContext)
+                when (result) {
+                    is Wallet.Model.FulfilmentSuccess.Available -> {
+                        println("kobe: fulfil success available: $result")
+                        fulfilmentAvailable = result
+                        emitChainAbstractionRequest(sessionRequest, result, verifyContext)
+                    }
+
+                    is Wallet.Model.FulfilmentSuccess.NotRequired -> {
+                        println("kobe: fulfil success not required: $result")
+                        emitSessionRequest(sessionRequest, verifyContext)
+                    }
                 }
             },
             onError = { error ->
-                //todo: emit error to the user and send response error to a dapp
                 println("kobe: fulfil error: $error")
-                emitSessionRequest(sessionRequest, verifyContext)
+                //todo: send JsonRpcError response to dapp
+                emitChainAbstractionError(sessionRequest, error, verifyContext)
             }
         )
     } catch (e: Exception) {
-        //todo: emit error to the user and send response error to a dapp
-        println("kobe: try error: $e")
+        println("kobe: CanFulfil: Unknown error: $e")
+        //todo: send JsonRpcError response to dapp
+        emitChainAbstractionError(sessionRequest, Wallet.Model.FulfilmentError.Unknown(e.message ?: "CanFulfil: Unknown error"), verifyContext)
     }
 }
 
@@ -66,6 +81,26 @@ fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContex
 
         scope.launch {
             _walletEvents.emit(sessionRequest)
+        }
+    }
+}
+
+fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, fulfilment: Wallet.Model.FulfilmentSuccess.Available, verifyContext: Wallet.Model.VerifyContext) {
+    if (WCDelegate.currentId != sessionRequest.request.id) {
+        WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
+
+        scope.launch {
+            _walletEvents.emit(fulfilment)
+        }
+    }
+}
+
+fun emitChainAbstractionError(sessionRequest: Wallet.Model.SessionRequest, fulfilmentError: Wallet.Model.FulfilmentError, verifyContext: Wallet.Model.VerifyContext) {
+    if (WCDelegate.currentId != sessionRequest.request.id) {
+        WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
+
+        scope.launch {
+            _walletEvents.emit(fulfilmentError)
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.reown.sample.wallet.ui.routes.dialog_routes.session_request
+package com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request
 
 import android.net.Uri
 import androidx.core.net.toUri
@@ -7,11 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
-import com.reown.sample.wallet.BuildConfig
-import com.reown.sample.wallet.blockchain.JsonRpcRequest
-import com.reown.sample.wallet.blockchain.createBlockChainApiService
-import com.reown.sample.wallet.domain.EthAccountDelegate
-import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.Signer.PERSONAL_SIGN_METHOD
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.model.Transaction
@@ -23,16 +18,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
-import org.web3j.crypto.Credentials
-import org.web3j.crypto.RawTransaction
-import org.web3j.crypto.TransactionEncoder
 import org.web3j.tx.gas.DefaultGasProvider
-import org.web3j.utils.Numeric
-import org.web3j.utils.Numeric.cleanHexPrefix
 import org.web3j.utils.Numeric.hexStringToByteArray
-import org.web3j.utils.Numeric.toBigInt
-import java.math.BigDecimal
-import java.math.BigInteger
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine

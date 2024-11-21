@@ -81,7 +81,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
 
         if (sessionRequest.request.method == "eth_sendTransaction") {
             originalTransaction = getOriginalTransaction(sessionRequest)
-            canFulfil(sessionRequest, verifyContext)
+            canFulfil(sessionRequest, originalTransaction!!, verifyContext)
         } else {
             emitSessionRequest(sessionRequest, verifyContext)
         }

@@ -49,6 +49,5 @@ class CanFulfilUseCase(private val chainAbstractionClient: ChainAbstractionClien
                 onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
             }
         }
-
     }
 }

@@ -1,4 +1,4 @@
-package com.reown.sample.wallet.ui.routes.dialog_routes.session_request
+package com.reown.sample.wallet.ui.routes.dialog_routes.session_request.chain_abstraction
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -31,14 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.reown.android.internal.common.exception.NoConnectivityException
-import com.reown.sample.common.CompletePreviews
 import com.reown.sample.common.sendResponseDeepLink
-import com.reown.sample.common.ui.theme.PreviewTheme
 import com.reown.sample.common.ui.theme.verified_color
 import com.reown.sample.common.ui.themedColor
-import com.reown.sample.wallet.domain.WCDelegate.currentId
+import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.common.Buttons
 import com.reown.sample.wallet.ui.common.Content
 import com.reown.sample.wallet.ui.common.InnerContent
@@ -48,23 +45,16 @@ import com.reown.sample.wallet.ui.common.peer.Peer
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.getColor
 import com.reown.sample.wallet.ui.routes.Route
+import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
+import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
-@CompletePreviews
-@Composable
-fun SessionRequestRoutePreview() {
-    PreviewTheme {
-        SessionRequestRoute(rememberNavController())
-    }
-}
-
 @SuppressLint("RestrictedApi")
 @Composable
-fun SessionRequestRoute(navController: NavHostController, sessionRequestViewModel: SessionRequestViewModel = viewModel()) {
-    val sessionRequestUI = sessionRequestViewModel.sessionRequestUI
+fun ChainAbstractionRoute(navController: NavHostController, chainAbstractionViewModel: ChainAbstractionViewModel = viewModel()) {
+    val sessionRequestUI = chainAbstractionViewModel.sessionRequestUI
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
     var isConfirmLoading by remember { mutableStateOf(false) }
@@ -72,7 +62,7 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
     when (sessionRequestUI) {
         is SessionRequestUI.Content -> {
             val allowButtonColor = getColor(sessionRequestUI.peerContextUI)
-            currentId = sessionRequestUI.requestId
+            WCDelegate.currentId = sessionRequestUI.requestId
             SemiTransparentDialog {
                 Spacer(modifier = Modifier.height(24.dp))
                 Peer(peerUI = sessionRequestUI.peerUI, "sends a request", sessionRequestUI.peerContextUI)
@@ -81,8 +71,8 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                 Spacer(modifier = Modifier.height(16.dp))
                 Buttons(
                     allowButtonColor,
-                    onConfirm = { confirmRequest(sessionRequestUI, navController, sessionRequestViewModel, composableScope, context) { isConfirmLoading = it } },
-                    onCancel = { cancelRequest(sessionRequestUI, navController, sessionRequestViewModel, composableScope, context) { isCancelLoading = it } },
+                    onConfirm = { confirmRequest(sessionRequestUI, navController, chainAbstractionViewModel, composableScope, context) { isConfirmLoading = it } },
+                    onCancel = { cancelRequest(sessionRequestUI, navController, chainAbstractionViewModel, composableScope, context) { isCancelLoading = it } },
                     isLoadingConfirm = isConfirmLoading,
                     isLoadingCancel = isCancelLoading
                 )
@@ -117,7 +107,7 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
 private fun cancelRequest(
     sessionRequestUI: SessionRequestUI.Content,
     navController: NavHostController,
-    sessionRequestViewModel: SessionRequestViewModel,
+    chainAbstractionViewModel: ChainAbstractionViewModel,
     composableScope: CoroutineScope,
     context: Context,
     toggleCancelLoader: (Boolean) -> Unit
@@ -127,7 +117,7 @@ private fun cancelRequest(
         navController.popBackStack(route = Route.Connections.path, inclusive = false)
     }
     try {
-        sessionRequestViewModel.reject(
+        chainAbstractionViewModel.reject(
             onSuccess = { uri ->
                 toggleCancelLoader(false)
                 composableScope.launch(Dispatchers.Main) {
@@ -153,7 +143,7 @@ private fun cancelRequest(
 private fun confirmRequest(
     sessionRequestUI: SessionRequestUI.Content,
     navController: NavHostController,
-    sessionRequestViewModel: SessionRequestViewModel,
+    chainAbstractionViewModel: ChainAbstractionViewModel,
     composableScope: CoroutineScope,
     context: Context,
     toggleConfirmLoader: (Boolean) -> Unit
@@ -163,7 +153,7 @@ private fun confirmRequest(
         navController.popBackStack(route = Route.Connections.path, inclusive = false)
     }
     try {
-        sessionRequestViewModel.approve(
+        chainAbstractionViewModel.approve(
             onSuccess = { uri ->
                 toggleConfirmLoader(false)
                 composableScope.launch(Dispatchers.Main) {
@@ -242,4 +232,3 @@ fun Request(sessionRequestUI: SessionRequestUI.Content) {
         }
     }
 }
-
