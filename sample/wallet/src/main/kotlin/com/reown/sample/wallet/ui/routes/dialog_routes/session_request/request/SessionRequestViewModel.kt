@@ -7,22 +7,16 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
-import com.reown.sample.wallet.domain.Signer.PERSONAL_SIGN_METHOD
+import com.reown.sample.wallet.domain.Signer
+import com.reown.sample.wallet.domain.Signer.PERSONAL_SIGN
 import com.reown.sample.wallet.domain.WCDelegate
-import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
-import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Numeric.hexStringToByteArray
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 class SessionRequestViewModel : ViewModel() {
     var sessionRequestUI: SessionRequestUI = generateSessionRequestUI()
@@ -32,85 +26,28 @@ class SessionRequestViewModel : ViewModel() {
             try {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
-                    val signedTransactions = mutableListOf<Pair<String, String>>()
-
-                    //sign fulfilment txs
-                    WCDelegate.fulfilmentAvailable!!.transactions.forEach { transaction ->
-                        val signedTransaction = Transaction.sign(transaction)
-                        signedTransactions.add(Pair(transaction.chainId, signedTransaction))
-                    }
-
-                    //execute fulfilment txs
-                    signedTransactions.forEach { (chainId, signedTx) ->
-                        try {
-                            Transaction.sendRaw(chainId, signedTx)
-                        } catch (e: Exception) {
-                            //todo: what should happen here when one of the route tx fails - stop executing and show the error?
-                            println("kobe: tx error: $e")
-                            return@launch onError(e)
-                        }
-                    }
-
-                    //check fulfilment status
-                    //TODO: refactor pooling with new bindings
-                    delay(WCDelegate.fulfilmentAvailable!!.checkIn)
-                    while (true) {
-                        println("kobe: Fulfilment status check")
-                        val fulfilmentResult = async { fulfillmentStatus() }.await()
-
-                        when (fulfilmentResult) {
-                            is Wallet.Model.FulfilmentStatus.Error -> {
-                                println("kobe: Fulfilment error: ${fulfilmentResult.reason}")
-                                onError(Throwable(fulfilmentResult.reason))
-                                break
+                    val result: String = Signer.sign(sessionRequest)
+                    val response = Wallet.Params.SessionRequestResponse(
+                        sessionTopic = sessionRequest.topic,
+                        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, result)
+                    )
+                    val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
+                    WalletKit.respondSessionRequest(response,
+                        onSuccess = {
+                            clearSessionRequest()
+                            onSuccess(redirect)
+                        },
+                        onError = { error ->
+                            Firebase.crashlytics.recordException(error.throwable)
+                            if (error.throwable !is NoConnectivityException) {
+                                clearSessionRequest()
                             }
-
-                            is Wallet.Model.FulfilmentStatus.Pending -> {
-                                println("kobe: Fulfilment pending: ${fulfilmentResult.checkIn}")
-                                delay(fulfilmentResult.checkIn)
-                            }
-
-                            is Wallet.Model.FulfilmentStatus.Completed -> {
-                                println("kobe: Fulfilment completed")
-
-                                //if status completed, execute init tx
-                                with(WCDelegate.originalTransaction!!) {
-                                    val nonceResult = Transaction.getNonce(chainId, from)
-                                    println("kobe: Original TX")
-                                    val signedTx = Transaction.sign(this, nonceResult, DefaultGasProvider.GAS_LIMIT)
-                                    try {
-                                        val resultTx = Transaction.sendRaw(chainId, signedTx)
-                                        val response = Wallet.Params.SessionRequestResponse(
-                                            sessionTopic = sessionRequest.topic,
-                                            jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)
-                                        )
-                                        val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                                        WalletKit.respondSessionRequest(response,
-                                            onSuccess = {
-                                                clearSessionRequest()
-                                                onSuccess(redirect)
-                                            },
-                                            onError = { error ->
-                                                Firebase.crashlytics.recordException(error.throwable)
-                                                if (error.throwable !is NoConnectivityException) {
-                                                    clearSessionRequest()
-                                                }
-                                                onError(error.throwable)
-                                            })
-
-                                    } catch (e: Exception) {
-                                        return@launch onError(e)
-                                    }
-                                }
-                                break //todo: clean up: return status, break, execute init tx
-                            }
-                        }
-                    }
+                            onError(error.throwable)
+                        })
                 } else {
                     onError(Throwable("Approve - Cannot find session request"))
                 }
             } catch (e: Exception) {
-                println("kobe: Error: $e")
                 Firebase.crashlytics.recordException(e)
                 reject()
                 clearSessionRequest()
@@ -118,24 +55,6 @@ class SessionRequestViewModel : ViewModel() {
             }
         }
     }
-
-    private suspend fun fulfillmentStatus(): Wallet.Model.FulfilmentStatus =
-        suspendCoroutine { continuation ->
-            try {
-                WalletKit.fulfillmentStatus(WCDelegate.fulfilmentAvailable!!.fulfilmentId,
-                    onSuccess = {
-                        println("kobe: Fulfilment status SUCCESS: $it")
-                        continuation.resume(it)
-                    },
-                    onError = {
-                        println("kobe: Fulfilment status ERROR: $it")
-                        continuation.resumeWithException(it.throwable)
-                    }
-                )
-            } catch (e: Exception) {
-                continuation.resumeWithException(e)
-            }
-        }
 
     fun reject(onSuccess: (Uri?) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
         try {
@@ -204,7 +123,7 @@ class SessionRequestViewModel : ViewModel() {
                 ),
                 topic = sessionRequest.topic,
                 requestId = sessionRequest.request.id,
-                param = if (sessionRequest.request.method == PERSONAL_SIGN_METHOD) extractMessageParamFromPersonalSign(sessionRequest.request.params) else sessionRequest.request.params,
+                param = if (sessionRequest.request.method == PERSONAL_SIGN) extractMessageParamFromPersonalSign(sessionRequest.request.params) else sessionRequest.request.params,
                 chain = sessionRequest.chainId,
                 method = sessionRequest.request.method,
                 peerContextUI = context.toPeerUI()

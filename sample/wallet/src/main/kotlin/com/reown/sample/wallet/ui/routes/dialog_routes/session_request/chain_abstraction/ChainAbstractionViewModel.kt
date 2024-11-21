@@ -206,7 +206,7 @@ class ChainAbstractionViewModel : ViewModel() {
                 ),
                 topic = sessionRequest.topic,
                 requestId = sessionRequest.request.id,
-                param = if (sessionRequest.request.method == Signer.PERSONAL_SIGN_METHOD) extractMessageParamFromPersonalSign(sessionRequest.request.params) else sessionRequest.request.params,
+                param = if (sessionRequest.request.method == Signer.PERSONAL_SIGN) extractMessageParamFromPersonalSign(sessionRequest.request.params) else sessionRequest.request.params,
                 chain = sessionRequest.chainId,
                 method = sessionRequest.request.method,
                 peerContextUI = context.toPeerUI()

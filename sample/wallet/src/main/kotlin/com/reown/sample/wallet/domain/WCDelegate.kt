@@ -3,6 +3,7 @@ package com.reown.sample.wallet.domain
 import android.util.Log
 import com.reown.android.Core
 import com.reown.android.CoreClient
+import com.reown.sample.wallet.domain.model.Transaction.getTransaction
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.CoroutineScope
@@ -80,7 +81,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
         println("kobe: session request: $sessionRequest")
 
         if (sessionRequest.request.method == "eth_sendTransaction") {
-            originalTransaction = getOriginalTransaction(sessionRequest)
+            originalTransaction = getTransaction(sessionRequest)
             canFulfil(sessionRequest, originalTransaction!!, verifyContext)
         } else {
             emitSessionRequest(sessionRequest, verifyContext)

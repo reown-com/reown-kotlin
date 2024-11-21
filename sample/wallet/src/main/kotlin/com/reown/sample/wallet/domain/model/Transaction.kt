@@ -4,19 +4,66 @@ import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.blockchain.JsonRpcRequest
 import com.reown.sample.wallet.blockchain.createBlockChainApiService
 import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
+import org.json.JSONArray
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.RawTransaction
 import org.web3j.crypto.TransactionEncoder
+import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Numeric
 import java.math.BigDecimal
 import java.math.BigInteger
 
 object Transaction {
+    suspend fun send(sessionRequest: Wallet.Model.SessionRequest): String {
+        val transaction = getTransaction(sessionRequest)
+        val nonceResult = getNonce(transaction.chainId, transaction.from)
+        val signedTransaction = sign(transaction, nonceResult, DefaultGasProvider.GAS_LIMIT)
+        val txHash = sendRaw(transaction.chainId, signedTransaction)
+        return txHash
+    }
+
+    fun getTransaction(sessionRequest: Wallet.Model.SessionRequest): Wallet.Model.Transaction {
+        val requestParams = JSONArray(sessionRequest.request.params).getJSONObject(0)
+        val from = requestParams.getString("from")
+        val to = requestParams.getString("to")
+        val data = requestParams.getString("data")
+        val value = try {
+            requestParams.getString("value")
+        } catch (e: Exception) {
+            "0"
+        }
+        val nonce = try {
+            requestParams.getString("nonce")
+        } catch (e: Exception) {
+            "0"
+        }
+        val gas = try {
+            requestParams.getString("gas")
+        } catch (e: Exception) {
+            "0"
+        }
+
+
+        return Wallet.Model.Transaction(
+            from = from,
+            to = to,
+            value = value,
+            data = data,
+            nonce = nonce,
+            gas = gas,
+            gasPrice = "0", //todo: will be removed
+            chainId = sessionRequest.chainId!!,
+            maxPriorityFeePerGas = "0", //todo: will be removed
+            maxFeePerGas = "0" //todo: will be removed
+        )
+    }
+
     fun sign(transaction: Wallet.Model.Transaction, nonce: String? = null, gasLimit: BigInteger? = null): String {
         val fees = WalletKit.estimateFees(transaction.chainId)
         val chainId = transaction.chainId.split(":")[1].toLong()
@@ -42,6 +89,24 @@ object Transaction {
         return Numeric.toHexString(TransactionEncoder.signMessage(rawTransaction, Credentials.create(EthAccountDelegate.privateKey)))
     }
 
+    suspend fun getNonce(chainId: String, from: String): String {
+        return coroutineScope {
+            val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
+            val nonceRequest = JsonRpcRequest(
+                method = "eth_getTransactionCount",
+                params = listOf(from, "latest"),
+                id = generateId()
+            )
+
+            val nonceResult = async { service.sendJsonRpcRequest(nonceRequest) }.await()
+            if (nonceResult.error != null) {
+                throw Exception("Getting nonce failed: ${nonceResult.error.message}")
+            } else {
+                nonceResult.result as String
+            }
+        }
+    }
+
     suspend fun sendRaw(chainId: String, signedTx: String): String {
         return coroutineScope {
             supervisorScope {
@@ -58,24 +123,6 @@ object Transaction {
                 } else {
                     resultTx.result as String
                 }
-            }
-        }
-    }
-
-    suspend fun getNonce(chainId: String, from: String): String {
-        return coroutineScope {
-            val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
-            val nonceRequest = JsonRpcRequest(
-                method = "eth_getTransactionCount",
-                params = listOf(from, "latest"),
-                id = generateId()
-            )
-
-            val nonceResult = async { service.sendJsonRpcRequest(nonceRequest) }.await()
-            if (nonceResult.error != null) {
-                throw Exception("Getting nonce failed: ${nonceResult.error.message}")
-            } else {
-                nonceResult.result as String
             }
         }
     }

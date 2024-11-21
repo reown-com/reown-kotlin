@@ -8,42 +8,6 @@ import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 
-fun getOriginalTransaction(sessionRequest: Wallet.Model.SessionRequest): Wallet.Model.Transaction {
-    val requestParams = JSONArray(sessionRequest.request.params).getJSONObject(0)
-    val from = requestParams.getString("from")
-    val to = requestParams.getString("to")
-    val data = requestParams.getString("data")
-    val value = try {
-        requestParams.getString("value")
-    } catch (e: Exception) {
-        "0"
-    }
-    val nonce = try {
-        requestParams.getString("nonce")
-    } catch (e: Exception) {
-        "0"
-    }
-    val gas = try {
-        requestParams.getString("gas")
-    } catch (e: Exception) {
-        "0"
-    }
-
-
-    return Wallet.Model.Transaction(
-        from = from,
-        to = to,
-        value = value,
-        data = data,
-        nonce = nonce,
-        gas = gas,
-        gasPrice = "0", //todo: will be removed
-        chainId = sessionRequest.chainId!!,
-        maxPriorityFeePerGas = "0", //todo: will be removed
-        maxFeePerGas = "0" //todo: will be removed
-    )
-}
-
 fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, originalTransaction: Wallet.Model.Transaction, verifyContext: Wallet.Model.VerifyContext) {
     try {
         WalletKit.canFulfil(

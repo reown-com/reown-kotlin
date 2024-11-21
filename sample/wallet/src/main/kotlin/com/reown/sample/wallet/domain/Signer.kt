@@ -1,12 +1,14 @@
 package com.reown.sample.wallet.domain
 
 import com.reown.sample.common.Chains
+import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
+import org.web3j.tx.gas.DefaultGasProvider
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -48,7 +50,7 @@ object Signer {
                     doTxsResult.userOperationHash
                 }
 
-                "eth_sendTransaction" -> {
+                ETH_SEND_TRANSACTION -> {
                     val transactions: MutableList<Wallet.Params.Transaction> = mutableListOf()
                     val params = JSONArray(sessionRequest.param).getJSONObject(0)
                     val to = params.getString("to") ?: ""
@@ -77,7 +79,11 @@ object Signer {
             }
 
             !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
-                sessionRequest.method == PERSONAL_SIGN_METHOD -> EthSigner.personalSign(sessionRequest.param)
+                sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
+                sessionRequest.method == ETH_SEND_TRANSACTION -> {
+                    val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
+                    txHash
+                }
                 //Note: Only for testing purposes - it will always fail on Dapp side
                 sessionRequest.chain?.contains(Chains.Info.Eth.chain, true) == true ->
                     """0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"""
@@ -92,7 +98,6 @@ object Signer {
             }
 
             else -> throw Exception("Unsupported Chain")
-
         }
     }
 
@@ -123,5 +128,6 @@ object Signer {
             }
         }
 
-    const val PERSONAL_SIGN_METHOD = "personal_sign"
+    const val PERSONAL_SIGN = "personal_sign"
+    const val ETH_SEND_TRANSACTION = "eth_sendTransaction"
 }
