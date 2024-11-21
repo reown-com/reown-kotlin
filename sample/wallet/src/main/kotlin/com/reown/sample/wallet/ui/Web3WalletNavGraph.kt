@@ -43,9 +43,11 @@ import com.reown.sample.wallet.ui.routes.composable_routes.settings.SettingsRout
 import com.reown.sample.wallet.ui.routes.dialog_routes.paste_uri.PasteUriRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_authenticate.SessionAuthenticateRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal.SessionProposalRoute
+import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.chain_abstraction.ChainAbstractionRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.snackbar_message.SnackbarMessageRoute
 
+@OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("RestrictedApi")
 @ExperimentalMaterialNavigationApi
 @Composable
@@ -125,6 +127,17 @@ fun Web3WalletNavGraph(
                 )
             ) {
                 NotificationsScreenRoute(navController, it.arguments?.getString("topic")!!, inboxViewModel)
+            }
+            dialog(
+                route = "${Route.ChainAbstraction.path}/{isError}",
+                arguments = listOf(
+                    navArgument("isError") {
+                        type = NavType.BoolType
+                        nullable = false
+                    }),
+                dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                ChainAbstractionRoute(navController, it.arguments?.getBoolean("isError")!!)
             }
             composable(Route.Inbox.path) {
                 InboxRoute(navController, inboxViewModel)

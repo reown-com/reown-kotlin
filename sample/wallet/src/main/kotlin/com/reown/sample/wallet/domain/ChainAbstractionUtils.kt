@@ -1,12 +1,10 @@
 package com.reown.sample.wallet.domain
 
 import com.reown.sample.wallet.domain.WCDelegate._walletEvents
-import com.reown.sample.wallet.domain.WCDelegate.fulfilmentAvailable
 import com.reown.sample.wallet.domain.WCDelegate.scope
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.launch
-import org.json.JSONArray
 
 fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, originalTransaction: Wallet.Model.Transaction, verifyContext: Wallet.Model.VerifyContext) {
     try {
@@ -16,7 +14,6 @@ fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, originalTransaction: 
                 when (result) {
                     is Wallet.Model.FulfilmentSuccess.Available -> {
                         println("kobe: fulfil success available: $result")
-                        fulfilmentAvailable = result
                         emitChainAbstractionRequest(sessionRequest, result, verifyContext)
                     }
 
@@ -52,6 +49,7 @@ fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContex
 fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, fulfilment: Wallet.Model.FulfilmentSuccess.Available, verifyContext: Wallet.Model.VerifyContext) {
     if (WCDelegate.currentId != sessionRequest.request.id) {
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
+        WCDelegate.fulfilmentAvailable = fulfilment
 
         scope.launch {
             _walletEvents.emit(fulfilment)
@@ -62,6 +60,7 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
 fun emitChainAbstractionError(sessionRequest: Wallet.Model.SessionRequest, fulfilmentError: Wallet.Model.FulfilmentError, verifyContext: Wallet.Model.VerifyContext) {
     if (WCDelegate.currentId != sessionRequest.request.id) {
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
+        WCDelegate.fulfilmentError = fulfilmentError
 
         scope.launch {
             _walletEvents.emit(fulfilmentError)

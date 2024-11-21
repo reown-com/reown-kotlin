@@ -8,6 +8,7 @@ sealed class Route(val path: String) {
     object SessionProposal : Route("session_proposal")
     object SessionRequest : Route("session_request")
     object SessionAuthenticate : Route("session_authenticate")
+    object ChainAbstraction : Route("chain_abstraction")
     object PasteUri : Route("paste_uri")
     object ScanUri : Route("scan_uri")
 

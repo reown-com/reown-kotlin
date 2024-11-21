@@ -114,6 +114,9 @@ class Web3WalletViewModel : ViewModel() {
                 }
             }
 
+            is Wallet.Model.FulfilmentSuccess.Available -> SignEvent.Fulfilment(isError = false)
+            is Wallet.Model.FulfilmentError -> SignEvent.Fulfilment(isError = true)
+
             is Wallet.Model.SessionAuthenticate -> {
                 _isLoadingFlow.value = false
                 SignEvent.SessionAuthenticate

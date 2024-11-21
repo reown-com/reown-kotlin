@@ -46,14 +46,15 @@ import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.getColor
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
-import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @SuppressLint("RestrictedApi")
 @Composable
-fun ChainAbstractionRoute(navController: NavHostController, chainAbstractionViewModel: ChainAbstractionViewModel = viewModel()) {
+fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, chainAbstractionViewModel: ChainAbstractionViewModel = viewModel()) {
+    println("kobe: isError: $isError")
+
     val sessionRequestUI = chainAbstractionViewModel.sessionRequestUI
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current

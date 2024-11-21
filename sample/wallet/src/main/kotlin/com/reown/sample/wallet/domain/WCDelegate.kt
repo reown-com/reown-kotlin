@@ -30,6 +30,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     var currentId: Long? = null
     //CA
     var fulfilmentAvailable: Wallet.Model.FulfilmentSuccess.Available? = null
+    var fulfilmentError: Wallet.Model.FulfilmentError? = null
     var originalTransaction: Wallet.Model.Transaction? = null
 
     init {
