@@ -55,7 +55,7 @@ object Transaction {
                 val resultTx = async { service.sendJsonRpcRequest(request) }.await()
 
                 if (resultTx.error != null) {
-                    throw Throwable("Route transaction failed: ${resultTx.error.message}")
+                    throw Exception("Route transaction failed: ${resultTx.error.message}")
                 } else {
                     resultTx.result as String
                 }
@@ -74,7 +74,7 @@ object Transaction {
 
             val nonceResult = async { service.sendJsonRpcRequest(nonceRequest) }.await()
             if (nonceResult.error != null) {
-                throw Throwable("Getting nonce failed: ${nonceResult.error.message}")
+                throw Exception("Getting nonce failed: ${nonceResult.error.message}")
             } else {
                 nonceResult.result as String
             }

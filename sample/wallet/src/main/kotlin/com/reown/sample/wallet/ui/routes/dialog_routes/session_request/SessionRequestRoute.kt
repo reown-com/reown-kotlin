@@ -61,7 +61,6 @@ fun SessionRequestRoutePreview() {
     }
 }
 
-
 @SuppressLint("RestrictedApi")
 @Composable
 fun SessionRequestRoute(navController: NavHostController, sessionRequestViewModel: SessionRequestViewModel = viewModel()) {
@@ -74,7 +73,6 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
         is SessionRequestUI.Content -> {
             val allowButtonColor = getColor(sessionRequestUI.peerContextUI)
             currentId = sessionRequestUI.requestId
-
             SemiTransparentDialog {
                 Spacer(modifier = Modifier.height(24.dp))
                 Peer(peerUI = sessionRequestUI.peerUI, "sends a request", sessionRequestUI.peerContextUI)
@@ -83,63 +81,8 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                 Spacer(modifier = Modifier.height(16.dp))
                 Buttons(
                     allowButtonColor,
-                    onConfirm = {
-                        isConfirmLoading = true
-                        if (sessionRequestUI.peerUI.linkMode) {
-                            navController.popBackStack(route = Route.Connections.path, inclusive = false)
-                        }
-                        try {
-                            sessionRequestViewModel.approve(
-                                onSuccess = { uri ->
-                                    isConfirmLoading = false
-                                    composableScope.launch(Dispatchers.Main) {
-                                        navController.popBackStack(route = Route.Connections.path, inclusive = false)
-                                    }
-                                    if (uri != null && uri.toString().isNotEmpty()) {
-                                        context.sendResponseDeepLink(uri)
-                                    } else {
-                                        composableScope.launch(Dispatchers.Main) {
-                                            Toast.makeText(context, "Go back to your browser", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                },
-                                onError = { error ->
-                                    isConfirmLoading = false
-                                    showError(navController, error, composableScope, context)
-                                })
-
-                        } catch (e: Throwable) {
-                            showError(navController, e, composableScope, context)
-                        }
-                    },
-                    onCancel = {
-                        isCancelLoading = true
-                        if (sessionRequestUI.peerUI.linkMode) {
-                            navController.popBackStack(route = Route.Connections.path, inclusive = false)
-                        }
-                        try {
-                            sessionRequestViewModel.reject(
-                                onSuccess = { uri ->
-                                    isCancelLoading = false
-                                    composableScope.launch(Dispatchers.Main) {
-                                        navController.popBackStack(route = Route.Connections.path, inclusive = false)
-                                    }
-                                    if (uri != null && uri.toString().isNotEmpty()) {
-                                        context.sendResponseDeepLink(uri)
-                                    } else {
-                                        composableScope.launch(Dispatchers.Main) {
-                                            Toast.makeText(context, "Go back to your browser", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                },
-                                onError = { error ->
-                                    isCancelLoading = false
-                                    showError(navController, error, composableScope, context)
-                                })
-                        } catch (e: Throwable) {
-                            showError(navController, e, composableScope, context)
-                        }
-                    },
+                    onConfirm = { confirmRequest(sessionRequestUI, navController, sessionRequestViewModel, composableScope, context) { isConfirmLoading = it } },
+                    onCancel = { cancelRequest(sessionRequestUI, navController, sessionRequestViewModel, composableScope, context) { isCancelLoading = it } },
                     isLoadingConfirm = isConfirmLoading,
                     isLoadingCancel = isCancelLoading
                 )
@@ -168,6 +111,79 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
             }
 
         }
+    }
+}
+
+private fun cancelRequest(
+    sessionRequestUI: SessionRequestUI.Content,
+    navController: NavHostController,
+    sessionRequestViewModel: SessionRequestViewModel,
+    composableScope: CoroutineScope,
+    context: Context,
+    toggleCancelLoader: (Boolean) -> Unit
+) {
+    toggleCancelLoader(true)
+    if (sessionRequestUI.peerUI.linkMode) {
+        navController.popBackStack(route = Route.Connections.path, inclusive = false)
+    }
+    try {
+        sessionRequestViewModel.reject(
+            onSuccess = { uri ->
+                toggleCancelLoader(false)
+                composableScope.launch(Dispatchers.Main) {
+                    navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                }
+                if (uri != null && uri.toString().isNotEmpty()) {
+                    context.sendResponseDeepLink(uri)
+                } else {
+                    composableScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context, "Go back to your browser", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            onError = { error ->
+                toggleCancelLoader(false)
+                showError(navController, error, composableScope, context)
+            })
+    } catch (e: Throwable) {
+        showError(navController, e, composableScope, context)
+    }
+}
+
+private fun confirmRequest(
+    sessionRequestUI: SessionRequestUI.Content,
+    navController: NavHostController,
+    sessionRequestViewModel: SessionRequestViewModel,
+    composableScope: CoroutineScope,
+    context: Context,
+    toggleConfirmLoader: (Boolean) -> Unit
+) {
+    toggleConfirmLoader(true)
+    if (sessionRequestUI.peerUI.linkMode) {
+        navController.popBackStack(route = Route.Connections.path, inclusive = false)
+    }
+    try {
+        sessionRequestViewModel.approve(
+            onSuccess = { uri ->
+                toggleConfirmLoader(false)
+                composableScope.launch(Dispatchers.Main) {
+                    navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                }
+                if (uri != null && uri.toString().isNotEmpty()) {
+                    context.sendResponseDeepLink(uri)
+                } else {
+                    composableScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context, "Go back to your browser", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            onError = { error ->
+                toggleConfirmLoader(false)
+                showError(navController, error, composableScope, context)
+            })
+
+    } catch (e: Throwable) {
+        showError(navController, e, composableScope, context)
     }
 }
 
