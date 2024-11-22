@@ -32,6 +32,17 @@ fun ButtonWithLoader(
 }
 
 @Composable
+fun ButtonWithoutLoader(
+    buttonColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    ButtonTopLevel(buttonColor, modifier = modifier) {
+        Button(isLoading = false, content = content, loaderColor = Color(0xFF000000))
+    }
+}
+
+@Composable
 fun Button(modifier: Modifier = Modifier, isLoading: Boolean, content: @Composable () -> Unit, loaderColor: Color) {
     AnimatedContent(targetState = isLoading, label = "Loading") { state ->
         if (state) {

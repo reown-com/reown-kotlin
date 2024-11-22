@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,7 +17,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.reown.sample.wallet.ui.common.generated.ButtonWithLoader
+import com.reown.sample.wallet.ui.common.generated.ButtonWithoutLoader
 
+
+@Composable
+fun Button(modifier: Modifier = Modifier, onClick: () -> Unit = {}, text: String) {
+    ButtonWithoutLoader(
+        buttonColor = Color(0x2A2A2A),
+        modifier = Modifier
+            .height(46.dp)
+            .clickable { onClick() },
+        content = {
+            Text(
+                text = text,
+                style = TextStyle(
+                    fontSize = 16.0.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF000000),
+                ),
+                modifier = modifier.wrapContentHeight(align = Alignment.CenterVertically).wrapContentWidth(align = Alignment.CenterHorizontally)
+            )
+        }
+    )
+}
 
 @Composable
 fun Buttons(

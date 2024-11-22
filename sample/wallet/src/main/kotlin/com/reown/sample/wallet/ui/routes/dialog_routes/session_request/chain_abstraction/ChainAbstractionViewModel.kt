@@ -46,7 +46,7 @@ class ChainAbstractionViewModel : ViewModel() {
                         try {
                             Transaction.sendRaw(chainId, signedTx)
                         } catch (e: Exception) {
-                            //todo: what should happen here when one of the route tx fails - stop executing and show the error?
+                            //todo: stop executing and show the error - send error to the dapp
                             println("kobe: tx error: $e")
                             return@launch onError(e)
                         }
@@ -100,6 +100,7 @@ class ChainAbstractionViewModel : ViewModel() {
                                             })
 
                                     } catch (e: Exception) {
+                                        //todo: stop executing and show the error - send error to the dapp
                                         return@launch onError(e)
                                     }
                                 }

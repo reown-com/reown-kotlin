@@ -107,6 +107,24 @@ object Transaction {
         }
     }
 
+    suspend fun getBalance(chainId: String, from: String): String {
+        return coroutineScope {
+            val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
+            val nonceRequest = JsonRpcRequest(
+                method = "eth_getBalance",
+                params = listOf(from, "latest"),
+                id = generateId()
+            )
+
+            val nonceResult = async { service.sendJsonRpcRequest(nonceRequest) }.await()
+            if (nonceResult.error != null) {
+                throw Exception("Getting nonce failed: ${nonceResult.error.message}")
+            } else {
+                nonceResult.result as String
+            }
+        }
+    }
+
     suspend fun sendRaw(chainId: String, signedTx: String): String {
         return coroutineScope {
             supervisorScope {
@@ -127,7 +145,7 @@ object Transaction {
         }
     }
 
-    private fun hexToBigDecimal(input: String): BigDecimal? {
+    fun hexToBigDecimal(input: String): BigDecimal? {
         val trimmedInput = input.trim()
         var hex = trimmedInput
         return if (hex.isEmpty()) {
@@ -141,6 +159,18 @@ object Transaction {
         } catch (ex: NullPointerException) {
             null
         } catch (ex: NumberFormatException) {
+            null
+        }
+    }
+
+    fun hexToTokenAmount(hexValue: String, decimals: Int): BigDecimal? {
+        return try {
+            val cleanedHex = hexValue.removePrefix("0x")
+            val amountBigInt = cleanedHex.toBigInteger(16)
+            val divisor = BigDecimal.TEN.pow(decimals)
+            BigDecimal(amountBigInt).divide(divisor)
+        } catch (e: NumberFormatException) {
+            println("Invalid hexadecimal value: $hexValue")
             null
         }
     }

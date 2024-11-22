@@ -67,3 +67,13 @@ fun emitChainAbstractionError(sessionRequest: Wallet.Model.SessionRequest, fulfi
         }
     }
 }
+
+fun getErrorMessage(): String {
+    return when (val error = WCDelegate.fulfilmentError!!) {
+        Wallet.Model.FulfilmentError.InsufficientFunds -> "Insufficient funds"
+        Wallet.Model.FulfilmentError.InsufficientGasFunds -> "Insufficient gas funds"
+        Wallet.Model.FulfilmentError.NoRoutesAvailable -> "No routes available"
+        is Wallet.Model.FulfilmentError.Unknown -> error.message
+        else -> "Unknown Error"
+    }
+}
