@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
@@ -73,7 +74,7 @@ fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, ch
     var isConfirmLoading by remember { mutableStateOf(false) }
     var isCancelLoading by remember { mutableStateOf(false) }
     var shouldShowErrorDialog by remember { mutableStateOf(false) }
-    var shouldShowSuccessDialog by remember { mutableStateOf(false) }
+    var shouldShowSuccessDialog by remember { mutableStateOf(true) }
 
     when {
         shouldShowSuccessDialog -> SuccessDialog(navController, chainAbstractionViewModel)
@@ -212,7 +213,7 @@ fun ErrorDialog(
                         modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
                         text = "Paying", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
                     )
-                    BlueLabelText("xx USDC") //TODO: GET from ERC20 decoding, how much to send
+                    BlueLabelText("xx USDC") //TODO: GET from ERC20 decoding, how much to send, add chain with icon
                 }
                 Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(
@@ -251,23 +252,49 @@ fun SuccessDialog(
     navController: NavHostController,
     chainAbstractionViewModel: ChainAbstractionViewModel
 ) {
-    SemiTransparentDialog() {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier
-                .background(mismatch_color.copy(alpha = .15f))
-                .fillMaxWidth()
-        ) {
-            Spacer(modifier = Modifier.height(32.dp))
-            Image(modifier = Modifier.size(72.dp), painter = painterResource(R.drawable.ic_scam), contentDescription = null)
-            Text(text = "SUCCESS: ${chainAbstractionViewModel.txHash}", style = TextStyle(color = Color(0xFFFFFFFF), fontSize = 24.sp, fontWeight = FontWeight.Bold))
+    SemiTransparentDialog {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                text = "The website you're trying to connect with is flagged as malicious by multiple security providers. Approving may lead to loss of funds.",
+                text = "Transaction completed!",
                 style = TextStyle(color = Color(0xFFFFFFFF), textAlign = TextAlign.Center)
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+            Image(modifier = Modifier.size(64.dp), painter = painterResource(R.drawable.ic_frame), contentDescription = null)
+            Text(text = "You successfully sent USDC!", style = TextStyle(color = Color(0xFFFFFFFF), fontSize = 16.sp, fontWeight = FontWeight.Bold))
+            Spacer(modifier = Modifier.height(32.dp))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .height(200.dp)
+                    .fillMaxWidth()
+            ) {
+                InnerContent {
+                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(
+                            modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
+                            text = "Paying", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                        )
+                        BlueLabelText("xx USDC") //TODO: GET from ERC20 decoding, how much to send, add chain with icon
+                    }
+                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(
+                            modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
+                            text = "Source of funds:",
+                            style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                        )
+                        val funding = WCDelegate.fulfilmentAvailable!!.funding.map { "${Transaction.hexToTokenAmount(it.amount, 6)!!.toPlainString()} ${it.symbol} from ${it.chainId}" }
+                        Column {
+                            funding.forEach {
+                                BlueLabelText(it)
+                            }
+                        }
+                    }
+                }
+            }
             CancelButton(
+                text = "Back to App",
                 modifier = Modifier
                     .padding(16.dp)
                     .height(46.dp)
