@@ -56,7 +56,7 @@ class ChainAbstractionViewModel : ViewModel() {
                             Transaction.sendRaw(chainId, signedTx, "Route")
                         } catch (e: Exception) {
                             println("kobe: route tx error: $e")
-                            respondWithError(e.message ?: "Route TX execution error")
+                            respondWithError(e.message ?: "Route TX execution error", WCDelegate.sessionRequestEvent!!.first)
                             return@launch onError(e)
                         }
                     }
@@ -109,7 +109,7 @@ class ChainAbstractionViewModel : ViewModel() {
                                             })
 
                                     } catch (e: Exception) {
-                                        respondWithError(e.message ?: "Init TX execution error")
+                                        respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent!!.first)
                                         return@launch onError(e)
                                     }
                                 }

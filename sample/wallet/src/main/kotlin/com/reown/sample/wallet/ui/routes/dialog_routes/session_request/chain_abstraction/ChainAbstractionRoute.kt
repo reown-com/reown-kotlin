@@ -74,7 +74,7 @@ fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, ch
     var isConfirmLoading by remember { mutableStateOf(false) }
     var isCancelLoading by remember { mutableStateOf(false) }
     var shouldShowErrorDialog by remember { mutableStateOf(false) }
-    var shouldShowSuccessDialog by remember { mutableStateOf(true) }
+    var shouldShowSuccessDialog by remember { mutableStateOf(false) }
 
     when {
         shouldShowSuccessDialog -> SuccessDialog(navController, chainAbstractionViewModel)
@@ -170,8 +170,6 @@ fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, ch
             }
         }
     }
-
-
 }
 
 @Composable

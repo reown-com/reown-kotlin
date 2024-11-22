@@ -27,39 +27,38 @@ fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, originalTransaction: 
             },
             onError = { error ->
                 println("kobe: fulfil error: $error")
-                respondWithError(getErrorMessage())
+                respondWithError(getErrorMessage(), sessionRequest)
                 emitChainAbstractionError(sessionRequest, error, verifyContext)
             }
         )
     } catch (e: Exception) {
         println("kobe: CanFulfil: Unknown error: $e")
-        respondWithError(e.message ?: "CanFulfil: Unknown error")
+        respondWithError(e.message ?: "CanFulfil: Unknown error", sessionRequest)
         emitChainAbstractionError(sessionRequest, Wallet.Model.FulfilmentError.Unknown(e.message ?: "CanFulfil: Unknown error"), verifyContext)
     }
 }
 
-fun respondWithError(errorMessage: String) {
-    val sessionRequest = WCDelegate.sessionRequestEvent?.first
-    if (sessionRequest != null) {
-        val result = Wallet.Params.SessionRequestResponse(
-            sessionTopic = sessionRequest.topic,
-            jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
-                id = sessionRequest.request.id,
-                code = 500,
-                message = errorMessage
-            )
+fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionRequest) {
+    val result = Wallet.Params.SessionRequestResponse(
+        sessionTopic = sessionRequest.topic,
+        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
+            id = sessionRequest.request.id,
+            code = 500,
+            message = errorMessage
         )
-        try {
-            WalletKit.respondSessionRequest(result,
-                onSuccess = {
-                    clearSessionRequest()
-                },
-                onError = { error ->
-                    Firebase.crashlytics.recordException(error.throwable)
-                })
-        } catch (e: Exception) {
-            Firebase.crashlytics.recordException(e)
-        }
+    )
+    try {
+        WalletKit.respondSessionRequest(result,
+            onSuccess = {
+                println("kobe: Error sent success")
+                clearSessionRequest()
+            },
+            onError = { error ->
+                println("kobe: Error sent error: $error")
+                Firebase.crashlytics.recordException(error.throwable)
+            })
+    } catch (e: Exception) {
+        Firebase.crashlytics.recordException(e)
     }
 }
 
@@ -96,7 +95,7 @@ fun emitChainAbstractionError(sessionRequest: Wallet.Model.SessionRequest, fulfi
 }
 
 fun getErrorMessage(): String {
-    return when (val error = WCDelegate.fulfilmentError!!) {
+    return when (val error = WCDelegate.fulfilmentError) {
         Wallet.Model.FulfilmentError.InsufficientFunds -> "Insufficient funds"
         Wallet.Model.FulfilmentError.InsufficientGasFunds -> "Insufficient gas funds"
         Wallet.Model.FulfilmentError.NoRoutesAvailable -> "No routes available"
