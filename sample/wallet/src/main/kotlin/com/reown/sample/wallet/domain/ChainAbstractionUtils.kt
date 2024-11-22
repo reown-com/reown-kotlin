@@ -1,5 +1,7 @@
 package com.reown.sample.wallet.domain
 
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.reown.sample.wallet.domain.WCDelegate._walletEvents
 import com.reown.sample.wallet.domain.WCDelegate.scope
 import com.reown.walletkit.client.Wallet
@@ -25,14 +27,39 @@ fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, originalTransaction: 
             },
             onError = { error ->
                 println("kobe: fulfil error: $error")
-                //todo: send JsonRpcError response to dapp
+                respondWithError(getErrorMessage())
                 emitChainAbstractionError(sessionRequest, error, verifyContext)
             }
         )
     } catch (e: Exception) {
         println("kobe: CanFulfil: Unknown error: $e")
-        //todo: send JsonRpcError response to dapp
+        respondWithError(e.message ?: "CanFulfil: Unknown error")
         emitChainAbstractionError(sessionRequest, Wallet.Model.FulfilmentError.Unknown(e.message ?: "CanFulfil: Unknown error"), verifyContext)
+    }
+}
+
+fun respondWithError(errorMessage: String) {
+    val sessionRequest = WCDelegate.sessionRequestEvent?.first
+    if (sessionRequest != null) {
+        val result = Wallet.Params.SessionRequestResponse(
+            sessionTopic = sessionRequest.topic,
+            jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
+                id = sessionRequest.request.id,
+                code = 500,
+                message = errorMessage
+            )
+        )
+        try {
+            WalletKit.respondSessionRequest(result,
+                onSuccess = {
+                    clearSessionRequest()
+                },
+                onError = { error ->
+                    Firebase.crashlytics.recordException(error.throwable)
+                })
+        } catch (e: Exception) {
+            Firebase.crashlytics.recordException(e)
+        }
     }
 }
 
@@ -76,4 +103,10 @@ fun getErrorMessage(): String {
         is Wallet.Model.FulfilmentError.Unknown -> error.message
         else -> "Unknown Error"
     }
+}
+
+fun clearSessionRequest() {
+    WCDelegate.sessionRequestEvent = null
+    WCDelegate.currentId = null
+//        sessionRequestUI = SessionRequestUI.Initial
 }

@@ -9,7 +9,9 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.clearSessionRequest
 import com.reown.sample.wallet.domain.model.Transaction
+import com.reown.sample.wallet.domain.respondWithError
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
@@ -53,8 +55,8 @@ class ChainAbstractionViewModel : ViewModel() {
                         try {
                             Transaction.sendRaw(chainId, signedTx, "Route")
                         } catch (e: Exception) {
-                            //todo: stop executing and show the error - send error to the dapp
-                            println("kobe: tx error: $e")
+                            println("kobe: route tx error: $e")
+                            respondWithError(e.message ?: "Route TX execution error")
                             return@launch onError(e)
                         }
                     }
@@ -107,7 +109,7 @@ class ChainAbstractionViewModel : ViewModel() {
                                             })
 
                                     } catch (e: Exception) {
-                                        //todo: stop executing and show the error - send error to the dapp
+                                        respondWithError(e.message ?: "Init TX execution error")
                                         return@launch onError(e)
                                     }
                                 }
@@ -193,12 +195,6 @@ class ChainAbstractionViewModel : ViewModel() {
         } else {
             throw IllegalArgumentException()
         }
-    }
-
-    private fun clearSessionRequest() {
-        WCDelegate.sessionRequestEvent = null
-        WCDelegate.currentId = null
-//        sessionRequestUI = SessionRequestUI.Initial
     }
 
     private fun generateSessionRequestUI(): SessionRequestUI {
