@@ -3,7 +3,9 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_request.chain_ab
 import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,8 +29,10 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,6 +42,7 @@ import com.reown.sample.common.sendResponseDeepLink
 import com.reown.sample.common.ui.theme.mismatch_color
 import com.reown.sample.common.ui.theme.verified_color
 import com.reown.sample.common.ui.themedColor
+import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.getErrorMessage
 import com.reown.sample.wallet.domain.model.Transaction
@@ -48,6 +53,7 @@ import com.reown.sample.wallet.ui.common.InnerContent
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
 import com.reown.sample.wallet.ui.common.blue.BlueLabelRow
 import com.reown.sample.wallet.ui.common.blue.BlueLabelText
+import com.reown.sample.wallet.ui.common.generated.CancelButton
 import com.reown.sample.wallet.ui.common.peer.Peer
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.getColor
@@ -61,86 +67,219 @@ import kotlinx.coroutines.launch
 @Composable
 fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, chainAbstractionViewModel: ChainAbstractionViewModel = viewModel()) {
     println("kobe: isError: $isError")
-    //InitTransaction(from=0xc3d7420EA0d9102760c4DCf700245961FFc5Ec42, to=0xaf88d065e77c8cC2239327C5EDb3A432268e5831, value=0, gas=0, gasPrice=0, data=0xa9059cbb000000000000000000000000228311b83daf3fc9a0d0a46c0b329942fc8cb2ed000000000000000000000000000000000000000000000000000000000007a120, nonce=0, maxFeePerGas=0, maxPriorityFeePerGas=0, chainId=eip155:42161)
-    //Available(fulfilmentId=2d26c36c-56ea-4fd0-86f6-b1d80e5b0bf0, checkIn=3000, transactions=[Transaction(from=0xc3d7420EA0d9102760c4DCf700245961FFc5Ec42, to=0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85, value=0x00, gas=0xf9e82, gasPrice=0xf4472, data=0x095ea7b30000000000000000000000003a23f943181408eac424116af7b7790c94cb97a500000000000000000000000000000000000000000000000000000000000696af, nonce=0x16, maxFeePerGas=0, maxPriorityFeePerGas=0, chainId=eip155:10), Transaction(from=0xc3d7420EA0d9102760c4DCf700245961FFc5Ec42, to=0x3a23F943181408EAC424116Af7b7790c94Cb97a5, value=0x00, gas=0xf9e82, gasPrice=0xf4472, data=0x0000019e5da11e770000000000000000000000000b2c639c533813f4aa9d7837caf62653d097ff850000000000000000000000000000000000000000000000000000000000036d310000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000759e0000000000000000000000000000000000000000000000000000000000036465000000000000000000000000ce8cca271ebc0533920c83d39f417ed6a0abb7d000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000000000000000001c000000000000000000000000000000000000000000000000000001f04aef628c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001b3b000000000000000000000000000000000000000000000000000000000000a4b1000000000000000000000000c3d7420ea0d9102760c4dcf700245961ffc5ec4200000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000013000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018000301001303000000000000000000000000000000030d4000000000000000000000000000000000000000000000000000000000000000000000000000000184ee8f0b860000000000000000000000000b2c639c533813f4aa9d7837caf62653d097ff85000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee000000000000000000000000000000000000000000000000000000000003297e0000000000000000000000000000000000000000000000000000000000001b3b00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000a8e449022e000000000000000000000000000000000000000000000000000000000003297e00000000000000000000000000000000000000000000000000003ba09fe48cae000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000012000000000000000000000001fb3cf6e48f1e7b10213e7b6d87d4c073c7fdb7b41caa3f800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000, nonce=0x17, maxFeePerGas=0, maxPriorityFeePerGas=0, chainId=eip155:10)], funding=[FundingMetadata(chainId=eip155:10, tokenContract=0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85, symbol=USDC, amount=0x696af)])
-
     val sessionRequestUI = chainAbstractionViewModel.sessionRequestUI
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
     var isConfirmLoading by remember { mutableStateOf(false) }
     var isCancelLoading by remember { mutableStateOf(false) }
+    var shouldShowErrorDialog by remember { mutableStateOf(false) }
+    var shouldShowSuccessDialog by remember { mutableStateOf(false) }
 
-    when (sessionRequestUI) {
-        is SessionRequestUI.Content -> {
-            val allowButtonColor = getColor(sessionRequestUI.peerContextUI)
-            WCDelegate.currentId = sessionRequestUI.requestId
+    when {
+        shouldShowSuccessDialog -> SuccessDialog(navController, chainAbstractionViewModel)
+        shouldShowErrorDialog -> ErrorDialog(navController, chainAbstractionViewModel)
+        else -> when (sessionRequestUI) {
+            is SessionRequestUI.Content -> {
+                val allowButtonColor = getColor(sessionRequestUI.peerContextUI)
+                WCDelegate.currentId = sessionRequestUI.requestId
 
-            SemiTransparentDialog {
-                Spacer(modifier = Modifier.height(24.dp))
-                Peer(peerUI = sessionRequestUI.peerUI, "Review transaction", sessionRequestUI.peerContextUI)
-                Spacer(modifier = Modifier.height(16.dp))
-                if (isError) {
-                    Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
-                        Text(
-                            text = getErrorMessage(),
-                            style = TextStyle(
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp,
-                                color = mismatch_color
-                            ),
+                SemiTransparentDialog {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Peer(peerUI = sessionRequestUI.peerUI, "Review transaction", sessionRequestUI.peerContextUI)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    if (isError) {
+                        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
+                            Text(
+                                text = getErrorMessage(),
+                                style = TextStyle(
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 18.sp,
+                                    color = mismatch_color
+                                ),
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                    Request(sessionRequestUI = sessionRequestUI, isError)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    if (isError) {
+                        Button(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFFD6D6D6))
+                                .height(46.dp),
+                            text = "Back to App",
+                            onClick = {
+                                navController.popBackStack()
+                            }
+                        )
+
+                    } else {
+                        Buttons(
+                            allowButtonColor,
+                            onConfirm = {
+                                confirmRequest(
+                                    sessionRequestUI,
+                                    navController,
+                                    chainAbstractionViewModel,
+                                    composableScope,
+                                    context,
+                                    toggleConfirmLoader = { isConfirmLoading = it },
+                                    onSuccess = { hash ->
+                                        chainAbstractionViewModel.txHash = hash
+                                        shouldShowSuccessDialog = true
+                                    },
+                                    onError = { message: String ->
+                                        chainAbstractionViewModel.errorMessage = message
+                                        shouldShowErrorDialog = true
+                                    }
+                                )
+                            },
+                            onCancel = { cancelRequest(sessionRequestUI, navController, chainAbstractionViewModel, composableScope, context) { isCancelLoading = it } },
+                            isLoadingConfirm = isConfirmLoading,
+                            isLoadingCancel = isCancelLoading
                         )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
-                Request(sessionRequestUI = sessionRequestUI, isError)
-                Spacer(modifier = Modifier.height(16.dp))
-                if (isError) {
-                    Button(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFFD6D6D6))
-                            .height(46.dp),
-                        text = "Back to App",
-                        onClick = {
-                            navController.popBackStack()
-                        }
-                    )
+            }
 
-                } else {
+            SessionRequestUI.Initial -> {
+                SemiTransparentDialog {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Peer(peerUI = PeerUI.Empty, null)
+                    Spacer(modifier = Modifier.height(200.dp))
+                    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(strokeWidth = 8.dp, modifier = Modifier.size(100.dp), color = Color(0xFFB8F53D))
+                    }
+                    Spacer(modifier = Modifier.height(200.dp))
                     Buttons(
-                        allowButtonColor,
-                        onConfirm = { confirmRequest(sessionRequestUI, navController, chainAbstractionViewModel, composableScope, context) { isConfirmLoading = it } },
-                        onCancel = { cancelRequest(sessionRequestUI, navController, chainAbstractionViewModel, composableScope, context) { isCancelLoading = it } },
+                        verified_color,
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .blur(4.dp)
+                            .padding(vertical = 8.dp),
                         isLoadingConfirm = isConfirmLoading,
                         isLoadingCancel = isCancelLoading
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+
             }
         }
+    }
 
-        SessionRequestUI.Initial -> {
-            SemiTransparentDialog {
-                Spacer(modifier = Modifier.height(24.dp))
-                Peer(peerUI = PeerUI.Empty, null)
-                Spacer(modifier = Modifier.height(200.dp))
-                Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(strokeWidth = 8.dp, modifier = Modifier.size(100.dp), color = Color(0xFFB8F53D))
+
+}
+
+@Composable
+fun ErrorDialog(
+    navController: NavHostController,
+    chainAbstractionViewModel: ChainAbstractionViewModel
+) {
+    SemiTransparentDialog {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                text = "Something went wrong!",
+                style = TextStyle(color = Color(0xFFFFFFFF), textAlign = TextAlign.Center)
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            Image(modifier = Modifier.size(64.dp), painter = painterResource(R.drawable.ic_scam), contentDescription = null)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "${chainAbstractionViewModel.errorMessage}",
+                style = TextStyle(color = Color(0xFFFFFFFF), fontSize = 16.sp),
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .height(200.dp)
+                .fillMaxWidth()
+        ) {
+            InnerContent {
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
+                        text = "Paying", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                    )
+                    BlueLabelText("xx USDC") //TODO: GET from ERC20 decoding, how much to send
                 }
-                Spacer(modifier = Modifier.height(200.dp))
-                Buttons(
-                    verified_color,
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .blur(4.dp)
-                        .padding(vertical = 8.dp),
-                    isLoadingConfirm = isConfirmLoading,
-                    isLoadingCancel = isCancelLoading
-                )
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
+                        text = "Source of funds:",
+                        style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                    )
+                    val funding = WCDelegate.fulfilmentAvailable!!.funding.map { "${Transaction.hexToTokenAmount(it.amount, 6)!!.toPlainString()} ${it.symbol} from ${it.chainId}" }
+                    Column {
+                        funding.forEach {
+                            BlueLabelText(it)
+                        }
+                    }
+                }
             }
+        }
+        CancelButton(
+            text = "Back to App",
+            modifier = Modifier
+                .padding(16.dp)
+                .height(46.dp)
+                .fillMaxWidth()
+                .clickable {
+                    navController.popBackStack(
+                        route = Route.Connections.path,
+                        inclusive = false
+                    )
+                },
+            backgroundColor = Color(0xFFFFFFFF).copy(.25f)
+        )
+    }
+}
 
+@Composable
+fun SuccessDialog(
+    navController: NavHostController,
+    chainAbstractionViewModel: ChainAbstractionViewModel
+) {
+    SemiTransparentDialog() {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier
+                .background(mismatch_color.copy(alpha = .15f))
+                .fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
+            Image(modifier = Modifier.size(72.dp), painter = painterResource(R.drawable.ic_scam), contentDescription = null)
+            Text(text = "SUCCESS: ${chainAbstractionViewModel.txHash}", style = TextStyle(color = Color(0xFFFFFFFF), fontSize = 24.sp, fontWeight = FontWeight.Bold))
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                text = "The website you're trying to connect with is flagged as malicious by multiple security providers. Approving may lead to loss of funds.",
+                style = TextStyle(color = Color(0xFFFFFFFF), textAlign = TextAlign.Center)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            CancelButton(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .height(46.dp)
+                    .fillMaxWidth()
+                    .clickable {
+                        navController.popBackStack(
+                            route = Route.Connections.path,
+                            inclusive = false
+                        )
+                    },
+                backgroundColor = Color(0xFFFFFFFF).copy(.25f)
+            )
         }
     }
 }
@@ -187,7 +326,9 @@ private fun confirmRequest(
     chainAbstractionViewModel: ChainAbstractionViewModel,
     composableScope: CoroutineScope,
     context: Context,
-    toggleConfirmLoader: (Boolean) -> Unit
+    toggleConfirmLoader: (Boolean) -> Unit,
+    onSuccess: (hash: String) -> Unit,
+    onError: (message: String) -> Unit
 ) {
     toggleConfirmLoader(true)
     if (sessionRequestUI.peerUI.linkMode) {
@@ -195,26 +336,31 @@ private fun confirmRequest(
     }
     try {
         chainAbstractionViewModel.approve(
-            onSuccess = { uri ->
+            onSuccess = { result ->
                 toggleConfirmLoader(false)
-                composableScope.launch(Dispatchers.Main) {
-                    navController.popBackStack(route = Route.Connections.path, inclusive = false)
-                }
-                if (uri != null && uri.toString().isNotEmpty()) {
-                    context.sendResponseDeepLink(uri)
+                if (result.redirect != null && result.redirect.toString().isNotEmpty()) {
+                    context.sendResponseDeepLink(result.redirect)
                 } else {
-                    composableScope.launch(Dispatchers.Main) {
-                        Toast.makeText(context, "Go back to your browser", Toast.LENGTH_SHORT).show()
-                    }
+                    onSuccess(result.hash)
                 }
             },
             onError = { error ->
                 toggleConfirmLoader(false)
-                showError(navController, error, composableScope, context)
+                handleError(error, composableScope, context, onError)
             })
 
     } catch (e: Throwable) {
-        showError(navController, e, composableScope, context)
+        handleError(e, composableScope, context, onError)
+    }
+}
+
+private fun handleError(error: Throwable, composableScope: CoroutineScope, context: Context, onError: (message: String) -> Unit) {
+    if (error is NoConnectivityException) {
+        composableScope.launch(Dispatchers.Main) {
+            Toast.makeText(context, error.message ?: "Session request error, please check your Internet connection", Toast.LENGTH_SHORT).show()
+        }
+    } else {
+        onError(error.message ?: "Session request error, please check your Internet connection")
     }
 }
 
@@ -247,10 +393,11 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                     text = "Your balance:", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
                 )
                 BlueLabelRow(listOf("xx USDC"))//todo: show balance
-                if (!isError){
+                if (!isError) {
                     Text(
                         modifier = Modifier.padding(vertical = 10.dp, horizontal = 13.dp),
-                        text = "Source of funds:", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                        text = "Source of funds:",
+                        style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
                     )
                     val funding = WCDelegate.fulfilmentAvailable!!.funding.map { "${Transaction.hexToTokenAmount(it.amount, 6)!!.toPlainString()} ${it.symbol} from ${it.chainId}" }
                     BlueLabelRow(funding)

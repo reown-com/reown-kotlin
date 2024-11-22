@@ -4,7 +4,6 @@ import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.blockchain.JsonRpcRequest
 import com.reown.sample.wallet.blockchain.createBlockChainApiService
 import com.reown.sample.wallet.domain.EthAccountDelegate
-import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
@@ -125,7 +124,7 @@ object Transaction {
         }
     }
 
-    suspend fun sendRaw(chainId: String, signedTx: String): String {
+    suspend fun sendRaw(chainId: String, signedTx: String, txType: String = ""): String {
         return coroutineScope {
             supervisorScope {
                 val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
@@ -137,7 +136,7 @@ object Transaction {
                 val resultTx = async { service.sendJsonRpcRequest(request) }.await()
 
                 if (resultTx.error != null) {
-                    throw Exception("Route transaction failed: ${resultTx.error.message}")
+                    throw Exception("$txType transaction failed: ${resultTx.error.message}")
                 } else {
                     resultTx.result as String
                 }

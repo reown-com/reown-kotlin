@@ -25,10 +25,17 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+data class TxSuccess(
+    val redirect: Uri?,
+    val hash: String
+)
+
 class ChainAbstractionViewModel : ViewModel() {
+    var txHash: String? = null
+    var errorMessage: String? = null
     var sessionRequestUI: SessionRequestUI = generateSessionRequestUI()
 
-    fun approve(onSuccess: (Uri?) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
+    fun approve(onSuccess: (TxSuccess) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
         viewModelScope.launch {
             try {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
@@ -44,7 +51,7 @@ class ChainAbstractionViewModel : ViewModel() {
                     //execute fulfilment txs
                     signedTransactions.forEach { (chainId, signedTx) ->
                         try {
-                            Transaction.sendRaw(chainId, signedTx)
+                            Transaction.sendRaw(chainId, signedTx, "Route")
                         } catch (e: Exception) {
                             //todo: stop executing and show the error - send error to the dapp
                             println("kobe: tx error: $e")
@@ -80,7 +87,7 @@ class ChainAbstractionViewModel : ViewModel() {
                                     println("kobe: Original TX")
                                     val signedTx = Transaction.sign(this, nonceResult, DefaultGasProvider.GAS_LIMIT)
                                     try {
-                                        val resultTx = Transaction.sendRaw(chainId, signedTx)
+                                        val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
                                         val response = Wallet.Params.SessionRequestResponse(
                                             sessionTopic = sessionRequest.topic,
                                             jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)
@@ -89,7 +96,7 @@ class ChainAbstractionViewModel : ViewModel() {
                                         WalletKit.respondSessionRequest(response,
                                             onSuccess = {
                                                 clearSessionRequest()
-                                                onSuccess(redirect)
+                                                onSuccess(TxSuccess(redirect, resultTx))
                                             },
                                             onError = { error ->
                                                 Firebase.crashlytics.recordException(error.throwable)
@@ -191,7 +198,7 @@ class ChainAbstractionViewModel : ViewModel() {
     private fun clearSessionRequest() {
         WCDelegate.sessionRequestEvent = null
         WCDelegate.currentId = null
-        sessionRequestUI = SessionRequestUI.Initial
+//        sessionRequestUI = SessionRequestUI.Initial
     }
 
     private fun generateSessionRequestUI(): SessionRequestUI {
