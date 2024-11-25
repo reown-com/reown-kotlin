@@ -15,6 +15,7 @@ import org.web3j.crypto.RawTransaction
 import org.web3j.crypto.TransactionEncoder
 import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Numeric
+import org.web3j.utils.Numeric.toBigInt
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -63,23 +64,25 @@ object Transaction {
         )
     }
 
-    fun sign(transaction: Wallet.Model.Transaction, nonce: String? = null, gasLimit: BigInteger? = null): String {
+    fun sign(transaction: Wallet.Model.Transaction, nonce: BigInteger? = null, gasLimit: BigInteger? = null): String {
         val fees = WalletKit.estimateFees(transaction.chainId)
         val chainId = transaction.chainId.split(":")[1].toLong()
-        val gas = hexToBigDecimal(transaction.gas)
+//        val gas = hexToBigDecimal(transaction.gas)
 
         println("kobe: fees: $fees")
-        println("kobe: gas: $gas")
+        println("kobe: gas: ${gasLimit ?: transaction.gas.toBigInteger()}")
+        println("kobe: nonce: ${nonce ?: transaction.nonce}")
+        println("kobe: value: ${transaction.value}")
         println("kobe: maxFeePerGas: ${fees.maxFeePerGas.toBigInteger()}")
         println("kobe: maxPriorityFeePerGas: ${fees.maxPriorityFeePerGas.toBigInteger()}")
         println("kobe: //////////////////////////////////////")
 
         val rawTransaction = RawTransaction.createTransaction(
             chainId,
-            Numeric.toBigInt(nonce ?: transaction.nonce),
-            gasLimit ?: Numeric.toBigInt(transaction.gas),
+            nonce ?: transaction.nonce.toBigInteger(),
+            gasLimit ?: transaction.gas.toBigInteger(),
             transaction.to,
-            Numeric.toBigInt(transaction.value),
+            transaction.value.toBigInteger(),
             transaction.data,
             fees.maxPriorityFeePerGas.toBigInteger(),
             fees.maxFeePerGas.toBigInteger(),
@@ -88,7 +91,7 @@ object Transaction {
         return Numeric.toHexString(TransactionEncoder.signMessage(rawTransaction, Credentials.create(EthAccountDelegate.privateKey)))
     }
 
-    suspend fun getNonce(chainId: String, from: String): String {
+    suspend fun getNonce(chainId: String, from: String): BigInteger {
         return coroutineScope {
             val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
             val nonceRequest = JsonRpcRequest(
@@ -101,7 +104,8 @@ object Transaction {
             if (nonceResult.error != null) {
                 throw Exception("Getting nonce failed: ${nonceResult.error.message}")
             } else {
-                nonceResult.result as String
+                val nonceHex = nonceResult.result as String
+                hexToBigDecimal(nonceHex)?.toBigInteger() ?: throw Exception("Getting nonce failed")
             }
         }
     }

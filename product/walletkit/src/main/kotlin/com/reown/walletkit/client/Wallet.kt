@@ -117,9 +117,9 @@ object Wallet {
         }
 
         sealed class FulfilmentStatus : Model() {
-            data class Pending(val createdAt: Long, val checkIn: Long) : FulfilmentStatus()
+            //            data class Pending(val createdAt: Long, val checkIn: Long) : FulfilmentStatus()
             data class Completed(val createdAt: Long) : FulfilmentStatus()
-            data class Error(val createdAt: Long, val reason: String) : FulfilmentStatus()
+            data class Error(val reason: String) : FulfilmentStatus()
         }
 
         data class ConnectionState(val isAvailable: Boolean, val reason: Reason? = null) : Model() {

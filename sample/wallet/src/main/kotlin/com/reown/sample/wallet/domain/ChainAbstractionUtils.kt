@@ -7,6 +7,9 @@ import com.reown.sample.wallet.domain.WCDelegate.scope
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, originalTransaction: Wallet.Model.Transaction, verifyContext: Wallet.Model.VerifyContext) {
     try {
@@ -61,6 +64,26 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
         Firebase.crashlytics.recordException(e)
     }
 }
+
+suspend fun fulfillmentStatus(): Wallet.Model.FulfilmentStatus =
+    suspendCoroutine { continuation ->
+        try {
+            WalletKit.fulfillmentStatus(
+                WCDelegate.fulfilmentAvailable!!.fulfilmentId,
+                WCDelegate.fulfilmentAvailable!!.checkIn,
+                onSuccess = {
+                    println("kobe: Fulfilment status SUCCESS: $it")
+                    continuation.resume(it)
+                },
+                onError = {
+                    println("kobe: Fulfilment status ERROR: $it")
+                    continuation.resumeWithException(Exception(it.reason))
+                }
+            )
+        } catch (e: Exception) {
+            continuation.resumeWithException(e)
+        }
+    }
 
 fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
     if (WCDelegate.currentId != sessionRequest.request.id) {

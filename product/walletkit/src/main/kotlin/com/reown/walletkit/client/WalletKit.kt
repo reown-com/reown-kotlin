@@ -2,7 +2,6 @@ package com.reown.walletkit.client
 
 import com.reown.android.Core
 import com.reown.android.CoreInterface
-import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
@@ -15,13 +14,6 @@ import com.reown.walletkit.use_cases.CanFulfilUseCase
 import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.flow
-import uniffi.uniffi_yttrium.ChainAbstractionClient
-import uniffi.yttrium.BridgingError
-import uniffi.yttrium.RouteResponse
-import uniffi.yttrium.RouteResponseSuccess
-import uniffi.yttrium.StatusResponse
-import uniffi.yttrium.StatusResponseSuccess
 import java.util.*
 
 object WalletKit {
@@ -347,12 +339,11 @@ object WalletKit {
         }
     }
 
-    fun fulfillmentStatus(fulfilmentId: String, onSuccess: (Wallet.Model.FulfilmentStatus) -> Unit, onError: (Wallet.Model.Error) -> Unit) {
-        //todo: do polling internally via Yttrium
+    fun fulfillmentStatus(fulfilmentId: String, checkIn: Long, onSuccess: (Wallet.Model.FulfilmentStatus.Completed) -> Unit, onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit) {
         try {
-            fulfilmentStatusUseCase(fulfilmentId, onSuccess, onError)
+            fulfilmentStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
         } catch (e: Exception) {
-            onError(Wallet.Model.Error(e))
+            onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
         }
     }
 

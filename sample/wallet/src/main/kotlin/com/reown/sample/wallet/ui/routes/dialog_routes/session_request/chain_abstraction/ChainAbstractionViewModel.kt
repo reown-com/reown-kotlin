@@ -10,6 +10,7 @@ import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.clearSessionRequest
+import com.reown.sample.wallet.domain.fulfillmentStatus
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.domain.respondWithError
 import com.reown.sample.wallet.ui.common.peer.PeerUI
@@ -43,7 +44,6 @@ class ChainAbstractionViewModel : ViewModel() {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
                     val signedTransactions = mutableListOf<Pair<String, String>>()
-
                     //sign fulfilment txs
                     WCDelegate.fulfilmentAvailable!!.transactions.forEach { transaction ->
                         val signedTransaction = Transaction.sign(transaction)
@@ -62,58 +62,48 @@ class ChainAbstractionViewModel : ViewModel() {
                     }
 
                     //check fulfilment status
-                    //TODO: refactor pooling with new bindings
-                    delay(WCDelegate.fulfilmentAvailable!!.checkIn)
-                    while (true) {
-                        println("kobe: Fulfilment status check")
-                        val fulfilmentResult = async { fulfillmentStatus() }.await()
+                    println("kobe: Fulfilment status check")
 
-                        when (fulfilmentResult) {
-                            is Wallet.Model.FulfilmentStatus.Error -> {
-                                println("kobe: Fulfilment error: ${fulfilmentResult.reason}")
-                                onError(Throwable(fulfilmentResult.reason))
-                                break
-                            }
+                    val fulfilmentResult = async { fulfillmentStatus() }.await()
 
-                            is Wallet.Model.FulfilmentStatus.Pending -> {
-                                println("kobe: Fulfilment pending: ${fulfilmentResult.checkIn}")
-                                delay(fulfilmentResult.checkIn)
-                            }
+                    when (fulfilmentResult) {
+                        is Wallet.Model.FulfilmentStatus.Error -> {
+                            println("kobe: Fulfilment error: ${fulfilmentResult.reason}")
+                            onError(Throwable(fulfilmentResult.reason))
+                        }
 
-                            is Wallet.Model.FulfilmentStatus.Completed -> {
-                                println("kobe: Fulfilment completed")
+                        is Wallet.Model.FulfilmentStatus.Completed -> {
+                            println("kobe: Fulfilment completed")
 
-                                //if status completed, execute init tx
-                                with(WCDelegate.originalTransaction!!) {
-                                    val nonceResult = Transaction.getNonce(chainId, from)
-                                    println("kobe: Original TX")
-                                    val signedTx = Transaction.sign(this, nonceResult, DefaultGasProvider.GAS_LIMIT)
-                                    try {
-                                        val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
-                                        val response = Wallet.Params.SessionRequestResponse(
-                                            sessionTopic = sessionRequest.topic,
-                                            jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)
-                                        )
-                                        val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                                        WalletKit.respondSessionRequest(response,
-                                            onSuccess = {
+                            //if status completed, execute init tx
+                            with(WCDelegate.originalTransaction!!) {
+                                val nonceResult = Transaction.getNonce(chainId, from)
+                                println("kobe: Original TX")
+                                val signedTx = Transaction.sign(this, nonceResult, DefaultGasProvider.GAS_LIMIT)
+                                try {
+                                    val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
+                                    val response = Wallet.Params.SessionRequestResponse(
+                                        sessionTopic = sessionRequest.topic,
+                                        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)
+                                    )
+                                    val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
+                                    WalletKit.respondSessionRequest(response,
+                                        onSuccess = {
+                                            clearSessionRequest()
+                                            onSuccess(TxSuccess(redirect, resultTx))
+                                        },
+                                        onError = { error ->
+                                            Firebase.crashlytics.recordException(error.throwable)
+                                            if (error.throwable !is NoConnectivityException) {
                                                 clearSessionRequest()
-                                                onSuccess(TxSuccess(redirect, resultTx))
-                                            },
-                                            onError = { error ->
-                                                Firebase.crashlytics.recordException(error.throwable)
-                                                if (error.throwable !is NoConnectivityException) {
-                                                    clearSessionRequest()
-                                                }
-                                                onError(error.throwable)
-                                            })
+                                            }
+                                            onError(error.throwable)
+                                        })
 
-                                    } catch (e: Exception) {
-                                        respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent!!.first)
-                                        return@launch onError(e)
-                                    }
+                                } catch (e: Exception) {
+                                    respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent!!.first)
+                                    return@launch onError(e)
                                 }
-                                break //todo: clean up: return status, break, execute init tx
                             }
                         }
                     }
@@ -129,25 +119,6 @@ class ChainAbstractionViewModel : ViewModel() {
             }
         }
     }
-
-    private suspend fun fulfillmentStatus(): Wallet.Model.FulfilmentStatus =
-        suspendCoroutine { continuation ->
-            try {
-                WalletKit.fulfillmentStatus(
-                    WCDelegate.fulfilmentAvailable!!.fulfilmentId,
-                    onSuccess = {
-                        println("kobe: Fulfilment status SUCCESS: $it")
-                        continuation.resume(it)
-                    },
-                    onError = {
-                        println("kobe: Fulfilment status ERROR: $it")
-                        continuation.resumeWithException(it.throwable)
-                    }
-                )
-            } catch (e: Exception) {
-                continuation.resumeWithException(e)
-            }
-        }
 
     fun reject(onSuccess: (Uri?) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
         try {
