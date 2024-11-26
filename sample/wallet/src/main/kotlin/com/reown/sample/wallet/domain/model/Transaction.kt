@@ -65,7 +65,7 @@ object Transaction {
         )
     }
 
-    fun sign(transaction: Wallet.Model.Transaction, nonce: BigInteger? = null, gasLimit: BigInteger? = BigInteger.valueOf(0)): String {
+    fun sign(transaction: Wallet.Model.Transaction, nonce: BigInteger? = null, gasLimit: BigInteger? = null): String {
         val fees = WalletKit.estimateFees(transaction.chainId)
         val chainId = transaction.chainId.split(":")[1].toLong()
 
