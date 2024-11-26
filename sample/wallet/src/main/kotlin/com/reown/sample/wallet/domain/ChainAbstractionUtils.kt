@@ -8,7 +8,6 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, originalTransaction: Wallet.Model.Transaction, verifyContext: Wallet.Model.VerifyContext) {
@@ -65,7 +64,7 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
     }
 }
 
-suspend fun fulfillmentStatus(): Wallet.Model.FulfilmentStatus =
+suspend fun fulfillmentStatus(): Result<Wallet.Model.FulfilmentStatus> =
     suspendCoroutine { continuation ->
         try {
             WalletKit.fulfillmentStatus(
@@ -73,15 +72,16 @@ suspend fun fulfillmentStatus(): Wallet.Model.FulfilmentStatus =
                 WCDelegate.fulfilmentAvailable!!.checkIn,
                 onSuccess = {
                     println("kobe: Fulfilment status SUCCESS: $it")
-                    continuation.resume(it)
+                    continuation.resume(Result.success(it))
                 },
                 onError = {
                     println("kobe: Fulfilment status ERROR: $it")
-                    continuation.resumeWithException(Exception(it.reason))
+                    continuation.resume(Result.failure(Exception(it.reason)))
                 }
             )
         } catch (e: Exception) {
-            continuation.resumeWithException(e)
+            println("kobe: Catch status utils: $e")
+            continuation.resume(Result.failure(e))
         }
     }
 

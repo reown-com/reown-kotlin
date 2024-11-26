@@ -8,9 +8,7 @@ import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
-import org.web3j.tx.gas.DefaultGasProvider
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 object Signer {
@@ -34,14 +32,14 @@ object Signer {
                     val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
                     val prepareSendTxsParams = Wallet.Params.PrepareSendTransactions(transactions = transactions, owner = ownerAccount)
 
-                    val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await()
+                    val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await().getOrThrow()
                     val signature = EthSigner.signHash(prepareTxsResult.hash, EthAccountDelegate.privateKey)
                     val doSendTxsParams = Wallet.Params.DoSendTransactions(
                         owner = ownerAccount,
                         signatures = listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
                         doSendTransactionParams = prepareTxsResult.doSendTransactionParams
                     )
-                    val doTxsResult = async { doTransactions(doSendTxsParams) }.await()
+                    val doTxsResult = async { doTransactions(doSendTxsParams) }.await().getOrThrow()
                     val userOperationReceiptParam = Wallet.Params.WaitForUserOperationReceipt(owner = ownerAccount, userOperationHash = doTxsResult.userOperationHash)
 
                     val userOperationReceipt = waitForUserOperationReceipt(userOperationReceiptParam)
@@ -64,14 +62,14 @@ object Signer {
                     transactions.add(Wallet.Params.Transaction(to, value, data))
                     val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
                     val prepareSendTxsParams = Wallet.Params.PrepareSendTransactions(transactions = transactions, owner = ownerAccount)
-                    val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await()
+                    val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await().getOrThrow()
                     val signature = EthSigner.signHash(prepareTxsResult.hash, EthAccountDelegate.privateKey)
                     val doSendTxsParams = Wallet.Params.DoSendTransactions(
                         owner = ownerAccount,
                         signatures = listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
                         doSendTransactionParams = prepareTxsResult.doSendTransactionParams
                     )
-                    val doTxsResult = async { doTransactions(doSendTxsParams) }.await()
+                    val doTxsResult = async { doTransactions(doSendTxsParams) }.await().getOrThrow()
                     doTxsResult.userOperationHash
                 }
 
@@ -101,30 +99,30 @@ object Signer {
         }
     }
 
-    private suspend fun prepareTransactions(params: Wallet.Params.PrepareSendTransactions): Wallet.Params.PrepareSendTransactionsResult =
+    private suspend fun prepareTransactions(params: Wallet.Params.PrepareSendTransactions): Result<Wallet.Params.PrepareSendTransactionsResult> =
         suspendCoroutine { continuation ->
             try {
-                WalletKit.prepareSendTransactions(params) { result -> continuation.resume(result) }
+                WalletKit.prepareSendTransactions(params) { result -> continuation.resume(Result.success(result)) }
             } catch (e: Exception) {
-                continuation.resumeWithException(e)
+                continuation.resume(Result.failure(e))
             }
         }
 
-    private suspend fun doTransactions(params: Wallet.Params.DoSendTransactions): Wallet.Params.DoSendTransactionsResult =
+    private suspend fun doTransactions(params: Wallet.Params.DoSendTransactions): Result<Wallet.Params.DoSendTransactionsResult> =
         suspendCoroutine { continuation ->
             try {
-                WalletKit.doSendTransactions(params) { result -> continuation.resume(result) }
+                WalletKit.doSendTransactions(params) { result -> continuation.resume(Result.success(result)) }
             } catch (e: Exception) {
-                continuation.resumeWithException(e)
+                continuation.resume(Result.failure(e))
             }
         }
 
-    private suspend fun waitForUserOperationReceipt(params: Wallet.Params.WaitForUserOperationReceipt): String =
+    private suspend fun waitForUserOperationReceipt(params: Wallet.Params.WaitForUserOperationReceipt): Result<String> =
         suspendCoroutine { continuation ->
             try {
-                WalletKit.waitForUserOperationReceipt(params) { result -> continuation.resume(result) }
+                WalletKit.waitForUserOperationReceipt(params) { result -> continuation.resume(Result.success(result)) }
             } catch (e: Exception) {
-                continuation.resumeWithException(e)
+                continuation.resume(Result.failure(e))
             }
         }
 

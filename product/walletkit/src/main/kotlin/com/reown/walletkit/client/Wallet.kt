@@ -117,7 +117,6 @@ object Wallet {
         }
 
         sealed class FulfilmentStatus : Model() {
-            //            data class Pending(val createdAt: Long, val checkIn: Long) : FulfilmentStatus()
             data class Completed(val createdAt: Long) : FulfilmentStatus()
             data class Error(val reason: String) : FulfilmentStatus()
         }

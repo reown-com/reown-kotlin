@@ -19,14 +19,10 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.S
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Numeric
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 data class TxSuccess(
     val redirect: Uri?,
@@ -44,6 +40,7 @@ class ChainAbstractionViewModel : ViewModel() {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
                     val signedTransactions = mutableListOf<Pair<String, String>>()
+                    val txHashes = mutableListOf<Pair<String, String>>()
                     //sign fulfilment txs
                     WCDelegate.fulfilmentAvailable!!.transactions.forEach { transaction ->
                         val signedTransaction = Transaction.sign(transaction)
@@ -53,9 +50,20 @@ class ChainAbstractionViewModel : ViewModel() {
                     //execute fulfilment txs
                     signedTransactions.forEach { (chainId, signedTx) ->
                         try {
-                            Transaction.sendRaw(chainId, signedTx, "Route")
+                            val txHash = Transaction.sendRaw(chainId, signedTx, "Route")
+                            txHashes.add(Pair(chainId, txHash))
                         } catch (e: Exception) {
-                            println("kobe: route tx error: $e")
+                            println("kobe: route broadcast tx error: $e")
+                            respondWithError(e.message ?: "Route TX broadcast error", WCDelegate.sessionRequestEvent!!.first)
+                            return@launch onError(e)
+                        }
+                    }
+
+                    txHashes.forEach { (chainId, txHash) ->
+                        try {
+                            Transaction.getReceipt(chainId, txHash)
+                        } catch (e: Exception) {
+                            println("kobe: route execution tx error: $e")
                             respondWithError(e.message ?: "Route TX execution error", WCDelegate.sessionRequestEvent!!.first)
                             return@launch onError(e)
                         }
@@ -65,50 +73,58 @@ class ChainAbstractionViewModel : ViewModel() {
                     println("kobe: Fulfilment status check")
 
                     val fulfilmentResult = async { fulfillmentStatus() }.await()
+                    fulfilmentResult.fold(
+                        onSuccess = {
+                            println("kobe: fold success")
+                            when (it) {
+                                is Wallet.Model.FulfilmentStatus.Error -> {
+                                    println("kobe: Fulfilment error: ${it.reason}")
+                                    onError(Throwable(it.reason))
+                                }
 
-                    when (fulfilmentResult) {
-                        is Wallet.Model.FulfilmentStatus.Error -> {
-                            println("kobe: Fulfilment error: ${fulfilmentResult.reason}")
-                            onError(Throwable(fulfilmentResult.reason))
-                        }
+                                is Wallet.Model.FulfilmentStatus.Completed -> {
+                                    println("kobe: Fulfilment completed")
 
-                        is Wallet.Model.FulfilmentStatus.Completed -> {
-                            println("kobe: Fulfilment completed")
+                                    //if status completed, execute init tx
+                                    with(WCDelegate.originalTransaction!!) {
+                                        val nonceResult = Transaction.getNonce(chainId, from)
+                                        println("kobe: Original TX")
+                                        val signedTx = Transaction.sign(this, nonceResult, DefaultGasProvider.GAS_LIMIT)
+                                        try {
+                                            val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
+                                            val response = Wallet.Params.SessionRequestResponse(
+                                                sessionTopic = sessionRequest.topic,
+                                                jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)
+                                            )
+                                            val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
+                                            WalletKit.respondSessionRequest(response,
+                                                onSuccess = {
+                                                    clearSessionRequest()
+                                                    onSuccess(TxSuccess(redirect, resultTx))
+                                                },
+                                                onError = { error ->
+                                                    Firebase.crashlytics.recordException(error.throwable)
+                                                    if (error.throwable !is NoConnectivityException) {
+                                                        clearSessionRequest()
+                                                    }
+                                                    onError(error.throwable)
+                                                })
 
-                            //if status completed, execute init tx
-                            with(WCDelegate.originalTransaction!!) {
-                                val nonceResult = Transaction.getNonce(chainId, from)
-                                println("kobe: Original TX")
-                                val signedTx = Transaction.sign(this, nonceResult, DefaultGasProvider.GAS_LIMIT)
-                                try {
-                                    val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
-                                    val response = Wallet.Params.SessionRequestResponse(
-                                        sessionTopic = sessionRequest.topic,
-                                        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)
-                                    )
-                                    val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                                    WalletKit.respondSessionRequest(response,
-                                        onSuccess = {
-                                            clearSessionRequest()
-                                            onSuccess(TxSuccess(redirect, resultTx))
-                                        },
-                                        onError = { error ->
-                                            Firebase.crashlytics.recordException(error.throwable)
-                                            if (error.throwable !is NoConnectivityException) {
-                                                clearSessionRequest()
-                                            }
-                                            onError(error.throwable)
-                                        })
-
-                                } catch (e: Exception) {
-                                    respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent!!.first)
-                                    return@launch onError(e)
+                                        } catch (e: Exception) {
+                                            respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent!!.first)
+                                            return@launch onError(e)
+                                        }
+                                    }
                                 }
                             }
+                        },
+                        onFailure = {
+                            println("kobe: fold error: $it")
+                            onError(Throwable("Fulfilment status error: $it"))
                         }
-                    }
-                } else {
-                    onError(Throwable("Approve - Cannot find session request"))
+                    )
+
+
                 }
             } catch (e: Exception) {
                 println("kobe: Error: $e")

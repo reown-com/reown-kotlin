@@ -343,6 +343,7 @@ object WalletKit {
         try {
             fulfilmentStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
         } catch (e: Exception) {
+            println("kobe: API error: $e")
             onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
         }
     }

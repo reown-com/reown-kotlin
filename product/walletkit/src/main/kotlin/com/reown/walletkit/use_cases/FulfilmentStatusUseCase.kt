@@ -5,12 +5,9 @@ import com.reown.walletkit.client.Wallet
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withTimeout
 import uniffi.uniffi_yttrium.ChainAbstractionClient
 import uniffi.yttrium.StatusResponse
-import uniffi.yttrium.StatusResponseCompleted
-import uniffi.yttrium.StatusResponseError
-import uniffi.yttrium.StatusResponsePending
 
 //todo: test me
 class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
@@ -20,18 +17,15 @@ class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstracti
         onSuccess: (Wallet.Model.FulfilmentStatus.Completed) -> Unit,
         onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit
     ) {
-        //todo: add timeout
         scope.launch {
-            supervisorScope {
+            withTimeout(120000) {
                 println("kobe: start checkin: $checkIn")
                 delay(checkIn)
 
                 while (true) {
                     try {
-                        val result = async {
-                            println("kobe: fulfilmentId: $fulfilmentId")
-                            chainAbstractionClient.status(fulfilmentId)
-                        }.await()
+                        println("kobe: fulfilmentId: $fulfilmentId")
+                        val result = async { chainAbstractionClient.status(fulfilmentId) }.await()
 
                         println("kobe: WK Status result: $result")
                         when (result) {
@@ -53,7 +47,9 @@ class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstracti
                             }
                         }
                     } catch (e: Exception) {
+                        println("kobe: Catch status WK: $e")
                         onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
+                        break
                     }
                 }
             }

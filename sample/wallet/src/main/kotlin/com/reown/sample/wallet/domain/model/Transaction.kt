@@ -8,6 +8,7 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
 import org.web3j.crypto.Credentials
@@ -143,6 +144,29 @@ object Transaction {
                     throw Exception("$txType transaction failed: ${resultTx.error.message}")
                 } else {
                     resultTx.result as String
+                }
+            }
+        }
+    }
+
+    suspend fun getReceipt(chainId: String, txHash: String) {
+        coroutineScope {
+            while (true) {
+                val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
+                val nonceRequest = JsonRpcRequest(
+                    method = "eth_getTransactionReceipt",
+                    params = listOf(txHash),
+                    id = generateId()
+                )
+
+                val receipt = async { service.sendJsonRpcRequest(nonceRequest) }.await()
+                when {
+                    receipt.error != null -> throw Exception("Getting tx receipt failed: ${receipt.error.message}")
+                    receipt.result == null -> delay(3000)
+                    else -> {
+                        println("kobe: receipt: $receipt")
+                        break
+                    }
                 }
             }
         }

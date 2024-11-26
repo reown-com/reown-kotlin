@@ -8,6 +8,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 fun createBlockChainApiService(projectId: String, chainId: String): BlockChainApiService {
+    val rpcUrl: String = when (chainId) {
+        "eip155:10" -> "https://mainnet.optimism.io"
+        "eip155:8453" -> "https://mainnet.base.org"
+        else -> "https://rpc.walletconnect.com"
+    }
+
     val httpClient = OkHttpClient.Builder()
 
     // Logging interceptor (optional)
@@ -35,7 +41,7 @@ fun createBlockChainApiService(projectId: String, chainId: String): BlockChainAp
     httpClient.addInterceptor(queryParameterInterceptor)
 
     val retrofit = Retrofit.Builder()
-        .baseUrl("https://rpc.walletconnect.com")
+        .baseUrl(rpcUrl)
         .client(httpClient.build())
         .addConverterFactory(GsonConverterFactory.create())
         .addCallAdapterFactory(CoroutineCallAdapterFactory())
