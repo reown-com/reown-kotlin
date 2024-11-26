@@ -65,10 +65,9 @@ object Transaction {
         )
     }
 
-    fun sign(transaction: Wallet.Model.Transaction, nonce: BigInteger? = null, gasLimit: BigInteger? = null): String {
+    fun sign(transaction: Wallet.Model.Transaction, nonce: BigInteger? = null, gasLimit: BigInteger? = BigInteger.valueOf(0)): String {
         val fees = WalletKit.estimateFees(transaction.chainId)
         val chainId = transaction.chainId.split(":")[1].toLong()
-//        val gas = hexToBigDecimal(transaction.gas)
 
         println("kobe: fees: $fees")
         println("kobe: gas: ${gasLimit ?: transaction.gas.toBigInteger()}")
@@ -130,22 +129,18 @@ object Transaction {
     }
 
     suspend fun sendRaw(chainId: String, signedTx: String, txType: String = ""): String {
-        return coroutineScope {
-            supervisorScope {
-                val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
-                val request = JsonRpcRequest(
-                    method = "eth_sendRawTransaction",
-                    params = listOf(signedTx),
-                    id = generateId()
-                )
-                val resultTx = async { service.sendJsonRpcRequest(request) }.await()
+        val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
+        val request = JsonRpcRequest(
+            method = "eth_sendRawTransaction",
+            params = listOf(signedTx),
+            id = generateId()
+        )
+        val resultTx = service.sendJsonRpcRequest(request)
 
-                if (resultTx.error != null) {
-                    throw Exception("$txType transaction failed: ${resultTx.error.message}")
-                } else {
-                    resultTx.result as String
-                }
-            }
+        if (resultTx.error != null) {
+            throw Exception("$txType transaction failed: ${resultTx.error.message}")
+        } else {
+            return resultTx.result as String
         }
     }
 
