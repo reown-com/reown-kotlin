@@ -105,7 +105,7 @@ fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, ch
                             modifier = Modifier
                                 .padding(8.dp)
                                 .height(60.dp)
-                                .clickable {  navController.popBackStack() },
+                                .clickable { navController.popBackStack() },
                             isLoading = false,
                             content = {
                                 Text(
@@ -186,63 +186,153 @@ fun ErrorDialog(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                text = "Something went wrong!",
-                style = TextStyle(color = Color(0xFFFFFFFF), textAlign = TextAlign.Center)
+                text = "Something went wrong",
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    lineHeight = 18.sp,
+                    fontWeight = FontWeight(500),
+                    color = Color(0xFFFFFFFF),
+                    textAlign = TextAlign.Center,
+                )
             )
             Spacer(modifier = Modifier.height(32.dp))
-            Image(modifier = Modifier.size(64.dp), painter = painterResource(R.drawable.ic_scam), contentDescription = null)
+            Image(modifier = Modifier.size(64.dp), painter = painterResource(R.drawable.ic_ca_error), contentDescription = null)
             Spacer(modifier = Modifier.height(16.dp))
             Text(
+                modifier = Modifier.padding(8.dp),
                 text = "${chainAbstractionViewModel.errorMessage}",
-                style = TextStyle(color = Color(0xFFFFFFFF), fontSize = 16.sp),
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                textAlign = TextAlign.Center
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    lineHeight = 18.sp,
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFF9A9A9A),
+                    textAlign = TextAlign.Center,
+                )
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .height(200.dp)
+                .padding(10.dp)
+                .clip(shape = RoundedCornerShape(25.dp))
                 .fillMaxWidth()
+                .background(themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFF505059).copy(.1f)))
+                .verticalScroll(rememberScrollState())
         ) {
             InnerContent {
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(
+                    modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
-                        modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
-                        text = "Paying", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                        text = "Paying",
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            lineHeight = 18.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFF9A9A9A),
+                        )
                     )
-                    BlueLabelText("xx USDC") //TODO: GET from ERC20 decoding, how much to send, add chain with icon
+                    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "10.00 USDC", //todo: how much is transaction
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFFFFFFFF),
+                            )
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
+                            Text(
+                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.originalTransaction!!.chainId)}",
+                                style = TextStyle(
+                                    fontSize = 12.sp,
+                                    lineHeight = 14.sp,
+                                    fontWeight = FontWeight(400),
+                                    color = Color(0xFF9A9A9A),
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Image(
+                                modifier = Modifier.size(12.dp).clip(CircleShape),
+                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
+                                contentDescription = "image description",
+                                contentScale = ContentScale.None
+                            )
+                        }
+                    }
                 }
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
-                        text = "Source of funds:",
-                        style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
-                    )
-                    val funding = WCDelegate.fulfilmentAvailable!!.funding.map { "${Transaction.hexToTokenAmount(it.amount, 6)!!.toPlainString()} ${it.symbol} from ${it.chainId}" }
-                    Column {
-                        funding.forEach {
-                            BlueLabelText(it)
+                WCDelegate.fulfilmentAvailable!!.funding.forEach { funding ->
+                    Row(
+                        modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Bridging",
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF9A9A9A),
+                            )
+                        )
+                        Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "${Transaction.hexToTokenAmount(funding.amount, 6)!!.toPlainString()}${funding.symbol}",
+                                style = TextStyle(
+                                    fontSize = 16.sp,
+                                    lineHeight = 18.sp,
+                                    fontWeight = FontWeight(400),
+                                    color = Color(0xFFFFFFFF),
+                                )
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
+                                Text(
+                                    text = "from ${NetworkUtils.getNameByChainId(funding.chainId)}",
+                                    style = TextStyle(
+                                        fontSize = 12.sp,
+                                        lineHeight = 14.sp,
+                                        fontWeight = FontWeight(400),
+                                        color = Color(0xFF9A9A9A),
+                                    )
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Image(
+                                    modifier = Modifier.size(12.dp).clip(CircleShape),
+                                    painter = painterResource(id = NetworkUtils.getIconByChainId(funding.chainId)),
+                                    contentDescription = "image description",
+                                    contentScale = ContentScale.None
+                                )
+                            }
                         }
                     }
                 }
             }
         }
-        CancelButton(
-            text = "Back to App",
+        ButtonWithLoader(
+            buttonColor = Color(0xFF363636),
+            loaderColor = Color(0xFFFFFFFF),
             modifier = Modifier
-                .padding(16.dp)
-                .height(46.dp)
-                .fillMaxWidth()
-                .clickable {
-                    navController.popBackStack(
-                        route = Route.Connections.path,
-                        inclusive = false
-                    )
-                },
-            backgroundColor = Color(0xFFFFFFFF).copy(.25f)
+                .padding(8.dp)
+                .height(60.dp)
+                .clickable { navController.popBackStack() },
+            isLoading = false,
+            content = {
+                Text(
+                    text = "Back to App",
+                    style = TextStyle(
+                        fontSize = 20.0.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFFFFFFF),
+                    ),
+                    modifier = Modifier.wrapContentHeight(align = Alignment.CenterVertically)
+                )
+            }
         )
     }
 }
@@ -253,61 +343,160 @@ fun SuccessDialog(
     chainAbstractionViewModel: ChainAbstractionViewModel
 ) {
     SemiTransparentDialog {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-                text = "Transaction completed!",
-                style = TextStyle(color = Color(0xFFFFFFFF), textAlign = TextAlign.Center)
+                text = "Transaction Completed",
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    lineHeight = 18.sp,
+                    fontWeight = FontWeight(500),
+                    color = Color(0xFFFFFFFF),
+                    textAlign = TextAlign.Center,
+                )
             )
             Spacer(modifier = Modifier.height(32.dp))
             Image(modifier = Modifier.size(64.dp), painter = painterResource(R.drawable.ic_frame), contentDescription = null)
-            Text(text = "You successfully sent USDC!", style = TextStyle(color = Color(0xFFFFFFFF), fontSize = 16.sp, fontWeight = FontWeight.Bold))
-            Spacer(modifier = Modifier.height(32.dp))
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .height(200.dp)
-                    .fillMaxWidth()
-            ) {
-                InnerContent {
-                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(
-                            modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
-                            text = "Paying", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = "You successfully send USDC!", //todo: get tx symbol
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    lineHeight = 18.sp,
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFF9A9A9A),
+                    textAlign = TextAlign.Center,
+                )
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .padding(10.dp)
+                .clip(shape = RoundedCornerShape(25.dp))
+                .fillMaxWidth()
+                .background(themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFF505059).copy(.1f)))
+                .verticalScroll(rememberScrollState())
+        ) {
+            InnerContent {
+                Row(
+                    modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Paying",
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            lineHeight = 18.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFF9A9A9A),
                         )
-                        BlueLabelText("xx USDC") //TODO: GET from ERC20 decoding, how much to send, add chain with icon
+                    )
+                    Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "10.00 USDC", //todo: how much is transaction
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFFFFFFFF),
+                            )
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
+                            Text(
+                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.originalTransaction!!.chainId)}",
+                                style = TextStyle(
+                                    fontSize = 12.sp,
+                                    lineHeight = 14.sp,
+                                    fontWeight = FontWeight(400),
+                                    color = Color(0xFF9A9A9A),
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Image(
+                                modifier = Modifier.size(12.dp).clip(CircleShape),
+                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
+                                contentDescription = "image description",
+                                contentScale = ContentScale.None
+                            )
+                        }
                     }
-                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                }
+                WCDelegate.fulfilmentAvailable!!.funding.forEach { funding ->
+                    Row(
+                        modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Text(
-                            modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
-                            text = "Source of funds:",
-                            style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                            text = "Bridging",
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF9A9A9A),
+                            )
                         )
-                        val funding = WCDelegate.fulfilmentAvailable!!.funding.map { "${Transaction.hexToTokenAmount(it.amount, 6)!!.toPlainString()} ${it.symbol} from ${it.chainId}" }
-                        Column {
-                            funding.forEach {
-                                BlueLabelText(it)
+                        Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "${Transaction.hexToTokenAmount(funding.amount, 6)!!.toPlainString()}${funding.symbol}",
+                                style = TextStyle(
+                                    fontSize = 16.sp,
+                                    lineHeight = 18.sp,
+                                    fontWeight = FontWeight(400),
+                                    color = Color(0xFFFFFFFF),
+                                )
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
+                                Text(
+                                    text = "from ${NetworkUtils.getNameByChainId(funding.chainId)}",
+                                    style = TextStyle(
+                                        fontSize = 12.sp,
+                                        lineHeight = 14.sp,
+                                        fontWeight = FontWeight(400),
+                                        color = Color(0xFF9A9A9A),
+                                    )
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Image(
+                                    modifier = Modifier.size(12.dp).clip(CircleShape),
+                                    painter = painterResource(id = NetworkUtils.getIconByChainId(funding.chainId)),
+                                    contentDescription = "image description",
+                                    contentScale = ContentScale.None
+                                )
                             }
                         }
                     }
                 }
             }
-            CancelButton(
-                text = "Back to App",
-                modifier = Modifier
-                    .padding(16.dp)
-                    .height(46.dp)
-                    .fillMaxWidth()
-                    .clickable {
-                        navController.popBackStack(
-                            route = Route.Connections.path,
-                            inclusive = false
-                        )
-                    },
-                backgroundColor = Color(0xFFFFFFFF).copy(.25f)
-            )
         }
+        ButtonWithLoader(
+            buttonColor = Color(0xFF363636),
+            loaderColor = Color(0xFFFFFFFF),
+            modifier = Modifier
+                .padding(8.dp)
+                .height(60.dp)
+                .clickable { navController.popBackStack() },
+            isLoading = false,
+            content = {
+                Text(
+                    text = "Back to App",
+                    style = TextStyle(
+                        fontSize = 20.0.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFFFFFFF),
+                    ),
+                    modifier = Modifier.wrapContentHeight(align = Alignment.CenterVertically)
+                )
+            }
+        )
     }
 }
 
