@@ -15,7 +15,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -46,14 +51,17 @@ import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.getErrorMessage
+import com.reown.sample.wallet.domain.model.NetworkUtils
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.common.Button
 import com.reown.sample.wallet.ui.common.Buttons
+import com.reown.sample.wallet.ui.common.ButtonsVertical
 import com.reown.sample.wallet.ui.common.Content
 import com.reown.sample.wallet.ui.common.InnerContent
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
 import com.reown.sample.wallet.ui.common.blue.BlueLabelRow
 import com.reown.sample.wallet.ui.common.blue.BlueLabelText
+import com.reown.sample.wallet.ui.common.generated.ButtonWithLoader
 import com.reown.sample.wallet.ui.common.generated.CancelButton
 import com.reown.sample.wallet.ui.common.peer.Peer
 import com.reown.sample.wallet.ui.common.peer.PeerUI
@@ -88,37 +96,31 @@ fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, ch
                     Spacer(modifier = Modifier.height(24.dp))
                     Peer(peerUI = sessionRequestUI.peerUI, "Review transaction", sessionRequestUI.peerContextUI)
                     Spacer(modifier = Modifier.height(16.dp))
-                    if (isError) {
-                        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
-                            Text(
-                                text = getErrorMessage(),
-                                style = TextStyle(
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp,
-                                    color = mismatch_color
-                                ),
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
                     Request(sessionRequestUI = sessionRequestUI, isError)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     if (isError) {
-                        Button(
+                        ButtonWithLoader(
+                            buttonColor = Color(0xFF363636),
+                            loaderColor = Color(0xFFFFFFFF),
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFFD6D6D6))
-                                .height(46.dp),
-                            text = "Back to App",
-                            onClick = {
-                                navController.popBackStack()
+                                .padding(8.dp)
+                                .height(60.dp)
+                                .clickable {  navController.popBackStack() },
+                            isLoading = false,
+                            content = {
+                                Text(
+                                    text = "Back to App",
+                                    style = TextStyle(
+                                        fontSize = 20.0.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFFFFFFFF),
+                                    ),
+                                    modifier = Modifier.wrapContentHeight(align = Alignment.CenterVertically)
+                                )
                             }
                         )
-
                     } else {
-                        Buttons(
+                        ButtonsVertical(
                             allowButtonColor,
                             onConfirm = {
                                 confirmRequest(
@@ -400,52 +402,293 @@ private fun showError(navController: NavHostController, throwable: Throwable?, c
 
 @Composable
 fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
-    Column(modifier = Modifier.height(400.dp)) {
-        Content(title = "Transaction") {
-            InnerContent {
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 13.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        modifier = Modifier.padding(start = 8.dp, top = 3.dp, end = 8.dp, bottom = 5.dp),
-                        text = "Paying", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+    Column(modifier = Modifier.height(450.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(10.dp)
+                .clip(shape = RoundedCornerShape(25.dp))
+                .fillMaxWidth()
+                .background(themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFF505059).copy(.1f)))
+                .verticalScroll(rememberScrollState())
+        ) {
+            Row(
+                modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Paying",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        lineHeight = 18.sp,
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFF9A9A9A),
                     )
-                    BlueLabelText("xx USDC") //TODO: GET from ERC20 decoding, how much to send
-                }
+                )
+                //todo: how much is transaction
+                Text(
+                    text = "10.00 USDC",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        lineHeight = 18.sp,
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFFFFFFFF),
+                    )
+                )
             }
-            Spacer(modifier = Modifier.height(5.dp))
+            //Content
             InnerContent {
                 Text(
                     modifier = Modifier.padding(vertical = 10.dp, horizontal = 13.dp),
-                    text = "Your balance:", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                    text = "Source of funds",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        lineHeight = 18.sp,
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFF9A9A9A),
+                    )
                 )
-                BlueLabelRow(listOf("xx USDC"))//todo: show balance
+
+                Row(
+                    modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Image(
+                            modifier = Modifier.size(24.dp).clip(CircleShape),
+                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
+                            contentDescription = "Network",
+                            contentScale = ContentScale.None
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Balance",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF9A9A9A),
+                            )
+                        )
+                    }
+                    //todo: balance of the sender
+                    Column {
+                        Text(
+                            text = "5.00 USDC",
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFFFFFFFF),
+                            )
+                        )
+                        if (isError) {
+                            Spacer(modifier = Modifier.height(5.dp))
+                            Text(
+                                text = getErrorMessage(),
+                                style = TextStyle(
+                                    fontSize = 12.sp,
+                                    lineHeight = 14.sp,
+                                    fontWeight = FontWeight(500),
+                                    color = Color(0xFFDF4A34),
+                                    textAlign = TextAlign.Right,
+                                )
+                            )
+                        }
+                    }
+
+                }
+
                 if (!isError) {
-                    Text(
-                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 13.dp),
-                        text = "Source of funds:",
-                        style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
-                    )
-                    val funding = WCDelegate.fulfilmentAvailable!!.funding.map { "${Transaction.hexToTokenAmount(it.amount, 6)!!.toPlainString()} ${it.symbol} from ${it.chainId}" }
-                    BlueLabelRow(funding)
+                    WCDelegate.fulfilmentAvailable!!.funding.forEach { funding ->
+                        Row(
+                            modifier = Modifier.padding(start = 18.dp, top = 8.dp, end = 18.dp, bottom = 8.dp).fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 38.dp)
+                            ) {
+                                Image(
+                                    modifier = Modifier.size(32.dp),
+                                    painter = painterResource(id = R.drawable.ic_bridge),
+                                    contentDescription = "Bridge",
+                                    contentScale = ContentScale.None
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = "Bridging",
+                                    style = TextStyle(
+                                        fontSize = 14.sp,
+                                        lineHeight = 16.sp,
+                                        fontWeight = FontWeight(400),
+                                        color = Color(0xFF9A9A9A),
+                                    )
+                                )
+                            }
+                            Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "${Transaction.hexToTokenAmount(funding.amount, 6)!!.toPlainString()}${funding.symbol}",
+                                    style = TextStyle(
+                                        fontSize = 16.sp,
+                                        lineHeight = 18.sp,
+                                        fontWeight = FontWeight(400),
+                                        color = Color(0xFFFFFFFF),
+                                    )
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
+                                    Text(
+                                        text = "from ${NetworkUtils.getNameByChainId(funding.chainId)}",
+                                        style = TextStyle(
+                                            fontSize = 12.sp,
+                                            lineHeight = 14.sp,
+                                            fontWeight = FontWeight(400),
+                                            color = Color(0xFF9A9A9A),
+                                        )
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Image(
+                                        modifier = Modifier.size(12.dp).clip(CircleShape),
+                                        painter = painterResource(id = NetworkUtils.getIconByChainId(funding.chainId)),
+                                        contentDescription = "image description",
+                                        contentScale = ContentScale.None
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(5.dp))
+                    }
                 }
             }
-            Spacer(modifier = Modifier.height(5.dp))
-            sessionRequestUI.chain?.let { chain ->
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        if (!isError) {
+            Column(
+                modifier = Modifier
+                    .padding(10.dp)
+                    .clip(shape = RoundedCornerShape(25.dp))
+                    .fillMaxWidth()
+                    .background(themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFF505059).copy(.1f)))
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Row(
+                    modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Network",
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            lineHeight = 18.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFF9A9A9A),
+                        )
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Image(
+                            modifier = Modifier.size(18.dp).clip(CircleShape),
+                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
+                            contentDescription = "Network",
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = NetworkUtils.getNameByChainId(WCDelegate.originalTransaction!!.chainId),
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFFFFFFFF),
+                            )
+                        )
+                    }
+                }
+
                 InnerContent {
-                    Text(
-                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 13.dp),
-                        text = "Chain", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
-                    )
-                    BlueLabelRow(listOf(sessionRequestUI.chain))
+                    Row(
+                        modifier = Modifier.padding(start = 18.dp, top = 8.dp, end = 18.dp, bottom = 8.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Estimated Fees",
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF9A9A9A),
+                            )
+                        )
+                        Text(
+                            text = "$4.34",
+                            style = TextStyle(
+                                fontSize = 16.sp,
+                                lineHeight = 18.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFFFFFFFF),
+                            )
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.padding(start = 18.dp, top = 8.dp, end = 18.dp, bottom = 8.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Bridge",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF9A9A9A),
+                            )
+                        )
+                        Text(
+                            text = "$3.00",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF9A9A9A),
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Row(
+                        modifier = Modifier.padding(start = 18.dp, top = 8.dp, end = 18.dp, bottom = 8.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Purchase",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF9A9A9A),
+                            )
+                        )
+                        Text(
+                            text = "$1.34",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                lineHeight = 16.sp,
+                                fontWeight = FontWeight(400),
+                                color = Color(0xFF9A9A9A),
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(5.dp))
                 }
-            }
-            Spacer(modifier = Modifier.height(5.dp))
-            InnerContent {
-                Text(
-                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 13.dp),
-                    text = "Method", style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
-                )
-                BlueLabelRow(listOf(sessionRequestUI.method))
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
+        Spacer(modifier = Modifier.height(5.dp))
     }
 }
