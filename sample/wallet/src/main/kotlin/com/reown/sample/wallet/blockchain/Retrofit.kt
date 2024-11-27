@@ -11,6 +11,7 @@ fun createBlockChainApiService(projectId: String, chainId: String): BlockChainAp
     val rpcUrl: String = when (chainId) {
         "eip155:10" -> "https://mainnet.optimism.io"
         "eip155:8453" -> "https://mainnet.base.org"
+        "eip155:42161" -> "https://arbitrum.llamarpc.com"
         else -> "https://rpc.walletconnect.com"
     }
 
