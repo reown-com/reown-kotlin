@@ -260,8 +260,7 @@ fun ErrorDialog(
                             Image(
                                 modifier = Modifier.size(12.dp).clip(CircleShape),
                                 painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
-                                contentDescription = "image description",
-                                contentScale = ContentScale.None
+                                contentDescription = "image description"
                             )
                         }
                     }
@@ -305,8 +304,7 @@ fun ErrorDialog(
                                 Image(
                                     modifier = Modifier.size(12.dp).clip(CircleShape),
                                     painter = painterResource(id = NetworkUtils.getIconByChainId(funding.chainId)),
-                                    contentDescription = "image description",
-                                    contentScale = ContentScale.None
+                                    contentDescription = "image description"
                                 )
                             }
                         }
@@ -423,8 +421,7 @@ fun SuccessDialog(
                             Image(
                                 modifier = Modifier.size(12.dp).clip(CircleShape),
                                 painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
-                                contentDescription = "image description",
-                                contentScale = ContentScale.None
+                                contentDescription = "image description"
                             )
                         }
                     }
@@ -468,8 +465,7 @@ fun SuccessDialog(
                                 Image(
                                     modifier = Modifier.size(12.dp).clip(CircleShape),
                                     painter = painterResource(id = NetworkUtils.getIconByChainId(funding.chainId)),
-                                    contentDescription = "image description",
-                                    contentScale = ContentScale.None
+                                    contentDescription = "image description"
                                 )
                             }
                         }
@@ -649,8 +645,7 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                         Image(
                             modifier = Modifier.size(24.dp).clip(CircleShape),
                             painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
-                            contentDescription = "Network",
-                            contentScale = ContentScale.None
+                            contentDescription = "Network"
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -703,10 +698,9 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                                 modifier = Modifier.padding(start = 38.dp)
                             ) {
                                 Image(
-                                    modifier = Modifier.size(32.dp),
+                                    modifier = Modifier.size(24.dp),
                                     painter = painterResource(id = R.drawable.ic_bridge),
-                                    contentDescription = "Bridge",
-                                    contentScale = ContentScale.None
+                                    contentDescription = "Bridge"
                                 )
                                 Spacer(modifier = Modifier.width(3.dp))
                                 Text(
@@ -743,8 +737,7 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                                     Image(
                                         modifier = Modifier.size(12.dp).clip(CircleShape),
                                         painter = painterResource(id = NetworkUtils.getIconByChainId(funding.chainId)),
-                                        contentDescription = "image description",
-                                        contentScale = ContentScale.None
+                                        contentDescription = "image description"
                                     )
                                 }
                             }
