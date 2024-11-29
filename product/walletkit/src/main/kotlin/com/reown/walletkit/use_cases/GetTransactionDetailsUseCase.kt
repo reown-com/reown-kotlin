@@ -2,7 +2,6 @@ package com.reown.walletkit.use_cases
 
 import com.reown.android.internal.common.scope
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.WalletKit.response
 import com.reown.walletkit.client.toWallet
 import com.reown.walletkit.client.toYttrium
 import kotlinx.coroutines.async
@@ -19,7 +18,7 @@ class GetTransactionDetailsUseCase(private val chainAbstractionClient: ChainAbst
     ) {
         scope.launch {
             try {
-                val result = async { chainAbstractionClient.getUiFields(response!!, initTransaction.toYttrium(), Currency.USD) }.await()
+                val result = async { chainAbstractionClient.getUiFields(available.toYttrium(), initTransaction.toYttrium(), Currency.USD) }.await()
                 onSuccess(result.toWallet())
             } catch (e: Exception) {
                 onError(Wallet.Model.Error(e))

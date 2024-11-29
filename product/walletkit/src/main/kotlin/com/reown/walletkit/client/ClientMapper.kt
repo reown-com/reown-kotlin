@@ -310,13 +310,46 @@ internal fun Wallet.Model.FulfilmentSuccess.Available.toYttrium(): RouteResponse
     RouteResponseAvailable(fulfilmentId, metadata = YMetadata(checkIn = checkIn.toULong(), fundingFrom = funding.map { it.toYttrium() }), transactions = transactions.map { it.toCAYttrium() })
 
 @JvmSynthetic
-fun Wallet.Model.Transaction.toYttrium(): InitTransaction = InitTransaction(from, to, value, gas, gasPrice, data, nonce, maxFeePerGas, maxPriorityFeePerGas, chainId)
+fun Wallet.Model.Transaction.toYttrium(): InitTransaction = InitTransaction(
+    from = from,
+    to = to,
+    value = value,
+    gas = gas,
+    gasPrice = gasPrice,
+    data = data,
+    nonce = nonce,
+    maxFeePerGas = maxFeePerGas,
+    maxPriorityFeePerGas = maxPriorityFeePerGas,
+    chainId = chainId
+)
 
 @JvmSynthetic
-private fun CATransaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(from, to, value, gas, gasPrice, data, nonce, maxFeePerGas, maxPriorityFeePerGas, chainId)
+private fun CATransaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(
+    from = from,
+    to = to,
+    value = value,
+    gas = gas,
+    gasPrice = gasPrice,
+    data = data,
+    nonce = nonce,
+    maxFeePerGas = maxFeePerGas,
+    maxPriorityFeePerGas = maxPriorityFeePerGas,
+    chainId = chainId
+)
 
 @JvmSynthetic
-private fun Wallet.Model.Transaction.toCAYttrium(): CATransaction = CATransaction(from, to, value, gas, gasPrice, data, nonce, maxFeePerGas, maxPriorityFeePerGas, chainId)
+private fun Wallet.Model.Transaction.toCAYttrium(): CATransaction = CATransaction(
+    from = from,
+    to = to,
+    value = value,
+    gas = gas,
+    gasPrice = gasPrice,
+    data = data,
+    nonce = nonce,
+    maxFeePerGas = maxFeePerGas,
+    maxPriorityFeePerGas = maxPriorityFeePerGas,
+    chainId = chainId
+)
 
 @JvmSynthetic
 private fun Wallet.Model.FundingMetadata.toYttrium(): FundingMetadata = FundingMetadata(chainId, tokenContract, symbol, amount)

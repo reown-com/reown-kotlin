@@ -18,7 +18,7 @@ class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstracti
         onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit
     ) {
         scope.launch {
-            withTimeout(180000) {
+            withTimeout(FULFILMENT_TIMEOUT) {
                 println("kobe: start checkin: $checkIn")
                 delay(checkIn)
 
@@ -54,5 +54,9 @@ class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstracti
                 }
             }
         }
+    }
+
+    private companion object {
+        const val FULFILMENT_TIMEOUT = 180000L
     }
 }
