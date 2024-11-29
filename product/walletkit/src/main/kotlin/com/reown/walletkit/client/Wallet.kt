@@ -4,6 +4,10 @@ import androidx.annotation.Keep
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
+import uniffi.yttrium.Amount
+import uniffi.yttrium.Transaction
+import uniffi.yttrium.TransactionFee
+import uniffi.yttrium.TxnDetails
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -108,6 +112,31 @@ object Wallet {
             data class Available(val fulfilmentId: String, val checkIn: Long, val transactions: List<Transaction>, val funding: List<FundingMetadata>) : FulfilmentSuccess()
             data object NotRequired : FulfilmentSuccess()
         }
+
+        data class Amount(
+            var symbol: String,
+            var amount: String,
+            var unit: String,
+            var formatted: String,
+            var formattedAlt: String
+        ) : Model()
+
+        data class TransactionFee(
+            var fee: Amount,
+            var localFee: Amount
+        ) : Model()
+
+        data class TxnDetails(
+            var transaction: Transaction,
+            var eip1559: EstimatedFees,
+            var transactionFee: TransactionFee
+        ) : Model()
+
+        data class RouteUiFields(
+            var routeDetails: List<TxnDetails>,
+            var initialDetails: TxnDetails,
+            var localTotal: Amount
+        ) : Model()
 
         sealed class FulfilmentError : Model() {
             data object NoRoutesAvailable : FulfilmentError()

@@ -2,6 +2,7 @@ package com.reown.walletkit.use_cases
 
 import com.reown.android.internal.common.scope
 import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit.response
 import com.reown.walletkit.client.toWallet
 import com.reown.walletkit.client.toYttrium
 import kotlinx.coroutines.async
@@ -32,7 +33,10 @@ class CanFulfilUseCase(private val chainAbstractionClient: ChainAbstractionClien
                 when (result) {
                     is RouteResponse.Success -> {
                         when (result.v1) {
-                            is RouteResponseSuccess.Available -> onSuccess(result.v1.v1.toWallet())
+                            is RouteResponseSuccess.Available -> {
+                                response = result.v1.v1
+                                onSuccess(result.v1.v1.toWallet())
+                            }
                             is RouteResponseSuccess.NotRequired -> onSuccess(Wallet.Model.FulfilmentSuccess.NotRequired)
                         }
                     }

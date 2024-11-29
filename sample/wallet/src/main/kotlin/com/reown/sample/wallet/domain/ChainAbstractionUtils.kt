@@ -6,7 +6,10 @@ import com.reown.sample.wallet.domain.WCDelegate._walletEvents
 import com.reown.sample.wallet.domain.WCDelegate.scope
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -64,6 +67,27 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
     }
 }
 
+suspend fun getTransactionsDetails(): Result<Wallet.Model.RouteUiFields> =
+    suspendCoroutine { continuation ->
+        try {
+            WalletKit.getTransactionDetails(
+                WCDelegate.fulfilmentAvailable!!,
+                WCDelegate.originalTransaction!!,
+                onSuccess = {
+                    println("kobe: Transaction details SUCCESS: $it")
+                    continuation.resume(Result.success(it))
+                },
+                onError = {
+                    println("kobe: Transaction details ERROR: $it")
+                    continuation.resume(Result.failure(it.throwable))
+                }
+            )
+        } catch (e: Exception) {
+            println("kobe: Transaction details utils: $e")
+            continuation.resume(Result.failure(e))
+        }
+    }
+
 suspend fun fulfillmentStatus(): Result<Wallet.Model.FulfilmentStatus> =
     suspendCoroutine { continuation ->
         try {
@@ -101,7 +125,12 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
         WCDelegate.fulfilmentAvailable = fulfilment
 
         scope.launch {
+            async { getTransactionsDetails() }.await().fold(
+                onSuccess = { WCDelegate.transactionsDetails = it },
+                onFailure = { error -> println("kobe: Failed getting tx details: $error") }
+            )
             _walletEvents.emit(fulfilment)
+
         }
     }
 }

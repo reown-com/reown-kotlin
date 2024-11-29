@@ -32,6 +32,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     var fulfilmentAvailable: Wallet.Model.FulfilmentSuccess.Available? = null
     var fulfilmentError: Wallet.Model.FulfilmentError? = null
     var originalTransaction: Wallet.Model.Transaction? = null
+    var transactionsDetails: Wallet.Model.RouteUiFields? = null
 
     init {
         CoreClient.setDelegate(this)

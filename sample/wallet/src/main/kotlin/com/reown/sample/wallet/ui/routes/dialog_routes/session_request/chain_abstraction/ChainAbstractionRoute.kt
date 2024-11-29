@@ -71,6 +71,7 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.S
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.math.BigInteger
 
 @SuppressLint("RestrictedApi")
 @Composable
@@ -399,7 +400,7 @@ fun SuccessDialog(
                     )
                     Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "10.00 USDC", //todo: how much is transaction
+                            text = "2.00 USDC", //todo: how much is transaction
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -610,9 +611,9 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                         color = Color(0xFF9A9A9A),
                     )
                 )
-                //todo: how much is transaction
+                //todo: how much is transaction, decode erc20
                 Text(
-                    text = "10.00 USDC",
+                    text = "2.00 USDC",
                     style = TextStyle(
                         fontSize = 16.sp,
                         lineHeight = 18.sp,
@@ -661,7 +662,7 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                     //todo: balance of the sender
                     Column {
                         Text(
-                            text = "5.00 USDC",
+                            text = "0.04 USDC",
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -808,7 +809,7 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "$4.34",
+                            text = "$0.07",//WCDelegate.transactionsDetails?.localTotal?.formattedAlt ?: "-.--",
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -832,7 +833,7 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "$3.00",
+                            text = "$0.02",
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 lineHeight = 16.sp,
@@ -857,7 +858,7 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "$1.34",
+                            text = "$0.05",//WCDelegate.transactionsDetails?.initialDetails?.transactionFee?.localFee?.formattedAlt ?: "-.--",
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 lineHeight = 16.sp,

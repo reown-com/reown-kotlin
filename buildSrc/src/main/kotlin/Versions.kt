@@ -13,7 +13,7 @@ const val NOTIFY_VERSION = "1.0.1"
 const val WALLETKIT_VERSION = "1.0.1"
 const val APPKIT_VERSION = "1.0.1"
 const val MODAL_CORE_VERSION = "1.0.1"
-const val YTTRIUM_VERSION = "0.2.12"
+const val YTTRIUM_VERSION = "0.2.14"
 
 //Artifact ids
 const val ANDROID_BOM = "android-bom"
@@ -29,5 +29,5 @@ val jvmVersion = JavaVersion.VERSION_11
 const val MIN_SDK: Int = 23
 const val TARGET_SDK: Int = 34
 const val COMPILE_SDK: Int = TARGET_SDK
-val SAMPLE_VERSION_CODE = "1.0.2".replace(".", "").toInt()
+val SAMPLE_VERSION_CODE = BOM_VERSION.replace(".", "").toInt()
 const val SAMPLE_VERSION_NAME = BOM_VERSION

@@ -13,7 +13,9 @@ import com.reown.walletkit.smart_account.SafeInteractor
 import com.reown.walletkit.use_cases.CanFulfilUseCase
 import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
+import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import kotlinx.coroutines.*
+import uniffi.yttrium.RouteResponseAvailable
 import java.util.*
 
 object WalletKit {
@@ -22,6 +24,9 @@ object WalletKit {
     private val canFulfilUseCase: CanFulfilUseCase by wcKoinApp.koin.inject()
     private val fulfilmentStatusUseCase: FulfilmentStatusUseCase by wcKoinApp.koin.inject()
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
+    private val getTransactionDetailsUseCase: GetTransactionDetailsUseCase by wcKoinApp.koin.inject()
+
+    var response: RouteResponseAvailable? = null
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -351,6 +356,19 @@ object WalletKit {
     @Throws(Exception::class)
     fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
         return estimateGasUseCase(chainId)
+    }
+
+    fun getTransactionDetails(
+        available: Wallet.Model.FulfilmentSuccess.Available,
+        initTransaction: Wallet.Model.Transaction,
+        onSuccess: (Wallet.Model.RouteUiFields) -> Unit,
+        onError: (Wallet.Model.Error) -> Unit
+    ) {
+        try {
+            getTransactionDetailsUseCase(available, initTransaction, onSuccess, onError)
+        } catch (e: Exception) {
+            onError(Wallet.Model.Error(e))
+        }
     }
 
     /**

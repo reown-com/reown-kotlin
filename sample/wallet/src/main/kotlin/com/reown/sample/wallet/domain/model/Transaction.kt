@@ -10,6 +10,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withTimeout
 import org.json.JSONArray
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.RawTransaction
@@ -49,7 +50,6 @@ object Transaction {
         } catch (e: Exception) {
             "0"
         }
-
 
         return Wallet.Model.Transaction(
             from = from,
@@ -145,7 +145,7 @@ object Transaction {
     }
 
     suspend fun getReceipt(chainId: String, txHash: String) {
-        coroutineScope {
+        withTimeout(30000) {
             while (true) {
                 val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
                 val nonceRequest = JsonRpcRequest(
@@ -167,7 +167,7 @@ object Transaction {
         }
     }
 
-    fun hexToBigDecimal(input: String): BigDecimal? {
+    private fun hexToBigDecimal(input: String): BigDecimal? {
         val trimmedInput = input.trim()
         var hex = trimmedInput
         return if (hex.isEmpty()) {
