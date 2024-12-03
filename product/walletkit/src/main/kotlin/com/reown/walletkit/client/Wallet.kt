@@ -4,10 +4,6 @@ import androidx.annotation.Keep
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
-import uniffi.yttrium.Amount
-import uniffi.yttrium.Transaction
-import uniffi.yttrium.TransactionFee
-import uniffi.yttrium.TxnDetails
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds

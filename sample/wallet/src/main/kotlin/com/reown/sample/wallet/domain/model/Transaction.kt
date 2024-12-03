@@ -70,8 +70,11 @@ object Transaction {
         val chainId = transaction.chainId.split(":")[1].toLong()
 
         println("kobe: fees: $fees")
+
+        println("kobe: chainId: $chainId")
+        println("kobe: nonce: ${nonce ?: transaction.nonce.toBigInteger()}")
         println("kobe: gas: ${gasLimit ?: transaction.gas.toBigInteger()}")
-        println("kobe: nonce: ${nonce ?: transaction.nonce}")
+
         println("kobe: value: ${transaction.value}")
         println("kobe: maxFeePerGas: ${fees.maxFeePerGas.toBigInteger()}")
         println("kobe: maxPriorityFeePerGas: ${fees.maxPriorityFeePerGas.toBigInteger()}")

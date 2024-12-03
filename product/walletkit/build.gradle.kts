@@ -105,6 +105,8 @@ tasks.named("preBuild") {
 dependencies {
     implementation("net.java.dev.jna:jna:5.12.0@aar") //todo: extract to toml
 
+//    implementation("com.github.reown-com:yttrium:0.2.51")
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 
