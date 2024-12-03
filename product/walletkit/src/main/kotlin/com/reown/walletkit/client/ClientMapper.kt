@@ -3,10 +3,10 @@ package com.reown.walletkit.client
 import com.reown.android.internal.common.signing.cacao.CacaoType
 import com.reown.sign.client.Sign
 import uniffi.uniffi_yttrium.Eip1559Estimation
-import uniffi.uniffi_yttrium.FfiTransaction
 import uniffi.uniffi_yttrium.InitTransaction
 import uniffi.uniffi_yttrium.OwnerSignature
 import uniffi.uniffi_yttrium.PreparedSendTransaction
+import uniffi.uniffi_yttrium.Transaction
 import uniffi.yttrium.FundingMetadata
 import uniffi.yttrium.Metadata as YMetadata
 import uniffi.yttrium.Transaction as CATransaction
@@ -296,7 +296,7 @@ internal fun Sign.Model.ConnectionState.Reason.toWallet(): Wallet.Model.Connecti
 internal fun PreparedSendTransaction.toWallet(): Wallet.Params.PrepareSendTransactionsResult = Wallet.Params.PrepareSendTransactionsResult(hash, doSendTransactionParams)
 
 @JvmSynthetic
-internal fun Wallet.Params.Transaction.toYttrium(): FfiTransaction = FfiTransaction(to = to, value = value, data = data)
+internal fun Wallet.Params.Transaction.toYttrium(): Transaction = Transaction(to = to, value = value, data = data)
 
 @JvmSynthetic
 internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)

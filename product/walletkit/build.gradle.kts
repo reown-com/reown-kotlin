@@ -47,13 +47,6 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    sourceSets {
-        getByName("main") {
-            java.srcDirs("${file(layout.buildDirectory)}/yttrium/kotlin-bindings")
-            jniLibs.srcDirs("${file(layout.buildDirectory)}/yttrium/libs")
-        }
-    }
-
     kotlinOptions {
         jvmTarget = jvmVersion.toString()
         freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.time.ExperimentalTime"
@@ -64,48 +57,9 @@ android {
     }
 }
 
-tasks.register("downloadYttriumArtifacts") {
-    doLast {
-        val tagName = YTTRIUM_VERSION
-        val downloadUrl = "https://github.com/reown-com/yttrium/releases/download/$tagName/kotlin-artifacts.zip"
-        val outputFile = file("${file(layout.buildDirectory)}/kotlin-artifacts.zip")
-        outputFile.parentFile.mkdirs()
-
-        try {
-            // Download the kotlin-artifacts.zip from GitHub Releases
-            URL(downloadUrl).openStream().use { input ->
-                outputFile.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-        } catch (e: Exception) {
-            println("Failed to download $downloadUrl error: $e")
-            throw e
-        }
-
-        // Extract the kotlin-artifacts.zip to the build directory
-        copy {
-            from(zipTree(outputFile))
-            into("${file(layout.buildDirectory)}")
-        }
-
-        // Delete the zip file after extraction
-        if (outputFile.exists()) {
-            outputFile.delete()
-        } else {
-            println("File $outputFile does not exist")
-        }
-    }
-}
-
-tasks.named("preBuild") {
-    dependsOn("downloadYttriumArtifacts")
-}
-
 dependencies {
     implementation("net.java.dev.jna:jna:5.12.0@aar") //todo: extract to toml
-
-//    implementation("com.github.reown-com:yttrium:0.2.51")
+    implementation("com.github.reown-com:yttrium:0.2.62")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)

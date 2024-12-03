@@ -124,12 +124,12 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
         WCDelegate.fulfilmentAvailable = fulfilment
 
-        scope.launch {
-            async { getTransactionsDetails() }.await().fold(
-                onSuccess = { WCDelegate.transactionsDetails = it },
-                onFailure = { error -> println("kobe: Failed getting tx details: $error") }
-            )
-        }
+//        scope.launch {
+//            async { getTransactionsDetails() }.await().fold(
+//                onSuccess = { WCDelegate.transactionsDetails = it },
+//                onFailure = { error -> println("kobe: Failed getting tx details: $error") }
+//            )
+//        }
         scope.launch {
             _walletEvents.emit(fulfilment)
         }

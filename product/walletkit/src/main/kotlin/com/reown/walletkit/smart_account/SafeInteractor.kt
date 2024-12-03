@@ -2,17 +2,18 @@ package com.reown.walletkit.smart_account
 
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.wcKoinApp
-import uniffi.uniffi_yttrium.FfiAccountClient
-import uniffi.uniffi_yttrium.FfiAccountClientConfig
+import uniffi.uniffi_yttrium.AccountClient
+import uniffi.uniffi_yttrium.AccountClientConfig
+
 import uniffi.yttrium.Config
 import uniffi.yttrium.Endpoint
 import uniffi.yttrium.Endpoints
 
 class SafeInteractor(private val pimlicoApiKey: String) {
     private val projectId: String = wcKoinApp.koin.get<ProjectId>().value
-    private val ownerToAccountClient = mutableMapOf<String, FfiAccountClient>()
+    private val ownerToAccountClient = mutableMapOf<String, AccountClient>()
 
-    fun getOrCreate(account: Account): FfiAccountClient {
+    fun getOrCreate(account: Account): AccountClient {
         return if (ownerToAccountClient.containsKey(account.owner)) {
             ownerToAccountClient[account.owner]!!
         } else {
@@ -22,7 +23,7 @@ class SafeInteractor(private val pimlicoApiKey: String) {
         }
     }
 
-    private fun createSafeAccount(account: Account): FfiAccountClient {
+    private fun createSafeAccount(account: Account): AccountClient {
         val pimlicoUrl = "https://api.pimlico.io/v2/${account.reference}/rpc?apikey=$pimlicoApiKey"
         val endpoints = Endpoints(
             rpc = Endpoint(baseUrl = "https://rpc.walletconnect.com/v1?chainId=${account.namespace}:${account.reference}&projectId=$projectId", apiKey = ""),
@@ -30,7 +31,7 @@ class SafeInteractor(private val pimlicoApiKey: String) {
             paymaster = Endpoint(baseUrl = pimlicoUrl, apiKey = ""),
         )
         val config = Config(endpoints)
-        val accountConfig = FfiAccountClientConfig(
+        val accountConfig = AccountClientConfig(
             ownerAddress = account.address,
             chainId = account.reference.toULong(),
             config = config,
@@ -38,6 +39,6 @@ class SafeInteractor(private val pimlicoApiKey: String) {
             safe = true,
             signerType = "PrivateKey" //todo: remove sign service
         )
-        return FfiAccountClient(accountConfig)
+        return AccountClient(accountConfig)
     }
 }

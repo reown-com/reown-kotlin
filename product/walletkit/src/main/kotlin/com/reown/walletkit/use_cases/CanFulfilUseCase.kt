@@ -20,7 +20,6 @@ class CanFulfilUseCase(private val chainAbstractionClient: ChainAbstractionClien
     ) {
         scope.launch {
             try {
-                println("kobe: ${transaction.toYttrium()}")
                 val result = async {
                     try {
                         chainAbstractionClient.route(transaction.toYttrium())
@@ -33,7 +32,7 @@ class CanFulfilUseCase(private val chainAbstractionClient: ChainAbstractionClien
                     is RouteResponse.Success -> {
                         when (result.v1) {
                             is RouteResponseSuccess.Available -> {
-                                onSuccess(result.v1.v1.toWallet())
+                                onSuccess((result.v1 as RouteResponseSuccess.Available).v1.toWallet())
                             }
                             is RouteResponseSuccess.NotRequired -> onSuccess(Wallet.Model.FulfilmentSuccess.NotRequired)
                         }
