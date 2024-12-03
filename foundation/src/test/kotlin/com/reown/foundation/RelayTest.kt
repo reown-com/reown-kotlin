@@ -51,7 +51,7 @@ class RelayTest {
 
     @ExperimentalTime
     @Test
-    fun `Connect with empty packageName when soma packageName is configured in Cloud - successful connection`() {
+    fun `Connect with empty packageName when some packageName is already configured in Cloud - successful connection`() {
         val testState = MutableStateFlow<TestState>(TestState.Idle)
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "")
 
@@ -114,7 +114,7 @@ class RelayTest {
 
     @ExperimentalTime
     @Test
-    fun `Connect with packageName when no packageName is configured in Cloud - successful connection`() {
+    fun `Connect with some packageName when no packageName is configured in Cloud - successful connection`() {
         serverUrl = "$testRelayUrl?projectId=$testProjectId2"
         val testState = MutableStateFlow<TestState>(TestState.Idle)
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "com.test")
