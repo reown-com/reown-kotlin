@@ -15,7 +15,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
 
-fun networkModule(serverUrl: String, sdkVersion: String, jwt: String): Module = module {
+fun networkModule(serverUrl: String, sdkVersion: String, jwt: String, packageName: String): Module = module {
     val DEFAULT_BACKOFF_SECONDS = 5L
     val TIMEOUT_TIME = 40000L
 
@@ -24,6 +24,7 @@ fun networkModule(serverUrl: String, sdkVersion: String, jwt: String): Module = 
         Interceptor {
             val updatedRequest = it.request().newBuilder()
                 .addHeader("User-Agent", "wc-2/kotlin-$sdkVersion")
+                .addHeader("packageName", packageName)
                 .build()
 
             it.proceed(updatedRequest)
