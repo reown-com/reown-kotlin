@@ -42,6 +42,7 @@ fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, 
             .buildUpon()
             .appendQueryParameter("auth", jwt)
             .appendQueryParameter("ua", get(named(AndroidCommonDITags.USER_AGENT)))
+            .appendQueryParameter("packageName", packageName)
             .build()
             .toString()
     }
@@ -58,7 +59,6 @@ fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, 
         Interceptor { chain ->
             val updatedRequest = chain.request().newBuilder()
                 .addHeader("User-Agent", get(named(AndroidCommonDITags.USER_AGENT)))
-                .addHeader("packageName", packageName)
                 .build()
 
             chain.proceed(updatedRequest)

@@ -24,7 +24,6 @@ fun networkModule(serverUrl: String, sdkVersion: String, jwt: String, packageNam
         Interceptor {
             val updatedRequest = it.request().newBuilder()
                 .addHeader("User-Agent", "wc-2/kotlin-$sdkVersion")
-                .addHeader("packageName", packageName)
                 .build()
 
             it.proceed(updatedRequest)
@@ -51,7 +50,7 @@ fun networkModule(serverUrl: String, sdkVersion: String, jwt: String, packageNam
     single(named(FoundationDITags.SCARLET)) {
         Scarlet.Builder()
             .backoffStrategy(get<LinearBackoffStrategy>())
-            .webSocketFactory(get<OkHttpClient>(named(FoundationDITags.OK_HTTP)).newWebSocketFactory("$serverUrl&auth=$jwt"))
+            .webSocketFactory(get<OkHttpClient>(named(FoundationDITags.OK_HTTP)).newWebSocketFactory("$serverUrl&auth=$jwt&packageName=$packageName"))
             .addMessageAdapterFactory(get<MoshiMessageAdapter.Factory>(named(FoundationDITags.MSG_ADAPTER)))
             .addStreamAdapterFactory(get<FlowStreamAdapter.Factory>())
             .build()

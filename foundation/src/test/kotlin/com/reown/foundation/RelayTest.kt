@@ -51,7 +51,7 @@ class RelayTest {
 
     @ExperimentalTime
     @Test
-    fun `Connect with empty packageName when packageName is white listed - successful connection`() {
+    fun `Connect with empty packageName when soma packageName is configured in Cloud - successful connection`() {
         val testState = MutableStateFlow<TestState>(TestState.Idle)
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "")
 
@@ -79,14 +79,21 @@ class RelayTest {
 
     @ExperimentalTime
     @Test
-    fun `Connect with not whitelisted packageName when some packageName is white listed - return an error`() {
+    fun `Connect with not whitelisted packageName when some packageName is already configured in Cloud - return an error`() {
         val testState = MutableStateFlow<TestState>(TestState.Idle)
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "com.test.failure")
 
-        //Await connection
-        val connectionTime = measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds
-        println("Connection time: $connectionTime ms")
-        testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+        clientA.eventsFlow.onEach { event ->
+            when (event) {
+                is Relay.Model.Event.OnConnectionFailed -> {
+                    if (event.throwable.message?.contains("403") == true) {
+                        testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+                    }
+                }
+
+                else -> {}
+            }
+        }.launchIn(testScope)
 
         //Lock until is finished or timed out
         runBlocking {
@@ -107,7 +114,7 @@ class RelayTest {
 
     @ExperimentalTime
     @Test
-    fun `Connect with packageName when packageName is NOT white listed`() {
+    fun `Connect with packageName when no packageName is configured in Cloud - successful connection`() {
         serverUrl = "$testRelayUrl?projectId=$testProjectId2"
         val testState = MutableStateFlow<TestState>(TestState.Idle)
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "com.test")
