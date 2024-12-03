@@ -138,7 +138,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         metaData: Core.Model.AppMetaData,
         keyServerUrl: String?
     ) {
-        val bundleId: String = application.packageName
+        val packageName: String = application.packageName
         val relayServerUrl = if (serverUrl.isNullOrEmpty()) "wss://relay.walletconnect.org?projectId=$projectId" else serverUrl
 
         with(koinApp) {
@@ -146,7 +146,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
             modules(
                 module { single { ProjectId(projectId) } },
                 module { single(named(AndroidCommonDITags.TELEMETRY_ENABLED)) { TelemetryEnabled(telemetryEnabled) } },
-                coreAndroidNetworkModule(relayServerUrl, connectionType, BuildConfig.SDK_VERSION, networkClientTimeout, bundleId),
+                coreAndroidNetworkModule(relayServerUrl, connectionType, BuildConfig.SDK_VERSION, networkClientTimeout, packageName),
                 coreCommonModule(),
                 coreCryptoModule(),
             )
@@ -156,7 +156,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
             }
 
             modules(
-                coreStorageModule(bundleId = bundleId),
+                coreStorageModule(packageName = packageName),
                 module { single(named(AndroidCommonDITags.CLIENT_ID)) { requireNotNull(get<SharedPreferences>().getString(KEY_CLIENT_ID, null)) } },
                 pushModule(),
                 module { single { relay ?: Relay } },
@@ -181,7 +181,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 keyServerModule(keyServerUrl),
                 explorerModule(),
                 appKitModule(),
-                pulseModule(bundleId)
+                pulseModule(packageName)
             )
         }
 
