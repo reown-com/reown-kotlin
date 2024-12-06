@@ -55,8 +55,5 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Prepare Artifacts
-        run: ./gradlew downloadYttriumArtifacts
-
       - name: Run lint
         run: ./gradlew lint

@@ -43,9 +43,6 @@ jobs:
           SECRETS_PROPERTIES: ${{ secrets.SECRETS_PROPERTIES }}
         run: echo $SECRETS_PROPERTIES | base64 --decode > secrets.properties
 
-      - name: Prepare Artifacts
-        run: ./gradlew downloadYttriumArtifacts
-
       - name: Assemble Debug Project
         env:
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
