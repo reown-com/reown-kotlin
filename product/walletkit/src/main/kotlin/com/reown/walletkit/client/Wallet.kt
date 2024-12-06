@@ -18,13 +18,14 @@ object Wallet {
     }
 
     sealed class Params {
-        data class Init(val core: CoreInterface) : Params()
+        data class Init(val core: CoreInterface, val pimlicoApiKey: String? = null) : Params()
 
         data class Pair(val uri: String) : Params()
 
         data class SessionApprove(
             val proposerPublicKey: String,
             val namespaces: Map<String, Model.Namespace.Session>,
+            val properties: Map<String, String>? = null,
             val relayProtocol: String? = null,
         ) : Params()
 
@@ -58,6 +59,15 @@ object Wallet {
         }
 
         data class DecryptMessage(val topic: String, val encryptedMessage: String) : Params()
+        data class GetSmartAccountAddress(val owner: Account) : Params()
+        data class PrepareSendTransactions(val transactions: List<Transaction>, val owner: Account) : Params()
+        data class DoSendTransactions(val owner: Account, val signatures: List<OwnerSignature>, val doSendTransactionParams: String) : Params()
+        data class PrepareSendTransactionsResult(var hash: String, var doSendTransactionParams: String) : Params()
+        data class DoSendTransactionsResult(var userOperationHash: String) : Params()
+        data class WaitForUserOperationReceipt(var owner: Account, var userOperationHash: String) : Params()
+        data class OwnerSignature(val address: String, val signature: String) : Params()
+        data class Account(val address: String) : Params()
+        data class Transaction(val to: String, val value: String, val data: String) : Params()
     }
 
     sealed class Model {
@@ -68,6 +78,73 @@ object Wallet {
         }
 
         data class Error(val throwable: Throwable) : Model()
+
+        data class Transaction(
+            var from: String,
+            var to: String,
+            var value: String,
+            var gas: String,
+            var gasPrice: String,
+            var data: String,
+            var nonce: String,
+            var maxFeePerGas: String,
+            var maxPriorityFeePerGas: String,
+            var chainId: String
+        ) : Model()
+
+        data class FundingMetadata(
+            var chainId: String,
+            var tokenContract: String,
+            var symbol: String,
+            var amount: String
+        ) : Model()
+
+        data class EstimatedFees(
+            val maxFeePerGas: String,
+            val maxPriorityFeePerGas: String
+        ) : Model()
+
+        sealed class FulfilmentSuccess : Model() {
+            data class Available(val fulfilmentId: String, val checkIn: Long, val transactions: List<Transaction>, val funding: List<FundingMetadata>) : FulfilmentSuccess()
+            data object NotRequired : FulfilmentSuccess()
+        }
+
+        data class Amount(
+            var symbol: String,
+            var amount: String,
+            var unit: String,
+            var formatted: String,
+            var formattedAlt: String
+        ) : Model()
+
+        data class TransactionFee(
+            var fee: Amount,
+            var localFee: Amount
+        ) : Model()
+
+        data class TxnDetails(
+            var transaction: Transaction,
+            var eip1559: EstimatedFees,
+            var transactionFee: TransactionFee
+        ) : Model()
+
+        data class RouteUiFields(
+            var routeDetails: List<TxnDetails>,
+            var initialDetails: TxnDetails,
+            var localTotal: Amount
+        ) : Model()
+
+        sealed class FulfilmentError : Model() {
+            data object NoRoutesAvailable : FulfilmentError()
+            data object InsufficientFunds : FulfilmentError()
+            data object InsufficientGasFunds : FulfilmentError()
+            data class Unknown(val message: String) : FulfilmentError()
+        }
+
+        sealed class FulfilmentStatus : Model() {
+            data class Completed(val createdAt: Long) : FulfilmentStatus()
+            data class Error(val reason: String) : FulfilmentStatus()
+        }
 
         data class ConnectionState(val isAvailable: Boolean, val reason: Reason? = null) : Model() {
             sealed class Reason : Model() {

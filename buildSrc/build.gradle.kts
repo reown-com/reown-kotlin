@@ -11,3 +11,15 @@ dependencies {
 
     testImplementation("junit:junit:${libs.versions.jUnit.get()}")
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11)) // Ensure Java 11 is used
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = "11" // Match Java 11
+    }
+}

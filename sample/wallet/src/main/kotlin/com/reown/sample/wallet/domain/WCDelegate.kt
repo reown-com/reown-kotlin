@@ -3,6 +3,7 @@ package com.reown.sample.wallet.domain
 import android.util.Log
 import com.reown.android.Core
 import com.reown.android.CoreClient
+import com.reown.sample.wallet.domain.model.Transaction.getTransaction
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.CoroutineScope
@@ -15,11 +16,11 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    internal val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _coreEvents: MutableSharedFlow<Core.Model> = MutableSharedFlow()
     val coreEvents: SharedFlow<Core.Model> = _coreEvents.asSharedFlow()
 
-    private val _walletEvents: MutableSharedFlow<Wallet.Model> = MutableSharedFlow()
+    internal val _walletEvents: MutableSharedFlow<Wallet.Model> = MutableSharedFlow()
     val walletEvents: SharedFlow<Wallet.Model> = _walletEvents.asSharedFlow()
     private val _connectionState: MutableSharedFlow<Wallet.Model.ConnectionState> = MutableSharedFlow(replay = 1)
     val connectionState: SharedFlow<Wallet.Model.ConnectionState> = _connectionState.asSharedFlow()
@@ -27,6 +28,11 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     var sessionAuthenticateEvent: Pair<Wallet.Model.SessionAuthenticate, Wallet.Model.VerifyContext>? = null
     var sessionRequestEvent: Pair<Wallet.Model.SessionRequest, Wallet.Model.VerifyContext>? = null
     var currentId: Long? = null
+    //CA
+    var fulfilmentAvailable: Wallet.Model.FulfilmentSuccess.Available? = null
+    var fulfilmentError: Wallet.Model.FulfilmentError? = null
+    var originalTransaction: Wallet.Model.Transaction? = null
+    var transactionsDetails: Wallet.Model.RouteUiFields? = null
 
     init {
         CoreClient.setDelegate(this)
@@ -74,12 +80,13 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
         }
 
     override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
-        if (currentId != sessionRequest.request.id) {
-            sessionRequestEvent = Pair(sessionRequest, verifyContext)
+        println("kobe: session request: $sessionRequest")
 
-            scope.launch {
-                _walletEvents.emit(sessionRequest)
-            }
+        if (sessionRequest.request.method == "eth_sendTransaction") {
+            originalTransaction = getTransaction(sessionRequest)
+            canFulfil(sessionRequest, originalTransaction!!, verifyContext)
+        } else {
+            emitSessionRequest(sessionRequest, verifyContext)
         }
     }
 
@@ -108,7 +115,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     }
 
     override fun onPairingDelete(deletedPairing: Core.Model.DeletedPairing) {
-       //Deprecated - pairings are automatically deleted
+        //Deprecated - pairings are automatically deleted
     }
 
     override fun onPairingExpired(expiredPairing: Core.Model.ExpiredPairing) {

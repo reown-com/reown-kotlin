@@ -29,6 +29,9 @@ object EthAccountDelegate {
     val ethAddress: String
         get() = "eip155:1:$account"
 
+    val sepoliaAddress: String
+        get() = "eip155:11155111:$account"
+
     val account: String
         get() = if (isInitialized) sharedPreferences.getString(ACCOUNT_TAG, null)!! else storeAccount().third
 

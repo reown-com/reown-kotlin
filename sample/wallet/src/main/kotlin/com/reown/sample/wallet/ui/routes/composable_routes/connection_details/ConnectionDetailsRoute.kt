@@ -299,9 +299,7 @@ fun ChainPermissions(account: String, accountsToSessions: Map<String, Wallet.Mod
     val lastDelimiterIndex = account.indexOfLast { it == ':' }
     val chainId = account.dropLast(account.lastIndex - lastDelimiterIndex + 1)
     Content(title = chainId.uppercase()) {
-
         val accountsToShow = session.accounts.filter { "${it.split(":")[0]}:${it.split(":")[1]}" == chainId }
-
         connectionsViewModel.displayedAccounts = accountsToShow
         Accounts(accountsToShow)
         val sections = mapOf("Methods" to getAllMethodsByChainId(session, account), "Events" to getAllEventsByChainId(session, account))
