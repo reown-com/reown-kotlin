@@ -96,7 +96,8 @@ object Wallet {
             var chainId: String,
             var tokenContract: String,
             var symbol: String,
-            var amount: String
+            var amount: String,
+            var bridgingFee: String
         ) : Model()
 
         data class EstimatedFees(
@@ -105,8 +106,15 @@ object Wallet {
         ) : Model()
 
         sealed class FulfilmentSuccess : Model() {
-            data class Available(val fulfilmentId: String, val checkIn: Long, val transactions: List<Transaction>, val funding: List<FundingMetadata>) : FulfilmentSuccess()
-            data object NotRequired : FulfilmentSuccess()
+            data class Available(
+                val fulfilmentId: String,
+                val checkIn: Long,
+                val transactions: List<Transaction>,
+                val initialTransaction: Transaction,
+                val funding: List<FundingMetadata>
+            ) : FulfilmentSuccess()
+
+            data class NotRequired(val initialTransaction: Transaction) : FulfilmentSuccess()
         }
 
         data class Amount(

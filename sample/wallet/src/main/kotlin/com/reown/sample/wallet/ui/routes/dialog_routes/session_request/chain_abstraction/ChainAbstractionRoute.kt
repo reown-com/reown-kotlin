@@ -77,6 +77,7 @@ import java.math.BigInteger
 @Composable
 fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, chainAbstractionViewModel: ChainAbstractionViewModel = viewModel()) {
     println("kobe: isError: $isError")
+    println("kobe: funding: ${WCDelegate.fulfilmentAvailable?.funding}")
     val sessionRequestUI = chainAbstractionViewModel.sessionRequestUI
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -283,7 +284,7 @@ fun ErrorDialog(
                         )
                         Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "${Transaction.hexToTokenAmount(funding.amount, 6)!!.toPlainString()}${funding.symbol}",
+                                text = "${Transaction.convertTokenAmount(funding.amount.toBigInteger(), 6)?.toPlainString()}${funding.symbol}",
                                 style = TextStyle(
                                     fontSize = 16.sp,
                                     lineHeight = 18.sp,
@@ -444,7 +445,7 @@ fun SuccessDialog(
                         )
                         Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "${Transaction.hexToTokenAmount(funding.amount, 6)!!.toPlainString()}${funding.symbol}",
+                                text = "${Transaction.convertTokenAmount(funding.amount.toBigInteger(), 6)!!.toPlainString()}${funding.symbol}",
                                 style = TextStyle(
                                     fontSize = 16.sp,
                                     lineHeight = 18.sp,
@@ -716,7 +717,7 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                             }
                             Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = "${Transaction.hexToTokenAmount(funding.amount, 6)!!.toPlainString()}${funding.symbol}",
+                                    text = "${Transaction.convertTokenAmount(funding.amount.toBigInteger(), 6)!!.toPlainString()}${funding.symbol}",
                                     style = TextStyle(
                                         fontSize = 16.sp,
                                         lineHeight = 18.sp,
