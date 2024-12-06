@@ -5,6 +5,9 @@ package com.reown.appkit.ui
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,10 +37,17 @@ import com.reown.appkit.ui.components.internal.AppKitComponent
 import com.reown.appkit.ui.theme.ColorPalette
 
 class AppKitSheet : BottomSheetDialogFragment() {
+    private val appTheme: Int by lazy { requireContext().applicationInfo.theme }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         requireContext().setTheme(R.style.Web3ModalTheme_DialogTheme)
+
         super.onCreate(savedInstanceState)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        requireContext().setTheme(appTheme)
     }
 
     override fun onCreateView(
@@ -76,7 +86,18 @@ class AppKitSheet : BottomSheetDialogFragment() {
                 modifier = Modifier.nestedScroll(rememberNestedScrollInteropConnection()),
                 navController = navController,
                 shouldOpenChooseNetwork = shouldOpenChooseNetwork,
-                closeModal = { this@AppKitSheet.dismiss() })
+                closeModal = {
+                    if (isAdded) {
+                        if (!isStateSaved) {
+                            this@AppKitSheet.dismiss()
+                        } else {
+                            Handler(Looper.getMainLooper()).post {
+                                this@AppKitSheet.dismissAllowingStateLoss()
+                            }
+                        }
+                    }
+                }
+            )
         }
     }
 
