@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Numeric
+import java.math.BigInteger
 
 data class TxSuccess(
     val redirect: Uri?,
@@ -102,7 +103,7 @@ class ChainAbstractionViewModel : ViewModel() {
                                         try {
                                             val nonceResult = Transaction.getNonce(chainId, from)
                                             println("kobe: Original TX")
-                                            val signedTx = Transaction.sign(this, nonceResult, DefaultGasProvider.GAS_LIMIT)
+                                            val signedTx = Transaction.sign(this, nonceResult, BigInteger.valueOf(50000))
 
                                             val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
                                             val response = Wallet.Params.SessionRequestResponse(
@@ -141,13 +142,13 @@ class ChainAbstractionViewModel : ViewModel() {
         } catch (e: Exception) {
             println("kobe: Error: $e")
             Firebase.crashlytics.recordException(e)
-            reject()
+            reject(message = e.message ?: "Undefined error, please check your Internet connection")
             clearSessionRequest()
             onError(Throwable(e.message ?: "Undefined error, please check your Internet connection"))
         }
     }
 
-    fun reject(onSuccess: (Uri?) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
+    fun reject(onSuccess: (Uri?) -> Unit = {}, onError: (Throwable) -> Unit = {}, message: String = "User rejected the request") {
         try {
             val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
             if (sessionRequest != null) {
@@ -156,7 +157,7 @@ class ChainAbstractionViewModel : ViewModel() {
                     jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
                         id = sessionRequest.requestId,
                         code = 500,
-                        message = "Kotlin Wallet Error"
+                        message = message
                     )
                 )
                 val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()

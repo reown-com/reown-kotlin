@@ -1,5 +1,7 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.EthAccountDelegate
@@ -52,7 +54,15 @@ val smartAccountWalletMetadata =
                 ),
                 events = listOf("chainChanged", "accountsChanged", "connect", "disconnect"),
                 accounts = listOf(
-                    "eip155:11155111:${WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)))}"
+                    "eip155:11155111:${
+                        try {
+                            WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)))
+                        } catch (e: Exception) {
+                            Firebase.crashlytics.recordException(e)
+                            println("kobe: Getting SA account error: ${e.message}")
+                            ""
+                        }
+                    }"
                 )
             )
         )

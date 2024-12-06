@@ -2,6 +2,8 @@ package com.reown.sample.wallet.ui.routes.composable_routes.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import com.reown.android.CoreClient
 import com.reown.sample.wallet.domain.EthAccountDelegate
@@ -18,7 +20,13 @@ class SettingsViewModel : ViewModel() {
 
     fun getSmartAccount(): String {
         val params = Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(address = EthAccountDelegate.sepoliaAddress))
-        val smartAccountAddress = WalletKit.getSmartAccount(params)
+        val smartAccountAddress = try {
+             WalletKit.getSmartAccount(params)
+        } catch (e: Exception) {
+            Firebase.crashlytics.recordException(e)
+            println("kobe: Getting SA account error: ${e.message}")
+            "error"
+        }
         return "eip155:11155111:$smartAccountAddress"
     }
 

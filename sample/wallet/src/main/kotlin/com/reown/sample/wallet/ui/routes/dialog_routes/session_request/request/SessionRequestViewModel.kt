@@ -49,14 +49,14 @@ class SessionRequestViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Firebase.crashlytics.recordException(e)
-                reject()
+                reject(message = e.message ?: "Undefined error, please check your Internet connection")
                 clearSessionRequest()
                 onError(Throwable(e.message ?: "Undefined error, please check your Internet connection"))
             }
         }
     }
 
-    fun reject(onSuccess: (Uri?) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
+    fun reject(onSuccess: (Uri?) -> Unit = {}, onError: (Throwable) -> Unit = {}, message: String = "User rejected the request") {
         try {
             val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
             if (sessionRequest != null) {
@@ -65,7 +65,7 @@ class SessionRequestViewModel : ViewModel() {
                     jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
                         id = sessionRequest.requestId,
                         code = 500,
-                        message = "Kotlin Wallet Error"
+                        message = message
                     )
                 )
                 val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()

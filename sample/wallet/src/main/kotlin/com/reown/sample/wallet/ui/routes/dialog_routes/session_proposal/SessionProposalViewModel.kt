@@ -47,7 +47,13 @@ class SessionProposalViewModel : ViewModel() {
             val sessionNamespaces =
                 WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = smartAccountWalletMetadata.namespaces)
             val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
-            val smartAccountAddress = WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(ownerAccount))
+            val smartAccountAddress = try {
+                WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(ownerAccount))
+            } catch (e: Exception) {
+                Firebase.crashlytics.recordException(e)
+                ""
+            }
+
             val capability = "{\"$smartAccountAddress\":{\"0xaa36a7\":{\"atomicBatch\":{\"supported\":true}}}}"
             val sessionProperties = mapOf("bundler_name" to "pimlico", "capabilities" to capability)
             Pair(sessionNamespaces, sessionProperties)

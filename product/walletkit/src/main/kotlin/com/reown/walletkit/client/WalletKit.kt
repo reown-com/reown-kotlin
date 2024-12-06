@@ -288,6 +288,7 @@ object WalletKit {
     }
 
     //Yttrium
+
     @Throws(Throwable::class)
     fun getSmartAccount(params: Wallet.Params.GetSmartAccountAddress): String {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
