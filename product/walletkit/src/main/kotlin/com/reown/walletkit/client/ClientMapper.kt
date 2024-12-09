@@ -303,7 +303,7 @@ internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSig
 
 @JvmSynthetic
 internal fun RouteResponseAvailable.toWallet(): Wallet.Model.FulfilmentSuccess.Available =
-    Wallet.Model.FulfilmentSuccess.Available(orchestrationId, metadata.checkIn.toLong(), transactions.map { it.toWallet() }, metadata.fundingFrom.map { it.toWallet() })
+    Wallet.Model.FulfilmentSuccess.Available(orchestrationId, metadata.checkIn.toLong(), transactions.map { it.toWallet() }, initialTransaction.toWallet(), metadata.fundingFrom.map { it.toWallet() })
 
 //@JvmSynthetic
 //internal fun Wallet.Model.FulfilmentSuccess.Available.toYttrium(): RouteResponseAvailable =
@@ -324,7 +324,7 @@ fun Wallet.Model.Transaction.toYttrium(): InitTransaction = InitTransaction(
 )
 
 @JvmSynthetic
-private fun CATransaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(
+fun CATransaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(
     from = from,
     to = to,
     value = value,
@@ -355,7 +355,7 @@ private fun Wallet.Model.Transaction.toCAYttrium(): CATransaction = CATransactio
 private fun Wallet.Model.FundingMetadata.toYttrium(): FundingMetadata = FundingMetadata(chainId, tokenContract, symbol, amount = amount, bridgingFee = "")
 
 @JvmSynthetic
-private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Model.FundingMetadata(chainId, tokenContract, symbol, amount)
+private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Model.FundingMetadata(chainId, tokenContract, symbol, amount, bridgingFee)
 
 @JvmSynthetic
 internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.Model.EstimatedFees(maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas)

@@ -200,6 +200,16 @@ object Transaction {
         }
     }
 
+    fun convertTokenAmount(value: BigInteger, decimals: Int): BigDecimal? {
+        return try {
+            val divisor = BigDecimal.TEN.pow(decimals)
+            BigDecimal(value).divide(divisor)
+        } catch (e: NumberFormatException) {
+            println("Invalid value: $value")
+            null
+        }
+    }
+
     private fun generateId(): Int = ("${(100..999).random()}").toInt()
 
     private fun containsHexPrefix(input: String): Boolean = input.startsWith("0x")

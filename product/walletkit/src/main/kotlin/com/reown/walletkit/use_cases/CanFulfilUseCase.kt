@@ -31,10 +31,11 @@ class CanFulfilUseCase(private val chainAbstractionClient: ChainAbstractionClien
                 when (result) {
                     is RouteResponse.Success -> {
                         when (result.v1) {
-                            is RouteResponseSuccess.Available -> {
+                            is RouteResponseSuccess.Available ->
                                 onSuccess((result.v1 as RouteResponseSuccess.Available).v1.toWallet())
-                            }
-                            is RouteResponseSuccess.NotRequired -> onSuccess(Wallet.Model.FulfilmentSuccess.NotRequired)
+
+                            is RouteResponseSuccess.NotRequired ->
+                                onSuccess(Wallet.Model.FulfilmentSuccess.NotRequired((result.v1 as RouteResponseSuccess.NotRequired).v1.initialTransaction.toWallet()))
                         }
                     }
 
