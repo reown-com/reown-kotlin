@@ -178,9 +178,9 @@ private fun loadSqlCipherLibrary(context: Context) {
     }
 }
 
-fun coreStorageModule(storagePrefix: String = String.Empty, bundleId: String) = module {
+fun coreStorageModule(storagePrefix: String = String.Empty, packageName: String) = module {
 
-    includes(baseStorageModule(storagePrefix, bundleId), signingModule())
+    includes(baseStorageModule(storagePrefix, packageName), signingModule())
 
     single<SqlDriver>(named(AndroidBuildVariantDITags.ANDROID_CORE_DATABASE_DRIVER)) {
         AndroidSqliteDriver(
