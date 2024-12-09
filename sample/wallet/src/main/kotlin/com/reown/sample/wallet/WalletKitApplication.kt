@@ -1,7 +1,6 @@
 package com.reown.sample.wallet
 
 import android.app.Application
-import com.google.firebase.FirebaseApp
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
@@ -21,6 +20,7 @@ import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
+import com.reown.sample.wallet.domain.SmartAccountEnabler
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
@@ -36,6 +36,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named
 import timber.log.Timber
+//import uniffi.uniffi_yttrium.AccountClient
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
 class WalletKitApplication : Application() {
@@ -44,6 +45,8 @@ class WalletKitApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         EthAccountDelegate.application = this
+
+        SmartAccountEnabler.init(this)
 
         val projectId = BuildConfig.PROJECT_ID
         val appMetaData = Core.Model.AppMetaData(
@@ -71,7 +74,7 @@ class WalletKitApplication : Application() {
 
         println("Account: ${EthAccountDelegate.account}")
 
-        WalletKit.initialize(Wallet.Params.Init(core = CoreClient),
+        WalletKit.initialize(Wallet.Params.Init(core = CoreClient, pimlicoApiKey = BuildConfig.PIMLICO_API_KEY),
             onSuccess = { println("Web3Wallet initialized") },
             onError = { error ->
                 Firebase.crashlytics.recordException(error.throwable)
@@ -79,7 +82,6 @@ class WalletKitApplication : Application() {
             })
 
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
-
         NotifyClient.initialize(
             init = Notify.Params.Init(CoreClient)
         ) { error ->

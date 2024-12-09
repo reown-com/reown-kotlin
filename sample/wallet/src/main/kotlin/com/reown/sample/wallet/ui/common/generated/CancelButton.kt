@@ -15,16 +15,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun CancelButton(modifier: Modifier = Modifier, backgroundColor: Color = Color(0xFFD6D6D6)) {
+fun CancelButton(modifier: Modifier = Modifier, backgroundColor: Color = Color(0xFFD6D6D6), text: String = "Cancel") {
     CancelButtonTopLevel(modifier = modifier, backgroundColor = backgroundColor) {
-        Cancel()
+        Cancel(text = text)
     }
 }
 
 @Composable
-fun Cancel(modifier: Modifier = Modifier) {
+fun Cancel(modifier: Modifier = Modifier, text: String) {
     Text(
-        text = "Cancel",
+        text = text,
         style = TextStyle(
             fontSize = 20.0.sp,
             fontWeight = FontWeight.SemiBold,

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -24,10 +25,22 @@ fun ButtonWithLoader(
     loaderColor: Color,
     modifier: Modifier = Modifier,
     isLoading: Boolean,
+    brush: Brush? = null,
+    content: @Composable () -> Unit
+) {
+    ButtonTopLevel(buttonColor, brush, modifier = modifier) {
+        Button(isLoading = isLoading, content = content, loaderColor = loaderColor)
+    }
+}
+
+@Composable
+fun ButtonWithoutLoader(
+    buttonColor: Color,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     ButtonTopLevel(buttonColor, modifier = modifier) {
-        Button(isLoading = isLoading, content = content, loaderColor = loaderColor)
+        Button(isLoading = false, content = content, loaderColor = Color(0xFF000000))
     }
 }
 
@@ -52,23 +65,43 @@ fun Button(modifier: Modifier = Modifier, isLoading: Boolean, content: @Composab
 @Composable
 fun ButtonTopLevel(
     buttonColor: Color,
+    brush: Brush? = null,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .padding(
-                start = 8.0.dp,
-                top = 0.0.dp,
-                end = 8.0.dp,
-                bottom = 1.0.dp
-            )
-            .clip(RoundedCornerShape(20.dp))
-            .background(buttonColor)
-            .fillMaxWidth(1.0f)
-            .fillMaxHeight(1.0f)
-    ) {
-        content()
+    if (brush != null) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier
+                .padding(
+                    start = 8.0.dp,
+                    top = 0.0.dp,
+                    end = 8.0.dp,
+                    bottom = 1.0.dp
+                )
+                .clip(RoundedCornerShape(20.dp))
+                .background(brush)
+                .fillMaxWidth(1.0f)
+                .fillMaxHeight(1.0f)
+        ) {
+            content()
+        }
+    } else {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier
+                .padding(
+                    start = 8.0.dp,
+                    top = 0.0.dp,
+                    end = 8.0.dp,
+                    bottom = 1.0.dp
+                )
+                .clip(RoundedCornerShape(20.dp))
+                .background(buttonColor)
+                .fillMaxWidth(1.0f)
+                .fillMaxHeight(1.0f)
+        ) {
+            content()
+        }
     }
 }

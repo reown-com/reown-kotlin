@@ -3,14 +3,27 @@ package com.reown.walletkit.client
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
+import com.reown.walletkit.di.walletKitModule
+import com.reown.walletkit.smart_account.Account
+import com.reown.walletkit.smart_account.SafeInteractor
+import com.reown.walletkit.use_cases.CanFulfilUseCase
+import com.reown.walletkit.use_cases.EstimateGasUseCase
+import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
+import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import kotlinx.coroutines.*
 import java.util.*
 
 object WalletKit {
     private lateinit var coreClient: CoreInterface
+    private lateinit var safeInteractor: SafeInteractor
+    private val canFulfilUseCase: CanFulfilUseCase by wcKoinApp.koin.inject()
+    private val fulfilmentStatusUseCase: FulfilmentStatusUseCase by wcKoinApp.koin.inject()
+    private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
+    private val getTransactionDetailsUseCase: GetTransactionDetailsUseCase by wcKoinApp.koin.inject()
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -96,7 +109,12 @@ object WalletKit {
 
     @Throws(IllegalStateException::class)
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
+        wcKoinApp.modules(walletKitModule())
         coreClient = params.core
+        if (params.pimlicoApiKey != null) {
+            safeInteractor = SafeInteractor(params.pimlicoApiKey)
+        }
+
         SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
             if (error.throwable is SignClientAlreadyInitializedException) {
                 onSuccess()
@@ -150,7 +168,7 @@ object WalletKit {
         onSuccess: (Wallet.Params.SessionApprove) -> Unit = {},
         onError: (Wallet.Model.Error) -> Unit,
     ) {
-        val signParams = Sign.Params.Approve(params.proposerPublicKey, params.namespaces.toSign(), params.relayProtocol)
+        val signParams = Sign.Params.Approve(params.proposerPublicKey, params.namespaces.toSign(), params.properties, params.relayProtocol)
         SignClient.approveSession(signParams, { onSuccess(params) }, { error -> onError(Wallet.Model.Error(error.throwable)) })
     }
 
@@ -267,6 +285,88 @@ object WalletKit {
         }
 
         SignClient.ping(signParams, signPingLister)
+    }
+
+    //Yttrium
+
+    @Throws(Throwable::class)
+    fun getSmartAccount(params: Wallet.Params.GetSmartAccountAddress): String {
+        check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
+
+        val client = safeInteractor.getOrCreate(Account(params.owner.address))
+        return runBlocking { client.getAddress() }
+    }
+
+    @Throws(Throwable::class)
+    fun prepareSendTransactions(params: Wallet.Params.PrepareSendTransactions, onSuccess: (Wallet.Params.PrepareSendTransactionsResult) -> Unit) {
+        check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
+
+        val client = safeInteractor.getOrCreate(Account(params.owner.address))
+        scope.launch {
+            async { client.prepareSendTransactions(params.transactions.map { it.toYttrium() }).toWallet() }
+                .await()
+                .let(onSuccess)
+        }
+    }
+
+    @Throws(Throwable::class)
+    fun doSendTransactions(params: Wallet.Params.DoSendTransactions, onSuccess: (Wallet.Params.DoSendTransactionsResult) -> Unit) {
+        check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
+
+        val client = safeInteractor.getOrCreate(Account(params.owner.address))
+        scope.launch {
+            async { client.doSendTransactions(params.signatures.map { it.toYttrium() }, params.doSendTransactionParams) }
+                .await()
+                .let { userOpHash -> onSuccess(Wallet.Params.DoSendTransactionsResult(userOpHash)) }
+        }
+    }
+
+    @Throws(Throwable::class)
+    fun waitForUserOperationReceipt(params: Wallet.Params.WaitForUserOperationReceipt, onSuccess: (String) -> Unit) {
+        check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
+
+        val client = safeInteractor.getOrCreate(Account(params.owner.address))
+        scope.launch {
+            async { client.waitForUserOperationReceipt(params.userOperationHash) }
+                .await()
+                .let(onSuccess)
+        }
+    }
+
+    //Chain Abstraction
+    fun canFulfil(transaction: Wallet.Model.Transaction, onSuccess: (Wallet.Model.FulfilmentSuccess) -> Unit, onError: (Wallet.Model.FulfilmentError) -> Unit) {
+        try {
+            canFulfilUseCase(transaction, onSuccess, onError)
+        } catch (e: Exception) {
+            onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
+        }
+    }
+
+    fun fulfillmentStatus(fulfilmentId: String, checkIn: Long, onSuccess: (Wallet.Model.FulfilmentStatus.Completed) -> Unit, onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit) {
+        try {
+            fulfilmentStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
+        } catch (e: Exception) {
+            println("kobe: API error: $e")
+            onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
+        }
+    }
+
+    @Throws(Exception::class)
+    fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
+        return estimateGasUseCase(chainId)
+    }
+
+    fun getTransactionDetails(
+        available: Wallet.Model.FulfilmentSuccess.Available,
+        initTransaction: Wallet.Model.Transaction,
+        onSuccess: (Wallet.Model.RouteUiFields) -> Unit,
+        onError: (Wallet.Model.Error) -> Unit
+    ) {
+        try {
+            getTransactionDetailsUseCase(available, initTransaction, onSuccess, onError)
+        } catch (e: Exception) {
+            onError(Wallet.Model.Error(e))
+        }
     }
 
     /**

@@ -15,7 +15,7 @@ fun getEthSignBody(account: String): String {
 }
 
 fun getEthSendTransaction(account: String): String {
-    return "[{\"from\":\"$account\",\"to\":\"0x70012948c348CBF00806A3C79E3c5DAdFaAa347B\",\"data\":\"0x\",\"gasLimit\":\"0x5208\",\"gasPrice\":\"0x0649534e00\",\"value\":\"0x01\",\"nonce\":\"0x07\"}]"
+    return "[{\"from\":\"$account\",\"to\":\"0x70012948c348CBF00806A3C79E3c5DAdFaAa347B\",\"data\":\"0x\",\"gasLimit\":\"0x5208\",\"gasPrice\":\"0x0649534e00\",\"value\":\"0\",\"nonce\":\"0x07\"}]"
 }
 
 fun getEthSignTypedData(account: String): String {
