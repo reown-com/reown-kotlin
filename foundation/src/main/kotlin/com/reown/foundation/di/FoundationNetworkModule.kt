@@ -15,7 +15,7 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
 
-fun networkModule(serverUrl: String, sdkVersion: String, jwt: String): Module = module {
+fun networkModule(serverUrl: String, sdkVersion: String, jwt: String, packageName: String): Module = module {
     val DEFAULT_BACKOFF_SECONDS = 5L
     val TIMEOUT_TIME = 40000L
 
@@ -50,7 +50,7 @@ fun networkModule(serverUrl: String, sdkVersion: String, jwt: String): Module = 
     single(named(FoundationDITags.SCARLET)) {
         Scarlet.Builder()
             .backoffStrategy(get<LinearBackoffStrategy>())
-            .webSocketFactory(get<OkHttpClient>(named(FoundationDITags.OK_HTTP)).newWebSocketFactory("$serverUrl&auth=$jwt"))
+            .webSocketFactory(get<OkHttpClient>(named(FoundationDITags.OK_HTTP)).newWebSocketFactory("$serverUrl&auth=$jwt&packageName=$packageName"))
             .addMessageAdapterFactory(get<MoshiMessageAdapter.Factory>(named(FoundationDITags.MSG_ADAPTER)))
             .addStreamAdapterFactory(get<FlowStreamAdapter.Factory>())
             .build()
