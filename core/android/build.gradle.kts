@@ -96,7 +96,7 @@ dependencies {
     implementation(libs.scarlet.android)
     implementation(libs.bundles.sqlDelight)
     //noinspection UseTomlInstead
-    api("net.zetetic:android-database-sqlcipher:4.5.4@aar")
+    api("net.zetetic:sqlcipher-android:4.6.1@aar")
     implementation(libs.relinker)
     api(libs.androidx.security)
     api(libs.koin.android)

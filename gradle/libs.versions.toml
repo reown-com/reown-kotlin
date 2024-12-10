@@ -26,7 +26,7 @@ koin = "3.5.6"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 bouncyCastle = "1.78.1"
-sqlCipher = "4.5.4"
+sqlCipher = "4.6.1"
 multibase = "1.1.1"
 json = "20220924"
 timber = "5.0.1"
@@ -148,7 +148,7 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx"
 firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
 
 bouncyCastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncyCastle" }
-sqlCipher = { module = "net.zetetic:android-database-sqlcipher", version.ref = "sqlCipher" }
+sqlCipher = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlCipher" }
 relinker = { module = "com.getkeepsafe.relinker:relinker", version.ref = "relinker" }
 mulitbase = { module = "com.github.multiformats:java-multibase", version.ref = "multibase" }
 jerseyCommon = { module = "org.glassfish.jersey.core:jersey-common", version.ref = "jerseyCommon" }
