@@ -41,11 +41,117 @@ sealed class TestState {
 @ExperimentalCoroutinesApi
 class RelayTest {
     private val testProjectId: String = requireNotNull(System.getProperty("TEST_PROJECT_ID"))
+    private val testProjectId2: String = requireNotNull(System.getProperty("TEST_PROJECT_ID2"))
     private val testRelayUrl: String = requireNotNull(System.getProperty("TEST_RELAY_URL"))
-    private val serverUrl = "$testRelayUrl?projectId=$testProjectId"
+    private var serverUrl = "$testRelayUrl?projectId=$testProjectId"
     private val sdkVersion: String = System.getProperty("SDK_VERSION") + "-relayTest"
     private val testJob: CompletableJob = SupervisorJob()
     private val testScope: CoroutineScope = CoroutineScope(testJob + Dispatchers.IO)
+
+
+    @ExperimentalTime
+    @Test
+    fun `Connect with empty packageName when some packageName is already configured in Cloud - successful connection`() {
+        val testState = MutableStateFlow<TestState>(TestState.Idle)
+        val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "")
+
+        //Await connection
+        val connectionTime = measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds
+        println("Connection time: $connectionTime ms")
+        testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+
+        //Lock until is finished or timed out
+        runBlocking {
+            val start = System.currentTimeMillis()
+            // Await test finish or check if timeout occurred
+            while (testState.value is TestState.Idle && !didTimeout(start, 60000L)) {
+                delay(10)
+            }
+
+            // Success or fail or idle
+            when (testState.value) {
+                is TestState.Success -> return@runBlocking
+                is TestState.Error -> fail((testState.value as TestState.Error).message)
+                is TestState.Idle -> fail("Test timeout")
+            }
+        }
+    }
+
+    @ExperimentalTime
+    @Test
+    fun `Connect with not whitelisted packageName when some packageName is already configured in Cloud - return an error`() {
+        val testState = MutableStateFlow<TestState>(TestState.Idle)
+        val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "com.test.failure")
+
+        clientA.eventsFlow.onEach { event ->
+            when (event) {
+                is Relay.Model.Event.OnConnectionFailed -> {
+                    if (event.throwable.message?.contains("403") == true) {
+                        testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+                    }
+                }
+
+                else -> {}
+            }
+        }.launchIn(testScope)
+
+        clientB.eventsFlow.onEach { event ->
+            when (event) {
+                is Relay.Model.Event.OnConnectionFailed -> {
+                    if (event.throwable.message?.contains("403") == true) {
+                        testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+                    }
+                }
+
+                else -> {}
+            }
+        }.launchIn(testScope)
+
+        //Lock until is finished or timed out
+        runBlocking {
+            val start = System.currentTimeMillis()
+            // Await test finish or check if timeout occurred
+            while (testState.value is TestState.Idle && !didTimeout(start, 120000L)) {
+                delay(10)
+            }
+
+            // Success or fail or idle
+            when (testState.value) {
+                is TestState.Success -> return@runBlocking
+                is TestState.Error -> fail((testState.value as TestState.Error).message)
+                is TestState.Idle -> fail("Test timeout")
+            }
+        }
+    }
+
+    @ExperimentalTime
+    @Test
+    fun `Connect with some packageName when no packageName is configured in Cloud - successful connection`() {
+        serverUrl = "$testRelayUrl?projectId=$testProjectId2"
+        val testState = MutableStateFlow<TestState>(TestState.Idle)
+        val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "com.test")
+
+        //Await connection
+        val connectionTime = measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds
+        println("Connection time: $connectionTime ms")
+        testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+
+        //Lock until is finished or timed out
+        runBlocking {
+            val start = System.currentTimeMillis()
+            // Await test finish or check if timeout occurred
+            while (testState.value is TestState.Idle && !didTimeout(start, 60000L)) {
+                delay(10)
+            }
+
+            // Success or fail or idle
+            when (testState.value) {
+                is TestState.Success -> return@runBlocking
+                is TestState.Error -> fail((testState.value as TestState.Error).message)
+                is TestState.Idle -> fail("Test timeout")
+            }
+        }
+    }
 
     @ExperimentalTime
     @Test
@@ -152,13 +258,13 @@ class RelayTest {
     private fun startLoggingClientEventsFlow(client: RelayInterface, tag: String) =
         client.eventsFlow.onEach { println("$tag eventsFlow: $it") }.launchIn(testScope)
 
-    private fun initTwoClients(): Pair<RelayInterface, RelayInterface> {
+    private fun initTwoClients(packageName: String = "com.reown.sample.wallet"): Pair<RelayInterface, RelayInterface> {
         val koinAppA: KoinApplication = KoinApplication.init()
             .apply { modules(foundationCommonModule(), cryptoModule()) }.also { koinApp ->
                 val jwt = koinApp.koin.get<ClientIdJwtRepository>().generateJWT(testRelayUrl) { clientId ->
                     println("ClientA id: $clientId")
                 }
-                koinApp.modules(networkModule(serverUrl.addUserAgent(sdkVersion), sdkVersion, jwt))
+                koinApp.modules(networkModule(serverUrl.addUserAgent(sdkVersion), sdkVersion, jwt, packageName))
             }
 
         val koinAppB: KoinApplication = KoinApplication.init()
@@ -166,7 +272,7 @@ class RelayTest {
                 val jwt = koinApp.koin.get<ClientIdJwtRepository>().generateJWT(testRelayUrl) { clientId ->
                     println("ClientB id: $clientId")
                 }
-                koinApp.modules(networkModule(serverUrl.addUserAgent(sdkVersion), sdkVersion, jwt))
+                koinApp.modules(networkModule(serverUrl.addUserAgent(sdkVersion), sdkVersion, jwt, packageName))
             }
 
         val clientA: BaseRelayClient = koinAppA.koin.get()

@@ -14,12 +14,12 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(11)) // Ensure Java 11 is used
+        languageVersion.set(JavaLanguageVersion.of(11))
     }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     kotlinOptions {
-        jvmTarget = "11" // Match Java 11
+        jvmTarget = "11"
     }
 }

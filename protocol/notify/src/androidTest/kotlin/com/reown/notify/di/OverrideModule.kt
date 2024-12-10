@@ -35,6 +35,6 @@ internal fun overrideModule(
         corePairingModule(pairing, pairingController),
         coreCryptoModule(sharedPrefsFile, keyStoreAlias),
         coreJsonRpcModule(),
-        coreAndroidNetworkModule(relayUrl, connectionType, "test_version", bundleId = bundleId)
+        coreAndroidNetworkModule(relayUrl, connectionType, "test_version", packageName = bundleId)
     )
 }
