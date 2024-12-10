@@ -1,3 +1,5 @@
+@file:OptIn(SmartAccountExperimentalApi::class)
+
 package com.reown.sample.wallet.ui.routes.composable_routes.settings
 
 import androidx.lifecycle.ViewModel
@@ -7,6 +9,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import com.reown.android.CoreClient
 import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.walletkit.client.SmartAccountExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,9 +1,12 @@
+@file:OptIn(ChainAbstractionExperimentalApi::class)
+
 package com.reown.sample.wallet.domain
 
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.sample.wallet.domain.WCDelegate._walletEvents
 import com.reown.sample.wallet.domain.WCDelegate.scope
+import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async

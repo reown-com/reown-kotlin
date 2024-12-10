@@ -15,6 +15,7 @@ import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import kotlinx.coroutines.*
+import org.jetbrains.annotations.ApiStatus.Experimental
 import java.util.*
 
 object WalletKit {
@@ -290,6 +291,7 @@ object WalletKit {
     //Yttrium
 
     @Throws(Throwable::class)
+    @SmartAccountExperimentalApi
     fun getSmartAccount(params: Wallet.Params.GetSmartAccountAddress): String {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
@@ -298,6 +300,7 @@ object WalletKit {
     }
 
     @Throws(Throwable::class)
+    @SmartAccountExperimentalApi
     fun prepareSendTransactions(params: Wallet.Params.PrepareSendTransactions, onSuccess: (Wallet.Params.PrepareSendTransactionsResult) -> Unit) {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
@@ -310,6 +313,7 @@ object WalletKit {
     }
 
     @Throws(Throwable::class)
+    @SmartAccountExperimentalApi
     fun doSendTransactions(params: Wallet.Params.DoSendTransactions, onSuccess: (Wallet.Params.DoSendTransactionsResult) -> Unit) {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
@@ -322,6 +326,7 @@ object WalletKit {
     }
 
     @Throws(Throwable::class)
+    @SmartAccountExperimentalApi
     fun waitForUserOperationReceipt(params: Wallet.Params.WaitForUserOperationReceipt, onSuccess: (String) -> Unit) {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
@@ -334,6 +339,7 @@ object WalletKit {
     }
 
     //Chain Abstraction
+    @ChainAbstractionExperimentalApi
     fun canFulfil(transaction: Wallet.Model.Transaction, onSuccess: (Wallet.Model.FulfilmentSuccess) -> Unit, onError: (Wallet.Model.FulfilmentError) -> Unit) {
         try {
             canFulfilUseCase(transaction, onSuccess, onError)
@@ -342,6 +348,7 @@ object WalletKit {
         }
     }
 
+    @ChainAbstractionExperimentalApi
     fun fulfillmentStatus(fulfilmentId: String, checkIn: Long, onSuccess: (Wallet.Model.FulfilmentStatus.Completed) -> Unit, onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit) {
         try {
             fulfilmentStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
@@ -352,10 +359,12 @@ object WalletKit {
     }
 
     @Throws(Exception::class)
+    @ChainAbstractionExperimentalApi
     fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
         return estimateGasUseCase(chainId)
     }
 
+    @ChainAbstractionExperimentalApi
     fun getTransactionDetails(
         available: Wallet.Model.FulfilmentSuccess.Available,
         initTransaction: Wallet.Model.Transaction,
