@@ -95,6 +95,18 @@ class RelayTest {
             }
         }.launchIn(testScope)
 
+        clientB.eventsFlow.onEach { event ->
+            when (event) {
+                is Relay.Model.Event.OnConnectionFailed -> {
+                    if (event.throwable.message?.contains("403") == true) {
+                        testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+                    }
+                }
+
+                else -> {}
+            }
+        }.launchIn(testScope)
+
         //Lock until is finished or timed out
         runBlocking {
             val start = System.currentTimeMillis()
