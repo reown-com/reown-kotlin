@@ -351,11 +351,11 @@ private fun Wallet.Model.Transaction.toCAYttrium(): CATransaction = CATransactio
     chainId = chainId
 )
 
-@JvmSynthetic
-private fun Wallet.Model.FundingMetadata.toYttrium(): FundingMetadata = FundingMetadata(chainId, tokenContract, symbol, amount = amount, bridgingFee = "")
+//@JvmSynthetic
+//private fun Wallet.Model.FundingMetadata.toYttrium(): FundingMetadata = FundingMetadata(chainId, tokenContract, symbol, amount = amount, bridgingFee = "")
 
 @JvmSynthetic
-private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Model.FundingMetadata(chainId, tokenContract, symbol, amount, bridgingFee)
+private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Model.FundingMetadata(chainId, tokenContract, symbol, amount, bridgingFee, 1)
 
 @JvmSynthetic
 internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.Model.EstimatedFees(maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas)

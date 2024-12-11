@@ -13,6 +13,7 @@ import com.reown.walletkit.smart_account.SafeInteractor
 import com.reown.walletkit.use_cases.CanFulfilUseCase
 import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
+import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import kotlinx.coroutines.*
 import org.jetbrains.annotations.ApiStatus.Experimental
@@ -25,6 +26,7 @@ object WalletKit {
     private val fulfilmentStatusUseCase: FulfilmentStatusUseCase by wcKoinApp.koin.inject()
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
     private val getTransactionDetailsUseCase: GetTransactionDetailsUseCase by wcKoinApp.koin.inject()
+    private val getERC20TokenBalanceUseCase: GetERC20TokenBalanceUseCase by wcKoinApp.koin.inject()
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -362,6 +364,12 @@ object WalletKit {
     @ChainAbstractionExperimentalApi
     fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
         return estimateGasUseCase(chainId)
+    }
+
+    @Throws(Exception::class)
+    @ChainAbstractionExperimentalApi
+    fun getERC20Balance(chainId: String, tokenAddress: String, ownerAddress: String): String {
+        return getERC20TokenBalanceUseCase(chainId, tokenAddress, ownerAddress)
     }
 
     @ChainAbstractionExperimentalApi

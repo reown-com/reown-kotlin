@@ -11,18 +11,19 @@ import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.clearSessionRequest
 import com.reown.sample.wallet.domain.fulfillmentStatus
+import com.reown.sample.wallet.domain.getUSDCContractAddress
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.domain.respondWithError
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
+import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
-import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Numeric
 import java.math.BigInteger
 
@@ -35,6 +36,18 @@ class ChainAbstractionViewModel : ViewModel() {
     var txHash: String? = null
     var errorMessage: String? = null
     var sessionRequestUI: SessionRequestUI = generateSessionRequestUI()
+
+    @OptIn(ChainAbstractionExperimentalApi::class)
+    fun getERC20Balance(): String {
+        val initialTransaction = WCDelegate.fulfilmentAvailable?.initialTransaction
+        val tokenAddress = getUSDCContractAddress(initialTransaction?.chainId ?: "") //todo: replace with init tx metadata
+        return try {
+            WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, initialTransaction?.from ?: "")
+        } catch (e: Exception) {
+            Firebase.crashlytics.recordException(e)
+            "-.--"
+        }
+    }
 
     fun approve(onSuccess: (TxSuccess) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
         try {
@@ -99,7 +112,7 @@ class ChainAbstractionViewModel : ViewModel() {
                                 is Wallet.Model.FulfilmentStatus.Completed -> {
                                     println("kobe: Fulfilment completed")
                                     //if status completed, execute init tx
-                                    with(WCDelegate.originalTransaction!!) {
+                                    with(WCDelegate.initialTransaction!!) {
                                         try {
                                             val nonceResult = Transaction.getNonce(chainId, from)
                                             println("kobe: Original TX")

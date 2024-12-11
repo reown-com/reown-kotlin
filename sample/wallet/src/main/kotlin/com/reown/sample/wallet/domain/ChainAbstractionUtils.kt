@@ -9,10 +9,8 @@ import com.reown.sample.wallet.domain.WCDelegate.scope
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
+import org.kethereum.model.ChainId
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -75,7 +73,7 @@ suspend fun getTransactionsDetails(): Result<Wallet.Model.RouteUiFields> =
         try {
             WalletKit.getTransactionDetails(
                 WCDelegate.fulfilmentAvailable!!,
-                WCDelegate.originalTransaction!!,
+                WCDelegate.initialTransaction!!,
                 onSuccess = {
                     println("kobe: Transaction details SUCCESS: $it")
                     continuation.resume(Result.success(it))
@@ -157,6 +155,15 @@ fun getErrorMessage(): String {
         Wallet.Model.FulfilmentError.NoRoutesAvailable -> "No routes available"
         is Wallet.Model.FulfilmentError.Unknown -> error.message
         else -> "Unknown Error"
+    }
+}
+
+fun getUSDCContractAddress(chainId: String): String {
+    return when (chainId) {
+        "eip155:10" -> "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
+        "eip155:8453" -> "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        "eip155:42161" -> "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+        else -> ""
     }
 }
 

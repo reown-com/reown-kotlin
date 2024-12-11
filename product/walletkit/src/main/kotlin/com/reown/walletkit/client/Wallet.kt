@@ -97,7 +97,8 @@ object Wallet {
             var tokenContract: String,
             var symbol: String,
             var amount: String,
-            var bridgingFee: String
+            var bridgingFee: String,
+            var decimals: Int
         ) : Model()
 
         data class EstimatedFees(

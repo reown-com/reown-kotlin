@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -45,7 +44,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.common.sendResponseDeepLink
-import com.reown.sample.common.ui.theme.mismatch_color
 import com.reown.sample.common.ui.theme.verified_color
 import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
@@ -53,16 +51,11 @@ import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.getErrorMessage
 import com.reown.sample.wallet.domain.model.NetworkUtils
 import com.reown.sample.wallet.domain.model.Transaction
-import com.reown.sample.wallet.ui.common.Button
 import com.reown.sample.wallet.ui.common.Buttons
 import com.reown.sample.wallet.ui.common.ButtonsVertical
-import com.reown.sample.wallet.ui.common.Content
 import com.reown.sample.wallet.ui.common.InnerContent
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
-import com.reown.sample.wallet.ui.common.blue.BlueLabelRow
-import com.reown.sample.wallet.ui.common.blue.BlueLabelText
 import com.reown.sample.wallet.ui.common.generated.ButtonWithLoader
-import com.reown.sample.wallet.ui.common.generated.CancelButton
 import com.reown.sample.wallet.ui.common.peer.Peer
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.getColor
@@ -71,7 +64,6 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.S
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.math.BigInteger
 
 @SuppressLint("RestrictedApi")
 @Composable
@@ -98,7 +90,7 @@ fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, ch
                     Spacer(modifier = Modifier.height(24.dp))
                     Peer(peerUI = sessionRequestUI.peerUI, "Review transaction", sessionRequestUI.peerContextUI)
                     Spacer(modifier = Modifier.height(16.dp))
-                    Request(sessionRequestUI = sessionRequestUI, isError)
+                    Request(chainAbstractionViewModel, isError)
                     Spacer(modifier = Modifier.height(8.dp))
                     if (isError) {
                         ButtonWithLoader(
@@ -250,7 +242,7 @@ fun ErrorDialog(
                         )
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
                             Text(
-                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.originalTransaction!!.chainId)}",
+                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.initialTransaction!!.chainId)}",
                                 style = TextStyle(
                                     fontSize = 12.sp,
                                     lineHeight = 14.sp,
@@ -261,7 +253,7 @@ fun ErrorDialog(
                             Spacer(modifier = Modifier.width(6.dp))
                             Image(
                                 modifier = Modifier.size(12.dp).clip(CircleShape),
-                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
+                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.initialTransaction!!.chainId)),
                                 contentDescription = "image description"
                             )
                         }
@@ -284,7 +276,7 @@ fun ErrorDialog(
                         )
                         Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "${Transaction.convertTokenAmount(funding.amount.toBigInteger(), 6)?.toPlainString()}${funding.symbol}",
+                                text = "${Transaction.hexToTokenAmount(funding.amount, 6)?.toPlainString()}${funding.symbol}",
                                 style = TextStyle(
                                     fontSize = 16.sp,
                                     lineHeight = 18.sp,
@@ -411,7 +403,7 @@ fun SuccessDialog(
                         )
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
                             Text(
-                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.originalTransaction!!.chainId)}",
+                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.initialTransaction!!.chainId)}",
                                 style = TextStyle(
                                     fontSize = 12.sp,
                                     lineHeight = 14.sp,
@@ -422,7 +414,7 @@ fun SuccessDialog(
                             Spacer(modifier = Modifier.width(6.dp))
                             Image(
                                 modifier = Modifier.size(12.dp).clip(CircleShape),
-                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
+                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.initialTransaction!!.chainId)),
                                 contentDescription = "image description"
                             )
                         }
@@ -445,7 +437,7 @@ fun SuccessDialog(
                         )
                         Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "${Transaction.convertTokenAmount(funding.amount.toBigInteger(), 6)!!.toPlainString()}${funding.symbol}",
+                                text = "${Transaction.hexToTokenAmount(funding.amount, 6)!!.toPlainString()}${funding.symbol}",
                                 style = TextStyle(
                                     fontSize = 16.sp,
                                     lineHeight = 18.sp,
@@ -588,7 +580,7 @@ private fun showError(navController: NavHostController, throwable: Throwable?, c
 }
 
 @Composable
-fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
+fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
     Column(modifier = Modifier.height(450.dp)) {
         Column(
             modifier = Modifier
@@ -646,7 +638,7 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                     ) {
                         Image(
                             modifier = Modifier.size(24.dp).clip(CircleShape),
-                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
+                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.initialTransaction!!.chainId)),
                             contentDescription = "Network"
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -660,10 +652,9 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                             )
                         )
                     }
-                    //todo: balance of the sender
                     Column {
                         Text(
-                            text = "0.04 USDC",
+                            text = Transaction.convertTokenAmount(viewModel.getERC20Balance().toBigInteger(), 6)?.toPlainString() ?: "-.--",
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -717,7 +708,7 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                             }
                             Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = "${Transaction.convertTokenAmount(funding.amount.toBigInteger(), 6)!!.toPlainString()}${funding.symbol}",
+                                    text = "${Transaction.hexToTokenAmount(funding.amount, 6)!!.toPlainString()}${funding.symbol}",
                                     style = TextStyle(
                                         fontSize = 16.sp,
                                         lineHeight = 18.sp,
@@ -778,12 +769,12 @@ fun Request(sessionRequestUI: SessionRequestUI.Content, isError: Boolean) {
                     ) {
                         Image(
                             modifier = Modifier.size(18.dp).clip(CircleShape),
-                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.originalTransaction!!.chainId)),
+                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.initialTransaction!!.chainId)),
                             contentDescription = "Network",
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = NetworkUtils.getNameByChainId(WCDelegate.originalTransaction!!.chainId),
+                            text = NetworkUtils.getNameByChainId(WCDelegate.initialTransaction!!.chainId),
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
