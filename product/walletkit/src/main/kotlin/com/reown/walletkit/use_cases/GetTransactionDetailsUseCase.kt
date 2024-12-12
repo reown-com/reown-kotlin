@@ -14,13 +14,12 @@ class GetTransactionDetailsUseCase(private val chainAbstractionClient: ChainAbst
     operator fun invoke(
         available: Wallet.Model.FulfilmentSuccess.Available,
         initTransaction: Wallet.Model.Transaction,
-        currency: Wallet.Model.Currency,
         onSuccess: (Wallet.Model.FulfilmentDetails) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
     ) {
         scope.launch {
             try {
-                val result = async { chainAbstractionClient.getRouteUiFields(available.toYttrium(), initTransaction.toCAYttrium(), currency.toYttrium()) }.await()
+                val result = async { chainAbstractionClient.getRouteUiFields(available.toYttrium(), initTransaction.toCAYttrium(), Currency.USD) }.await()
                 onSuccess(result.toWallet())
             } catch (e: Exception) {
                 onError(Wallet.Model.Error(e))

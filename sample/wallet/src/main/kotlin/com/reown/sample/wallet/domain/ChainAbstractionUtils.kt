@@ -74,7 +74,6 @@ suspend fun getTransactionsDetails(): Result<Wallet.Model.FulfilmentDetails> =
             WalletKit.getFulfilmentDetails(
                 WCDelegate.fulfilmentAvailable!!,
                 WCDelegate.initialTransaction!!,
-                Wallet.Model.Currency.EUR,
                 onSuccess = {
                     println("kobe: Transaction details SUCCESS: $it")
                     continuation.resume(Result.success(it))
