@@ -22,8 +22,8 @@ import com.reown.android.sdk.core.AndroidCoreDatabase
 import com.reown.foundation.util.Logger
 import com.reown.util.randomBytes
 import com.reown.utils.Empty
-import net.sqlcipher.database.SQLiteDatabaseHook
-import net.sqlcipher.database.SupportFactory
+import net.zetetic.database.sqlcipher.SQLiteDatabaseHook
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.core.scope.Scope
@@ -159,9 +159,9 @@ fun getSupportFactory(
     passphrase: ByteArray,
     hook: SQLiteDatabaseHook?,
     clearPassphrase: Boolean
-): SupportFactory {
+): SupportOpenHelperFactory {
     loadSqlCipherLibrary(context)
-    return SupportFactory(passphrase, hook, clearPassphrase)
+    return SupportOpenHelperFactory(passphrase, hook, clearPassphrase)
 }
 
 private fun loadSqlCipherLibrary(context: Context) {
@@ -178,9 +178,9 @@ private fun loadSqlCipherLibrary(context: Context) {
     }
 }
 
-fun coreStorageModule(storagePrefix: String = String.Empty, bundleId: String) = module {
+fun coreStorageModule(storagePrefix: String = String.Empty, packageName: String) = module {
 
-    includes(baseStorageModule(storagePrefix, bundleId), signingModule())
+    includes(baseStorageModule(storagePrefix, packageName), signingModule())
 
     single<SqlDriver>(named(AndroidBuildVariantDITags.ANDROID_CORE_DATABASE_DRIVER)) {
         AndroidSqliteDriver(

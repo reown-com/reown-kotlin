@@ -26,6 +26,7 @@ jobs:
         env:
           TEST_RELAY_URL: wss://relay.walletconnect.org
           TEST_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
+          TEST_PROJECT_ID2: ${{ secrets.TEST_PROJECT_ID2 }}
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
         with:
