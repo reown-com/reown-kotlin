@@ -133,9 +133,6 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
 
             _walletEvents.emit(fulfilment)
         }
-//        scope.launch {
-//            _walletEvents.emit(fulfilment)
-//        }
     }
 }
 

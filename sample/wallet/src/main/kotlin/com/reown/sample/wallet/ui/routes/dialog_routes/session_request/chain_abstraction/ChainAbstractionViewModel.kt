@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
+import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.clearSessionRequest
@@ -41,11 +42,12 @@ class ChainAbstractionViewModel : ViewModel() {
 
     @OptIn(ChainAbstractionExperimentalApi::class)
     fun getERC20Balance(): String {
-        val initialTransaction = WCDelegate.fulfilmentAvailable?.initialTransaction
+        val initialTransaction = WCDelegate.sessionRequestEvent?.first
         val tokenAddress = getUSDCContractAddress(initialTransaction?.chainId ?: "") //todo: replace with init tx metadata
         return try {
-            WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, initialTransaction?.from ?: "")
+            WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, EthAccountDelegate.account ?: "")
         } catch (e: Exception) {
+            println("kobe: getERC20Balance error: $e")
             Firebase.crashlytics.recordException(e)
             "-.--"
         }

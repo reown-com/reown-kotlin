@@ -590,29 +590,31 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                 .background(themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFF505059).copy(.1f)))
                 .verticalScroll(rememberScrollState())
         ) {
-            Row(
-                modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Paying",
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        lineHeight = 18.sp,
-                        fontWeight = FontWeight(400),
-                        color = Color(0xFF9A9A9A),
+            if (!isError) {
+                Row(
+                    modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Paying",
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            lineHeight = 18.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFF9A9A9A),
+                        )
                     )
-                )
-                Text(
-                    text = viewModel.getTransferAmount(),
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        lineHeight = 18.sp,
-                        fontWeight = FontWeight(400),
-                        color = Color(0xFFFFFFFF),
+                    Text(
+                        text = viewModel.getTransferAmount(),
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            lineHeight = 18.sp,
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFFFFFFFF),
+                        )
                     )
-                )
+                }
             }
             //Content
             InnerContent {
