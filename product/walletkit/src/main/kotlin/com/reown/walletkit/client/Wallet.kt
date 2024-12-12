@@ -96,8 +96,19 @@ object Wallet {
             var chainId: String,
             var tokenContract: String,
             var symbol: String,
-            var amount: String
+            var amount: String,
+            var bridgingFee: String,
+            var decimals: Int
         ) : Model()
+
+        data class InitialTransactionMetadata(
+            var symbol: String,
+            var amount: String,
+            var decimals: Int,
+            var tokenContract: String,
+            var transferTo: String
+        ) : Model()
+
 
         data class EstimatedFees(
             val maxFeePerGas: String,
@@ -105,8 +116,28 @@ object Wallet {
         ) : Model()
 
         sealed class FulfilmentSuccess : Model() {
-            data class Available(val fulfilmentId: String, val checkIn: Long, val transactions: List<Transaction>, val funding: List<FundingMetadata>) : FulfilmentSuccess()
-            data object NotRequired : FulfilmentSuccess()
+            data class Available(
+                val fulfilmentId: String,
+                val checkIn: Long,
+                val transactions: List<Transaction>,
+                val initialTransaction: Transaction,
+                val initialTransactionMetadata: InitialTransactionMetadata,
+                val funding: List<FundingMetadata>
+            ) : FulfilmentSuccess()
+
+            data class NotRequired(val initialTransaction: Transaction) : FulfilmentSuccess()
+        }
+
+        enum class Currency {
+            USD,
+            EUR,
+            GBP,
+            AUD,
+            CAD,
+            INR,
+            JPY,
+            BTC,
+            ETH;
         }
 
         data class Amount(
@@ -122,15 +153,16 @@ object Wallet {
             var localFee: Amount
         ) : Model()
 
-        data class TxnDetails(
+        data class TransactionDetails(
             var transaction: Transaction,
             var eip1559: EstimatedFees,
             var transactionFee: TransactionFee
         ) : Model()
 
-        data class RouteUiFields(
-            var routeDetails: List<TxnDetails>,
-            var initialDetails: TxnDetails,
+        data class FulfilmentDetails(
+            var routeDetails: List<TransactionDetails>,
+            var initialDetails: TransactionDetails,
+            var bridgeDetails: List<TransactionFee>,
             var localTotal: Amount
         ) : Model()
 

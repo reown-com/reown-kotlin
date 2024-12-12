@@ -1,15 +1,16 @@
+@file:OptIn(ChainAbstractionExperimentalApi::class)
+
 package com.reown.sample.wallet.domain
 
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.sample.wallet.domain.WCDelegate._walletEvents
 import com.reown.sample.wallet.domain.WCDelegate.scope
+import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -67,12 +68,12 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
     }
 }
 
-suspend fun getTransactionsDetails(): Result<Wallet.Model.RouteUiFields> =
+suspend fun getTransactionsDetails(): Result<Wallet.Model.FulfilmentDetails> =
     suspendCoroutine { continuation ->
         try {
-            WalletKit.getTransactionDetails(
+            WalletKit.getFulfilmentDetails(
                 WCDelegate.fulfilmentAvailable!!,
-                WCDelegate.originalTransaction!!,
+                WCDelegate.initialTransaction!!,
                 onSuccess = {
                     println("kobe: Transaction details SUCCESS: $it")
                     continuation.resume(Result.success(it))
@@ -124,15 +125,17 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
         WCDelegate.fulfilmentAvailable = fulfilment
 
-//        scope.launch {
-//            async { getTransactionsDetails() }.await().fold(
-//                onSuccess = { WCDelegate.transactionsDetails = it },
-//                onFailure = { error -> println("kobe: Failed getting tx details: $error") }
-//            )
-//        }
         scope.launch {
+            async { getTransactionsDetails() }.await().fold(
+                onSuccess = { WCDelegate.fulfilmentDetails = it },
+                onFailure = { error -> println("kobe: Failed getting tx details: $error") }
+            )
+
             _walletEvents.emit(fulfilment)
         }
+//        scope.launch {
+//            _walletEvents.emit(fulfilment)
+//        }
     }
 }
 
@@ -154,6 +157,15 @@ fun getErrorMessage(): String {
         Wallet.Model.FulfilmentError.NoRoutesAvailable -> "No routes available"
         is Wallet.Model.FulfilmentError.Unknown -> error.message
         else -> "Unknown Error"
+    }
+}
+
+fun getUSDCContractAddress(chainId: String): String {
+    return when (chainId) {
+        "eip155:10" -> "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
+        "eip155:8453" -> "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        "eip155:42161" -> "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+        else -> ""
     }
 }
 

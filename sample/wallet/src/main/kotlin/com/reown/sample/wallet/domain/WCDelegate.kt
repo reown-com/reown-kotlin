@@ -31,8 +31,8 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     //CA
     var fulfilmentAvailable: Wallet.Model.FulfilmentSuccess.Available? = null
     var fulfilmentError: Wallet.Model.FulfilmentError? = null
-    var originalTransaction: Wallet.Model.Transaction? = null
-    var transactionsDetails: Wallet.Model.RouteUiFields? = null
+    var initialTransaction: Wallet.Model.Transaction? = null
+    var fulfilmentDetails: Wallet.Model.FulfilmentDetails? = null
 
     init {
         CoreClient.setDelegate(this)
@@ -83,8 +83,8 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
         println("kobe: session request: $sessionRequest")
 
         if (sessionRequest.request.method == "eth_sendTransaction") {
-            originalTransaction = getTransaction(sessionRequest)
-            canFulfil(sessionRequest, originalTransaction!!, verifyContext)
+            initialTransaction = getTransaction(sessionRequest)
+            canFulfil(sessionRequest, initialTransaction!!, verifyContext)
         } else {
             emitSessionRequest(sessionRequest, verifyContext)
         }

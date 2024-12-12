@@ -11,20 +11,23 @@ import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.clearSessionRequest
 import com.reown.sample.wallet.domain.fulfillmentStatus
+import com.reown.sample.wallet.domain.getUSDCContractAddress
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.domain.respondWithError
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
+import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
-import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Numeric
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 data class TxSuccess(
     val redirect: Uri?,
@@ -35,6 +38,37 @@ class ChainAbstractionViewModel : ViewModel() {
     var txHash: String? = null
     var errorMessage: String? = null
     var sessionRequestUI: SessionRequestUI = generateSessionRequestUI()
+
+    @OptIn(ChainAbstractionExperimentalApi::class)
+    fun getERC20Balance(): String {
+        val initialTransaction = WCDelegate.fulfilmentAvailable?.initialTransaction
+        val tokenAddress = getUSDCContractAddress(initialTransaction?.chainId ?: "") //todo: replace with init tx metadata
+        return try {
+            WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, initialTransaction?.from ?: "")
+        } catch (e: Exception) {
+            Firebase.crashlytics.recordException(e)
+            "-.--"
+        }
+    }
+
+    fun calculateBridgeFee(): String {
+        var totalFee: BigDecimal = BigDecimal.ZERO
+        WCDelegate.fulfilmentDetails?.bridgeDetails?.forEach {
+            val fee = Transaction.hexToTokenAmount(it.localFee.amount, it.localFee.unit.toInt())
+            totalFee = totalFee.plus(fee!!)
+        }
+
+        return "$${totalFee.setScale(2, RoundingMode.UP).toPlainString()}"
+    }
+
+    fun getTransferAmount(): String {
+        return "${
+            Transaction.hexToTokenAmount(
+                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.amount!!,
+                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.decimals!!
+            )?.toPlainString() ?: "-.--"
+        } ${WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.symbol}"
+    }
 
     fun approve(onSuccess: (TxSuccess) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
         try {
@@ -99,13 +133,15 @@ class ChainAbstractionViewModel : ViewModel() {
                                 is Wallet.Model.FulfilmentStatus.Completed -> {
                                     println("kobe: Fulfilment completed")
                                     //if status completed, execute init tx
-                                    with(WCDelegate.originalTransaction!!) {
+                                    with(WCDelegate.initialTransaction!!) {
                                         try {
                                             val nonceResult = Transaction.getNonce(chainId, from)
                                             println("kobe: Original TX")
                                             val signedTx = Transaction.sign(this, nonceResult, BigInteger.valueOf(50000))
 
                                             val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
+                                            val receipt = Transaction.getReceipt(chainId, resultTx)
+                                            println("kobe: Original TX receipt: $receipt")
                                             val response = Wallet.Params.SessionRequestResponse(
                                                 sessionTopic = sessionRequest.topic,
                                                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)
