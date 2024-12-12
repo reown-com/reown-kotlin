@@ -25,7 +25,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.web3j.utils.Numeric
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 data class TxSuccess(
     val redirect: Uri?,
@@ -47,6 +49,25 @@ class ChainAbstractionViewModel : ViewModel() {
             Firebase.crashlytics.recordException(e)
             "-.--"
         }
+    }
+
+    fun calculateBridgeFee(): String {
+        var totalFee: BigDecimal = BigDecimal.ZERO
+        WCDelegate.transactionsDetails?.bridgeDetails?.forEach {
+            val fee = Transaction.hexToTokenAmount(it.localFee.amount, it.localFee.unit.toInt())
+            totalFee = totalFee.plus(fee!!)
+        }
+
+        return "$${totalFee.setScale(2, RoundingMode.UP).toPlainString()}"
+    }
+
+    fun getTransferAmount(): String {
+        return "${
+            Transaction.hexToTokenAmount(
+                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.amount!!,
+                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.decimals!!
+            )?.toPlainString() ?: "-.--"
+        } ${WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.symbol}"
     }
 
     fun approve(onSuccess: (TxSuccess) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
@@ -119,6 +140,8 @@ class ChainAbstractionViewModel : ViewModel() {
                                             val signedTx = Transaction.sign(this, nonceResult, BigInteger.valueOf(50000))
 
                                             val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
+                                            val receipt = Transaction.getReceipt(chainId, resultTx)
+                                            println("kobe: Original TX receipt: $receipt")
                                             val response = Wallet.Params.SessionRequestResponse(
                                                 sessionTopic = sessionRequest.topic,
                                                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)

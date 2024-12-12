@@ -4,6 +4,7 @@ import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.blockchain.JsonRpcRequest
 import com.reown.sample.wallet.blockchain.createBlockChainApiService
 import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
@@ -65,9 +66,19 @@ object Transaction {
         )
     }
 
+    @OptIn(ChainAbstractionExperimentalApi::class)
     fun sign(transaction: Wallet.Model.Transaction, nonce: BigInteger? = null, gasLimit: BigInteger? = null): String {
         val fees = WalletKit.estimateFees(transaction.chainId)
         val chainId = transaction.chainId.split(":")[1].toLong()
+        if (transaction.nonce.startsWith("0x")) {
+            transaction.nonce = hexToBigDecimal(transaction.nonce)?.toBigInteger().toString()
+        }
+        if (transaction.gas.startsWith("0x")) {
+            transaction.gas = hexToBigDecimal(transaction.gas)?.toBigInteger().toString()
+        }
+        if (transaction.value.startsWith("0x")) {
+            transaction.value = hexToBigDecimal(transaction.value)?.toBigInteger().toString()
+        }
 
         println("kobe: fees: $fees")
 
@@ -170,7 +181,7 @@ object Transaction {
         }
     }
 
-    private fun hexToBigDecimal(input: String): BigDecimal? {
+    fun hexToBigDecimal(input: String): BigDecimal? {
         val trimmedInput = input.trim()
         var hex = trimmedInput
         return if (hex.isEmpty()) {

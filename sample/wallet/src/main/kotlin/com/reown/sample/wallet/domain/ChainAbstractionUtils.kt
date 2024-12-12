@@ -9,6 +9,7 @@ import com.reown.sample.wallet.domain.WCDelegate.scope
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.kethereum.model.ChainId
 import kotlin.coroutines.resume
@@ -74,6 +75,7 @@ suspend fun getTransactionsDetails(): Result<Wallet.Model.RouteUiFields> =
             WalletKit.getTransactionDetails(
                 WCDelegate.fulfilmentAvailable!!,
                 WCDelegate.initialTransaction!!,
+                Wallet.Model.Currency.EUR,
                 onSuccess = {
                     println("kobe: Transaction details SUCCESS: $it")
                     continuation.resume(Result.success(it))
@@ -125,15 +127,17 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
         WCDelegate.fulfilmentAvailable = fulfilment
 
-//        scope.launch {
-//            async { getTransactionsDetails() }.await().fold(
-//                onSuccess = { WCDelegate.transactionsDetails = it },
-//                onFailure = { error -> println("kobe: Failed getting tx details: $error") }
-//            )
-//        }
         scope.launch {
+            async { getTransactionsDetails() }.await().fold(
+                onSuccess = { WCDelegate.transactionsDetails = it },
+                onFailure = { error -> println("kobe: Failed getting tx details: $error") }
+            )
+
             _walletEvents.emit(fulfilment)
         }
+//        scope.launch {
+//            _walletEvents.emit(fulfilment)
+//        }
     }
 }
 

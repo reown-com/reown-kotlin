@@ -232,7 +232,7 @@ fun ErrorDialog(
                     )
                     Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "10.00 USDC", //todo: how much is transaction
+                            text = chainAbstractionViewModel.getTransferAmount(),
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -355,7 +355,7 @@ fun SuccessDialog(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 modifier = Modifier.padding(8.dp),
-                text = "You successfully send USDC!", //todo: get tx symbol
+                text = "You successfully send ${WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.symbol ?: ""}",
                 style = TextStyle(
                     fontSize = 16.sp,
                     lineHeight = 18.sp,
@@ -393,7 +393,7 @@ fun SuccessDialog(
                     )
                     Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "2.00 USDC", //todo: how much is transaction
+                            text = chainAbstractionViewModel.getTransferAmount(),
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -604,9 +604,8 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                         color = Color(0xFF9A9A9A),
                     )
                 )
-                //todo: how much is transaction, decode erc20
                 Text(
-                    text = "2.00 USDC",
+                    text = viewModel.getTransferAmount(),
                     style = TextStyle(
                         fontSize = 16.sp,
                         lineHeight = 18.sp,
@@ -801,7 +800,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "$0.07",//WCDelegate.transactionsDetails?.localTotal?.formattedAlt ?: "-.--",
+                            text = "${WCDelegate.transactionsDetails?.localTotal?.formattedAlt} ${WCDelegate.transactionsDetails?.localTotal?.symbol}",
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -810,6 +809,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                     }
+
                     Row(
                         modifier = Modifier.padding(start = 18.dp, top = 8.dp, end = 18.dp, bottom = 8.dp).fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -825,7 +825,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "$0.02",
+                            text = viewModel.calculateBridgeFee(),
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 lineHeight = 16.sp,
@@ -850,7 +850,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "$0.05",//WCDelegate.transactionsDetails?.initialDetails?.transactionFee?.localFee?.formattedAlt ?: "-.--",
+                            text = "${WCDelegate.transactionsDetails?.initialDetails?.transactionFee?.localFee?.formattedAlt} ${WCDelegate.transactionsDetails?.initialDetails?.transactionFee?.localFee?.symbol}",
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 lineHeight = 16.sp,

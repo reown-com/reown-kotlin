@@ -101,6 +101,15 @@ object Wallet {
             var decimals: Int
         ) : Model()
 
+        data class InitialTransactionMetadata(
+            var symbol: String,
+            var amount: String,
+            var decimals: Int,
+            var tokenContract: String,
+            var transferTo: String
+        ) : Model()
+
+
         data class EstimatedFees(
             val maxFeePerGas: String,
             val maxPriorityFeePerGas: String
@@ -112,10 +121,23 @@ object Wallet {
                 val checkIn: Long,
                 val transactions: List<Transaction>,
                 val initialTransaction: Transaction,
+                val initialTransactionMetadata: InitialTransactionMetadata,
                 val funding: List<FundingMetadata>
             ) : FulfilmentSuccess()
 
             data class NotRequired(val initialTransaction: Transaction) : FulfilmentSuccess()
+        }
+
+        enum class Currency {
+            USD,
+            EUR,
+            GBP,
+            AUD,
+            CAD,
+            INR,
+            JPY,
+            BTC,
+            ETH;
         }
 
         data class Amount(
@@ -140,6 +162,7 @@ object Wallet {
         data class RouteUiFields(
             var routeDetails: List<TxnDetails>,
             var initialDetails: TxnDetails,
+            var bridgeDetails: List<TransactionFee>,
             var localTotal: Amount
         ) : Model()
 

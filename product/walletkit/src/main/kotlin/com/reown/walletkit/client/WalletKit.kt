@@ -376,11 +376,12 @@ object WalletKit {
     fun getTransactionDetails(
         available: Wallet.Model.FulfilmentSuccess.Available,
         initTransaction: Wallet.Model.Transaction,
+        currency: Wallet.Model.Currency,
         onSuccess: (Wallet.Model.RouteUiFields) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
     ) {
         try {
-            getTransactionDetailsUseCase(available, initTransaction, onSuccess, onError)
+            getTransactionDetailsUseCase(available, initTransaction, currency, onSuccess, onError)
         } catch (e: Exception) {
             onError(Wallet.Model.Error(e))
         }
