@@ -16,9 +16,6 @@ import uniffi.yttrium.Transaction as CATransaction
 import uniffi.yttrium.RouteResponseAvailable
 import uniffi.yttrium.TransactionFee
 
-//import uniffi.yttrium.RouteUiFields
-//import uniffi.yttrium.TxnDetails
-
 @JvmSynthetic
 internal fun Map<String, Wallet.Model.Namespace.Session>.toSign(): Map<String, Sign.Model.Namespace.Session> =
     mapValues { (_, namespace) ->
