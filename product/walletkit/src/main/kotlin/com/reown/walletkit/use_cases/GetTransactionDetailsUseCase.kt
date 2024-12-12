@@ -15,7 +15,7 @@ class GetTransactionDetailsUseCase(private val chainAbstractionClient: ChainAbst
         available: Wallet.Model.FulfilmentSuccess.Available,
         initTransaction: Wallet.Model.Transaction,
         currency: Wallet.Model.Currency,
-        onSuccess: (Wallet.Model.RouteUiFields) -> Unit,
+        onSuccess: (Wallet.Model.FulfilmentDetails) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
     ) {
         scope.launch {

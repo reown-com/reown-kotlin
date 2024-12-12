@@ -397,7 +397,7 @@ private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Mo
 internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.Model.EstimatedFees(maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas)
 
 @JvmSynthetic
-internal fun RouteUiFields.toWallet(): Wallet.Model.RouteUiFields = Wallet.Model.RouteUiFields(
+internal fun RouteUiFields.toWallet(): Wallet.Model.FulfilmentDetails = Wallet.Model.FulfilmentDetails(
     localTotal = Wallet.Model.Amount(
         symbol = localTotal.symbol,
         amount = localTotal.amount,
@@ -410,7 +410,7 @@ internal fun RouteUiFields.toWallet(): Wallet.Model.RouteUiFields = Wallet.Model
     bridgeDetails = bridge.map { it.toWallet() }
 )
 
-private fun TxnDetails.toWallet(): Wallet.Model.TxnDetails = Wallet.Model.TxnDetails(
+private fun TxnDetails.toWallet(): Wallet.Model.TransactionDetails = Wallet.Model.TransactionDetails(
     transaction = transaction.toWallet(),
     eip1559 = Wallet.Model.EstimatedFees(maxFeePerGas = estimate.maxFeePerGas, maxPriorityFeePerGas = estimate.maxPriorityFeePerGas),
     transactionFee = fee.toWallet()

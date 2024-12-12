@@ -800,7 +800,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "${WCDelegate.transactionsDetails?.localTotal?.formattedAlt} ${WCDelegate.transactionsDetails?.localTotal?.symbol}",
+                            text = "${WCDelegate.fulfilmentDetails?.localTotal?.formattedAlt} ${WCDelegate.fulfilmentDetails?.localTotal?.symbol}",
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -850,7 +850,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "${WCDelegate.transactionsDetails?.initialDetails?.transactionFee?.localFee?.formattedAlt} ${WCDelegate.transactionsDetails?.initialDetails?.transactionFee?.localFee?.symbol}",
+                            text = "${WCDelegate.fulfilmentDetails?.initialDetails?.transactionFee?.localFee?.formattedAlt} ${WCDelegate.fulfilmentDetails?.initialDetails?.transactionFee?.localFee?.symbol}",
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 lineHeight = 16.sp,

@@ -53,7 +53,7 @@ class ChainAbstractionViewModel : ViewModel() {
 
     fun calculateBridgeFee(): String {
         var totalFee: BigDecimal = BigDecimal.ZERO
-        WCDelegate.transactionsDetails?.bridgeDetails?.forEach {
+        WCDelegate.fulfilmentDetails?.bridgeDetails?.forEach {
             val fee = Transaction.hexToTokenAmount(it.localFee.amount, it.localFee.unit.toInt())
             totalFee = totalFee.plus(fee!!)
         }

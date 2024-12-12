@@ -16,7 +16,6 @@ import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import kotlinx.coroutines.*
-import org.jetbrains.annotations.ApiStatus.Experimental
 import java.util.*
 
 object WalletKit {
@@ -373,11 +372,11 @@ object WalletKit {
     }
 
     @ChainAbstractionExperimentalApi
-    fun getTransactionDetails(
+    fun getFulfilmentDetails(
         available: Wallet.Model.FulfilmentSuccess.Available,
         initTransaction: Wallet.Model.Transaction,
         currency: Wallet.Model.Currency,
-        onSuccess: (Wallet.Model.RouteUiFields) -> Unit,
+        onSuccess: (Wallet.Model.FulfilmentDetails) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
     ) {
         try {

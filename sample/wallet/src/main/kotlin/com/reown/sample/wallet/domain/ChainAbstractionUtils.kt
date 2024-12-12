@@ -11,7 +11,6 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import org.kethereum.model.ChainId
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -69,10 +68,10 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
     }
 }
 
-suspend fun getTransactionsDetails(): Result<Wallet.Model.RouteUiFields> =
+suspend fun getTransactionsDetails(): Result<Wallet.Model.FulfilmentDetails> =
     suspendCoroutine { continuation ->
         try {
-            WalletKit.getTransactionDetails(
+            WalletKit.getFulfilmentDetails(
                 WCDelegate.fulfilmentAvailable!!,
                 WCDelegate.initialTransaction!!,
                 Wallet.Model.Currency.EUR,
@@ -129,7 +128,7 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
 
         scope.launch {
             async { getTransactionsDetails() }.await().fold(
-                onSuccess = { WCDelegate.transactionsDetails = it },
+                onSuccess = { WCDelegate.fulfilmentDetails = it },
                 onFailure = { error -> println("kobe: Failed getting tx details: $error") }
             )
 

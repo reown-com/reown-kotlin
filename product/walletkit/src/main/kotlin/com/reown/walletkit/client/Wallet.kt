@@ -153,15 +153,15 @@ object Wallet {
             var localFee: Amount
         ) : Model()
 
-        data class TxnDetails(
+        data class TransactionDetails(
             var transaction: Transaction,
             var eip1559: EstimatedFees,
             var transactionFee: TransactionFee
         ) : Model()
 
-        data class RouteUiFields(
-            var routeDetails: List<TxnDetails>,
-            var initialDetails: TxnDetails,
+        data class FulfilmentDetails(
+            var routeDetails: List<TransactionDetails>,
+            var initialDetails: TransactionDetails,
             var bridgeDetails: List<TransactionFee>,
             var localTotal: Amount
         ) : Model()
