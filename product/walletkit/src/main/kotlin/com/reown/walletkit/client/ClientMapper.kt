@@ -422,10 +422,10 @@ private fun TransactionFee.toWallet() = Wallet.Model.TransactionFee(
         formatted = fee.formatted
     ),
     localFee = Wallet.Model.Amount(
-        symbol = fee.symbol,
-        amount = fee.amount,
-        unit = fee.unit.toString(),
-        formattedAlt = fee.formattedAlt,
-        formatted = fee.formatted
+        symbol = localFee.symbol,
+        amount = localFee.amount,
+        unit = localFee.unit.toString(),
+        formattedAlt = localFee.formattedAlt,
+        formatted = localFee.formatted
     )
 )
