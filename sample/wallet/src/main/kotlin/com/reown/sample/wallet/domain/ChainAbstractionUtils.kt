@@ -14,10 +14,10 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, originalTransaction: Wallet.Model.Transaction, verifyContext: Wallet.Model.VerifyContext) {
+fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wallet.Model.Transaction, verifyContext: Wallet.Model.VerifyContext) {
     try {
-        WalletKit.canFulfil(
-            originalTransaction,
+        WalletKit.prepareFulfillment(
+            initialTransaction,
             onSuccess = { result ->
                 when (result) {
                     is Wallet.Model.FulfilmentSuccess.Available -> {

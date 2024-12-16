@@ -160,7 +160,7 @@ object Wallet {
         ) : Model()
 
         data class FulfilmentDetails(
-            var routeDetails: List<TransactionDetails>,
+            var fulfilmentDetails: List<TransactionDetails>,
             var initialDetails: TransactionDetails,
             var bridgeDetails: List<TransactionFee>,
             var localTotal: Amount

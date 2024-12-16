@@ -341,7 +341,11 @@ object WalletKit {
 
     //Chain Abstraction
     @ChainAbstractionExperimentalApi
-    fun canFulfil(transaction: Wallet.Model.Transaction, onSuccess: (Wallet.Model.FulfilmentSuccess) -> Unit, onError: (Wallet.Model.FulfilmentError) -> Unit) {
+    fun prepareFulfillment(
+        transaction: Wallet.Model.Transaction,
+        onSuccess: (Wallet.Model.FulfilmentSuccess) -> Unit,
+        onError: (Wallet.Model.FulfilmentError) -> Unit
+    ) {
         try {
             canFulfilUseCase(transaction, onSuccess, onError)
         } catch (e: Exception) {
@@ -350,7 +354,12 @@ object WalletKit {
     }
 
     @ChainAbstractionExperimentalApi
-    fun fulfillmentStatus(fulfilmentId: String, checkIn: Long, onSuccess: (Wallet.Model.FulfilmentStatus.Completed) -> Unit, onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit) {
+    fun fulfillmentStatus(
+        fulfilmentId: String,
+        checkIn: Long,
+        onSuccess: (Wallet.Model.FulfilmentStatus.Completed) -> Unit,
+        onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit
+    ) {
         try {
             fulfilmentStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
         } catch (e: Exception) {

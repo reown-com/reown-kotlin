@@ -403,7 +403,7 @@ internal fun RouteUiFields.toWallet(): Wallet.Model.FulfilmentDetails = Wallet.M
         formatted = localTotal.formatted
     ),
     initialDetails = initial.toWallet(),
-    routeDetails = route.map { it.toWallet() },
+    fulfilmentDetails = route.map { it.toWallet() },
     bridgeDetails = bridge.map { it.toWallet() }
 )
 
