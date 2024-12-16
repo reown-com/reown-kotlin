@@ -75,4 +75,19 @@ dependencies {
 
     releaseImplementation("com.reown:android-core:$CORE_VERSION")
     releaseImplementation("com.reown:sign:$SIGN_VERSION")
+
+    testImplementation(libs.bundles.androidxTest)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.json)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.bundles.scarlet.test)
+    testImplementation(libs.bundles.sqlDelight.test)
+    testImplementation(libs.koin.test)
+
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.coroutines.test)
+    androidTestImplementation(libs.core)
+
+    androidTestUtil(libs.androidx.testOrchestrator)
+    androidTestImplementation(libs.bundles.androidxAndroidTest)
 }
