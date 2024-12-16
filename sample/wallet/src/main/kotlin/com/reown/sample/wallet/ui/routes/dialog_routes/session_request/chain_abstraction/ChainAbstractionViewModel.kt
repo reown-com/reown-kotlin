@@ -135,11 +135,11 @@ class ChainAbstractionViewModel : ViewModel() {
                                 is Wallet.Model.FulfilmentStatus.Completed -> {
                                     println("kobe: Fulfilment completed")
                                     //if status completed, execute init tx
-                                    with(WCDelegate.initialTransaction!!) {
+                                    with(WCDelegate.fulfilmentAvailable!!.initialTransaction) {
                                         try {
                                             val nonceResult = Transaction.getNonce(chainId, from)
                                             println("kobe: Original TX")
-                                            val signedTx = Transaction.sign(this, nonceResult, BigInteger.valueOf(50000))
+                                            val signedTx = Transaction.sign(this, nonceResult)
 
                                             val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
                                             val receipt = Transaction.getReceipt(chainId, resultTx)

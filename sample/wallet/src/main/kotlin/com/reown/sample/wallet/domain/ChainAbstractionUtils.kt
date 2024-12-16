@@ -73,7 +73,7 @@ suspend fun getTransactionsDetails(): Result<Wallet.Model.FulfilmentDetails> =
         try {
             WalletKit.getFulfilmentDetails(
                 WCDelegate.fulfilmentAvailable!!,
-                WCDelegate.initialTransaction!!,
+                WCDelegate.fulfilmentAvailable!!.initialTransaction,
                 onSuccess = {
                     println("kobe: Transaction details SUCCESS: $it")
                     continuation.resume(Result.success(it))

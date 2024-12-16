@@ -73,6 +73,10 @@ object Transaction {
         if (transaction.nonce.startsWith("0x")) {
             transaction.nonce = hexToBigDecimal(transaction.nonce)?.toBigInteger().toString()
         }
+
+        println("kobe: GAS1: ${transaction.gas}")
+        println("kobe: GAS2: ${hexToBigDecimal(transaction.gas)}")
+
         if (transaction.gas.startsWith("0x")) {
             transaction.gas = hexToBigDecimal(transaction.gas)?.toBigInteger().toString()
         }

@@ -242,7 +242,7 @@ fun ErrorDialog(
                         )
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
                             Text(
-                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.initialTransaction!!.chainId)}",
+                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.fulfilmentAvailable!!.initialTransaction.chainId)}",
                                 style = TextStyle(
                                     fontSize = 12.sp,
                                     lineHeight = 14.sp,
@@ -253,7 +253,7 @@ fun ErrorDialog(
                             Spacer(modifier = Modifier.width(6.dp))
                             Image(
                                 modifier = Modifier.size(12.dp).clip(CircleShape),
-                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.initialTransaction!!.chainId)),
+                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.fulfilmentAvailable!!.initialTransaction.chainId)),
                                 contentDescription = "image description"
                             )
                         }
@@ -403,7 +403,7 @@ fun SuccessDialog(
                         )
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
                             Text(
-                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.initialTransaction!!.chainId)}",
+                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.fulfilmentAvailable!!.initialTransaction.chainId)}",
                                 style = TextStyle(
                                     fontSize = 12.sp,
                                     lineHeight = 14.sp,
@@ -414,7 +414,7 @@ fun SuccessDialog(
                             Spacer(modifier = Modifier.width(6.dp))
                             Image(
                                 modifier = Modifier.size(12.dp).clip(CircleShape),
-                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.initialTransaction!!.chainId)),
+                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.fulfilmentAvailable!!.initialTransaction.chainId)),
                                 contentDescription = "image description"
                             )
                         }
@@ -639,7 +639,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                     ) {
                         Image(
                             modifier = Modifier.size(24.dp).clip(CircleShape),
-                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.initialTransaction!!.chainId)),
+                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.fulfilmentAvailable!!.initialTransaction.chainId)),
                             contentDescription = "Network"
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -770,12 +770,12 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                     ) {
                         Image(
                             modifier = Modifier.size(18.dp).clip(CircleShape),
-                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.initialTransaction!!.chainId)),
+                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.fulfilmentAvailable!!.initialTransaction.chainId)),
                             contentDescription = "Network",
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = NetworkUtils.getNameByChainId(WCDelegate.initialTransaction!!.chainId),
+                            text = NetworkUtils.getNameByChainId(WCDelegate.fulfilmentAvailable!!.initialTransaction.chainId),
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
