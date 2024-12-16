@@ -11,7 +11,6 @@ import uniffi.yttrium.BridgingError
 import uniffi.yttrium.RouteResponse
 import uniffi.yttrium.RouteResponseSuccess
 
-//todo: test me
 class PrepareFulfilmentUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
         transaction: Wallet.Model.Transaction,
@@ -20,19 +19,10 @@ class PrepareFulfilmentUseCase(private val chainAbstractionClient: ChainAbstract
     ) {
         scope.launch {
             try {
-                val result = async {
-                    try {
-                        println("kobe: calling route")
-                        chainAbstractionClient.route(transaction.toYttrium())
-                    } catch (e: Exception) {
-                        println("kobe: catch error: $e")
-                        onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
-                    }
-                }.await()
+                val result = async { chainAbstractionClient.route(transaction.toYttrium()) }.await()
 
                 when (result) {
                     is RouteResponse.Success -> {
-                        println("kobe: success")
                         when (result.v1) {
                             is RouteResponseSuccess.Available ->
                                 onSuccess((result.v1 as RouteResponseSuccess.Available).v1.toWallet())
@@ -43,7 +33,6 @@ class PrepareFulfilmentUseCase(private val chainAbstractionClient: ChainAbstract
                     }
 
                     is RouteResponse.Error -> {
-                        println("kobe: route error")
                         when (result.v1.error) {
                             BridgingError.NO_ROUTES_AVAILABLE -> onError(Wallet.Model.FulfilmentError.NoRoutesAvailable)
                             BridgingError.INSUFFICIENT_FUNDS -> onError(Wallet.Model.FulfilmentError.InsufficientFunds)
@@ -52,10 +41,8 @@ class PrepareFulfilmentUseCase(private val chainAbstractionClient: ChainAbstract
                     }
                 }
             } catch (e: Exception) {
-                println("kobe: catch 2 error")
                 onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
             }
         }
-
     }
 }

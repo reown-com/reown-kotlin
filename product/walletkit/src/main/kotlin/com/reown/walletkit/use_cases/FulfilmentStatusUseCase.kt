@@ -9,7 +9,6 @@ import kotlinx.coroutines.withTimeout
 import uniffi.uniffi_yttrium.ChainAbstractionClient
 import uniffi.yttrium.StatusResponse
 
-//todo: test me
 class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
         fulfilmentId: String,
@@ -19,7 +18,6 @@ class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstracti
     ) {
         scope.launch {
             withTimeout(FULFILMENT_TIMEOUT) {
-                println("kobe: start checkin: $checkIn")
                 delay(checkIn)
 
                 while (true) {

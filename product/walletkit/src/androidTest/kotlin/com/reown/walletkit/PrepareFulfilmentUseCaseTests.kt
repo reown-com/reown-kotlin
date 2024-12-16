@@ -146,7 +146,6 @@ class PrepareFulfilmentUseCaseTest {
             }
         }.await()
 
-        // Then
         assertTrue(result is Wallet.Model.FulfilmentError.Unknown)
     }
 
@@ -158,10 +157,10 @@ class PrepareFulfilmentUseCaseTest {
             data = "data",
             nonce = "nonce",
             gas = "gas",
-            gasPrice = "0", //todo: will be removed
+            gasPrice = "0",
             chainId = "1",
-            maxPriorityFeePerGas = "0", //todo: will be removed
-            maxFeePerGas = "0" //todo: will be removed
+            maxPriorityFeePerGas = "0",
+            maxFeePerGas = "0"
         )
     }
 }

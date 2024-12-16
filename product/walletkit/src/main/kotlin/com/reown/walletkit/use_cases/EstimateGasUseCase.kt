@@ -5,7 +5,6 @@ import com.reown.walletkit.client.toWallet
 import kotlinx.coroutines.runBlocking
 import uniffi.uniffi_yttrium.ChainAbstractionClient
 
-//todo: test me
 class EstimateGasUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(chainId: String): Wallet.Model.EstimatedFees {
         return runBlocking { chainAbstractionClient.estimateFees(chainId).toWallet() }
