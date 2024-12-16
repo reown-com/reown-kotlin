@@ -12,7 +12,7 @@ import uniffi.yttrium.RouteResponse
 import uniffi.yttrium.RouteResponseSuccess
 
 //todo: test me
-class CanFulfilUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
+class PrepareFulfilmentUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
         transaction: Wallet.Model.Transaction,
         onSuccess: (Wallet.Model.FulfilmentSuccess) -> Unit,

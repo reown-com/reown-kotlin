@@ -10,7 +10,7 @@ import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
 import com.reown.walletkit.di.walletKitModule
 import com.reown.walletkit.smart_account.Account
 import com.reown.walletkit.smart_account.SafeInteractor
-import com.reown.walletkit.use_cases.CanFulfilUseCase
+import com.reown.walletkit.use_cases.PrepareFulfilmentUseCase
 import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
@@ -21,7 +21,7 @@ import java.util.*
 object WalletKit {
     private lateinit var coreClient: CoreInterface
     private lateinit var safeInteractor: SafeInteractor
-    private val canFulfilUseCase: CanFulfilUseCase by wcKoinApp.koin.inject()
+    private val prepareFulfilmentUseCase: PrepareFulfilmentUseCase by wcKoinApp.koin.inject()
     private val fulfilmentStatusUseCase: FulfilmentStatusUseCase by wcKoinApp.koin.inject()
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
     private val getTransactionDetailsUseCase: GetTransactionDetailsUseCase by wcKoinApp.koin.inject()
@@ -347,7 +347,7 @@ object WalletKit {
         onError: (Wallet.Model.FulfilmentError) -> Unit
     ) {
         try {
-            canFulfilUseCase(transaction, onSuccess, onError)
+            prepareFulfilmentUseCase(transaction, onSuccess, onError)
         } catch (e: Exception) {
             onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
         }
