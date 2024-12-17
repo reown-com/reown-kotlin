@@ -74,9 +74,6 @@ object Transaction {
             transaction.nonce = hexToBigDecimal(transaction.nonce)?.toBigInteger().toString()
         }
 
-        println("kobe: GAS1: ${transaction.gas}")
-        println("kobe: GAS2: ${hexToBigDecimal(transaction.gas)}")
-
         if (transaction.gas.startsWith("0x")) {
             transaction.gas = hexToBigDecimal(transaction.gas)?.toBigInteger().toString()
         }
@@ -84,16 +81,14 @@ object Transaction {
             transaction.value = hexToBigDecimal(transaction.value)?.toBigInteger().toString()
         }
 
-        println("kobe: fees: $fees")
-
-        println("kobe: chainId: $chainId")
-        println("kobe: nonce: ${nonce ?: transaction.nonce.toBigInteger()}")
-        println("kobe: gas: ${gasLimit ?: transaction.gas.toBigInteger()}")
-
-        println("kobe: value: ${transaction.value}")
-        println("kobe: maxFeePerGas: ${fees.maxFeePerGas.toBigInteger()}")
-        println("kobe: maxPriorityFeePerGas: ${fees.maxPriorityFeePerGas.toBigInteger()}")
-        println("kobe: //////////////////////////////////////")
+        println("fees: $fees")
+        println("chainId: $chainId")
+        println("nonce: ${nonce ?: transaction.nonce.toBigInteger()}")
+        println("gas: ${gasLimit ?: transaction.gas.toBigInteger()}")
+        println("value: ${transaction.value}")
+        println("maxFeePerGas: ${fees.maxFeePerGas.toBigInteger()}")
+        println("maxPriorityFeePerGas: ${fees.maxPriorityFeePerGas.toBigInteger()}")
+        println("//////////////////////////////////////")
 
         val rawTransaction = RawTransaction.createTransaction(
             chainId,
@@ -177,7 +172,7 @@ object Transaction {
                     receipt.error != null -> throw Exception("Getting tx receipt failed: ${receipt.error.message}")
                     receipt.result == null -> delay(3000)
                     else -> {
-                        println("kobe: receipt: $receipt")
+                        println("receipt: $receipt")
                         break
                     }
                 }

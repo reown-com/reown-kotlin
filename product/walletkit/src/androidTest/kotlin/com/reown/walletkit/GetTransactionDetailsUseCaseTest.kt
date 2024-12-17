@@ -3,13 +3,12 @@ package com.reown.walletkit
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.toWallet
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import io.mockk.*
-import junit.framework.TestCase.assertEquals
+import io.mockk.coEvery
+import io.mockk.mockk
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertThrows
 import org.junit.Test
 import uniffi.uniffi_yttrium.ChainAbstractionClient
 import uniffi.uniffi_yttrium.Eip1559Estimation
@@ -85,11 +84,11 @@ class GetTransactionDetailsUseCaseTest {
 //                    available,
 //                    initTransaction,
 //                    onSuccess = {
-//                        println("kobe: success: $it")
+//                        println("success: $it")
 //                        continuation.resumeWith(Result.success(false))
 //                    },
 //                    onError = {
-//                        println("kobe: test1  error: $it")
+//                        println("test1  error: $it")
 //                        errorCaptured = true
 //                        continuation.resume(it.throwable)
 //
@@ -99,8 +98,8 @@ class GetTransactionDetailsUseCaseTest {
 //            }
 //        }.await()
 //
-//        println("kobe: result: $result")
-//        println("kobe: errorCaptured: $errorCaptured")
+//        println("result: $result")
+//        println("errorCaptured: $errorCaptured")
 //        assertEquals(errorCaptured, true)
 //    }
 

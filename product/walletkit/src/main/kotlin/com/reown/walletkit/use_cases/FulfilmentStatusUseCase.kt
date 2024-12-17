@@ -22,30 +22,23 @@ class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstracti
 
                 while (true) {
                     try {
-                        println("kobe: fulfilmentId: $fulfilmentId")
                         val result = async { chainAbstractionClient.status(fulfilmentId) }.await()
-
-                        println("kobe: WK Status result: $result")
                         when (result) {
                             is StatusResponse.Completed -> {
-                                println("kobe: success: completed")
                                 onSuccess(Wallet.Model.FulfilmentStatus.Completed(result.v1.createdAt.toLong()))
                                 break
                             }
 
                             is StatusResponse.Error -> {
-                                println("kobe: success: error: ${result.v1.error}")
                                 onError(Wallet.Model.FulfilmentStatus.Error(result.v1.error))
                                 break
                             }
 
                             is StatusResponse.Pending -> {
-                                println("kobe: success: pending: ${result.v1.checkIn.toLong()}")
                                 delay(result.v1.checkIn.toLong())
                             }
                         }
                     } catch (e: Exception) {
-                        println("kobe: Catch status WK: $e")
                         onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
                         break
                     }

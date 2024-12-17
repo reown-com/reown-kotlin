@@ -5,6 +5,7 @@ import com.google.firebase.ktx.Firebase
 import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.recordError
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.walletkit.client.Wallet
@@ -58,8 +59,8 @@ val smartAccountWalletMetadata =
                         try {
                             WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)))
                         } catch (e: Exception) {
-                            Firebase.crashlytics.recordException(e)
-                            println("kobe: Getting SA account error: ${e.message}")
+                            println("Getting SA account error: ${e.message}")
+                            recordError(e)
                             ""
                         }
                     }"

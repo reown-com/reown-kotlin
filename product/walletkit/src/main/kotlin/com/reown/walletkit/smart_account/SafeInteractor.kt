@@ -35,7 +35,7 @@ class SafeInteractor(private val pimlicoApiKey: String) {
             ownerAddress = account.address,
             chainId = account.reference.toULong(),
             config = config,
-            privateKey = "ff89825a799afce0d5deaa079cdde227072ec3f62973951683ac8cc033092156", //todo: remove sign service
+            privateKey = "", //todo: remove sign service
             safe = true,
             signerType = "PrivateKey" //todo: remove sign service
         )

@@ -20,10 +20,8 @@ class GetTransactionDetailsUseCase(private val chainAbstractionClient: ChainAbst
         scope.launch {
             try {
                 val result = async { chainAbstractionClient.getRouteUiFields(available.toYttrium(), initTransaction.toCAYttrium(), Currency.USD) }.await()
-                println("kobe: result: $result")
                 onSuccess(result.toWallet())
             } catch (e: Exception) {
-                println("kobe: ERROR: $e")
                 onError(Wallet.Model.Error(e))
             }
         }

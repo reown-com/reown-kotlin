@@ -9,6 +9,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
 import com.reown.android.CoreClient
 import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.recordError
 import com.reown.walletkit.client.SmartAccountExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
@@ -26,8 +27,8 @@ class SettingsViewModel : ViewModel() {
         val smartAccountAddress = try {
              WalletKit.getSmartAccount(params)
         } catch (e: Exception) {
-            Firebase.crashlytics.recordException(e)
-            println("kobe: Getting SA account error: ${e.message}")
+            println("Getting SA account error: ${e.message}")
+            recordError(e)
             "error"
         }
         return "eip155:11155111:$smartAccountAddress"

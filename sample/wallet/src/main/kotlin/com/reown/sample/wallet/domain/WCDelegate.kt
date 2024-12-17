@@ -79,8 +79,6 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
         }
 
     override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
-        println("kobe: session request: $sessionRequest")
-
         if (sessionRequest.request.method == "eth_sendTransaction") {
             canFulfil(sessionRequest, getTransaction(sessionRequest), verifyContext)
         } else {

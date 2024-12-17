@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
+@OptIn(ChainAbstractionExperimentalApi::class)
 fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wallet.Model.Transaction, verifyContext: Wallet.Model.VerifyContext) {
     try {
         WalletKit.prepareFulfillment(
@@ -21,24 +22,24 @@ fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: W
             onSuccess = { result ->
                 when (result) {
                     is Wallet.Model.FulfilmentSuccess.Available -> {
-                        println("kobe: fulfil success available: $result")
+                        println("Fulfil success available: $result")
                         emitChainAbstractionRequest(sessionRequest, result, verifyContext)
                     }
 
                     is Wallet.Model.FulfilmentSuccess.NotRequired -> {
-                        println("kobe: fulfil success not required: $result")
+                        println("Fulfil success not required: $result")
                         emitSessionRequest(sessionRequest, verifyContext)
                     }
                 }
             },
             onError = { error ->
-                println("kobe: fulfil error: $error")
+                println("Fulfil error: $error")
                 respondWithError(getErrorMessage(), sessionRequest)
                 emitChainAbstractionError(sessionRequest, error, verifyContext)
             }
         )
     } catch (e: Exception) {
-        println("kobe: CanFulfil: Unknown error: $e")
+        println("CanFulfil: Unknown error: $e")
         respondWithError(e.message ?: "CanFulfil: Unknown error", sessionRequest)
         emitChainAbstractionError(sessionRequest, Wallet.Model.FulfilmentError.Unknown(e.message ?: "CanFulfil: Unknown error"), verifyContext)
     }
@@ -56,12 +57,12 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
     try {
         WalletKit.respondSessionRequest(result,
             onSuccess = {
-                println("kobe: Error sent success")
+                println("Error sent success")
                 clearSessionRequest()
             },
             onError = { error ->
-                println("kobe: Error sent error: $error")
-                Firebase.crashlytics.recordException(error.throwable)
+                println("Error sent error: $error")
+                recordError(error.throwable)
             })
     } catch (e: Exception) {
         Firebase.crashlytics.recordException(e)
@@ -75,16 +76,18 @@ suspend fun getTransactionsDetails(): Result<Wallet.Model.FulfilmentDetails> =
                 WCDelegate.fulfilmentAvailable!!,
                 WCDelegate.fulfilmentAvailable!!.initialTransaction,
                 onSuccess = {
-                    println("kobe: Transaction details SUCCESS: $it")
+                    println("Transaction details SUCCESS: $it")
                     continuation.resume(Result.success(it))
                 },
                 onError = {
-                    println("kobe: Transaction details ERROR: $it")
+                    println("Transaction details ERROR: $it")
+                    recordError(Throwable(it.throwable))
                     continuation.resume(Result.failure(it.throwable))
                 }
             )
         } catch (e: Exception) {
-            println("kobe: Transaction details utils: $e")
+            println("Transaction details utils: $e")
+            recordError(e)
             continuation.resume(Result.failure(e))
         }
     }
@@ -96,16 +99,18 @@ suspend fun fulfillmentStatus(): Result<Wallet.Model.FulfilmentStatus> =
                 WCDelegate.fulfilmentAvailable!!.fulfilmentId,
                 WCDelegate.fulfilmentAvailable!!.checkIn,
                 onSuccess = {
-                    println("kobe: Fulfilment status SUCCESS: $it")
+                    println("Fulfilment status SUCCESS: $it")
                     continuation.resume(Result.success(it))
                 },
                 onError = {
-                    println("kobe: Fulfilment status ERROR: $it")
+                    println("Fulfilment status ERROR: $it")
+                    recordError(Throwable(it.reason))
                     continuation.resume(Result.failure(Exception(it.reason)))
                 }
             )
         } catch (e: Exception) {
-            println("kobe: Catch status utils: $e")
+            println("Catch status utils: $e")
+            recordError(e)
             continuation.resume(Result.failure(e))
         }
     }
@@ -128,7 +133,7 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
         scope.launch {
             async { getTransactionsDetails() }.await().fold(
                 onSuccess = { WCDelegate.fulfilmentDetails = it },
-                onFailure = { error -> println("kobe: Failed getting tx details: $error") }
+                onFailure = { error -> println("Failed getting tx details: $error") }
             )
 
             _walletEvents.emit(fulfilment)
@@ -140,6 +145,7 @@ fun emitChainAbstractionError(sessionRequest: Wallet.Model.SessionRequest, fulfi
     if (WCDelegate.currentId != sessionRequest.request.id) {
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
         WCDelegate.fulfilmentError = fulfilmentError
+        recordError(Throwable(getErrorMessage()))
 
         scope.launch {
             _walletEvents.emit(fulfilmentError)
@@ -170,4 +176,9 @@ fun clearSessionRequest() {
     WCDelegate.sessionRequestEvent = null
     WCDelegate.currentId = null
 //        sessionRequestUI = SessionRequestUI.Initial
+}
+
+fun recordError(throwable: Throwable) {
+    mixPanel.track("error: $throwable; errorMessage: ${throwable.message}")
+    Firebase.crashlytics.recordException(throwable)
 }

@@ -14,6 +14,7 @@ import com.reown.sample.wallet.domain.clearSessionRequest
 import com.reown.sample.wallet.domain.fulfillmentStatus
 import com.reown.sample.wallet.domain.getUSDCContractAddress
 import com.reown.sample.wallet.domain.model.Transaction
+import com.reown.sample.wallet.domain.recordError
 import com.reown.sample.wallet.domain.respondWithError
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
@@ -47,8 +48,8 @@ class ChainAbstractionViewModel : ViewModel() {
         return try {
             WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, EthAccountDelegate.account ?: "")
         } catch (e: Exception) {
-            println("kobe: getERC20Balance error: $e")
-            Firebase.crashlytics.recordException(e)
+            println("getERC20Balance error: $e")
+            recordError(e)
             "-.--"
         }
     }
@@ -84,17 +85,17 @@ class ChainAbstractionViewModel : ViewModel() {
                     signedTransactions.add(Pair(transaction.chainId, signedTransaction))
                 }
 
-
                 //execute fulfilment txs
                 signedTransactions.forEach { (chainId, signedTx) ->
                     viewModelScope.launch {
                         try {
-                            println("kobe: send raw: $signedTx")
+                            println("Send raw: $signedTx")
                             val txHash = Transaction.sendRaw(chainId, signedTx, "Route")
-                            println("kobe: receive hash: $txHash")
+                            println("Receive hash: $txHash")
                             txHashesChannel.send(Pair(chainId, txHash))
                         } catch (e: Exception) {
-                            println("kobe: route broadcast tx error: $e")
+                            println("Route broadcast tx error: $e")
+                            recordError(e)
                             respondWithError(e.message ?: "Route TX broadcast error", WCDelegate.sessionRequestEvent!!.first)
                             return@launch onError(e)
                         }
@@ -105,45 +106,42 @@ class ChainAbstractionViewModel : ViewModel() {
                 viewModelScope.launch {
                     repeat(signedTransactions.size) {
                         val (chainId, txHash) = txHashesChannel.receive()
-                        println("kobe: receive tx hash: $txHash")
+                        println("Receive tx hash: $txHash")
 
                         try {
                             Transaction.getReceipt(chainId, txHash)
                         } catch (e: Exception) {
-                            println("kobe: route execution tx error: $e")
+                            println("Route execution tx error: $e")
+                            recordError(e)
                             respondWithError(e.message ?: "Route TX execution error", WCDelegate.sessionRequestEvent!!.first)
                             return@launch onError(e)
                         }
                     }
-                    println("kobe: close channel")
                     txHashesChannel.close()
 
 
                     //check fulfilment status
-                    println("kobe: Fulfilment status check")
-
-
+                    println("Fulfilment status check")
                     val fulfilmentResult = async { fulfillmentStatus() }.await()
                     fulfilmentResult.fold(
                         onSuccess = {
                             when (it) {
                                 is Wallet.Model.FulfilmentStatus.Error -> {
-                                    println("kobe: Fulfilment error: ${it.reason}")
+                                    println("Fulfilment error: ${it.reason}")
                                     onError(Throwable(it.reason))
                                 }
 
                                 is Wallet.Model.FulfilmentStatus.Completed -> {
-                                    println("kobe: Fulfilment completed")
+                                    println("Fulfilment completed")
                                     //if status completed, execute init tx
                                     with(WCDelegate.fulfilmentAvailable!!.initialTransaction) {
                                         try {
                                             val nonceResult = Transaction.getNonce(chainId, from)
-                                            println("kobe: Original TX")
+                                            println("Original TX")
                                             val signedTx = Transaction.sign(this, nonceResult)
-
                                             val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
                                             val receipt = Transaction.getReceipt(chainId, resultTx)
-                                            println("kobe: Original TX receipt: $receipt")
+                                            println("Original TX receipt: $receipt")
                                             val response = Wallet.Params.SessionRequestResponse(
                                                 sessionTopic = sessionRequest.topic,
                                                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)
@@ -155,7 +153,7 @@ class ChainAbstractionViewModel : ViewModel() {
                                                     onSuccess(TxSuccess(redirect, resultTx))
                                                 },
                                                 onError = { error ->
-                                                    Firebase.crashlytics.recordException(error.throwable)
+                                                    recordError(error.throwable)
                                                     if (error.throwable !is NoConnectivityException) {
                                                         clearSessionRequest()
                                                     }
@@ -163,6 +161,7 @@ class ChainAbstractionViewModel : ViewModel() {
                                                 })
 
                                         } catch (e: Exception) {
+                                            recordError(e)
                                             respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent!!.first)
                                             return@launch onError(e)
                                         }
@@ -171,15 +170,16 @@ class ChainAbstractionViewModel : ViewModel() {
                             }
                         },
                         onFailure = {
-                            println("kobe: fold error: $it")
+                            println("Fulfilment error: $it")
+                            recordError(it)
                             onError(Throwable("Fulfilment status error: $it"))
                         }
                     )
                 }
             }
         } catch (e: Exception) {
-            println("kobe: Error: $e")
-            Firebase.crashlytics.recordException(e)
+            println("Error: $e")
+            recordError(e)
             reject(message = e.message ?: "Undefined error, please check your Internet connection")
             clearSessionRequest()
             onError(Throwable(e.message ?: "Undefined error, please check your Internet connection"))

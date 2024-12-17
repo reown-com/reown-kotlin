@@ -68,8 +68,6 @@ import kotlinx.coroutines.launch
 @SuppressLint("RestrictedApi")
 @Composable
 fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, chainAbstractionViewModel: ChainAbstractionViewModel = viewModel()) {
-    println("kobe: isError: $isError")
-    println("kobe: funding: ${WCDelegate.fulfilmentAvailable?.funding}")
     val sessionRequestUI = chainAbstractionViewModel.sessionRequestUI
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
