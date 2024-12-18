@@ -83,9 +83,26 @@ object Wallet {
             var from: String,
             var to: String,
             var value: String,
-            var gas: String,
-            var gasPrice: String,
-            var data: String,
+            var gasLimit: String,
+            var input: String,
+            var nonce: String,
+            var chainId: String
+        ) : Model()
+
+        data class InitialTransaction(
+            var from: String,
+            var to: String,
+            var value: String,
+            var input: String,
+            var chainId: String
+        ) : Model()
+
+        data class FeeEstimatedTransaction(
+            var from: String,
+            var to: String,
+            var value: String,
+            var gasLimit: String,
+            var input: String,
             var nonce: String,
             var maxFeePerGas: String,
             var maxPriorityFeePerGas: String,
@@ -128,17 +145,17 @@ object Wallet {
             data class NotRequired(val initialTransaction: Transaction) : FulfilmentSuccess()
         }
 
-        enum class Currency {
-            USD,
-            EUR,
-            GBP,
-            AUD,
-            CAD,
-            INR,
-            JPY,
-            BTC,
-            ETH;
-        }
+//        enum class Currency {
+//            USD,
+//            EUR,
+//            GBP,
+//            AUD,
+//            CAD,
+//            INR,
+//            JPY,
+//            BTC,
+//            ETH;
+//        }
 
         data class Amount(
             var symbol: String,
@@ -154,12 +171,11 @@ object Wallet {
         ) : Model()
 
         data class TransactionDetails(
-            var transaction: Transaction,
-            var eip1559: EstimatedFees,
+            var transaction: FeeEstimatedTransaction,
             var transactionFee: TransactionFee
         ) : Model()
 
-        data class FulfilmentDetails(
+        data class TransactionsDetails(
             var fulfilmentDetails: List<TransactionDetails>,
             var initialDetails: TransactionDetails,
             var bridgeDetails: List<TransactionFee>,

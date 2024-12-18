@@ -9,7 +9,7 @@ import kotlinx.coroutines.withTimeout
 import uniffi.uniffi_yttrium.ChainAbstractionClient
 import uniffi.yttrium.StatusResponse
 
-class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
+class ChainAbstractionStatusUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
         fulfilmentId: String,
         checkIn: Long,
@@ -22,7 +22,14 @@ class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstracti
 
                 while (true) {
                     try {
-                        val result = async { chainAbstractionClient.status(fulfilmentId) }.await()
+                        val result = async {
+                            try {
+                                chainAbstractionClient.status(fulfilmentId)
+                            } catch (e: Exception) {
+                                return@async onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
+                            }
+                        }.await()
+
                         when (result) {
                             is StatusResponse.Completed -> {
                                 onSuccess(Wallet.Model.FulfilmentStatus.Completed(result.v1.createdAt.toLong()))
@@ -37,6 +44,8 @@ class FulfilmentStatusUseCase(private val chainAbstractionClient: ChainAbstracti
                             is StatusResponse.Pending -> {
                                 delay(result.v1.checkIn.toLong())
                             }
+
+                            else -> break
                         }
                     } catch (e: Exception) {
                         onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))

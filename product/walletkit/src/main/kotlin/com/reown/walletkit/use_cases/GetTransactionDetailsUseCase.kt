@@ -2,43 +2,36 @@ package com.reown.walletkit.use_cases
 
 import com.reown.android.internal.common.scope
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.toCAYttrium
-import com.reown.walletkit.client.toWallet
 import com.reown.walletkit.client.toYttrium
+import com.reown.walletkit.client.toWallet
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import uniffi.uniffi_yttrium.ChainAbstractionClient
 import uniffi.yttrium.Currency
+import uniffi.yttrium.UiFields
 
 class GetTransactionDetailsUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
         available: Wallet.Model.FulfilmentSuccess.Available,
-        initTransaction: Wallet.Model.Transaction,
-        onSuccess: (Wallet.Model.FulfilmentDetails) -> Unit,
+        onSuccess: (Wallet.Model.TransactionsDetails) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
     ) {
         scope.launch {
             try {
-                val result = async { chainAbstractionClient.getRouteUiFields(available.toYttrium(), initTransaction.toCAYttrium(), Currency.USD) }.await()
-                onSuccess(result.toWallet())
+                val result = async {
+                    try {
+                        chainAbstractionClient.getUiFields(available.toYttrium(), Currency.USD)
+                    } catch (e: Exception) {
+                        return@async onError(Wallet.Model.Error(e))
+                    }
+                }.await()
+
+                if (result is UiFields) {
+                    onSuccess((result).toWallet())
+                }
+
             } catch (e: Exception) {
                 onError(Wallet.Model.Error(e))
-            }
-        }
-    }
-
-    private companion object {
-        fun Wallet.Model.Currency.toYttrium(): Currency {
-            return when (this) {
-                Wallet.Model.Currency.USD -> Currency.USD
-                Wallet.Model.Currency.EUR -> Currency.EUR
-                Wallet.Model.Currency.GBP -> Currency.GBP
-                Wallet.Model.Currency.AUD -> Currency.AUD
-                Wallet.Model.Currency.CAD -> Currency.CAD
-                Wallet.Model.Currency.INR -> Currency.INR
-                Wallet.Model.Currency.JPY -> Currency.JPY
-                Wallet.Model.Currency.BTC -> Currency.BTC
-                Wallet.Model.Currency.ETH -> Currency.ETH
             }
         }
     }

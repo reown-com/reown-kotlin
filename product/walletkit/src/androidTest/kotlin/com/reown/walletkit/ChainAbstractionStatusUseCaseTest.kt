@@ -1,7 +1,7 @@
 package com.reown.walletkit
 
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
+import com.reown.walletkit.use_cases.ChainAbstractionStatusUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import junit.framework.TestCase.assertTrue
@@ -17,9 +17,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @ExperimentalCoroutinesApi
-class FulfilmentStatusUseCaseTest {
+class ChainAbstractionStatusUseCaseTest {
     private val chainAbstractionClient: ChainAbstractionClient = mockk()
-    private val fulfilmentStatusUseCase = FulfilmentStatusUseCase(chainAbstractionClient)
+    private val chainAbstractionStatusUseCase = ChainAbstractionStatusUseCase(chainAbstractionClient)
 
     @Test
     fun shouldCallOnSuccessWhenStatusIsCompleted() = runTest {
@@ -31,7 +31,7 @@ class FulfilmentStatusUseCaseTest {
 
         val result = async {
             suspendCoroutine { continuation ->
-                fulfilmentStatusUseCase.invoke(
+                chainAbstractionStatusUseCase.invoke(
                     fulfilmentId,
                     checkIn,
                     onSuccess = {
@@ -57,7 +57,7 @@ class FulfilmentStatusUseCaseTest {
 
         val result = async {
             suspendCoroutine { continuation ->
-                fulfilmentStatusUseCase.invoke(
+                chainAbstractionStatusUseCase.invoke(
                     fulfilmentId,
                     checkIn,
                     onSuccess = {
@@ -71,5 +71,30 @@ class FulfilmentStatusUseCaseTest {
         }.await()
 
         assertTrue(result is Wallet.Model.FulfilmentStatus.Error)
+    }
+
+    @Test
+    fun shouldCallOnErrorWhenErrorIsThrown() = runTest {
+        val fulfilmentId = "123"
+        val checkIn = 1000L
+
+        coEvery { chainAbstractionClient.status(fulfilmentId) } throws  RuntimeException("error")
+
+        val result = async {
+            suspendCoroutine { continuation ->
+                chainAbstractionStatusUseCase.invoke(
+                    fulfilmentId,
+                    checkIn,
+                    onSuccess = {
+                        continuation.resume(false)
+                    },
+                    onError = {
+                        continuation.resume(true)
+                    }
+                )
+            }
+        }.await()
+
+        assertTrue(result)
     }
 }

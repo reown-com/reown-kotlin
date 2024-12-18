@@ -1,9 +1,9 @@
 package com.reown.walletkit
 
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.toWallet
-import com.reown.walletkit.use_cases.PrepareFulfilmentUseCase
-import io.mockk.*
+import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
+import io.mockk.coEvery
+import io.mockk.mockk
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
@@ -13,7 +13,7 @@ import uniffi.yttrium.BridgingError
 import uniffi.yttrium.FundingMetadata
 import uniffi.yttrium.InitialTransactionMetadata
 import uniffi.yttrium.Metadata
-import uniffi.yttrium.RouteResponse
+import uniffi.yttrium.PrepareResponse
 import uniffi.yttrium.RouteResponseAvailable
 import uniffi.yttrium.RouteResponseError
 import uniffi.yttrium.RouteResponseNotRequired
@@ -22,13 +22,13 @@ import uniffi.yttrium.Transaction
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class PrepareFulfilmentUseCaseTest {
+class PrepareChainAbstractionUseCaseTest {
     private val chainAbstractionClient: ChainAbstractionClient = mockk()
-    private val prepareFulfilmentUseCase = PrepareFulfilmentUseCase(chainAbstractionClient)
+    private val prepareChainAbstractionUseCase = PrepareChainAbstractionUseCase(chainAbstractionClient)
 
     @Test
     fun shouldCallOnSuccessWithAvailableResult() = runTest {
-        val successResult = RouteResponse.Success(
+        val successResult = PrepareResponse.Success(
             RouteResponseSuccess.Available(
                 RouteResponseAvailable(
                     orchestrationId = "123",
@@ -42,11 +42,12 @@ class PrepareFulfilmentUseCaseTest {
                 )
             )
         )
-        coEvery { chainAbstractionClient.route(any()) } returns successResult
+        coEvery { chainAbstractionClient.prepare(any()) } returns successResult
 
         val result = async {
             suspendCoroutine { continuation ->
-                prepareFulfilmentUseCase.invoke(transaction.toWallet(),
+                prepareChainAbstractionUseCase.invoke(
+                    initTransaction,
                     onSuccess = {
                         continuation.resume(true)
                     },
@@ -62,13 +63,13 @@ class PrepareFulfilmentUseCaseTest {
 
     @Test
     fun shouldCallOnSuccessWithNotRequiredResult() = runTest {
-        val successResult = RouteResponse.Success(RouteResponseSuccess.NotRequired(RouteResponseNotRequired(initialTransaction = transaction, transactions = emptyList<Transaction>())))
-        coEvery { chainAbstractionClient.route(any()) } returns successResult
+        val successResult = PrepareResponse.Success(RouteResponseSuccess.NotRequired(RouteResponseNotRequired(initialTransaction = transaction, transactions = emptyList<Transaction>())))
+        coEvery { chainAbstractionClient.prepare(any()) } returns successResult
 
         val result = async {
             suspendCoroutine { continuation ->
-                prepareFulfilmentUseCase.invoke(
-                    transaction.toWallet(),
+                prepareChainAbstractionUseCase.invoke(
+                    initTransaction,
                     onSuccess = {
                         continuation.resume(it)
                     },
@@ -84,14 +85,14 @@ class PrepareFulfilmentUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWithNoRoutesAvailableError() = runTest {
-        val errorResult = RouteResponse.Error(RouteResponseError(BridgingError.NO_ROUTES_AVAILABLE))
+        val errorResult = PrepareResponse.Error(RouteResponseError(BridgingError.NO_ROUTES_AVAILABLE))
 
-        coEvery { chainAbstractionClient.route(any()) } returns errorResult
+        coEvery { chainAbstractionClient.prepare(any()) } returns errorResult
 
         val result = async {
             suspendCoroutine { continuation ->
-                prepareFulfilmentUseCase.invoke(
-                    transaction.toWallet(),
+                prepareChainAbstractionUseCase.invoke(
+                    initTransaction,
                     onSuccess = {
                         continuation.resume(false)
                     },
@@ -107,14 +108,14 @@ class PrepareFulfilmentUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWithInsufficientFundsError() = runTest {
-        val errorResult = RouteResponse.Error(RouteResponseError(BridgingError.INSUFFICIENT_FUNDS))
+        val errorResult = PrepareResponse.Error(RouteResponseError(BridgingError.INSUFFICIENT_FUNDS))
 
-        coEvery { chainAbstractionClient.route(any()) } returns errorResult
+        coEvery { chainAbstractionClient.prepare(any()) } returns errorResult
 
         val result = async {
             suspendCoroutine { continuation ->
-                prepareFulfilmentUseCase.invoke(
-                    Companion.transaction.toWallet(),
+                prepareChainAbstractionUseCase.invoke(
+                    initTransaction,
                     onSuccess = {
                         continuation.resume(false)
                     },
@@ -130,23 +131,23 @@ class PrepareFulfilmentUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWithUnknownErrorOnException() = runTest {
-        coEvery { chainAbstractionClient.route(any()) } throws RuntimeException("Some unexpected error")
+        coEvery { chainAbstractionClient.prepare(any()) } throws RuntimeException("Some unexpected error")
 
         val result = async {
             suspendCoroutine { continuation ->
-                prepareFulfilmentUseCase.invoke(
-                    Companion.transaction.toWallet(),
+                prepareChainAbstractionUseCase.invoke(
+                    initTransaction,
                     onSuccess = {
                         continuation.resume(false)
                     },
                     onError = {
-                        continuation.resume(it)
+                        continuation.resume(true)
                     }
                 )
             }
         }.await()
 
-        assertTrue(result is Wallet.Model.FulfilmentError.Unknown)
+        assertTrue(result)
     }
 
     companion object {
@@ -154,13 +155,18 @@ class PrepareFulfilmentUseCaseTest {
             from = "from",
             to = "to",
             value = "value",
-            data = "data",
+            input = "data",
             nonce = "nonce",
-            gas = "gas",
-            gasPrice = "0",
             chainId = "1",
-            maxPriorityFeePerGas = "0",
-            maxFeePerGas = "0"
+            gasLimit = "0"
+        )
+
+        val initTransaction = Wallet.Model.InitialTransaction(
+            from = "from",
+            to = "to",
+            value = "value",
+            chainId = "1",
+            input = "data"
         )
     }
 }

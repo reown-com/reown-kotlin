@@ -653,7 +653,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                     }
                     Column {
                         Text(
-                            text = Transaction.convertTokenAmount(viewModel.getERC20Balance().toBigInteger(), 6)?.toPlainString() ?: "-.--",
+                            text = Transaction.hexToTokenAmount(viewModel.getERC20Balance(), 6)?.toPlainString() ?: "-.--",
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -800,7 +800,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "${WCDelegate.fulfilmentDetails?.localTotal?.formattedAlt} ${WCDelegate.fulfilmentDetails?.localTotal?.symbol}",
+                            text = "${WCDelegate.transactionsDetails?.localTotal?.formattedAlt} ${WCDelegate.transactionsDetails?.localTotal?.symbol}",
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -850,7 +850,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "${WCDelegate.fulfilmentDetails?.initialDetails?.transactionFee?.localFee?.formattedAlt} ${WCDelegate.fulfilmentDetails?.initialDetails?.transactionFee?.localFee?.symbol}",
+                            text = "${WCDelegate.transactionsDetails?.initialDetails?.transactionFee?.localFee?.formattedAlt} ${WCDelegate.transactionsDetails?.initialDetails?.transactionFee?.localFee?.symbol}",
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 lineHeight = 16.sp,

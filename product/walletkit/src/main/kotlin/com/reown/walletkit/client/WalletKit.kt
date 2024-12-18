@@ -10,9 +10,9 @@ import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
 import com.reown.walletkit.di.walletKitModule
 import com.reown.walletkit.smart_account.Account
 import com.reown.walletkit.smart_account.SafeInteractor
-import com.reown.walletkit.use_cases.PrepareFulfilmentUseCase
+import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
 import com.reown.walletkit.use_cases.EstimateGasUseCase
-import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
+import com.reown.walletkit.use_cases.ChainAbstractionStatusUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import kotlinx.coroutines.*
@@ -21,8 +21,8 @@ import java.util.*
 object WalletKit {
     private lateinit var coreClient: CoreInterface
     private lateinit var safeInteractor: SafeInteractor
-    private val prepareFulfilmentUseCase: PrepareFulfilmentUseCase by wcKoinApp.koin.inject()
-    private val fulfilmentStatusUseCase: FulfilmentStatusUseCase by wcKoinApp.koin.inject()
+    private val prepareChainAbstractionUseCase: PrepareChainAbstractionUseCase by wcKoinApp.koin.inject()
+    private val chainAbstractionStatusUseCase: ChainAbstractionStatusUseCase by wcKoinApp.koin.inject()
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
     private val getTransactionDetailsUseCase: GetTransactionDetailsUseCase by wcKoinApp.koin.inject()
     private val getERC20TokenBalanceUseCase: GetERC20TokenBalanceUseCase by wcKoinApp.koin.inject()
@@ -341,27 +341,27 @@ object WalletKit {
 
     //Chain Abstraction
     @ChainAbstractionExperimentalApi
-    fun prepareFulfillment(
-        transaction: Wallet.Model.Transaction,
+    fun prepare(
+        initialTransaction: Wallet.Model.InitialTransaction,
         onSuccess: (Wallet.Model.FulfilmentSuccess) -> Unit,
         onError: (Wallet.Model.FulfilmentError) -> Unit
     ) {
         try {
-            prepareFulfilmentUseCase(transaction, onSuccess, onError)
+            prepareChainAbstractionUseCase(initialTransaction, onSuccess, onError)
         } catch (e: Exception) {
             onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
         }
     }
 
     @ChainAbstractionExperimentalApi
-    fun fulfillmentStatus(
+    fun status(
         fulfilmentId: String,
         checkIn: Long,
         onSuccess: (Wallet.Model.FulfilmentStatus.Completed) -> Unit,
         onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit
     ) {
         try {
-            fulfilmentStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
+            chainAbstractionStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
         } catch (e: Exception) {
             onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
         }
@@ -380,14 +380,13 @@ object WalletKit {
     }
 
     @ChainAbstractionExperimentalApi
-    fun getFulfilmentDetails(
+    fun getTransactionDetails(
         available: Wallet.Model.FulfilmentSuccess.Available,
-        initTransaction: Wallet.Model.Transaction,
-        onSuccess: (Wallet.Model.FulfilmentDetails) -> Unit,
+        onSuccess: (Wallet.Model.TransactionsDetails) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
     ) {
         try {
-            getTransactionDetailsUseCase(available, initTransaction, onSuccess, onError)
+            getTransactionDetailsUseCase(available, onSuccess, onError)
         } catch (e: Exception) {
             onError(Wallet.Model.Error(e))
         }

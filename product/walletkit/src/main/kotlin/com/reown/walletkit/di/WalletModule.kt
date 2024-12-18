@@ -1,9 +1,9 @@
 package com.reown.walletkit.di
 
 import com.reown.android.internal.common.model.ProjectId
-import com.reown.walletkit.use_cases.PrepareFulfilmentUseCase
+import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
 import com.reown.walletkit.use_cases.EstimateGasUseCase
-import com.reown.walletkit.use_cases.FulfilmentStatusUseCase
+import com.reown.walletkit.use_cases.ChainAbstractionStatusUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import org.koin.dsl.module
@@ -13,9 +13,9 @@ import uniffi.uniffi_yttrium.ChainAbstractionClient
 internal fun walletKitModule() = module {
     single { ChainAbstractionClient(get<ProjectId>().value) }
 
-    single { PrepareFulfilmentUseCase(get()) }
+    single { PrepareChainAbstractionUseCase(get()) }
 
-    single { FulfilmentStatusUseCase(get()) }
+    single { ChainAbstractionStatusUseCase(get()) }
 
     single { EstimateGasUseCase(get()) }
 

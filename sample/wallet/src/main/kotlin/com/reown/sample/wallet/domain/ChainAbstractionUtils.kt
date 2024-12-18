@@ -15,66 +15,67 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @OptIn(ChainAbstractionExperimentalApi::class)
-fun canFulfil(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wallet.Model.Transaction, verifyContext: Wallet.Model.VerifyContext) {
+fun prepare(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wallet.Model.InitialTransaction, verifyContext: Wallet.Model.VerifyContext) {
     try {
-        WalletKit.prepareFulfillment(
+        WalletKit.prepare(
             initialTransaction,
             onSuccess = { result ->
                 when (result) {
                     is Wallet.Model.FulfilmentSuccess.Available -> {
-                        println("Fulfil success available: $result")
+                        println("Prepare success available: $result")
                         emitChainAbstractionRequest(sessionRequest, result, verifyContext)
                     }
 
                     is Wallet.Model.FulfilmentSuccess.NotRequired -> {
-                        println("Fulfil success not required: $result")
+                        println("Prepare success not required: $result")
                         emitSessionRequest(sessionRequest, verifyContext)
                     }
                 }
             },
             onError = { error ->
-                println("Fulfil error: $error")
+                println("Prepare error: $error")
                 respondWithError(getErrorMessage(), sessionRequest)
                 emitChainAbstractionError(sessionRequest, error, verifyContext)
             }
         )
     } catch (e: Exception) {
-        println("CanFulfil: Unknown error: $e")
-        respondWithError(e.message ?: "CanFulfil: Unknown error", sessionRequest)
-        emitChainAbstractionError(sessionRequest, Wallet.Model.FulfilmentError.Unknown(e.message ?: "CanFulfil: Unknown error"), verifyContext)
+        println("Prepare: Unknown error: $e")
+        respondWithError(e.message ?: "Prepare: Unknown error", sessionRequest)
+        emitChainAbstractionError(sessionRequest, Wallet.Model.FulfilmentError.Unknown(e.message ?: "Prepare: Unknown error"), verifyContext)
     }
 }
 
-fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionRequest) {
-    val result = Wallet.Params.SessionRequestResponse(
-        sessionTopic = sessionRequest.topic,
-        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
-            id = sessionRequest.request.id,
-            code = 500,
-            message = errorMessage
+fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionRequest?) {
+    if (sessionRequest != null) {
+        val result = Wallet.Params.SessionRequestResponse(
+            sessionTopic = sessionRequest.topic,
+            jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
+                id = sessionRequest.request.id,
+                code = 500,
+                message = errorMessage
+            )
         )
-    )
-    try {
-        WalletKit.respondSessionRequest(result,
-            onSuccess = {
-                println("Error sent success")
-                clearSessionRequest()
-            },
-            onError = { error ->
-                println("Error sent error: $error")
-                recordError(error.throwable)
-            })
-    } catch (e: Exception) {
-        Firebase.crashlytics.recordException(e)
+        try {
+            WalletKit.respondSessionRequest(result,
+                onSuccess = {
+                    println("Error sent success")
+                    clearSessionRequest()
+                },
+                onError = { error ->
+                    println("Error sent error: $error")
+                    recordError(error.throwable)
+                })
+        } catch (e: Exception) {
+            Firebase.crashlytics.recordException(e)
+        }
     }
 }
 
-suspend fun getTransactionsDetails(): Result<Wallet.Model.FulfilmentDetails> =
+suspend fun getTransactionsDetails(): Result<Wallet.Model.TransactionsDetails> =
     suspendCoroutine { continuation ->
         try {
-            WalletKit.getFulfilmentDetails(
+            WalletKit.getTransactionDetails(
                 WCDelegate.fulfilmentAvailable!!,
-                WCDelegate.fulfilmentAvailable!!.initialTransaction,
                 onSuccess = {
                     println("Transaction details SUCCESS: $it")
                     continuation.resume(Result.success(it))
@@ -92,10 +93,10 @@ suspend fun getTransactionsDetails(): Result<Wallet.Model.FulfilmentDetails> =
         }
     }
 
-suspend fun fulfillmentStatus(): Result<Wallet.Model.FulfilmentStatus> =
+suspend fun status(): Result<Wallet.Model.FulfilmentStatus> =
     suspendCoroutine { continuation ->
         try {
-            WalletKit.fulfillmentStatus(
+            WalletKit.status(
                 WCDelegate.fulfilmentAvailable!!.fulfilmentId,
                 WCDelegate.fulfilmentAvailable!!.checkIn,
                 onSuccess = {
@@ -132,7 +133,7 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
 
         scope.launch {
             async { getTransactionsDetails() }.await().fold(
-                onSuccess = { WCDelegate.fulfilmentDetails = it },
+                onSuccess = { WCDelegate.transactionsDetails = it },
                 onFailure = { error -> println("Failed getting tx details: $error") }
             )
 

@@ -2,27 +2,34 @@ package com.reown.walletkit.use_cases
 
 import com.reown.android.internal.common.scope
 import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.toInitialYttrium
 import com.reown.walletkit.client.toWallet
-import com.reown.walletkit.client.toYttrium
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import uniffi.uniffi_yttrium.ChainAbstractionClient
 import uniffi.yttrium.BridgingError
-import uniffi.yttrium.RouteResponse
+import uniffi.yttrium.PrepareResponse
+import uniffi.yttrium.RouteResponseError
 import uniffi.yttrium.RouteResponseSuccess
 
-class PrepareFulfilmentUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
+class PrepareChainAbstractionUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
-        transaction: Wallet.Model.Transaction,
+        initialTransaction: Wallet.Model.InitialTransaction,
         onSuccess: (Wallet.Model.FulfilmentSuccess) -> Unit,
         onError: (Wallet.Model.FulfilmentError) -> Unit
     ) {
         scope.launch {
             try {
-                val result = async { chainAbstractionClient.route(transaction.toYttrium()) }.await()
+                val result = async {
+                    try {
+                        chainAbstractionClient.prepare(initialTransaction.toInitialYttrium())
+                    } catch (e: Exception) {
+                        return@async onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
+                    }
+                }.await()
 
                 when (result) {
-                    is RouteResponse.Success -> {
+                    is PrepareResponse.Success -> {
                         when (result.v1) {
                             is RouteResponseSuccess.Available ->
                                 onSuccess((result.v1 as RouteResponseSuccess.Available).v1.toWallet())
@@ -32,7 +39,7 @@ class PrepareFulfilmentUseCase(private val chainAbstractionClient: ChainAbstract
                         }
                     }
 
-                    is RouteResponse.Error -> {
+                    is PrepareResponse.Error -> {
                         when (result.v1.error) {
                             BridgingError.NO_ROUTES_AVAILABLE -> onError(Wallet.Model.FulfilmentError.NoRoutesAvailable)
                             BridgingError.INSUFFICIENT_FUNDS -> onError(Wallet.Model.FulfilmentError.InsufficientFunds)

@@ -56,13 +56,40 @@ object Transaction {
             from = from,
             to = to,
             value = value,
-            data = data,
+            input = data,
             nonce = nonce,
-            gas = gas,
-            gasPrice = "0", //todo: will be removed
+            gasLimit = gas,
             chainId = sessionRequest.chainId!!,
-            maxPriorityFeePerGas = "0", //todo: will be removed
-            maxFeePerGas = "0" //todo: will be removed
+        )
+    }
+
+    fun getInitialTransaction(sessionRequest: Wallet.Model.SessionRequest): Wallet.Model.InitialTransaction {
+        val requestParams = JSONArray(sessionRequest.request.params).getJSONObject(0)
+        val from = requestParams.getString("from")
+        val to = requestParams.getString("to")
+        val data = requestParams.getString("data")
+        val value = try {
+            requestParams.getString("value")
+        } catch (e: Exception) {
+            "0"
+        }
+        val nonce = try {
+            requestParams.getString("nonce")
+        } catch (e: Exception) {
+            "0"
+        }
+        val gas = try {
+            requestParams.getString("gas")
+        } catch (e: Exception) {
+            "0"
+        }
+
+        return Wallet.Model.InitialTransaction(
+            from = from,
+            to = to,
+            value = value,
+            chainId = sessionRequest.chainId!!,
+            input = data,
         )
     }
 
@@ -74,8 +101,8 @@ object Transaction {
             transaction.nonce = hexToBigDecimal(transaction.nonce)?.toBigInteger().toString()
         }
 
-        if (transaction.gas.startsWith("0x")) {
-            transaction.gas = hexToBigDecimal(transaction.gas)?.toBigInteger().toString()
+        if (transaction.gasLimit.startsWith("0x")) {
+            transaction.gasLimit = hexToBigDecimal(transaction.gasLimit)?.toBigInteger().toString()
         }
         if (transaction.value.startsWith("0x")) {
             transaction.value = hexToBigDecimal(transaction.value)?.toBigInteger().toString()
@@ -84,7 +111,7 @@ object Transaction {
         println("fees: $fees")
         println("chainId: $chainId")
         println("nonce: ${nonce ?: transaction.nonce.toBigInteger()}")
-        println("gas: ${gasLimit ?: transaction.gas.toBigInteger()}")
+        println("gas: ${gasLimit ?: transaction.gasLimit.toBigInteger()}")
         println("value: ${transaction.value}")
         println("maxFeePerGas: ${fees.maxFeePerGas.toBigInteger()}")
         println("maxPriorityFeePerGas: ${fees.maxPriorityFeePerGas.toBigInteger()}")
@@ -93,10 +120,10 @@ object Transaction {
         val rawTransaction = RawTransaction.createTransaction(
             chainId,
             nonce ?: transaction.nonce.toBigInteger(),
-            gasLimit ?: transaction.gas.toBigInteger(),
+            gasLimit ?: transaction.gasLimit.toBigInteger(),
             transaction.to,
             transaction.value.toBigInteger(),
-            transaction.data,
+            transaction.input,
             fees.maxPriorityFeePerGas.toBigInteger(),
             fees.maxFeePerGas.toBigInteger(),
         )

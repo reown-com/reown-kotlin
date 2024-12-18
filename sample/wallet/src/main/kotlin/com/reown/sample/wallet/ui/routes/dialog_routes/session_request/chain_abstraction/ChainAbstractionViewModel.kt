@@ -11,7 +11,7 @@ import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.clearSessionRequest
-import com.reown.sample.wallet.domain.fulfillmentStatus
+import com.reown.sample.wallet.domain.status
 import com.reown.sample.wallet.domain.getUSDCContractAddress
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.domain.recordError
@@ -28,7 +28,6 @@ import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.web3j.utils.Numeric
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.math.RoundingMode
 
 data class TxSuccess(
@@ -50,15 +49,15 @@ class ChainAbstractionViewModel : ViewModel() {
         } catch (e: Exception) {
             println("getERC20Balance error: $e")
             recordError(e)
-            "-.--"
+            ""
         }
     }
 
     fun calculateBridgeFee(): String {
         var totalFee: BigDecimal = BigDecimal.ZERO
-        WCDelegate.fulfilmentDetails?.bridgeDetails?.forEach {
+        WCDelegate.transactionsDetails?.bridgeDetails?.forEach {
             val fee = Transaction.hexToTokenAmount(it.localFee.amount, it.localFee.unit.toInt())
-            totalFee = totalFee.plus(fee!!)
+            totalFee = totalFee.plus(fee ?: BigDecimal.ZERO)
         }
 
         return "$${totalFee.setScale(2, RoundingMode.UP).toPlainString()}"
@@ -67,8 +66,8 @@ class ChainAbstractionViewModel : ViewModel() {
     fun getTransferAmount(): String {
         return "${
             Transaction.hexToTokenAmount(
-                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.amount!!,
-                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.decimals!!
+                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.amount ?: "",
+                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.decimals ?: 6
             )?.toPlainString() ?: "-.--"
         } ${WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.symbol}"
     }
@@ -80,7 +79,7 @@ class ChainAbstractionViewModel : ViewModel() {
                 val signedTransactions = mutableListOf<Pair<String, String>>()
                 val txHashesChannel = Channel<Pair<String, String>>()
                 //sign fulfilment txs
-                WCDelegate.fulfilmentAvailable!!.transactions.forEach { transaction ->
+                WCDelegate.fulfilmentAvailable?.transactions?.forEach { transaction ->
                     val signedTransaction = Transaction.sign(transaction)
                     signedTransactions.add(Pair(transaction.chainId, signedTransaction))
                 }
@@ -96,7 +95,7 @@ class ChainAbstractionViewModel : ViewModel() {
                         } catch (e: Exception) {
                             println("Route broadcast tx error: $e")
                             recordError(e)
-                            respondWithError(e.message ?: "Route TX broadcast error", WCDelegate.sessionRequestEvent!!.first)
+                            respondWithError(e.message ?: "Route TX broadcast error", WCDelegate.sessionRequestEvent?.first)
                             return@launch onError(e)
                         }
                     }
@@ -113,7 +112,7 @@ class ChainAbstractionViewModel : ViewModel() {
                         } catch (e: Exception) {
                             println("Route execution tx error: $e")
                             recordError(e)
-                            respondWithError(e.message ?: "Route TX execution error", WCDelegate.sessionRequestEvent!!.first)
+                            respondWithError(e.message ?: "Route TX execution error", WCDelegate.sessionRequestEvent?.first)
                             return@launch onError(e)
                         }
                     }
@@ -122,7 +121,7 @@ class ChainAbstractionViewModel : ViewModel() {
 
                     //check fulfilment status
                     println("Fulfilment status check")
-                    val fulfilmentResult = async { fulfillmentStatus() }.await()
+                    val fulfilmentResult = async { status() }.await()
                     fulfilmentResult.fold(
                         onSuccess = {
                             when (it) {
@@ -162,7 +161,7 @@ class ChainAbstractionViewModel : ViewModel() {
 
                                         } catch (e: Exception) {
                                             recordError(e)
-                                            respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent!!.first)
+                                            respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent?.first)
                                             return@launch onError(e)
                                         }
                                     }

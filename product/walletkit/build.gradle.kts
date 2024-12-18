@@ -65,7 +65,7 @@ android {
 
 dependencies {
     implementation("net.java.dev.jna:jna:5.15.0@aar")
-    implementation("com.github.reown-com:yttrium:0.4.2")
+    implementation("com.github.reown-com:yttrium:0.4.11")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)

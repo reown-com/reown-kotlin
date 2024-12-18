@@ -3,6 +3,7 @@ package com.reown.sample.wallet.domain
 import android.util.Log
 import com.reown.android.Core
 import com.reown.android.CoreClient
+import com.reown.sample.wallet.domain.model.Transaction.getInitialTransaction
 import com.reown.sample.wallet.domain.model.Transaction.getTransaction
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
@@ -31,7 +32,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     //CA
     var fulfilmentAvailable: Wallet.Model.FulfilmentSuccess.Available? = null
     var fulfilmentError: Wallet.Model.FulfilmentError? = null
-    var fulfilmentDetails: Wallet.Model.FulfilmentDetails? = null
+    var transactionsDetails: Wallet.Model.TransactionsDetails? = null
 
     init {
         CoreClient.setDelegate(this)
@@ -80,7 +81,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
 
     override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
         if (sessionRequest.request.method == "eth_sendTransaction") {
-            canFulfil(sessionRequest, getTransaction(sessionRequest), verifyContext)
+            prepare(sessionRequest, getInitialTransaction(sessionRequest), verifyContext)
         } else {
             emitSessionRequest(sessionRequest, verifyContext)
         }

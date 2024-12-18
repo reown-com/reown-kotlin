@@ -3,18 +3,19 @@ package com.reown.walletkit.client
 import com.reown.android.internal.common.signing.cacao.CacaoType
 import com.reown.sign.client.Sign
 import uniffi.uniffi_yttrium.Eip1559Estimation
-import uniffi.uniffi_yttrium.InitTransaction
 import uniffi.uniffi_yttrium.OwnerSignature
 import uniffi.uniffi_yttrium.PreparedSendTransaction
 import uniffi.uniffi_yttrium.FfiTransaction
-import uniffi.uniffi_yttrium.RouteUiFields
-import uniffi.uniffi_yttrium.TxnDetails
+import uniffi.yttrium.FeeEstimatedTransaction
 import uniffi.yttrium.FundingMetadata
+import uniffi.yttrium.InitialTransaction
 import uniffi.yttrium.InitialTransactionMetadata
 import uniffi.yttrium.Metadata as YMetadata
-import uniffi.yttrium.Transaction as CATransaction
+import uniffi.yttrium.Transaction
 import uniffi.yttrium.RouteResponseAvailable
 import uniffi.yttrium.TransactionFee
+import uniffi.yttrium.TxnDetails
+import uniffi.yttrium.UiFields
 
 @JvmSynthetic
 internal fun Map<String, Wallet.Model.Namespace.Session>.toSign(): Map<String, Sign.Model.Namespace.Session> =
@@ -318,9 +319,13 @@ internal fun RouteResponseAvailable.toWallet(): Wallet.Model.FulfilmentSuccess.A
 internal fun Wallet.Model.FulfilmentSuccess.Available.toYttrium(): RouteResponseAvailable =
     RouteResponseAvailable(
         fulfilmentId,
-        metadata = YMetadata(checkIn = checkIn.toULong(), initialTransaction = initialTransactionMetadata.toYttrium(), fundingFrom = funding.map { it.toYttrium() }),
-        initialTransaction = initialTransaction.toCAYttrium(),
-        transactions = transactions.map { it.toCAYttrium() })
+        metadata = YMetadata(
+            checkIn = checkIn.toULong(),
+            initialTransaction = initialTransactionMetadata.toYttrium(),
+            fundingFrom = funding.map { it.toYttrium() }
+        ),
+        initialTransaction = initialTransaction.toYttrium(),
+        transactions = transactions.map { it.toYttrium() })
 
 @JvmSynthetic
 private fun Wallet.Model.InitialTransactionMetadata.toYttrium(): InitialTransactionMetadata =
@@ -343,44 +348,33 @@ private fun InitialTransactionMetadata.toWallet(): Wallet.Model.InitialTransacti
     )
 
 @JvmSynthetic
-fun Wallet.Model.Transaction.toYttrium(): InitTransaction = InitTransaction(
+fun Wallet.Model.InitialTransaction.toInitialYttrium(): InitialTransaction = InitialTransaction(
     from = from,
     to = to,
     value = value,
-    gas = gas,
-    gasPrice = gasPrice,
-    data = data,
+    chainId = chainId,
+    input = input,
+)
+
+@JvmSynthetic
+fun Transaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(
+    from = from,
+    to = to,
+    value = value,
+    gasLimit = gasLimit,
+    input = input,
     nonce = nonce,
-    maxFeePerGas = maxFeePerGas,
-    maxPriorityFeePerGas = maxPriorityFeePerGas,
     chainId = chainId
 )
 
 @JvmSynthetic
-fun CATransaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(
+fun Wallet.Model.Transaction.toYttrium(): Transaction = Transaction(
     from = from,
     to = to,
     value = value,
-    gas = gas,
-    gasPrice = gasPrice,
-    data = data,
+    gasLimit = gasLimit,
+    input = input,
     nonce = nonce,
-    maxFeePerGas = maxFeePerGas,
-    maxPriorityFeePerGas = maxPriorityFeePerGas,
-    chainId = chainId
-)
-
-@JvmSynthetic
-fun Wallet.Model.Transaction.toCAYttrium(): CATransaction = CATransaction(
-    from = from,
-    to = to,
-    value = value,
-    gas = gas,
-    gasPrice = gasPrice,
-    data = data,
-    nonce = nonce,
-    maxFeePerGas = maxFeePerGas,
-    maxPriorityFeePerGas = maxPriorityFeePerGas,
     chainId = chainId
 )
 
@@ -394,7 +388,7 @@ private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Mo
 internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.Model.EstimatedFees(maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas)
 
 @JvmSynthetic
-internal fun RouteUiFields.toWallet(): Wallet.Model.FulfilmentDetails = Wallet.Model.FulfilmentDetails(
+internal fun UiFields.toWallet(): Wallet.Model.TransactionsDetails = Wallet.Model.TransactionsDetails(
     localTotal = Wallet.Model.Amount(
         symbol = localTotal.symbol,
         amount = localTotal.amount,
@@ -409,8 +403,19 @@ internal fun RouteUiFields.toWallet(): Wallet.Model.FulfilmentDetails = Wallet.M
 
 private fun TxnDetails.toWallet(): Wallet.Model.TransactionDetails = Wallet.Model.TransactionDetails(
     transaction = transaction.toWallet(),
-    eip1559 = Wallet.Model.EstimatedFees(maxFeePerGas = estimate.maxFeePerGas, maxPriorityFeePerGas = estimate.maxPriorityFeePerGas),
     transactionFee = fee.toWallet()
+)
+
+fun FeeEstimatedTransaction.toWallet(): Wallet.Model.FeeEstimatedTransaction = Wallet.Model.FeeEstimatedTransaction(
+    from = from,
+    to = to,
+    value = value,
+    gasLimit = gasLimit,
+    input = input,
+    nonce = nonce,
+    maxFeePerGas = maxFeePerGas,
+    maxPriorityFeePerGas = maxPriorityFeePerGas,
+    chainId = chainId
 )
 
 private fun TransactionFee.toWallet() = Wallet.Model.TransactionFee(
