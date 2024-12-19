@@ -74,7 +74,7 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
 suspend fun getTransactionsDetails(): Result<Wallet.Model.TransactionsDetails> =
     suspendCoroutine { continuation ->
         try {
-            WalletKit.getTransactionDetails(
+            WalletKit.getTransactionsDetails(
                 WCDelegate.fulfilmentAvailable!!,
                 onSuccess = {
                     println("Transaction details SUCCESS: $it")

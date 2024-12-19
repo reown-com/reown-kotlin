@@ -380,7 +380,7 @@ object WalletKit {
     }
 
     @ChainAbstractionExperimentalApi
-    fun getTransactionDetails(
+    fun getTransactionsDetails(
         available: Wallet.Model.PrepareSuccess.Available,
         onSuccess: (Wallet.Model.TransactionsDetails) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
