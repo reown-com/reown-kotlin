@@ -343,13 +343,13 @@ object WalletKit {
     @ChainAbstractionExperimentalApi
     fun prepare(
         initialTransaction: Wallet.Model.InitialTransaction,
-        onSuccess: (Wallet.Model.FulfilmentSuccess) -> Unit,
-        onError: (Wallet.Model.FulfilmentError) -> Unit
+        onSuccess: (Wallet.Model.PrepareSuccess) -> Unit,
+        onError: (Wallet.Model.PrepareError) -> Unit
     ) {
         try {
             prepareChainAbstractionUseCase(initialTransaction, onSuccess, onError)
         } catch (e: Exception) {
-            onError(Wallet.Model.FulfilmentError.Unknown(e.message ?: "Unknown error"))
+            onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
         }
     }
 
@@ -357,13 +357,13 @@ object WalletKit {
     fun status(
         fulfilmentId: String,
         checkIn: Long,
-        onSuccess: (Wallet.Model.FulfilmentStatus.Completed) -> Unit,
-        onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit
+        onSuccess: (Wallet.Model.Status.Completed) -> Unit,
+        onError: (Wallet.Model.Status.Error) -> Unit
     ) {
         try {
             chainAbstractionStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
         } catch (e: Exception) {
-            onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
+            onError(Wallet.Model.Status.Error(e.message ?: "Unknown error"))
         }
     }
 
@@ -381,7 +381,7 @@ object WalletKit {
 
     @ChainAbstractionExperimentalApi
     fun getTransactionDetails(
-        available: Wallet.Model.FulfilmentSuccess.Available,
+        available: Wallet.Model.PrepareSuccess.Available,
         onSuccess: (Wallet.Model.TransactionsDetails) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
     ) {

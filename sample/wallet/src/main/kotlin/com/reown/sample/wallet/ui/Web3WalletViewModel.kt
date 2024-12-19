@@ -8,7 +8,6 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.Core
 import com.reown.android.internal.common.exception.InvalidProjectIdException
 import com.reown.android.internal.common.exception.ProjectIdDoesNotExistException
-import com.reown.sample.wallet.domain.ISSUER
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.PairingEvent
@@ -114,8 +113,8 @@ class Web3WalletViewModel : ViewModel() {
                 }
             }
 
-            is Wallet.Model.FulfilmentSuccess.Available -> SignEvent.Fulfilment(isError = false)
-            is Wallet.Model.FulfilmentError -> SignEvent.Fulfilment(isError = true)
+            is Wallet.Model.PrepareSuccess.Available -> SignEvent.Fulfilment(isError = false)
+            is Wallet.Model.PrepareError -> SignEvent.Fulfilment(isError = true)
 
             is Wallet.Model.SessionAuthenticate -> {
                 _isLoadingFlow.value = false

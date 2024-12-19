@@ -53,16 +53,6 @@ class ChainAbstractionViewModel : ViewModel() {
         }
     }
 
-    fun calculateBridgeFee(): String {
-        var totalFee: BigDecimal = BigDecimal.ZERO
-        WCDelegate.transactionsDetails?.bridgeDetails?.forEach {
-            val fee = Transaction.hexToTokenAmount(it.localFee.amount, it.localFee.unit.toInt())
-            totalFee = totalFee.plus(fee ?: BigDecimal.ZERO)
-        }
-
-        return "$${totalFee.setScale(2, RoundingMode.UP).toPlainString()}"
-    }
-
     fun getTransferAmount(): String {
         return "${
             Transaction.hexToTokenAmount(
@@ -79,9 +69,9 @@ class ChainAbstractionViewModel : ViewModel() {
                 val signedTransactions = mutableListOf<Pair<String, String>>()
                 val txHashesChannel = Channel<Pair<String, String>>()
                 //sign fulfilment txs
-                WCDelegate.fulfilmentAvailable?.transactions?.forEach { transaction ->
-                    val signedTransaction = Transaction.sign(transaction)
-                    signedTransactions.add(Pair(transaction.chainId, signedTransaction))
+                WCDelegate.transactionsDetails?.fulfilmentDetails?.forEach { fulfilment ->
+                    val signedTransaction = Transaction.sign(fulfilment.transaction)
+                    signedTransactions.add(Pair(fulfilment.transaction.chainId, signedTransaction))
                 }
 
                 //execute fulfilment txs
@@ -125,15 +115,15 @@ class ChainAbstractionViewModel : ViewModel() {
                     fulfilmentResult.fold(
                         onSuccess = {
                             when (it) {
-                                is Wallet.Model.FulfilmentStatus.Error -> {
+                                is Wallet.Model.Status.Error -> {
                                     println("Fulfilment error: ${it.reason}")
                                     onError(Throwable(it.reason))
                                 }
 
-                                is Wallet.Model.FulfilmentStatus.Completed -> {
+                                is Wallet.Model.Status.Completed -> {
                                     println("Fulfilment completed")
                                     //if status completed, execute init tx
-                                    with(WCDelegate.fulfilmentAvailable!!.initialTransaction) {
+                                    with(WCDelegate.transactionsDetails!!.initialDetails.transaction) {
                                         try {
                                             val nonceResult = Transaction.getNonce(chainId, from)
                                             println("Original TX")

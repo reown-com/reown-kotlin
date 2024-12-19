@@ -6,6 +6,7 @@ import uniffi.uniffi_yttrium.Eip1559Estimation
 import uniffi.uniffi_yttrium.OwnerSignature
 import uniffi.uniffi_yttrium.PreparedSendTransaction
 import uniffi.uniffi_yttrium.FfiTransaction
+import uniffi.yttrium.Amount
 import uniffi.yttrium.FeeEstimatedTransaction
 import uniffi.yttrium.FundingMetadata
 import uniffi.yttrium.InitialTransaction
@@ -305,8 +306,8 @@ internal fun Wallet.Params.Transaction.toYttrium(): FfiTransaction = FfiTransact
 internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)
 
 @JvmSynthetic
-internal fun RouteResponseAvailable.toWallet(): Wallet.Model.FulfilmentSuccess.Available =
-    Wallet.Model.FulfilmentSuccess.Available(
+internal fun RouteResponseAvailable.toWallet(): Wallet.Model.PrepareSuccess.Available =
+    Wallet.Model.PrepareSuccess.Available(
         fulfilmentId = orchestrationId,
         checkIn = metadata.checkIn.toLong(),
         transactions = transactions.map { it.toWallet() },
@@ -316,7 +317,7 @@ internal fun RouteResponseAvailable.toWallet(): Wallet.Model.FulfilmentSuccess.A
     )
 
 @JvmSynthetic
-internal fun Wallet.Model.FulfilmentSuccess.Available.toYttrium(): RouteResponseAvailable =
+internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): RouteResponseAvailable =
     RouteResponseAvailable(
         fulfilmentId,
         metadata = YMetadata(
@@ -389,16 +390,21 @@ internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.M
 
 @JvmSynthetic
 internal fun UiFields.toWallet(): Wallet.Model.TransactionsDetails = Wallet.Model.TransactionsDetails(
-    localTotal = Wallet.Model.Amount(
-        symbol = localTotal.symbol,
-        amount = localTotal.amount,
-        unit = localTotal.unit.toString(),
-        formattedAlt = localTotal.formattedAlt,
-        formatted = localTotal.formatted
-    ),
+    localTotal = localTotal.toWallet(),
     initialDetails = initial.toWallet(),
     fulfilmentDetails = route.map { it.toWallet() },
-    bridgeDetails = bridge.map { it.toWallet() }
+    bridgeFees = bridge.map { it.toWallet() },
+    localFulfilmentTotal = localRouteTotal.toWallet(),
+    localBridgeTotal = localBridgeTotal.toWallet()
+)
+
+@JvmSynthetic
+internal fun Amount.toWallet(): Wallet.Model.Amount = Wallet.Model.Amount(
+    symbol = symbol,
+    amount = amount,
+    unit = unit.toString(),
+    formattedAlt = formattedAlt,
+    formatted = formatted
 )
 
 private fun TxnDetails.toWallet(): Wallet.Model.TransactionDetails = Wallet.Model.TransactionDetails(

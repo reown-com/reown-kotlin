@@ -31,7 +31,9 @@ object Transaction {
         return txHash
     }
 
-    fun getTransaction(sessionRequest: Wallet.Model.SessionRequest): Wallet.Model.Transaction {
+    @OptIn(ChainAbstractionExperimentalApi::class)
+    fun getTransaction(sessionRequest: Wallet.Model.SessionRequest): Wallet.Model.FeeEstimatedTransaction {
+        val fees = WalletKit.estimateFees(sessionRequest.chainId!!)
         val requestParams = JSONArray(sessionRequest.request.params).getJSONObject(0)
         val from = requestParams.getString("from")
         val to = requestParams.getString("to")
@@ -52,7 +54,7 @@ object Transaction {
             "0"
         }
 
-        return Wallet.Model.Transaction(
+        return Wallet.Model.FeeEstimatedTransaction(
             from = from,
             to = to,
             value = value,
@@ -60,6 +62,8 @@ object Transaction {
             nonce = nonce,
             gasLimit = gas,
             chainId = sessionRequest.chainId!!,
+            maxFeePerGas = fees.maxFeePerGas,
+            maxPriorityFeePerGas = fees.maxPriorityFeePerGas
         )
     }
 
@@ -70,11 +74,6 @@ object Transaction {
         val data = requestParams.getString("data")
         val value = try {
             requestParams.getString("value")
-        } catch (e: Exception) {
-            "0"
-        }
-        val nonce = try {
-            requestParams.getString("nonce")
         } catch (e: Exception) {
             "0"
         }
@@ -93,9 +92,7 @@ object Transaction {
         )
     }
 
-    @OptIn(ChainAbstractionExperimentalApi::class)
-    fun sign(transaction: Wallet.Model.Transaction, nonce: BigInteger? = null, gasLimit: BigInteger? = null): String {
-        val fees = WalletKit.estimateFees(transaction.chainId)
+    fun sign(transaction: Wallet.Model.FeeEstimatedTransaction, nonce: BigInteger? = null, gasLimit: BigInteger? = null): String {
         val chainId = transaction.chainId.split(":")[1].toLong()
         if (transaction.nonce.startsWith("0x")) {
             transaction.nonce = hexToBigDecimal(transaction.nonce)?.toBigInteger().toString()
@@ -107,14 +104,19 @@ object Transaction {
         if (transaction.value.startsWith("0x")) {
             transaction.value = hexToBigDecimal(transaction.value)?.toBigInteger().toString()
         }
+        if (transaction.maxFeePerGas.startsWith("0x")) {
+            transaction.maxFeePerGas = hexToBigDecimal(transaction.maxFeePerGas)?.toBigInteger().toString()
+        }
+        if (transaction.maxPriorityFeePerGas.startsWith("0x")) {
+            transaction.maxPriorityFeePerGas = hexToBigDecimal(transaction.maxPriorityFeePerGas)?.toBigInteger().toString()
+        }
 
-        println("fees: $fees")
         println("chainId: $chainId")
         println("nonce: ${nonce ?: transaction.nonce.toBigInteger()}")
         println("gas: ${gasLimit ?: transaction.gasLimit.toBigInteger()}")
         println("value: ${transaction.value}")
-        println("maxFeePerGas: ${fees.maxFeePerGas.toBigInteger()}")
-        println("maxPriorityFeePerGas: ${fees.maxPriorityFeePerGas.toBigInteger()}")
+        println("maxFeePerGas: ${transaction.maxFeePerGas.toBigInteger()}")
+        println("maxPriorityFeePerGas: ${transaction.maxPriorityFeePerGas.toBigInteger()}")
         println("//////////////////////////////////////")
 
         val rawTransaction = RawTransaction.createTransaction(
@@ -124,8 +126,8 @@ object Transaction {
             transaction.to,
             transaction.value.toBigInteger(),
             transaction.input,
-            fees.maxPriorityFeePerGas.toBigInteger(),
-            fees.maxFeePerGas.toBigInteger(),
+            transaction.maxPriorityFeePerGas.toBigInteger(),
+            transaction.maxFeePerGas.toBigInteger(),
         )
 
         return Numeric.toHexString(TransactionEncoder.signMessage(rawTransaction, Credentials.create(EthAccountDelegate.privateKey)))

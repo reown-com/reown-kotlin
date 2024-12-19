@@ -80,7 +80,7 @@ class PrepareChainAbstractionUseCaseTest {
             }
         }.await()
 
-        assertTrue(result is Wallet.Model.FulfilmentSuccess.NotRequired)
+        assertTrue(result is Wallet.Model.PrepareSuccess.NotRequired)
     }
 
     @Test
@@ -103,7 +103,7 @@ class PrepareChainAbstractionUseCaseTest {
             }
         }.await()
 
-        assertTrue(result is Wallet.Model.FulfilmentError.NoRoutesAvailable)
+        assertTrue(result is Wallet.Model.PrepareError.NoRoutesAvailable)
     }
 
     @Test
@@ -126,7 +126,7 @@ class PrepareChainAbstractionUseCaseTest {
             }
         }.await()
 
-        assertTrue(result is Wallet.Model.FulfilmentError.InsufficientFunds)
+        assertTrue(result is Wallet.Model.PrepareError.InsufficientFunds)
     }
 
     @Test

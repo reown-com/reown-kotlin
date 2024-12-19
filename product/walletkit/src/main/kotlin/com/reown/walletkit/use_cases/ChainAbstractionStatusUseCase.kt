@@ -13,8 +13,8 @@ class ChainAbstractionStatusUseCase(private val chainAbstractionClient: ChainAbs
     operator fun invoke(
         fulfilmentId: String,
         checkIn: Long,
-        onSuccess: (Wallet.Model.FulfilmentStatus.Completed) -> Unit,
-        onError: (Wallet.Model.FulfilmentStatus.Error) -> Unit
+        onSuccess: (Wallet.Model.Status.Completed) -> Unit,
+        onError: (Wallet.Model.Status.Error) -> Unit
     ) {
         scope.launch {
             withTimeout(FULFILMENT_TIMEOUT) {
@@ -26,18 +26,18 @@ class ChainAbstractionStatusUseCase(private val chainAbstractionClient: ChainAbs
                             try {
                                 chainAbstractionClient.status(fulfilmentId)
                             } catch (e: Exception) {
-                                return@async onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
+                                return@async onError(Wallet.Model.Status.Error(e.message ?: "Unknown error"))
                             }
                         }.await()
 
                         when (result) {
                             is StatusResponse.Completed -> {
-                                onSuccess(Wallet.Model.FulfilmentStatus.Completed(result.v1.createdAt.toLong()))
+                                onSuccess(Wallet.Model.Status.Completed(result.v1.createdAt.toLong()))
                                 break
                             }
 
                             is StatusResponse.Error -> {
-                                onError(Wallet.Model.FulfilmentStatus.Error(result.v1.error))
+                                onError(Wallet.Model.Status.Error(result.v1.error))
                                 break
                             }
 
@@ -48,7 +48,7 @@ class ChainAbstractionStatusUseCase(private val chainAbstractionClient: ChainAbs
                             else -> break
                         }
                     } catch (e: Exception) {
-                        onError(Wallet.Model.FulfilmentStatus.Error(e.message ?: "Unknown error"))
+                        onError(Wallet.Model.Status.Error(e.message ?: "Unknown error"))
                         break
                     }
                 }

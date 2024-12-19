@@ -825,7 +825,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = viewModel.calculateBridgeFee(),
+                            text = WCDelegate.transactionsDetails?.localBridgeTotal?.formattedAlt ?: "-.--",
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 lineHeight = 16.sp,

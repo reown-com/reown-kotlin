@@ -70,7 +70,7 @@ class ChainAbstractionStatusUseCaseTest {
             }
         }.await()
 
-        assertTrue(result is Wallet.Model.FulfilmentStatus.Error)
+        assertTrue(result is Wallet.Model.Status.Error)
     }
 
     @Test

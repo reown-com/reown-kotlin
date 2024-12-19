@@ -132,7 +132,7 @@ object Wallet {
             val maxPriorityFeePerGas: String
         ) : Model()
 
-        sealed class FulfilmentSuccess : Model() {
+        sealed class PrepareSuccess : Model() {
             data class Available(
                 val fulfilmentId: String,
                 val checkIn: Long,
@@ -140,9 +140,9 @@ object Wallet {
                 val initialTransaction: Transaction,
                 val initialTransactionMetadata: InitialTransactionMetadata,
                 val funding: List<FundingMetadata>
-            ) : FulfilmentSuccess()
+            ) : PrepareSuccess()
 
-            data class NotRequired(val initialTransaction: Transaction) : FulfilmentSuccess()
+            data class NotRequired(val initialTransaction: Transaction) : PrepareSuccess()
         }
 
 //        enum class Currency {
@@ -178,20 +178,22 @@ object Wallet {
         data class TransactionsDetails(
             var fulfilmentDetails: List<TransactionDetails>,
             var initialDetails: TransactionDetails,
-            var bridgeDetails: List<TransactionFee>,
+            var bridgeFees: List<TransactionFee>,
+            var localBridgeTotal: Amount,
+            var localFulfilmentTotal: Amount,
             var localTotal: Amount
         ) : Model()
 
-        sealed class FulfilmentError : Model() {
-            data object NoRoutesAvailable : FulfilmentError()
-            data object InsufficientFunds : FulfilmentError()
-            data object InsufficientGasFunds : FulfilmentError()
-            data class Unknown(val message: String) : FulfilmentError()
+        sealed class PrepareError : Model() {
+            data object NoRoutesAvailable : PrepareError()
+            data object InsufficientFunds : PrepareError()
+            data object InsufficientGasFunds : PrepareError()
+            data class Unknown(val message: String) : PrepareError()
         }
 
-        sealed class FulfilmentStatus : Model() {
-            data class Completed(val createdAt: Long) : FulfilmentStatus()
-            data class Error(val reason: String) : FulfilmentStatus()
+        sealed class Status : Model() {
+            data class Completed(val createdAt: Long) : Status()
+            data class Error(val reason: String) : Status()
         }
 
         data class ConnectionState(val isAvailable: Boolean, val reason: Reason? = null) : Model() {

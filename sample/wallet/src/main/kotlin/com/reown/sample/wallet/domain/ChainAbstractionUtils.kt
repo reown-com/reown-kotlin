@@ -21,12 +21,12 @@ fun prepare(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wal
             initialTransaction,
             onSuccess = { result ->
                 when (result) {
-                    is Wallet.Model.FulfilmentSuccess.Available -> {
+                    is Wallet.Model.PrepareSuccess.Available -> {
                         println("Prepare success available: $result")
                         emitChainAbstractionRequest(sessionRequest, result, verifyContext)
                     }
 
-                    is Wallet.Model.FulfilmentSuccess.NotRequired -> {
+                    is Wallet.Model.PrepareSuccess.NotRequired -> {
                         println("Prepare success not required: $result")
                         emitSessionRequest(sessionRequest, verifyContext)
                     }
@@ -41,7 +41,7 @@ fun prepare(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wal
     } catch (e: Exception) {
         println("Prepare: Unknown error: $e")
         respondWithError(e.message ?: "Prepare: Unknown error", sessionRequest)
-        emitChainAbstractionError(sessionRequest, Wallet.Model.FulfilmentError.Unknown(e.message ?: "Prepare: Unknown error"), verifyContext)
+        emitChainAbstractionError(sessionRequest, Wallet.Model.PrepareError.Unknown(e.message ?: "Prepare: Unknown error"), verifyContext)
     }
 }
 
@@ -93,7 +93,7 @@ suspend fun getTransactionsDetails(): Result<Wallet.Model.TransactionsDetails> =
         }
     }
 
-suspend fun status(): Result<Wallet.Model.FulfilmentStatus> =
+suspend fun status(): Result<Wallet.Model.Status> =
     suspendCoroutine { continuation ->
         try {
             WalletKit.status(
@@ -126,7 +126,7 @@ fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContex
     }
 }
 
-fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, fulfilment: Wallet.Model.FulfilmentSuccess.Available, verifyContext: Wallet.Model.VerifyContext) {
+fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, fulfilment: Wallet.Model.PrepareSuccess.Available, verifyContext: Wallet.Model.VerifyContext) {
     if (WCDelegate.currentId != sessionRequest.request.id) {
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
         WCDelegate.fulfilmentAvailable = fulfilment
@@ -142,24 +142,24 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
     }
 }
 
-fun emitChainAbstractionError(sessionRequest: Wallet.Model.SessionRequest, fulfilmentError: Wallet.Model.FulfilmentError, verifyContext: Wallet.Model.VerifyContext) {
+fun emitChainAbstractionError(sessionRequest: Wallet.Model.SessionRequest, prepareError: Wallet.Model.PrepareError, verifyContext: Wallet.Model.VerifyContext) {
     if (WCDelegate.currentId != sessionRequest.request.id) {
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
-        WCDelegate.fulfilmentError = fulfilmentError
+        WCDelegate.prepareError = prepareError
         recordError(Throwable(getErrorMessage()))
 
         scope.launch {
-            _walletEvents.emit(fulfilmentError)
+            _walletEvents.emit(prepareError)
         }
     }
 }
 
 fun getErrorMessage(): String {
-    return when (val error = WCDelegate.fulfilmentError) {
-        Wallet.Model.FulfilmentError.InsufficientFunds -> "Insufficient funds"
-        Wallet.Model.FulfilmentError.InsufficientGasFunds -> "Insufficient gas funds"
-        Wallet.Model.FulfilmentError.NoRoutesAvailable -> "No routes available"
-        is Wallet.Model.FulfilmentError.Unknown -> error.message
+    return when (val error = WCDelegate.prepareError) {
+        Wallet.Model.PrepareError.InsufficientFunds -> "Insufficient funds"
+        Wallet.Model.PrepareError.InsufficientGasFunds -> "Insufficient gas funds"
+        Wallet.Model.PrepareError.NoRoutesAvailable -> "No routes available"
+        is Wallet.Model.PrepareError.Unknown -> error.message
         else -> "Unknown Error"
     }
 }

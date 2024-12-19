@@ -12,7 +12,7 @@ import uniffi.yttrium.UiFields
 
 class GetTransactionDetailsUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
-        available: Wallet.Model.FulfilmentSuccess.Available,
+        available: Wallet.Model.PrepareSuccess.Available,
         onSuccess: (Wallet.Model.TransactionsDetails) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
     ) {

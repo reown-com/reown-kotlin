@@ -5,14 +5,12 @@ import com.reown.walletkit.client.toWallet
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
-import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import uniffi.uniffi_yttrium.ChainAbstractionClient
-import uniffi.uniffi_yttrium.Eip1559Estimation
 import uniffi.yttrium.Amount
 import uniffi.yttrium.FeeEstimatedTransaction
 import uniffi.yttrium.Transaction
@@ -29,7 +27,7 @@ class GetTransactionDetailsUseCaseTest {
 
     @Test
     fun shouldCallOnSuccessWithExpectedResultWhenClientSucceeds() = runTest {
-        val available = Wallet.Model.FulfilmentSuccess.Available(
+        val available = Wallet.Model.PrepareSuccess.Available(
             fulfilmentId = "123",
             checkIn = 11,
             initialTransaction = transaction.toWallet(),
@@ -67,7 +65,7 @@ class GetTransactionDetailsUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWhenClientThrowsAnException() = runTest {
-        val available = Wallet.Model.FulfilmentSuccess.Available(
+        val available = Wallet.Model.PrepareSuccess.Available(
             fulfilmentId = "123",
             checkIn = 11,
             initialTransaction = transaction.toWallet(),

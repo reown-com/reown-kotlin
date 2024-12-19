@@ -4,7 +4,6 @@ import android.util.Log
 import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.sample.wallet.domain.model.Transaction.getInitialTransaction
-import com.reown.sample.wallet.domain.model.Transaction.getTransaction
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.CoroutineScope
@@ -30,8 +29,8 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     var sessionRequestEvent: Pair<Wallet.Model.SessionRequest, Wallet.Model.VerifyContext>? = null
     var currentId: Long? = null
     //CA
-    var fulfilmentAvailable: Wallet.Model.FulfilmentSuccess.Available? = null
-    var fulfilmentError: Wallet.Model.FulfilmentError? = null
+    var fulfilmentAvailable: Wallet.Model.PrepareSuccess.Available? = null
+    var prepareError: Wallet.Model.PrepareError? = null
     var transactionsDetails: Wallet.Model.TransactionsDetails? = null
 
     init {
