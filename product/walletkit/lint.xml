@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Exclude the 'kotlin-bindings' directory from all lint checks -->
+    <issue id="all">
+        <ignore path="build/yttrium/kotlin-bindings/**" />
+    </issue>
+</lint>

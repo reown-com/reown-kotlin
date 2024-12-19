@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.reown.sample.common.ui.themedColor
 
 @Composable
-fun SemiTransparentDialog(backgroundColor: Color = themedColor(Color(0xFF242425), Color(0xFFFFFFFF)), content: @Composable () -> Unit) {
+fun SemiTransparentDialog(backgroundColor: Color = themedColor(Color(0xFF2A2A2A), Color(0xFFFFFFFF)), content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()

@@ -22,6 +22,7 @@ android {
             useSupportLibrary = true
         }
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
+        buildConfigField("String", "PIMLICO_API_KEY", "\"${System.getenv("PIMLICO_API_KEY") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
     }
 
@@ -72,6 +73,16 @@ android {
 dependencies {
     implementation(project(":sample:common"))
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
+
+    implementation("org.web3j:core:4.9.4")
+
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    // Converter for JSON parsing using Gson
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // OkHttp logging interceptor (optional, for debugging)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)

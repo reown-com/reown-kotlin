@@ -1,3 +1,6 @@
+import com.android.build.api.dsl.Packaging
+import java.net.URL
+
 plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
@@ -33,6 +36,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "${rootDir.path}/gradle/proguard-rules/sdk-rules.pro", "${projectDir}/web3wallet-rules.pro")
         }
     }
+
     lint {
         abortOnError = true
         ignoreWarnings = true
@@ -43,6 +47,12 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
+
+     packaging {
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium.so")
+    }
+
     kotlinOptions {
         jvmTarget = jvmVersion.toString()
         freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.time.ExperimentalTime"
@@ -54,6 +64,9 @@ android {
 }
 
 dependencies {
+    implementation("net.java.dev.jna:jna:5.15.0@aar")
+    implementation("com.github.reown-com:yttrium:0.4.11")
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 
@@ -62,4 +75,19 @@ dependencies {
 
     releaseImplementation("com.reown:android-core:$CORE_VERSION")
     releaseImplementation("com.reown:sign:$SIGN_VERSION")
+
+    testImplementation(libs.bundles.androidxTest)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.json)
+    testImplementation(libs.coroutines.test)
+    testImplementation(libs.bundles.scarlet.test)
+    testImplementation(libs.bundles.sqlDelight.test)
+    testImplementation(libs.koin.test)
+
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.coroutines.test)
+    androidTestImplementation(libs.core)
+
+    androidTestUtil(libs.androidx.testOrchestrator)
+    androidTestImplementation(libs.bundles.androidxAndroidTest)
 }
