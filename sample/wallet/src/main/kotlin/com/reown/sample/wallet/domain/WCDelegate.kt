@@ -79,6 +79,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
         }
 
     override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
+        println("Request: $sessionRequest")
         if (sessionRequest.request.method == "eth_sendTransaction") {
             prepare(sessionRequest, getInitialTransaction(sessionRequest), verifyContext)
         } else {
