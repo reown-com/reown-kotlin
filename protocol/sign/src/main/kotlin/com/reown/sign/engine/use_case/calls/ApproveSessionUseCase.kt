@@ -55,6 +55,7 @@ internal class ApproveSessionUseCase(
     override suspend fun approve(
         proposerPublicKey: String,
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
+        sessionProperties: Map<String, String>?,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit
     ) = supervisorScope {
@@ -70,7 +71,7 @@ internal class ApproveSessionUseCase(
                 metadataStorageRepository.insertOrAbortMetadata(sessionTopic, selfAppMetaData, AppMetaDataType.SELF)
                 metadataStorageRepository.insertOrAbortMetadata(sessionTopic, proposal.appMetaData, AppMetaDataType.PEER)
                 trace.add(Trace.Session.STORE_SESSION)
-                val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces)
+                val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces, sessionProperties)
                 val sessionSettle = SignRpc.SessionSettle(params = params)
                 val irnParams = IrnParams(Tags.SESSION_SETTLE, Ttl(fiveMinutesInSeconds))
                 trace.add(Trace.Session.PUBLISHING_SESSION_SETTLE).also { logger.log("Publishing session settle on topic: $sessionTopic") }
@@ -180,6 +181,7 @@ internal interface ApproveSessionUseCaseInterface {
     suspend fun approve(
         proposerPublicKey: String,
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
+        sessionProperties: Map<String, String>? = null,
         onSuccess: () -> Unit = {},
         onFailure: (Throwable) -> Unit = {},
     )

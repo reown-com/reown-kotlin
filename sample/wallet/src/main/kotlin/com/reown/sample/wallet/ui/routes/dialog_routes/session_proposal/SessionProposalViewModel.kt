@@ -3,6 +3,9 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 import androidx.lifecycle.ViewModel
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.SmartAccountEnabler
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
@@ -17,9 +20,8 @@ class SessionProposalViewModel : ViewModel() {
         if (proposal != null) {
             try {
                 Timber.d("Approving session proposal: $proposalPublicKey")
-                val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
-                val approveProposal = Wallet.Params.SessionApprove(proposerPublicKey = proposal.proposerPublicKey, namespaces = sessionNamespaces)
-
+                val (sessionNamespaces, sessionProperties) = getNamespacesAndProperties(proposal)
+                val approveProposal = Wallet.Params.SessionApprove(proposerPublicKey = proposal.proposerPublicKey, namespaces = sessionNamespaces, properties = sessionProperties)
                 WalletKit.approveSession(approveProposal,
                     onError = { error ->
                         Firebase.crashlytics.recordException(error.throwable)
@@ -37,6 +39,27 @@ class SessionProposalViewModel : ViewModel() {
             }
         } else {
             onError(Throwable("Cannot approve session proposal, it has expired. Please try again."))
+        }
+    }
+
+    private fun getNamespacesAndProperties(proposal: Wallet.Model.SessionProposal): Pair<Map<String, Wallet.Model.Namespace.Session>, Map<String, String>> {
+        return if (SmartAccountEnabler.isSmartAccountEnabled.value) {
+            val sessionNamespaces =
+                WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = smartAccountWalletMetadata.namespaces)
+            val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
+            val smartAccountAddress = try {
+                WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(ownerAccount))
+            } catch (e: Exception) {
+                Firebase.crashlytics.recordException(e)
+                ""
+            }
+
+            val capability = "{\"$smartAccountAddress\":{\"0xaa36a7\":{\"atomicBatch\":{\"supported\":true}}}}"
+            val sessionProperties = mapOf("bundler_name" to "pimlico", "capabilities" to capability)
+            Pair(sessionNamespaces, sessionProperties)
+        } else {
+            val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
+            Pair(sessionNamespaces, mapOf())
         }
     }
 

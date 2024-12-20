@@ -84,9 +84,12 @@ class RelayTest {
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "com.test.failure")
 
         clientA.eventsFlow.onEach { event ->
+            println("Test Result: A event: $event")
             when (event) {
                 is Relay.Model.Event.OnConnectionFailed -> {
+                    println("Test Result: A onFailed")
                     if (event.throwable.message?.contains("403") == true) {
+                        println("Test Result: A Success")
                         testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
                     }
                 }
@@ -96,9 +99,12 @@ class RelayTest {
         }.launchIn(testScope)
 
         clientB.eventsFlow.onEach { event ->
+            println("Test Result: B event: $event")
             when (event) {
                 is Relay.Model.Event.OnConnectionFailed -> {
+                    println("Test Result: B onFailed")
                     if (event.throwable.message?.contains("403") == true) {
+                        println("Test Result: B Success")
                         testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
                     }
                 }

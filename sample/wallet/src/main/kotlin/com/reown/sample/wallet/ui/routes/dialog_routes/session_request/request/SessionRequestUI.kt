@@ -1,4 +1,4 @@
-package com.reown.sample.wallet.ui.routes.dialog_routes.session_request
+package com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request
 
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
