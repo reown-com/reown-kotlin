@@ -8,6 +8,7 @@ interface SignEvent : Web3WalletEvent {
     object SessionProposal : SignEvent
     object SessionAuthenticate : SignEvent
     data class SessionRequest(val arrayOfArgs: ArrayList<String?>, val numOfArgs: Int) : SignEvent
+    data class Fulfilment(val isError: Boolean) : SignEvent
     object ExpiredRequest : SignEvent
     object Disconnect : SignEvent
     data class ConnectionState(val isAvailable: Boolean) : SignEvent

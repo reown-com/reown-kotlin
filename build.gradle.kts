@@ -6,6 +6,7 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.sonarqube.gradle.SonarExtension
+import java.net.URL
 import java.util.Base64
 import javax.xml.parsers.DocumentBuilderFactory
 
@@ -107,8 +108,6 @@ subprojects {
 task<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
-
-
 
 nexusPublishing {
     repositories {
