@@ -18,7 +18,11 @@ object Wallet {
     }
 
     sealed class Params {
-        data class Init(val core: CoreInterface, val pimlicoApiKey: String? = null) : Params()
+        data class Init(
+            val core: CoreInterface,
+            @SmartAccountExperimentalApi
+            val pimlicoApiKey: String? = null
+        ) : Params()
 
         data class Pair(val uri: String) : Params()
 
