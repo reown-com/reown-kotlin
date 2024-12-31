@@ -209,7 +209,7 @@ object Transaction {
         }
     }
 
-    fun hexToBigDecimal(input: String): BigDecimal? {
+    private fun hexToBigDecimal(input: String): BigDecimal? {
         val trimmedInput = input.trim()
         var hex = trimmedInput
         return if (hex.isEmpty()) {
