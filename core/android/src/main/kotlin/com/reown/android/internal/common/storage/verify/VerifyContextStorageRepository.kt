@@ -4,17 +4,21 @@ import android.database.sqlite.SQLiteException
 import com.reown.android.internal.common.model.Validation
 import com.reown.android.sdk.storage.data.dao.VerifyContextQueries
 import com.reown.android.verify.model.VerifyContext
+import com.reown.foundation.util.Logger
 
-class VerifyContextStorageRepository(private val verifyContextQueries: VerifyContextQueries) {
+class VerifyContextStorageRepository(private val verifyContextQueries: VerifyContextQueries, private val logger: Logger) {
 
     @Throws(SQLiteException::class)
     suspend fun insertOrAbort(verifyContext: VerifyContext) = with(verifyContext) {
         verifyContextQueries.insertOrAbortVerifyContext(id, origin, validation, verifyUrl, isScam)
     }
 
-    @Throws(SQLiteException::class)
     suspend fun get(id: Long): VerifyContext? {
-        return verifyContextQueries.getVerifyContextById(id, mapper = this::toVerifyContext).executeAsOneOrNull()
+        return try {
+            verifyContextQueries.getVerifyContextById(id, mapper = this::toVerifyContext).executeAsOneOrNull()
+        } catch (e: Exception) {
+            null
+        }
     }
 
     @Throws(SQLiteException::class)
@@ -22,9 +26,12 @@ class VerifyContextStorageRepository(private val verifyContextQueries: VerifyCon
         return verifyContextQueries.geListOfVerifyContexts(mapper = this::toVerifyContext).executeAsList()
     }
 
-    @Throws(SQLiteException::class)
     suspend fun delete(id: Long) {
-        verifyContextQueries.deleteVerifyContext(id)
+        try {
+            verifyContextQueries.deleteVerifyContext(id)
+        } catch (e: Exception) {
+            logger.error(e)
+        }
     }
 
     private fun toVerifyContext(id: Long, origin: String, validation: Validation, verifyUrl: String, isScam: Boolean?): VerifyContext =
