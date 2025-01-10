@@ -12,7 +12,6 @@ import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.clearSessionRequest
 import com.reown.sample.wallet.domain.status
-import com.reown.sample.wallet.domain.getUSDCContractAddress
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.domain.recordError
 import com.reown.sample.wallet.domain.respondWithError
@@ -27,9 +26,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.web3j.utils.Numeric
-import java.math.BigDecimal
-import java.math.RoundingMode
-
 data class TxSuccess(
     val redirect: Uri?,
     val hash: String
@@ -43,7 +39,8 @@ class ChainAbstractionViewModel : ViewModel() {
     @OptIn(ChainAbstractionExperimentalApi::class)
     fun getERC20Balance(): String {
         val initialTransaction = WCDelegate.sessionRequestEvent?.first
-        val tokenAddress = getUSDCContractAddress(initialTransaction?.chainId ?: "") //todo: replace with init tx metadata
+
+        val tokenAddress = WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.tokenContract ?: ""
         return try {
             WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, EthAccountDelegate.account ?: "")
         } catch (e: Exception) {

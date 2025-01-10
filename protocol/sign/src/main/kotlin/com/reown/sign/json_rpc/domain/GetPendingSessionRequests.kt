@@ -14,8 +14,7 @@ internal class GetPendingSessionRequests(
 ) {
 
     suspend operator fun invoke(): List<Request<String>> = supervisorScope {
-        jsonRpcHistory.getListOfPendingRecords()
-            .filter { record -> record.method == JsonRpcMethod.WC_SESSION_REQUEST }
+        jsonRpcHistory.getListOfPendingSessionRequests()
             .mapNotNull { record -> serializer.tryDeserialize<SignRpc.SessionRequest>(record.body)?.toRequest(record) }
     }
 }

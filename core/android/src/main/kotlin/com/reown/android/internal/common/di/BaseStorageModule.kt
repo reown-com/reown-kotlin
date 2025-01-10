@@ -124,7 +124,7 @@ fun baseStorageModule(storagePrefix: String = String.Empty, packageName: String)
 
     single { IdentitiesStorageRepository(identities = get(), get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI))) }
 
-    single { VerifyContextStorageRepository(verifyContextQueries = get()) }
+    single { VerifyContextStorageRepository(verifyContextQueries = get(), logger = get(named(AndroidCommonDITags.LOGGER))) }
 
     single { PushMessagesRepository(pushMessageQueries = get()) }
 

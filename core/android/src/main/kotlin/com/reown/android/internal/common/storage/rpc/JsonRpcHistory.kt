@@ -63,6 +63,9 @@ class JsonRpcHistory(
             .executeAsList()
             .filter { record -> record.response == null }
 
+    fun getListOfPendingSessionRequests(): List<JsonRpcHistoryRecord> =
+        jsonRpcHistoryQueries.getPendingSessionRequests(mapper = ::toRecord).executeAsList()
+
     fun getPendingRecordById(id: Long): JsonRpcHistoryRecord? {
         val record = jsonRpcHistoryQueries.getJsonRpcHistoryRecord(id, mapper = ::toRecord).executeAsOneOrNull()
         return if (record != null && record.response == null) record else null

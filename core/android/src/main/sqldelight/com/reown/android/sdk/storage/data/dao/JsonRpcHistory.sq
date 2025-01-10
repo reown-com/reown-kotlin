@@ -34,6 +34,11 @@ getJsonRpcRecords:
 SELECT request_id, topic, method, body, response, transport_type
 FROM JsonRpcHistoryDao;
 
+getPendingSessionRequests:
+SELECT request_id, topic, method, body, response, transport_type
+FROM JsonRpcHistoryDao
+WHERE method = "wc_sessionRequest" AND response IS NULL;
+
 doesJsonRpcNotExist:
 SELECT NOT EXISTS (
     SELECT 1
