@@ -363,26 +363,37 @@ internal class SignEngine(
     }
 
     private fun propagatePendingSessionRequestsQueue() = scope.launch {
-        getPendingSessionRequests()
-            .map { pendingRequest -> pendingRequest.toSessionRequest(metadataStorageRepository.getByTopicAndType(pendingRequest.topic, AppMetaDataType.PEER)) }
-            .filter { sessionRequest -> sessionRequest.expiry?.isExpired() == false }
-            .filter { sessionRequest -> getSessionsUseCase.getListOfSettledSessions().find { session -> session.topic.value == sessionRequest.topic } != null }
-            .onEach { sessionRequest ->
-                scope.launch {
-                    supervisorScope {
-                        val verifyContext =
-                            verifyContextStorageRepository.get(sessionRequest.request.id) ?: VerifyContext(
-                                sessionRequest.request.id,
-                                String.Empty,
-                                Validation.UNKNOWN,
-                                String.Empty,
-                                null
-                            )
-                        val sessionRequestEvent = EngineDO.SessionRequestEvent(sessionRequest, verifyContext.toEngineDO())
-                        sessionRequestEventsQueue.add(sessionRequestEvent)
+        try {
+            getPendingSessionRequests()
+                .map { pendingRequest -> pendingRequest.toSessionRequest(metadataStorageRepository.getByTopicAndType(pendingRequest.topic, AppMetaDataType.PEER)) }
+                .filter { sessionRequest -> sessionRequest.expiry?.isExpired() == false }
+                .filter { sessionRequest ->
+                    try {
+                        getSessionsUseCase.getListOfSettledSessions().find { session -> session.topic.value == sessionRequest.topic } != null
+                    } catch (e: Exception) {
+                        logger.error(e)
+                        false
                     }
                 }
-            }
+                .onEach { sessionRequest ->
+                    scope.launch {
+                        supervisorScope {
+                            val verifyContext =
+                                verifyContextStorageRepository.get(sessionRequest.request.id) ?: VerifyContext(
+                                    sessionRequest.request.id,
+                                    String.Empty,
+                                    Validation.UNKNOWN,
+                                    String.Empty,
+                                    null
+                                )
+                            val sessionRequestEvent = EngineDO.SessionRequestEvent(sessionRequest, verifyContext.toEngineDO())
+                            sessionRequestEventsQueue.add(sessionRequestEvent)
+                        }
+                    }
+                }
+        } catch (e: Exception) {
+            logger.error(e)
+        }
     }
 
     private fun sessionProposalExpiryWatcher() {
