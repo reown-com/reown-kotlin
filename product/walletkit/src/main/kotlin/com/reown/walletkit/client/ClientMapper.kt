@@ -2,18 +2,19 @@ package com.reown.walletkit.client
 
 import com.reown.android.internal.common.signing.cacao.CacaoType
 import com.reown.sign.client.Sign
+import com.squareup.moshi.Moshi
 import uniffi.uniffi_yttrium.Eip1559Estimation
-import uniffi.uniffi_yttrium.OwnerSignature
-import uniffi.uniffi_yttrium.PreparedSendTransaction
-import uniffi.uniffi_yttrium.FfiTransaction
 import uniffi.yttrium.Amount
+import uniffi.yttrium.Call
+import uniffi.yttrium.DoSendTransactionParams
 import uniffi.yttrium.FeeEstimatedTransaction
 import uniffi.yttrium.FundingMetadata
-import uniffi.yttrium.InitialTransaction
 import uniffi.yttrium.InitialTransactionMetadata
+import uniffi.yttrium.OwnerSignature
+import uniffi.yttrium.PrepareResponseAvailable
+import uniffi.yttrium.PreparedSendTransaction
 import uniffi.yttrium.Metadata as YMetadata
 import uniffi.yttrium.Transaction
-import uniffi.yttrium.RouteResponseAvailable
 import uniffi.yttrium.TransactionFee
 import uniffi.yttrium.TxnDetails
 import uniffi.yttrium.UiFields
@@ -297,16 +298,20 @@ internal fun Sign.Model.ConnectionState.Reason.toWallet(): Wallet.Model.Connecti
 }
 
 @JvmSynthetic
-internal fun PreparedSendTransaction.toWallet(): Wallet.Params.PrepareSendTransactionsResult = Wallet.Params.PrepareSendTransactionsResult(hash, doSendTransactionParams)
+internal fun PreparedSendTransaction.toWallet(moshi: Moshi): Wallet.Params.PrepareSendTransactionsResult {
+    val jsonParams = moshi.adapter(DoSendTransactionParams::class.java).toJson(doSendTransactionParams)
+    return Wallet.Params.PrepareSendTransactionsResult(hash = hash, doSendTransactionParams = jsonParams, eip712Domain = domain)
+}
+
 
 @JvmSynthetic
-internal fun Wallet.Params.Transaction.toYttrium(): FfiTransaction = FfiTransaction(to = to, value = value, data = data)
+internal fun Wallet.Params.Call.toYttrium(): Call = Call(to = to, value = value, input = data)
 
 @JvmSynthetic
 internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)
 
 @JvmSynthetic
-internal fun RouteResponseAvailable.toWallet(): Wallet.Model.PrepareSuccess.Available =
+internal fun PrepareResponseAvailable.toWallet(): Wallet.Model.PrepareSuccess.Available =
     Wallet.Model.PrepareSuccess.Available(
         fulfilmentId = orchestrationId,
         checkIn = metadata.checkIn.toLong(),
@@ -317,8 +322,8 @@ internal fun RouteResponseAvailable.toWallet(): Wallet.Model.PrepareSuccess.Avai
     )
 
 @JvmSynthetic
-internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): RouteResponseAvailable =
-    RouteResponseAvailable(
+internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): PrepareResponseAvailable =
+    PrepareResponseAvailable(
         fulfilmentId,
         metadata = YMetadata(
             checkIn = checkIn.toULong(),
@@ -347,15 +352,6 @@ private fun InitialTransactionMetadata.toWallet(): Wallet.Model.InitialTransacti
         tokenContract = tokenContract,
         decimals = decimals.toInt()
     )
-
-@JvmSynthetic
-fun Wallet.Model.InitialTransaction.toInitialYttrium(): InitialTransaction = InitialTransaction(
-    from = from,
-    to = to,
-    value = value,
-    chainId = chainId,
-    input = input,
-)
 
 @JvmSynthetic
 fun Transaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(

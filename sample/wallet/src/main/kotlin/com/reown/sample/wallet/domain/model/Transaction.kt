@@ -71,7 +71,11 @@ object Transaction {
         val requestParams = JSONArray(sessionRequest.request.params).getJSONObject(0)
         val from = requestParams.getString("from")
         val to = requestParams.getString("to")
-        val data = requestParams.getString("data")
+        val data = try {
+            requestParams.getString("data")
+        } catch (e: Exception) {
+            "0x"
+        }
         val value = try {
             requestParams.getString("value")
         } catch (e: Exception) {
@@ -187,7 +191,7 @@ object Transaction {
     }
 
     suspend fun getReceipt(chainId: String, txHash: String) {
-        withTimeout(30000) {
+        withTimeout(60000) {
             while (true) {
                 val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
                 val nonceRequest = JsonRpcRequest(

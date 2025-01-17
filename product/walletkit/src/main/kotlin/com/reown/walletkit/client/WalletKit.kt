@@ -2,6 +2,7 @@ package com.reown.walletkit.client
 
 import com.reown.android.Core
 import com.reown.android.CoreInterface
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
@@ -15,7 +16,10 @@ import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.ChainAbstractionStatusUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.*
+import org.koin.core.qualifier.named
+import uniffi.yttrium.DoSendTransactionParams
 import java.util.*
 
 object WalletKit {
@@ -26,6 +30,7 @@ object WalletKit {
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
     private val getTransactionDetailsUseCase: GetTransactionDetailsUseCase by wcKoinApp.koin.inject()
     private val getERC20TokenBalanceUseCase: GetERC20TokenBalanceUseCase by wcKoinApp.koin.inject()
+    private val moshi: Moshi = wcKoinApp.koin.get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)).build()
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -307,8 +312,9 @@ object WalletKit {
 
         val client = safeInteractor.getOrCreate(Account(params.owner.address))
         scope.launch {
-            async { client.prepareSendTransactions(params.transactions.map { it.toYttrium() }).toWallet() }
+            async { client.prepareSendTransactions(params.calls.map { it.toYttrium() }) }
                 .await()
+                .toWallet(moshi)
                 .let(onSuccess)
         }
     }
@@ -319,8 +325,9 @@ object WalletKit {
         check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
 
         val client = safeInteractor.getOrCreate(Account(params.owner.address))
+        val doSendParams = moshi.adapter(DoSendTransactionParams::class.java).fromJson(params.doSendTransactionParams) ?: throw IllegalStateException("Failed to parse DoSendTransactionParams")
         scope.launch {
-            async { client.doSendTransactions(params.signatures.map { it.toYttrium() }, params.doSendTransactionParams) }
+            async { client.doSendTransactions(params.signatures.map { it.toYttrium() }, doSendParams) }
                 .await()
                 .let { userOpHash -> onSuccess(Wallet.Params.DoSendTransactionsResult(userOpHash)) }
         }
