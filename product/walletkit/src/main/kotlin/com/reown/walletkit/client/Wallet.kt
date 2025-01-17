@@ -64,14 +64,14 @@ object Wallet {
 
         data class DecryptMessage(val topic: String, val encryptedMessage: String) : Params()
         data class GetSmartAccountAddress(val owner: Account) : Params()
-        data class PrepareSendTransactions(val transactions: List<Transaction>, val owner: Account) : Params()
+        data class PrepareSendTransactions(val calls: List<Call>, val owner: Account) : Params()
         data class DoSendTransactions(val owner: Account, val signatures: List<OwnerSignature>, val doSendTransactionParams: String) : Params()
-        data class PrepareSendTransactionsResult(var hash: String, var doSendTransactionParams: String) : Params()
+        data class PrepareSendTransactionsResult(var hash: String, var doSendTransactionParams: String, val eip712Domain: String, ) : Params()
         data class DoSendTransactionsResult(var userOperationHash: String) : Params()
         data class WaitForUserOperationReceipt(var owner: Account, var userOperationHash: String) : Params()
         data class OwnerSignature(val address: String, val signature: String) : Params()
         data class Account(val address: String) : Params()
-        data class Transaction(val to: String, val value: String, val data: String) : Params()
+        data class Call(val to: String, val value: String, val data: String) : Params()
     }
 
     sealed class Model {

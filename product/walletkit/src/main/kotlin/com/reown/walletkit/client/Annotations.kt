@@ -1,7 +1,7 @@
 package com.reown.walletkit.client
 
 @RequiresOptIn(
-    message = "This API is experimental and may change in a future release.",
+    message = "This API is experimental and may change in a future release, use carefully.",
     level = RequiresOptIn.Level.WARNING
 )
 @Retention(AnnotationRetention.BINARY)
@@ -9,7 +9,7 @@ package com.reown.walletkit.client
 annotation class ChainAbstractionExperimentalApi
 
 @RequiresOptIn(
-    message = "This API is experimental and may change in a future release.",
+    message = "This API is experimental and may change in a future release, use carefully.",
     level = RequiresOptIn.Level.WARNING
 )
 @Retention(AnnotationRetention.BINARY)

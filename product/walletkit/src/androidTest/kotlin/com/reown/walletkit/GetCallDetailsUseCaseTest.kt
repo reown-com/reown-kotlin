@@ -21,7 +21,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @ExperimentalCoroutinesApi
-class GetTransactionDetailsUseCaseTest {
+class GetCallDetailsUseCaseTest {
     private val chainAbstractionClient: ChainAbstractionClient = mockk()
     private val getTransactionDetailsUseCase = GetTransactionDetailsUseCase(chainAbstractionClient)
 
