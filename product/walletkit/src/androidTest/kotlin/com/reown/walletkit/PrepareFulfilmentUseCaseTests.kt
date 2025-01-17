@@ -14,10 +14,10 @@ import uniffi.yttrium.FundingMetadata
 import uniffi.yttrium.InitialTransactionMetadata
 import uniffi.yttrium.Metadata
 import uniffi.yttrium.PrepareResponse
-import uniffi.yttrium.RouteResponseAvailable
-import uniffi.yttrium.RouteResponseError
-import uniffi.yttrium.RouteResponseNotRequired
-import uniffi.yttrium.RouteResponseSuccess
+import uniffi.yttrium.PrepareResponseAvailable
+import uniffi.yttrium.PrepareResponseError
+import uniffi.yttrium.PrepareResponseNotRequired
+import uniffi.yttrium.PrepareResponseSuccess
 import uniffi.yttrium.Transaction
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -29,8 +29,8 @@ class PrepareChainAbstractionUseCaseTest {
     @Test
     fun shouldCallOnSuccessWithAvailableResult() = runTest {
         val successResult = PrepareResponse.Success(
-            RouteResponseSuccess.Available(
-                RouteResponseAvailable(
+            PrepareResponseSuccess.Available(
+                PrepareResponseAvailable(
                     orchestrationId = "123",
                     initialTransaction = transaction,
                     metadata = Metadata(
@@ -42,7 +42,7 @@ class PrepareChainAbstractionUseCaseTest {
                 )
             )
         )
-        coEvery { chainAbstractionClient.prepare(any()) } returns successResult
+        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } returns successResult
 
         val result = async {
             suspendCoroutine { continuation ->
@@ -63,8 +63,8 @@ class PrepareChainAbstractionUseCaseTest {
 
     @Test
     fun shouldCallOnSuccessWithNotRequiredResult() = runTest {
-        val successResult = PrepareResponse.Success(RouteResponseSuccess.NotRequired(RouteResponseNotRequired(initialTransaction = transaction, transactions = emptyList<Transaction>())))
-        coEvery { chainAbstractionClient.prepare(any()) } returns successResult
+        val successResult = PrepareResponse.Success(PrepareResponseSuccess.NotRequired(PrepareResponseNotRequired(initialTransaction = transaction, transactions = emptyList())))
+        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } returns successResult
 
         val result = async {
             suspendCoroutine { continuation ->
@@ -85,9 +85,9 @@ class PrepareChainAbstractionUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWithNoRoutesAvailableError() = runTest {
-        val errorResult = PrepareResponse.Error(RouteResponseError(BridgingError.NO_ROUTES_AVAILABLE))
+        val errorResult = PrepareResponse.Error(PrepareResponseError(BridgingError.NO_ROUTES_AVAILABLE))
 
-        coEvery { chainAbstractionClient.prepare(any()) } returns errorResult
+        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } returns errorResult
 
         val result = async {
             suspendCoroutine { continuation ->
@@ -108,9 +108,9 @@ class PrepareChainAbstractionUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWithInsufficientFundsError() = runTest {
-        val errorResult = PrepareResponse.Error(RouteResponseError(BridgingError.INSUFFICIENT_FUNDS))
+        val errorResult = PrepareResponse.Error(PrepareResponseError(BridgingError.INSUFFICIENT_FUNDS))
 
-        coEvery { chainAbstractionClient.prepare(any()) } returns errorResult
+        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } returns errorResult
 
         val result = async {
             suspendCoroutine { continuation ->
@@ -131,7 +131,7 @@ class PrepareChainAbstractionUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWithUnknownErrorOnException() = runTest {
-        coEvery { chainAbstractionClient.prepare(any()) } throws RuntimeException("Some unexpected error")
+        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } throws RuntimeException("Some unexpected error")
 
         val result = async {
             suspendCoroutine { continuation ->

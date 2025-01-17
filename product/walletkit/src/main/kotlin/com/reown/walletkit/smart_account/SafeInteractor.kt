@@ -3,8 +3,6 @@ package com.reown.walletkit.smart_account
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.wcKoinApp
 import uniffi.uniffi_yttrium.FfiAccountClient
-import uniffi.uniffi_yttrium.FfiAccountClientConfig
-
 import uniffi.yttrium.Config
 import uniffi.yttrium.Endpoint
 import uniffi.yttrium.Endpoints
@@ -31,14 +29,6 @@ class SafeInteractor(private val pimlicoApiKey: String) {
             paymaster = Endpoint(baseUrl = pimlicoUrl, apiKey = ""),
         )
         val config = Config(endpoints)
-        val accountConfig = FfiAccountClientConfig(
-            ownerAddress = account.address,
-            chainId = account.reference.toULong(),
-            config = config,
-            privateKey = "ff89825a799afce0d5deaa079cdde227072ec3f62973951683ac8cc033000000", //todo: remove sign service, just placeholder
-            safe = true,
-            signerType = "PrivateKey" //todo: remove sign service
-        )
-        return FfiAccountClient(accountConfig)
+        return FfiAccountClient(owner = account.address, chainId = account.reference.toULong(), config = config)
     }
 }
