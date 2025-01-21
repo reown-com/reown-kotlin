@@ -150,7 +150,8 @@ internal fun callsModule() = module {
             metadataStorageRepository = get(),
             insertEventUseCase = get(),
             clientId = get(named(AndroidCommonDITags.CLIENT_ID)),
-            logger = get(named(AndroidCommonDITags.LOGGER))
+            logger = get(named(AndroidCommonDITags.LOGGER)),
+            moshiBuilder = get(named(AndroidCommonDITags.MOSHI))
         )
     }
 
