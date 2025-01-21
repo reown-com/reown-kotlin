@@ -33,7 +33,7 @@ internal class OnSessionUpdateUseCase(
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
     suspend operator fun invoke(request: WCRequest, params: SignParams.UpdateNamespacesParams) = supervisorScope {
-        val irnParams = IrnParams(Tags.SESSION_UPDATE_RESPONSE, Ttl(dayInSeconds))
+        val irnParams = IrnParams(Tags.SESSION_UPDATE_RESPONSE, Ttl(dayInSeconds), correlationId = request.id.toString())
         logger.log("Session update received on topic: ${request.topic}")
         try {
             if (!sessionStorageRepository.isSessionValid(request.topic)) {

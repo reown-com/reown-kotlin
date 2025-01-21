@@ -47,7 +47,7 @@ internal class OnSessionSettleUseCase(
     suspend operator fun invoke(request: WCRequest, settleParams: SignParams.SessionSettleParams) = supervisorScope {
         logger.log("Session settle received on topic: ${request.topic}")
         val sessionTopic = request.topic
-        val irnParams = IrnParams(Tags.SESSION_SETTLE_RESPONSE, Ttl(fiveMinutesInSeconds))
+        val irnParams = IrnParams(Tags.SESSION_SETTLE_RESPONSE, Ttl(fiveMinutesInSeconds), correlationId = request.id.toString())
         val selfPublicKey: PublicKey = try {
             crypto.getSelfPublicFromKeyAgreement(sessionTopic)
         } catch (e: Exception) {

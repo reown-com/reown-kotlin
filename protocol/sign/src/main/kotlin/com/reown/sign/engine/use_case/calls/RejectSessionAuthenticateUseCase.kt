@@ -87,7 +87,7 @@ internal class RejectSessionAuthenticateUseCase(
                 onFailure(e)
             }
         } else {
-            val irnParams = IrnParams(Tags.SESSION_AUTHENTICATE_RESPONSE_REJECT, Ttl(dayInSeconds), false)
+            val irnParams = IrnParams(Tags.SESSION_AUTHENTICATE_RESPONSE_REJECT, Ttl(dayInSeconds), correlationId = response.id.toString(), prompt = false)
             logger.log("Sending Session Authenticate Reject on topic: $responseTopic")
             jsonRpcInteractor.publishJsonRpcResponse(
                 responseTopic, irnParams, response, envelopeType = EnvelopeType.ONE, participants = Participants(senderPublicKey, receiverPublicKey),

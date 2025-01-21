@@ -110,7 +110,7 @@ internal class SessionRequestUseCase(
 
                 Ttl(newTtl)
             }
-            val irnParams = IrnParams(Tags.SESSION_REQUEST, irnParamsTtl, true)
+            val irnParams = IrnParams(Tags.SESSION_REQUEST, irnParamsTtl, correlationId = sessionPayload.id.toString(), prompt = true)
             val requestTtlInSeconds = expiry.run { seconds - nowInSeconds }
 
             logger.log("Sending session request on topic: ${request.topic}}")

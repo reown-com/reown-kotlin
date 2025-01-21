@@ -91,7 +91,7 @@ internal class RespondSessionRequestUseCase(
                 onFailure(e)
             }
         } else {
-            val irnParams = IrnParams(Tags.SESSION_REQUEST_RESPONSE, Ttl(fiveMinutesInSeconds))
+            val irnParams = IrnParams(Tags.SESSION_REQUEST_RESPONSE, Ttl(fiveMinutesInSeconds), correlationId = jsonRpcResponse.id.toString())
             logger.log("Sending session request response on topic: $topic, id: ${jsonRpcResponse.id}")
             jsonRpcInteractor.publishJsonRpcResponse(topic = Topic(topic), params = irnParams, response = jsonRpcResponse,
                 onSuccess = {

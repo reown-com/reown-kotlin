@@ -136,8 +136,7 @@ internal fun callsModule() = module {
             verifyContextStorageRepository = get(),
             proposalStorageRepository = get(),
             jsonRpcInteractor = get(),
-            logger = get(named(AndroidCommonDITags.LOGGER)),
-            pairingController = get()
+            logger = get(named(AndroidCommonDITags.LOGGER))
         )
     }
 

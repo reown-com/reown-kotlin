@@ -28,7 +28,7 @@ internal class DisconnectSessionUseCase(
 
         val deleteParams = SignParams.DeleteParams(Reason.UserDisconnected.code, Reason.UserDisconnected.message)
         val sessionDelete = SignRpc.SessionDelete(params = deleteParams)
-        val irnParams = IrnParams(Tags.SESSION_DELETE, Ttl(dayInSeconds))
+        val irnParams = IrnParams(Tags.SESSION_DELETE, Ttl(dayInSeconds), correlationId = sessionDelete.id.toString())
 
         logger.log("Sending session disconnect on topic: $topic")
         jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, sessionDelete,

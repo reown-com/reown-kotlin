@@ -19,7 +19,7 @@ internal fun JsonRpcHistoryRecord.toWCResponse(result: JsonRpcResponse, params: 
 
 @JvmSynthetic
 internal fun IrnParams.toRelay(): Relay.Model.IrnParams =
-    Relay.Model.IrnParams(tag.id, ttl.seconds, prompt)
+    Relay.Model.IrnParams(tag.id, ttl.seconds, correlationId, rpcMethods, chainId, txHashes, contractAddresses, prompt)
 
 internal fun Subscription.toWCRequest(clientJsonRpc: ClientJsonRpc, params: ClientParams, transportType: TransportType): WCRequest =
     WCRequest(topic, clientJsonRpc.id, clientJsonRpc.method, params, decryptedMessage, publishedAt, encryptedMessage, attestation, transportType)
