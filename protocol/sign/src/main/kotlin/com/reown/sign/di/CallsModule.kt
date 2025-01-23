@@ -151,7 +151,7 @@ internal fun callsModule() = module {
             insertEventUseCase = get(),
             clientId = get(named(AndroidCommonDITags.CLIENT_ID)),
             logger = get(named(AndroidCommonDITags.LOGGER)),
-            moshiBuilder = get(named(AndroidCommonDITags.MOSHI))
+            tvf = get()
         )
     }
 
@@ -166,7 +166,7 @@ internal fun callsModule() = module {
             metadataStorageRepository = get(),
             insertEventUseCase = get(),
             clientId = get(named(AndroidCommonDITags.CLIENT_ID)),
-            moshiBuilder = get(named(AndroidCommonDITags.MOSHI))
+            tvf = get()
         )
     }
 

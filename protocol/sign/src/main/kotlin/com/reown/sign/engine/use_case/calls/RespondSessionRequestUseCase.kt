@@ -50,9 +50,8 @@ internal class RespondSessionRequestUseCase(
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
-    moshiBuilder: Moshi.Builder
+    private val tvf: TVF
 ) : RespondSessionRequestUseCaseInterface {
-    private val moshi: Moshi = moshiBuilder.build()
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     override val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
     override suspend fun respondSessionRequest(
@@ -102,9 +101,8 @@ internal class RespondSessionRequestUseCase(
         } else {
 
             println("kobe: method: ${ pendingRequest.params.rpcMethod}")
-            val tvfData = TVF.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
-            val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let { TVF.collectTxHashes(pendingRequest.params.rpcMethod, it.result.toString()) }
-
+            val tvfData = tvf.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
+            val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let { tvf.collectTxHashes(pendingRequest.params.rpcMethod, it.result.toString()) }
             println("kobe: rpcMethods: ${tvfData?.first}; contractAddresses: ${tvfData?.second}; txHashes: ${txHashes}; chainId: ${tvfData?.third}")
 
             val irnParams = IrnParams(

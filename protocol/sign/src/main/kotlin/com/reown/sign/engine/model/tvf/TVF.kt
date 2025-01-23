@@ -1,13 +1,8 @@
 package com.reown.sign.engine.model.tvf
 
-import com.reown.android.internal.common.di.AndroidCommonDITags
-import com.reown.android.internal.common.wcKoinApp
 import com.squareup.moshi.Moshi
-import org.koin.core.qualifier.named
 
-object TVF {
-    val moshi: Moshi = wcKoinApp.koin.get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)).build()
-
+class TVF(private val moshi: Moshi) {
     private val evm: List<String>
         get() = listOf(ETH_SEND_TRANSACTION, ETH_SEND_RAW_TRANSACTION)
     private val solana
@@ -71,10 +66,12 @@ object TVF {
         }
     }
 
-    private const val ETH_SEND_TRANSACTION = "eth_sendTransaction"
-    private const val ETH_SEND_RAW_TRANSACTION = "eth_sendRawTransaction"
-    private const val WALLET_SEND_CALLS = "wallet_sendCalls"
-    private const val SOLANA_SIGN_TRANSACTION = "solana_signTransaction"
-    private const val SOLANA_SIGN_AND_SEND_TRANSACTION = "solana_signAndSendTransaction"
-    private const val SOLANA_SIGN_ALL_TRANSACTION = "solana_signAllTransactions"
+    companion object {
+        private const val ETH_SEND_TRANSACTION = "eth_sendTransaction"
+        private const val ETH_SEND_RAW_TRANSACTION = "eth_sendRawTransaction"
+        private const val WALLET_SEND_CALLS = "wallet_sendCalls"
+        private const val SOLANA_SIGN_TRANSACTION = "solana_signTransaction"
+        private const val SOLANA_SIGN_AND_SEND_TRANSACTION = "solana_signAndSendTransaction"
+        private const val SOLANA_SIGN_ALL_TRANSACTION = "solana_signAllTransactions"
+    }
 }

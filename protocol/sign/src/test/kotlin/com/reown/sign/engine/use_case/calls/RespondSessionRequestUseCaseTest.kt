@@ -8,6 +8,7 @@ import com.reown.android.internal.common.storage.metadata.MetadataStorageReposit
 import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
 import com.reown.android.pulse.domain.InsertEventUseCase
 import com.reown.foundation.util.Logger
+import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.json_rpc.domain.GetPendingJsonRpcHistoryEntryByIdUseCase
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import io.mockk.every
@@ -25,6 +26,7 @@ class RespondSessionRequestUseCaseTest {
     private val verifyContextStorageRepository = mockk<VerifyContextStorageRepository>()
     private val metadataStorageRepository = mockk<MetadataStorageRepositoryInterface>()
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface = mockk()
+    private val tvf: TVF = mockk()
     private val insertEventUseCase = mockk<InsertEventUseCase>()
     private val respondSessionRequestUseCase = RespondSessionRequestUseCase(
         jsonRpcInteractor,
@@ -35,7 +37,8 @@ class RespondSessionRequestUseCaseTest {
         verifyContextStorageRepository,
         metadataStorageRepository,
         insertEventUseCase,
-        "clientId"
+        "clientId",
+        tvf
     )
 
     @Before

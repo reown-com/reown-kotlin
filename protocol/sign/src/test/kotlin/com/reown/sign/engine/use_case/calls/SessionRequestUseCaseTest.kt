@@ -7,6 +7,7 @@ import com.reown.android.internal.common.storage.metadata.MetadataStorageReposit
 import com.reown.android.pulse.domain.InsertEventUseCase
 import com.reown.foundation.util.Logger
 import com.reown.sign.engine.model.EngineDO
+import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -21,6 +22,7 @@ class SessionRequestUseCaseTest {
     private val jsonRpcInteractor = mockk<RelayJsonRpcInteractorInterface>()
     private val logger = mockk<Logger>()
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface = mockk()
+    private val tvf: TVF = mockk()
     private val metadataStorageRepository = mockk<MetadataStorageRepositoryInterface>()
     private val insertEventUseCase = mockk<InsertEventUseCase>()
     private val sessionRequestUseCase = SessionRequestUseCase(
@@ -30,7 +32,8 @@ class SessionRequestUseCaseTest {
         metadataStorageRepository,
         insertEventUseCase,
         "clientId",
-        logger
+        logger,
+        tvf
     )
 
     @Before

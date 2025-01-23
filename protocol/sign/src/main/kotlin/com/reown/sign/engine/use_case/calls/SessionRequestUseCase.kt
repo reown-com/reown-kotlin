@@ -35,7 +35,6 @@ import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.squareup.moshi.Moshi
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -55,9 +54,8 @@ internal class SessionRequestUseCase(
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
     private val logger: Logger,
-    moshiBuilder: Moshi.Builder
+    private val tvf: TVF
 ) : SessionRequestUseCaseInterface {
-    private val moshi: Moshi = moshiBuilder.build()
     private val _errors: MutableSharedFlow<SDKError> = MutableSharedFlow()
     override val errors: SharedFlow<SDKError> = _errors.asSharedFlow()
 
@@ -115,7 +113,7 @@ internal class SessionRequestUseCase(
                 Ttl(newTtl)
             }
 
-            val tvfData = TVF.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
+            val tvfData = tvf.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
             println("kobe: rpcMethods: ${tvfData?.first}; contractAddresses: ${tvfData?.second}; chainId: ${tvfData?.third}")
 
             val irnParams = IrnParams(
