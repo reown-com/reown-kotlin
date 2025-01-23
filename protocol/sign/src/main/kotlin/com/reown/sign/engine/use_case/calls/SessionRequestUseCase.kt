@@ -33,7 +33,7 @@ import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestVO
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
-import com.reown.sign.engine.model.tvf.EthSendTransaction
+import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.TimeoutCancellationException
@@ -46,7 +46,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
-import com.reown.sign.engine.model.tvf.TVF as TVF1
 
 internal class SessionRequestUseCase(
     private val sessionStorageRepository: SessionStorageRepository,
@@ -116,30 +115,16 @@ internal class SessionRequestUseCase(
                 Ttl(newTtl)
             }
 
-            println("kobe: params: ${sessionPayload.rpcParams}")
-
-            val contractAddresses = if (sessionPayload.rpcMethod == "eth_sendTransaction") {
-                try {
-                    val test = moshi.adapter(Array<EthSendTransaction>::class.java).fromJson(sessionPayload.rpcParams)
-                    println("kobe: payload: ${test?.get(0)}")
-                    listOf(test?.get(0)?.to ?: "")
-                } catch (e: Exception) {
-                    println("kobe: error: $e")
-                    listOf("")
-                }
-            } else {
-                null
-            }
-
-            println("kobe: rpcMethods: ${sessionPayload.rpcMethod}; contractAddresses: $contractAddresses; chainId: ${sessionPayload.params.chainId}")
+            val tvfData = TVF.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
+            println("kobe: rpcMethods: ${tvfData?.first}; contractAddresses: ${tvfData?.second}; chainId: ${tvfData?.third}")
 
             val irnParams = IrnParams(
                 Tags.SESSION_REQUEST,
                 irnParamsTtl,
                 correlationId = sessionPayload.id.toString(),
-                rpcMethods = listOf(sessionPayload.rpcMethod),
-                contractAddresses = contractAddresses,
-                chainId = sessionPayload.params.chainId,
+                rpcMethods = tvfData?.first,
+                contractAddresses = tvfData?.second,
+                chainId = tvfData?.third,
                 prompt = true
             )
             val requestTtlInSeconds = expiry.run { seconds - nowInSeconds }

@@ -70,6 +70,7 @@ internal sealed class SignParams : CoreSignParams() {
     ) : SignParams() {
         val expiry = request.expiryTimestamp
         val rpcMethod = request.method
+        val rpcParams = request.params
     }
 
     @JsonClass(generateAdapter = true)
