@@ -123,9 +123,7 @@ abstract class BaseRelayClient : RelayInterface {
                     val publishParams = RelayDTO.Publish.Request.Params(Topic(topic), message, Ttl(ttl), tag, prompt, correlationId, rpcMethods, chainId, txHashes, contractAddresses)
                     val publishRequest = RelayDTO.Publish.Request(id = id ?: generateClientToServerId(), params = publishParams)
                     observePublishResult(publishRequest.id, onResult)
-
                     println("kobe: IRN publish: $publishRequest")
-
                     relayService.publishRequest(publishRequest)
                 }
             },

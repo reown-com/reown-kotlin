@@ -58,7 +58,7 @@ class TVFTests {
         // Assert
         assertNotNull(result)
         assertEquals(listOf("eth_sendTransaction"), result?.first)
-        assertEquals(listOf(""), result?.second)
+        assertEquals(null, result?.second)
         assertEquals("1", result?.third)
     }
 

@@ -23,11 +23,7 @@ class TVF(private val moshi: Moshi) {
                         ?.firstOrNull()
                         ?.to
                         ?.let { listOf(it) }
-                        ?: listOf("")
-                }.getOrElse {
-                    println("Error parsing rpcParams: $it")
-                    listOf("")
-                }
+                }.getOrNull()
             }
 
             else -> null
@@ -61,7 +57,7 @@ class TVF(private val moshi: Moshi) {
                 else -> null
             }
         } catch (e: Exception) {
-            println("kobe: error processing $rpcMethod - $e")
+            println("error processing $rpcMethod - $e")
             null
         }
     }
