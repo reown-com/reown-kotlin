@@ -1,7 +1,6 @@
 package com.reown.sign.engine.use_case.calls
 
 import com.reown.android.internal.common.JsonRpcResponse
-import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
 import com.reown.android.internal.common.exception.InvalidExpiryException
 import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
@@ -15,7 +14,6 @@ import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.internal.utils.CoreValidator
 import com.reown.android.internal.utils.currentTimeInSeconds
 import com.reown.android.internal.utils.fiveMinutesInSeconds
@@ -36,7 +34,6 @@ import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestV
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.tvf.EthSendTransaction
-import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.TimeoutCancellationException
@@ -48,8 +45,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeout
-import org.koin.core.qualifier.named
 import java.util.concurrent.TimeUnit
+import com.reown.sign.engine.model.tvf.TVF as TVF1
 
 internal class SessionRequestUseCase(
     private val sessionStorageRepository: SessionStorageRepository,
@@ -121,34 +118,26 @@ internal class SessionRequestUseCase(
 
             println("kobe: params: ${sessionPayload.rpcParams}")
 
-            val rpcMethods = if (sessionPayload.rpcMethod in TVF.all) {
-                listOf(sessionPayload.rpcMethod)
-            } else {
-                null
-            }
-
             val contractAddresses = if (sessionPayload.rpcMethod == "eth_sendTransaction") {
-                //[{"from":"0x9CAaB7E1D1ad6eaB4d6a7f479Cb8800da551cbc0","to":"0x70012948c348CBF00806A3C79E3c5DAdFaAa347B","data":"0x","gasLimit":"0x5208","gasPrice":"0x0649534e00","value":"0","nonce":"0x07"}]
-                val to = try {
+                try {
                     val test = moshi.adapter(Array<EthSendTransaction>::class.java).fromJson(sessionPayload.rpcParams)
                     println("kobe: payload: ${test?.get(0)}")
-                    test?.get(0)?.to ?: ""
+                    listOf(test?.get(0)?.to ?: "")
                 } catch (e: Exception) {
                     println("kobe: error: $e")
-                    ""
+                    listOf("")
                 }
-                listOf(to)
             } else {
                 null
             }
 
-            println("kobe: rpcMethods: $rpcMethods; contractAddresses: $contractAddresses; chainId: ${sessionPayload.params.chainId}")
+            println("kobe: rpcMethods: ${sessionPayload.rpcMethod}; contractAddresses: $contractAddresses; chainId: ${sessionPayload.params.chainId}")
 
             val irnParams = IrnParams(
                 Tags.SESSION_REQUEST,
                 irnParamsTtl,
                 correlationId = sessionPayload.id.toString(),
-                rpcMethods = rpcMethods,
+                rpcMethods = listOf(sessionPayload.rpcMethod),
                 contractAddresses = contractAddresses,
                 chainId = sessionPayload.params.chainId,
                 prompt = true

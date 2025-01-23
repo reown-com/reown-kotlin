@@ -113,13 +113,14 @@ val walletMetaData = WalletMetaData(
             accounts = listOf("cosmos:cosmoshub-4:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc", "cosmos:cosmoshub-1:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc")
         ),
         "solana" to Wallet.Model.Namespace.Session(
-            chains = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "solana:8E9rvCKLFQia2Y35HXjjpWzj8weVo44K", "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"),
-            methods = listOf("solana_signMessage", "solana_signTransaction"),
-            events = listOf(),
+            chains = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z", "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", "solana:8E9rvCKLFQia2Y35HXjjpWzj8weVo44K"),
+            methods = listOf("solana_signMessage", "solana_signTransaction", "solana_signAndSendTransaction", "solana_signAllTransactions"),
+            events = listOf("accountsChanged", "chainChanged"),
             accounts = listOf(
-                "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:FFiNdLBt9522PfCZQhWM28rHSPg9ekCa7rEZvBVf8NAf",
-                "solana:8E9rvCKLFQia2Y35HXjjpWzj8weVo44K:FFiNdLBt9522PfCZQhWM28rHSPg9ekCa7rEZvBVf8NAf",
-                "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:FFiNdLBt9522PfCZQhWM28rHSPg9ekCa7rEZvBVf8NAf"
+                "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:DoMfA4MGqmAhstknCtcFFen1pr8oSha8yK2KBPzjr7g5",
+                "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z:DoMfA4MGqmAhstknCtcFFen1pr8oSha8yK2KBPzjr7g5",
+                "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1:DoMfA4MGqmAhstknCtcFFen1pr8oSha8yK2KBPzjr7g5",
+                "solana:8E9rvCKLFQia2Y35HXjjpWzj8weVo44K:DoMfA4MGqmAhstknCtcFFen1pr8oSha8yK2KBPzjr7g5"
             )
         )
     )

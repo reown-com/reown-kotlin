@@ -6,9 +6,9 @@ import com.squareup.moshi.JsonClass
 data class EthSendTransaction(
     val from: String,
     val to: String,
-    val data: String,
-    val gasLimit: String,
-    val gasPrice: String,
-    val value: String,
-    val nonce: String
+    val data: String?,
+    val gasLimit: String?,
+    val gasPrice: String?,
+    val value: String?,
+    val nonce: String?
 )

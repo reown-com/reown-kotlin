@@ -67,7 +67,10 @@ internal sealed class SignParams : CoreSignParams() {
         val request: SessionRequestVO,
         @Json(name = "chainId")
         val chainId: String,
-    ) : SignParams()
+    ) : SignParams() {
+        val expiry = request.expiryTimestamp
+        val rpcMethod = request.method
+    }
 
     @JsonClass(generateAdapter = true)
     internal data class EventParams(
