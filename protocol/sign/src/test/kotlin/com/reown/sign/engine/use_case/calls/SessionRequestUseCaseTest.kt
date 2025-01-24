@@ -1,15 +1,30 @@
 package com.reown.sign.engine.use_case.calls
 
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
+import com.reown.android.internal.common.exception.InvalidExpiryException
 import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
+import com.reown.android.internal.common.model.AppMetaData
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.Namespace
+import com.reown.android.internal.common.model.Redirect
+import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.utils.CoreValidator
 import com.reown.android.pulse.domain.InsertEventUseCase
+import com.reown.foundation.common.model.PublicKey
+import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger
+import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.invoke
+import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertSame
@@ -60,5 +75,195 @@ class SessionRequestUseCaseTest {
                 assertSame(CannotFindSequenceForTopic::class, error::class)
             }
         )
+    }
+
+    @Test
+    fun `should fail if expiry is not within bounds`() = runTest {
+        val session = SessionVO(
+            topic = Topic("topic"),
+            expiry = Expiry(0),
+            relayProtocol = "relayProtocol",
+            relayData = "relayData",
+            controllerKey = PublicKey(""),
+            selfPublicKey = PublicKey(""),
+            sessionNamespaces = emptyMap(),
+            requiredNamespaces = emptyMap(),
+            optionalNamespaces = emptyMap(),
+            isAcknowledged = false,
+            pairingTopic = "pairingTopic",
+            transportType = null
+        )
+        // Arrange
+        coEvery { sessionStorageRepository.isSessionValid(any()) } returns true
+        coEvery { sessionStorageRepository.getSessionWithoutMetadataByTopic(any()) } returns session
+        coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "")
+
+        val request = EngineDO.Request(
+            topic = "topic",
+            method = "method",
+            params = "params",
+            chainId = "chainId",
+            expiry = Expiry(0)
+        )
+
+        val onFailure = mockk<(Throwable) -> Unit>(relaxed = true)
+
+        // Act
+        sessionRequestUseCase.sessionRequest(request, onSuccess = {}, onFailure = onFailure)
+
+        // Assert
+        coVerify { onFailure(ofType(InvalidExpiryException::class)) }
+    }
+
+    @Test
+    fun `should send session request using link mode if peer link mode is enabled`() = runTest {
+        val session = SessionVO(
+            topic = Topic("topic"),
+            expiry = Expiry(0),
+            relayProtocol = "relayProtocol",
+            relayData = "relayData",
+            controllerKey = PublicKey(""),
+            selfPublicKey = PublicKey(""),
+            sessionNamespaces = mapOf(
+                "eip155" to Namespace.Session(
+                    chains = listOf("eip155:1", "eip155:42161"),
+                    methods = listOf("eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_signTypedData"),
+                    events = listOf("chainChanged", "accountsChanged"),
+                    accounts = listOf("eip155:1:0x1234556")
+                )
+            ),
+            requiredNamespaces = emptyMap(),
+            optionalNamespaces = emptyMap(),
+            peerAppMetaData = AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link")),
+            isAcknowledged = false,
+            pairingTopic = "pairingTopic",
+            transportType = TransportType.LINK_MODE
+        )
+        // Arrange
+        coEvery { sessionStorageRepository.isSessionValid(any()) } returns true
+        coEvery { sessionStorageRepository.getSessionWithoutMetadataByTopic(any()) } returns session
+        coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
+        coEvery { insertEventUseCase.invoke(any()) } just Runs
+        coEvery { linkModeJsonRpcInteractor.triggerRequest(any(), any(), any()) } just Runs
+
+        val onSuccess: (Long) -> Unit = mockk(relaxed = true)
+
+        val request = EngineDO.Request(
+            topic = "topic",
+            method = "personal_sign",
+            params = "params",
+            chainId = "eip155:1",
+        )
+
+        // Act
+        sessionRequestUseCase.sessionRequest(request, onSuccess = onSuccess, onFailure = {})
+
+        // Assert
+        coVerify { linkModeJsonRpcInteractor.triggerRequest(any(), any(), any()) }
+    }
+
+    @Test
+    fun `should publish session request through jsonRpcInteractor when transport type is RELAY`() = runTest {
+        val session = SessionVO(
+            topic = Topic("topic"),
+            expiry = Expiry(0),
+            relayProtocol = "relayProtocol",
+            relayData = "relayData",
+            controllerKey = PublicKey(""),
+            selfPublicKey = PublicKey(""),
+            sessionNamespaces = mapOf(
+                "eip155" to Namespace.Session(
+                    chains = listOf("eip155:1", "eip155:42161"),
+                    methods = listOf("eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_signTypedData"),
+                    events = listOf("chainChanged", "accountsChanged"),
+                    accounts = listOf("eip155:1:0x1234556")
+                )
+            ),
+            requiredNamespaces = emptyMap(),
+            optionalNamespaces = emptyMap(),
+            peerAppMetaData = AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = false, universal = "link")),
+            isAcknowledged = false,
+            pairingTopic = "pairingTopic",
+            transportType = TransportType.RELAY
+        )
+        // Arrange
+        coEvery { sessionStorageRepository.isSessionValid(any()) } returns true
+        coEvery { sessionStorageRepository.getSessionWithoutMetadataByTopic(any()) } returns session
+        coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
+        coEvery { insertEventUseCase.invoke(any()) } just Runs
+        coEvery { linkModeJsonRpcInteractor.triggerRequest(any(), any(), any()) } just Runs
+        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any(), captureLambda(), any()) } answers {
+            lambda<() -> Unit>().invoke()
+        }
+        every { logger.log(any<String>()) } just Runs
+        val onSuccess: (Long) -> Unit = mockk(relaxed = true)
+        val request = EngineDO.Request(
+            topic = "topic",
+            method = "personal_sign",
+            params = "params",
+            chainId = "eip155:1",
+        )
+
+        // Act
+        sessionRequestUseCase.sessionRequest(request, onSuccess = onSuccess, onFailure = {})
+
+        // Assert
+        coVerify { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any(), any(), any()) }
+        coVerify { onSuccess(any()) }
+    }
+
+    @Test
+    fun `should handle failure when publishing session request fails`() = runTest {
+        // Arrange
+        val session = SessionVO(
+            topic = Topic("topic"),
+            expiry = Expiry(0),
+            relayProtocol = "relayProtocol",
+            relayData = "relayData",
+            controllerKey = PublicKey(""),
+            selfPublicKey = PublicKey(""),
+            sessionNamespaces = mapOf(
+                "eip155" to Namespace.Session(
+                    chains = listOf("eip155:1", "eip155:42161"),
+                    methods = listOf("eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_signTypedData"),
+                    events = listOf("chainChanged", "accountsChanged"),
+                    accounts = listOf("eip155:1:0x1234556")
+                )
+            ),
+            requiredNamespaces = emptyMap(),
+            optionalNamespaces = emptyMap(),
+            peerAppMetaData = AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = false, universal = "link")),
+            isAcknowledged = false,
+            pairingTopic = "pairingTopic",
+            transportType = TransportType.RELAY
+        )
+        // Arrange
+        coEvery { sessionStorageRepository.isSessionValid(any()) } returns true
+        coEvery { sessionStorageRepository.getSessionWithoutMetadataByTopic(any()) } returns session
+        coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
+        coEvery { insertEventUseCase.invoke(any()) } just Runs
+        coEvery { linkModeJsonRpcInteractor.triggerRequest(any(), any(), any()) } just Runs
+        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any(), any(), captureLambda()) } answers {
+            lastArg<(Throwable) -> Unit>().invoke(Exception("Session request failure"))
+        }
+        every { logger.log(any<String>()) } just Runs
+
+
+        val onFailure: (Throwable) -> Unit = mockk(relaxed = true)
+
+        val request = EngineDO.Request(
+            topic = "topic",
+            method = "personal_sign",
+            params = "params",
+            chainId = "eip155:1",
+        )
+
+        // Act
+        sessionRequestUseCase.sessionRequest(request, onSuccess = {}, onFailure = onFailure)
+
+        // Assert
+        coVerify { onFailure(ofType(Exception::class)) }
     }
 }
