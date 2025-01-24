@@ -74,12 +74,12 @@ internal class RespondSessionRequestUseCase(
         val pendingRequest = getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id)
         if (pendingRequest == null) {
             logger.error("Request doesn't exist: $topic, id: ${jsonRpcResponse.id}")
-            throw RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}")
+            return@supervisorScope onFailure(RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}"))
         }
         pendingRequest.params.expiry?.let {
             if (Expiry(it).isExpired()) {
                 logger.error("Request Expired: $topic, id: ${jsonRpcResponse.id}")
-                throw RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}")
+                return@supervisorScope onFailure(RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}"))
             }
         }
 

@@ -168,7 +168,6 @@ class ApproveSessionUseCaseTest {
         val sessionNamespaces = mapOf<String, EngineDO.Namespace.Session>()
         val proposal = mockk<ProposalVO>(relaxed = true)
         val sessionTopic = mockk<Topic>()
-        val pairingTopic = Topic("pairingTopic")
 
         coEvery { proposalStorageRepository.getProposalByKey(proposerPublicKey) } returns proposal
         coEvery { crypto.generateAndStoreX25519KeyPair() } returns mockk()
