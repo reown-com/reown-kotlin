@@ -114,8 +114,6 @@ internal class SessionRequestUseCase(
             }
 
             val tvfData = tvf.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
-            println("kobe: rpcMethods: ${tvfData?.first}; contractAddresses: ${tvfData?.second}; chainId: ${tvfData?.third}")
-
             val irnParams = IrnParams(
                 Tags.SESSION_REQUEST,
                 irnParamsTtl,

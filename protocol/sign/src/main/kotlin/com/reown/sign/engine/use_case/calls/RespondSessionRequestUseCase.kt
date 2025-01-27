@@ -99,12 +99,8 @@ internal class RespondSessionRequestUseCase(
                 onFailure(e)
             }
         } else {
-
-            println("kobe: method: ${ pendingRequest.params.rpcMethod}")
             val tvfData = tvf.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
             val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let { tvf.collectTxHashes(pendingRequest.params.rpcMethod, it.result.toString()) }
-            println("kobe: rpcMethods: ${tvfData?.first}; contractAddresses: ${tvfData?.second}; txHashes: ${txHashes}; chainId: ${tvfData?.third}")
-
             val irnParams = IrnParams(
                 Tags.SESSION_REQUEST_RESPONSE,
                 Ttl(fiveMinutesInSeconds),

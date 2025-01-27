@@ -6,6 +6,7 @@ import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.common.toRelay
 import com.reown.foundation.common.toRelayEvent
+import com.reown.foundation.di.FoundationDITags
 import com.reown.foundation.di.foundationCommonModule
 import com.reown.foundation.network.data.service.RelayService
 import com.reown.foundation.network.model.Relay
@@ -13,6 +14,7 @@ import com.reown.foundation.network.model.RelayDTO
 import com.reown.foundation.util.Logger
 import com.reown.foundation.util.scope
 import com.reown.util.generateClientToServerId
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,6 +40,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeout
 import org.koin.core.KoinApplication
+import org.koin.core.qualifier.named
 
 sealed class ConnectionState {
     data object Open : ConnectionState()
@@ -123,7 +126,6 @@ abstract class BaseRelayClient : RelayInterface {
                     val publishParams = RelayDTO.Publish.Request.Params(Topic(topic), message, Ttl(ttl), tag, prompt, correlationId, rpcMethods, chainId, txHashes, contractAddresses)
                     val publishRequest = RelayDTO.Publish.Request(id = id ?: generateClientToServerId(), params = publishParams)
                     observePublishResult(publishRequest.id, onResult)
-                    println("kobe: IRN publish: $publishRequest")
                     relayService.publishRequest(publishRequest)
                 }
             },
