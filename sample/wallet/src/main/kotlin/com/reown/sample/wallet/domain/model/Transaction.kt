@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeout
 import org.json.JSONArray
+import org.json.JSONObject
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.RawTransaction
 import org.web3j.crypto.TransactionEncoder
@@ -206,7 +207,15 @@ object Transaction {
                     receipt.result == null -> delay(3000)
                     else -> {
                         println("receipt: $receipt")
-                        break
+                        val status = JSONObject(receipt.result.toString()).getString("status")
+
+                        if (status == "1") {
+                            break
+                        } else if (status == "0") {
+                            throw Exception("Route Transaction failed. Tx hash: $txHash, chainId: $chainId")
+                        } else {
+                            break
+                        }
                     }
                 }
             }
