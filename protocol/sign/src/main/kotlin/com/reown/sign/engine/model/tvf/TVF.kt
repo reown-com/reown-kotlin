@@ -15,18 +15,16 @@ class TVF(private val moshi: Moshi) {
     fun collect(rpcMethod: String, rpcParams: String, chainId: String): Triple<List<String>, List<String>?, String>? {
         if (rpcMethod !in all) return null
 
-        val contractAddresses = when (rpcMethod) {
-            "eth_sendTransaction" -> {
-                runCatching {
-                    moshi.adapter(Array<EthSendTransaction>::class.java)
-                        .fromJson(rpcParams)
-                        ?.firstOrNull()
-                        ?.to
-                        ?.let { listOf(it) }
-                }.getOrNull()
-            }
-
-            else -> null
+        val contractAddresses = if (rpcMethod == "eth_sendTransaction") {
+            runCatching {
+                moshi.adapter(Array<EthSendTransaction>::class.java)
+                    .fromJson(rpcParams)
+                    ?.firstOrNull()
+                    ?.takeIf { it.data != "0x" }
+                    ?.to
+            }.getOrNull()?.let { listOf(it) }
+        } else {
+            null
         }
 
         return Triple(listOf(rpcMethod), contractAddresses, chainId)
