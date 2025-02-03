@@ -17,7 +17,7 @@ import kotlin.coroutines.suspendCoroutine
 @OptIn(ChainAbstractionExperimentalApi::class)
 fun prepare(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wallet.Model.InitialTransaction, verifyContext: Wallet.Model.VerifyContext) {
     try {
-        WalletKit.prepare(
+        WalletKit.ChainAbstraction.prepare(
             initialTransaction,
             onSuccess = { result ->
                 when (result) {
@@ -74,7 +74,7 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
 suspend fun getTransactionsDetails(): Result<Wallet.Model.TransactionsDetails> =
     suspendCoroutine { continuation ->
         try {
-            WalletKit.getTransactionsDetails(
+            WalletKit.ChainAbstraction.getTransactionsDetails(
                 WCDelegate.fulfilmentAvailable!!,
                 onSuccess = {
                     println("Transaction details SUCCESS: $it")
@@ -96,7 +96,7 @@ suspend fun getTransactionsDetails(): Result<Wallet.Model.TransactionsDetails> =
 suspend fun status(): Result<Wallet.Model.Status> =
     suspendCoroutine { continuation ->
         try {
-            WalletKit.status(
+            WalletKit.ChainAbstraction.status(
                 WCDelegate.fulfilmentAvailable!!.fulfilmentId,
                 WCDelegate.fulfilmentAvailable!!.checkIn,
                 onSuccess = {

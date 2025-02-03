@@ -283,59 +283,6 @@ object WalletKit {
         SignClient.ping(signParams, signPingLister)
     }
 
-    //Chain Abstraction
-    @ChainAbstractionExperimentalApi
-    fun prepare(
-        initialTransaction: Wallet.Model.InitialTransaction,
-        onSuccess: (Wallet.Model.PrepareSuccess) -> Unit,
-        onError: (Wallet.Model.PrepareError) -> Unit
-    ) {
-        try {
-            prepareChainAbstractionUseCase(initialTransaction, onSuccess, onError)
-        } catch (e: Exception) {
-            onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
-        }
-    }
-
-    @ChainAbstractionExperimentalApi
-    fun status(
-        fulfilmentId: String,
-        checkIn: Long,
-        onSuccess: (Wallet.Model.Status.Completed) -> Unit,
-        onError: (Wallet.Model.Status.Error) -> Unit
-    ) {
-        try {
-            chainAbstractionStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
-        } catch (e: Exception) {
-            onError(Wallet.Model.Status.Error(e.message ?: "Unknown error"))
-        }
-    }
-
-    @Throws(Exception::class)
-    @ChainAbstractionExperimentalApi
-    fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
-        return estimateGasUseCase(chainId)
-    }
-
-    @Throws(Exception::class)
-    @ChainAbstractionExperimentalApi
-    fun getERC20Balance(chainId: String, tokenAddress: String, ownerAddress: String): String {
-        return getERC20TokenBalanceUseCase(chainId, tokenAddress, ownerAddress)
-    }
-
-    @ChainAbstractionExperimentalApi
-    fun getTransactionsDetails(
-        available: Wallet.Model.PrepareSuccess.Available,
-        onSuccess: (Wallet.Model.TransactionsDetails) -> Unit,
-        onError: (Wallet.Model.Error) -> Unit
-    ) {
-        try {
-            getTransactionDetailsUseCase(available, onSuccess, onError)
-        } catch (e: Exception) {
-            onError(Wallet.Model.Error(e))
-        }
-    }
-
     /**
      * Caution: This function is blocking and runs on the current thread.
      * It is advised that this function be called from background operation
@@ -402,5 +349,59 @@ object WalletKit {
     @Throws(IllegalStateException::class)
     fun getListOfVerifyContexts(): List<Wallet.Model.VerifyContext> {
         return SignClient.getListOfVerifyContexts().map { verifyContext -> verifyContext.toWallet() }
+    }
+
+    @Throws(Exception::class)
+    @ChainAbstractionExperimentalApi
+    fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
+        return estimateGasUseCase(chainId)
+    }
+
+    @Throws(Exception::class)
+    @ChainAbstractionExperimentalApi
+    fun getERC20Balance(chainId: String, tokenAddress: String, ownerAddress: String): String {
+        return getERC20TokenBalanceUseCase(chainId, tokenAddress, ownerAddress)
+    }
+
+    object ChainAbstraction {
+        @ChainAbstractionExperimentalApi
+        fun prepare(
+            initialTransaction: Wallet.Model.InitialTransaction,
+            onSuccess: (Wallet.Model.PrepareSuccess) -> Unit,
+            onError: (Wallet.Model.PrepareError) -> Unit
+        ) {
+            try {
+                prepareChainAbstractionUseCase(initialTransaction, onSuccess, onError)
+            } catch (e: Exception) {
+                onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
+            }
+        }
+
+        @ChainAbstractionExperimentalApi
+        fun status(
+            fulfilmentId: String,
+            checkIn: Long,
+            onSuccess: (Wallet.Model.Status.Completed) -> Unit,
+            onError: (Wallet.Model.Status.Error) -> Unit
+        ) {
+            try {
+                chainAbstractionStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
+            } catch (e: Exception) {
+                onError(Wallet.Model.Status.Error(e.message ?: "Unknown error"))
+            }
+        }
+
+        @ChainAbstractionExperimentalApi
+        fun getTransactionsDetails(
+            available: Wallet.Model.PrepareSuccess.Available,
+            onSuccess: (Wallet.Model.TransactionsDetails) -> Unit,
+            onError: (Wallet.Model.Error) -> Unit
+        ) {
+            try {
+                getTransactionDetailsUseCase(available, onSuccess, onError)
+            } catch (e: Exception) {
+                onError(Wallet.Model.Error(e))
+            }
+        }
     }
 }
