@@ -2,35 +2,27 @@ package com.reown.walletkit.client
 
 import com.reown.android.Core
 import com.reown.android.CoreInterface
-import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
 import com.reown.walletkit.di.walletKitModule
-import com.reown.walletkit.smart_account.Account
-import com.reown.walletkit.smart_account.SafeInteractor
-import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
-import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.ChainAbstractionStatusUseCase
+import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
-import com.squareup.moshi.Moshi
+import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
 import kotlinx.coroutines.*
-import org.koin.core.qualifier.named
-import uniffi.yttrium.DoSendTransactionParams
 import java.util.*
 
 object WalletKit {
     private lateinit var coreClient: CoreInterface
-    private lateinit var safeInteractor: SafeInteractor
     private val prepareChainAbstractionUseCase: PrepareChainAbstractionUseCase by wcKoinApp.koin.inject()
     private val chainAbstractionStatusUseCase: ChainAbstractionStatusUseCase by wcKoinApp.koin.inject()
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
     private val getTransactionDetailsUseCase: GetTransactionDetailsUseCase by wcKoinApp.koin.inject()
     private val getERC20TokenBalanceUseCase: GetERC20TokenBalanceUseCase by wcKoinApp.koin.inject()
-    private val moshi: Moshi = wcKoinApp.koin.get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)).build()
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -118,9 +110,6 @@ object WalletKit {
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
         wcKoinApp.modules(walletKitModule())
         coreClient = params.core
-        if (params.pimlicoApiKey != null) {
-            safeInteractor = SafeInteractor(params.pimlicoApiKey)
-        }
 
         SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
             if (error.throwable is SignClientAlreadyInitializedException) {
@@ -292,58 +281,6 @@ object WalletKit {
         }
 
         SignClient.ping(signParams, signPingLister)
-    }
-
-    //Yttrium
-
-    @Throws(Throwable::class)
-    @SmartAccountExperimentalApi
-    fun getSmartAccount(params: Wallet.Params.GetSmartAccountAddress): String {
-        check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
-
-        val client = safeInteractor.getOrCreate(Account(params.owner.address))
-        return runBlocking { client.getAddress() }
-    }
-
-    @Throws(Throwable::class)
-    @SmartAccountExperimentalApi
-    fun prepareSendTransactions(params: Wallet.Params.PrepareSendTransactions, onSuccess: (Wallet.Params.PrepareSendTransactionsResult) -> Unit) {
-        check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
-
-        val client = safeInteractor.getOrCreate(Account(params.owner.address))
-        scope.launch {
-            async { client.prepareSendTransactions(params.calls.map { it.toYttrium() }) }
-                .await()
-                .toWallet(moshi)
-                .let(onSuccess)
-        }
-    }
-
-    @Throws(Throwable::class)
-    @SmartAccountExperimentalApi
-    fun doSendTransactions(params: Wallet.Params.DoSendTransactions, onSuccess: (Wallet.Params.DoSendTransactionsResult) -> Unit) {
-        check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
-
-        val client = safeInteractor.getOrCreate(Account(params.owner.address))
-        val doSendParams = moshi.adapter(DoSendTransactionParams::class.java).fromJson(params.doSendTransactionParams) ?: throw IllegalStateException("Failed to parse DoSendTransactionParams")
-        scope.launch {
-            async { client.doSendTransactions(params.signatures.map { it.toYttrium() }, doSendParams) }
-                .await()
-                .let { userOpHash -> onSuccess(Wallet.Params.DoSendTransactionsResult(userOpHash)) }
-        }
-    }
-
-    @Throws(Throwable::class)
-    @SmartAccountExperimentalApi
-    fun waitForUserOperationReceipt(params: Wallet.Params.WaitForUserOperationReceipt, onSuccess: (String) -> Unit) {
-        check(::safeInteractor.isInitialized) { "Smart Accounts are not enabled" }
-
-        val client = safeInteractor.getOrCreate(Account(params.owner.address))
-        scope.launch {
-            async { client.waitForUserOperationReceipt(params.userOperationHash) }
-                .await()
-                .let(onSuccess)
-        }
     }
 
     //Chain Abstraction

@@ -74,7 +74,7 @@ class WalletKitApplication : Application() {
 
         println("Account: ${EthAccountDelegate.account}")
 
-        WalletKit.initialize(Wallet.Params.Init(core = CoreClient, pimlicoApiKey = BuildConfig.PIMLICO_API_KEY),
+        WalletKit.initialize(Wallet.Params.Init(core = CoreClient),
             onSuccess = { println("Web3Wallet initialized") },
             onError = { error ->
                 Firebase.crashlytics.recordException(error.throwable)
