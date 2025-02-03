@@ -184,7 +184,7 @@ class RelayTest {
             )
         }
 
-        clientA.publish(testTopic, testMessage, Relay.Model.IrnParams(1114, 300, correlationId = "1234", prompt = true)) { result ->
+        clientA.publish(testTopic, testMessage, Relay.Model.IrnParams(1114, 300, correlationId = 1234L, prompt = true)) { result ->
             result.fold(
                 onSuccess = { println("ClientA publish on topic: $testTopic; message: $testMessage") },
                 onFailure = { error ->
@@ -223,7 +223,7 @@ class RelayTest {
         measureAwaitingForConnection(clientA, clientB)
 
         //Publish message
-        clientA.publish(testTopic, testMessage, Relay.Model.IrnParams(1114, ttl, correlationId = "1234", prompt = true)) { result ->
+        clientA.publish(testTopic, testMessage, Relay.Model.IrnParams(1114, ttl, correlationId = 1234L, prompt = true)) { result ->
             result.fold(
                 onSuccess = {
                     testState.compareAndSet(expect = TestState.Idle, update = TestState.Error("ClientA publish on topic: $testTopic with ttl: $ttl"))

@@ -102,7 +102,7 @@ internal class ApproveSessionAuthenticateUseCase(
             val responseTopic: Topic = crypto.getTopicFromKey(receiverPublicKey)
             val sessionTopic = crypto.getTopicFromKey(symmetricKey)
             trace.add(Trace.SessionAuthenticate.CREATE_AUTHENTICATED_SESSION_TOPIC)
-            val irnParams = IrnParams(Tags.SESSION_AUTHENTICATE_RESPONSE_APPROVE, Ttl(dayInSeconds), correlationId = id.toString())
+            val irnParams = IrnParams(Tags.SESSION_AUTHENTICATE_RESPONSE_APPROVE, Ttl(dayInSeconds), correlationId = id)
 
             if (cacaos.find { cacao -> !cacaoVerifier.verify(cacao) } != null) {
                 insertTelemetryEventUseCase(Props(type = EventType.Error.INVALID_CACAO, properties = Properties(trace = trace, topic = sessionTopic.value)))

@@ -126,7 +126,7 @@ internal class RelayerInteractorTest {
     }
 
     private fun publishJsonRpcRequests() {
-        val irnParamsVO = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = "1234", prompt = true)
+        val irnParamsVO = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = 1234L, prompt = true)
         sut.publishJsonRpcRequest(
             topicVO,
             irnParamsVO,
@@ -193,7 +193,7 @@ internal class RelayerInteractorTest {
     fun `RespondWithParams publishes result with params and request id on request topic`() {
         val params: ClientParams = mockk()
         val result = JsonRpcResponse.JsonRpcResult(request.id, result = params)
-        val irnParams = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = "1234", prompt = true)
+        val irnParams = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = 1234L, prompt = true)
         mockRelayPublishSuccess()
         sut.respondWithParams(request, params, irnParams, onSuccess = {}, onFailure = {})
         verify { sut.publishJsonRpcResponse(topic = topicVO, response = result, params = irnParams, onSuccess = any(), onFailure = any()) }
@@ -202,7 +202,7 @@ internal class RelayerInteractorTest {
     @Test
     fun `RespondWithSuccess publishes result as true with request id on request topic`() {
         val result = JsonRpcResponse.JsonRpcResult(request.id, result = true)
-        val irnParams = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = "1234", prompt = true)
+        val irnParams = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = 1234L, prompt = true)
         mockRelayPublishSuccess()
         sut.respondWithSuccess(request, irnParams)
         verify { sut.publishJsonRpcResponse(topic = topicVO, response = result, params = irnParams, onSuccess = any(), onFailure = any()) }
@@ -212,7 +212,7 @@ internal class RelayerInteractorTest {
     fun `RespondWithError publishes result as error with request id on request topic`() {
         val error = JsonRpcResponse.Error(peerError.code, peerError.message)
         val result = JsonRpcResponse.JsonRpcError(request.id, error = error)
-        val irnParams = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = "1234", prompt = true)
+        val irnParams = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = 1234L, prompt = true)
         mockRelayPublishSuccess()
         sut.respondWithError(request, peerError, irnParams)
         verify { sut.publishJsonRpcResponse(topic = topicVO, response = result, params = irnParams, onSuccess = any(), onFailure = any()) }
@@ -221,7 +221,7 @@ internal class RelayerInteractorTest {
     @Test
     fun `OnFailure callback called when respondWithError encounters error`() {
         mockRelayPublishFailure()
-        val irnParams = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = "1234", prompt = true)
+        val irnParams = IrnParams(Tags.SESSION_PING, Ttl(300), correlationId = 1234L, prompt = true)
         sut.respondWithError(request = request, error = peerError, irnParams = irnParams, onFailure = onFailure)
         verify { onFailure(any()) }
     }

@@ -39,7 +39,7 @@ internal class SessionUpdateUseCase(
             onSuccess = {
                 val params = SignParams.UpdateNamespacesParams(namespaces.toMapOfNamespacesVOSession())
                 val sessionUpdate = SignRpc.SessionUpdate(params = params)
-                val irnParams = IrnParams(Tags.SESSION_UPDATE, Ttl(dayInSeconds), correlationId = sessionUpdate.id.toString())
+                val irnParams = IrnParams(Tags.SESSION_UPDATE, Ttl(dayInSeconds), correlationId = sessionUpdate.id)
 
                 try {
                     logger.log("Sending session update on topic: $topic")

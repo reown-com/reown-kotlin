@@ -117,7 +117,7 @@ internal class PairingEngine(
         jsonRpcInteractor.clientSyncJsonRpc
             .filter { request -> request.method !in setOfRegisteredMethods }
             .onEach { request ->
-                val irnParams = IrnParams(Tags.UNSUPPORTED_METHOD, Ttl(dayInSeconds), correlationId = request.id.toString())
+                val irnParams = IrnParams(Tags.UNSUPPORTED_METHOD, Ttl(dayInSeconds), correlationId = request.id)
                 jsonRpcInteractor.respondWithError(request, Invalid.MethodUnsupported(request.method), irnParams)
             }.map { request ->
                 SDKError(Exception(Invalid.MethodUnsupported(request.method).message))
@@ -239,7 +239,7 @@ internal class PairingEngine(
 
         val deleteParams = PairingParams.DeleteParams(6000, "User disconnected")
         val pairingDelete = PairingRpc.PairingDelete(params = deleteParams)
-        val irnParams = IrnParams(Tags.PAIRING_DELETE, Ttl(dayInSeconds), correlationId = pairingDelete.id.toString())
+        val irnParams = IrnParams(Tags.PAIRING_DELETE, Ttl(dayInSeconds), correlationId = pairingDelete.id)
         logger.log("Sending Pairing disconnect")
         jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, pairingDelete,
             onSuccess = {
@@ -263,7 +263,7 @@ internal class PairingEngine(
     fun ping(topic: String, onSuccess: (String) -> Unit, onFailure: (Throwable) -> Unit) {
         if (isPairingValid(topic)) {
             val pingPayload = PairingRpc.PairingPing(params = PairingParams.PingParams())
-            val irnParams = IrnParams(Tags.PAIRING_PING, Ttl(thirtySeconds), correlationId = pingPayload.id.toString())
+            val irnParams = IrnParams(Tags.PAIRING_PING, Ttl(thirtySeconds), correlationId = pingPayload.id)
 
             jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, pingPayload,
                 onSuccess = { onPingSuccess(pingPayload, onSuccess, topic, onFailure) },
@@ -378,7 +378,7 @@ internal class PairingEngine(
 
     @Deprecated(message = "This method has been deprecated. It will be removed soon.")
     private suspend fun onPairingDelete(request: WCRequest, params: PairingParams.DeleteParams) {
-        val irnParams = IrnParams(Tags.PAIRING_DELETE_RESPONSE, Ttl(dayInSeconds), correlationId = request.id.toString())
+        val irnParams = IrnParams(Tags.PAIRING_DELETE_RESPONSE, Ttl(dayInSeconds), correlationId = request.id)
         try {
             if (!isPairingValid(request.topic.value)) {
                 jsonRpcInteractor.respondWithError(request, Uncategorized.NoMatchingTopic("Pairing", request.topic.value), irnParams)
@@ -399,7 +399,7 @@ internal class PairingEngine(
 
     @Deprecated(message = "Ping method has been deprecated. It will be removed soon.")
     private fun onPing(request: WCRequest) {
-        val irnParams = IrnParams(Tags.PAIRING_PING, Ttl(thirtySeconds), correlationId = request.id.toString())
+        val irnParams = IrnParams(Tags.PAIRING_PING, Ttl(thirtySeconds), correlationId = request.id)
         jsonRpcInteractor.respondWithSuccess(request, irnParams)
     }
 

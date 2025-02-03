@@ -104,7 +104,7 @@ internal class RespondSessionRequestUseCase(
             val irnParams = IrnParams(
                 Tags.SESSION_REQUEST_RESPONSE,
                 Ttl(fiveMinutesInSeconds),
-                correlationId = jsonRpcResponse.id.toString(),
+                correlationId = jsonRpcResponse.id,
                 rpcMethods = tvfData?.first,
                 contractAddresses = tvfData?.second,
                 txHashes = txHashes,

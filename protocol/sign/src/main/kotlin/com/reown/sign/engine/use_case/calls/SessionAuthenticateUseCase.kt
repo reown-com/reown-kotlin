@@ -186,7 +186,7 @@ internal class SessionAuthenticateUseCase(
     ): Result<Unit> {
         logger.log("Sending session authenticate on topic: ${pairing.topic}")
         val irnParamsTtl = getIrnParamsTtl(requestExpiry, currentTimeInSeconds)
-        val irnParams = IrnParams(Tags.SESSION_AUTHENTICATE, irnParamsTtl, correlationId = authRequest.id.toString(), prompt = true)
+        val irnParams = IrnParams(Tags.SESSION_AUTHENTICATE, irnParamsTtl, correlationId = authRequest.id, prompt = true)
         val sessionAuthenticateDeferred = CompletableDeferred<Result<Unit>>()
         jsonRpcInteractor.publishJsonRpcRequest(Topic(pairing.topic), irnParams, authRequest,
             onSuccess = {

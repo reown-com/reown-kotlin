@@ -187,7 +187,7 @@ object Relay {
         data class IrnParams(
             val tag: Int,
             val ttl: Long,
-            val correlationId: String?,
+            val correlationId: Long?,
             val rpcMethods: List<String>? = null,
             val chainId: String? = null,
             val txHashes: List<String>? = null,

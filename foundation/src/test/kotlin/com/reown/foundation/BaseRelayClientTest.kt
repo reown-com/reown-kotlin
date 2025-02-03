@@ -75,7 +75,7 @@ class BaseRelayClientTest {
 
         val topic = "testTopic"
         val message = "testMessage"
-        val params = Relay.Model.IrnParams(1, 60, correlationId = "1234", prompt = true)
+        val params = Relay.Model.IrnParams(1, 60, correlationId = 1234L, prompt = true)
         val ack = RelayDTO.Publish.Result.Acknowledgement(123L, result = true)
 
         val publishRequestSlot = slot<RelayDTO.Publish.Request>()
@@ -95,7 +95,7 @@ class BaseRelayClientTest {
     fun `test publish success`() = testScope.runTest {
         val topic = "testTopic"
         val message = "testMessage"
-        val params = Relay.Model.IrnParams(1, 60, correlationId = "1234", prompt = true)
+        val params = Relay.Model.IrnParams(1, 60, correlationId = 1234L, prompt = true)
         val ack = RelayDTO.Publish.Result.Acknowledgement(123L, result = true)
 
         coEvery { relayServiceMock.publishRequest(any()) } returns Unit
@@ -121,7 +121,7 @@ class BaseRelayClientTest {
     fun `test publish error due to time out`() = testScope.runTest {
         val topic = "testTopic"
         val message = "testMessage"
-        val params = Relay.Model.IrnParams(1, 60, correlationId = "1234", prompt = true)
+        val params = Relay.Model.IrnParams(1, 60, correlationId = 1234L, prompt = true)
 
         coEvery { relayServiceMock.publishRequest(any()) } returns Unit
         coEvery { relayServiceMock.observePublishAcknowledgement() } returns flow { delay(15000L) }

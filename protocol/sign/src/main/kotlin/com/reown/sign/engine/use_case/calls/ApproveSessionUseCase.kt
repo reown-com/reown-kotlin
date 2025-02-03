@@ -73,7 +73,7 @@ internal class ApproveSessionUseCase(
                 trace.add(Trace.Session.STORE_SESSION)
                 val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces, sessionProperties)
                 val sessionSettle = SignRpc.SessionSettle(params = params)
-                val irnParams = IrnParams(Tags.SESSION_SETTLE, Ttl(fiveMinutesInSeconds), correlationId = sessionSettle.id.toString())
+                val irnParams = IrnParams(Tags.SESSION_SETTLE, Ttl(fiveMinutesInSeconds), correlationId = sessionSettle.id)
                 trace.add(Trace.Session.PUBLISHING_SESSION_SETTLE).also { logger.log("Publishing session settle on topic: $sessionTopic") }
                 jsonRpcInteractor.publishJsonRpcRequest(
                     topic = sessionTopic,
@@ -139,7 +139,7 @@ internal class ApproveSessionUseCase(
             val sessionTopic = crypto.generateTopicFromKeyAgreement(selfPublicKey, PublicKey(proposerPublicKey))
             trace.add(Trace.Session.CREATE_SESSION_TOPIC)
             val approvalParams = proposal.toSessionApproveParams(selfPublicKey)
-            val irnParams = IrnParams(Tags.SESSION_PROPOSE_RESPONSE_APPROVE, Ttl(fiveMinutesInSeconds), correlationId = proposal.requestId.toString())
+            val irnParams = IrnParams(Tags.SESSION_PROPOSE_RESPONSE_APPROVE, Ttl(fiveMinutesInSeconds), correlationId = proposal.requestId)
             trace.add(Trace.Session.SUBSCRIBING_SESSION_TOPIC).also { logger.log("Subscribing to session topic: $sessionTopic") }
             jsonRpcInteractor.subscribe(sessionTopic,
                 onSuccess = {

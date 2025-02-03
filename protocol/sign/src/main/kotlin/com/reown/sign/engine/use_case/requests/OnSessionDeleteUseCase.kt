@@ -32,7 +32,7 @@ internal class OnSessionDeleteUseCase(
 
     suspend operator fun invoke(request: WCRequest, params: SignParams.DeleteParams) = supervisorScope {
         logger.log("Session delete received on topic: ${request.topic}")
-        val irnParams = IrnParams(Tags.SESSION_DELETE_RESPONSE, Ttl(dayInSeconds), correlationId = request.id.toString())
+        val irnParams = IrnParams(Tags.SESSION_DELETE_RESPONSE, Ttl(dayInSeconds), correlationId = request.id)
         try {
             if (!sessionStorageRepository.isSessionValid(request.topic)) {
                 logger.error("Session delete received failure on topic: ${request.topic} - invalid session")

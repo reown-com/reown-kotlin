@@ -117,7 +117,7 @@ internal class SessionRequestUseCase(
             val irnParams = IrnParams(
                 Tags.SESSION_REQUEST,
                 irnParamsTtl,
-                correlationId = sessionPayload.id.toString(),
+                correlationId = sessionPayload.id,
                 rpcMethods = tvfData?.first,
                 contractAddresses = tvfData?.second,
                 chainId = tvfData?.third,
