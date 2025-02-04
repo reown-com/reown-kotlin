@@ -8,16 +8,17 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.EthSigner
 import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.clearSessionRequest
-import com.reown.sample.wallet.domain.status
+import com.reown.sample.wallet.domain.execute
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.domain.recordError
-import com.reown.sample.wallet.domain.respondWithError
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
+import com.reown.util.hexToBytes
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
@@ -26,6 +27,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.web3j.utils.Numeric
+
 data class TxSuccess(
     val redirect: Uri?,
     val hash: String
@@ -60,115 +62,137 @@ class ChainAbstractionViewModel : ViewModel() {
     }
 
     fun approve(onSuccess: (TxSuccess) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
-        try {
-            val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
-            if (sessionRequest != null) {
-                val signedTransactions = mutableListOf<Pair<String, String>>()
-                val txHashesChannel = Channel<Pair<String, String>>()
-                //sign fulfilment txs
-                WCDelegate.transactionsDetails?.fulfilmentDetails?.forEach { fulfilment ->
-                    val signedTransaction = Transaction.sign(fulfilment.transaction)
-                    signedTransactions.add(Pair(fulfilment.transaction.chainId, signedTransaction))
-                }
-
-                //execute fulfilment txs
-                signedTransactions.forEach { (chainId, signedTx) ->
-                    viewModelScope.launch {
-                        try {
-                            println("Send raw: $signedTx")
-                            val txHash = Transaction.sendRaw(chainId, signedTx, "Route")
-                            println("Receive hash: $txHash")
-                            txHashesChannel.send(Pair(chainId, txHash))
-                        } catch (e: Exception) {
-                            println("Route broadcast tx error: $e")
-                            recordError(e)
-                            respondWithError(e.message ?: "Route TX broadcast error", WCDelegate.sessionRequestEvent?.first)
-                            return@launch onError(e)
-                        }
+        viewModelScope.launch {
+            try {
+                val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
+                if (sessionRequest != null) {
+                    val signedTransactions = mutableListOf<Pair<String, String>>()
+                    val txHashesChannel = Channel<Pair<String, String>>()
+                    //sign fulfilment txs
+                    WCDelegate.transactionsDetails?.fulfilmentDetails?.forEach { fulfilment ->
+                        val signedTransaction = EthSigner.signHash(fulfilment.transactionHashToSign, EthAccountDelegate.privateKey)
+                        signedTransactions.add(Pair(fulfilment.transaction.chainId, signedTransaction))
                     }
-                }
 
-                //awaits receipts
-                viewModelScope.launch {
-                    repeat(signedTransactions.size) {
-                        val (chainId, txHash) = txHashesChannel.receive()
-                        println("Receive tx hash: $txHash")
+                    println("Original TX")
+                    val initTransactionDetails = WCDelegate.transactionsDetails!!.initialDetails
+                    val signedTx = EthSigner.signHash(initTransactionDetails.transactionHashToSign, EthAccountDelegate.privateKey)
 
-                        try {
-                            Transaction.getReceipt(chainId, txHash)
-                        } catch (e: Exception) {
-                            println("Route execution tx error: $e")
-                            recordError(e)
-                            respondWithError(e.message ?: "Route TX execution error", WCDelegate.sessionRequestEvent?.first)
-                            return@launch onError(e)
+                    println("kobe: routeSignatures: $signedTransactions; init signature: $signedTx")
+
+                    val result = async { execute(WCDelegate.transactionsDetails!!, signedTransactions.map { it.second }, signedTx) }.await()
+
+                    result.fold(
+                        onSuccess = { executeSuccess ->
+
+                            val response = Wallet.Params.SessionRequestResponse(
+                                sessionTopic = sessionRequest.topic,
+                                jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, executeSuccess.initialTxHash)
+                            )
+
+                            val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
+                            WalletKit.respondSessionRequest(response,
+                                onSuccess = {
+                                    clearSessionRequest()
+                                    onSuccess(TxSuccess(redirect, executeSuccess.initialTxHash))
+                                },
+                                onError = { error ->
+                                    recordError(error.throwable)
+                                    if (error.throwable !is NoConnectivityException) {
+                                        clearSessionRequest()
+                                    }
+                                    onError(error.throwable)
+                                })
+                        },
+                        onFailure = {
+                            println("Execution error: $it")
+                            recordError(it)
+                            onError(Throwable("Execution error: $it"))
                         }
-                    }
-                    txHashesChannel.close()
+                    )
+//                //execute fulfilment txs
+//                signedTransactions.forEach { (chainId, signedTx) ->
+//                    viewModelScope.launch {
+//                        try {
+//                            println("Send raw: $signedTx")
+//                            val txHash = Transaction.sendRaw(chainId, signedTx, "Route")
+//                            println("Receive hash: $txHash")
+//                            txHashesChannel.send(Pair(chainId, txHash))
+//                        } catch (e: Exception) {
+//                            println("Route broadcast tx error: $e")
+//                            recordError(e)
+//                            respondWithError(e.message ?: "Route TX broadcast error", WCDelegate.sessionRequestEvent?.first)
+//                            return@launch onError(e)
+//                        }
+//                    }
+//                }
+
+//                //awaits receipts
+//                viewModelScope.launch {
+//                    repeat(signedTransactions.size) {
+//                        val (chainId, txHash) = txHashesChannel.receive()
+//                        println("Receive tx hash: $txHash")
+//
+//                        try {
+//                            Transaction.getReceipt(chainId, txHash)
+//                        } catch (e: Exception) {
+//                            println("Route execution tx error: $e")
+//                            recordError(e)
+//                            respondWithError(e.message ?: "Route TX execution error", WCDelegate.sessionRequestEvent?.first)
+//                            return@launch onError(e)
+//                        }
+//                    }
+//                    txHashesChannel.close()
 
 
                     //check fulfilment status
-                    println("Fulfilment status check")
-                    val fulfilmentResult = async { status() }.await()
-                    fulfilmentResult.fold(
-                        onSuccess = {
-                            when (it) {
-                                is Wallet.Model.Status.Error -> {
-                                    println("Fulfilment error: ${it.reason}")
-                                    onError(Throwable(it.reason))
-                                }
+//                    println("Fulfilment status check")
+//                    val fulfilmentResult = async { status() }.await()
+//                fulfilmentResult.fold(
+//                    onSuccess = {
+//                        when (it) {
+//                            is Wallet.Model.Status.Error -> {
+//                                println("Fulfilment error: ${it.reason}")
+//                                onError(Throwable(it.reason))
+//                            }
+//
+//                            is Wallet.Model.Status.Completed -> {
+//                                println("Fulfilment completed")
+//                                //if status completed, execute init tx
+//                                with(WCDelegate.transactionsDetails!!.initialDetails.transaction) {
+//                try {
+//                                        val nonceResult = Transaction.getNonce(chainId, from)
+//                                        println("Original TX")
+//                                        val signedTx = Transaction.sign(this, nonceResult)
+//                                        val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
+//                                        val receipt = Transaction.getReceipt(chainId, resultTx)
+//                                        println("Original TX receipt: $receipt")
 
-                                is Wallet.Model.Status.Completed -> {
-                                    println("Fulfilment completed")
-                                    //if status completed, execute init tx
-                                    with(WCDelegate.transactionsDetails!!.initialDetails.transaction) {
-                                        try {
-                                            val nonceResult = Transaction.getNonce(chainId, from)
-                                            println("Original TX")
-                                            val signedTx = Transaction.sign(this, nonceResult)
-                                            val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
-                                            val receipt = Transaction.getReceipt(chainId, resultTx)
-                                            println("Original TX receipt: $receipt")
-                                            val response = Wallet.Params.SessionRequestResponse(
-                                                sessionTopic = sessionRequest.topic,
-                                                jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, resultTx)
-                                            )
-                                            val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                                            WalletKit.respondSessionRequest(response,
-                                                onSuccess = {
-                                                    clearSessionRequest()
-                                                    onSuccess(TxSuccess(redirect, resultTx))
-                                                },
-                                                onError = { error ->
-                                                    recordError(error.throwable)
-                                                    if (error.throwable !is NoConnectivityException) {
-                                                        clearSessionRequest()
-                                                    }
-                                                    onError(error.throwable)
-                                                })
 
-                                        } catch (e: Exception) {
-                                            recordError(e)
-                                            respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent?.first)
-                                            return@launch onError(e)
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        onFailure = {
-                            println("Fulfilment error: $it")
-                            recordError(it)
-                            onError(Throwable("Fulfilment status error: $it"))
-                        }
-                    )
+//                } catch (e: Exception) {
+//                    recordError(e)
+//                    respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent?.first)
+//                    return@launch onError(e)
+//                }
                 }
+//                            }
+//                        }
+//                    },
+//                    onFailure = {
+//                        println("Fulfilment error: $it")
+//                        recordError(it)
+//                        onError(Throwable("Fulfilment status error: $it"))
+//                    }
+//                )
+//            }
+//        }
+            } catch (e: Exception) {
+                println("Error: $e")
+                recordError(e)
+                reject(message = e.message ?: "Undefined error, please check your Internet connection")
+                clearSessionRequest()
+                onError(Throwable(e.message ?: "Undefined error, please check your Internet connection"))
             }
-        } catch (e: Exception) {
-            println("Error: $e")
-            recordError(e)
-            reject(message = e.message ?: "Undefined error, please check your Internet connection")
-            clearSessionRequest()
-            onError(Throwable(e.message ?: "Undefined error, please check your Internet connection"))
         }
     }
 

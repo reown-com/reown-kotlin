@@ -10,6 +10,7 @@ import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
 import com.reown.walletkit.di.walletKitModule
 import com.reown.walletkit.use_cases.ChainAbstractionStatusUseCase
 import com.reown.walletkit.use_cases.EstimateGasUseCase
+import com.reown.walletkit.use_cases.ExecuteChainAbstractionUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
@@ -19,6 +20,7 @@ import java.util.*
 object WalletKit {
     private lateinit var coreClient: CoreInterface
     private val prepareChainAbstractionUseCase: PrepareChainAbstractionUseCase by wcKoinApp.koin.inject()
+    private val executeChainAbstractionUseCase: ExecuteChainAbstractionUseCase by wcKoinApp.koin.inject()
     private val chainAbstractionStatusUseCase: ChainAbstractionStatusUseCase by wcKoinApp.koin.inject()
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
     private val getTransactionDetailsUseCase: GetTransactionDetailsUseCase by wcKoinApp.koin.inject()
@@ -378,16 +380,17 @@ object WalletKit {
         }
 
         @ChainAbstractionExperimentalApi
-        fun status(
-            fulfilmentId: String,
-            checkIn: Long,
-            onSuccess: (Wallet.Model.Status.Completed) -> Unit,
-            onError: (Wallet.Model.Status.Error) -> Unit
+        fun execute(
+            transactionDetails: Wallet.Model.TransactionsDetails,
+            prepareSignedTxs: List<String>,
+            initSignedTx: String,
+            onSuccess: (Wallet.Model.ExecuteSuccess) -> Unit,
+            onError: (Wallet.Model.Error) -> Unit
         ) {
             try {
-                chainAbstractionStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
+                executeChainAbstractionUseCase(transactionDetails, prepareSignedTxs, initSignedTx, onSuccess, onError)
             } catch (e: Exception) {
-                onError(Wallet.Model.Status.Error(e.message ?: "Unknown error"))
+                onError(Wallet.Model.Error(e))
             }
         }
 
@@ -403,5 +406,20 @@ object WalletKit {
                 onError(Wallet.Model.Error(e))
             }
         }
+
+//        //todo: remove
+//        @ChainAbstractionExperimentalApi
+//        fun status(
+//            fulfilmentId: String,
+//            checkIn: Long,
+//            onSuccess: (Wallet.Model.Status.Completed) -> Unit,
+//            onError: (Wallet.Model.Status.Error) -> Unit
+//        ) {
+//            try {
+//                chainAbstractionStatusUseCase(fulfilmentId, checkIn, onSuccess, onError)
+//            } catch (e: Exception) {
+//                onError(Wallet.Model.Status.Error(e.message ?: "Unknown error"))
+//            }
+//        }
     }
 }

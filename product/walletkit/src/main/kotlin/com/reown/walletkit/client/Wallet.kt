@@ -4,6 +4,7 @@ import androidx.annotation.Keep
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
+import uniffi.yttrium.PrepareResponseAvailable
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -145,17 +146,10 @@ object Wallet {
             data class NotRequired(val initialTransaction: Transaction) : PrepareSuccess()
         }
 
-//        enum class Currency {
-//            USD,
-//            EUR,
-//            GBP,
-//            AUD,
-//            CAD,
-//            INR,
-//            JPY,
-//            BTC,
-//            ETH;
-//        }
+        data class ExecuteSuccess(
+            val initialTxHash: String,
+            val initialTxReceipt: String
+        ) : Model()
 
         data class Amount(
             var symbol: String,
@@ -172,10 +166,12 @@ object Wallet {
 
         data class TransactionDetails(
             var transaction: FeeEstimatedTransaction,
-            var transactionFee: TransactionFee
+            var transactionFee: TransactionFee,
+            val transactionHashToSign: String
         ) : Model()
 
         data class TransactionsDetails(
+            var prepareAvailable: PrepareSuccess.Available,
             var fulfilmentDetails: List<TransactionDetails>,
             var initialDetails: TransactionDetails,
             var bridgeFees: List<TransactionFee>,

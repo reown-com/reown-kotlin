@@ -2,6 +2,7 @@ package com.reown.walletkit
 
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.toWallet
+import com.reown.walletkit.client.toYttrium
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -42,6 +43,7 @@ class GetCallDetailsUseCaseTest {
             localTotal = Amount("11", "18", 2u, "22", "1222"),
             localBridgeTotal = Amount("11", "18", 2u, "22", "1222"),
             localRouteTotal = Amount("11", "18", 2u, "22", "1222"),
+            routeResponse = available.toYttrium()
         )
 
         coEvery { chainAbstractionClient.getUiFields(any(), any()) } returns resultFields
@@ -122,6 +124,7 @@ class GetCallDetailsUseCaseTest {
         val txDetails = TxnDetails(
             transaction = feeEstimatedTransactionMetadata,
             fee = TransactionFee(Amount("11", "18", 2u, "22", "1222"), Amount("11", "18", 2u, "22", "1222")),
+            transactionHashToSign = "hash",
         )
     }
 }

@@ -7,6 +7,7 @@ import uniffi.uniffi_yttrium.Eip1559Estimation
 import uniffi.yttrium.Amount
 import uniffi.yttrium.Call
 import uniffi.yttrium.DoSendTransactionParams
+import uniffi.yttrium.ExecuteDetails
 import uniffi.yttrium.FeeEstimatedTransaction
 import uniffi.yttrium.FundingMetadata
 import uniffi.yttrium.InitialTransactionMetadata
@@ -311,6 +312,12 @@ internal fun Wallet.Params.Call.toYttrium(): Call = Call(to = to, value = value,
 internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)
 
 @JvmSynthetic
+internal fun ExecuteDetails.toWallet(): Wallet.Model.ExecuteSuccess = Wallet.Model.ExecuteSuccess(
+    initialTxHash = initialTxnHash,
+    initialTxReceipt = initialTxnReceipt,
+)
+
+@JvmSynthetic
 internal fun PrepareResponseAvailable.toWallet(): Wallet.Model.PrepareSuccess.Available =
     Wallet.Model.PrepareSuccess.Available(
         fulfilmentId = orchestrationId,
@@ -386,12 +393,24 @@ internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.M
 
 @JvmSynthetic
 internal fun UiFields.toWallet(): Wallet.Model.TransactionsDetails = Wallet.Model.TransactionsDetails(
+    prepareAvailable = routeResponse.toWallet(),
     localTotal = localTotal.toWallet(),
     initialDetails = initial.toWallet(),
     fulfilmentDetails = route.map { it.toWallet() },
     bridgeFees = bridge.map { it.toWallet() },
     localFulfilmentTotal = localRouteTotal.toWallet(),
     localBridgeTotal = localBridgeTotal.toWallet()
+)
+
+@JvmSynthetic
+internal fun Wallet.Model.TransactionsDetails.toYttrium(): UiFields = UiFields(
+    routeResponse = prepareAvailable.toYttrium(),
+    route = fulfilmentDetails.map { it.toYttrium() },
+    localTotal = localTotal.toYttrium(),
+    localRouteTotal = localFulfilmentTotal.toYttrium(),
+    bridge = bridgeFees.map { it.toYttrium() },
+    localBridgeTotal = localBridgeTotal.toYttrium(),
+    initial = initialDetails.toYttrium()
 )
 
 @JvmSynthetic
@@ -403,12 +422,40 @@ internal fun Amount.toWallet(): Wallet.Model.Amount = Wallet.Model.Amount(
     formatted = formatted
 )
 
+@JvmSynthetic
+internal fun Wallet.Model.Amount.toYttrium(): Amount = Amount(
+    symbol = symbol,
+    amount = amount,
+    unit = unit.toUByte(),
+    formattedAlt = formattedAlt,
+    formatted = formatted
+)
+
 private fun TxnDetails.toWallet(): Wallet.Model.TransactionDetails = Wallet.Model.TransactionDetails(
     transaction = transaction.toWallet(),
-    transactionFee = fee.toWallet()
+    transactionFee = fee.toWallet(),
+    transactionHashToSign = transactionHashToSign
+)
+
+private fun Wallet.Model.TransactionDetails.toYttrium(): TxnDetails = TxnDetails(
+    transaction = transaction.toWallet(),
+    fee = transactionFee.toYttrium(),
+    transactionHashToSign = transactionHashToSign
 )
 
 fun FeeEstimatedTransaction.toWallet(): Wallet.Model.FeeEstimatedTransaction = Wallet.Model.FeeEstimatedTransaction(
+    from = from,
+    to = to,
+    value = value,
+    gasLimit = gasLimit,
+    input = input,
+    nonce = nonce,
+    maxFeePerGas = maxFeePerGas,
+    maxPriorityFeePerGas = maxPriorityFeePerGas,
+    chainId = chainId
+)
+
+fun Wallet.Model.FeeEstimatedTransaction.toWallet(): FeeEstimatedTransaction = FeeEstimatedTransaction(
     from = from,
     to = to,
     value = value,
@@ -432,6 +479,23 @@ private fun TransactionFee.toWallet() = Wallet.Model.TransactionFee(
         symbol = localFee.symbol,
         amount = localFee.amount,
         unit = localFee.unit.toString(),
+        formattedAlt = localFee.formattedAlt,
+        formatted = localFee.formatted
+    )
+)
+
+private fun Wallet.Model.TransactionFee.toYttrium() = TransactionFee(
+    fee = Amount(
+        symbol = fee.symbol,
+        amount = fee.amount,
+        unit = fee.unit.toUByte(),
+        formattedAlt = fee.formattedAlt,
+        formatted = fee.formatted
+    ),
+    localFee = Amount(
+        symbol = localFee.symbol,
+        amount = localFee.amount,
+        unit = localFee.unit.toUByte(),
         formattedAlt = localFee.formattedAlt,
         formatted = localFee.formatted
     )

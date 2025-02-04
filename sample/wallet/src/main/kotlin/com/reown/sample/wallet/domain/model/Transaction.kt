@@ -190,28 +190,28 @@ object Transaction {
         }
     }
 
-    suspend fun getReceipt(chainId: String, txHash: String) {
-        withTimeout(60000) {
-            while (true) {
-                val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
-                val nonceRequest = JsonRpcRequest(
-                    method = "eth_getTransactionReceipt",
-                    params = listOf(txHash),
-                    id = generateId()
-                )
-
-                val receipt = async { service.sendJsonRpcRequest(nonceRequest) }.await()
-                when {
-                    receipt.error != null -> throw Exception("Getting tx receipt failed: ${receipt.error.message}")
-                    receipt.result == null -> delay(3000)
-                    else -> {
-                        println("receipt: $receipt")
-                        break
-                    }
-                }
-            }
-        }
-    }
+//    suspend fun getReceipt(chainId: String, txHash: String) {
+//        withTimeout(60000) {
+//            while (true) {
+//                val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
+//                val nonceRequest = JsonRpcRequest(
+//                    method = "eth_getTransactionReceipt",
+//                    params = listOf(txHash),
+//                    id = generateId()
+//                )
+//
+//                val receipt = async { service.sendJsonRpcRequest(nonceRequest) }.await()
+//                when {
+//                    receipt.error != null -> throw Exception("Getting tx receipt failed: ${receipt.error.message}")
+//                    receipt.result == null -> delay(3000)
+//                    else -> {
+//                        println("receipt: $receipt")
+//                        break
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private fun hexToBigDecimal(input: String): BigDecimal? {
         val trimmedInput = input.trim()

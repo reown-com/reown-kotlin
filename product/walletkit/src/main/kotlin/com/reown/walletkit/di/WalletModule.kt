@@ -4,6 +4,7 @@ import com.reown.android.internal.common.model.ProjectId
 import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
 import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.ChainAbstractionStatusUseCase
+import com.reown.walletkit.use_cases.ExecuteChainAbstractionUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
 import com.reown.walletkit.use_cases.GetTransactionDetailsUseCase
 import org.koin.dsl.module
@@ -22,4 +23,6 @@ internal fun walletKitModule() = module {
     single { GetTransactionDetailsUseCase(get()) }
 
     single { GetERC20TokenBalanceUseCase(get()) }
+
+    single { ExecuteChainAbstractionUseCase(get()) }
 }

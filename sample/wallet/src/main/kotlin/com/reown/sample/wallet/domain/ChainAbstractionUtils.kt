@@ -93,28 +93,51 @@ suspend fun getTransactionsDetails(): Result<Wallet.Model.TransactionsDetails> =
         }
     }
 
-suspend fun status(): Result<Wallet.Model.Status> =
+@OptIn(ChainAbstractionExperimentalApi::class)
+suspend fun execute(transactionDetails: Wallet.Model.TransactionsDetails, fulfilmentTxs: List<String>, initialTx: String): Result<Wallet.Model.ExecuteSuccess> =
     suspendCoroutine { continuation ->
         try {
-            WalletKit.ChainAbstraction.status(
-                WCDelegate.fulfilmentAvailable!!.fulfilmentId,
-                WCDelegate.fulfilmentAvailable!!.checkIn,
+            WalletKit.ChainAbstraction.execute(transactionDetails, fulfilmentTxs, initialTx,
                 onSuccess = {
-                    println("Fulfilment status SUCCESS: $it")
+                    println("kobe: Execute SUCCESS: $it")
                     continuation.resume(Result.success(it))
                 },
                 onError = {
-                    println("Fulfilment status ERROR: $it")
-                    recordError(Throwable(it.reason))
-                    continuation.resume(Result.failure(Exception(it.reason)))
+                    println("kobe: Execute ERROR: $it")
+                    recordError(it.throwable)
+                    continuation.resume(Result.failure(it.throwable))
                 }
             )
+
         } catch (e: Exception) {
             println("Catch status utils: $e")
             recordError(e)
             continuation.resume(Result.failure(e))
         }
     }
+
+//suspend fun status(): Result<Wallet.Model.Status> =
+//    suspendCoroutine { continuation ->
+//        try {
+//            WalletKit.ChainAbstraction.status(
+//                WCDelegate.fulfilmentAvailable!!.fulfilmentId,
+//                WCDelegate.fulfilmentAvailable!!.checkIn,
+//                onSuccess = {
+//                    println("Fulfilment status SUCCESS: $it")
+//                    continuation.resume(Result.success(it))
+//                },
+//                onError = {
+//                    println("Fulfilment status ERROR: $it")
+//                    recordError(Throwable(it.reason))
+//                    continuation.resume(Result.failure(Exception(it.reason)))
+//                }
+//            )
+//        } catch (e: Exception) {
+//            println("Catch status utils: $e")
+//            recordError(e)
+//            continuation.resume(Result.failure(e))
+//        }
+//    }
 
 fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
     if (WCDelegate.currentId != sessionRequest.request.id) {
