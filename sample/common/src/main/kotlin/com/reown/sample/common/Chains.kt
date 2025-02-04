@@ -25,6 +25,10 @@ fun getEthSignTypedData(account: String): String {
     return "[\"$account\",\"$stringifiedParams\"]"
 }
 
+fun getSolanaSignAndSendParams(): String {
+    return "{\"transaction\":\"4hXTCkRzt9WyecNzV1XPgCDfGAZzQKNxLXgynz5QDuWWPSAZBZSHptvWRL3BjCvzUXRdKvHL2b7yGrRQcWyaqsaBCncVG7BFggS8w9snUts67BSh3EqKpXLUm5UMHfD7ZBe9GhARjbNQMLJ1QD3Spr6oMTBU6EhdB4RD8CP2xUxr2u3d6fos36PD98XS6oX8TQjLpsMwncs5DAMiD4nNnR8NBfyghGCWvCVifVwvA8B8TJxE1aiyiv2L429BCWfyzAme5sZW8rDb14NeCQHhZbtNqfXhcp2tAnaAT\",\"sendOptions\": {\"skipPreflight\":true,\"preflightCommitment\":\"confirmed\",\"maxRetries\":2,\"minContextSlot\"?:1}}"
+}
+
 enum class Chains(
     val chainName: String,
     val chainNamespace: String,
@@ -164,7 +168,7 @@ enum class Chains(
         object Solana : Info() {
             override val chain = "solana"
             override val defaultEvents: List<String> = listOf()
-            override val defaultMethods: List<String> = listOf("solana_signMessage", "solana_signTransaction")
+            override val defaultMethods: List<String> = listOf("solana_signMessage", "solana_signTransaction", "solana_signAndSendTransaction", "solana_signAllTransactions")
         }
     }
 }

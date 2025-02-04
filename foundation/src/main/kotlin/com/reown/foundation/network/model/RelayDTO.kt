@@ -42,6 +42,16 @@ sealed class RelayDTO {
                 val tag: Int,
                 @Json(name = "prompt")
                 val prompt: Boolean?,
+                @Json(name = "correlationId")
+                val correlationId: Long?,
+                @Json(name = "rpcMethods")
+                val rpcMethods: List<String>?,
+                @Json(name = "chainId")
+                val chainId: String?,
+                @Json(name = "txHashes")
+                val txHashes: List<String>?,
+                @Json(name = "contractAddresses")
+                val contractAddresses: List<String>?,
             )
         }
 

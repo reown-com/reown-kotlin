@@ -31,7 +31,7 @@ internal class OnSessionExtendUseCase(
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
     suspend operator fun invoke(request: WCRequest, requestParams: SignParams.ExtendParams) = supervisorScope {
-        val irnParams = IrnParams(Tags.SESSION_EXTEND_RESPONSE, Ttl(dayInSeconds))
+        val irnParams = IrnParams(Tags.SESSION_EXTEND_RESPONSE, Ttl(dayInSeconds), correlationId = request.id)
         logger.log("Session extend received on topic: ${request.topic}")
         try {
             if (!sessionStorageRepository.isSessionValid(request.topic)) {

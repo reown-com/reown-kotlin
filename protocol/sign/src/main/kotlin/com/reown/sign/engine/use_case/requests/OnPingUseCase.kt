@@ -12,7 +12,7 @@ import kotlinx.coroutines.supervisorScope
 internal class OnPingUseCase(private val jsonRpcInteractor: RelayJsonRpcInteractorInterface, private val logger: Logger) {
 
     suspend operator fun invoke(request: WCRequest) = supervisorScope {
-        val irnParams = IrnParams(Tags.SESSION_PING_RESPONSE, Ttl(thirtySeconds))
+        val irnParams = IrnParams(Tags.SESSION_PING_RESPONSE, Ttl(thirtySeconds), correlationId = request.id)
         logger.log("Session ping received on topic: ${request.topic}")
         jsonRpcInteractor.respondWithSuccess(request, irnParams)
     }

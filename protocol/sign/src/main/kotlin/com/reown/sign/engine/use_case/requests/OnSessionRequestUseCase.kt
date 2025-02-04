@@ -54,7 +54,7 @@ internal class OnSessionRequestUseCase(
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
     suspend operator fun invoke(request: WCRequest, params: SignParams.SessionRequestParams) = supervisorScope {
-        val irnParams = IrnParams(Tags.SESSION_REQUEST_RESPONSE, Ttl(fiveMinutesInSeconds))
+        val irnParams = IrnParams(Tags.SESSION_REQUEST_RESPONSE, Ttl(fiveMinutesInSeconds), correlationId = request.id)
         logger.log("Session request received on topic: ${request.topic}")
 
         try {

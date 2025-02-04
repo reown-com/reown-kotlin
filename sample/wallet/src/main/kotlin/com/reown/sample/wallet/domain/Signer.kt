@@ -93,6 +93,15 @@ object Signer {
                 //Note: Only for testing purposes - it will always fail on Dapp side
                 sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
                     """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+
+                sessionRequest.method == "solana_signAndSendTransaction" ||
+                        sessionRequest.method == "solana_signTransaction" -> {
+                    """{"signature":"2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"}"""
+                }
+
+                sessionRequest.method == "solana_signAllTransactions" -> {
+                    """{"transactions":["2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"]}"""
+                }
                 //Note: Only for testing purposes - it will always fail on Dapp side
                 sessionRequest.chain?.contains(Chains.Info.Solana.chain, true) == true ->
                     """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
