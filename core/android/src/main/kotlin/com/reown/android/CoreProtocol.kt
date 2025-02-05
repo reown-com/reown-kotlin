@@ -144,6 +144,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         with(koinApp) {
             androidContext(application)
             modules(
+                module { single(named(AndroidCommonDITags.PACKAGE_NAME)) { packageName } },
                 module { single { ProjectId(projectId) } },
                 module { single(named(AndroidCommonDITags.TELEMETRY_ENABLED)) { TelemetryEnabled(telemetryEnabled) } },
                 coreAndroidNetworkModule(relayServerUrl, connectionType, BuildConfig.SDK_VERSION, networkClientTimeout, packageName),

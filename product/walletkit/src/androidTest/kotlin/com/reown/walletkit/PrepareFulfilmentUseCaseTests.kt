@@ -19,6 +19,7 @@ import uniffi.yttrium.PrepareResponseError
 import uniffi.yttrium.PrepareResponseNotRequired
 import uniffi.yttrium.PrepareResponseSuccess
 import uniffi.yttrium.Transaction
+import java.time.Duration
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -36,7 +37,7 @@ class PrepareChainAbstractionUseCaseTest {
                     metadata = Metadata(
                         fundingFrom = listOf(FundingMetadata(chainId = "1", tokenContract = "token", symbol = "s", amount = "11", decimals = 18u, bridgingFee = "0")),
                         initialTransaction = InitialTransactionMetadata(transferTo = "aa", amount = "11", tokenContract = "cc", symbol = "s", decimals = 18u),
-                        checkIn = 11u
+                        checkIn = Duration.ofSeconds(11)
                     ),
                     transactions = listOf(transaction)
                 )

@@ -19,6 +19,7 @@ import uniffi.yttrium.Transaction
 import uniffi.yttrium.TransactionFee
 import uniffi.yttrium.TxnDetails
 import uniffi.yttrium.UiFields
+import java.time.Duration
 
 @JvmSynthetic
 internal fun Map<String, Wallet.Model.Namespace.Session>.toSign(): Map<String, Sign.Model.Namespace.Session> =
@@ -321,7 +322,7 @@ internal fun ExecuteDetails.toWallet(): Wallet.Model.ExecuteSuccess = Wallet.Mod
 internal fun PrepareResponseAvailable.toWallet(): Wallet.Model.PrepareSuccess.Available =
     Wallet.Model.PrepareSuccess.Available(
         fulfilmentId = orchestrationId,
-        checkIn = metadata.checkIn.toLong(),
+        checkIn = metadata.checkIn.toSeconds(), //todo: change to Ulong
         transactions = transactions.map { it.toWallet() },
         initialTransaction = initialTransaction.toWallet(),
         initialTransactionMetadata = metadata.initialTransaction.toWallet(),
@@ -333,7 +334,7 @@ internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): PrepareResponseA
     PrepareResponseAvailable(
         fulfilmentId,
         metadata = YMetadata(
-            checkIn = checkIn.toULong(),
+            checkIn = Duration.ofSeconds(checkIn), //todo: change to Ulong
             initialTransaction = initialTransactionMetadata.toYttrium(),
             fundingFrom = funding.map { it.toYttrium() }
         ),
