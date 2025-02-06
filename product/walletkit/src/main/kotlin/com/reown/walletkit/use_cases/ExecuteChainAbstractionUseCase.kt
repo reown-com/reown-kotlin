@@ -10,7 +10,7 @@ import uniffi.uniffi_yttrium.ChainAbstractionClient
 import uniffi.yttrium.ExecuteDetails
 class ExecuteChainAbstractionUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
-        details: Wallet.Model.TransactionsDetails,
+        prepareAvailable: Wallet.Model.PrepareSuccess.Available,
         signedRouteTxs: List<String>,
         initSignedTx: String,
         onSuccess: (Wallet.Model.ExecuteSuccess) -> Unit,
@@ -21,7 +21,7 @@ class ExecuteChainAbstractionUseCase(private val chainAbstractionClient: ChainAb
 
                 val result = async {
                     try {
-                        chainAbstractionClient.execute(details.toYttrium(), signedRouteTxs, initSignedTx)
+                        chainAbstractionClient.execute(prepareAvailable.toYttrium(), signedRouteTxs, initSignedTx)
                     } catch (e: Exception) {
                         return@async onError(Wallet.Model.Error(e))
                     }

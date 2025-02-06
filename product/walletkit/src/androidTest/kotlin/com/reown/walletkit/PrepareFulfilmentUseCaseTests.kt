@@ -9,17 +9,21 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import uniffi.uniffi_yttrium.ChainAbstractionClient
+import uniffi.yttrium.Amount
 import uniffi.yttrium.BridgingError
+import uniffi.yttrium.FeeEstimatedTransaction
 import uniffi.yttrium.FundingMetadata
 import uniffi.yttrium.InitialTransactionMetadata
 import uniffi.yttrium.Metadata
-import uniffi.yttrium.PrepareResponse
+import uniffi.yttrium.PrepareDetailedResponse
+import uniffi.yttrium.PrepareDetailedResponseSuccess
 import uniffi.yttrium.PrepareResponseAvailable
 import uniffi.yttrium.PrepareResponseError
 import uniffi.yttrium.PrepareResponseNotRequired
-import uniffi.yttrium.PrepareResponseSuccess
 import uniffi.yttrium.Transaction
-import java.time.Duration
+import uniffi.yttrium.TransactionFee
+import uniffi.yttrium.TxnDetails
+import uniffi.yttrium.UiFields
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -29,21 +33,46 @@ class PrepareChainAbstractionUseCaseTest {
 
     @Test
     fun shouldCallOnSuccessWithAvailableResult() = runTest {
-        val successResult = PrepareResponse.Success(
-            PrepareResponseSuccess.Available(
-                PrepareResponseAvailable(
-                    orchestrationId = "123",
-                    initialTransaction = transaction,
-                    metadata = Metadata(
-                        fundingFrom = listOf(FundingMetadata(chainId = "1", tokenContract = "token", symbol = "s", amount = "11", decimals = 18u, bridgingFee = "0")),
-                        initialTransaction = InitialTransactionMetadata(transferTo = "aa", amount = "11", tokenContract = "cc", symbol = "s", decimals = 18u),
-                        checkIn = Duration.ofSeconds(11)
-                    ),
-                    transactions = listOf(transaction)
+        val feeEstimatedTransactionMetadata = FeeEstimatedTransaction(
+            from = "from",
+            to = "to",
+            value = "value",
+            input = "data",
+            nonce = "nonce",
+            gasLimit = "gas",
+            chainId = "1",
+            maxPriorityFeePerGas = "11",
+            maxFeePerGas = "33"
+        )
+        val txDetails = TxnDetails(
+            transaction = feeEstimatedTransactionMetadata,
+            fee = TransactionFee(Amount("11", "18", 2u, "22", "1222"), Amount("11", "18", 2u, "22", "1222")),
+            transactionHashToSign = "hash",
+        )
+        val successResult = PrepareDetailedResponse.Success(
+            PrepareDetailedResponseSuccess.Available(
+                UiFields(
+                    route = listOf(txDetails),
+                    initial = txDetails,
+                    bridge = listOf(TransactionFee(Amount("11", "18", 2u, "22", "1222"), Amount("11", "18", 2u, "22", "1222"))),
+                    localTotal = Amount("11", "18", 2u, "22", "1222"),
+                    localBridgeTotal = Amount("11", "18", 2u, "22", "1222"),
+                    localRouteTotal = Amount("11", "18", 2u, "22", "1222"),
+                    routeResponse = PrepareResponseAvailable(
+                        orchestrationId = "123",
+                        initialTransaction = transaction,
+                        metadata = Metadata(
+                            fundingFrom = listOf(FundingMetadata(chainId = "1", tokenContract = "token", symbol = "s", amount = "11", decimals = 18u, bridgingFee = "0")),
+                            initialTransaction = InitialTransactionMetadata(transferTo = "aa", amount = "11", tokenContract = "cc", symbol = "s", decimals = 18u),
+                            checkIn = 11u
+                        ),
+                        transactions = listOf(transaction)
+                    )
                 )
+
             )
         )
-        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } returns successResult
+        coEvery { chainAbstractionClient.prepareDetailed(any(), any(), any(), any()) } returns successResult
 
         val result = async {
             suspendCoroutine { continuation ->
@@ -64,8 +93,8 @@ class PrepareChainAbstractionUseCaseTest {
 
     @Test
     fun shouldCallOnSuccessWithNotRequiredResult() = runTest {
-        val successResult = PrepareResponse.Success(PrepareResponseSuccess.NotRequired(PrepareResponseNotRequired(initialTransaction = transaction, transactions = emptyList())))
-        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } returns successResult
+        val successResult = PrepareDetailedResponse.Success(PrepareDetailedResponseSuccess.NotRequired(PrepareResponseNotRequired(initialTransaction = transaction, transactions = emptyList())))
+        coEvery { chainAbstractionClient.prepareDetailed(any(), any(), any(), any()) } returns successResult
 
         val result = async {
             suspendCoroutine { continuation ->
@@ -86,9 +115,9 @@ class PrepareChainAbstractionUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWithNoRoutesAvailableError() = runTest {
-        val errorResult = PrepareResponse.Error(PrepareResponseError(BridgingError.NO_ROUTES_AVAILABLE))
+        val errorResult = PrepareDetailedResponse.Error(PrepareResponseError(BridgingError.NO_ROUTES_AVAILABLE))
 
-        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } returns errorResult
+        coEvery { chainAbstractionClient.prepareDetailed(any(), any(), any(), any()) } returns errorResult
 
         val result = async {
             suspendCoroutine { continuation ->
@@ -109,9 +138,9 @@ class PrepareChainAbstractionUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWithInsufficientFundsError() = runTest {
-        val errorResult = PrepareResponse.Error(PrepareResponseError(BridgingError.INSUFFICIENT_FUNDS))
+        val errorResult = PrepareDetailedResponse.Error(PrepareResponseError(BridgingError.INSUFFICIENT_FUNDS))
 
-        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } returns errorResult
+        coEvery { chainAbstractionClient.prepareDetailed(any(), any(), any(), any()) } returns errorResult
 
         val result = async {
             suspendCoroutine { continuation ->
@@ -132,7 +161,7 @@ class PrepareChainAbstractionUseCaseTest {
 
     @Test
     fun shouldCallOnErrorWithUnknownErrorOnException() = runTest {
-        coEvery { chainAbstractionClient.prepare(any(), any(), any()) } throws RuntimeException("Some unexpected error")
+        coEvery { chainAbstractionClient.prepareDetailed(any(), any(), any(), any()) } throws RuntimeException("Some unexpected error")
 
         val result = async {
             suspendCoroutine { continuation ->

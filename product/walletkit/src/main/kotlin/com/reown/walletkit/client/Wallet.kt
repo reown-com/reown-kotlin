@@ -140,7 +140,8 @@ object Wallet {
                 val transactions: List<Transaction>,
                 val initialTransaction: Transaction,
                 val initialTransactionMetadata: InitialTransactionMetadata,
-                val funding: List<FundingMetadata>
+                val funding: List<FundingMetadata>,
+                val transactionsDetails: TransactionsDetails
             ) : PrepareSuccess()
 
             data class NotRequired(val initialTransaction: Transaction) : PrepareSuccess()
@@ -171,7 +172,6 @@ object Wallet {
         ) : Model()
 
         data class TransactionsDetails(
-            var prepareAvailable: PrepareSuccess.Available,
             var fulfilmentDetails: List<TransactionDetails>,
             var initialDetails: TransactionDetails,
             var bridgeFees: List<TransactionFee>,

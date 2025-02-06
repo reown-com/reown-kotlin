@@ -18,7 +18,6 @@ import com.reown.sample.wallet.domain.recordError
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
-import com.reown.util.hexToBytes
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
@@ -42,7 +41,7 @@ class ChainAbstractionViewModel : ViewModel() {
     fun getERC20Balance(): String {
         val initialTransaction = WCDelegate.sessionRequestEvent?.first
 
-        val tokenAddress = WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.tokenContract ?: ""
+        val tokenAddress = WCDelegate.prepareAvailable?.initialTransactionMetadata?.tokenContract ?: ""
         return try {
             WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, EthAccountDelegate.account ?: "")
         } catch (e: Exception) {
@@ -55,10 +54,10 @@ class ChainAbstractionViewModel : ViewModel() {
     fun getTransferAmount(): String {
         return "${
             Transaction.hexToTokenAmount(
-                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.amount ?: "",
-                WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.decimals ?: 6
+                WCDelegate.prepareAvailable?.initialTransactionMetadata?.amount ?: "",
+                WCDelegate.prepareAvailable?.initialTransactionMetadata?.decimals ?: 6
             )?.toPlainString() ?: "-.--"
-        } ${WCDelegate.fulfilmentAvailable?.initialTransactionMetadata?.symbol}"
+        } ${WCDelegate.prepareAvailable?.initialTransactionMetadata?.symbol}"
     }
 
     fun approve(onSuccess: (TxSuccess) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
@@ -69,18 +68,18 @@ class ChainAbstractionViewModel : ViewModel() {
                     val signedTransactions = mutableListOf<Pair<String, String>>()
                     val txHashesChannel = Channel<Pair<String, String>>()
                     //sign fulfilment txs
-                    WCDelegate.transactionsDetails?.fulfilmentDetails?.forEach { fulfilment ->
+                    WCDelegate.prepareAvailable?.transactionsDetails?.fulfilmentDetails?.forEach { fulfilment ->
                         val signedTransaction = EthSigner.signHash(fulfilment.transactionHashToSign, EthAccountDelegate.privateKey)
                         signedTransactions.add(Pair(fulfilment.transaction.chainId, signedTransaction))
                     }
 
                     println("Original TX")
-                    val initTransactionDetails = WCDelegate.transactionsDetails!!.initialDetails
+                    val initTransactionDetails = WCDelegate.prepareAvailable?.transactionsDetails!!.initialDetails
                     val signedTx = EthSigner.signHash(initTransactionDetails.transactionHashToSign, EthAccountDelegate.privateKey)
 
                     println("kobe: routeSignatures: $signedTransactions; init signature: $signedTx")
 
-                    val result = async { execute(WCDelegate.transactionsDetails!!, signedTransactions.map { it.second }, signedTx) }.await()
+                    val result = async { execute(WCDelegate.prepareAvailable!!, signedTransactions.map { it.second }, signedTx) }.await()
 
                     result.fold(
                         onSuccess = { executeSuccess ->

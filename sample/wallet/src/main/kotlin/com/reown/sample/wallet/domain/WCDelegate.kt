@@ -29,9 +29,8 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     var sessionRequestEvent: Pair<Wallet.Model.SessionRequest, Wallet.Model.VerifyContext>? = null
     var currentId: Long? = null
     //CA
-    var fulfilmentAvailable: Wallet.Model.PrepareSuccess.Available? = null
+    var prepareAvailable: Wallet.Model.PrepareSuccess.Available? = null
     var prepareError: Wallet.Model.PrepareError? = null
-    var transactionsDetails: Wallet.Model.TransactionsDetails? = null
 
     init {
         CoreClient.setDelegate(this)

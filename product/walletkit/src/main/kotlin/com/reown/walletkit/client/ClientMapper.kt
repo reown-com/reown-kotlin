@@ -19,7 +19,6 @@ import uniffi.yttrium.Transaction
 import uniffi.yttrium.TransactionFee
 import uniffi.yttrium.TxnDetails
 import uniffi.yttrium.UiFields
-import java.time.Duration
 
 @JvmSynthetic
 internal fun Map<String, Wallet.Model.Namespace.Session>.toSign(): Map<String, Sign.Model.Namespace.Session> =
@@ -319,27 +318,49 @@ internal fun ExecuteDetails.toWallet(): Wallet.Model.ExecuteSuccess = Wallet.Mod
 )
 
 @JvmSynthetic
-internal fun PrepareResponseAvailable.toWallet(): Wallet.Model.PrepareSuccess.Available =
+internal fun UiFields.toWallet(): Wallet.Model.PrepareSuccess.Available =
     Wallet.Model.PrepareSuccess.Available(
-        fulfilmentId = orchestrationId,
-        checkIn = metadata.checkIn.toSeconds(), //todo: change to Ulong
-        transactions = transactions.map { it.toWallet() },
-        initialTransaction = initialTransaction.toWallet(),
-        initialTransactionMetadata = metadata.initialTransaction.toWallet(),
-        funding = metadata.fundingFrom.map { it.toWallet() }
+        fulfilmentId = routeResponse.orchestrationId,
+        checkIn = routeResponse.metadata.checkIn.toLong(),
+        transactions = routeResponse.transactions.map { it.toWallet() },
+        initialTransaction = routeResponse.initialTransaction.toWallet(),
+        initialTransactionMetadata = routeResponse.metadata.initialTransaction.toWallet(),
+        funding = routeResponse.metadata.fundingFrom.map { it.toWallet() },
+        transactionsDetails = toTransactionsDetails()
     )
 
+private fun UiFields.toTransactionsDetails() = Wallet.Model.TransactionsDetails(
+    localTotal = localTotal.toWallet(),
+    initialDetails = initial.toWallet(),
+    fulfilmentDetails = route.map { it.toWallet() },
+    bridgeFees = bridge.map { it.toWallet() },
+    localFulfilmentTotal = localRouteTotal.toWallet(),
+    localBridgeTotal = localBridgeTotal.toWallet()
+)
+
 @JvmSynthetic
-internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): PrepareResponseAvailable =
+internal fun Wallet.Model.PrepareSuccess.Available.toResponseYttrium(): PrepareResponseAvailable =
     PrepareResponseAvailable(
         fulfilmentId,
         metadata = YMetadata(
-            checkIn = Duration.ofSeconds(checkIn), //todo: change to Ulong
+            checkIn = checkIn.toULong(),
             initialTransaction = initialTransactionMetadata.toYttrium(),
             fundingFrom = funding.map { it.toYttrium() }
         ),
         initialTransaction = initialTransaction.toYttrium(),
         transactions = transactions.map { it.toYttrium() })
+
+@JvmSynthetic
+internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): UiFields =
+    UiFields(
+        route = transactionsDetails.fulfilmentDetails.map { it.toYttrium() },
+        localTotal = transactionsDetails.localTotal.toYttrium(),
+        localRouteTotal = transactionsDetails.localFulfilmentTotal.toYttrium(),
+        bridge = transactionsDetails.bridgeFees.map { it.toYttrium() },
+        localBridgeTotal = transactionsDetails.localBridgeTotal.toYttrium(),
+        initial = transactionsDetails.initialDetails.toYttrium(),
+        routeResponse = toResponseYttrium()
+    )
 
 @JvmSynthetic
 private fun Wallet.Model.InitialTransactionMetadata.toYttrium(): InitialTransactionMetadata =
@@ -391,28 +412,6 @@ private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Mo
 
 @JvmSynthetic
 internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.Model.EstimatedFees(maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas)
-
-@JvmSynthetic
-internal fun UiFields.toWallet(): Wallet.Model.TransactionsDetails = Wallet.Model.TransactionsDetails(
-    prepareAvailable = routeResponse.toWallet(),
-    localTotal = localTotal.toWallet(),
-    initialDetails = initial.toWallet(),
-    fulfilmentDetails = route.map { it.toWallet() },
-    bridgeFees = bridge.map { it.toWallet() },
-    localFulfilmentTotal = localRouteTotal.toWallet(),
-    localBridgeTotal = localBridgeTotal.toWallet()
-)
-
-@JvmSynthetic
-internal fun Wallet.Model.TransactionsDetails.toYttrium(): UiFields = UiFields(
-    routeResponse = prepareAvailable.toYttrium(),
-    route = fulfilmentDetails.map { it.toYttrium() },
-    localTotal = localTotal.toYttrium(),
-    localRouteTotal = localFulfilmentTotal.toYttrium(),
-    bridge = bridgeFees.map { it.toYttrium() },
-    localBridgeTotal = localBridgeTotal.toYttrium(),
-    initial = initialDetails.toYttrium()
-)
 
 @JvmSynthetic
 internal fun Amount.toWallet(): Wallet.Model.Amount = Wallet.Model.Amount(
