@@ -16,16 +16,26 @@ import uniffi.yttrium.PulseMetadata
 @JvmSynthetic
 internal fun walletKitModule() = module {
     single {
-        ChainAbstractionClient(
-            projectId = get<ProjectId>().value,
-            pulseMetadata = PulseMetadata(
-                packageName = get(named(AndroidCommonDITags.PACKAGE_NAME)),
-                sdkPlatform = "android-${Build.VERSION.RELEASE}",
-                sdkVersion = "reown-kotlin-${BuildConfig.SDK_VERSION}",
-                bundleId = null,
-                url = null
-            )
+        val metadata = PulseMetadata(
+            packageName = get(named(AndroidCommonDITags.PACKAGE_NAME)),
+            sdkPlatform = "mobile",
+            sdkVersion = "reown-kotlin-${BuildConfig.SDK_VERSION}",
+            bundleId = null,
+            url = null
         )
+        val projectId = get<ProjectId>().value
+
+        println("kobe: CA Client: $projectId, $metadata")
+
+        try {
+            ChainAbstractionClient(
+                projectId = projectId,
+                pulseMetadata = metadata
+            )
+        } catch (e: Exception) {
+            println("kobe: CA Client: $e")
+            throw e
+        }
     }
 
     single { PrepareChainAbstractionUseCase(get()) }

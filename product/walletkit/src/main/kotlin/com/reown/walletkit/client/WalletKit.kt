@@ -371,7 +371,7 @@ object WalletKit {
             try {
                 prepareChainAbstractionUseCase(initialTransaction, onSuccess, onError)
             } catch (e: Exception) {
-                onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
+                onError(Wallet.Model.PrepareError.Unknown("kobe: ${e.message}" ?: "Unknown error"))
             }
         }
 
