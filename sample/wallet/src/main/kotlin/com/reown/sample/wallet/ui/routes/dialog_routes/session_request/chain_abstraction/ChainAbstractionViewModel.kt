@@ -76,9 +76,6 @@ class ChainAbstractionViewModel : ViewModel() {
                     println("Original TX")
                     val initTransactionDetails = WCDelegate.prepareAvailable?.transactionsDetails!!.initialDetails
                     val signedTx = EthSigner.signHash(initTransactionDetails.transactionHashToSign, EthAccountDelegate.privateKey)
-
-                    println("kobe: routeSignatures: $signedTransactions; init signature: $signedTx")
-
                     val result = async { execute(WCDelegate.prepareAvailable!!, signedTransactions.map { it.second }, signedTx) }.await()
 
                     result.fold(

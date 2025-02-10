@@ -76,18 +76,15 @@ suspend fun execute(prepareAvailable: Wallet.Model.PrepareSuccess.Available, ful
         try {
             WalletKit.ChainAbstraction.execute(prepareAvailable, fulfilmentTxs, initialTx,
                 onSuccess = {
-                    println("kobe: Execute SUCCESS: $it")
                     continuation.resume(Result.success(it))
                 },
                 onError = {
-                    println("kobe: Execute ERROR: $it")
                     recordError(it.throwable)
                     continuation.resume(Result.failure(it.throwable))
                 }
             )
 
         } catch (e: Exception) {
-            println("Catch status utils: $e")
             recordError(e)
             continuation.resume(Result.failure(e))
         }
