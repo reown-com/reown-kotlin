@@ -68,7 +68,7 @@ class ChainAbstractionViewModel : ViewModel() {
                     val signedTransactions = mutableListOf<Pair<String, String>>()
                     val txHashesChannel = Channel<Pair<String, String>>()
                     //sign fulfilment txs
-                    WCDelegate.prepareAvailable?.transactionsDetails?.fulfilmentDetails?.forEach { fulfilment ->
+                    WCDelegate.prepareAvailable?.transactionsDetails?.details?.forEach { fulfilment ->
                         val signedTransaction = EthSigner.signHash(fulfilment.transactionHashToSign, EthAccountDelegate.privateKey)
                         signedTransactions.add(Pair(fulfilment.transaction.chainId, signedTransaction))
                     }

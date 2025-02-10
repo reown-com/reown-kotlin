@@ -332,7 +332,7 @@ internal fun UiFields.toWallet(): Wallet.Model.PrepareSuccess.Available =
 private fun UiFields.toTransactionsDetails() = Wallet.Model.TransactionsDetails(
     localTotal = localTotal.toWallet(),
     initialDetails = initial.toWallet(),
-    fulfilmentDetails = route.map { it.toWallet() },
+    details = route.map { it.toWallet() },
     bridgeFees = bridge.map { it.toWallet() },
     localFulfilmentTotal = localRouteTotal.toWallet(),
     localBridgeTotal = localBridgeTotal.toWallet()
@@ -353,7 +353,7 @@ internal fun Wallet.Model.PrepareSuccess.Available.toResponseYttrium(): PrepareR
 @JvmSynthetic
 internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): UiFields =
     UiFields(
-        route = transactionsDetails.fulfilmentDetails.map { it.toYttrium() },
+        route = transactionsDetails.details.map { it.toYttrium() },
         localTotal = transactionsDetails.localTotal.toYttrium(),
         localRouteTotal = transactionsDetails.localFulfilmentTotal.toYttrium(),
         bridge = transactionsDetails.bridgeFees.map { it.toYttrium() },
