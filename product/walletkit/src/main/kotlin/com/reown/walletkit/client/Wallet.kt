@@ -4,7 +4,6 @@ import androidx.annotation.Keep
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
-import uniffi.yttrium.PrepareResponseAvailable
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -135,7 +134,7 @@ object Wallet {
 
         sealed class PrepareSuccess : Model() {
             data class Available(
-                val fulfilmentId: String,
+                val orchestratorId: String,
                 val checkIn: Long,
                 val transactions: List<Transaction>,
                 val initialTransaction: Transaction,

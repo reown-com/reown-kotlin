@@ -320,7 +320,7 @@ internal fun ExecuteDetails.toWallet(): Wallet.Model.ExecuteSuccess = Wallet.Mod
 @JvmSynthetic
 internal fun UiFields.toWallet(): Wallet.Model.PrepareSuccess.Available =
     Wallet.Model.PrepareSuccess.Available(
-        fulfilmentId = routeResponse.orchestrationId,
+        orchestratorId = routeResponse.orchestrationId,
         checkIn = routeResponse.metadata.checkIn.toLong(),
         transactions = routeResponse.transactions.map { it.toWallet() },
         initialTransaction = routeResponse.initialTransaction.toWallet(),
@@ -341,7 +341,7 @@ private fun UiFields.toTransactionsDetails() = Wallet.Model.TransactionsDetails(
 @JvmSynthetic
 internal fun Wallet.Model.PrepareSuccess.Available.toResponseYttrium(): PrepareResponseAvailable =
     PrepareResponseAvailable(
-        fulfilmentId,
+        orchestratorId,
         metadata = YMetadata(
             checkIn = checkIn.toULong(),
             initialTransaction = initialTransactionMetadata.toYttrium(),
