@@ -156,7 +156,7 @@ class RelayTest {
 
     @ExperimentalTime
     @Test
-    fun `One client sends unencrypted message, second one receives it`() {
+    fun `One client sends message, second one receives it`() {
         val testState = MutableStateFlow<TestState>(TestState.Idle)
         val testTopic = Random.nextBytes(32).bytesToHex()
         val testMessage = "testMessage"
@@ -185,6 +185,75 @@ class RelayTest {
         }
 
         clientA.publish(testTopic, testMessage, Relay.Model.IrnParams(1114, 300, correlationId = 1234L, prompt = true)) { result ->
+            result.fold(
+                onSuccess = { println("ClientA publish on topic: $testTopic; message: $testMessage") },
+                onFailure = { error ->
+                    println("ClientA failed to publish on topic: $testTopic. Message: ${error.message}")
+                }
+            )
+        }
+
+        //Lock until is finished or timed out
+        runBlocking {
+            val start = System.currentTimeMillis()
+            // Await test finish or check if timeout occurred
+            while (testState.value is TestState.Idle && !didTimeout(start, 60000L)) {
+                delay(10)
+            }
+
+            // Success or fail or idle
+            when (testState.value) {
+                is TestState.Success -> return@runBlocking
+                is TestState.Error -> fail((testState.value as TestState.Error).message)
+                is TestState.Idle -> fail("Test timeout")
+            }
+        }
+    }
+
+    @ExperimentalTime
+    @Test
+    fun `One client sends message with tvf, second one receives it`() {
+        val testState = MutableStateFlow<TestState>(TestState.Idle)
+        val testTopic = Random.nextBytes(32).bytesToHex()
+        val testMessage = "testMessage"
+        val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients()
+
+        // Listen to incoming messages/requests
+        clientB.subscriptionRequest.onEach {
+            println("ClientB subscriptionRequest: $it")
+            assertEquals(testMessage, it.params.subscriptionData.message)
+            testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+        }.launchIn(testScope)
+
+        //Await connection
+        measureAwaitingForConnection(clientA, clientB)
+
+        //Subscribe to topic
+        clientB.subscribe(testTopic) { result ->
+            result.fold(
+                onSuccess = {
+                    println("ClientB subscribe on topic: $testTopic")
+                },
+                onFailure = { error ->
+                    println("ClientB failed to subscribe on topic: $testTopic. Message: ${error.message}")
+                }
+            )
+        }
+
+        clientA.publish(
+            testTopic,
+            testMessage,
+            Relay.Model.IrnParams(
+                1114,
+                300,
+                correlationId = 1234L,
+                prompt = true,
+                chainId = "test",
+                contractAddresses = listOf("address"),
+                txHashes = listOf("hash"),
+                rpcMethods = listOf("method")
+            )
+        ) { result ->
             result.fold(
                 onSuccess = { println("ClientA publish on topic: $testTopic; message: $testMessage") },
                 onFailure = { error ->
