@@ -432,13 +432,13 @@ internal fun Wallet.Model.Amount.toYttrium(): Amount = Amount(
 )
 
 private fun TxnDetails.toWallet(): Wallet.Model.TransactionDetails = Wallet.Model.TransactionDetails(
-    transaction = transaction.toWallet(),
+    feeEstimatedTransaction = transaction.toWallet(),
     transactionFee = fee.toWallet(),
     transactionHashToSign = transactionHashToSign
 )
 
 private fun Wallet.Model.TransactionDetails.toYttrium(): TxnDetails = TxnDetails(
-    transaction = transaction.toWallet(),
+    transaction = feeEstimatedTransaction.toWallet(),
     fee = transactionFee.toYttrium(),
     transactionHashToSign = transactionHashToSign
 )

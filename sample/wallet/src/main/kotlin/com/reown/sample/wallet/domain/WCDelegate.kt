@@ -4,6 +4,7 @@ import android.util.Log
 import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.sample.wallet.domain.model.Transaction.getInitialTransaction
+import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.CoroutineScope
@@ -31,6 +32,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     //CA
     var prepareAvailable: Wallet.Model.PrepareSuccess.Available? = null
     var prepareError: Wallet.Model.PrepareError? = null
+
 
     init {
         CoreClient.setDelegate(this)
@@ -77,10 +79,36 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
             }
         }
 
+    @OptIn(ChainAbstractionExperimentalApi::class)
     override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
-        println("Request: $sessionRequest")
         if (sessionRequest.request.method == "eth_sendTransaction") {
-            prepare(sessionRequest, getInitialTransaction(sessionRequest), verifyContext)
+            try {
+                WalletKit.ChainAbstraction.prepare(
+                    getInitialTransaction(sessionRequest),
+                    onSuccess = { result ->
+                        when (result) {
+                            is Wallet.Model.PrepareSuccess.Available -> {
+                                println("Prepare success available: $result")
+                                emitChainAbstractionRequest(sessionRequest, result, verifyContext)
+                            }
+
+                            is Wallet.Model.PrepareSuccess.NotRequired -> {
+                                println("Prepare success not required: $result")
+                                emitSessionRequest(sessionRequest, verifyContext)
+                            }
+                        }
+                    },
+                    onError = { error ->
+                        println("Prepare error: $error")
+                        respondWithError(getErrorMessage(), sessionRequest)
+                        emitChainAbstractionError(sessionRequest, error, verifyContext)
+                    }
+                )
+            } catch (e: Exception) {
+                println("Prepare: Unknown error: $e")
+                respondWithError(e.message ?: "Prepare: Unknown error", sessionRequest)
+                emitChainAbstractionError(sessionRequest, Wallet.Model.PrepareError.Unknown(e.message ?: "Prepare: Unknown error"), verifyContext)
+            }
         } else {
             emitSessionRequest(sessionRequest, verifyContext)
         }

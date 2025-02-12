@@ -165,7 +165,7 @@ object Wallet {
         ) : Model()
 
         data class TransactionDetails(
-            var transaction: FeeEstimatedTransaction,
+            var feeEstimatedTransaction: FeeEstimatedTransaction,
             var transactionFee: TransactionFee,
             val transactionHashToSign: String
         ) : Model()

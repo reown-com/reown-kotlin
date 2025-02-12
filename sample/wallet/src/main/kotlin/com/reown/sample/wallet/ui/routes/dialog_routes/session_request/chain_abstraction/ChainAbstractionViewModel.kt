@@ -11,6 +11,7 @@ import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.EthSigner
 import com.reown.sample.wallet.domain.Signer
 import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WCDelegate.prepareAvailable
 import com.reown.sample.wallet.domain.clearSessionRequest
 import com.reown.sample.wallet.domain.execute
 import com.reown.sample.wallet.domain.model.Transaction
@@ -22,7 +23,6 @@ import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.web3j.utils.Numeric
@@ -41,7 +41,7 @@ class ChainAbstractionViewModel : ViewModel() {
     fun getERC20Balance(): String {
         val initialTransaction = WCDelegate.sessionRequestEvent?.first
 
-        val tokenAddress = WCDelegate.prepareAvailable?.initialTransactionMetadata?.tokenContract ?: ""
+        val tokenAddress = prepareAvailable?.initialTransactionMetadata?.tokenContract ?: ""
         return try {
             WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, EthAccountDelegate.account ?: "")
         } catch (e: Exception) {
@@ -54,10 +54,10 @@ class ChainAbstractionViewModel : ViewModel() {
     fun getTransferAmount(): String {
         return "${
             Transaction.hexToTokenAmount(
-                WCDelegate.prepareAvailable?.initialTransactionMetadata?.amount ?: "",
-                WCDelegate.prepareAvailable?.initialTransactionMetadata?.decimals ?: 6
+                prepareAvailable?.initialTransactionMetadata?.amount ?: "",
+                prepareAvailable?.initialTransactionMetadata?.decimals ?: 6
             )?.toPlainString() ?: "-.--"
-        } ${WCDelegate.prepareAvailable?.initialTransactionMetadata?.symbol}"
+        } ${prepareAvailable?.initialTransactionMetadata?.symbol}"
     }
 
     fun approve(onSuccess: (TxSuccess) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
@@ -65,22 +65,23 @@ class ChainAbstractionViewModel : ViewModel() {
             try {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
-                    val signedTransactions = mutableListOf<Pair<String, String>>()
-                    val txHashesChannel = Channel<Pair<String, String>>()
-                    //sign fulfilment txs
-                    WCDelegate.prepareAvailable?.transactionsDetails?.details?.forEach { fulfilment ->
-                        val signedTransaction = EthSigner.signHash(fulfilment.transactionHashToSign, EthAccountDelegate.privateKey)
-                        signedTransactions.add(Pair(fulfilment.transaction.chainId, signedTransaction))
+                    val signedFulfilmentTransactions = mutableListOf<String>()
+
+                    //signing fulfilment txs
+                    prepareAvailable?.transactionsDetails?.details?.forEach { transactionDetail ->
+                        val signedTransaction = EthSigner.signHash(transactionDetail.transactionHashToSign, EthAccountDelegate.privateKey)
+                        signedFulfilmentTransactions.add(signedTransaction)
                     }
 
-                    println("Original TX")
-                    val initTransactionDetails = WCDelegate.prepareAvailable?.transactionsDetails!!.initialDetails
-                    val signedTx = EthSigner.signHash(initTransactionDetails.transactionHashToSign, EthAccountDelegate.privateKey)
-                    val result = async { execute(WCDelegate.prepareAvailable!!, signedTransactions.map { it.second }, signedTx) }.await()
+                    //signing initial tx
+                    val initTransactionDetails = prepareAvailable?.transactionsDetails?.initialDetails ?: throw IllegalStateException("Initial transaction not found")
+                    val signedInitialTx = EthSigner.signHash(initTransactionDetails.transactionHashToSign, EthAccountDelegate.privateKey)
+
+                    //call execute method from WalletKit
+                    val result = async { execute(prepareAvailable!!, signedFulfilmentTransactions, signedInitialTx) }.await()
 
                     result.fold(
                         onSuccess = { executeSuccess ->
-
                             val response = Wallet.Params.SessionRequestResponse(
                                 sessionTopic = sessionRequest.topic,
                                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, executeSuccess.initialTxHash)
@@ -106,82 +107,7 @@ class ChainAbstractionViewModel : ViewModel() {
                             onError(Throwable("Execution error: $it"))
                         }
                     )
-//                //execute fulfilment txs
-//                signedTransactions.forEach { (chainId, signedTx) ->
-//                    viewModelScope.launch {
-//                        try {
-//                            println("Send raw: $signedTx")
-//                            val txHash = Transaction.sendRaw(chainId, signedTx, "Route")
-//                            println("Receive hash: $txHash")
-//                            txHashesChannel.send(Pair(chainId, txHash))
-//                        } catch (e: Exception) {
-//                            println("Route broadcast tx error: $e")
-//                            recordError(e)
-//                            respondWithError(e.message ?: "Route TX broadcast error", WCDelegate.sessionRequestEvent?.first)
-//                            return@launch onError(e)
-//                        }
-//                    }
-//                }
-
-//                //awaits receipts
-//                viewModelScope.launch {
-//                    repeat(signedTransactions.size) {
-//                        val (chainId, txHash) = txHashesChannel.receive()
-//                        println("Receive tx hash: $txHash")
-//
-//                        try {
-//                            Transaction.getReceipt(chainId, txHash)
-//                        } catch (e: Exception) {
-//                            println("Route execution tx error: $e")
-//                            recordError(e)
-//                            respondWithError(e.message ?: "Route TX execution error", WCDelegate.sessionRequestEvent?.first)
-//                            return@launch onError(e)
-//                        }
-//                    }
-//                    txHashesChannel.close()
-
-
-                    //check fulfilment status
-//                    println("Fulfilment status check")
-//                    val fulfilmentResult = async { status() }.await()
-//                fulfilmentResult.fold(
-//                    onSuccess = {
-//                        when (it) {
-//                            is Wallet.Model.Status.Error -> {
-//                                println("Fulfilment error: ${it.reason}")
-//                                onError(Throwable(it.reason))
-//                            }
-//
-//                            is Wallet.Model.Status.Completed -> {
-//                                println("Fulfilment completed")
-//                                //if status completed, execute init tx
-//                                with(WCDelegate.transactionsDetails!!.initialDetails.transaction) {
-//                try {
-//                                        val nonceResult = Transaction.getNonce(chainId, from)
-//                                        println("Original TX")
-//                                        val signedTx = Transaction.sign(this, nonceResult)
-//                                        val resultTx = Transaction.sendRaw(chainId, signedTx, "Original")
-//                                        val receipt = Transaction.getReceipt(chainId, resultTx)
-//                                        println("Original TX receipt: $receipt")
-
-
-//                } catch (e: Exception) {
-//                    recordError(e)
-//                    respondWithError(e.message ?: "Init TX execution error", WCDelegate.sessionRequestEvent?.first)
-//                    return@launch onError(e)
-//                }
                 }
-//                            }
-//                        }
-//                    },
-//                    onFailure = {
-//                        println("Fulfilment error: $it")
-//                        recordError(it)
-//                        onError(Throwable("Fulfilment status error: $it"))
-//                    }
-//                )
-//            }
-//        }
             } catch (e: Exception) {
                 println("Error: $e")
                 recordError(e)

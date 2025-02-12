@@ -44,6 +44,26 @@ fun prepare(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wal
     }
 }
 
+@OptIn(ChainAbstractionExperimentalApi::class)
+suspend fun execute(prepareAvailable: Wallet.Model.PrepareSuccess.Available, prepareTxs: List<String>, initialTx: String): Result<Wallet.Model.ExecuteSuccess> =
+    suspendCoroutine { continuation ->
+        try {
+            WalletKit.ChainAbstraction.execute(prepareAvailable, prepareTxs, initialTx,
+                onSuccess = { executeSuccess ->
+                    continuation.resume(Result.success(executeSuccess))
+                },
+                onError = { executeError ->
+                    recordError(executeError.throwable)
+                    continuation.resume(Result.failure(executeError.throwable))
+                }
+            )
+
+        } catch (e: Exception) {
+            recordError(e)
+            continuation.resume(Result.failure(e))
+        }
+    }
+
 fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionRequest?) {
     if (sessionRequest != null) {
         val result = Wallet.Params.SessionRequestResponse(
@@ -69,26 +89,6 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
         }
     }
 }
-
-@OptIn(ChainAbstractionExperimentalApi::class)
-suspend fun execute(prepareAvailable: Wallet.Model.PrepareSuccess.Available, fulfilmentTxs: List<String>, initialTx: String): Result<Wallet.Model.ExecuteSuccess> =
-    suspendCoroutine { continuation ->
-        try {
-            WalletKit.ChainAbstraction.execute(prepareAvailable, fulfilmentTxs, initialTx,
-                onSuccess = {
-                    continuation.resume(Result.success(it))
-                },
-                onError = {
-                    recordError(it.throwable)
-                    continuation.resume(Result.failure(it.throwable))
-                }
-            )
-
-        } catch (e: Exception) {
-            recordError(e)
-            continuation.resume(Result.failure(e))
-        }
-    }
 
 fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
     if (WCDelegate.currentId != sessionRequest.request.id) {

@@ -349,18 +349,6 @@ object WalletKit {
         return SignClient.getListOfVerifyContexts().map { verifyContext -> verifyContext.toWallet() }
     }
 
-    @Throws(Exception::class)
-    @ChainAbstractionExperimentalApi
-    fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
-        return estimateGasUseCase(chainId)
-    }
-
-    @Throws(Exception::class)
-    @ChainAbstractionExperimentalApi
-    fun getERC20Balance(chainId: String, tokenAddress: String, ownerAddress: String): String {
-        return getERC20TokenBalanceUseCase(chainId, tokenAddress, ownerAddress)
-    }
-
     object ChainAbstraction {
         @ChainAbstractionExperimentalApi
         fun prepare(
@@ -371,7 +359,7 @@ object WalletKit {
             try {
                 prepareChainAbstractionUseCase(initialTransaction, onSuccess, onError)
             } catch (e: Exception) {
-                onError(Wallet.Model.PrepareError.Unknown("kobe: ${e.message}" ?: "Unknown error"))
+                onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
             }
         }
 
@@ -389,5 +377,15 @@ object WalletKit {
                 onError(Wallet.Model.Error(e))
             }
         }
+    }
+
+    @Throws(Exception::class)
+    fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
+        return estimateGasUseCase(chainId)
+    }
+
+    @Throws(Exception::class)
+    fun getERC20Balance(chainId: String, tokenAddress: String, ownerAddress: String): String {
+        return getERC20TokenBalanceUseCase(chainId, tokenAddress, ownerAddress)
     }
 }
