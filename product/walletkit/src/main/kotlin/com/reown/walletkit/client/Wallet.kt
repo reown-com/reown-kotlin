@@ -18,11 +18,7 @@ object Wallet {
     }
 
     sealed class Params {
-        data class Init(
-            val core: CoreInterface,
-            @SmartAccountExperimentalApi
-            val pimlicoApiKey: String? = null
-        ) : Params()
+        data class Init(val core: CoreInterface) : Params()
 
         data class Pair(val uri: String) : Params()
 
@@ -66,7 +62,7 @@ object Wallet {
         data class GetSmartAccountAddress(val owner: Account) : Params()
         data class PrepareSendTransactions(val calls: List<Call>, val owner: Account) : Params()
         data class DoSendTransactions(val owner: Account, val signatures: List<OwnerSignature>, val doSendTransactionParams: String) : Params()
-        data class PrepareSendTransactionsResult(var hash: String, var doSendTransactionParams: String, val eip712Domain: String, ) : Params()
+        data class PrepareSendTransactionsResult(var hash: String, var doSendTransactionParams: String, val eip712Domain: String) : Params()
         data class DoSendTransactionsResult(var userOperationHash: String) : Params()
         data class WaitForUserOperationReceipt(var owner: Account, var userOperationHash: String) : Params()
         data class OwnerSignature(val address: String, val signature: String) : Params()
@@ -138,28 +134,22 @@ object Wallet {
 
         sealed class PrepareSuccess : Model() {
             data class Available(
-                val fulfilmentId: String,
+                val orchestratorId: String,
                 val checkIn: Long,
                 val transactions: List<Transaction>,
                 val initialTransaction: Transaction,
                 val initialTransactionMetadata: InitialTransactionMetadata,
-                val funding: List<FundingMetadata>
+                val funding: List<FundingMetadata>,
+                val transactionsDetails: TransactionsDetails
             ) : PrepareSuccess()
 
             data class NotRequired(val initialTransaction: Transaction) : PrepareSuccess()
         }
 
-//        enum class Currency {
-//            USD,
-//            EUR,
-//            GBP,
-//            AUD,
-//            CAD,
-//            INR,
-//            JPY,
-//            BTC,
-//            ETH;
-//        }
+        data class ExecuteSuccess(
+            val initialTxHash: String,
+            val initialTxReceipt: String
+        ) : Model()
 
         data class Amount(
             var symbol: String,
@@ -175,12 +165,13 @@ object Wallet {
         ) : Model()
 
         data class TransactionDetails(
-            var transaction: FeeEstimatedTransaction,
-            var transactionFee: TransactionFee
+            var feeEstimatedTransaction: FeeEstimatedTransaction,
+            var transactionFee: TransactionFee,
+            val transactionHashToSign: String
         ) : Model()
 
         data class TransactionsDetails(
-            var fulfilmentDetails: List<TransactionDetails>,
+            var details: List<TransactionDetails>,
             var initialDetails: TransactionDetails,
             var bridgeFees: List<TransactionFee>,
             var localBridgeTotal: Amount,

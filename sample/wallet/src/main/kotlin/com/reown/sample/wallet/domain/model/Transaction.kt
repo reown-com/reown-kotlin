@@ -13,7 +13,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeout
 import org.json.JSONArray
-import org.json.JSONObject
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.RawTransaction
 import org.web3j.crypto.TransactionEncoder
@@ -191,36 +190,28 @@ object Transaction {
         }
     }
 
-    suspend fun getReceipt(chainId: String, txHash: String) {
-        withTimeout(60000) {
-            while (true) {
-                val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
-                val nonceRequest = JsonRpcRequest(
-                    method = "eth_getTransactionReceipt",
-                    params = listOf(txHash),
-                    id = generateId()
-                )
-
-                val receipt = async { service.sendJsonRpcRequest(nonceRequest) }.await()
-                when {
-                    receipt.error != null -> throw Exception("Getting tx receipt failed: ${receipt.error.message}")
-                    receipt.result == null -> delay(3000)
-                    else -> {
-                        println("receipt: $receipt")
-                        val status = JSONObject(receipt.result.toString()).getString("status")
-
-                        if (status == "1") {
-                            break
-                        } else if (status == "0") {
-                            throw Exception("Route Transaction failed. Tx hash: $txHash, chainId: $chainId")
-                        } else {
-                            break
-                        }
-                    }
-                }
-            }
-        }
-    }
+//    suspend fun getReceipt(chainId: String, txHash: String) {
+//        withTimeout(60000) {
+//            while (true) {
+//                val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
+//                val nonceRequest = JsonRpcRequest(
+//                    method = "eth_getTransactionReceipt",
+//                    params = listOf(txHash),
+//                    id = generateId()
+//                )
+//
+//                val receipt = async { service.sendJsonRpcRequest(nonceRequest) }.await()
+//                when {
+//                    receipt.error != null -> throw Exception("Getting tx receipt failed: ${receipt.error.message}")
+//                    receipt.result == null -> delay(3000)
+//                    else -> {
+//                        println("receipt: $receipt")
+//                        break
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private fun hexToBigDecimal(input: String): BigDecimal? {
         val trimmedInput = input.trim()

@@ -14,74 +14,74 @@ import kotlin.coroutines.suspendCoroutine
 object Signer {
     suspend fun sign(sessionRequest: SessionRequestUI.Content): String = supervisorScope {
         when {
-            SmartAccountEnabler.isSmartAccountEnabled.value -> when (sessionRequest.method) {
-                "wallet_sendCalls" -> {
-                    val calls: MutableList<Wallet.Params.Call> = mutableListOf()
-                    val callsArray = JSONArray(sessionRequest.param).getJSONObject(0).getJSONArray("calls")
-                    for (i in 0 until callsArray.length()) {
-                        val call = callsArray.getJSONObject(i)
-                        val to = call.getString("to") ?: ""
-                        val value = try {
-                            call.getString("value")
-                        } catch (e: Exception) {
-                            ""
-                        }
+//            SmartAccountEnabler.isSmartAccountEnabled.value -> when (sessionRequest.method) {
+//                "wallet_sendCalls" -> {
+//                    val calls: MutableList<Wallet.Params.Call> = mutableListOf()
+//                    val callsArray = JSONArray(sessionRequest.param).getJSONObject(0).getJSONArray("calls")
+//                    for (i in 0 until callsArray.length()) {
+//                        val call = callsArray.getJSONObject(i)
+//                        val to = call.getString("to") ?: ""
+//                        val value = try {
+//                            call.getString("value")
+//                        } catch (e: Exception) {
+//                            ""
+//                        }
+//
+//                        val data = try {
+//                            call.getString("data")
+//                        } catch (e: Exception) {
+//                            ""
+//                        }
+//                        calls.add(Wallet.Params.Call(to, value, data))
+//                    }
+//                    val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
+//                    val prepareSendTxsParams = Wallet.Params.PrepareSendTransactions(calls = calls, owner = ownerAccount)
+//
+//                    val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await().getOrThrow()
+//                    val signature = EthSigner.signHash(prepareTxsResult.hash, EthAccountDelegate.privateKey)
+//                    val doSendTxsParams = Wallet.Params.DoSendTransactions(
+//                        owner = ownerAccount,
+//                        signatures = listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
+//                        doSendTransactionParams = prepareTxsResult.doSendTransactionParams
+//                    )
+//                    val doTxsResult = async { doTransactions(doSendTxsParams) }.await().getOrThrow()
+//                    val userOperationReceiptParam = Wallet.Params.WaitForUserOperationReceipt(owner = ownerAccount, userOperationHash = doTxsResult.userOperationHash)
+//
+//                    val userOperationReceipt = waitForUserOperationReceipt(userOperationReceiptParam)
+//                    println("userOperationReceipt: $userOperationReceipt")
+//
+//                    doTxsResult.userOperationHash
+//                }
+//
+//                ETH_SEND_TRANSACTION -> {
+//                    val calls: MutableList<Wallet.Params.Call> = mutableListOf()
+//                    val params = JSONArray(sessionRequest.param).getJSONObject(0)
+//                    val to = params.getString("to") ?: ""
+//                    val value = params.getString("value") ?: ""
+//                    val data = try {
+//                        params.getString("data")
+//                    } catch (e: Exception) {
+//                        ""
+//                    }
+//
+//                    calls.add(Wallet.Params.Call(to, value, data))
+//                    val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
+//                    val prepareSendTxsParams = Wallet.Params.PrepareSendTransactions(calls = calls, owner = ownerAccount)
+//                    val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await().getOrThrow()
+//                    val signature = EthSigner.signHash(prepareTxsResult.hash, EthAccountDelegate.privateKey)
+//                    val doSendTxsParams = Wallet.Params.DoSendTransactions(
+//                        owner = ownerAccount,
+//                        signatures = listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
+//                        doSendTransactionParams = prepareTxsResult.doSendTransactionParams
+//                    )
+//                    val doTxsResult = async { doTransactions(doSendTxsParams) }.await().getOrThrow()
+//                    doTxsResult.userOperationHash
+//                }
+//
+//                else -> throw Exception("Unsupported Method")
+//            }
 
-                        val data = try {
-                            call.getString("data")
-                        } catch (e: Exception) {
-                            ""
-                        }
-                        calls.add(Wallet.Params.Call(to, value, data))
-                    }
-                    val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
-                    val prepareSendTxsParams = Wallet.Params.PrepareSendTransactions(calls = calls, owner = ownerAccount)
-
-                    val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await().getOrThrow()
-                    val signature = EthSigner.signHash(prepareTxsResult.hash, EthAccountDelegate.privateKey)
-                    val doSendTxsParams = Wallet.Params.DoSendTransactions(
-                        owner = ownerAccount,
-                        signatures = listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
-                        doSendTransactionParams = prepareTxsResult.doSendTransactionParams
-                    )
-                    val doTxsResult = async { doTransactions(doSendTxsParams) }.await().getOrThrow()
-                    val userOperationReceiptParam = Wallet.Params.WaitForUserOperationReceipt(owner = ownerAccount, userOperationHash = doTxsResult.userOperationHash)
-
-                    val userOperationReceipt = waitForUserOperationReceipt(userOperationReceiptParam)
-                    println("userOperationReceipt: $userOperationReceipt")
-
-                    doTxsResult.userOperationHash
-                }
-
-                ETH_SEND_TRANSACTION -> {
-                    val calls: MutableList<Wallet.Params.Call> = mutableListOf()
-                    val params = JSONArray(sessionRequest.param).getJSONObject(0)
-                    val to = params.getString("to") ?: ""
-                    val value = params.getString("value") ?: ""
-                    val data = try {
-                        params.getString("data")
-                    } catch (e: Exception) {
-                        ""
-                    }
-
-                    calls.add(Wallet.Params.Call(to, value, data))
-                    val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
-                    val prepareSendTxsParams = Wallet.Params.PrepareSendTransactions(calls = calls, owner = ownerAccount)
-                    val prepareTxsResult = async { prepareTransactions(prepareSendTxsParams) }.await().getOrThrow()
-                    val signature = EthSigner.signHash(prepareTxsResult.hash, EthAccountDelegate.privateKey)
-                    val doSendTxsParams = Wallet.Params.DoSendTransactions(
-                        owner = ownerAccount,
-                        signatures = listOf(Wallet.Params.OwnerSignature(address = EthAccountDelegate.account, signature = signature)),
-                        doSendTransactionParams = prepareTxsResult.doSendTransactionParams
-                    )
-                    val doTxsResult = async { doTransactions(doSendTxsParams) }.await().getOrThrow()
-                    doTxsResult.userOperationHash
-                }
-
-                else -> throw Exception("Unsupported Method")
-            }
-
-            !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
+//            !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
                 sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
                 sessionRequest.method == ETH_SEND_TRANSACTION -> {
                     val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
@@ -107,38 +107,38 @@ object Signer {
                     """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
 
                 else -> throw Exception("Unsupported Method")
-            }
+//            }
 
-            else -> throw Exception("Unsupported Chain")
+//            else -> throw Exception("Unsupported Chain")
         }
     }
 
-    private suspend fun prepareTransactions(params: Wallet.Params.PrepareSendTransactions): Result<Wallet.Params.PrepareSendTransactionsResult> =
-        suspendCoroutine { continuation ->
-            try {
-                WalletKit.prepareSendTransactions(params) { result -> continuation.resume(Result.success(result)) }
-            } catch (e: Exception) {
-                continuation.resume(Result.failure(e))
-            }
-        }
-
-    private suspend fun doTransactions(params: Wallet.Params.DoSendTransactions): Result<Wallet.Params.DoSendTransactionsResult> =
-        suspendCoroutine { continuation ->
-            try {
-                WalletKit.doSendTransactions(params) { result -> continuation.resume(Result.success(result)) }
-            } catch (e: Exception) {
-                continuation.resume(Result.failure(e))
-            }
-        }
-
-    private suspend fun waitForUserOperationReceipt(params: Wallet.Params.WaitForUserOperationReceipt): Result<String> =
-        suspendCoroutine { continuation ->
-            try {
-                WalletKit.waitForUserOperationReceipt(params) { result -> continuation.resume(Result.success(result)) }
-            } catch (e: Exception) {
-                continuation.resume(Result.failure(e))
-            }
-        }
+//    private suspend fun prepareTransactions(params: Wallet.Params.PrepareSendTransactions): Result<Wallet.Params.PrepareSendTransactionsResult> =
+//        suspendCoroutine { continuation ->
+//            try {
+//                WalletKit.prepareSendTransactions(params) { result -> continuation.resume(Result.success(result)) }
+//            } catch (e: Exception) {
+//                continuation.resume(Result.failure(e))
+//            }
+//        }
+//
+//    private suspend fun doTransactions(params: Wallet.Params.DoSendTransactions): Result<Wallet.Params.DoSendTransactionsResult> =
+//        suspendCoroutine { continuation ->
+//            try {
+//                WalletKit.doSendTransactions(params) { result -> continuation.resume(Result.success(result)) }
+//            } catch (e: Exception) {
+//                continuation.resume(Result.failure(e))
+//            }
+//        }
+//
+//    private suspend fun waitForUserOperationReceipt(params: Wallet.Params.WaitForUserOperationReceipt): Result<String> =
+//        suspendCoroutine { continuation ->
+//            try {
+//                WalletKit.waitForUserOperationReceipt(params) { result -> continuation.resume(Result.success(result)) }
+//            } catch (e: Exception) {
+//                continuation.resume(Result.failure(e))
+//            }
+//        }
 
     const val PERSONAL_SIGN = "personal_sign"
     const val ETH_SEND_TRANSACTION = "eth_sendTransaction"

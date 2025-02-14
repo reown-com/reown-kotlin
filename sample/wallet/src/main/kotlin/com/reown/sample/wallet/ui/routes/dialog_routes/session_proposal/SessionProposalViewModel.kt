@@ -43,24 +43,24 @@ class SessionProposalViewModel : ViewModel() {
     }
 
     private fun getNamespacesAndProperties(proposal: Wallet.Model.SessionProposal): Pair<Map<String, Wallet.Model.Namespace.Session>, Map<String, String>> {
-        return if (SmartAccountEnabler.isSmartAccountEnabled.value) {
-            val sessionNamespaces =
-                WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = smartAccountWalletMetadata.namespaces)
-            val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
-            val smartAccountAddress = try {
-                WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(ownerAccount))
-            } catch (e: Exception) {
-                Firebase.crashlytics.recordException(e)
-                ""
-            }
-
-            val capability = "{\"$smartAccountAddress\":{\"0xaa36a7\":{\"atomicBatch\":{\"supported\":true}}}}"
-            val sessionProperties = mapOf("bundler_name" to "pimlico", "capabilities" to capability)
-            Pair(sessionNamespaces, sessionProperties)
-        } else {
-            val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
-            Pair(sessionNamespaces, mapOf())
-        }
+//        return if (SmartAccountEnabler.isSmartAccountEnabled.value) {
+//            val sessionNamespaces =
+//                WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = smartAccountWalletMetadata.namespaces)
+//            val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
+//            val smartAccountAddress = try {
+//                WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(ownerAccount))
+//            } catch (e: Exception) {
+//                Firebase.crashlytics.recordException(e)
+//                ""
+//            }
+//
+//            val capability = "{\"$smartAccountAddress\":{\"0xaa36a7\":{\"atomicBatch\":{\"supported\":true}}}}"
+//            val sessionProperties = mapOf("bundler_name" to "pimlico", "capabilities" to capability)
+//            Pair(sessionNamespaces, sessionProperties)
+//        } else {
+        val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
+        return Pair(sessionNamespaces, mapOf())
+//        }
     }
 
     fun reject(proposalPublicKey: String, onSuccess: (String) -> Unit = {}, onError: (Throwable) -> Unit = {}) {

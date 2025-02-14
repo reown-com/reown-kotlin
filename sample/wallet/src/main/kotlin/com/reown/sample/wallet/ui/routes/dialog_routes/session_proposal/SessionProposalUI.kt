@@ -25,49 +25,49 @@ data class WalletMetaData(
     val namespaces: Map<String, Wallet.Model.Namespace.Session>,
 )
 
-val smartAccountWalletMetadata =
-    WalletMetaData(
-        peerUI = PeerUI(
-            peerIcon = "https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Icon/Gradient/Icon.png",
-            peerName = "Kotlin.Wallet",
-            peerUri = "kotlin.wallet.app",
-            peerDescription = "Kotlin Wallet Description"
-        ),
-        namespaces = mapOf(
-            "eip155" to Wallet.Model.Namespace.Session(
-                chains = listOf("eip155:11155111"),
-                methods = listOf(
-                    "eth_sendTransaction",
-                    "personal_sign",
-                    "eth_accounts",
-                    "eth_requestAccounts",
-                    "eth_call",
-                    "eth_getBalance",
-                    "eth_sendRawTransaction",
-                    "eth_sign",
-                    "eth_signTransaction",
-                    "eth_signTypedData",
-                    "eth_signTypedData_v4",
-                    "wallet_switchEthereumChain",
-                    "wallet_addEthereumChain",
-                    "wallet_sendCalls",
-                    "wallet_getCallsStatus"
-                ),
-                events = listOf("chainChanged", "accountsChanged", "connect", "disconnect"),
-                accounts = listOf(
-                    "eip155:11155111:${
-                        try {
-                            WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)))
-                        } catch (e: Exception) {
-                            println("Getting SA account error: ${e.message}")
-                            recordError(e)
-                            ""
-                        }
-                    }"
-                )
-            )
-        )
-    )
+//val smartAccountWalletMetadata =
+//    WalletMetaData(
+//        peerUI = PeerUI(
+//            peerIcon = "https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Icon/Gradient/Icon.png",
+//            peerName = "Kotlin.Wallet",
+//            peerUri = "kotlin.wallet.app",
+//            peerDescription = "Kotlin Wallet Description"
+//        ),
+//        namespaces = mapOf(
+//            "eip155" to Wallet.Model.Namespace.Session(
+//                chains = listOf("eip155:11155111"),
+//                methods = listOf(
+//                    "eth_sendTransaction",
+//                    "personal_sign",
+//                    "eth_accounts",
+//                    "eth_requestAccounts",
+//                    "eth_call",
+//                    "eth_getBalance",
+//                    "eth_sendRawTransaction",
+//                    "eth_sign",
+//                    "eth_signTransaction",
+//                    "eth_signTypedData",
+//                    "eth_signTypedData_v4",
+//                    "wallet_switchEthereumChain",
+//                    "wallet_addEthereumChain",
+//                    "wallet_sendCalls",
+//                    "wallet_getCallsStatus"
+//                ),
+//                events = listOf("chainChanged", "accountsChanged", "connect", "disconnect"),
+//                accounts = listOf(
+//                    "eip155:11155111:${
+//                        try {
+//                            WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)))
+//                        } catch (e: Exception) {
+//                            println("Getting SA account error: ${e.message}")
+//                            recordError(e)
+//                            ""
+//                        }
+//                    }"
+//                )
+//            )
+//        )
+//    )
 
 val walletMetaData = WalletMetaData(
     peerUI = PeerUI(
