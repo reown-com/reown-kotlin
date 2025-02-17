@@ -57,7 +57,7 @@ internal class SearchState(
         get() = _state.value.isFocused
 
     val searchValue: String
-        get() = _state.value.searchValue
+        get() = _state.value.searchValue.trim()
 
     fun onSearchValueChange(value: String) {
         _state.update { it.copy(searchValue = value) }
