@@ -57,7 +57,10 @@ internal sealed class SignRpc : JsonRpcClientSync<SignParams> {
         override val method: String = JsonRpcMethod.WC_SESSION_REQUEST,
         @Json(name = "params")
         override val params: SignParams.SessionRequestParams
-    ) : SignRpc()
+    ) : SignRpc() {
+        val rpcMethod = params.request.method
+        val rpcParams = params.request.params
+    }
 
     @JsonClass(generateAdapter = true)
     internal data class SessionDelete(

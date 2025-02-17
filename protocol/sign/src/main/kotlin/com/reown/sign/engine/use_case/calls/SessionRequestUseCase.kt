@@ -33,6 +33,7 @@ import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestVO
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
+import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
@@ -53,6 +54,7 @@ internal class SessionRequestUseCase(
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
     private val logger: Logger,
+    private val tvf: TVF
 ) : SessionRequestUseCaseInterface {
     private val _errors: MutableSharedFlow<SDKError> = MutableSharedFlow()
     override val errors: SharedFlow<SDKError> = _errors.asSharedFlow()
@@ -110,7 +112,17 @@ internal class SessionRequestUseCase(
 
                 Ttl(newTtl)
             }
-            val irnParams = IrnParams(Tags.SESSION_REQUEST, irnParamsTtl, true)
+
+            val tvfData = tvf.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
+            val irnParams = IrnParams(
+                Tags.SESSION_REQUEST,
+                irnParamsTtl,
+                correlationId = sessionPayload.id,
+                rpcMethods = tvfData?.first,
+                contractAddresses = tvfData?.second,
+                chainId = tvfData?.third,
+                prompt = true
+            )
             val requestTtlInSeconds = expiry.run { seconds - nowInSeconds }
 
             logger.log("Sending session request on topic: ${request.topic}}")

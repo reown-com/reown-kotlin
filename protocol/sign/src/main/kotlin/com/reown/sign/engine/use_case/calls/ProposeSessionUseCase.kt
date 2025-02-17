@@ -57,7 +57,7 @@ internal class ProposeSessionUseCase(
                     )
                 val request = SignRpc.SessionPropose(params = sessionProposal)
                 proposalStorageRepository.insertProposal(sessionProposal.toVO(pairing.topic, request.id))
-                val irnParams = IrnParams(Tags.SESSION_PROPOSE, Ttl(fiveMinutesInSeconds), true)
+                val irnParams = IrnParams(Tags.SESSION_PROPOSE, Ttl(fiveMinutesInSeconds), correlationId = request.id, prompt = true)
                 jsonRpcInteractor.subscribe(pairing.topic) { error -> onFailure(error) }
 
                 logger.log("Sending proposal on topic: ${pairing.topic.value}")

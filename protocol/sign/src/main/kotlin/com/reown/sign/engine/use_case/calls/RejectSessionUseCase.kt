@@ -22,7 +22,6 @@ internal class RejectSessionUseCase(
     private val verifyContextStorageRepository: VerifyContextStorageRepository,
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val proposalStorageRepository: ProposalStorageRepository,
-    private val pairingController: PairingControllerInterface,
     private val logger: Logger
 ) : RejectSessionUseCaseInterface {
 
@@ -39,7 +38,7 @@ internal class RejectSessionUseCase(
         jsonRpcInteractor.respondWithError(
             proposal.toSessionProposeRequest(),
             PeerError.EIP1193.UserRejectedRequest(reason),
-            IrnParams(Tags.SESSION_PROPOSE_RESPONSE_REJECT, Ttl(fiveMinutesInSeconds)),
+            IrnParams(Tags.SESSION_PROPOSE_RESPONSE_REJECT, Ttl(fiveMinutesInSeconds), correlationId = proposal.requestId),
             onSuccess = {
                 logger.log("Session rejection sent successfully, topic: ${proposal.pairingTopic.value}")
                 scope.launch {

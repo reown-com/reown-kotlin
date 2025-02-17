@@ -33,7 +33,7 @@ internal class OnSessionEventUseCase(
 
     suspend operator fun invoke(request: WCRequest, params: SignParams.EventParams) = supervisorScope {
         logger.log("Session event received on topic: ${request.topic}")
-        val irnParams = IrnParams(Tags.SESSION_EVENT_RESPONSE, Ttl(fiveMinutesInSeconds))
+        val irnParams = IrnParams(Tags.SESSION_EVENT_RESPONSE, Ttl(fiveMinutesInSeconds), correlationId = request.id)
         try {
             SignValidator.validateEvent(params.toEngineDOEvent()) { error ->
                 logger.error("Session event received failure on topic: ${request.topic} - $error")
