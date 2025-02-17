@@ -114,7 +114,7 @@ internal class WalletDataSource(
 
     fun clearSearch() {
         searchPhrase = String.Empty
-        searchState.value = WalletsData.empty()
+        searchState.value = WalletsData.refresh()
     }
 
     suspend fun searchWallet(searchPhrase: String) {
