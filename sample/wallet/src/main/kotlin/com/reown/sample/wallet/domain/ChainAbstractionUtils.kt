@@ -9,7 +9,6 @@ import com.reown.sample.wallet.domain.WCDelegate.scope
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -17,7 +16,7 @@ import kotlin.coroutines.suspendCoroutine
 @OptIn(ChainAbstractionExperimentalApi::class)
 fun prepare(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wallet.Model.InitialTransaction, verifyContext: Wallet.Model.VerifyContext) {
     try {
-        WalletKit.prepare(
+        WalletKit.ChainAbstraction.prepare(
             initialTransaction,
             onSuccess = { result ->
                 when (result) {
@@ -45,6 +44,26 @@ fun prepare(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wal
     }
 }
 
+@OptIn(ChainAbstractionExperimentalApi::class)
+suspend fun execute(prepareAvailable: Wallet.Model.PrepareSuccess.Available, prepareTxs: List<String>, initialTx: String): Result<Wallet.Model.ExecuteSuccess> =
+    suspendCoroutine { continuation ->
+        try {
+            WalletKit.ChainAbstraction.execute(prepareAvailable, prepareTxs, initialTx,
+                onSuccess = { executeSuccess ->
+                    continuation.resume(Result.success(executeSuccess))
+                },
+                onError = { executeError ->
+                    recordError(executeError.throwable)
+                    continuation.resume(Result.failure(executeError.throwable))
+                }
+            )
+
+        } catch (e: Exception) {
+            recordError(e)
+            continuation.resume(Result.failure(e))
+        }
+    }
+
 fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionRequest?) {
     if (sessionRequest != null) {
         val result = Wallet.Params.SessionRequestResponse(
@@ -71,51 +90,6 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
     }
 }
 
-suspend fun getTransactionsDetails(): Result<Wallet.Model.TransactionsDetails> =
-    suspendCoroutine { continuation ->
-        try {
-            WalletKit.getTransactionsDetails(
-                WCDelegate.fulfilmentAvailable!!,
-                onSuccess = {
-                    println("Transaction details SUCCESS: $it")
-                    continuation.resume(Result.success(it))
-                },
-                onError = {
-                    println("Transaction details ERROR: $it")
-                    recordError(Throwable(it.throwable))
-                    continuation.resume(Result.failure(it.throwable))
-                }
-            )
-        } catch (e: Exception) {
-            println("Transaction details utils: $e")
-            recordError(e)
-            continuation.resume(Result.failure(e))
-        }
-    }
-
-suspend fun status(): Result<Wallet.Model.Status> =
-    suspendCoroutine { continuation ->
-        try {
-            WalletKit.status(
-                WCDelegate.fulfilmentAvailable!!.fulfilmentId,
-                WCDelegate.fulfilmentAvailable!!.checkIn,
-                onSuccess = {
-                    println("Fulfilment status SUCCESS: $it")
-                    continuation.resume(Result.success(it))
-                },
-                onError = {
-                    println("Fulfilment status ERROR: $it")
-                    recordError(Throwable(it.reason))
-                    continuation.resume(Result.failure(Exception(it.reason)))
-                }
-            )
-        } catch (e: Exception) {
-            println("Catch status utils: $e")
-            recordError(e)
-            continuation.resume(Result.failure(e))
-        }
-    }
-
 fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
     if (WCDelegate.currentId != sessionRequest.request.id) {
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
@@ -129,14 +103,9 @@ fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContex
 fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, fulfilment: Wallet.Model.PrepareSuccess.Available, verifyContext: Wallet.Model.VerifyContext) {
     if (WCDelegate.currentId != sessionRequest.request.id) {
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
-        WCDelegate.fulfilmentAvailable = fulfilment
+        WCDelegate.prepareAvailable = fulfilment
 
         scope.launch {
-            async { getTransactionsDetails() }.await().fold(
-                onSuccess = { WCDelegate.transactionsDetails = it },
-                onFailure = { error -> println("Failed getting tx details: $error") }
-            )
-
             _walletEvents.emit(fulfilment)
         }
     }

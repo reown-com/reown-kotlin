@@ -184,6 +184,15 @@ object Relay {
 
         data class ShutdownReason(val code: Int, val reason: String) : Model()
 
-        data class IrnParams(val tag: Int, val ttl: Long, val prompt: Boolean = false) : Model()
+        data class IrnParams(
+            val tag: Int,
+            val ttl: Long,
+            val correlationId: Long?,
+            val rpcMethods: List<String>? = null,
+            val chainId: String? = null,
+            val txHashes: List<String>? = null,
+            val contractAddresses: List<String>? = null,
+            val prompt: Boolean = false
+        ) : Model()
     }
 }

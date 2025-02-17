@@ -5,6 +5,7 @@ package com.reown.sign.di
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.signing.cacao.CacaoVerifier
 import com.reown.sign.engine.domain.SignEngine
+import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCase
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCaseInterface
 import com.reown.sign.json_rpc.domain.DeleteRequestByIdUseCase
@@ -20,6 +21,8 @@ import org.koin.dsl.module
 internal fun engineModule() = module {
 
     includes(callsModule(), requestsModule(), responsesModule())
+
+    single { TVF(moshi = get(named(AndroidCommonDITags.MOSHI))) }
 
     single { GetPendingSessionRequests(jsonRpcHistory = get(), serializer = get()) }
 

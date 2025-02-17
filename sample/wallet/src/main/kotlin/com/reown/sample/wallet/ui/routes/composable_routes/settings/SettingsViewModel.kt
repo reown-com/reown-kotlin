@@ -22,17 +22,17 @@ class SettingsViewModel : ViewModel() {
     val privateKey = EthAccountDelegate.privateKey
     val clientId = CoreClient.Echo.clientId
 
-    fun getSmartAccount(): String {
-        val params = Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(address = EthAccountDelegate.sepoliaAddress))
-        val smartAccountAddress = try {
-             WalletKit.getSmartAccount(params)
-        } catch (e: Exception) {
-            println("Getting SA account error: ${e.message}")
-            recordError(e)
-            "error"
-        }
-        return "eip155:11155111:$smartAccountAddress"
-    }
+//    fun getSmartAccount(): String {
+//        val params = Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(address = EthAccountDelegate.sepoliaAddress))
+//        val smartAccountAddress = try {
+//             WalletKit.getSmartAccount(params)
+//        } catch (e: Exception) {
+//            println("Getting SA account error: ${e.message}")
+//            recordError(e)
+//            "error"
+//        }
+//        return "eip155:11155111:$smartAccountAddress"
+//    }
 
     private val _deviceToken = MutableStateFlow("")
     val deviceToken = _deviceToken.asStateFlow()

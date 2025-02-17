@@ -3,12 +3,14 @@ package com.reown.android.internal.common.model
 enum class Tags(val id: Int) {
     UNSUPPORTED_METHOD(0),
 
+    //Pairing Tags
     PAIRING_DELETE(1000),
     PAIRING_DELETE_RESPONSE(1001),
 
     PAIRING_PING(1002),
     PAIRING_PING_RESPONSE(1003),
 
+    //Sign Tags
     SESSION_PROPOSE(1100),
     SESSION_PROPOSE_RESPONSE_APPROVE(1101),
     SESSION_PROPOSE_RESPONSE_REJECT(1120),
@@ -47,6 +49,7 @@ enum class Tags(val id: Int) {
     SESSION_REQUEST_LINK_MODE(1125),
     SESSION_REQUEST_LINK_MODE_RESPONSE(1126),
 
+    //Notify Tags
     NOTIFY_SUBSCRIBE(4000),
     NOTIFY_SUBSCRIBE_RESPONSE(4001),
 

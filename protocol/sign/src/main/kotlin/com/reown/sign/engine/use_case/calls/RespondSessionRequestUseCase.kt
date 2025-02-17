@@ -25,9 +25,15 @@ import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.exceptions.NO_SEQUENCE_FOR_TOPIC_MESSAGE
+import com.reown.sign.engine.model.tvf.EthSendTransaction
+import com.reown.sign.engine.model.tvf.SolanaSignAllTransactionsResult
+import com.reown.sign.engine.model.tvf.SolanaSignAndSendTransactionResult
+import com.reown.sign.engine.model.tvf.SolanaSignTransactionResult
+import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.engine.sessionRequestEventsQueue
 import com.reown.sign.json_rpc.domain.GetPendingJsonRpcHistoryEntryByIdUseCase
 import com.reown.sign.storage.sequence.SessionStorageRepository
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -44,6 +50,7 @@ internal class RespondSessionRequestUseCase(
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
+    private val tvf: TVF
 ) : RespondSessionRequestUseCaseInterface {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     override val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
@@ -64,14 +71,15 @@ internal class RespondSessionRequestUseCase(
                 this.copy(peerAppMetaData = peerAppMetaData)
             }
 
-        if (getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id) == null) {
+        val pendingRequest = getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id)
+        if (pendingRequest == null) {
             logger.error("Request doesn't exist: $topic, id: ${jsonRpcResponse.id}")
-            throw RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}")
+            return@supervisorScope onFailure(RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}"))
         }
-        getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id)?.params?.request?.expiryTimestamp?.let {
+        pendingRequest.params.expiry?.let {
             if (Expiry(it).isExpired()) {
                 logger.error("Request Expired: $topic, id: ${jsonRpcResponse.id}")
-                throw RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}")
+                return@supervisorScope onFailure(RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}"))
             }
         }
 
@@ -91,7 +99,17 @@ internal class RespondSessionRequestUseCase(
                 onFailure(e)
             }
         } else {
-            val irnParams = IrnParams(Tags.SESSION_REQUEST_RESPONSE, Ttl(fiveMinutesInSeconds))
+            val tvfData = tvf.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
+            val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let { tvf.collectTxHashes(pendingRequest.params.rpcMethod, it.result.toString()) }
+            val irnParams = IrnParams(
+                Tags.SESSION_REQUEST_RESPONSE,
+                Ttl(fiveMinutesInSeconds),
+                correlationId = jsonRpcResponse.id,
+                rpcMethods = tvfData?.first,
+                contractAddresses = tvfData?.second,
+                txHashes = txHashes,
+                chainId = tvfData?.third
+            )
             logger.log("Sending session request response on topic: $topic, id: ${jsonRpcResponse.id}")
             jsonRpcInteractor.publishJsonRpcResponse(topic = Topic(topic), params = irnParams, response = jsonRpcResponse,
                 onSuccess = {

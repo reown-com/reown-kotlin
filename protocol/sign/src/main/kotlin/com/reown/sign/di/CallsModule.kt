@@ -136,8 +136,7 @@ internal fun callsModule() = module {
             verifyContextStorageRepository = get(),
             proposalStorageRepository = get(),
             jsonRpcInteractor = get(),
-            logger = get(named(AndroidCommonDITags.LOGGER)),
-            pairingController = get()
+            logger = get(named(AndroidCommonDITags.LOGGER))
         )
     }
 
@@ -151,7 +150,8 @@ internal fun callsModule() = module {
             metadataStorageRepository = get(),
             insertEventUseCase = get(),
             clientId = get(named(AndroidCommonDITags.CLIENT_ID)),
-            logger = get(named(AndroidCommonDITags.LOGGER))
+            logger = get(named(AndroidCommonDITags.LOGGER)),
+            tvf = get()
         )
     }
 
@@ -166,6 +166,7 @@ internal fun callsModule() = module {
             metadataStorageRepository = get(),
             insertEventUseCase = get(),
             clientId = get(named(AndroidCommonDITags.CLIENT_ID)),
+            tvf = get()
         )
     }
 

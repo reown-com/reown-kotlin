@@ -62,7 +62,7 @@ fun SettingsRoute(navController: NavHostController) {
         Section.SettingsSection(
             "Account", listOf(
                 Item.SettingCopyableItem("CAIP-10", viewModel.caip10),
-                Item.SettingCopyableItem("Safe Smart Account Address", viewModel.getSmartAccount()),
+//                Item.SettingCopyableItem("Safe Smart Account Address", viewModel.getSmartAccount()),
                 Item.SettingCopyableItem("Private key", viewModel.privateKey),
             )
         ),

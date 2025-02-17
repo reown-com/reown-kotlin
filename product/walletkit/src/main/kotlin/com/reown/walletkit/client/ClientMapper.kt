@@ -7,6 +7,7 @@ import uniffi.uniffi_yttrium.Eip1559Estimation
 import uniffi.yttrium.Amount
 import uniffi.yttrium.Call
 import uniffi.yttrium.DoSendTransactionParams
+import uniffi.yttrium.ExecuteDetails
 import uniffi.yttrium.FeeEstimatedTransaction
 import uniffi.yttrium.FundingMetadata
 import uniffi.yttrium.InitialTransactionMetadata
@@ -311,20 +312,36 @@ internal fun Wallet.Params.Call.toYttrium(): Call = Call(to = to, value = value,
 internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)
 
 @JvmSynthetic
-internal fun PrepareResponseAvailable.toWallet(): Wallet.Model.PrepareSuccess.Available =
-    Wallet.Model.PrepareSuccess.Available(
-        fulfilmentId = orchestrationId,
-        checkIn = metadata.checkIn.toLong(),
-        transactions = transactions.map { it.toWallet() },
-        initialTransaction = initialTransaction.toWallet(),
-        initialTransactionMetadata = metadata.initialTransaction.toWallet(),
-        funding = metadata.fundingFrom.map { it.toWallet() }
-    )
+internal fun ExecuteDetails.toWallet(): Wallet.Model.ExecuteSuccess = Wallet.Model.ExecuteSuccess(
+    initialTxHash = initialTxnHash,
+    initialTxReceipt = initialTxnReceipt,
+)
 
 @JvmSynthetic
-internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): PrepareResponseAvailable =
+internal fun UiFields.toWallet(): Wallet.Model.PrepareSuccess.Available =
+    Wallet.Model.PrepareSuccess.Available(
+        orchestratorId = routeResponse.orchestrationId,
+        checkIn = routeResponse.metadata.checkIn.toLong(),
+        transactions = routeResponse.transactions.map { it.toWallet() },
+        initialTransaction = routeResponse.initialTransaction.toWallet(),
+        initialTransactionMetadata = routeResponse.metadata.initialTransaction.toWallet(),
+        funding = routeResponse.metadata.fundingFrom.map { it.toWallet() },
+        transactionsDetails = toTransactionsDetails()
+    )
+
+private fun UiFields.toTransactionsDetails() = Wallet.Model.TransactionsDetails(
+    localTotal = localTotal.toWallet(),
+    initialDetails = initial.toWallet(),
+    details = route.map { it.toWallet() },
+    bridgeFees = bridge.map { it.toWallet() },
+    localFulfilmentTotal = localRouteTotal.toWallet(),
+    localBridgeTotal = localBridgeTotal.toWallet()
+)
+
+@JvmSynthetic
+internal fun Wallet.Model.PrepareSuccess.Available.toResponseYttrium(): PrepareResponseAvailable =
     PrepareResponseAvailable(
-        fulfilmentId,
+        orchestratorId,
         metadata = YMetadata(
             checkIn = checkIn.toULong(),
             initialTransaction = initialTransactionMetadata.toYttrium(),
@@ -332,6 +349,18 @@ internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): PrepareResponseA
         ),
         initialTransaction = initialTransaction.toYttrium(),
         transactions = transactions.map { it.toYttrium() })
+
+@JvmSynthetic
+internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): UiFields =
+    UiFields(
+        route = transactionsDetails.details.map { it.toYttrium() },
+        localTotal = transactionsDetails.localTotal.toYttrium(),
+        localRouteTotal = transactionsDetails.localFulfilmentTotal.toYttrium(),
+        bridge = transactionsDetails.bridgeFees.map { it.toYttrium() },
+        localBridgeTotal = transactionsDetails.localBridgeTotal.toYttrium(),
+        initial = transactionsDetails.initialDetails.toYttrium(),
+        routeResponse = toResponseYttrium()
+    )
 
 @JvmSynthetic
 private fun Wallet.Model.InitialTransactionMetadata.toYttrium(): InitialTransactionMetadata =
@@ -385,16 +414,6 @@ private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Mo
 internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.Model.EstimatedFees(maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas)
 
 @JvmSynthetic
-internal fun UiFields.toWallet(): Wallet.Model.TransactionsDetails = Wallet.Model.TransactionsDetails(
-    localTotal = localTotal.toWallet(),
-    initialDetails = initial.toWallet(),
-    fulfilmentDetails = route.map { it.toWallet() },
-    bridgeFees = bridge.map { it.toWallet() },
-    localFulfilmentTotal = localRouteTotal.toWallet(),
-    localBridgeTotal = localBridgeTotal.toWallet()
-)
-
-@JvmSynthetic
 internal fun Amount.toWallet(): Wallet.Model.Amount = Wallet.Model.Amount(
     symbol = symbol,
     amount = amount,
@@ -403,12 +422,40 @@ internal fun Amount.toWallet(): Wallet.Model.Amount = Wallet.Model.Amount(
     formatted = formatted
 )
 
+@JvmSynthetic
+internal fun Wallet.Model.Amount.toYttrium(): Amount = Amount(
+    symbol = symbol,
+    amount = amount,
+    unit = unit.toUByte(),
+    formattedAlt = formattedAlt,
+    formatted = formatted
+)
+
 private fun TxnDetails.toWallet(): Wallet.Model.TransactionDetails = Wallet.Model.TransactionDetails(
-    transaction = transaction.toWallet(),
-    transactionFee = fee.toWallet()
+    feeEstimatedTransaction = transaction.toWallet(),
+    transactionFee = fee.toWallet(),
+    transactionHashToSign = transactionHashToSign
+)
+
+private fun Wallet.Model.TransactionDetails.toYttrium(): TxnDetails = TxnDetails(
+    transaction = feeEstimatedTransaction.toWallet(),
+    fee = transactionFee.toYttrium(),
+    transactionHashToSign = transactionHashToSign
 )
 
 fun FeeEstimatedTransaction.toWallet(): Wallet.Model.FeeEstimatedTransaction = Wallet.Model.FeeEstimatedTransaction(
+    from = from,
+    to = to,
+    value = value,
+    gasLimit = gasLimit,
+    input = input,
+    nonce = nonce,
+    maxFeePerGas = maxFeePerGas,
+    maxPriorityFeePerGas = maxPriorityFeePerGas,
+    chainId = chainId
+)
+
+fun Wallet.Model.FeeEstimatedTransaction.toWallet(): FeeEstimatedTransaction = FeeEstimatedTransaction(
     from = from,
     to = to,
     value = value,
@@ -432,6 +479,23 @@ private fun TransactionFee.toWallet() = Wallet.Model.TransactionFee(
         symbol = localFee.symbol,
         amount = localFee.amount,
         unit = localFee.unit.toString(),
+        formattedAlt = localFee.formattedAlt,
+        formatted = localFee.formatted
+    )
+)
+
+private fun Wallet.Model.TransactionFee.toYttrium() = TransactionFee(
+    fee = Amount(
+        symbol = fee.symbol,
+        amount = fee.amount,
+        unit = fee.unit.toUByte(),
+        formattedAlt = fee.formattedAlt,
+        formatted = fee.formatted
+    ),
+    localFee = Amount(
+        symbol = localFee.symbol,
+        amount = localFee.amount,
+        unit = localFee.unit.toUByte(),
         formattedAlt = localFee.formattedAlt,
         formatted = localFee.formatted
     )
