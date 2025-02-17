@@ -98,26 +98,32 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
     fun sendSIWEOverPersonalSign() {
         _isConfirmLoading.value = true
         appKitEngine.shouldDisconnect = false
-        val account = appKitEngine.getAccount() ?: throw IllegalStateException("Account is null")
-        val issuer = "did:pkh:${account.chain.id}:${account.address}"
-        val siweMessage = appKitEngine.formatSIWEMessage(AppKit.authPayloadParams!!, issuer)
-        val msg = siweMessage.encodeToByteArray().joinToString(separator = "", prefix = "0x") { eachByte -> "%02x".format(eachByte) }
-        val body = "[\"$msg\", \"${account.address}\"]"
-        appKitEngine.request(
-            request = Request("personal_sign", body),
-            onSuccess = { sendRequest ->
-                logger.log("SIWE sent successfully")
-                appKitEngine.siweRequestIdWithMessage = Pair((sendRequest as SentRequestResult.WalletConnect).requestId, siweMessage)
-            },
-            onError = {
-                if (it !is AppKitEngine.RedirectMissingThrowable) {
-                    appKitEngine.shouldDisconnect = true
-                }
+        try {
+            val account = appKitEngine.getAccount() ?: throw IllegalStateException("Account is null")
+            val issuer = "did:pkh:${account.chain.id}:${account.address}"
+            val siweMessage = appKitEngine.formatSIWEMessage(AppKit.authPayloadParams!!, issuer)
+            val msg = siweMessage.encodeToByteArray().joinToString(separator = "", prefix = "0x") { eachByte -> "%02x".format(eachByte) }
+            val body = "[\"$msg\", \"${account.address}\"]"
+            appKitEngine.request(
+                request = Request("personal_sign", body),
+                onSuccess = { sendRequest ->
+                    logger.log("SIWE sent successfully")
+                    appKitEngine.siweRequestIdWithMessage = Pair((sendRequest as SentRequestResult.WalletConnect).requestId, siweMessage)
+                },
+                onError = {
+                    if (it !is AppKitEngine.RedirectMissingThrowable) {
+                        appKitEngine.shouldDisconnect = true
+                    }
 
-                _isConfirmLoading.value = false
-                showError(it.message)
-            },
-        )
+                    _isConfirmLoading.value = false
+                    showError(it.message)
+                },
+            )
+        } catch (e: Exception) {
+            appKitEngine.shouldDisconnect = true
+            _isConfirmLoading.value = false
+            showError(e.message)
+        }
     }
 
     fun fetchInitialWallets() {

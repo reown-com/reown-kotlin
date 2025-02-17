@@ -53,15 +53,39 @@ private fun AccountAvatar(url: String) {
 }
 
 internal fun generateAvatarColors(address: String): List<Color> {
-    val hash = address.lowercase().replace("^0x".toRegex(), "")
-    val baseColor = hash.substring(0, 6)
-    val rgbColor = hexToRgb(baseColor)
-    val colors: MutableList<Color> = mutableListOf()
-    for (i in 0 until 5) {
-        val tintedColor = tintColor(rgbColor, 0.15 * i)
-        colors.add(Color(tintedColor.first, tintedColor.second, tintedColor.third))
+    // Default color in case of invalid input (a neutral blue shade)
+    val defaultBaseColor = "4287f5"
+
+    try {
+        val hash = address.takeIf { it.isNotEmpty() }
+            ?.lowercase()
+            ?.replace("^0x".toRegex(), "")
+            ?: defaultBaseColor
+
+        // Ensure we have at least 6 characters for the color
+        val baseColor = when {
+            hash.length >= 6 -> hash.substring(0, 6)
+            hash.isNotEmpty() -> hash.padEnd(6, hash.last())
+            else -> defaultBaseColor
+        }
+
+        val rgbColor = hexToRgb(baseColor)
+        val colors: MutableList<Color> = mutableListOf()
+
+        for (i in 0 until 5) {
+            val tintedColor = tintColor(rgbColor, 0.15 * i)
+            colors.add(Color(tintedColor.first, tintedColor.second, tintedColor.third))
+        }
+
+        return colors
+    } catch (e: Exception) {
+        // If anything goes wrong, return colors based on the default color
+        val rgbColor = hexToRgb(defaultBaseColor)
+        return List(5) { i ->
+            val tintedColor = tintColor(rgbColor, 0.15 * i)
+            Color(tintedColor.first, tintedColor.second, tintedColor.third)
+        }
     }
-    return colors
 }
 
 internal fun hexToRgb(hex: String): Triple<Int, Int, Int> {

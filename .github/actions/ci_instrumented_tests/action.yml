@@ -43,7 +43,7 @@ runs:
         NOTIFY_INTEGRATION_TESTS_SECRET: ${{ inputs.notifySecret }}
       run: ./gradlew ${{ inputs.command }} -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: ${{ inputs.name }}
