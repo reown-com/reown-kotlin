@@ -160,7 +160,7 @@ private fun WalletsGrid(
             verticalArrangement = Arrangement.Center,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            walletsGridItems(walletsData.wallets, onWalletItemClick)
+            walletsGridItems(walletsData.wallets.distinctBy { it.id }, onWalletItemClick)
             if (walletsData.loadingState == LoadingState.APPEND) {
                 loadingWalletsItems()
             }
@@ -289,7 +289,7 @@ private fun AllWalletsEmptyPreview() {
 @Composable
 private fun AllWalletsPreview() {
     AppKitPreview {
-        AllWalletsContent(WalletsData.submit(testWallets),"", {}, {}, {}, {}, {})
+        AllWalletsContent(WalletsData.submit(testWallets), "", {}, {}, {}, {}, {})
     }
 }
 
@@ -297,7 +297,7 @@ private fun AllWalletsPreview() {
 @Composable
 private fun AllWalletsLoadingRefreshPreview() {
     AppKitPreview {
-        AllWalletsContent(WalletsData.refresh(),"", {}, {}, {}, {}, {})
+        AllWalletsContent(WalletsData.refresh(), "", {}, {}, {}, {}, {})
     }
 }
 
@@ -305,6 +305,6 @@ private fun AllWalletsLoadingRefreshPreview() {
 @Composable
 private fun AllWalletsLoadingAppendPreview() {
     AppKitPreview {
-        AllWalletsContent(WalletsData.append(testWallets),"", {}, {}, {}, {}, {})
+        AllWalletsContent(WalletsData.append(testWallets), "", {}, {}, {}, {}, {})
     }
 }
