@@ -11,8 +11,6 @@ import uniffi.yttrium.Call
 import uniffi.yttrium.Currency
 import uniffi.yttrium.PrepareDetailedResponse
 import uniffi.yttrium.PrepareDetailedResponseSuccess
-import uniffi.yttrium.PrepareResponse
-import uniffi.yttrium.PrepareResponseSuccess
 
 class PrepareChainAbstractionUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
