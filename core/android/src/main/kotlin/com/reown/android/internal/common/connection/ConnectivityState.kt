@@ -39,10 +39,15 @@ internal class ConnectivityState(context: Context) {
     }
 
     private fun Network.isCapable(): Boolean {
-        return connectivityManager.getNetworkCapabilities(this)?.run {
-            hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) &&
-                    (hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
-        } ?: false
+        return try {
+            connectivityManager.getNetworkCapabilities(this)?.run {
+                hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) &&
+                        (hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) || hasTransport(NetworkCapabilities.TRANSPORT_WIFI))
+            } ?: false
+        } catch (e: Throwable) {
+            Timber.e(e, "Failed to check network capabilities")
+            true
+        }
     }
 
     init {
