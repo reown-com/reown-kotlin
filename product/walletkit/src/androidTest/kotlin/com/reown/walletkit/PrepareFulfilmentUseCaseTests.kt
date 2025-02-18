@@ -1,7 +1,6 @@
 package com.reown.walletkit
 
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.toWallet
 import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
