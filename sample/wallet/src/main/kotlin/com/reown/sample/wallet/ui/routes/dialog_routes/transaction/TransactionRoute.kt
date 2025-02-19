@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,10 +22,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -92,6 +95,8 @@ fun AddressCard() {
 
 @Composable
 fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain, selectedCoin: StableCoin) {
+    val balanceState by viewModel.balanceState.collectAsState()
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray.copy(alpha = 0.3f))
@@ -115,7 +120,7 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain, selectedC
                     fontSize = 16.sp
                 )
                 Text(
-                    text = "${viewModel.getBalance(selectedChain, StableCoin.USDC)} USDC",
+                    text = "${balanceState[Pair(selectedChain, StableCoin.USDC)] ?: "-.--"} USDC",
                     color = Color.White,
                     fontSize = 16.sp
                 )
@@ -130,7 +135,7 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain, selectedC
                     fontSize = 16.sp
                 )
                 Text(
-                    text = "${viewModel.getBalance(selectedChain, StableCoin.USDT)} USDT",
+                    text = "${balanceState[Pair(selectedChain, StableCoin.USDT)] ?: "-.--"} USDT",
                     color = Color.White,
                     fontSize = 16.sp
                 )
@@ -314,13 +319,15 @@ fun CoinSelectionButton(
 fun SendButton() {
     Button(
         onClick = { /* Handle send click */ },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
         shape = RoundedCornerShape(8.dp)
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
@@ -328,13 +335,13 @@ fun SendButton() {
                             Color(0xFF9C27B0)
                         )
                     )
-                )
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "Send",
                 color = Color.White,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(16.dp)
+                fontSize = 18.sp
             )
         }
     }
