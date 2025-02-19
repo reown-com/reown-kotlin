@@ -33,21 +33,23 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
 
 @Composable
-fun TransactionRoute(navController: NavHostController) {
-    var selectedCoin by remember { mutableStateOf("USDC") }
+fun TransactionRoute(navController: NavHostController, viewModel: TransactionViewModel = viewModel()) {
+    var selectedCoin by remember { mutableStateOf(StableCoin.USDC) }
     var amountToSend by remember { mutableStateOf("1") }
     var address by remember { mutableStateOf("") }
+    var selectedNetwork by remember { mutableStateOf(Chain.BASE) }
 
     SemiTransparentDialog {
         Spacer(modifier = Modifier.height(16.dp))
         AddressCard()
         Spacer(modifier = Modifier.height(16.dp))
-        BalanceCard()
+        BalanceCard(viewModel, selectedNetwork, selectedCoin)
         Spacer(modifier = Modifier.height(16.dp))
         TransactionCard(
             selectedCoin = selectedCoin,
@@ -55,7 +57,9 @@ fun TransactionRoute(navController: NavHostController) {
             amountToSend = amountToSend,
             onAmountChanged = { amountToSend = it },
             recipient = address,
-            onRecipientChanged = { address = it }
+            onRecipientChanged = { address = it },
+            selectedNetwork,
+            onNetworkSelected = { selectedNetwork = it }
         )
         SendButton()
         Spacer(modifier = Modifier.height(16.dp))
@@ -87,7 +91,7 @@ fun AddressCard() {
 }
 
 @Composable
-fun BalanceCard() {
+fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain, selectedCoin: StableCoin) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray.copy(alpha = 0.3f))
@@ -111,7 +115,7 @@ fun BalanceCard() {
                     fontSize = 16.sp
                 )
                 Text(
-                    text = "28,999864 USDC",
+                    text = "${viewModel.getBalance(selectedChain, StableCoin.USDC)} USDC",
                     color = Color.White,
                     fontSize = 16.sp
                 )
@@ -126,7 +130,7 @@ fun BalanceCard() {
                     fontSize = 16.sp
                 )
                 Text(
-                    text = "0 USDT",
+                    text = "${viewModel.getBalance(selectedChain, StableCoin.USDT)} USDT",
                     color = Color.White,
                     fontSize = 16.sp
                 )
@@ -137,12 +141,14 @@ fun BalanceCard() {
 
 @Composable
 fun TransactionCard(
-    selectedCoin: String,
-    onCoinSelected: (String) -> Unit,
+    selectedCoin: StableCoin,
+    onCoinSelected: (StableCoin) -> Unit,
     amountToSend: String,
     onAmountChanged: (String) -> Unit,
     recipient: String,
-    onRecipientChanged: (String) -> Unit
+    onRecipientChanged: (String) -> Unit,
+    selectedNetwork: Chain,
+    onNetworkSelected: (Chain) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -169,16 +175,17 @@ fun TransactionCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 CoinSelectionButton(
-                    text = "USDC",
-                    selected = selectedCoin == "USDC",
-                    onClick = { onCoinSelected("USDC") },
+                    text = StableCoin.USDC.name,
+                    selected = selectedCoin == StableCoin.USDC,
+                    onClick = { onCoinSelected(StableCoin.USDC) },
                     modifier = Modifier.weight(1f)
                 )
                 CoinSelectionButton(
-                    text = "USDT",
-                    selected = selectedCoin == "USDT",
-                    onClick = { onCoinSelected("USDT") },
-                    modifier = Modifier.weight(1f)
+                    text = StableCoin.USDT.name,
+                    selected = selectedCoin == StableCoin.USDT,
+                    onClick = { onCoinSelected(StableCoin.USDT) },
+                    modifier = Modifier.weight(1f),
+                    isEnabled = false
                 )
             }
 
@@ -233,7 +240,6 @@ fun TransactionCard(
                 )
                 Box {
                     var expanded by remember { mutableStateOf(false) }
-                    var selectedOption by remember { mutableStateOf("Base") }
 
                     Button(
                         onClick = { expanded = true },
@@ -246,7 +252,7 @@ fun TransactionCard(
                         shape = RoundedCornerShape(4.dp)
                     ) {
                         Text(
-                            text = selectedOption,
+                            text = selectedNetwork.name,
                             color = Color(0xFF2196F3),
                             fontSize = 16.sp
                         )
@@ -259,16 +265,16 @@ fun TransactionCard(
                             .background(Color.DarkGray),
                         properties = PopupProperties(focusable = true)
                     ) {
-                        listOf("Base", "OP", "Arb").forEach { option ->
+                        listOf(Chain.BASE, Chain.OPTIMISM, Chain.ARBITRUM).forEach { option ->
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = option,
+                                        text = option.name,
                                         color = Color.White
                                     )
                                 },
                                 onClick = {
-                                    selectedOption = option
+                                    onNetworkSelected(option)
                                     expanded = false
                                 }
                             )
@@ -285,11 +291,13 @@ fun CoinSelectionButton(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
         modifier = modifier,
+        enabled = isEnabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = if (selected) Color.Gray else Color.DarkGray
         ),
