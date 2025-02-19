@@ -60,6 +60,7 @@ import com.reown.sample.wallet.ui.common.InnerContent
 import com.reown.sample.wallet.ui.common.blue.BlueLabelTexts
 import com.reown.sample.wallet.ui.common.getAllEventsByChainId
 import com.reown.sample.wallet.ui.common.getAllMethodsByChainId
+import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionType
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionUI
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
@@ -223,7 +224,11 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                             )
                         }
                     }
-                })
+                },
+                onTransactionClick = {
+                    navController.navigate(Route.TransactionDialog.path)
+                }
+            )
         }
     } ?: run {
         Text("Something went wrong :C")
@@ -231,7 +236,7 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
 }
 
 @Composable
-fun ConnectionType(connectionUI: ConnectionUI, isLoading: Boolean, connectionsViewModel: ConnectionsViewModel, onDelete: () -> Unit, onSwitch: () -> Unit) {
+fun ConnectionType(connectionUI: ConnectionUI, isLoading: Boolean, connectionsViewModel: ConnectionsViewModel, onDelete: () -> Unit, onSwitch: () -> Unit, onTransactionClick: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (val type = connectionUI.type) {
             is ConnectionType.Sign -> Namespace(type.namespaces, connectionsViewModel)
@@ -255,7 +260,14 @@ fun ConnectionType(connectionUI: ConnectionUI, isLoading: Boolean, connectionsVi
                         .padding(vertical = 5.dp),
                         text = "Switch Account",
                         style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 16.sp, color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)))
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(modifier = Modifier
+                        .clip(RoundedCornerShape(5.dp))
+                        .clickable { onTransactionClick() }
+                        .padding(vertical = 5.dp),
+                        text = "Send Transaction",
+                        style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(modifier = Modifier
                         .clip(RoundedCornerShape(5.dp))
                         .clickable { onDelete() }

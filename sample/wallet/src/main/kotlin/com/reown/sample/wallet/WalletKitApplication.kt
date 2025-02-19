@@ -72,7 +72,7 @@ class WalletKitApplication : Application() {
             }
         )
 
-        println("Account: ${EthAccountDelegate.account}")
+        println("Account: ${EthAccountDelegate.address}")
 
         WalletKit.initialize(Wallet.Params.Init(core = CoreClient),
             onSuccess = { println("Web3Wallet initialized") },
@@ -91,7 +91,7 @@ class WalletKitApplication : Application() {
 
         mixPanel = MixpanelAPI.getInstance(this, CommonBuildConfig.MIX_PANEL, true).apply {
             identify(CoreClient.Push.clientId)
-            people.set("\$name", EthAccountDelegate.ethAddress)
+            people.set("\$name", EthAccountDelegate.ethAccount)
         }
 
         initializeBeagle()
