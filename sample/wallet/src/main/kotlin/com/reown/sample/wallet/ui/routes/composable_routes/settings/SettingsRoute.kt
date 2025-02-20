@@ -52,6 +52,7 @@ import com.reown.sample.common.ui.theme.UiModePreview
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.SmartAccountEnabler
+import com.reown.sample.wallet.ui.routes.Route
 
 @Composable
 fun SettingsRoute(navController: NavHostController) {
@@ -78,10 +79,14 @@ fun SettingsRoute(navController: NavHostController) {
     val context: Context = LocalContext.current
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
 
-    SettingsScreen(sections, onLogoutClicked = { navController.popBackStack() }, onSettingClicked = {
-        Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
-        clipboardManager.setText(AnnotatedString(it))
-    })
+    SettingsScreen(sections,
+        onLogoutClicked = { navController.popBackStack() },
+        onSettingClicked = {
+            Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
+            clipboardManager.setText(AnnotatedString(it))
+        },
+        onTransactionClick = { navController.navigate(Route.TransactionDialog.path) }
+    )
 }
 
 @Composable
@@ -89,6 +94,7 @@ private fun SettingsScreen(
     sections: List<Section>,
     onLogoutClicked: () -> Unit,
     onSettingClicked: (String) -> Unit,
+    onTransactionClick: () -> Unit,
 ) {
     Divider()
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -105,6 +111,13 @@ private fun SettingsScreen(
                 if (index != sections.lastIndex) Divider()
             }
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(modifier = Modifier
+            .clip(RoundedCornerShape(5.dp))
+            .clickable { onTransactionClick() }
+            .padding(vertical = 5.dp),
+            text = "Send Transaction",
+            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
     }
 }
 
@@ -223,6 +236,6 @@ fun SettingScreenPreview() {
     )
 
     PreviewTheme {
-        SettingsScreen(sections = sections, onLogoutClicked = { }, onSettingClicked = { })
+        SettingsScreen(sections = sections, onLogoutClicked = { }, onSettingClicked = { }, onTransactionClick = {})
     }
 }

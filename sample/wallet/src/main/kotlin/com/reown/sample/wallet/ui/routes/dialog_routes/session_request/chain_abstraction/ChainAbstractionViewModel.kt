@@ -83,24 +83,30 @@ class ChainAbstractionViewModel : ViewModel() {
 
                     result.fold(
                         onSuccess = { executeSuccess ->
-                            val response = Wallet.Params.SessionRequestResponse(
-                                sessionTopic = sessionRequest.topic,
-                                jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, executeSuccess.initialTxHash)
-                            )
 
-                            val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                            WalletKit.respondSessionRequest(response,
-                                onSuccess = {
-                                    clearSessionRequest()
-                                    onSuccess(TxSuccess(redirect, executeSuccess.initialTxHash))
-                                },
-                                onError = { error ->
-                                    recordError(error.throwable)
-                                    if (error.throwable !is NoConnectivityException) {
+                            if (sessionRequest.topic.isNotEmpty()) {
+                                val response = Wallet.Params.SessionRequestResponse(
+                                    sessionTopic = sessionRequest.topic,
+                                    jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, executeSuccess.initialTxHash)
+                                )
+
+                                val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
+                                WalletKit.respondSessionRequest(response,
+                                    onSuccess = {
                                         clearSessionRequest()
-                                    }
-                                    onError(error.throwable)
-                                })
+                                        onSuccess(TxSuccess(redirect, executeSuccess.initialTxHash))
+                                    },
+                                    onError = { error ->
+                                        recordError(error.throwable)
+                                        if (error.throwable !is NoConnectivityException) {
+                                            clearSessionRequest()
+                                        }
+                                        onError(error.throwable)
+                                    })
+                            } else {
+                                clearSessionRequest()
+                                onSuccess(TxSuccess(null, executeSuccess.initialTxHash))
+                            }
                         },
                         onFailure = {
                             println("Execution error: $it")

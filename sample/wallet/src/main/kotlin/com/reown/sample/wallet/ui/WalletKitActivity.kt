@@ -139,7 +139,12 @@ class WalletKitActivity : AppCompatActivity() {
                 when (event) {
                     is SignEvent.SessionProposal -> navigateWhenReady { navController.navigate(Route.SessionProposal.path) }
                     is SignEvent.SessionAuthenticate -> navigateWhenReady { navController.navigate(Route.SessionAuthenticate.path) }
-                    is SignEvent.Fulfilment -> navigateWhenReady { navController.navigate("${Route.ChainAbstraction.path}/${event.isError}")}
+                    is SignEvent.Fulfilment -> navigateWhenReady {
+                        navController.navigate("${Route.ChainAbstraction.path}/${event.isError}") {
+                            popUpTo(Route.TransactionDialog.path) { inclusive = true }
+                        }
+                    }
+
                     is SignEvent.ExpiredRequest -> {
                         if (navController.currentDestination?.route != Route.Connections.path) {
                             navController.popBackStack(route = Route.Connections.path, inclusive = false)

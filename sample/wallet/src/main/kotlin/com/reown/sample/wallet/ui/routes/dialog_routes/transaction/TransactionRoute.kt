@@ -10,18 +10,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,10 +32,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
@@ -40,31 +45,54 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
+import com.reown.sample.wallet.ui.routes.Route
 
 @Composable
 fun TransactionRoute(navController: NavHostController, viewModel: TransactionViewModel = viewModel()) {
     var selectedCoin by remember { mutableStateOf(StableCoin.USDC) }
     var amountToSend by remember { mutableStateOf("1") }
-    var address by remember { mutableStateOf("") }
-    var selectedNetwork by remember { mutableStateOf(Chain.BASE) }
+    var to by remember { mutableStateOf("") }
+    var selectedChain by remember { mutableStateOf(Chain.BASE) }
+    val uiState by viewModel.uiState.collectAsState()
 
     SemiTransparentDialog {
         Spacer(modifier = Modifier.height(16.dp))
         AddressCard()
         Spacer(modifier = Modifier.height(16.dp))
-        BalanceCard(viewModel, selectedNetwork, selectedCoin)
+        BalanceCard(viewModel, selectedChain)
         Spacer(modifier = Modifier.height(16.dp))
         TransactionCard(
             selectedCoin = selectedCoin,
             onCoinSelected = { selectedCoin = it },
             amountToSend = amountToSend,
             onAmountChanged = { amountToSend = it },
-            recipient = address,
-            onRecipientChanged = { address = it },
-            selectedNetwork,
-            onNetworkSelected = { selectedNetwork = it }
+            recipient = to,
+            onRecipientChanged = { to = it },
+            selectedChain,
+            onNetworkSelected = { selectedChain = it }
         )
-        SendButton()
+        Spacer(modifier = Modifier.height(16.dp))
+        if (uiState is UIState.Error) {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                text = (uiState as UIState.Error).message,
+                color = Color.Red,
+                fontSize = 16.sp,
+            )
+        }
+        if (uiState is UIState.NotRequired) {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                text = "Chain Abstraction is not required for this transaction.",
+                color = Color.Red,
+                fontSize = 16.sp
+            )
+        }
+        SendButton(uiState = uiState) {
+            viewModel.sendTransaction(selectedChain, selectedCoin, amountToSend, to, EthAccountDelegate.address)
+        }
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
@@ -94,7 +122,7 @@ fun AddressCard() {
 }
 
 @Composable
-fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain, selectedCoin: StableCoin) {
+fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
     val balanceState by viewModel.balanceState.collectAsState()
 
     Card(
@@ -155,6 +183,9 @@ fun TransactionCard(
     selectedNetwork: Chain,
     onNetworkSelected: (Chain) -> Unit
 ) {
+    val savedRecipients = listOf("0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD")
+    var isRecipientDropdownExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray.copy(alpha = 0.3f))
@@ -200,24 +231,58 @@ fun TransactionCard(
                 color = Color.Gray,
                 fontSize = 16.sp
             )
-            TextField(
-                value = recipient,
-                placeholder = {
-                    Text(
-                        text = "address...",
-                        color = Color.Gray,
-                        fontSize = 16.sp
+            Box {
+                TextField(
+                    value = recipient,
+                    placeholder = {
+                        Text(
+                            text = "address...",
+                            color = Color.Gray,
+                            fontSize = 16.sp
+                        )
+                    },
+                    onValueChange = onRecipientChanged,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { focusState ->
+                            if (focusState.isFocused) {
+                                isRecipientDropdownExpanded = true
+                            }
+                        },
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color.Black,
+                        focusedContainerColor = Color.Black,
+                        unfocusedTextColor = Color.White,
+                        focusedTextColor = Color.White
                     )
-                },
-                onValueChange = onRecipientChanged,
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color.Black,
-                    focusedContainerColor = Color.Black,
-                    unfocusedTextColor = Color.White,
-                    focusedTextColor = Color.White
                 )
-            )
+
+                DropdownMenu(
+                    expanded = isRecipientDropdownExpanded,
+                    onDismissRequest = { isRecipientDropdownExpanded = false },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.DarkGray)
+                ) {
+                    savedRecipients.forEach { savedRecipient ->
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text(
+                                        text = savedRecipient,
+                                        color = Color.White,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            },
+                            onClick = {
+                                onRecipientChanged(savedRecipient)
+                                isRecipientDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
             Text(
@@ -316,9 +381,9 @@ fun CoinSelectionButton(
 }
 
 @Composable
-fun SendButton() {
+fun SendButton(uiState: UIState, onSend: () -> Unit = {}) {
     Button(
-        onClick = { /* Handle send click */ },
+        onClick = { onSend() },
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
@@ -338,11 +403,23 @@ fun SendButton() {
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Send",
-                color = Color.White,
-                fontSize = 18.sp
-            )
+            when (uiState) {
+                is UIState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                }
+
+                else -> {
+                    Text(
+                        text = "Send",
+                        color = Color.White,
+                        fontSize = 18.sp
+                    )
+                }
+            }
         }
     }
 }

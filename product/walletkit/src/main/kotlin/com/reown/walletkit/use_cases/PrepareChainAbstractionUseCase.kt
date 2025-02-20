@@ -22,7 +22,8 @@ class PrepareChainAbstractionUseCase(private val chainAbstractionClient: ChainAb
             try {
                 val result = async {
                     try {
-                        val call = Call(initialTransaction.to, initialTransaction.value, initialTransaction.input)
+                        val call = Call(to = initialTransaction.to, value = initialTransaction.value, input = initialTransaction.input)
+                        println("kobe: call: $call")
                         chainAbstractionClient.prepareDetailed(initialTransaction.chainId, initialTransaction.from, call, Currency.USD)
                     } catch (e: Exception) {
                         return@async onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))

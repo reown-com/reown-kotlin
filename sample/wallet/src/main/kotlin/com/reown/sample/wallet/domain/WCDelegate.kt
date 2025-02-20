@@ -83,8 +83,11 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
         if (sessionRequest.request.method == "eth_sendTransaction") {
             try {
+                val initTx = getInitialTransaction(sessionRequest)
+                println("kobe: init tx: $initTx")
+                println("kobe: session request: $sessionRequest")
                 WalletKit.ChainAbstraction.prepare(
-                    getInitialTransaction(sessionRequest),
+                    initTx,
                     onSuccess = { result ->
                         when (result) {
                             is Wallet.Model.PrepareSuccess.Available -> {

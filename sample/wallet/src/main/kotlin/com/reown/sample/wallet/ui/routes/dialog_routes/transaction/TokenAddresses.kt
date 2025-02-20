@@ -22,7 +22,7 @@ object TokenAddresses {
             StableCoin.USDT to "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
         ),
         Chain.OPTIMISM to mapOf(
-            StableCoin.USDC to "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
+            StableCoin.USDC to "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
             StableCoin.USDT to "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58"
         )
     )
