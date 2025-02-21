@@ -220,8 +220,7 @@ fun TransactionCard(
                     text = StableCoin.USDT.name,
                     selected = selectedCoin == StableCoin.USDT,
                     onClick = { onCoinSelected(StableCoin.USDT) },
-                    modifier = Modifier.weight(1f),
-                    isEnabled = false
+                    modifier = Modifier.weight(1f)
                 )
             }
 
