@@ -304,9 +304,8 @@ internal fun PreparedSendTransaction.toWallet(moshi: Moshi): Wallet.Params.Prepa
     return Wallet.Params.PrepareSendTransactionsResult(hash = hash, doSendTransactionParams = jsonParams, eip712Domain = domain)
 }
 
-
 @JvmSynthetic
-internal fun Wallet.Params.Call.toYttrium(): Call = Call(to = to, value = value, input = data)
+internal fun Call.toWallet(): Wallet.Model.Call = Wallet.Model.Call(to = to, value = value, input = input)
 
 @JvmSynthetic
 internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)

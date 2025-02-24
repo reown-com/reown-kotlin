@@ -23,7 +23,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
@@ -46,6 +46,7 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal.SessionP
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.chain_abstraction.ChainAbstractionRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.snackbar_message.SnackbarMessageRoute
+import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.TransactionRoute
 
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("RestrictedApi")
@@ -161,6 +162,9 @@ fun Web3WalletNavGraph(
             ) {
                 scrimColor = ModalBottomSheetDefaults.scrimColor
                 UpdateSubscriptionRoute(navController, sheetState, it.arguments?.getString("topic")!!)
+            }
+            dialog(Route.TransactionDialog.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
+                TransactionRoute(navController)
             }
             dialog(Route.SessionProposal.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
                 SessionProposalRoute(navController)

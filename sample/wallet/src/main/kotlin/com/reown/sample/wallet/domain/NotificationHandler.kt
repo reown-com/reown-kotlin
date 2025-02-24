@@ -115,7 +115,7 @@ object NotificationHandler {
                 val topic = (notifications.first() as Notification.Decrypted).topic
 
                 // TODO discus with the team how to make it more dev friendly
-                val appMetadata = NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAddress))[topic]?.metadata
+                val appMetadata = NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAccount))[topic]?.metadata
                     ?: throw IllegalStateException("No active subscription for topic: $topic")
 
                 val appDomain = URI(appMetadata.url).host
