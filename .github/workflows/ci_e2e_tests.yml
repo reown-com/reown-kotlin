@@ -1,0 +1,56 @@
+name: Maestro Tests
+
+on:
+#  pull_request:
+#    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  maestro-tests:
+    name: Run Maestro Tests
+    runs-on: macos-latest  # Using macOS runner for mobile testing
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          export PATH="$PATH":"$HOME/.maestro/bin"
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Build and install app
+        run: |
+          # Adjust this command based on your project setup
+          ./gradlew assembleInternal
+          adb install app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Start Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          script: |
+            # Run Maestro tests
+            maestro test .maestro/flows/native/
+            maestro test .maestro/flows/web/
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: maestro-test-reports
+          path: |
+            .maestro/reports/
