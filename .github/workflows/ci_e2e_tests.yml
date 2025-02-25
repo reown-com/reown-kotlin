@@ -1,8 +1,8 @@
 name: Maestro Tests
 
 on:
-#  push:
-#    branches: [ feat/maestro ]
+  push:
+    branches: [ feat/maestro ]
   workflow_dispatch:
 
 jobs:
