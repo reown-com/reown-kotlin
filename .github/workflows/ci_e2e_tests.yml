@@ -57,9 +57,15 @@ jobs:
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
           MIX_PANEL: ${{ secrets.MIX_PANEL }}
-        run:
+        run: |
           ./gradlew ${{ matrix.conf.command }}
-          adb install app/build/outputs/apk/debug/${{ matrix.conf.name }}-internal.apk
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.conf.name }}-apk
+          path: sample/${{ matrix.conf.name }}/build/outputs/apk/internal/*.apk
+          retention-days: 1
 
   run_e2e_tests:
     name: Run Maestro Tests
@@ -79,25 +85,40 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
 
+      - name: Download all APKs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-apk"
+          path: apks
+          merge-multiple: true
+
       - name: Install Maestro
         run: |
           curl -Ls "https://get.maestro.mobile.dev" | bash
           export PATH="$PATH":"$HOME/.maestro/bin"
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
-      - name: Start Android Emulator
+      - name: Start Android Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           target: google_apis
           arch: x86_64
-          profile: pixel_9
-          avd-name: pixel_9
+          profile: pixel
+          avd-name: test_pixel
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-            adb devices
-            # Run Maestro tests
+            echo "Listing available APKs:"
+            find apks -name "*.apk"
+            
+            echo "Installing APKs:"
+            find apks -name "*.apk" -exec adb install -r {} \;
+            
+            echo "Installed apps:"
+            adb shell pm list packages
+            
+            echo "Running Maestro tests:"
             maestro test .maestro/flows/native/
             maestro test .maestro/flows/web/
 
