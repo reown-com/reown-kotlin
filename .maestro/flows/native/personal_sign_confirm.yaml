@@ -1,0 +1,11 @@
+appId: com.reown.sample.dapp.internal
+name: Kotlin Dapp to Kotlin Wallet personal_sign Confirmed
+---
+- launchApp:
+    permissions:
+      all: allow
+- runFlow: connect_confirm.yaml
+- tapOn: "Ethereum_Main"
+- tapOn: "personal_sign"
+- tapOn: "Confirm"
+- assertVisible: result_message

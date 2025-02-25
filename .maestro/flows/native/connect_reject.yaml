@@ -1,0 +1,14 @@
+appId: com.reown.sample.dapp.internal
+name: Kotlin Dapp to Kotlin Wallet Connection Rejected
+---
+- clearState
+- launchApp:
+    permissions:
+      all: allow
+- tapOn: "NOT NOW"
+- tapOn: "Ethereum"
+- tapOn: "Connect via AppKit"
+- tapOn: "All wallets"
+- tapOn: "Android Sample Internal"
+- tapOn: "Cancel"
+- assertVisible: "Connection declined"
