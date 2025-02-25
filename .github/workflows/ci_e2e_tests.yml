@@ -1,4 +1,4 @@
-name: Maestro Tests
+name: E2E Tests with Maestro
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
           { name: dapp, command: ":sample:dapp:assembleInternal" },
           #          { name: modal, command: ":sample:modal:assembleInternal" }
         ]
-    name: ${{ matrix.conf.name }}
+    name: Build ${{ matrix.conf.name }} Internal
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -68,9 +68,9 @@ jobs:
           retention-days: 1
 
   run_e2e_tests:
-    name: Run Maestro Tests
+    name: Run E2E Tests
     # Explicitly request an Intel-based runner to avoid ARM compatibility issues
-    runs-on: macos-12
+    runs-on: ubuntu-latest
     needs: build_internal_samples
 
     steps:
