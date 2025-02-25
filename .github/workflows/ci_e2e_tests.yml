@@ -69,7 +69,8 @@ jobs:
 
   run_e2e_tests:
     name: Run Maestro Tests
-    runs-on: macos-latest  # Using macOS runner for mobile testing
+    # Explicitly request an Intel-based runner to avoid ARM compatibility issues
+    runs-on: macos-12
     needs: build_internal_samples
 
     steps:
@@ -101,11 +102,11 @@ jobs:
       - name: Start Android Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 30
           target: google_apis
           arch: x86_64
-          profile: pixel
-          avd-name: test_pixel
+          profile: Nexus 6
+          avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
