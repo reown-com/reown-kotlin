@@ -107,56 +107,32 @@ jobs:
           echo "y" | sdkmanager "system-images;android-29;default;x86_64"
           echo "no" | avdmanager create avd --force --name test_device --package "system-images;android-29;default;x86_64" --device "pixel"
 
-      - name: Start emulator and run tests
-        run: |
-          # Start emulator in background
-          nohup $ANDROID_HOME/emulator/emulator -avd test_device -no-audio -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim &
-        
-          # Wait for emulator to start
-          $ANDROID_HOME/platform-tools/adb wait-for-device
-        
-          # Keep checking device state
-          while [ "$($ANDROID_HOME/platform-tools/adb shell getprop sys.boot_completed 2>/dev/null)" != "1" ]; do
-            echo "Waiting for emulator to boot..."
-            sleep 5
-          done
-        
-          echo "Emulator is ready!"
-          $ANDROID_HOME/platform-tools/adb devices
-        
-          # Install APKs
-          find apks -name "*.apk" -exec $ANDROID_HOME/platform-tools/adb install -r {} \;
-        
-          echo "Installed apps:"
-          $ANDROID_HOME/platform-tools/adb shell pm list packages
-        
-          # Run Maestro tests
-          maestro test .maestro/flows/native/
-          maestro test .maestro/flows/web/
-
-#      - name: Start Android Emulator and Run Tests
-#        uses: reactivecircus/android-emulator-runner@v2
-#        with:
-#          api-level: 30
-#          target: google_apis
-#          arch: x86_64
-#          profile: Nexus 6
-#          avd-name: test_device
-#          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-#          disable-animations: true
-#          script: |
-#            echo "Listing available APKs:"
-#            find apks -name "*.apk"
-#
-#            echo "Installing APKs:"
-#            find apks -name "*.apk" -exec adb install -r {} \;
-#
-#            echo "Installed apps:"
-#            adb shell pm list packages
-#
-#            echo "Running Maestro tests:"
-#            maestro test .maestro/flows/native/
-#            maestro test .maestro/flows/web/
+      - name: Start Android Emulator and Run Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          avd-name: test_device
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            echo "Listing available APKs:"
+            find apks -name "*.apk"
+            
+            # verify emulator is running
+            adb devices
+            
+            echo "Installing APKs:"
+            find apks -name "*.apk" -exec adb install -r {} \;
+            
+            echo "Installed apps:"
+            adb shell pm list packages
+            
+            echo "Running Maestro tests:"
+            maestro test .maestro/flows/native/
+            maestro test .maestro/flows/web/
 
       - name: Upload test reports
         if: always()
