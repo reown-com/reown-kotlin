@@ -69,7 +69,7 @@ jobs:
   run_e2e_tests:
     name: Run E2E Tests
     timeout-minutes: 20
-    runs-on: macos-12
+    runs-on: macos-13
     needs: build_internal_samples
     steps:
       - name: Checkout repository
