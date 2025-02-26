@@ -12,9 +12,8 @@ jobs:
         conf: [
           { name: wallet, command: ":sample:wallet:assembleInternal" },
           { name: dapp, command: ":sample:dapp:assembleInternal" },
-          #          { name: modal, command: ":sample:modal:assembleInternal" }
         ]
-    name: Build ${{ matrix.conf.name }} Internal
+    name: Build Internal ${{ matrix.conf.name }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -69,10 +68,8 @@ jobs:
 
   run_e2e_tests:
     name: Run E2E Tests
-    # Explicitly request an Intel-based runner to avoid ARM compatibility issues
     runs-on: ubuntu-latest
     needs: build_internal_samples
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -83,9 +80,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-
       - name: Download all APKs
         uses: actions/download-artifact@v4
         with:
@@ -93,35 +87,76 @@ jobs:
           path: apks
           merge-multiple: true
 
+      - name: List APKs
+        run: |
+          echo "Available APKs:"
+          find apks -name "*.apk"
+
       - name: Install Maestro
         run: |
           curl -Ls "https://get.maestro.mobile.dev" | bash
           export PATH="$PATH":"$HOME/.maestro/bin"
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+          maestro --version
 
-      - name: Start Android Emulator and Run Tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: google_apis
-          arch: x86_64
-          profile: Nexus 6
-          avd-name: test_device
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          script: |
-            echo "Listing available APKs:"
-            find apks -name "*.apk"
-            
-            echo "Installing APKs:"
-            find apks -name "*.apk" -exec adb install -r {} \;
-            
-            echo "Installed apps:"
-            adb shell pm list packages
-            
-            echo "Running Maestro tests:"
-            maestro test .maestro/flows/native/
-            maestro test .maestro/flows/web/
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Use pre-installed emulator
+        run: |
+          echo "y" | sdkmanager "system-images;android-29;default;x86_64"
+          echo "no" | avdmanager create avd --force --name test_device --package "system-images;android-29;default;x86_64" --device "pixel"
+
+      - name: Start emulator and run tests
+        run: |
+          # Start emulator in background
+          nohup $ANDROID_HOME/emulator/emulator -avd test_device -no-audio -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim &
+        
+          # Wait for emulator to start
+          $ANDROID_HOME/platform-tools/adb wait-for-device
+        
+          # Keep checking device state
+          while [ "$($ANDROID_HOME/platform-tools/adb shell getprop sys.boot_completed 2>/dev/null)" != "1" ]; do
+            echo "Waiting for emulator to boot..."
+            sleep 5
+          done
+        
+          echo "Emulator is ready!"
+          $ANDROID_HOME/platform-tools/adb devices
+        
+          # Install APKs
+          find apks -name "*.apk" -exec $ANDROID_HOME/platform-tools/adb install -r {} \;
+        
+          echo "Installed apps:"
+          $ANDROID_HOME/platform-tools/adb shell pm list packages
+        
+          # Run Maestro tests
+          maestro test .maestro/flows/native/
+          maestro test .maestro/flows/web/
+
+#      - name: Start Android Emulator and Run Tests
+#        uses: reactivecircus/android-emulator-runner@v2
+#        with:
+#          api-level: 30
+#          target: google_apis
+#          arch: x86_64
+#          profile: Nexus 6
+#          avd-name: test_device
+#          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+#          disable-animations: true
+#          script: |
+#            echo "Listing available APKs:"
+#            find apks -name "*.apk"
+#
+#            echo "Installing APKs:"
+#            find apks -name "*.apk" -exec adb install -r {} \;
+#
+#            echo "Installed apps:"
+#            adb shell pm list packages
+#
+#            echo "Running Maestro tests:"
+#            maestro test .maestro/flows/native/
+#            maestro test .maestro/flows/web/
 
       - name: Upload test reports
         if: always()
