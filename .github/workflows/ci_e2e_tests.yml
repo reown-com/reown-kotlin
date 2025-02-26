@@ -68,7 +68,8 @@ jobs:
 
   run_e2e_tests:
     name: Run E2E Tests
-    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    runs-on: macos-12
     needs: build_internal_samples
     steps:
       - name: Checkout repository
@@ -102,10 +103,10 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
 
-      - name: Use pre-installed emulator
-        run: |
-          echo "y" | sdkmanager "system-images;android-29;default;x86_64"
-          echo "no" | avdmanager create avd --force --name test_device --package "system-images;android-29;default;x86_64" --device "pixel"
+#      - name: Use pre-installed emulator
+#        run: |
+#          echo "y" | sdkmanager "system-images;android-29;default;x86_64"
+#          echo "no" | avdmanager create avd --force --name test_device --package "system-images;android-29;default;x86_64" --device "pixel"
 
       - name: Start Android Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
@@ -113,10 +114,16 @@ jobs:
           api-level: 30
           target: google_apis
           arch: x86_64
+          ram-size: 2048M
+          emulator-boot-timeout: 600 # 10min
+          cores: 2
           profile: Nexus 6
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
+          pre-emulator-launch-script: |
+            echo "Running pre emulator launch script. Printing the working directory now:"
+            pwd
           script: |
             echo "Listing available APKs:"
             find apks -name "*.apk"
