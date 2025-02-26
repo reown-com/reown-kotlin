@@ -106,13 +106,13 @@ jobs:
       - name: Start Android Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 32
           target: google_apis
           arch: x86_64
           ram-size: 2048M
           emulator-boot-timeout: 600 # 10min
           cores: 2
-          profile: Pixel 5
+          profile: Nexus 6
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
 #          disable-animations: true
