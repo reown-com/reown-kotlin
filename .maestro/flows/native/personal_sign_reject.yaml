@@ -4,8 +4,10 @@ name: Kotlin Dapp to Kotlin Wallet personal_sign Rejected
 - launchApp:
     permissions:
       all: allow
-- runFlow: connect_confirm.yaml
+- startRecording: "Native personal_sign Rejected"
+- tapOn: "NOT NOW"
 - tapOn: "Ethereum_Main"
 - tapOn: "personal_sign"
 - tapOn: "Cancel"
 - assertVisible: result_error
+- stopRecording

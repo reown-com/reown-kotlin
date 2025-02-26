@@ -3,6 +3,12 @@ name: Kotlin Dapp to Kotlin Wallet Connection Rejected
 ---
 - clearState
 - launchApp:
+    appId: "com.reown.sample.wallet.internal"
+- startRecording: "Native Connection Rejected"
+- tapOn: "NOT NOW"
+- tapOn: "Get Started"
+- launchApp:
+    appId: "com.reown.sample.dapp.internal"
     permissions:
       all: allow
 - tapOn: "NOT NOW"
@@ -12,3 +18,4 @@ name: Kotlin Dapp to Kotlin Wallet Connection Rejected
 - tapOn: "Android Sample Internal"
 - tapOn: "Cancel"
 - assertVisible: "Connection declined"
+- stopRecording

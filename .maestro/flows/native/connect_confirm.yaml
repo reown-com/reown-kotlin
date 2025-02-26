@@ -5,6 +5,7 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
 - launchApp:
     permissions:
       all: allow
+- startRecording: "Native Connection Confirmed"
 - tapOn: "NOT NOW"
 - tapOn: "Ethereum"
 - tapOn: "Connect via AppKit"
@@ -12,3 +13,4 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
 - tapOn: "Android Sample Internal"
 - tapOn: "Confirm"
 - assertVisible: "Ethereum_main"
+- stopRecording

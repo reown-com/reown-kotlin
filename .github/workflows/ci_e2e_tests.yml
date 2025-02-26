@@ -103,24 +103,19 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
 
-#      - name: Use pre-installed emulator
-#        run: |
-#          echo "y" | sdkmanager "system-images;android-29;default;x86_64"
-#          echo "no" | avdmanager create avd --force --name test_device --package "system-images;android-29;default;x86_64" --device "pixel"
-
       - name: Start Android Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30
+          api-level: 32
           target: google_apis
           arch: x86_64
           ram-size: 2048M
           emulator-boot-timeout: 600 # 10min
           cores: 2
-          profile: Nexus 6
+          profile: Pixel 2
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
+#          disable-animations: true
           pre-emulator-launch-script: |
             echo "Running pre emulator launch script. Printing the working directory now:"
             pwd
@@ -137,9 +132,17 @@ jobs:
             echo "Installed apps:"
             adb shell pm list packages
             
-            echo "Running Maestro tests:"
-            maestro test .maestro/flows/native/
-            maestro test .maestro/flows/web/
+            echo "Running Maestro native to native tests:"
+            maestro test .maestro/flows/native/connect_reject.yaml
+            maestro test .maestro/flows/native/connect_confirm.yaml
+            maestro test .maestro/flows/native/sign_request_reject.yaml
+            maestro test .maestro/flows/native/sign_request_confirm.yaml
+            
+            echo "Running Maestro web to native tests:"
+            maestro test .maestro/flows/web/connect_reject.yaml
+            maestro test .maestro/flows/web/connect_confirm.yaml
+#            maestro test .maestro/flows/web/sign_request_reject.yaml
+#            maestro test .maestro/flows/web/sign_request_confirm.yaml
 
       - name: Upload test reports
         if: always()

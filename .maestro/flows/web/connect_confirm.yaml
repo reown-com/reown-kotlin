@@ -1,12 +1,14 @@
-appId: com.reown.sample.dapp.internal
+appId: com.reown.sample.wallet.internal
 name: AppKit Web to Kotlin Wallet Connection Confirmed
 ---
 - openLink:
     link: https://appkit-lab.reown.com/library/wagmi/
     browser: true
+- startRecording: "Web to Native Connection Confirmed"
 - tapOn: "Connect Wallet"
 - tapOn: "Kotlin Sample Wallet Kotlin Sample Wallet"
 - tapOn: "Confirm"
 - back
 - back
-- assertVisible: "Account Information"
+- assertVisible: "AppKit Interactions"
+- stopRecording
