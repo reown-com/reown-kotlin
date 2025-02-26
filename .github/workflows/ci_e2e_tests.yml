@@ -112,7 +112,7 @@ jobs:
           ram-size: 2048M
           emulator-boot-timeout: 600 # 10min
           cores: 2
-          profile: Pixel 2
+          profile: Pixel
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
 #          disable-animations: true
