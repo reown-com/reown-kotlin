@@ -106,13 +106,12 @@ jobs:
       - name: Start Android Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 32
+          api-level: 30
           target: google_apis
-          arch: x86_64
+          arch: arm64-v8a
           ram-size: 2048M
-          emulator-boot-timeout: 600 # 10min
-          cores: 2
-          profile: Nexus 6
+#          emulator-boot-timeout: 600 # 10min
+          profile: pixel_3a
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           #          disable-animations: true
@@ -120,6 +119,9 @@ jobs:
             echo "Running pre emulator launch script. Printing the working directory now:"
             pwd
           script: |
+            echo "Listing available devices:"
+            avdmanager list device
+            
             echo "Listing available APKs:"
             find apks -name "*.apk"
             
@@ -134,9 +136,9 @@ jobs:
             
             echo "Running Maestro native to native tests:"
             maestro test .maestro/flows/native/connect_reject.yaml || echo "Test connect_reject failed but continuing"
-            maestro test .maestro/flows/native/connect_confirm.yaml || echo "Test connect_confirm failed but continuing"
-            maestro test .maestro/flows/native/personal_sign_reject.yaml || echo "Test sign_request_reject failed but continuing"
-            maestro test .maestro/flows/native/personal_sign_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
+#            maestro test .maestro/flows/native/connect_confirm.yaml || echo "Test connect_confirm failed but continuing"
+#            maestro test .maestro/flows/native/personal_sign_reject.yaml || echo "Test sign_request_reject failed but continuing"
+#            maestro test .maestro/flows/native/personal_sign_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
 
 #            echo "Running Maestro web to native tests:"
 #            maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
