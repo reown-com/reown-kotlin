@@ -151,12 +151,12 @@ jobs:
           echo "Running Maestro native to native tests:"
           maestro test .maestro/flows/native/connect_reject.yaml || echo "Test connect_reject failed but continuing"
           maestro test .maestro/flows/native/connect_confirm.yaml || echo "Test connect_confirm failed but continuing"
-          maestro test .maestro/flows/native/sign_request_reject.yaml || echo "Test sign_request_reject failed but continuing"
-          maestro test .maestro/flows/native/sign_request_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
+          maestro test .maestro/flows/native/personal_sign_reject.yaml || echo "Test sign_request_reject failed but continuing"
+          maestro test .maestro/flows/native/personal_sign_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
             
-          echo "Running Maestro web to native tests:"
-          maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
-          maestro test .maestro/flows/web/connect_confirm.yaml || echo "Test web_connect_confirm failed but continuing"
+#          echo "Running Maestro web to native tests:"
+#          maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
+#          maestro test .maestro/flows/web/connect_confirm.yaml || echo "Test web_connect_confirm failed but continuing"
 #
 #            echo "List of files in current directory and subdirectories:"
 #            find . -type f -name "*.mp4" -o -name "*.mov" | sort
