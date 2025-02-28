@@ -93,12 +93,12 @@ jobs:
           echo "Available APKs:"
           find apks -name "*.apk"
 
-      - name: Install Maestro
-        run: |
-          curl -Ls "https://get.maestro.mobile.dev" | bash
-          export PATH="$PATH":"$HOME/.maestro/bin"
-          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
-          maestro --version
+#      - name: Install Maestro
+#        run: |
+#          curl -Ls "https://get.maestro.mobile.dev" | bash
+#          export PATH="$PATH":"$HOME/.maestro/bin"
+#          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+#          maestro --version
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
