@@ -93,68 +93,70 @@ jobs:
           echo "Available APKs:"
           find apks -name "*.apk"
 
-#      - name: Install Maestro
-#        run: |
-#          curl -Ls "https://get.maestro.mobile.dev" | bash
-#          export PATH="$PATH":"$HOME/.maestro/bin"
-#          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
-#          maestro --version
+      #      - name: Install Maestro
+      #        run: |
+      #          curl -Ls "https://get.maestro.mobile.dev" | bash
+      #          export PATH="$PATH":"$HOME/.maestro/bin"
+      #          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+      #          maestro --version
 
-#      - name: Setup Android SDK
-#        uses: android-actions/setup-android@v2
+      #      - name: Setup Android SDK
+      #        uses: android-actions/setup-android@v2
+
+
+      #        uses: reactivecircus/android-emulator-runner@v2
+      #        with:
+      #          api-level: 32
+      #          target: google_apis
+      #          arch: x86_64
+      #          ram-size: 4096M
+      #          emulator-boot-timeout: 600 # 10min
+      #          cores: 2
+      #          profile: Pixel 8
+      #          avd-name: Pixel 8
+      #          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+      #          disable-animations: true
+      #          pre-emulator-launch-script: |
+      #            echo "Running pre emulator launch script. Printing the working directory now:"
+      #            pwd
 
       - name: Start Android Emulator and Run Tests
-#        uses: reactivecircus/android-emulator-runner@v2
-        with:
-#          api-level: 32
-#          target: google_apis
-#          arch: x86_64
-#          ram-size: 4096M
-#          emulator-boot-timeout: 600 # 10min
-#          cores: 2
-#          profile: Pixel 8
-#          avd-name: Pixel 8
-#          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-#          disable-animations: true
-#          pre-emulator-launch-script: |
-#            echo "Running pre emulator launch script. Printing the working directory now:"
-#            pwd
-          run: |
-            # Start your existing emulator in background
-            $ANDROID_SDK_ROOT/emulator/emulator -avd Pixel_8 -no-window -gpu swiftshader_indirect
-            
-             # Wait for device to boot
-            adb wait-for-device
-            
-            # Wait until the device is fully booted
-            while [ "$(adb shell getprop sys.boot_completed 2>/dev/null)" != "1" ]; do
-            echo "Waiting for emulator to boot..."
-            sleep 2
-            done
+        run: |
+          # Start your existing emulator in background
+          $ANDROID_SDK_ROOT/emulator/emulator -avd Pixel_8 -no-window -gpu swiftshader_indirect
           
-            echo "Emulator is ready!"
+           # Wait for device to boot
+          adb wait-for-device
           
-            echo "Listing available APKs:"
-            find apks -name "*.apk"
+          # Wait until the device is fully booted
+          while [ "$(adb shell getprop sys.boot_completed 2>/dev/null)" != "1" ]; do
+          echo "Waiting for emulator to boot..."
+          sleep 2
+          done
+        
+          echo "Emulator is ready!"
+        
+          echo "Listing available APKs:"
+          find apks -name "*.apk"
             
-            # verify emulator is running
-            adb devices
+          # verify emulator is running
+          adb devices
+          
+          echo "Installing APKs:"
+          find apks -name "*.apk" -exec adb install -r {} \;
             
-            echo "Installing APKs:"
-            find apks -name "*.apk" -exec adb install -r {} \;
+          echo "Installed apps:"
+          adb shell pm list packages
             
-            echo "Installed apps:"
-            adb shell pm list packages
+          echo "Running Maestro native to native tests:"
+          maestro test .maestro/flows/native/connect_reject.yaml || echo "Test connect_reject failed but continuing"
+          maestro test .maestro/flows/native/connect_confirm.yaml || echo "Test connect_confirm failed but continuing"
+          maestro test .maestro/flows/native/sign_request_reject.yaml || echo "Test sign_request_reject failed but continuing"
+          maestro test .maestro/flows/native/sign_request_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
             
-            echo "Running Maestro native to native tests:"
-            maestro test .maestro/flows/native/connect_reject.yaml || echo "Test connect_reject failed but continuing"
-            maestro test .maestro/flows/native/connect_confirm.yaml || echo "Test connect_confirm failed but continuing"
-            maestro test .maestro/flows/native/sign_request_reject.yaml || echo "Test sign_request_reject failed but continuing"
-            maestro test .maestro/flows/native/sign_request_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
-            
-            echo "Running Maestro web to native tests:"
-            maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
-            maestro test .maestro/flows/web/connect_confirm.yaml || echo "Test web_connect_confirm failed but continuing"
+          echo "Running Maestro web to native tests:"
+          maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
+          maestro test .maestro/flows/web/connect_confirm.yaml || echo "Test web_connect_confirm failed but continuing"
 #
 #            echo "List of files in current directory and subdirectories:"
 #            find . -type f -name "*.mp4" -o -name "*.mov" | sort
