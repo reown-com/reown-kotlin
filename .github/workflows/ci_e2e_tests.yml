@@ -69,7 +69,7 @@ jobs:
   run_e2e_tests:
     name: Run E2E Tests
     timeout-minutes: 20
-    runs-on: macos-13
+    runs-on: jakub-runner
     needs: build_internal_samples
     steps:
       - name: Checkout repository
@@ -109,10 +109,10 @@ jobs:
           api-level: 32
           target: google_apis
           arch: x86_64
-          ram-size: 2048M
+          ram-size: 4096M
           emulator-boot-timeout: 600 # 10min
           cores: 2
-          profile: Nexus 6
+          profile: Pixel 8
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
 #          disable-animations: true
