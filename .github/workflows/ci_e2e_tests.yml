@@ -123,7 +123,7 @@ jobs:
       - name: Start Android Emulator and Run Tests
         run: |
           # Start your existing emulator in background
-          $ANDROID_SDK_ROOT/emulator/emulator -avd Pixel_8 -no-window -gpu swiftshader_indirect
+          $ANDROID_SDK_ROOT/emulator/emulator -avd Pixel_8 -no-snapshot -no-snapshot-save -no-snapshot-load -no-window -gpu swiftshader_indirect &
           
            # Wait for device to boot
           adb wait-for-device
