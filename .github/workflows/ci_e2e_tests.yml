@@ -100,25 +100,40 @@ jobs:
 #          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 #          maestro --version
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+#      - name: Setup Android SDK
+#        uses: android-actions/setup-android@v2
 
       - name: Start Android Emulator and Run Tests
-        uses: reactivecircus/android-emulator-runner@v2
+#        uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 32
-          target: google_apis
-          arch: x86_64
-          ram-size: 4096M
-          emulator-boot-timeout: 600 # 10min
-          cores: 2
-          avd-name: test_device
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+#          api-level: 32
+#          target: google_apis
+#          arch: x86_64
+#          ram-size: 4096M
+#          emulator-boot-timeout: 600 # 10min
+#          cores: 2
+#          profile: Pixel 8
+#          avd-name: Pixel 8
+#          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
 #          disable-animations: true
-          pre-emulator-launch-script: |
-            echo "Running pre emulator launch script. Printing the working directory now:"
-            pwd
-          script: |
+#          pre-emulator-launch-script: |
+#            echo "Running pre emulator launch script. Printing the working directory now:"
+#            pwd
+          run: |
+            # Start your existing emulator in background
+            $ANDROID_SDK_ROOT/emulator/emulator -avd Pixel_8 -no-window -gpu swiftshader_indirect
+            
+             # Wait for device to boot
+            adb wait-for-device
+            
+            # Wait until the device is fully booted
+            while [ "$(adb shell getprop sys.boot_completed 2>/dev/null)" != "1" ]; do
+            echo "Waiting for emulator to boot..."
+            sleep 2
+            done
+          
+            echo "Emulator is ready!"
+          
             echo "Listing available APKs:"
             find apks -name "*.apk"
             
