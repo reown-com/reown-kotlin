@@ -93,33 +93,6 @@ jobs:
           echo "Available APKs:"
           find apks -name "*.apk"
 
-      #      - name: Install Maestro
-      #        run: |
-      #          curl -Ls "https://get.maestro.mobile.dev" | bash
-      #          export PATH="$PATH":"$HOME/.maestro/bin"
-      #          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
-      #          maestro --version
-
-      #      - name: Setup Android SDK
-      #        uses: android-actions/setup-android@v2
-
-
-      #        uses: reactivecircus/android-emulator-runner@v2
-      #        with:
-      #          api-level: 32
-      #          target: google_apis
-      #          arch: x86_64
-      #          ram-size: 4096M
-      #          emulator-boot-timeout: 600 # 10min
-      #          cores: 2
-      #          profile: Pixel 8
-      #          avd-name: Pixel 8
-      #          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-      #          disable-animations: true
-      #          pre-emulator-launch-script: |
-      #            echo "Running pre emulator launch script. Printing the working directory now:"
-      #            pwd
-
       - name: Start Android Emulator and Run Tests
         run: |
           # Start your existing emulator in background
@@ -157,15 +130,6 @@ jobs:
 #          echo "Running Maestro web to native tests:"
 #          maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
 #          maestro test .maestro/flows/web/connect_confirm.yaml || echo "Test web_connect_confirm failed but continuing"
-#
-#            echo "List of files in current directory and subdirectories:"
-#            find . -type f -name "*.mp4" -o -name "*.mov" | sort
-#
-#            echo "Moving video files to .maestro/videos directory:"
-#            find . -maxdepth 1 -type f -name "*.mp4" -o -name "*.mov" | xargs -I {} mv {} .maestro/videos/ || true
-#
-#            echo "Collected videos:"
-#            find .maestro/videos -type f | sort
 
       - name: Find video files in project root
         if: always()
@@ -198,11 +162,3 @@ jobs:
           path: |
             .maestro/videos/
             if-no-files-found: warn
-
-#      - name: Upload test reports
-#        if: always()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: maestro-test-reports
-#          path: |
-#            .maestro/reports/
