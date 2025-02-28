@@ -112,7 +112,6 @@ jobs:
           ram-size: 4096M
           emulator-boot-timeout: 600 # 10min
           cores: 2
-          profile: Pixel 8
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
 #          disable-animations: true
