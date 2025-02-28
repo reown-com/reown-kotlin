@@ -69,7 +69,7 @@ jobs:
   run_e2e_tests:
     name: Run E2E Tests
     timeout-minutes: 20
-    runs-on: macos-13-large
+    runs-on: macos-latest-xlarge #macos-13-large (intel)
     needs: build_internal_samples
     steps:
       - name: Checkout repository
@@ -110,7 +110,7 @@ jobs:
           target: google_apis
           arch: arm64-v8a
           ram-size: 2048M
-#          emulator-boot-timeout: 600 # 10min
+          emulator-boot-timeout: 600 # 10min
           profile: pixel_3a
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
