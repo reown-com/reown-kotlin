@@ -120,6 +120,10 @@ jobs:
             
           echo "Installed apps:"
           adb shell pm list packages
+          
+          echo "Running Maestro web to native tests:"
+          maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
+          maestro test .maestro/flows/web/connect_confirm.yaml || echo "Test web_connect_confirm failed but continuing"
             
 #          echo "Running Maestro native to native tests:"
 #          maestro test .maestro/flows/native/connect_reject.yaml || echo "Test connect_reject failed but continuing"
@@ -127,9 +131,7 @@ jobs:
 #          maestro test .maestro/flows/native/personal_sign_reject.yaml || echo "Test sign_request_reject failed but continuing"
 #          maestro test .maestro/flows/native/personal_sign_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
             
-          echo "Running Maestro web to native tests:"
-          maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
-          maestro test .maestro/flows/web/connect_confirm.yaml || echo "Test web_connect_confirm failed but continuing"
+
 
       - name: Find video files in project root
         if: always()
