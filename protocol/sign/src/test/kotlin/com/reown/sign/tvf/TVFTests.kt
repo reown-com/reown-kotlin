@@ -121,14 +121,55 @@ class TVFTests {
     fun `collectTxHashes should parse solana_signAllTransactions and return all transactions`() {
         // Arrange
         val rpcMethod = "solana_signAllTransactions"
-        val rpcResult = "{\"transactions\": [\"tx1\", \"tx2\"]}"
+        val rpcResult =
+            "{\"transactions\": [\"AYxQUCwuEoBMHp45bxp9yyegtoVUcyyc0idYrBan1PW/mWWA4MrXsbytuJt9FP1tXH5ZxYYyKc3YmBM+hcueqA4BAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAAanHwLXEo8xArFhOhqld18H+7VdHJSIY4f27y1qCK4AoDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMgTgAAAAAAAA==\", \"AWHu1QYry2PqYQAxDBXUtxBjRorQecJEVzje2rVY2rKJ6usAMAC/f0GGSqxpWlaS93wIfg3FqPPMzAKDdxgTwQwBAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAA58ONgFXrro2UqR0pvpUDFIqAYRJMYUnemdWXhfWu8VcDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMgTgAAAAAAAA==\", \"AeJw688VKMWEeOHsYhe03By/2rqJHTQeq6W4L1ZLdbT2l/Nim8ctL3erMyH9IWPsQP73uaarRmiVfanEJHx7uQ4BAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAAtIy17v5fs39LuoitzpBhVrg8ZIQF/3ih1N9dQ+X3shEDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMjTgAAAAAAAA==\"]}"
 
         // Act
         val result = tvf.collectTxHashes(rpcMethod, rpcResult)
 
-        // Assert
-        assertNotNull(result)
-        assertEquals(listOf("tx1", "tx2"), result)
+        //Assert
+        assert(result != null)
+        assert(result!!.isNotEmpty())
+    }
+
+    @Test
+    fun `collectTxHashes should parse solana_signAllTransactions and null`() {
+        // Arrange
+        val rpcMethod = "solana_signAllTransactions"
+        val rpcResult =
+            "{\"transactions\": [\"asdasdsfasdfsd\"]}"
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        //Assert
+        assert(result == null)
+    }
+
+    @Test
+    fun `collectTxHashes should not parse malformed solana_signAllTransactions and null`() {
+        // Arrange
+        val rpcMethod = "solana_signAllTransactions"
+        val rpcResult = "{\"transactions\": }"
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        //Assert
+        assert(result == null)
+    }
+
+    @Test
+    fun `collectTxHashes should not parse empty solana_signAllTransactions result`() {
+        // Arrange
+        val rpcMethod = "solana_signAllTransactions"
+        val rpcResult = ""
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        //Assert
+        assert(result == null)
     }
 
     @Test

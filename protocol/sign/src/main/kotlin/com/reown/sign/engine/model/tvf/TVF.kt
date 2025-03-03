@@ -1,6 +1,8 @@
 package com.reown.sign.engine.model.tvf
 
 import com.squareup.moshi.Moshi
+import io.ipfs.multibase.Base58
+import org.bouncycastle.util.encoders.Base64
 
 class TVF(private val moshi: Moshi) {
     private val evm: List<String>
@@ -47,16 +49,39 @@ class TVF(private val moshi: Moshi) {
                         ?.signature
                         ?.let { listOf(it) }
 
-                SOLANA_SIGN_ALL_TRANSACTION ->
+                SOLANA_SIGN_ALL_TRANSACTION -> {
                     moshi.adapter(SolanaSignAllTransactionsResult::class.java)
                         .fromJson(rpcResult)
                         ?.transactions
+                        ?.map { transaction -> extractSignature(transaction) }
+                }
 
                 else -> null
             }
         } catch (e: Exception) {
-            println("error processing $rpcMethod - $e")
+            println("Error processing $rpcMethod - $e")
             null
+        }
+    }
+
+    private fun extractSignature(transaction: String): String {
+        val transactionBuffer = try {
+            Base64.decode(transaction)
+        } catch (e: Exception) {
+            Base58.decode(transaction)
+        }
+
+        if (transactionBuffer.isEmpty()) {
+            throw IllegalArgumentException("Transaction buffer is empty")
+        }
+
+        val numSignatures = transactionBuffer[0].toInt() and 0xFF
+
+        if (numSignatures > 0 && transactionBuffer.size >= 65) {
+            val signatureBuffer = transactionBuffer.copyOfRange(1, 65)
+            return Base58.encode(signatureBuffer)
+        } else {
+            throw IllegalArgumentException("No signatures found in transaction")
         }
     }
 
