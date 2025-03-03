@@ -143,6 +143,24 @@ jobs:
             adb shell pm list packages
             
             echo "Running Maestro native to native tests:"
+            
+             # Variable to track test failures
+            TEST_FAILURES=0
+            
+            # Function to run test and track failures
+            run_test() {
+              echo "Running test: $1"
+              maestro test "$1"
+            
+              # Check if test failed and increment counter
+              if [ $? -ne 0 ]; then
+                echo "❌ Test $1 FAILED"
+                TEST_FAILURES=$((TEST_FAILURES + 1))
+              else
+                echo "✅ Test $1 PASSED"
+              fi
+            }
+            
             maestro test .maestro/flows/native/connect_reject.yaml || echo "Test connect_reject failed but continuing"
             maestro test .maestro/flows/native/connect_confirm.yaml || echo "Test connect_confirm failed but continuing"
             maestro test .maestro/flows/native/personal_sign_reject.yaml || echo "Test sign_request_reject failed but continuing"
@@ -151,6 +169,14 @@ jobs:
 #            echo "Running Maestro web to native tests:"
 #            maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
 #            maestro test .maestro/flows/web/connect_confirm.yaml || echo "Test web_connect_confirm failed but continuing"
+
+            # Check if any tests failed and exit with error if so
+            if [ $TEST_FAILURES -gt 0 ]; then
+              echo "❌ $TEST_FAILURES tests failed"
+              exit 1
+            else
+              echo "✅ All tests passed successfully"
+            fi
 
       - name: Find video files in project root
         if: always()
