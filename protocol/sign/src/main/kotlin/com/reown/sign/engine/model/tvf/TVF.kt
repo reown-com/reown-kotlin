@@ -76,7 +76,6 @@ class TVF(private val moshi: Moshi) {
         }
 
         val numSignatures = transactionBuffer[0].toInt() and 0xFF
-
         if (numSignatures > 0 && transactionBuffer.size >= 65) {
             val signatureBuffer = transactionBuffer.copyOfRange(1, 65)
             return Base58.encode(signatureBuffer)
