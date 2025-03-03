@@ -51,7 +51,6 @@ fun AccountRoute(navController: NavController) {
     val viewModel: AccountViewModel = viewModel()
     val state by viewModel.uiState.collectAsState()
     val awaitResponse by viewModel.awaitResponse.collectAsState(false)
-    val context = LocalContext.current
     val showDialog = remember { mutableStateOf(false) }
     val dialogMessage = remember { mutableStateOf("") }
     val errorMessage = remember { mutableStateOf("") }
@@ -64,11 +63,9 @@ fun AccountRoute(navController: NavController) {
                 is DappSampleEvents.RequestSuccess -> {
                     dialogMessage.value = "Result: ${event.result}"
                     showDialog.value = true
-//                    Toast.makeText(context, "Result: ${event.result}", Toast.LENGTH_LONG).show()
                 }
 
                 is DappSampleEvents.RequestPeerError -> {
-//                    Toast.makeText(context, "Error: ${event.errorMsg}", Toast.LENGTH_LONG).show()
                     errorMessage.value = "Error: ${event.errorMsg}"
                     showDialog.value = true
                 }
@@ -76,7 +73,6 @@ fun AccountRoute(navController: NavController) {
                 is DappSampleEvents.RequestError -> {
                     errorMessage.value = "Error: ${event.exceptionMsg}"
                     showDialog.value = true
-//                    Toast.makeText(context, "Error: ${event.exceptionMsg}", Toast.LENGTH_LONG).show()
                 }
 
                 is DappSampleEvents.Disconnect -> navController.navigate(Route.ChainSelection.path) {
