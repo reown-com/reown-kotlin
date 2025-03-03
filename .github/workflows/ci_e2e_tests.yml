@@ -1,8 +1,10 @@
 name: E2E Tests with Maestro
 
 on:
-  push:
-    branches: [ feat/maestro ]
+  pull_request:
+    branches:
+      - develop
+      - master
   workflow_dispatch:
 
 jobs:
@@ -69,7 +71,7 @@ jobs:
   run_e2e_tests:
     name: Run E2E Tests
     timeout-minutes: 20
-    runs-on: ubuntu-latest #macos-latest-xlarge #macos-13-large (intel)
+    runs-on: ubuntu-latest
     needs: build_internal_samples
     steps:
       - name: Checkout repository
@@ -114,10 +116,10 @@ jobs:
         with:
           api-level: 30
           target: google_apis
-          arch: x86_64 #arm64-v8a
+          arch: x86_64
           ram-size: 2048M
           emulator-boot-timeout: 600 # 10min
-          profile: pixel_3a
+          profile: pixel_7
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           #          disable-animations: true
@@ -142,9 +144,9 @@ jobs:
             
             echo "Running Maestro native to native tests:"
             maestro test .maestro/flows/native/connect_reject.yaml || echo "Test connect_reject failed but continuing"
-#            maestro test .maestro/flows/native/connect_confirm.yaml || echo "Test connect_confirm failed but continuing"
-#            maestro test .maestro/flows/native/personal_sign_reject.yaml || echo "Test sign_request_reject failed but continuing"
-#            maestro test .maestro/flows/native/personal_sign_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
+            maestro test .maestro/flows/native/connect_confirm.yaml || echo "Test connect_confirm failed but continuing"
+            maestro test .maestro/flows/native/personal_sign_reject.yaml || echo "Test sign_request_reject failed but continuing"
+            maestro test .maestro/flows/native/personal_sign_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
 
 #            echo "Running Maestro web to native tests:"
 #            maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
