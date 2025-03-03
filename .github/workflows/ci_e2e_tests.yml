@@ -1,6 +1,9 @@
 name: E2E Tests with Maestro
 
 on:
+  push:
+    branches:
+        - feat/maestro
   pull_request:
     types:
       - opened
