@@ -145,33 +145,52 @@ jobs:
             adb shell pm list packages
             
             echo "Running Maestro native to native tests:"
-             # Variable to track test failures
             TEST_FAILURES=0
             
-            # Function to run test and track failures
-            run_test() {
-              echo "Running test: $1"
-              maestro test "$1"
+            # Run each test and check the result
+            echo "Running test: connect_reject.yaml"
+            maestro test .maestro/flows/native/connect_reject.yaml
+            if [ $? -ne 0 ]; then
+              echo "❌ Test connect_reject.yaml FAILED"
+              TEST_FAILURES=$((TEST_FAILURES + 1))
+            else
+              echo "✅ Test connect_reject.yaml PASSED"
+            fi
             
-              if [ $? -ne 0 ]; then
-                echo "❌ Test $1 FAILED"
-                TEST_FAILURES=$((TEST_FAILURES + 1))
-              else
-                echo "✅ Test $1 PASSED"
-              fi
-            }
+            echo "Running test: connect_confirm.yaml"
+            maestro test .maestro/flows/native/connect_confirm.yaml
+            if [ $? -ne 0 ]; then
+              echo "❌ Test connect_confirm.yaml FAILED"
+              TEST_FAILURES=$((TEST_FAILURES + 1))
+            else
+              echo "✅ Test connect_confirm.yaml PASSED"
+            fi
             
-            maestro test .maestro/flows/native/connect_reject.yaml || echo "Test connect_reject failed but continuing"
-            maestro test .maestro/flows/native/connect_confirm.yaml || echo "Test connect_confirm failed but continuing"
-            maestro test .maestro/flows/native/personal_sign_reject.yaml || echo "Test sign_request_reject failed but continuing"
-            maestro test .maestro/flows/native/personal_sign_confirm.yaml || echo "Test sign_request_confirm failed but continuing"
+            echo "Running test: personal_sign_reject.yaml"
+            maestro test .maestro/flows/native/personal_sign_reject.yaml
+            if [ $? -ne 0 ]; then
+              echo "❌ Test personal_sign_reject.yaml FAILED"
+              TEST_FAILURES=$((TEST_FAILURES + 1))
+            else
+              echo "✅ Test personal_sign_reject.yaml PASSED"
+            fi
             
+            echo "Running test: personal_sign_confirm.yaml"
+            maestro test .maestro/flows/native/personal_sign_confirm.yaml
+            if [ $? -ne 0 ]; then
+              echo "❌ Test personal_sign_confirm.yaml FAILED"
+              TEST_FAILURES=$((TEST_FAILURES + 1))
+            else
+              echo "✅ Test personal_sign_confirm.yaml PASSED"
+            fi
+            
+            # Check overall result and fail if needed
             if [ $TEST_FAILURES -gt 0 ]; then
               echo "❌ $TEST_FAILURES tests failed"
               exit 1
             else
               echo "✅ All tests passed successfully"
-            fi
+            fi            
 
 #            echo "Running Maestro web to native tests:"
 #            maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
