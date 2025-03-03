@@ -2,11 +2,9 @@ name: E2E Tests with Maestro
 
 on:
   pull_request:
-    branches:
-      - develop
-      - master
     types:
       - opened
+      - synchronize
       - edited
   workflow_dispatch:
 
