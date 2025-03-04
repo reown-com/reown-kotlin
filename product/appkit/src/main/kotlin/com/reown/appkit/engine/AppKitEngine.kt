@@ -166,6 +166,26 @@ internal class AppKitEngine(
         }
     }
 
+    fun extend(onSuccess: () -> Unit = {}, onError: (Throwable) -> Unit) {
+        val session = getSessionUseCase()?.isSessionActive()
+
+        if (session == null) {
+            onError(InvalidSessionException)
+            return
+        }
+
+        when (session) {
+            is Session.WalletConnect ->
+                SignClient.extend(
+                    extend = Sign.Params.Extend(session.topic),
+                    onSuccess = { onSuccess() },
+                    onError = { onError(it.throwable) }
+                )
+            else -> onError(UnsupportedOperationException("Extend is only supported for WalletConnect sessions"))
+        }
+    }
+
+
     private fun openWalletApp(topic: String, onError: (RedirectMissingThrowable) -> Unit) {
         val redirect = SignClient.getActiveSessionByTopic(topic)?.redirect ?: String.Empty
         try {
