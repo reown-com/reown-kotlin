@@ -139,7 +139,12 @@ class WalletKitActivity : AppCompatActivity() {
                 when (event) {
                     is SignEvent.SessionProposal -> navigateWhenReady { navController.navigate(Route.SessionProposal.path) }
                     is SignEvent.SessionAuthenticate -> navigateWhenReady { navController.navigate(Route.SessionAuthenticate.path) }
-                    is SignEvent.Fulfilment -> navigateWhenReady { navController.navigate("${Route.ChainAbstraction.path}/${event.isError}")}
+                    is SignEvent.Fulfilment -> navigateWhenReady {
+                        navController.navigate("${Route.ChainAbstraction.path}/${event.isError}") {
+                            popUpTo(Route.TransactionDialog.path) { inclusive = true }
+                        }
+                    }
+
                     is SignEvent.ExpiredRequest -> {
                         if (navController.currentDestination?.route != Route.Connections.path) {
                             navController.popBackStack(route = Route.Connections.path, inclusive = false)
@@ -227,8 +232,8 @@ class WalletKitActivity : AppCompatActivity() {
             NetworkLogListModule(),
             LogListModule(),
             DividerModule(),
-            TextModule(text = EthAccountDelegate.ethAddress) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Account", EthAccountDelegate.ethAddress))
+            TextModule(text = EthAccountDelegate.ethAccount) {
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Account", EthAccountDelegate.ethAccount))
             },
             PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = EthAccountDelegate.privateKey) {
@@ -248,7 +253,7 @@ class WalletKitActivity : AppCompatActivity() {
                 onValueChanged = { text ->
                     NotifyClient.unregister(
                         params = Notify.Params.Unregister(
-                            EthAccountDelegate.ethAddress,
+                            EthAccountDelegate.ethAccount,
                         ),
                         onSuccess = {
                             println("Unregister Success")
@@ -263,7 +268,7 @@ class WalletKitActivity : AppCompatActivity() {
     }
 
     private fun registerAccount() {
-        val account = EthAccountDelegate.ethAddress
+        val account = EthAccountDelegate.ethAccount
         val domain = BuildConfig.APPLICATION_ID
         val isRegistered = NotifyClient.isRegistered(params = Notify.Params.IsRegistered(account = account, domain = domain))
 

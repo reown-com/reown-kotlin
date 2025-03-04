@@ -6,6 +6,7 @@ import com.reown.walletkit.BuildConfig
 import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.ExecuteChainAbstractionUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
+import com.reown.walletkit.use_cases.PrepareCallERC20TransferCallUseCase
 import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -34,4 +35,6 @@ internal fun walletKitModule() = module {
     single { GetERC20TokenBalanceUseCase(get()) }
 
     single { ExecuteChainAbstractionUseCase(get()) }
+
+    single { PrepareCallERC20TransferCallUseCase(get()) }
 }

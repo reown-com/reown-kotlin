@@ -52,14 +52,14 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
         .filterIsInstance<Notify.Event.SubscriptionsChanged>()
         .debounce(500L)
         .map { event -> event.subscriptions }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAddress)).values.toList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAccount)).values.toList())
 
     private var _activeSubscriptions = emptyList<ActiveSubscriptionsUI>()
     private val getActiveSubscriptionTrigger = MutableSharedFlow<Unit>()
 
     private val _activeSubscriptionsFlow: Flow<List<ActiveSubscriptionsUI>> = merge(
         subscriptionStateChangesEvents.onEach { _activeSubscriptions = it.toUI() },
-        getActiveSubscriptionTrigger.onEach { _activeSubscriptions = NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAddress)).values.toList().toUI() }
+        getActiveSubscriptionTrigger.onEach { _activeSubscriptions = NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAccount)).values.toList().toUI() }
     ).map { _activeSubscriptions }
 
     private val _activeSubscriptionsTrigger = MutableSharedFlow<Unit>()
@@ -169,7 +169,7 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             _discoverState.update { DiscoverState.Subscribing(explorerApp) }
 
-            val subscribeParams = Notify.Params.Subscribe(explorerApp.dappUrl.toUri(), EthAccountDelegate.ethAddress, 15.seconds)
+            val subscribeParams = Notify.Params.Subscribe(explorerApp.dappUrl.toUri(), EthAccountDelegate.ethAccount, 15.seconds)
 
             viewModelScope.launch(Dispatchers.IO) {
                 NotifyClient.subscribe(params = subscribeParams).let { result ->

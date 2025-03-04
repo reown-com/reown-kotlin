@@ -26,13 +26,13 @@ object EthAccountDelegate {
         sharedPreferences.edit { putString(PUBLIC_KEY_TAG, publicKey) }
     }
 
-    val ethAddress: String
-        get() = "eip155:1:$account"
+    val ethAccount: String
+        get() = "eip155:1:$address"
 
-    val sepoliaAddress: String
-        get() = "eip155:11155111:$account"
+    val sepoliaAccount: String
+        get() = "eip155:11155111:$address"
 
-    val account: String
+    val address: String
         get() = if (isInitialized) sharedPreferences.getString(ACCOUNT_TAG, null)!! else storeAccount().third
 
     var privateKey: String

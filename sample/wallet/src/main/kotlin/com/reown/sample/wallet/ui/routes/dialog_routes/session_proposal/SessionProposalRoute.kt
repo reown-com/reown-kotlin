@@ -73,24 +73,6 @@ fun SessionProposalRoutePreview() {
 }
 
 @Composable
-fun SessionProposalRoute(navController: NavHostController, sessionProposalViewModel: SessionProposalViewModel = viewModel()) {
-    val sessionProposalUI = sessionProposalViewModel.sessionProposal ?: throw Exception("Missing session proposal")
-    val composableScope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val allowButtonColor = getColor(sessionProposalUI.peerContext)
-    var shouldOpenProposalDialog by remember { mutableStateOf(false) }
-    if (shouldOpenProposalDialog) {
-        SessionProposalDialog(sessionProposalUI, allowButtonColor, composableScope, sessionProposalViewModel, context, navController)
-    }
-
-    if (sessionProposalUI.peerContext.isScam == true && !shouldOpenProposalDialog) {
-        ScammerScreen(sessionProposalUI, navController) { shouldOpenProposalDialog = true }
-    } else {
-        SessionProposalDialog(sessionProposalUI, allowButtonColor, composableScope, sessionProposalViewModel, context, navController)
-    }
-}
-
-@Composable
 fun ScammerScreen(
     sessionProposalUI: SessionProposalUI,
     navController: NavHostController,
@@ -129,6 +111,24 @@ fun ScammerScreen(
                 backgroundColor = Color(0xFFFFFFFF).copy(.25f)
             )
         }
+    }
+}
+
+@Composable
+fun SessionProposalRoute(navController: NavHostController, sessionProposalViewModel: SessionProposalViewModel = viewModel()) {
+    val sessionProposalUI = sessionProposalViewModel.sessionProposal ?: throw Exception("Missing session proposal")
+    val composableScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val allowButtonColor = getColor(sessionProposalUI.peerContext)
+    var shouldOpenProposalDialog by remember { mutableStateOf(false) }
+    if (shouldOpenProposalDialog) {
+        SessionProposalDialog(sessionProposalUI, allowButtonColor, composableScope, sessionProposalViewModel, context, navController)
+    }
+
+    if (sessionProposalUI.peerContext.isScam == true && !shouldOpenProposalDialog) {
+        ScammerScreen(sessionProposalUI, navController) { shouldOpenProposalDialog = true }
+    } else {
+        SessionProposalDialog(sessionProposalUI, allowButtonColor, composableScope, sessionProposalViewModel, context, navController)
     }
 }
 

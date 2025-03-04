@@ -11,6 +11,7 @@ import com.reown.walletkit.di.walletKitModule
 import com.reown.walletkit.use_cases.EstimateGasUseCase
 import com.reown.walletkit.use_cases.ExecuteChainAbstractionUseCase
 import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
+import com.reown.walletkit.use_cases.PrepareCallERC20TransferCallUseCase
 import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
 import kotlinx.coroutines.*
 import java.util.*
@@ -21,6 +22,7 @@ object WalletKit {
     private val executeChainAbstractionUseCase: ExecuteChainAbstractionUseCase by wcKoinApp.koin.inject()
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
     private val getERC20TokenBalanceUseCase: GetERC20TokenBalanceUseCase by wcKoinApp.koin.inject()
+    private val prepareCallERC20TransferCallUseCase: PrepareCallERC20TransferCallUseCase by wcKoinApp.koin.inject()
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -387,5 +389,10 @@ object WalletKit {
     @Throws(Exception::class)
     fun getERC20Balance(chainId: String, tokenAddress: String, ownerAddress: String): String {
         return getERC20TokenBalanceUseCase(chainId, tokenAddress, ownerAddress)
+    }
+
+    @Throws(Exception::class)
+    fun prepareErc20TransferCall(contractAddress: String, to: String, amount: String): Wallet.Model.Call {
+        return prepareCallERC20TransferCallUseCase(contractAddress, to, amount)
     }
 }

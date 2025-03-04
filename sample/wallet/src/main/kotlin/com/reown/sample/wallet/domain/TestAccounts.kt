@@ -4,7 +4,7 @@ import com.reown.sample.common.Chains
 import com.reown.util.hexToBytes
 import io.ipfs.multibase.Base16
 
-val ACCOUNTS_1_EIP155_ADDRESS by lazy { EthAccountDelegate.account }
+val ACCOUNTS_1_EIP155_ADDRESS by lazy { EthAccountDelegate.address }
 const val ACCOUNTS_2_EIP155_ADDRESS = "0x15bca56b6e2728aec2532df9d436bd1600e86688"
 
 private val accounts: List<Pair<Chains, String>> by lazy {
