@@ -47,7 +47,6 @@ class TransactionViewModel : ViewModel() {
     @OptIn(ChainAbstractionExperimentalApi::class)
     fun sendTransaction(chain: Chain, token: StableCoin, amount: String, to: String, from: String) {
         val hexAmount = stringToTokenHex(amount)
-        println("kobe: chain: ${chain.id}, token: $token, amount: $hexAmount, to: $to, from: $from, contract: ${token.getAddressOn(chain)}")
         _uiState.value = UIState.Loading
         try {
             val transferCall = WalletKit.prepareErc20TransferCall(contractAddress = token.getAddressOn(chain), to = to, amount = hexAmount)
@@ -58,9 +57,6 @@ class TransactionViewModel : ViewModel() {
                 input = transferCall.input,
                 value = transferCall.value,
             )
-
-            println("kobe: init tx call: $initialTransaction")
-
             WalletKit.ChainAbstraction.prepare(
                 initialTransaction,
                 onSuccess = { result ->

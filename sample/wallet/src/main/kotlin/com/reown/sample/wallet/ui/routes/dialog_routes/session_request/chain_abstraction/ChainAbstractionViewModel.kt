@@ -43,7 +43,6 @@ class ChainAbstractionViewModel : ViewModel() {
 
         val tokenAddress = prepareAvailable?.initialTransactionMetadata?.tokenContract ?: ""
         return try {
-            println("kobe: init tx ${initialTransaction?.chainId}")
             WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, EthAccountDelegate.address ?: "")
         } catch (e: Exception) {
             println("getERC20Balance error: $e")

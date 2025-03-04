@@ -84,8 +84,6 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
         if (sessionRequest.request.method == "eth_sendTransaction") {
             try {
                 val initTx = getInitialTransaction(sessionRequest)
-                println("kobe: init tx: $initTx")
-                println("kobe: session request: $sessionRequest")
                 WalletKit.ChainAbstraction.prepare(
                     initTx,
                     onSuccess = { result ->
