@@ -20,6 +20,7 @@ object Modal {
         data class Init(
             val core: CoreInterface,
             val excludedWalletIds: List<String> = listOf(),
+            val includeWalletIds: List<String> = listOf(),
             val recommendedWalletsIds: List<String> = listOf(),
             val coinbaseEnabled: Boolean = true,
             val enableAnalytics: Boolean? = null

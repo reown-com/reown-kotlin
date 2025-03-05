@@ -9,7 +9,7 @@ interface GetWalletsUseCaseInterface {
         page: Int,
         search: String? = null,
         excludeIds: List<String>? = null,
-        includes: List<String>? = null
+        includeIds: List<String>? = null
     ): WalletListing
 }
 
@@ -21,6 +21,6 @@ internal class GetWalletsUseCase(
         page: Int,
         search: String?,
         excludeIds: List<String>?,
-        includes: List<String>?
-    ): WalletListing = appKitApiRepository.getWallets(sdkType, page, search, excludeIds, includes).getOrThrow()
+        includeIds: List<String>?
+    ): WalletListing = appKitApiRepository.getWallets(sdkType, page, search, excludeIds, includeIds).getOrThrow()
 }
