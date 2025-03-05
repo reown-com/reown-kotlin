@@ -74,9 +74,14 @@ private fun WalletsList(
     }
 }
 
-private fun walletSizeLabel(total: Int): String = with(total % 10) {
-    if (this != 0) {
-        "${total - this}+"
+private fun walletSizeLabel(total: Int): String {
+    if (total < 10) {
+        return total.toString()
+    }
+
+    val remainder = total % 10
+    return if (remainder != 0) {
+        "${total - remainder}+"
     } else {
         total.toString()
     }
