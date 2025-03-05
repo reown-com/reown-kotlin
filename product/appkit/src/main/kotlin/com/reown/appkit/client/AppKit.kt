@@ -6,20 +6,19 @@ import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pulse.model.EventType
 import com.reown.android.pulse.model.properties.Props
-import com.reown.sign.client.Sign
-import com.reown.sign.client.SignClient
-import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
-import com.reown.util.Empty
 import com.reown.appkit.client.models.Account
-import com.reown.appkit.client.models.Session
 import com.reown.appkit.client.models.AppKitClientAlreadyInitializedException
+import com.reown.appkit.client.models.Session
 import com.reown.appkit.client.models.request.Request
 import com.reown.appkit.client.models.request.SentRequestResult
 import com.reown.appkit.di.appKitModule
 import com.reown.appkit.domain.delegate.AppKitDelegate
 import com.reown.appkit.domain.model.Session.WalletConnect
-import com.reown.appkit.domain.model.toModalError
 import com.reown.appkit.engine.AppKitEngine
+import com.reown.sign.client.Sign
+import com.reown.sign.client.SignClient
+import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
+import com.reown.util.Empty
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.jetbrains.annotations.ApiStatus.Experimental
@@ -293,5 +292,22 @@ object AppKit {
     fun getConnectorType(): Modal.ConnectorType? {
         checkEngineInitialization()
         return appKitEngine.getConnectorType()
+    }
+
+    /**
+     * Extends the expiry time of the current session.
+     * 
+     * @param onSuccess Callback for successful session extension
+     * @param onError Callback for errors during session extension
+     */
+    fun extend(
+        onSuccess: () -> Unit = {},
+        onError: (Modal.Model.Error) -> Unit
+    ) {
+        checkEngineInitialization()
+        appKitEngine.extend(
+            onSuccess = onSuccess,
+            onError = { onError(Modal.Model.Error(it)) }
+        )
     }
 }
