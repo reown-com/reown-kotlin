@@ -56,6 +56,7 @@ internal class AppKitEngine(
 ) : SendEventInterface by sendEventUseCase,
     EnableAnalyticsUseCaseInterface by enableAnalyticsUseCase {
     internal var excludedWalletsIds: MutableList<String> = mutableListOf()
+    internal var includeWalletsIds: MutableList<String> = mutableListOf()
     internal var recommendedWalletsIds: MutableList<String> = mutableListOf()
     internal var siweRequestIdWithMessage: Pair<Long, String>? = null
     private lateinit var coinbaseClient: CoinbaseClient
@@ -66,6 +67,7 @@ internal class AppKitEngine(
         onError: (Modal.Model.Error) -> Unit
     ) {
         excludedWalletsIds.addAll(init.excludedWalletIds)
+        includeWalletsIds.addAll(init.includeWalletIds)
         recommendedWalletsIds.addAll(init.recommendedWalletsIds)
         setupCoinbase(init, onError)
     }
