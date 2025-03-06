@@ -56,6 +56,7 @@ internal class ApproveSessionUseCase(
         proposerPublicKey: String,
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
         sessionProperties: Map<String, String>?,
+        scopedProperties: Map<String, String>?,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit
     ) = supervisorScope {
@@ -182,6 +183,7 @@ internal interface ApproveSessionUseCaseInterface {
         proposerPublicKey: String,
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
         sessionProperties: Map<String, String>? = null,
+        scopedProperties: Map<String, String>? = null,
         onSuccess: () -> Unit = {},
         onFailure: (Throwable) -> Unit = {},
     )

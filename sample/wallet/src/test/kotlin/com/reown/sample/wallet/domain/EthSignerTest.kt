@@ -13,6 +13,7 @@ class EthSignerTest {
 
         assert(signature == "0xf7d4d35037d8cf5c757f0761fe84e312ba40a9493e868b5d3066b84a8dfc1bbb13dafc39e0dd6ef6a44cf17007580ef3ec8051097bfdab3996070971ae5cb13a1b")
     }
+
     @Test
     fun testSignHash2() {
         val signature =  EthSigner.signHash(

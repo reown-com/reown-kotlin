@@ -118,14 +118,17 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
         checkEngineInitialization()
         scope.launch {
             try {
-                signEngine.proposeSession(
-                    connect.namespaces?.toMapOfEngineNamespacesRequired(),
-                    connect.optionalNamespaces?.toMapOfEngineNamespacesOptional(),
-                    connect.properties,
-                    connect.pairing.toPairing(),
-                    onSuccess = { onSuccess(connect.pairing.uri) },
-                    onFailure = { error -> onError(Sign.Model.Error(error)) }
-                )
+                with(connect) {
+                    signEngine.proposeSession(
+                        namespaces?.toMapOfEngineNamespacesRequired(),
+                        optionalNamespaces?.toMapOfEngineNamespacesOptional(),
+                        properties,
+                        scopedProperties,
+                        pairing.toPairing(),
+                        onSuccess = { onSuccess(pairing.uri) },
+                        onFailure = { error -> onError(Sign.Model.Error(error)) }
+                    )
+                }
             } catch (error: Exception) {
                 onError(Sign.Model.Error(error))
             }

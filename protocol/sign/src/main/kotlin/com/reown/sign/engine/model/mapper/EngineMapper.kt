@@ -79,7 +79,8 @@ internal fun SignParams.SessionProposeParams.toVO(topic: Topic, requestId: Long)
         proposerPublicKey = proposer.publicKey,
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
-        expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp) else null
+        expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp) else null,
+        scopedProperties = scopedProperties
     )
 
 @JvmSynthetic
@@ -91,7 +92,7 @@ internal fun ProposalVO.toSessionProposeRequest(): WCRequest =
         params = SignParams.SessionProposeParams(
             relays = listOf(RelayProtocolOptions(protocol = relayProtocol, data = relayData)),
             proposer = SessionProposer(proposerPublicKey, AppMetaData(name = name, description = description, url = url, icons = icons)),
-            requiredNamespaces = requiredNamespaces, optionalNamespaces = optionalNamespaces, properties = properties, expiryTimestamp = expiry?.seconds
+            requiredNamespaces = requiredNamespaces, optionalNamespaces = optionalNamespaces, properties = properties, expiryTimestamp = expiry?.seconds, scopedProperties = scopedProperties
         ),
         transportType = TransportType.RELAY
     )
@@ -166,7 +167,8 @@ internal fun ProposalVO.toSessionSettleParams(
         controller = selfParticipant,
         namespaces = namespaces.toMapOfNamespacesVOSession(),
         expiry = sessionExpiry,
-        properties = properties
+        properties = properties,
+        scopedProperties = scopedProperties
     )
 
 @JvmSynthetic
@@ -175,6 +177,7 @@ internal fun toSessionProposeParams(
     requiredNamespaces: Map<String, EngineDO.Namespace.Proposal>,
     optionalNamespaces: Map<String, EngineDO.Namespace.Proposal>,
     properties: Map<String, String>?,
+    scopedProperties: Map<String, String>?,
     selfPublicKey: PublicKey,
     appMetaData: AppMetaData,
     expiry: Expiry
@@ -184,6 +187,7 @@ internal fun toSessionProposeParams(
     requiredNamespaces = requiredNamespaces.toNamespacesVORequired(),
     optionalNamespaces = optionalNamespaces.toNamespacesVOOptional(),
     properties = properties,
+    scopedProperties = scopedProperties,
     expiryTimestamp = expiry.seconds
 )
 
