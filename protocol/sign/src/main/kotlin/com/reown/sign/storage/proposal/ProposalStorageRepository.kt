@@ -36,9 +36,9 @@ class ProposalStorageRepository(
             relayData,
             proposerPublicKey,
             properties,
-            scopedProperties,
             redirect,
-            expiry?.seconds
+            expiry?.seconds,
+            scopedProperties,
         )
 
         insertRequiredNamespace(requiredNamespaces, requestId)
@@ -85,9 +85,9 @@ class ProposalStorageRepository(
         relay_data: String?,
         proposer_key: String,
         properties: Map<String, String>?,
-        scoped_properties: Map<String, String>?,
         redirect: String,
-        expiry: Long?
+        expiry: Long?,
+        scoped_properties: Map<String, String>?
     ): ProposalVO {
         val requiredNamespaces: Map<String, Namespace.Proposal> = getRequiredNamespaces(request_id)
         val optionalNamespaces: Map<String, Namespace.Proposal> = getOptionalNamespaces(request_id)
