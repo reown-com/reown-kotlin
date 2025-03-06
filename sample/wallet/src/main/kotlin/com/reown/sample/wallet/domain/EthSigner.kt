@@ -21,9 +21,13 @@ object EthSigner {
 
         val ecKeyPair = ECKeyPair.create(privateKey.hexToBytes())
         val signatureData = Sign.signMessage(dataToSign, ecKeyPair, false)
+
         val rHex = signatureData.r.bytesToHex()
         val sHex = signatureData.s.bytesToHex()
         val vByte = signatureData.v[0]
+
+        println("kobe: rHex: $rHex, sHex: $sHex, vByte: $vByte")
+
         val v = (vByte.toInt() and 0xFF)
         val vHex = v.toString(16)
         val result = "0x$rHex$sHex$vHex"

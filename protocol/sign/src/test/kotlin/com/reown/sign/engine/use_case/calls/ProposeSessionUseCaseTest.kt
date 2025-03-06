@@ -40,6 +40,7 @@ class ProposeSessionUseCaseTest {
             requiredNamespaces = mapOf("required" to EngineDO.Namespace.Proposal(listOf("required"), listOf("required"), listOf("required"))),
             optionalNamespaces = mapOf("optional" to EngineDO.Namespace.Proposal(listOf("optional"), listOf("optional"), listOf("optional"))),
             properties = mapOf("key" to "value"),
+            scopedProperties = null,
             pairing = com.reown.android.internal.common.model.Pairing(
                 topic = Topic("topic"),
                 relay = RelayProtocolOptions(),

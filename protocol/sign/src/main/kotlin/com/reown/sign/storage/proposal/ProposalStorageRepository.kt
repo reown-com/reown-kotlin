@@ -36,6 +36,7 @@ class ProposalStorageRepository(
             relayData,
             proposerPublicKey,
             properties,
+            scopedProperties,
             redirect,
             expiry?.seconds
         )
@@ -84,6 +85,7 @@ class ProposalStorageRepository(
         relay_data: String?,
         proposer_key: String,
         properties: Map<String, String>?,
+        scoped_properties: Map<String, String>?,
         redirect: String,
         expiry: Long?
     ): ProposalVO {
@@ -102,6 +104,7 @@ class ProposalStorageRepository(
             relayData = relay_data,
             proposerPublicKey = proposer_key,
             properties = properties,
+            scopedProperties = scoped_properties,
             requiredNamespaces = requiredNamespaces,
             optionalNamespaces = optionalNamespaces,
             expiry = if (expiry != null) Expiry(expiry) else null
