@@ -87,6 +87,14 @@ private fun walletSizeLabel(total: Int): String {
     }
 }
 
+/**
+ * Creates a capability JSON string similar to the provided example.
+ * Example: {"$smartAccountAddress":{"0xaa36a7":{"atomicBatch":{"supported":true}}}}
+ */
+private fun createCapabilityJson(address: String, chainId: String, feature: String, isSupported: Boolean): String {
+    return "{\"$address\":{\"$chainId\":{\"$feature\":{\"supported\":$isSupported}}}}"
+}
+
 @Composable
 private fun WalletListSelect(item: Wallet, onWalletItemClick: (Wallet) -> Unit) {
     val label: (@Composable (Boolean) -> Unit)? = when {
