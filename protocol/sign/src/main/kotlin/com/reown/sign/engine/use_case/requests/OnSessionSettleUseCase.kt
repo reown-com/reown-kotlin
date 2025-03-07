@@ -81,6 +81,7 @@ internal class OnSessionSettleUseCase(
                 requiredNamespaces,
                 optionalNamespaces,
                 properties,
+                proposal.scopedProperties,
                 proposal.pairingTopic.value
             )
 

@@ -318,6 +318,7 @@ object Sign {
             val namespaces: Map<String, Model.Namespace.Proposal>? = null,
             val optionalNamespaces: Map<String, Model.Namespace.Proposal>? = null,
             val properties: Map<String, String>? = null,
+            val scopedProperties: Map<String, String>? = null,
             val pairing: Core.Model.Pairing,
         ) : Params()
 
@@ -344,6 +345,7 @@ object Sign {
             val proposerPublicKey: String,
             val namespaces: Map<String, Model.Namespace.Session>,
             val properties: Map<String, String>? = null,
+            val scopedProperties: Map<String, String>? = null,
             val relayProtocol: String? = null,
         ) : Params()
 

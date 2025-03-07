@@ -30,6 +30,7 @@ internal data class SessionVO(
     val requiredNamespaces: Map<String, Namespace.Proposal>,
     val optionalNamespaces: Map<String, Namespace.Proposal>?,
     val properties: Map<String, String>? = null,
+    val scopedProperties: Map<String, String>? = null,
     val isAcknowledged: Boolean,
     val pairingTopic: String,
     val transportType: TransportType?
@@ -79,6 +80,7 @@ internal data class SessionVO(
             requiredNamespaces: Map<String, Namespace.Proposal>,
             optionalNamespaces: Map<String, Namespace.Proposal>?,
             properties: Map<String, String>?,
+            scopedProperties: Map<String, String>?,
             pairingTopic: String
         ): SessionVO {
             return SessionVO(

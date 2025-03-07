@@ -17,6 +17,7 @@ internal data class ProposalVO(
     val requiredNamespaces: Map<String, Namespace.Proposal>,
     val optionalNamespaces: Map<String, Namespace.Proposal>,
     val properties: Map<String, String>?,
+    val scopedProperties: Map<String, String>?,
     val proposerPublicKey: String,
     val relayProtocol: String,
     val relayData: String?,
