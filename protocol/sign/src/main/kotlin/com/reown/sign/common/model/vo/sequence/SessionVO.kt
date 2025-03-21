@@ -49,6 +49,7 @@ internal data class SessionVO(
             selfParticipant: SessionParticipant,
             sessionExpiry: Long,
             namespaces: Map<String, EngineDO.Namespace.Session>,
+            scopedProperties: Map<String, String>? = null,
             pairingTopic: String
         ): SessionVO {
             return SessionVO(
@@ -65,6 +66,7 @@ internal data class SessionVO(
                 requiredNamespaces = proposal.requiredNamespaces,
                 optionalNamespaces = proposal.optionalNamespaces,
                 properties = proposal.properties,
+                scopedProperties = scopedProperties,
                 isAcknowledged = false,
                 pairingTopic = pairingTopic,
                 transportType = TransportType.RELAY
@@ -97,6 +99,7 @@ internal data class SessionVO(
                 requiredNamespaces = requiredNamespaces,
                 optionalNamespaces = optionalNamespaces,
                 properties = properties,
+                scopedProperties = scopedProperties,
                 isAcknowledged = true,
                 pairingTopic = pairingTopic,
                 transportType = TransportType.RELAY
