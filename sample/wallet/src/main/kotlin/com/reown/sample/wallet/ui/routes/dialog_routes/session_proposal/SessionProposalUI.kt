@@ -94,7 +94,8 @@ val walletMetaData = WalletMetaData(
                 "wallet_switchEthereumChain",
                 "wallet_addEthereumChain",
                 "wallet_sendCalls",
-                "wallet_getCallsStatus"
+                "wallet_getCallsStatus",
+                "wallet_getAssets"
             ),
             events = listOf("chainChanged", "accountsChanged", "connect", "disconnect"),
             accounts = listOf(

@@ -22,23 +22,16 @@ class SessionProposalViewModel : ViewModel() {
                 Timber.d("Approving session proposal: $proposalPublicKey")
                 val (sessionNamespaces, sessionProperties) = getNamespacesAndProperties(proposal)
                 val scopedProperties = mapOf(
-                    "eip155" to mapOf(
-                        "walletService" to listOf(
-                            mapOf(
-                                "url" to "<wallet service URL>",
-                                "methods" to listOf("wallet_getAssets")
-                            )
-                        )
-                    )
+                    "eip155" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet\", \"methods\":[\"wallet_getAssets\"]}]}"
                 )
-                
+
                 val approveProposal = Wallet.Params.SessionApprove(
-                    proposerPublicKey = proposal.proposerPublicKey, 
-                    namespaces = sessionNamespaces, 
+                    proposerPublicKey = proposal.proposerPublicKey,
+                    namespaces = sessionNamespaces,
                     properties = sessionProperties,
                     scopedProperties = scopedProperties
                 )
-                
+
                 WalletKit.approveSession(approveProposal,
                     onError = { error ->
                         Firebase.crashlytics.recordException(error.throwable)

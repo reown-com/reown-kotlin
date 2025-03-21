@@ -160,7 +160,8 @@ internal fun ProposalVO.toSessionSettleParams(
     selfParticipant: SessionParticipant,
     sessionExpiry: Long,
     namespaces: Map<String, EngineDO.Namespace.Session>,
-    properties: Map<String, String>?
+    properties: Map<String, String>?,
+    scopedProperties: Map<String, String>?
 ): SignParams.SessionSettleParams =
     SignParams.SessionSettleParams(
         relay = RelayProtocolOptions(relayProtocol, relayData),
