@@ -48,6 +48,7 @@ object Sign {
             val proposerPublicKey: String,
             val relayProtocol: String,
             val relayData: String?,
+            val scopedProperties: Map<String, String>?,
         ) : Model()
 
         data class ExpiredProposal(val pairingTopic: String, val proposerPublicKey: String) : Model()
