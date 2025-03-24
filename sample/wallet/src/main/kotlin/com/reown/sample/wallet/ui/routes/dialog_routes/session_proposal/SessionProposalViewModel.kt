@@ -3,9 +3,8 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 import androidx.lifecycle.ViewModel
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
-import com.reown.sample.wallet.domain.EthAccountDelegate
-import com.reown.sample.wallet.domain.SmartAccountEnabler
+import com.reown.sample.wallet.BuildConfig
+import com.reown.android.BuildConfig as AndroidBuildConfig
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
@@ -22,7 +21,7 @@ class SessionProposalViewModel : ViewModel() {
                 Timber.d("Approving session proposal: $proposalPublicKey")
                 val (sessionNamespaces, sessionProperties) = getNamespacesAndProperties(proposal)
                 val scopedProperties = mapOf(
-                    "eip155" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet\", \"methods\":[\"wallet_getAssets\"]}]}"
+                    "eip155" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=${BuildConfig.PROJECT_ID}&st=wkca&sv=reown-kotlin-${AndroidBuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
                 )
 
                 val approveProposal = Wallet.Params.SessionApprove(
