@@ -16,14 +16,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,7 +51,9 @@ fun AccountRoute(navController: NavController) {
     val viewModel: AccountViewModel = viewModel()
     val state by viewModel.uiState.collectAsState()
     val awaitResponse by viewModel.awaitResponse.collectAsState(false)
-    val context = LocalContext.current
+    val showDialog = remember { mutableStateOf(false) }
+    val dialogMessage = remember { mutableStateOf("") }
+    val errorMessage = remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.fetchAccountDetails()
@@ -52,15 +61,18 @@ fun AccountRoute(navController: NavController) {
         viewModel.events.collect { event ->
             when (event) {
                 is DappSampleEvents.RequestSuccess -> {
-                    Toast.makeText(context, "Result: ${event.result}", Toast.LENGTH_LONG).show()
+                    dialogMessage.value = "Result: ${event.result}"
+                    showDialog.value = true
                 }
 
                 is DappSampleEvents.RequestPeerError -> {
-                    Toast.makeText(context, "Error: ${event.errorMsg}", Toast.LENGTH_LONG).show()
+                    errorMessage.value = "Error: ${event.errorMsg}"
+                    showDialog.value = true
                 }
 
                 is DappSampleEvents.RequestError -> {
-                    Toast.makeText(context, "Error: ${event.exceptionMsg}", Toast.LENGTH_LONG).show()
+                    errorMessage.value = "Error: ${event.exceptionMsg}"
+                    showDialog.value = true
                 }
 
                 is DappSampleEvents.Disconnect -> navController.navigate(Route.ChainSelection.path) {
@@ -74,12 +86,63 @@ fun AccountRoute(navController: NavController) {
         }
     }
 
+    if (showDialog.value) {
+        SimpleResultDialog(
+            message = dialogMessage.value,
+            error = errorMessage.value,
+            onClose = { showDialog.value = false }
+        )
+    }
+
     AccountScreen(
         state = state,
         onMethodClick = viewModel::requestMethod,
         awaitResponse = awaitResponse
     )
 }
+
+@Composable
+fun SimpleResultDialog(
+    message: String,
+    error: String,
+    onClose: () -> Unit
+) {
+    AlertDialog(
+        modifier = Modifier.semantics {
+            contentDescription = "result_dialog"
+        },
+        onDismissRequest = onClose,
+        text = {
+            if (message.isNotEmpty()) {
+                Text(
+                    text = message,
+                    modifier = Modifier.semantics {
+                        contentDescription = "result_message"
+                    }
+                )
+            }
+            if (error.isNotEmpty()) {
+                Text(
+                    text = error,
+                    modifier = Modifier.semantics {
+                        contentDescription = "result_error"
+                    }
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onClose,
+                modifier = Modifier.semantics {
+                    contentDescription = "close_button"
+                }
+            ) {
+                Text("Close")
+            }
+        }
+    )
+}
+
 
 @Composable
 private fun AccountScreen(

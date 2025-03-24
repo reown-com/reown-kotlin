@@ -1,0 +1,16 @@
+appId: com.reown.sample.dapp.internal
+name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
+---
+- clearState
+- launchApp:
+    permissions:
+      all: allow
+- startRecording: "Native Connection Confirmed"
+- tapOn: "NOT NOW"
+- tapOn: "Ethereum"
+- tapOn: "Connect via AppKit"
+- tapOn: "All wallets"
+- tapOn: "Android Sample Internal"
+- tapOn: "Confirm"
+- assertVisible: "Ethereum_main"
+- stopRecording
