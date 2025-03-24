@@ -50,17 +50,18 @@ private fun EngineDO.WalletConnectUri.getQuery(): String {
 internal fun SignParams.SessionProposeParams.toEngineDO(topic: Topic): EngineDO.SessionProposal =
     EngineDO.SessionProposal(
         pairingTopic = topic.value,
-        name = this.proposer.metadata.name,
-        description = this.proposer.metadata.description,
-        url = this.proposer.metadata.url,
-        icons = this.proposer.metadata.icons.mapNotNull { convertToURI(it) },
-        redirect = this.proposer.metadata.redirect?.native ?: String.Empty,
-        requiredNamespaces = this.requiredNamespaces.toMapOfEngineNamespacesRequired(),
-        optionalNamespaces = this.optionalNamespaces?.toMapOfEngineNamespacesOptional() ?: emptyMap(),
+        name = proposer.metadata.name,
+        description = proposer.metadata.description,
+        url = proposer.metadata.url,
+        icons = proposer.metadata.icons.mapNotNull { convertToURI(it) },
+        redirect = proposer.metadata.redirect?.native ?: String.Empty,
+        requiredNamespaces = requiredNamespaces.toMapOfEngineNamespacesRequired(),
+        optionalNamespaces = optionalNamespaces?.toMapOfEngineNamespacesOptional() ?: emptyMap(),
         properties = properties,
-        proposerPublicKey = this.proposer.publicKey,
+        proposerPublicKey = proposer.publicKey,
         relayProtocol = relays.first().protocol,
-        relayData = relays.first().data
+        relayData = relays.first().data,
+        scopedProperties = scopedProperties
     )
 
 @JvmSynthetic
@@ -206,7 +207,8 @@ internal fun ProposalVO.toEngineDO(): EngineDO.SessionProposal =
         requiredNamespaces = requiredNamespaces.toMapOfEngineNamespacesRequired(),
         optionalNamespaces = optionalNamespaces.toMapOfEngineNamespacesOptional(),
         proposerPublicKey = proposerPublicKey,
-        properties = properties
+        properties = properties,
+        scopedProperties = scopedProperties
     )
 
 @JvmSynthetic

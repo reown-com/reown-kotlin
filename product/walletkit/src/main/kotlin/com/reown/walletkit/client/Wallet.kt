@@ -216,6 +216,7 @@ object Wallet {
             val proposerPublicKey: String,
             val relayProtocol: String,
             val relayData: String?,
+            val scopedProperties: Map<String, String>?,
         ) : Model()
 
         data class SessionAuthenticate(
