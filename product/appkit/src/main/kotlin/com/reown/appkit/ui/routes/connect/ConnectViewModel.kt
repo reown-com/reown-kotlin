@@ -45,7 +45,7 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
     private val observeSelectedChainUseCase: ObserveSelectedChainUseCase = wcKoinApp.koin.get()
     private val appKitEngine: AppKitEngine = wcKoinApp.koin.get()
     private val sendEventUseCase: SendEventInterface = wcKoinApp.koin.get()
-    private var sessionParams = getSessionParamsSelectedChain(AppKit.selectedChain?.id)
+    private var sessionParams: Modal.Params.SessionParams = getSessionParamsSelectedChain()
     val selectedChain = observeSelectedChainUseCase().map { savedChainId ->
         AppKit.chains.find { it.id == savedChainId } ?: appKitEngine.getSelectedChainOrFirst()
     }
@@ -149,7 +149,7 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
 
     fun navigateToConnectWallet(chain: Modal.Model.Chain) {
         viewModelScope.launch { saveChainSelectionUseCase(chain.id) }
-        sessionParams = getSessionParamsSelectedChain(chain.id)
+        sessionParams = getSessionParamsSelectedChain()
         navigateTo(Route.CONNECT_YOUR_WALLET.path)
     }
 
@@ -223,17 +223,10 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
         }
     }
 
-    private fun getSessionParamsSelectedChain(chainId: String?) = with(AppKit.chains) {
-        val selectedChain = getSelectedChain(chainId)
+    private fun getSessionParamsSelectedChain() = with(AppKit.chains) {
         Modal.Params.SessionParams(
-            requiredNamespaces = mapOf(
-                selectedChain.chainNamespace to Modal.Model.Namespace.Proposal(
-                    chains = listOf(selectedChain.id),
-                    methods = selectedChain.requiredMethods,
-                    events = selectedChain.events
-                )
-            ),
-            optionalNamespaces = filter { it.id != selectedChain.id }.toOptionalNamespaces()
+            requiredNamespaces = mapOf(),
+            optionalNamespaces = toOptionalNamespaces()
         )
     }
 
