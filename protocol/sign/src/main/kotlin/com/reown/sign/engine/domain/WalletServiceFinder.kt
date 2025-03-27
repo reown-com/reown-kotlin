@@ -1,15 +1,11 @@
 package com.reown.sign.engine.domain
 
-import com.reown.android.internal.common.di.AndroidCommonDITags
-import com.reown.android.internal.common.wcKoinApp
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.engine.model.EngineDO
-import org.koin.core.qualifier.named
 import java.net.URL
 
-internal object WalletServiceFinder {
-    private val logger: Logger by lazy { wcKoinApp.koin.get(named(AndroidCommonDITags.LOGGER)) }
+internal class WalletServiceFinder(private val logger: Logger) {
 
     /**
      * Finds a matching wallet service URL for the given request based on scopedProperties
