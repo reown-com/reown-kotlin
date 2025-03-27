@@ -252,8 +252,8 @@ fun waitForArtifactsToBeAvailable() {
     val repoIds: List<String> = repoIdWithVersion.map { it.first }
     val client = HttpClients.createDefault()
     val artifactUrls = repoIdWithVersion.map { (repoId, version) ->
-        println("Checking: https://repo1.maven.org/maven2/com/walletconnect/$repoId/$version/")
-        "https://repo1.maven.org/maven2/com/walletconnect/$repoId/$version/"
+        println("Checking: https://repo1.maven.org/maven2/com/reown/$repoId/$version/")
+        "https://repo1.maven.org/maven2/com/reown/$repoId/$version/"
     }
     val maxRetries = 40
     var attempt = 0
