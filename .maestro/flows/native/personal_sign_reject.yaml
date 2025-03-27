@@ -1,0 +1,13 @@
+appId: com.reown.sample.dapp.internal
+name: Kotlin Dapp to Kotlin Wallet personal_sign Rejected
+---
+- launchApp:
+    permissions:
+      all: allow
+- startRecording: "Native personal_sign Rejected"
+- tapOn: "NOT NOW"
+- tapOn: "Ethereum_Main"
+- tapOn: "personal_sign"
+- tapOn: "Cancel"
+- assertVisible: result_error
+- stopRecording

@@ -3,6 +3,7 @@ rootProject.name = "Reown Kotlin"
 val excludedDirs = listOf(
     "undefined",
     ".idea",
+    ".maestro",
     ".git",
     "build",
     ".gradle",
