@@ -30,6 +30,7 @@ internal data class SessionVO(
     val requiredNamespaces: Map<String, Namespace.Proposal>,
     val optionalNamespaces: Map<String, Namespace.Proposal>?,
     val properties: Map<String, String>? = null,
+    val scopedProperties: Map<String, String>? = null,
     val isAcknowledged: Boolean,
     val pairingTopic: String,
     val transportType: TransportType?
@@ -48,6 +49,8 @@ internal data class SessionVO(
             selfParticipant: SessionParticipant,
             sessionExpiry: Long,
             namespaces: Map<String, EngineDO.Namespace.Session>,
+            scopedProperties: Map<String, String>? = null,
+            sessionProperties: Map<String, String>?,
             pairingTopic: String
         ): SessionVO {
             return SessionVO(
@@ -63,7 +66,8 @@ internal data class SessionVO(
                 sessionNamespaces = namespaces.toMapOfNamespacesVOSession(),
                 requiredNamespaces = proposal.requiredNamespaces,
                 optionalNamespaces = proposal.optionalNamespaces,
-                properties = proposal.properties,
+                properties = sessionProperties,
+                scopedProperties = scopedProperties,
                 isAcknowledged = false,
                 pairingTopic = pairingTopic,
                 transportType = TransportType.RELAY
@@ -78,7 +82,6 @@ internal data class SessionVO(
             selfMetadata: AppMetaData,
             requiredNamespaces: Map<String, Namespace.Proposal>,
             optionalNamespaces: Map<String, Namespace.Proposal>?,
-            properties: Map<String, String>?,
             pairingTopic: String
         ): SessionVO {
             return SessionVO(
@@ -94,7 +97,8 @@ internal data class SessionVO(
                 sessionNamespaces = settleParams.namespaces,
                 requiredNamespaces = requiredNamespaces,
                 optionalNamespaces = optionalNamespaces,
-                properties = properties,
+                properties = settleParams.properties,
+                scopedProperties = settleParams.scopedProperties,
                 isAcknowledged = true,
                 pairingTopic = pairingTopic,
                 transportType = TransportType.RELAY

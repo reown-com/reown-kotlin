@@ -48,6 +48,7 @@ internal class PairingControllerImpl : ParingController {
                 sessionParams.requiredNamespaces,
                 sessionParams.optionalNamespaces,
                 sessionParams.properties,
+                sessionParams.scopedProperties,
                 pairing
             )
             appKitEngine.connectWC(

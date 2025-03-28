@@ -48,13 +48,19 @@ fun baseStorageModule(storagePrefix: String = String.Empty, packageName: String)
                 if (databaseValue.isBlank()) {
                     mapOf()
                 } else {
-                    databaseValue.split(",").associate { entry ->
-                        val entries = entry.split("=")
-                        entries.first().trim() to entries.last().trim()
+                    // Find the index of the first equals sign
+                    val firstEqualsIndex = databaseValue.indexOf('=')
+                    if (firstEqualsIndex > 0) {
+                        val key = databaseValue.substring(0, firstEqualsIndex).trim()
+                        val value = databaseValue.substring(firstEqualsIndex + 1).trim()
+                        mapOf(key to value)
+                    } else {
+                        mapOf()
                     }
                 }
 
-            override fun encode(value: Map<String, String>): String = value.entries.joinToString()
+            override fun encode(value: Map<String, String>): String =
+                value.entries.joinToString { (key, value) -> "$key=$value" }
         }
     }
 

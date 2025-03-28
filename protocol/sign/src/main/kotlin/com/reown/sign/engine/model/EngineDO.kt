@@ -91,6 +91,7 @@ internal sealed class EngineDO {
         val proposerPublicKey: String,
         val relayProtocol: String,
         val relayData: String?,
+        val scopedProperties: Map<String, String>?,
     ) : EngineDO(), EngineEvent
 
     data class ExpiredProposal(val pairingTopic: String, val proposerPublicKey: String) : EngineDO(), EngineEvent

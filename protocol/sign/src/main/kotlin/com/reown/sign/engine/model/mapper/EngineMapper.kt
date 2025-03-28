@@ -50,17 +50,18 @@ private fun EngineDO.WalletConnectUri.getQuery(): String {
 internal fun SignParams.SessionProposeParams.toEngineDO(topic: Topic): EngineDO.SessionProposal =
     EngineDO.SessionProposal(
         pairingTopic = topic.value,
-        name = this.proposer.metadata.name,
-        description = this.proposer.metadata.description,
-        url = this.proposer.metadata.url,
-        icons = this.proposer.metadata.icons.mapNotNull { convertToURI(it) },
-        redirect = this.proposer.metadata.redirect?.native ?: String.Empty,
-        requiredNamespaces = this.requiredNamespaces.toMapOfEngineNamespacesRequired(),
-        optionalNamespaces = this.optionalNamespaces?.toMapOfEngineNamespacesOptional() ?: emptyMap(),
+        name = proposer.metadata.name,
+        description = proposer.metadata.description,
+        url = proposer.metadata.url,
+        icons = proposer.metadata.icons.mapNotNull { convertToURI(it) },
+        redirect = proposer.metadata.redirect?.native ?: String.Empty,
+        requiredNamespaces = requiredNamespaces.toMapOfEngineNamespacesRequired(),
+        optionalNamespaces = optionalNamespaces?.toMapOfEngineNamespacesOptional() ?: emptyMap(),
         properties = properties,
-        proposerPublicKey = this.proposer.publicKey,
+        proposerPublicKey = proposer.publicKey,
         relayProtocol = relays.first().protocol,
-        relayData = relays.first().data
+        relayData = relays.first().data,
+        scopedProperties = scopedProperties
     )
 
 @JvmSynthetic
@@ -79,7 +80,8 @@ internal fun SignParams.SessionProposeParams.toVO(topic: Topic, requestId: Long)
         proposerPublicKey = proposer.publicKey,
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
-        expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp) else null
+        expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp) else null,
+        scopedProperties = scopedProperties
     )
 
 @JvmSynthetic
@@ -91,7 +93,7 @@ internal fun ProposalVO.toSessionProposeRequest(): WCRequest =
         params = SignParams.SessionProposeParams(
             relays = listOf(RelayProtocolOptions(protocol = relayProtocol, data = relayData)),
             proposer = SessionProposer(proposerPublicKey, AppMetaData(name = name, description = description, url = url, icons = icons)),
-            requiredNamespaces = requiredNamespaces, optionalNamespaces = optionalNamespaces, properties = properties, expiryTimestamp = expiry?.seconds
+            requiredNamespaces = requiredNamespaces, optionalNamespaces = optionalNamespaces, properties = properties, expiryTimestamp = expiry?.seconds, scopedProperties = scopedProperties
         ),
         transportType = TransportType.RELAY
     )
@@ -159,14 +161,16 @@ internal fun ProposalVO.toSessionSettleParams(
     selfParticipant: SessionParticipant,
     sessionExpiry: Long,
     namespaces: Map<String, EngineDO.Namespace.Session>,
-    properties: Map<String, String>?
+    sessionProperties: Map<String, String>?,
+    scopedProperties: Map<String, String>?
 ): SignParams.SessionSettleParams =
     SignParams.SessionSettleParams(
         relay = RelayProtocolOptions(relayProtocol, relayData),
         controller = selfParticipant,
         namespaces = namespaces.toMapOfNamespacesVOSession(),
         expiry = sessionExpiry,
-        properties = properties
+        properties = sessionProperties,
+        scopedProperties = scopedProperties
     )
 
 @JvmSynthetic
@@ -175,6 +179,7 @@ internal fun toSessionProposeParams(
     requiredNamespaces: Map<String, EngineDO.Namespace.Proposal>,
     optionalNamespaces: Map<String, EngineDO.Namespace.Proposal>,
     properties: Map<String, String>?,
+    scopedProperties: Map<String, String>?,
     selfPublicKey: PublicKey,
     appMetaData: AppMetaData,
     expiry: Expiry
@@ -184,6 +189,7 @@ internal fun toSessionProposeParams(
     requiredNamespaces = requiredNamespaces.toNamespacesVORequired(),
     optionalNamespaces = optionalNamespaces.toNamespacesVOOptional(),
     properties = properties,
+    scopedProperties = scopedProperties,
     expiryTimestamp = expiry.seconds
 )
 
@@ -201,7 +207,8 @@ internal fun ProposalVO.toEngineDO(): EngineDO.SessionProposal =
         requiredNamespaces = requiredNamespaces.toMapOfEngineNamespacesRequired(),
         optionalNamespaces = optionalNamespaces.toMapOfEngineNamespacesOptional(),
         proposerPublicKey = proposerPublicKey,
-        properties = properties
+        properties = properties,
+        scopedProperties = scopedProperties
     )
 
 @JvmSynthetic

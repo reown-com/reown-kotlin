@@ -124,7 +124,8 @@ internal fun Sign.Model.SessionProposal.toWallet(): Wallet.Model.SessionProposal
         properties,
         proposerPublicKey,
         relayProtocol,
-        relayData
+        relayData,
+        scopedProperties
     )
 
 @JvmSynthetic
@@ -214,7 +215,8 @@ internal fun Wallet.Model.SessionProposal.toSign(): Sign.Model.SessionProposal =
         properties,
         proposerPublicKey,
         relayProtocol,
-        relayData
+        relayData,
+        scopedProperties
     )
 
 @JvmSynthetic

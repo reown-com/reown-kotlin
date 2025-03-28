@@ -5,6 +5,7 @@ package com.reown.sign.di
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.signing.cacao.CacaoVerifier
 import com.reown.sign.engine.domain.SignEngine
+import com.reown.sign.engine.domain.WalletServiceFinder
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCase
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCaseInterface
@@ -39,6 +40,8 @@ internal fun engineModule() = module {
     single { GetSessionAuthenticateRequest(jsonRpcHistory = get(), serializer = get()) }
 
     single { CacaoVerifier(projectId = get()) }
+
+    single { WalletServiceFinder(logger = get(named(AndroidCommonDITags.LOGGER))) }
 
     single {
         SignEngine(

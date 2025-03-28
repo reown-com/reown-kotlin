@@ -11,7 +11,7 @@ object EthUtils {
     )
 
 
-    val ethOptionalMethods = listOf(walletSwitchEthChain, walletAddEthChain)
+    val ethOptionalMethods = listOf(walletSwitchEthChain, walletAddEthChain, "wallet_getAssets") //todo: remove me
 
     val ethMethods = ethRequiredMethods + ethOptionalMethods
 

@@ -79,6 +79,7 @@ internal class SessionStorageRepository(
                 relay_data = relayData,
                 is_acknowledged = isAcknowledged,
                 properties = properties,
+                scoped_properties = scopedProperties,
                 transport_type = transportType
             )
         }
@@ -217,7 +218,8 @@ internal class SessionStorageRepository(
         is_acknowledged: Boolean,
         pairingTopic: String,
         properties: Map<String, String>?,
-        transportType: TransportType?
+        transportType: TransportType?,
+        scoped_properties: Map<String, String>?,
     ): SessionVO {
         val sessionNamespaces: Map<String, Namespace.Session> = getSessionNamespaces(id)
         val requiredNamespaces: Map<String, Namespace.Proposal> = getRequiredNamespaces(id)
@@ -238,6 +240,7 @@ internal class SessionStorageRepository(
             optionalNamespaces = optionalNamespaces,
             isAcknowledged = is_acknowledged,
             properties = properties,
+            scopedProperties = scoped_properties,
             pairingTopic = pairingTopic,
             transportType = transportType
         )

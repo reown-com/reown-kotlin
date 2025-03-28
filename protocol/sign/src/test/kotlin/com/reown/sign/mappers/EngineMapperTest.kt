@@ -42,6 +42,7 @@ class EngineMapperTest {
             optionalNamespaces = null,
             relays = listOf(RelayProtocolOptions()),
             properties = emptyMap(),
+            scopedProperties = null,
             proposer = SessionProposer("", AppMetaData("", "", listOf(svgIcon), "")), expiryTimestamp = 123456789
         )
 

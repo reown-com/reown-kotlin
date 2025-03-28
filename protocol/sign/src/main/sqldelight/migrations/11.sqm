@@ -1,0 +1,8 @@
+import kotlin.String;
+import kotlin.collections.Map;
+
+-- migrates 11db to 12db
+
+-- CREATE V12 SCHEMA
+ALTER TABLE SessionDao ADD COLUMN scoped_properties TEXT AS Map<String, String>;
+ALTER TABLE ProposalDao ADD COLUMN scoped_properties TEXT AS Map<String, String>;

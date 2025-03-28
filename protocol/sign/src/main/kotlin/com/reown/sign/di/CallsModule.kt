@@ -151,7 +151,8 @@ internal fun callsModule() = module {
             insertEventUseCase = get(),
             clientId = get(named(AndroidCommonDITags.CLIENT_ID)),
             logger = get(named(AndroidCommonDITags.LOGGER)),
-            tvf = get()
+            tvf = get(),
+            walletServiceFinder = get()
         )
     }
 

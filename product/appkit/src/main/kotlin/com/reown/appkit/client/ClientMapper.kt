@@ -85,7 +85,7 @@ internal fun Sign.Model.Ping.Success.toModal() = Modal.Model.Ping.Success(topic)
 internal fun Sign.Model.Ping.Error.toModal() = Modal.Model.Ping.Error(error)
 
 // toSign()
-internal fun Modal.Params.Connect.toSign() = Sign.Params.Connect(namespaces?.toSign(), optionalNamespaces?.toSign(), properties, pairing)
+internal fun Modal.Params.Connect.toSign() = Sign.Params.Connect(namespaces?.toSign(), optionalNamespaces?.toSign(), properties, scopedProperties, pairing)
 
 internal fun Modal.Params.Authenticate.toSign(): Sign.Params.Authenticate = with(this) {
     Sign.Params.Authenticate(
