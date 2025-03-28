@@ -80,8 +80,6 @@ internal class OnSessionSettleUseCase(
                 selfAppMetaData,
                 requiredNamespaces,
                 optionalNamespaces,
-                properties,
-                proposal.scopedProperties,
                 proposal.pairingTopic.value
             )
 

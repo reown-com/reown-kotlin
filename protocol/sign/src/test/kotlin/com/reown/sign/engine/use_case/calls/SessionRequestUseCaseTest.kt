@@ -16,6 +16,7 @@ import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.sequence.SessionVO
+import com.reown.sign.engine.domain.WalletServiceFinder
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
@@ -38,6 +39,7 @@ class SessionRequestUseCaseTest {
     private val logger = mockk<Logger>()
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface = mockk()
     private val tvf: TVF = mockk()
+    private val walletServiceFinder: WalletServiceFinder = mockk()
     private val metadataStorageRepository = mockk<MetadataStorageRepositoryInterface>()
     private val insertEventUseCase = mockk<InsertEventUseCase>()
     private val sessionRequestUseCase = SessionRequestUseCase(
@@ -48,7 +50,8 @@ class SessionRequestUseCaseTest {
         insertEventUseCase,
         "clientId",
         logger,
-        tvf
+        tvf,
+        walletServiceFinder
     )
 
     @Before

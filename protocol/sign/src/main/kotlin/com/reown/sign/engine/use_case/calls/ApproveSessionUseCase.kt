@@ -66,7 +66,8 @@ internal class ApproveSessionUseCase(
             val selfPublicKey = crypto.getSelfPublicFromKeyAgreement(sessionTopic)
             val selfParticipant = SessionParticipant(selfPublicKey.keyAsHex, selfAppMetaData)
             val sessionExpiry = ACTIVE_SESSION
-            val unacknowledgedSession = SessionVO.createUnacknowledgedSession(sessionTopic, proposal, selfParticipant, sessionExpiry, sessionNamespaces, scopedProperties, pairingTopic.value)
+            val unacknowledgedSession =
+                SessionVO.createUnacknowledgedSession(sessionTopic, proposal, selfParticipant, sessionExpiry, sessionNamespaces, scopedProperties, sessionProperties, pairingTopic.value)
             try {
                 sessionStorageRepository.insertSession(unacknowledgedSession, requestId)
                 metadataStorageRepository.insertOrAbortMetadata(sessionTopic, selfAppMetaData, AppMetaDataType.SELF)

@@ -18,7 +18,6 @@ internal class WalletServiceFinder(private val logger: Logger) {
 
         // Check for namespace match (e.g., "eip155" for any eip155 chain)
         val namespace = request.chainId.split(":").first()
-        println("kobe: namespace: $namespace")
         findWalletService(request.method, scopedProperties, namespace)?.let { return it }
 
         return null
@@ -28,6 +27,8 @@ internal class WalletServiceFinder(private val logger: Logger) {
      * Finds a wallet service that supports the given method in the specified scope
      */
     private fun findWalletService(method: String, scopedProperties: Map<String, String>, key: String): URL? {
+        println("kobe: method: $method; scopedProperties: $scopedProperties; key: $key")
+
         val scopeJSON = scopedProperties[key] ?: return null
         val scopeData = scopeJSON.toByteArray(Charsets.UTF_8)
 
