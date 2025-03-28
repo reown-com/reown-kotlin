@@ -1,15 +1,9 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
 import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
-import com.reown.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
-import com.reown.sample.wallet.domain.EthAccountDelegate
-import com.reown.sample.wallet.domain.recordError
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.WalletKit
 
 data class SessionProposalUI(
     val peerUI: PeerUI,

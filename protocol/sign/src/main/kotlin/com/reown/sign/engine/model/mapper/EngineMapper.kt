@@ -161,7 +161,7 @@ internal fun ProposalVO.toSessionSettleParams(
     selfParticipant: SessionParticipant,
     sessionExpiry: Long,
     namespaces: Map<String, EngineDO.Namespace.Session>,
-    properties: Map<String, String>?,
+    sessionProperties: Map<String, String>?,
     scopedProperties: Map<String, String>?
 ): SignParams.SessionSettleParams =
     SignParams.SessionSettleParams(
@@ -169,7 +169,7 @@ internal fun ProposalVO.toSessionSettleParams(
         controller = selfParticipant,
         namespaces = namespaces.toMapOfNamespacesVOSession(),
         expiry = sessionExpiry,
-        properties = properties,
+        properties = sessionProperties,
         scopedProperties = scopedProperties
     )
 
