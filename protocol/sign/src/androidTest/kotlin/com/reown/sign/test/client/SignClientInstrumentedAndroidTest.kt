@@ -14,6 +14,7 @@ import com.reown.sign.test.utils.dapp.dappClientSendRequest
 import com.reown.sign.test.utils.globalOnError
 import com.reown.sign.test.utils.sessionChains
 import com.reown.sign.test.utils.sessionEvents
+import com.reown.sign.test.utils.sessionMethods
 import com.reown.sign.test.utils.sessionNamespaceKey
 import com.reown.sign.test.utils.wallet.AutoApproveSessionWalletDelegate
 import com.reown.sign.test.utils.wallet.WalletDelegate
@@ -25,6 +26,8 @@ import com.reown.sign.test.utils.wallet.walletClientExtendSession
 import com.reown.sign.test.utils.wallet.walletClientRespondToRequest
 import com.reown.sign.test.utils.wallet.walletClientUpdateSession
 import junit.framework.TestCase.fail
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Rule
 import org.junit.Test
 import timber.log.Timber
@@ -322,6 +325,72 @@ class SignClientInstrumentedAndroidTest {
             }
         }
 
+        launch(walletDelegate, dappDelegate)
+    }
+
+    @Test
+    fun interceptWalletGetAssetsWithWalletService() {
+        Timber.d("interceptWalletGetAssetsWithWalletService: start")
+
+        val walletDelegate = AutoApproveSessionWalletDelegate()
+
+        val onSessionApprovedSuccess = { approvedSession: Sign.Model.ApprovedSession ->
+            DappSignClient.request(
+                Sign.Params.Request(
+                    approvedSession.topic, "wallet_getAssets", JSONObject()
+                        .put("account", "1243")
+                        .put("chainFilter", JSONArray().put("0xa"))
+                        .toString(), sessionChains.first()
+                ),
+                onSuccess = { _: Sign.Model.SentRequest -> Timber.d("Dapp: requestOnSuccess") },
+                onError = ::globalOnError
+            )
+        }
+
+        val dappDelegate = object : AutoApproveDappDelegate(onSessionApprovedSuccess) {
+            override fun onSessionRequestResponse(response: Sign.Model.SessionRequestResponse) {
+                when (response.result) {
+                    is Sign.Model.JsonRpcResponse.JsonRpcError -> fail("Expected result response not error")
+                    is Sign.Model.JsonRpcResponse.JsonRpcResult -> {
+                        assert(response.method == "wallet_getAssets")
+                        scenarioExtension.closeAsSuccess().also { Timber.d("receive session request response: finish") }
+                    }
+                }
+            }
+        }
+        launch(walletDelegate, dappDelegate)
+    }
+
+    @Test
+    fun interceptWalletGetAssetsWithWalletServiceThatReturnsAnError() {
+        Timber.d("interceptWalletGetAssetsWithWalletService: start")
+
+        val walletDelegate = AutoApproveSessionWalletDelegate()
+
+        val onSessionApprovedSuccess = { approvedSession: Sign.Model.ApprovedSession ->
+            DappSignClient.request(
+                Sign.Params.Request(
+                    approvedSession.topic, "wallet_getAssetsss", JSONObject()
+                        .put("account", "1243")
+                        .put("chainFilterrr", JSONArray().put("0xa"))
+                        .toString(), sessionChains.first()
+                ),
+                onSuccess = { _: Sign.Model.SentRequest -> Timber.d("Dapp: requestOnSuccess") },
+                onError = ::globalOnError
+            )
+        }
+
+        val dappDelegate = object : AutoApproveDappDelegate(onSessionApprovedSuccess) {
+            override fun onSessionRequestResponse(response: Sign.Model.SessionRequestResponse) {
+                when (response.result) {
+                    is Sign.Model.JsonRpcResponse.JsonRpcError -> {
+                        assert(response.method == "wallet_getAssets")
+                        scenarioExtension.closeAsSuccess().also { Timber.d("receive session request response error: finish") }
+                    }
+                    is Sign.Model.JsonRpcResponse.JsonRpcResult -> fail("Expected result response not error")
+                }
+            }
+        }
         launch(walletDelegate, dappDelegate)
     }
 
