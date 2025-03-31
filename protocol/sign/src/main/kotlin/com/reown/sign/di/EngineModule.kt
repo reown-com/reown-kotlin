@@ -5,7 +5,8 @@ package com.reown.sign.di
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.signing.cacao.CacaoVerifier
 import com.reown.sign.engine.domain.SignEngine
-import com.reown.sign.engine.domain.WalletServiceFinder
+import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
+import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCase
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCaseInterface
@@ -15,8 +16,10 @@ import com.reown.sign.json_rpc.domain.GetPendingSessionAuthenticateRequest
 import com.reown.sign.json_rpc.domain.GetPendingSessionRequests
 import com.reown.sign.json_rpc.domain.GetSessionAuthenticateRequest
 import com.reown.sign.json_rpc.domain.GetSessionRequestByIdUseCase
+import okhttp3.OkHttpClient
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import java.util.concurrent.TimeUnit
 
 @JvmSynthetic
 internal fun engineModule() = module {
@@ -42,6 +45,16 @@ internal fun engineModule() = module {
     single { CacaoVerifier(projectId = get()) }
 
     single { WalletServiceFinder(logger = get(named(AndroidCommonDITags.LOGGER))) }
+
+    single {
+        WalletServiceRequester(
+            okHttpClient = OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
+        )
+    }
 
     single {
         SignEngine(

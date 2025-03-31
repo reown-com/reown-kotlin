@@ -10,13 +10,13 @@ import com.reown.android.internal.common.model.Redirect
 import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.reown.android.internal.utils.CoreValidator
 import com.reown.android.pulse.domain.InsertEventUseCase
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.sequence.SessionVO
-import com.reown.sign.engine.domain.WalletServiceFinder
+import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
+import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
@@ -40,6 +40,7 @@ class SessionRequestUseCaseTest {
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface = mockk()
     private val tvf: TVF = mockk()
     private val walletServiceFinder: WalletServiceFinder = mockk()
+    private val walletServiceRequester: WalletServiceRequester = mockk()
     private val metadataStorageRepository = mockk<MetadataStorageRepositoryInterface>()
     private val insertEventUseCase = mockk<InsertEventUseCase>()
     private val sessionRequestUseCase = SessionRequestUseCase(
@@ -51,7 +52,8 @@ class SessionRequestUseCaseTest {
         "clientId",
         logger,
         tvf,
-        walletServiceFinder
+        walletServiceFinder,
+        walletServiceRequester
     )
 
     @Before

@@ -2,7 +2,7 @@ package com.reown.sign
 
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.sequence.SessionVO
-import com.reown.sign.engine.domain.WalletServiceFinder
+import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
 import com.reown.sign.engine.model.EngineDO
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -37,7 +37,7 @@ class WalletServiceFinderTest {
     fun `findMatchingWalletService returns URL when exact chain match found`() {
         // Given
         val scopedProperties = mapOf(
-            "eip155:1" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=$projectId&st=wkca&sv=reown-kotlin-$sdkVersion\", \"methods\":[\"wallet_getAssets\"]}]}"
+            "eip155:1" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=$projectId&st=wkca&sv=reown-kotlin-$sdkVersion\", \"methods\":[\"wallet_getAssets\", \"wallet_getBalance\"]}]}"
         )
 
         val mockRequest = mockk<EngineDO.Request>()

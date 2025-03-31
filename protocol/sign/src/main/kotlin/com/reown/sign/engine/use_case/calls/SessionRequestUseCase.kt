@@ -33,11 +33,13 @@ import com.reown.sign.common.model.vo.clientsync.session.SignRpc
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestVO
 import com.reown.sign.common.validator.SignValidator
-import com.reown.sign.engine.domain.WalletServiceFinder
+import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
+import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -57,10 +59,11 @@ internal class SessionRequestUseCase(
     private val clientId: String,
     private val logger: Logger,
     private val tvf: TVF,
-    private val walletServiceFinder: WalletServiceFinder
+    private val walletServiceFinder: WalletServiceFinder,
+    private val walletServiceRequester: WalletServiceRequester
 ) : SessionRequestUseCaseInterface {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
-    val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
+    override val requestEvents: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
     private val _errors: MutableSharedFlow<SDKError> = MutableSharedFlow()
     override val errors: SharedFlow<SDKError> = _errors.asSharedFlow()
@@ -99,18 +102,26 @@ internal class SessionRequestUseCase(
         println("kobe: scopedProperties: ${session.scopedProperties}")
         val walletServiceUrl = walletServiceFinder.findMatchingWalletService(request, session)
         println("kobe: walletServiceUrl: $walletServiceUrl")
-        //todo add unit and integration test
-//        if (walletServiceUrl != null) {
-//
-////            _events.emit(EngineDO.SessionPayloadResponse(wcResponse.topic.value, params.chainId, method, result))
-//        } else {
+
+        if (walletServiceUrl != null) {
+            try {
+                val response = async { walletServiceRequester.request(sessionPayload, walletServiceUrl.toString()) }.await()
+                println("kobe: Request Use Case: $response")
+                val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcResult(id = sessionPayload.id, result = response)
+                _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
+            } catch (e: Exception) {
+                println("kobe: Request Error: $e")
+                val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcError(id = sessionPayload.id, error = EngineDO.JsonRpcResponse.Error(0, e.message ?: ""))
+                _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
+            }
+        } else {
             if (session.transportType == TransportType.LINK_MODE && session.peerLinkMode == true) {
                 if (session.peerAppLink.isNullOrEmpty()) return@supervisorScope onFailure(IllegalStateException("App link is missing"))
                 triggerLinkModeRequest(sessionPayload, request, session.peerAppLink, onFailure)
             } else {
                 triggerRelayRequest(expiry, nowInSeconds, sessionPayload, request, onSuccess, onFailure)
             }
-//        }
+        }
     }
 
     private fun triggerRelayRequest(
@@ -197,5 +208,6 @@ internal class SessionRequestUseCase(
 
 internal interface SessionRequestUseCaseInterface {
     val errors: SharedFlow<SDKError>
+    val requestEvents: SharedFlow<EngineEvent>
     suspend fun sessionRequest(request: EngineDO.Request, onSuccess: (Long) -> Unit, onFailure: (Throwable) -> Unit)
 }

@@ -1,4 +1,4 @@
-package com.reown.sign.engine.domain
+package com.reown.sign.engine.domain.wallet_service
 
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.sequence.SessionVO
