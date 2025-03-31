@@ -1,26 +1,14 @@
 package com.reown.sign.engine.domain
 
-import com.reown.android.internal.common.di.AndroidCommonDITags
-import com.reown.android.internal.common.wcKoinApp
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.sequence.SessionVO
+import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
 import com.reown.sign.engine.model.EngineDO
-import io.mockk.MockKAnnotations
-import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Before
 import org.junit.Test
-import org.koin.core.KoinApplication
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.core.qualifier.named
-import org.koin.dsl.module
 import java.net.URL
 
 class WalletServiceFinderTest {

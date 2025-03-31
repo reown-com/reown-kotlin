@@ -17,6 +17,7 @@ import com.reown.appkit.client.AppKit
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.models.Session
 import com.reown.appkit.client.models.request.Request
+import com.reown.sample.common.getGetWalletAssetsParams
 import com.reown.sample.common.getSolanaSignAndSendParams
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,6 +92,7 @@ class AccountViewModel(
                 val (_, _, account) = currentState.selectedAccount.split(":")
                 val params: String = when {
                     method.equals("personal_sign", true) -> getPersonalSignBody(account)
+                    method.equals("wallet_getAssets", true) -> getGetWalletAssetsParams()
                     method.equals("eth_sign", true) -> getEthSignBody(account)
                     method.equals("eth_sendTransaction", true) -> getEthSendTransaction(account)
                     method.equals("eth_signTypedData", true) -> getEthSignTypedData(account)
@@ -104,7 +106,7 @@ class AccountViewModel(
 
                 AppKit.request(requestParams,
                     onSuccess = { _ ->
-                        (AppKit.getSession() as Session.WalletConnectSession).redirect?.toUri()?.let { deepLinkUri -> sendSessionRequestDeepLink(deepLinkUri) }
+                        println("kobe: AppKit request success: $method")
                     },
                     onError = {
                         viewModelScope.launch {
