@@ -110,6 +110,7 @@ internal class SessionRequestUseCase(
                 val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcResult(id = sessionPayload.id, result = response)
                 _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
             } catch (e: Exception) {
+                logger.error("Sending session request error: $e")
                 println("kobe: Request Error: $e")
                 val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcError(id = sessionPayload.id, error = EngineDO.JsonRpcResponse.Error(0, e.message ?: ""))
                 _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
