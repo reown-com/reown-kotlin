@@ -4,7 +4,6 @@ import com.reown.android.Core
 import com.reown.sign.BuildConfig
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
-import com.reown.sign.client.mapper.toRpcError
 import com.reown.sign.test.scenario.SignClientInstrumentedActivityScenario
 import com.reown.sign.test.utils.TestClient
 import com.reown.sign.test.utils.dapp.AutoApproveDappDelegate
@@ -15,7 +14,6 @@ import com.reown.sign.test.utils.dapp.dappClientSendRequest
 import com.reown.sign.test.utils.globalOnError
 import com.reown.sign.test.utils.sessionChains
 import com.reown.sign.test.utils.sessionEvents
-import com.reown.sign.test.utils.sessionMethods
 import com.reown.sign.test.utils.sessionNamespaceKey
 import com.reown.sign.test.utils.wallet.AutoApproveSessionWalletDelegate
 import com.reown.sign.test.utils.wallet.WalletDelegate
@@ -40,7 +38,7 @@ class SignClientInstrumentedAndroidTest {
 	private fun setDelegates(walletDelegate: SignClient.WalletDelegate, dappDelegate: SignClient.DappDelegate) {
 		WalletSignClient.setWalletDelegate(walletDelegate)
 		DappSignClient.setDappDelegate(dappDelegate)
-	}A
+	}
 
 	private fun launch(walletDelegate: SignClient.WalletDelegate, dappDelegate: SignClient.DappDelegate) {
 		setDelegates(walletDelegate, dappDelegate)

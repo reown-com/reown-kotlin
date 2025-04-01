@@ -27,8 +27,6 @@ internal class WalletServiceFinder(private val logger: Logger) {
      * Finds a wallet service that supports the given method in the specified scope
      */
     private fun findWalletService(method: String, scopedProperties: Map<String, String>, key: String): URL? {
-        println("kobe: method: $method; scopedProperties: $scopedProperties; key: $key")
-
         val scopeJSON = scopedProperties[key] ?: return null
         val scopeData = scopeJSON.toByteArray(Charsets.UTF_8)
 

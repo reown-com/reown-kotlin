@@ -98,20 +98,15 @@ internal class SessionRequestUseCase(
 
         val params = SignParams.SessionRequestParams(SessionRequestVO(request.method, request.params, expiry.seconds), request.chainId)
         val sessionPayload = SignRpc.SessionRequest(params = params)
-
-        println("kobe: scopedProperties: ${session.scopedProperties}")
         val walletServiceUrl = walletServiceFinder.findMatchingWalletService(request, session)
-        println("kobe: walletServiceUrl: $walletServiceUrl")
 
         if (walletServiceUrl != null) {
             try {
                 val response = async { walletServiceRequester.request(sessionPayload, walletServiceUrl.toString()) }.await()
-                println("kobe: Request Use Case: $response")
                 val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcResult(id = sessionPayload.id, result = response)
                 _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
             } catch (e: Exception) {
                 logger.error("Sending session request error: $e")
-                println("kobe: Request Error: $e")
                 val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcError(id = sessionPayload.id, error = EngineDO.JsonRpcResponse.Error(0, e.message ?: ""))
                 _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
             }

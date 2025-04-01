@@ -141,8 +141,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         val packageName: String = application.packageName
         val relayServerUrl = if (serverUrl.isNullOrEmpty()) "wss://relay.walletconnect.org?projectId=$projectId" else serverUrl
 
-        println("kobe: server: $relayServerUrl; $packageName")
-
         with(koinApp) {
             androidContext(application)
             modules(

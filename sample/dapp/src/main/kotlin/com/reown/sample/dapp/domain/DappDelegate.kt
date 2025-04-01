@@ -85,7 +85,6 @@ object DappDelegate : AppKit.ModalDelegate, CoreClient.CoreDelegate {
     }
 
     override fun onSessionRequestResponse(response: Modal.Model.SessionRequestResponse) {
-        println("kobe: onSessionRequestResponse: $response")
         scope.launch {
             _wcEventModels.emit(response)
         }

@@ -105,7 +105,7 @@ class AccountViewModel(
 
                 AppKit.request(requestParams,
                     onSuccess = { _ ->
-                        println("kobe: AppKit request success: $method")
+                        println("AppKit request success: $method")
                     },
                     onError = {
                         viewModelScope.launch {

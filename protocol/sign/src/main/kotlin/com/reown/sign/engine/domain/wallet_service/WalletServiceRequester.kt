@@ -17,8 +17,6 @@ internal class WalletServiceRequester(private val okHttpClient: OkHttpClient) {
             put("params", JSONObject(sessionRequest.rpcParams))
         }
 
-        println("kobe: Sending Request: $jsonRpcRequest to $walletServiceUri")
-
         val httpRequest = Request.Builder()
             .url(walletServiceUri)
             .post(jsonRpcRequest.toString().toRequestBody("application/json".toMediaType()))
@@ -40,8 +38,6 @@ internal class WalletServiceRequester(private val okHttpClient: OkHttpClient) {
             throw IllegalStateException("Failed to send request to wallet service: $errorMessage")
         } else {
             val responseBody = response.body?.string() ?: ""
-
-            println("kobe: Wallet Service Response: $responseBody")
             return responseBody
         }
     }
