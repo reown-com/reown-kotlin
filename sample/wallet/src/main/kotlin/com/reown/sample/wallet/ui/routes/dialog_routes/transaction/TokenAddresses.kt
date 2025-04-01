@@ -7,15 +7,17 @@ enum class Chain(val id: String) {
 }
 
 enum class StableCoin {
-    USDC,
-    USDT
+    USDC, //decimals 6
+    USDT, //decimals 6
+    USDS //decimals 6
 }
 
 object TokenAddresses {
     private val ADDRESSES = mapOf(
         Chain.BASE to mapOf(
             StableCoin.USDC to "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-            StableCoin.USDT to "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb"
+            StableCoin.USDT to "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+            StableCoin.USDS to "0x820c137fa70c8691f0e44dc420a5e53c168921dc"
         ),
         Chain.ARBITRUM to mapOf(
             StableCoin.USDC to "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
