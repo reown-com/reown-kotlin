@@ -57,6 +57,7 @@ class TransactionViewModel : ViewModel() {
                 input = transferCall.input,
                 value = transferCall.value,
             )
+            println("initial tx: $initialTransaction")
             WalletKit.ChainAbstraction.prepare(
                 initialTransaction,
                 onSuccess = { result ->
@@ -92,6 +93,7 @@ class TransactionViewModel : ViewModel() {
                 },
                 onError = { error ->
                     WCDelegate.prepareError = error
+                    println("Prepare success not required: ${getErrorMessage()}")
                     recordError(Throwable("Prepare error: ${getErrorMessage()}"))
                     _uiState.value = UIState.Error("Prepare error: $error")
                 }
@@ -122,7 +124,8 @@ class TransactionViewModel : ViewModel() {
                                     EthAccountDelegate.address
                                 )
                             }
-                            val formattedBalance = Transaction.hexToTokenAmount(balance, 6)?.toPlainString() ?: "0"
+
+                            val formattedBalance = Transaction.hexToTokenAmount(balance, token.decimals)?.toPlainString() ?: "0"
                             _balanceState.update { currentState ->
                                 currentState + (Pair(chain, token) to formattedBalance)
                             }

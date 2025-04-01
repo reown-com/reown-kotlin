@@ -6,10 +6,10 @@ enum class Chain(val id: String) {
     OPTIMISM("eip155:10")
 }
 
-enum class StableCoin {
-    USDC, //decimals 6
-    USDT, //decimals 6
-    USDS //decimals 6
+enum class StableCoin(val decimals: Int) {
+    USDC(6),
+    USDT(6),
+    USDS(18)
 }
 
 object TokenAddresses {
