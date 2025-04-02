@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.walletkit.utils.solanaGenerateKeypair
 import com.reown.walletkit.utils.solanaPublicKeyForKeypair
 import com.reown.walletkit.utils.solanaSignPrehash
@@ -53,6 +54,6 @@ object SolanaAccountDelegate {
         val privateKeyBase58 = Base58.encode(privateKeyBytes)
         val publicKeyBase58 = Base58.encode(publicKeyBytes)
 
-        return Triple(privateKeyBase58, publicKeyBase58, "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:$publicKeyBase58")
+        return Triple(privateKeyBase58, publicKeyBase58, "${Chain.SOLANA.id}:$publicKeyBase58")
     }
 }

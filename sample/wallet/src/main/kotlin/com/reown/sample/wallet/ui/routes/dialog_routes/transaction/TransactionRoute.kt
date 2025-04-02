@@ -44,6 +44,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
 import com.reown.sample.wallet.ui.routes.Route
 
@@ -100,7 +101,9 @@ fun TransactionRoute(navController: NavHostController, viewModel: TransactionVie
 @Composable
 fun AddressCard() {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray.copy(alpha = 0.3f))
     ) {
         Column(
@@ -113,7 +116,13 @@ fun AddressCard() {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = EthAccountDelegate.address,
+                text = "EVM: ${EthAccountDelegate.address}",
+                color = Color.White,
+                fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Solana: ${SolanaAccountDelegate.keys.second}",
                 color = Color.White,
                 fontSize = 14.sp
             )
@@ -126,7 +135,9 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
     val balanceState by viewModel.balanceState.collectAsState()
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray.copy(alpha = 0.3f))
     ) {
         Column(
@@ -143,7 +154,7 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "USD Coin",
+                    text = "USDC",
                     color = Color.Gray,
                     fontSize = 16.sp
                 )
@@ -158,7 +169,7 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Tether USD",
+                    text = "USDT",
                     color = Color.Gray,
                     fontSize = 16.sp
                 )
@@ -202,7 +213,9 @@ fun TransactionCard(
     var isRecipientDropdownExpanded by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray.copy(alpha = 0.3f))
     ) {
         Column(
@@ -355,7 +368,7 @@ fun TransactionCard(
                             .background(Color.DarkGray),
                         properties = PopupProperties(focusable = true)
                     ) {
-                        listOf(Chain.BASE, Chain.OPTIMISM, Chain.ARBITRUM).forEach { option ->
+                        listOf(Chain.BASE, Chain.OPTIMISM, Chain.ARBITRUM, Chain.SOLANA).forEach { option ->
                             DropdownMenuItem(
                                 text = {
                                     Text(
