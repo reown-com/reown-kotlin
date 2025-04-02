@@ -90,6 +90,17 @@ object Wallet {
             var chainId: String
         ) : Model()
 
+        data class SolanaTransaction(
+            val from: String,
+            val chainId: String,
+            val versionedTransaction: String
+        ) : Model()
+
+        sealed class Transactions : Model() {
+            data class Eip155(val transactions: List<Transaction>) : Transactions()
+            data class Solana(val transactions: List<SolanaTransaction>) : Transactions()
+        }
+
         data class InitialTransaction(
             var from: String,
             var to: String,
@@ -127,7 +138,6 @@ object Wallet {
             var transferTo: String
         ) : Model()
 
-
         data class EstimatedFees(
             val maxFeePerGas: String,
             val maxPriorityFeePerGas: String
@@ -137,7 +147,7 @@ object Wallet {
             data class Available(
                 val orchestratorId: String,
                 val checkIn: Long,
-                val transactions: List<Transaction>,
+                val transactions: List<Transactions>,
                 val initialTransaction: Transaction,
                 val initialTransactionMetadata: InitialTransactionMetadata,
                 val funding: List<FundingMetadata>,
@@ -165,14 +175,29 @@ object Wallet {
             var localFee: Amount
         ) : Model()
 
+        sealed class Route : Model() {
+            data class Eip155(val transactionDetails: List<TransactionDetails>) : Route()
+            data class Solana(val solanaTransactionDetails: List<SolanaTransactionDetails>) : Route()
+        }
+
+        sealed class RouteSig : Model() {
+            data class Eip155(val signatures: List<String>) : RouteSig()
+            data class Solana(val signatures: List<String>) : RouteSig()
+        }
+
         data class TransactionDetails(
             var feeEstimatedTransaction: FeeEstimatedTransaction,
             var transactionFee: TransactionFee,
             val transactionHashToSign: String
         ) : Model()
 
+        data class SolanaTransactionDetails(
+            var transaction: SolanaTransaction,
+            val transactionHashToSign: String
+        ) : Model()
+
         data class TransactionsDetails(
-            var details: List<TransactionDetails>,
+            var route: List<Route>,
             var initialDetails: TransactionDetails,
             var bridgeFees: List<TransactionFee>,
             var localBridgeTotal: Amount,

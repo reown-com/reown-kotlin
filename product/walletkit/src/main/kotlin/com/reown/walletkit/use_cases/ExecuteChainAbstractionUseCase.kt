@@ -8,10 +8,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import uniffi.uniffi_yttrium.ChainAbstractionClient
 import uniffi.yttrium.ExecuteDetails
+
 class ExecuteChainAbstractionUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
         prepareAvailable: Wallet.Model.PrepareSuccess.Available,
-        signedRouteTxs: List<String>,
+        signedRouteTxs: List<Wallet.Model.RouteSig>,
         initSignedTx: String,
         onSuccess: (Wallet.Model.ExecuteSuccess) -> Unit,
         onError: (Wallet.Model.Error) -> Unit
@@ -21,7 +22,7 @@ class ExecuteChainAbstractionUseCase(private val chainAbstractionClient: ChainAb
 
                 val result = async {
                     try {
-                        chainAbstractionClient.execute(prepareAvailable.toYttrium(), signedRouteTxs, initSignedTx)
+                        chainAbstractionClient.execute(prepareAvailable.toYttrium(), signedRouteTxs.map { it.toYttrium() }, initSignedTx)
                     } catch (e: Exception) {
                         return@async onError(Wallet.Model.Error(e))
                     }

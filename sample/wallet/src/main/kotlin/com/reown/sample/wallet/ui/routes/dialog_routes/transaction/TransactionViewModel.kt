@@ -59,6 +59,7 @@ class TransactionViewModel : ViewModel() {
             )
             WalletKit.ChainAbstraction.prepare(
                 initialTransaction,
+                listOf(), //TODO: add accounts
                 onSuccess = { result ->
                     when (result) {
                         is Wallet.Model.PrepareSuccess.Available -> {

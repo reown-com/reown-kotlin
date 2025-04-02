@@ -14,41 +14,15 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @OptIn(ChainAbstractionExperimentalApi::class)
-fun prepare(sessionRequest: Wallet.Model.SessionRequest, initialTransaction: Wallet.Model.InitialTransaction, verifyContext: Wallet.Model.VerifyContext) {
-    try {
-        WalletKit.ChainAbstraction.prepare(
-            initialTransaction,
-            onSuccess = { result ->
-                when (result) {
-                    is Wallet.Model.PrepareSuccess.Available -> {
-                        println("Prepare success available: $result")
-                        emitChainAbstractionRequest(sessionRequest, result, verifyContext)
-                    }
-
-                    is Wallet.Model.PrepareSuccess.NotRequired -> {
-                        println("Prepare success not required: $result")
-                        emitSessionRequest(sessionRequest, verifyContext)
-                    }
-                }
-            },
-            onError = { error ->
-                println("Prepare error: $error")
-                respondWithError(getErrorMessage(), sessionRequest)
-                emitChainAbstractionError(sessionRequest, error, verifyContext)
-            }
-        )
-    } catch (e: Exception) {
-        println("Prepare: Unknown error: $e")
-        respondWithError(e.message ?: "Prepare: Unknown error", sessionRequest)
-        emitChainAbstractionError(sessionRequest, Wallet.Model.PrepareError.Unknown(e.message ?: "Prepare: Unknown error"), verifyContext)
-    }
-}
-
-@OptIn(ChainAbstractionExperimentalApi::class)
-suspend fun execute(prepareAvailable: Wallet.Model.PrepareSuccess.Available, prepareTxs: List<String>, initialTx: String): Result<Wallet.Model.ExecuteSuccess> =
+suspend fun execute(
+    prepareAvailable: Wallet.Model.PrepareSuccess.Available,
+    signedTxs: List<Wallet.Model.RouteSig>,
+    initialTx: String
+): Result<Wallet.Model.ExecuteSuccess> =
     suspendCoroutine { continuation ->
         try {
-            WalletKit.ChainAbstraction.execute(prepareAvailable, prepareTxs, initialTx,
+            WalletKit.ChainAbstraction.execute(
+                prepareAvailable, signedTxs, initialTx,
                 onSuccess = { executeSuccess ->
                     continuation.resume(Result.success(executeSuccess))
                 },
@@ -75,7 +49,8 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
             )
         )
         try {
-            WalletKit.respondSessionRequest(result,
+            WalletKit.respondSessionRequest(
+                result,
                 onSuccess = {
                     println("Error sent success")
                     clearSessionRequest()
@@ -100,7 +75,11 @@ fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContex
     }
 }
 
-fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, fulfilment: Wallet.Model.PrepareSuccess.Available, verifyContext: Wallet.Model.VerifyContext) {
+fun emitChainAbstractionRequest(
+    sessionRequest: Wallet.Model.SessionRequest,
+    fulfilment: Wallet.Model.PrepareSuccess.Available,
+    verifyContext: Wallet.Model.VerifyContext
+) {
     if (WCDelegate.currentId != sessionRequest.request.id) {
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
         WCDelegate.prepareAvailable = fulfilment
@@ -111,7 +90,11 @@ fun emitChainAbstractionRequest(sessionRequest: Wallet.Model.SessionRequest, ful
     }
 }
 
-fun emitChainAbstractionError(sessionRequest: Wallet.Model.SessionRequest, prepareError: Wallet.Model.PrepareError, verifyContext: Wallet.Model.VerifyContext) {
+fun emitChainAbstractionError(
+    sessionRequest: Wallet.Model.SessionRequest,
+    prepareError: Wallet.Model.PrepareError,
+    verifyContext: Wallet.Model.VerifyContext
+) {
     if (WCDelegate.currentId != sessionRequest.request.id) {
         WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
         WCDelegate.prepareError = prepareError
