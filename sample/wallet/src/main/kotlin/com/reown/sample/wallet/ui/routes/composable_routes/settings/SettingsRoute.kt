@@ -109,6 +109,14 @@ private fun SettingsScreen(
         Divider()
         FeaturesSection()
         Divider()
+        Text(
+            modifier = Modifier
+                .clip(RoundedCornerShape(5.dp))
+                .clickable { onTransactionClick() }
+                .padding(vertical = 5.dp),
+            text = "Send Transaction",
+            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
+        Divider()
         LazyColumn {
             itemsIndexed(sections) { index, section ->
                 when (section) {
@@ -118,14 +126,6 @@ private fun SettingsScreen(
                 if (index != sections.lastIndex) Divider()
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            modifier = Modifier
-                .clip(RoundedCornerShape(5.dp))
-                .clickable { onTransactionClick() }
-                .padding(vertical = 5.dp),
-            text = "Send Transaction",
-            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
     }
 }
 

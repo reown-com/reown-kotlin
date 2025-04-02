@@ -7,12 +7,10 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.Core
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
-import com.reown.sample.wallet.domain.WCDelegate._walletEvents
 import com.reown.sample.wallet.domain.emitChainAbstractionRequest
 import com.reown.sample.wallet.domain.getErrorMessage
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.domain.model.Transaction
-import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.TokenAddresses.getAddressOn
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
@@ -143,7 +141,7 @@ class TransactionViewModel : ViewModel() {
         }
     }
 
-    fun stringToTokenHex(amount: String): String {
+    private fun stringToTokenHex(amount: String): String {
         return try {
             val withDecimals = amount.toBigDecimal().multiply(BigDecimal("1000000"))
             val hex = withDecimals.toBigInteger().toString(16)
