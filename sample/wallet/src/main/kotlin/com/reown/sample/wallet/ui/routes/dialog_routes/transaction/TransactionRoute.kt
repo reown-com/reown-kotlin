@@ -168,6 +168,21 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
                     fontSize = 16.sp
                 )
             }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "USDS",
+                    color = Color.Gray,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = "${balanceState[Pair(selectedChain, StableCoin.USDS)] ?: "-.--"} USDS",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+            }
         }
     }
 }
@@ -220,6 +235,12 @@ fun TransactionCard(
                     text = StableCoin.USDT.name,
                     selected = selectedCoin == StableCoin.USDT,
                     onClick = { onCoinSelected(StableCoin.USDT) },
+                    modifier = Modifier.weight(1f)
+                )
+                CoinSelectionButton(
+                    text = StableCoin.USDS.name,
+                    selected = selectedCoin == StableCoin.USDS,
+                    onClick = { onCoinSelected(StableCoin.USDS) },
                     modifier = Modifier.weight(1f)
                 )
             }
