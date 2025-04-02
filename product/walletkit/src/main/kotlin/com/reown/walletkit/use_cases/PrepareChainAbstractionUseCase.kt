@@ -2,6 +2,7 @@ package com.reown.walletkit.use_cases
 
 import com.reown.android.internal.common.scope
 import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit
 import com.reown.walletkit.client.toWallet
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -11,6 +12,7 @@ import uniffi.yttrium.Call
 import uniffi.yttrium.Currency
 import uniffi.yttrium.PrepareDetailedResponse
 import uniffi.yttrium.PrepareDetailedResponseSuccess
+import uniffi.yttrium.solanaGenerateKeypair
 
 class PrepareChainAbstractionUseCase(private val chainAbstractionClient: ChainAbstractionClient) {
     operator fun invoke(
@@ -24,6 +26,7 @@ class PrepareChainAbstractionUseCase(private val chainAbstractionClient: ChainAb
                 val result = async {
                     try {
                         val call = Call(to = initialTransaction.to, value = initialTransaction.value, input = initialTransaction.input)
+                        solanaGenerateKeypair()
                         chainAbstractionClient.prepareDetailed(initialTransaction.chainId, initialTransaction.from, call, accounts, Currency.USD)
                     } catch (e: Exception) {
                         return@async onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
