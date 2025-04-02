@@ -106,6 +106,7 @@ internal class RelayJsonRpcInteractor(
 
         try {
             val requestJson = serializer.serialize(payload) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
+
             if (jsonRpcHistory.setRequest(payload.id, topic, payload.method, requestJson, TransportType.RELAY)) {
                 val encryptedRequest = chaChaPolyCodec.encrypt(topic, requestJson, envelopeType, participants)
                 val encryptedRequestString = Base64.toBase64String(encryptedRequest)

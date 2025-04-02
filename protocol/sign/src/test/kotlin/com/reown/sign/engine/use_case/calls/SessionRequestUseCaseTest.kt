@@ -1,5 +1,6 @@
 package com.reown.sign.engine.use_case.calls
 
+import com.reown.android.BuildConfig
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
 import com.reown.android.internal.common.exception.InvalidExpiryException
 import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
@@ -10,12 +11,13 @@ import com.reown.android.internal.common.model.Redirect
 import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.reown.android.internal.utils.CoreValidator
 import com.reown.android.pulse.domain.InsertEventUseCase
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.sequence.SessionVO
+import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
+import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
@@ -27,10 +29,13 @@ import io.mockk.invoke
 import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.assertSame
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
+import java.net.URL
 
 class SessionRequestUseCaseTest {
     private val sessionStorageRepository = mockk<SessionStorageRepository>()
@@ -38,6 +43,8 @@ class SessionRequestUseCaseTest {
     private val logger = mockk<Logger>()
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface = mockk()
     private val tvf: TVF = mockk()
+    private val walletServiceFinder: WalletServiceFinder = mockk()
+    private val walletServiceRequester: WalletServiceRequester = mockk()
     private val metadataStorageRepository = mockk<MetadataStorageRepositoryInterface>()
     private val insertEventUseCase = mockk<InsertEventUseCase>()
     private val sessionRequestUseCase = SessionRequestUseCase(
@@ -48,7 +55,9 @@ class SessionRequestUseCaseTest {
         insertEventUseCase,
         "clientId",
         logger,
-        tvf
+        tvf,
+        walletServiceFinder,
+        walletServiceRequester
     )
 
     @Before
@@ -145,6 +154,7 @@ class SessionRequestUseCaseTest {
         coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
         coEvery { insertEventUseCase.invoke(any()) } just Runs
         coEvery { linkModeJsonRpcInteractor.triggerRequest(any(), any(), any()) } just Runs
+        coEvery { walletServiceFinder.findMatchingWalletService(any(), any()) } returns null
 
         val onSuccess: (Long) -> Unit = mockk(relaxed = true)
 
@@ -197,6 +207,8 @@ class SessionRequestUseCaseTest {
             lambda<() -> Unit>().invoke()
         }
         every { logger.log(any<String>()) } just Runs
+        coEvery { walletServiceFinder.findMatchingWalletService(any(), any()) } returns null
+
         val onSuccess: (Long) -> Unit = mockk(relaxed = true)
         val request = EngineDO.Request(
             topic = "topic",
@@ -249,10 +261,9 @@ class SessionRequestUseCaseTest {
             lastArg<(Throwable) -> Unit>().invoke(Exception("Session request failure"))
         }
         every { logger.log(any<String>()) } just Runs
-
+        coEvery { walletServiceFinder.findMatchingWalletService(any(), any()) } returns null
 
         val onFailure: (Throwable) -> Unit = mockk(relaxed = true)
-
         val request = EngineDO.Request(
             topic = "topic",
             method = "personal_sign",
@@ -265,5 +276,115 @@ class SessionRequestUseCaseTest {
 
         // Assert
         coVerify { onFailure(ofType(Exception::class)) }
+    }
+
+    @Test
+    fun `should intercept wallet_getAssets with wallet service`() = runTest {
+        val session = SessionVO(
+            topic = Topic("topic"),
+            expiry = Expiry(0),
+            relayProtocol = "relayProtocol",
+            relayData = "relayData",
+            controllerKey = PublicKey(""),
+            selfPublicKey = PublicKey(""),
+            sessionNamespaces = mapOf(
+                "eip155" to Namespace.Session(
+                    chains = listOf("eip155:1", "eip155:42161"),
+                    methods = listOf("eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_signTypedData", "wallet_getAssets"),
+                    events = listOf("chainChanged", "accountsChanged"),
+                    accounts = listOf("eip155:1:0x1234556")
+                )
+            ),
+            scopedProperties = mapOf(
+                "eip155" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=12345678&st=wkca&sv=reown-kotlin-1.0.0\", \"methods\":[\"wallet_getAssets\"]}]}"
+            ),
+            requiredNamespaces = emptyMap(),
+            optionalNamespaces = emptyMap(),
+            peerAppMetaData = AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = false, universal = "link")),
+            isAcknowledged = false,
+            pairingTopic = "pairingTopic",
+            transportType = TransportType.RELAY
+        )
+        // Arrange
+        coEvery { sessionStorageRepository.isSessionValid(any()) } returns true
+        coEvery { sessionStorageRepository.getSessionWithoutMetadataByTopic(any()) } returns session
+        coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
+        coEvery { insertEventUseCase.invoke(any()) } just Runs
+        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { logger.log(any<String>()) } just Runs
+        coEvery { walletServiceFinder.findMatchingWalletService(any(), any()) } returns URL("https://rpc.walletconnect.org/v1/wallet?projectId=12345678&st=wkca&sv=reown-kotlin-1.0.0")
+        coEvery { walletServiceRequester.request(any(), any()) } returns "result"
+
+        val onSuccess: (Long) -> Unit = mockk(relaxed = true)
+        val request = EngineDO.Request(
+            topic = "topic",
+            method = "wallet_getAssets",
+            params = JSONObject()
+                .put("account", "1243")
+                .put("chainFilter", JSONArray().put("0xa"))
+                .toString(),
+            chainId = "eip155:1",
+        )
+
+        // Act
+        sessionRequestUseCase.sessionRequest(request, onSuccess = onSuccess, onFailure = {})
+
+        // Assert
+        coVerify { walletServiceRequester.request(any(), any()) }
+    }
+
+    @Test
+    fun `should intercept wallet_getAssets with wallet service and handle error gracefully when wallet service request fails`() = runTest {
+        val session = SessionVO(
+            topic = Topic("topic"),
+            expiry = Expiry(0),
+            relayProtocol = "relayProtocol",
+            relayData = "relayData",
+            controllerKey = PublicKey(""),
+            selfPublicKey = PublicKey(""),
+            sessionNamespaces = mapOf(
+                "eip155" to Namespace.Session(
+                    chains = listOf("eip155:1", "eip155:42161"),
+                    methods = listOf("eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_signTypedData", "wallet_getAssets"),
+                    events = listOf("chainChanged", "accountsChanged"),
+                    accounts = listOf("eip155:1:0x1234556")
+                )
+            ),
+            scopedProperties = mapOf(
+                "eip155" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=12345678&st=wkca&sv=reown-kotlin-1.0.0\", \"methods\":[\"wallet_getAssets\"]}]}"
+            ),
+            requiredNamespaces = emptyMap(),
+            optionalNamespaces = emptyMap(),
+            peerAppMetaData = AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = false, universal = "link")),
+            isAcknowledged = false,
+            pairingTopic = "pairingTopic",
+            transportType = TransportType.RELAY
+        )
+        // Arrange
+        coEvery { sessionStorageRepository.isSessionValid(any()) } returns true
+        coEvery { sessionStorageRepository.getSessionWithoutMetadataByTopic(any()) } returns session
+        coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
+        coEvery { insertEventUseCase.invoke(any()) } just Runs
+        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { logger.error(any<String>()) } just Runs
+        coEvery { walletServiceFinder.findMatchingWalletService(any(), any()) } returns URL("https://rpc.walletconnect.org/v1/wallet?projectId=12345678&st=wkca&sv=reown-kotlin-1.0.0")
+        coEvery { walletServiceRequester.request(any(), any()) } throws Exception("Wallet service request failed")
+
+        val onSuccess: (Long) -> Unit = mockk(relaxed = true)
+        val request = EngineDO.Request(
+            topic = "topic",
+            method = "wallet_getAssets",
+            params = JSONObject()
+                .put("account", "1243")
+                .put("chainFilter", JSONArray().put("0xa"))
+                .toString(),
+            chainId = "eip155:1",
+        )
+
+        // Act
+        sessionRequestUseCase.sessionRequest(request, onSuccess = onSuccess, onFailure = {})
+
+        // Assert
+        coVerify { logger.error(any<String>()) }
     }
 }

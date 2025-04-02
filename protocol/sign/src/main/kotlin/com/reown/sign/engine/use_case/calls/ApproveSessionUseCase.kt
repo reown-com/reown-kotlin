@@ -56,6 +56,7 @@ internal class ApproveSessionUseCase(
         proposerPublicKey: String,
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
         sessionProperties: Map<String, String>?,
+        scopedProperties: Map<String, String>?,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit
     ) = supervisorScope {
@@ -65,13 +66,14 @@ internal class ApproveSessionUseCase(
             val selfPublicKey = crypto.getSelfPublicFromKeyAgreement(sessionTopic)
             val selfParticipant = SessionParticipant(selfPublicKey.keyAsHex, selfAppMetaData)
             val sessionExpiry = ACTIVE_SESSION
-            val unacknowledgedSession = SessionVO.createUnacknowledgedSession(sessionTopic, proposal, selfParticipant, sessionExpiry, sessionNamespaces, pairingTopic.value)
+            val unacknowledgedSession =
+                SessionVO.createUnacknowledgedSession(sessionTopic, proposal, selfParticipant, sessionExpiry, sessionNamespaces, scopedProperties, sessionProperties, pairingTopic.value)
             try {
                 sessionStorageRepository.insertSession(unacknowledgedSession, requestId)
                 metadataStorageRepository.insertOrAbortMetadata(sessionTopic, selfAppMetaData, AppMetaDataType.SELF)
                 metadataStorageRepository.insertOrAbortMetadata(sessionTopic, proposal.appMetaData, AppMetaDataType.PEER)
                 trace.add(Trace.Session.STORE_SESSION)
-                val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces, sessionProperties)
+                val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces, sessionProperties, scopedProperties)
                 val sessionSettle = SignRpc.SessionSettle(params = params)
                 val irnParams = IrnParams(Tags.SESSION_SETTLE, Ttl(fiveMinutesInSeconds), correlationId = sessionSettle.id)
                 trace.add(Trace.Session.PUBLISHING_SESSION_SETTLE).also { logger.log("Publishing session settle on topic: $sessionTopic") }
@@ -182,6 +184,7 @@ internal interface ApproveSessionUseCaseInterface {
         proposerPublicKey: String,
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
         sessionProperties: Map<String, String>? = null,
+        scopedProperties: Map<String, String>? = null,
         onSuccess: () -> Unit = {},
         onFailure: (Throwable) -> Unit = {},
     )

@@ -38,6 +38,7 @@ internal class ProposeSessionUseCase(
         requiredNamespaces: Map<String, EngineDO.Namespace.Proposal>?,
         optionalNamespaces: Map<String, EngineDO.Namespace.Proposal>?,
         properties: Map<String, String>?,
+        scopedProperties: Map<String, String>?,
         pairing: Pairing,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit,
@@ -53,7 +54,7 @@ internal class ProposeSessionUseCase(
                         listOf(relay),
                         requiredNamespaces ?: emptyMap(),
                         optionalNamespaces ?: emptyMap(),
-                        properties, selfPublicKey, selfAppMetaData, expiry
+                        properties, scopedProperties, selfPublicKey, selfAppMetaData, expiry
                     )
                 val request = SignRpc.SessionPropose(params = sessionProposal)
                 proposalStorageRepository.insertProposal(sessionProposal.toVO(pairing.topic, request.id))
@@ -112,6 +113,7 @@ internal interface ProposeSessionUseCaseInterface {
         requiredNamespaces: Map<String, EngineDO.Namespace.Proposal>?,
         optionalNamespaces: Map<String, EngineDO.Namespace.Proposal>?,
         properties: Map<String, String>?,
+        scopedProperties: Map<String, String>?,
         pairing: Pairing,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit,

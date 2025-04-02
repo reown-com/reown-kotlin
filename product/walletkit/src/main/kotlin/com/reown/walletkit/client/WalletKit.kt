@@ -164,7 +164,7 @@ object WalletKit {
         onSuccess: (Wallet.Params.SessionApprove) -> Unit = {},
         onError: (Wallet.Model.Error) -> Unit,
     ) {
-        val signParams = Sign.Params.Approve(params.proposerPublicKey, params.namespaces.toSign(), params.properties, params.relayProtocol)
+        val signParams = Sign.Params.Approve(params.proposerPublicKey, params.namespaces.toSign(), params.properties, params.scopedProperties, params.relayProtocol)
         SignClient.approveSession(signParams, { onSuccess(params) }, { error -> onError(Wallet.Model.Error(error.throwable)) })
     }
 

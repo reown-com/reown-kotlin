@@ -30,6 +30,7 @@ object Modal {
             val namespaces: Map<String, Model.Namespace.Proposal>? = null,
             val optionalNamespaces: Map<String, Model.Namespace.Proposal>? = null,
             val properties: Map<String, String>? = null,
+            val scopedProperties: Map<String, String>? = null,
             val pairing: Core.Model.Pairing,
         ) : Params()
 
@@ -70,7 +71,8 @@ object Modal {
         data class SessionParams(
             val requiredNamespaces: Map<String, Model.Namespace.Proposal>,
             val optionalNamespaces: Map<String, Model.Namespace.Proposal>? = null,
-            val properties: Map<String, String>? = null
+            val properties: Map<String, String>? = null,
+            val scopedProperties: Map<String, String>? = null
         )
     }
 

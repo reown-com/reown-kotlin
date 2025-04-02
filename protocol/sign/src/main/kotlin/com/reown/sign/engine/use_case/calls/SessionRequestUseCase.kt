@@ -11,6 +11,7 @@ import com.reown.android.internal.common.model.Namespace
 import com.reown.android.internal.common.model.SDKError
 import com.reown.android.internal.common.model.Tags
 import com.reown.android.internal.common.model.TransportType
+import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
@@ -32,10 +33,13 @@ import com.reown.sign.common.model.vo.clientsync.session.SignRpc
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestVO
 import com.reown.sign.common.validator.SignValidator
+import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
+import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -54,8 +58,13 @@ internal class SessionRequestUseCase(
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
     private val logger: Logger,
-    private val tvf: TVF
+    private val tvf: TVF,
+    private val walletServiceFinder: WalletServiceFinder,
+    private val walletServiceRequester: WalletServiceRequester
 ) : SessionRequestUseCaseInterface {
+    private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
+    override val requestEvents: SharedFlow<EngineEvent> = _events.asSharedFlow()
+
     private val _errors: MutableSharedFlow<SDKError> = MutableSharedFlow()
     override val errors: SharedFlow<SDKError> = _errors.asSharedFlow()
 
@@ -89,62 +98,95 @@ internal class SessionRequestUseCase(
 
         val params = SignParams.SessionRequestParams(SessionRequestVO(request.method, request.params, expiry.seconds), request.chainId)
         val sessionPayload = SignRpc.SessionRequest(params = params)
+        val walletServiceUrl = walletServiceFinder.findMatchingWalletService(request, session)
 
-        if (session.transportType == TransportType.LINK_MODE && session.peerLinkMode == true) {
-            if (session.peerAppLink.isNullOrEmpty()) return@supervisorScope onFailure(IllegalStateException("App link is missing"))
+        if (walletServiceUrl != null) {
             try {
-                linkModeJsonRpcInteractor.triggerRequest(sessionPayload, Topic(request.topic), session.peerAppLink)
-                insertEventUseCase(
-                    Props(
-                        EventType.SUCCESS,
-                        Tags.SESSION_REQUEST_LINK_MODE.id.toString(),
-                        Properties(correlationId = sessionPayload.id, clientId = clientId, direction = Direction.SENT.state)
-                    )
-                )
+                val response = async { walletServiceRequester.request(sessionPayload, walletServiceUrl.toString()) }.await()
+                val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcResult(id = sessionPayload.id, result = response)
+                _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
             } catch (e: Exception) {
-                onFailure(e)
+                logger.error("Sending session request error: $e")
+                val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcError(id = sessionPayload.id, error = EngineDO.JsonRpcResponse.Error(0, e.message ?: ""))
+                _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
             }
         } else {
-            val irnParamsTtl = expiry.run {
-                val defaultTtl = fiveMinutesInSeconds
-                val extractedTtl = seconds - nowInSeconds
-                val newTtl = extractedTtl.takeIf { extractedTtl >= defaultTtl } ?: defaultTtl
-
-                Ttl(newTtl)
+            if (session.transportType == TransportType.LINK_MODE && session.peerLinkMode == true) {
+                if (session.peerAppLink.isNullOrEmpty()) return@supervisorScope onFailure(IllegalStateException("App link is missing"))
+                triggerLinkModeRequest(sessionPayload, request, session.peerAppLink, onFailure)
+            } else {
+                triggerRelayRequest(expiry, nowInSeconds, sessionPayload, request, onSuccess, onFailure)
             }
+        }
+    }
 
-            val tvfData = tvf.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
-            val irnParams = IrnParams(
-                Tags.SESSION_REQUEST,
-                irnParamsTtl,
-                correlationId = sessionPayload.id,
-                rpcMethods = tvfData?.first,
-                contractAddresses = tvfData?.second,
-                chainId = tvfData?.third,
-                prompt = true
-            )
-            val requestTtlInSeconds = expiry.run { seconds - nowInSeconds }
+    private fun triggerRelayRequest(
+        expiry: Expiry,
+        nowInSeconds: Long,
+        sessionPayload: SignRpc.SessionRequest,
+        request: EngineDO.Request,
+        onSuccess: (Long) -> Unit,
+        onFailure: (Throwable) -> Unit
+    ) {
+        val irnParamsTtl = expiry.run {
+            val defaultTtl = fiveMinutesInSeconds
+            val extractedTtl = seconds - nowInSeconds
+            val newTtl = extractedTtl.takeIf { extractedTtl >= defaultTtl } ?: defaultTtl
 
-            logger.log("Sending session request on topic: ${request.topic}}")
-            jsonRpcInteractor.publishJsonRpcRequest(Topic(request.topic), irnParams, sessionPayload,
-                onSuccess = {
-                    logger.log("Session request sent successfully on topic: ${request.topic}")
-                    onSuccess(sessionPayload.id)
-                    scope.launch {
-                        try {
-                            withTimeout(TimeUnit.SECONDS.toMillis(requestTtlInSeconds)) {
-                                collectResponse(sessionPayload.id) { cancel() }
-                            }
-                        } catch (e: TimeoutCancellationException) {
-                            _errors.emit(SDKError(e))
+            Ttl(newTtl)
+        }
+
+        val tvfData = tvf.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
+        val irnParams = IrnParams(
+            Tags.SESSION_REQUEST,
+            irnParamsTtl,
+            correlationId = sessionPayload.id,
+            rpcMethods = tvfData?.first,
+            contractAddresses = tvfData?.second,
+            chainId = tvfData?.third,
+            prompt = true
+        )
+        val requestTtlInSeconds = expiry.run { seconds - nowInSeconds }
+
+        logger.log("Sending session request on topic: ${request.topic}}")
+        jsonRpcInteractor.publishJsonRpcRequest(Topic(request.topic), irnParams, sessionPayload,
+            onSuccess = {
+                logger.log("Session request sent successfully on topic: ${request.topic}")
+                onSuccess(sessionPayload.id)
+                scope.launch {
+                    try {
+                        withTimeout(TimeUnit.SECONDS.toMillis(requestTtlInSeconds)) {
+                            collectResponse(sessionPayload.id) { cancel() }
                         }
+                    } catch (e: TimeoutCancellationException) {
+                        _errors.emit(SDKError(e))
                     }
-                },
-                onFailure = { error ->
-                    logger.error("Sending session request error: $error")
-                    onFailure(error)
                 }
+            },
+            onFailure = { error ->
+                logger.error("Sending session request error: $error")
+                onFailure(error)
+            }
+        )
+    }
+
+    private suspend fun SessionRequestUseCase.triggerLinkModeRequest(
+        sessionPayload: SignRpc.SessionRequest,
+        request: EngineDO.Request,
+        peerAppLink: String,
+        onFailure: (Throwable) -> Unit
+    ) {
+        try {
+            linkModeJsonRpcInteractor.triggerRequest(sessionPayload, Topic(request.topic), peerAppLink)
+            insertEventUseCase(
+                Props(
+                    EventType.SUCCESS,
+                    Tags.SESSION_REQUEST_LINK_MODE.id.toString(),
+                    Properties(correlationId = sessionPayload.id, clientId = clientId, direction = Direction.SENT.state)
+                )
             )
+        } catch (e: Exception) {
+            onFailure(e)
         }
     }
 
@@ -162,5 +204,6 @@ internal class SessionRequestUseCase(
 
 internal interface SessionRequestUseCaseInterface {
     val errors: SharedFlow<SDKError>
+    val requestEvents: SharedFlow<EngineEvent>
     suspend fun sessionRequest(request: EngineDO.Request, onSuccess: (Long) -> Unit, onFailure: (Throwable) -> Unit)
 }

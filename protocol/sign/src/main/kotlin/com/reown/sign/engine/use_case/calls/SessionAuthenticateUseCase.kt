@@ -213,6 +213,7 @@ internal class SessionAuthenticateUseCase(
             emptyMap(),
             optionalNamespaces,
             properties = null,
+            scopedProperties = null,
             pairing = pairing.toPairing(),
             onSuccess = {
                 logger.log("Session proposal as a fallback sent successfully on topic: ${pairing.topic}")

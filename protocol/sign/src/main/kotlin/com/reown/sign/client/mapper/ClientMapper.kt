@@ -68,7 +68,8 @@ internal fun EngineDO.SessionProposal.toClientSessionProposal(): Sign.Model.Sess
         properties,
         proposerPublicKey,
         relayProtocol,
-        relayData
+        relayData,
+        scopedProperties
     )
 
 @JvmSynthetic

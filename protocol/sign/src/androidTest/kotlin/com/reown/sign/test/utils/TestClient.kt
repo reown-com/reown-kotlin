@@ -32,7 +32,6 @@ internal object TestClient {
         )
 
         private val coreProtocol = CoreClient.apply {
-            Timber.d("Wallet CP start: ")
             initialize(app, BuildConfig.PROJECT_ID, metadata, ConnectionType.MANUAL, onError = ::globalOnError)
             Relay.connect(::globalOnError)
         }
