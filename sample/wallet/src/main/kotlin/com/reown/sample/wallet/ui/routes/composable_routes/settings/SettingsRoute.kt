@@ -69,8 +69,8 @@ fun SettingsRoute(navController: NavHostController) {
         ),
         Section.SettingsSection(
             "Solana Account", listOf(
-                Item.SettingCopyableItem("Address", "Solana address"),
-                Item.SettingCopyableItem("Private key", "Solana priv"),
+                Item.SettingCopyableItem("Address", viewModel.solanaKeys.third),
+                Item.SettingCopyableItem("Private key", viewModel.solanaKeys.first),
             )
         ),
         Section.SettingsSection(
