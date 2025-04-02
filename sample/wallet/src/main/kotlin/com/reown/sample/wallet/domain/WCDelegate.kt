@@ -86,7 +86,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
                 val initTx = getInitialTransaction(sessionRequest)
                 WalletKit.ChainAbstraction.prepare(
                     initTx,
-                    listOf(), //todo: add scocunts
+                    listOf(SolanaAccountDelegate.keys.third),
                     onSuccess = { result ->
                         when (result) {
                             is Wallet.Model.PrepareSuccess.Available -> {
