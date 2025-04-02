@@ -245,12 +245,12 @@ class WalletKitActivity : AppCompatActivity() {
             },
             TextModule(text = "Solana account"),
             TextModule(text = SolanaAccountDelegate.keys.third) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Solana Account", EthAccountDelegate.ethAccount))
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Solana Account", SolanaAccountDelegate.keys.third))
             },
             PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "Solana private key"),
             TextModule(text = SolanaAccountDelegate.keys.first) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Solana Private Key", EthAccountDelegate.privateKey))
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Solana Private Key", SolanaAccountDelegate.keys.first))
             },
             PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "Client ID"),

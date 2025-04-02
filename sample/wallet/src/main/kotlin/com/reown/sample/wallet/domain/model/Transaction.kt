@@ -9,18 +9,15 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withTimeout
 import org.json.JSONArray
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.RawTransaction
 import org.web3j.crypto.TransactionEncoder
 import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Numeric
-import org.web3j.utils.Numeric.toBigInt
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 object Transaction {
     suspend fun send(sessionRequest: Wallet.Model.SessionRequest): String {
@@ -231,14 +228,19 @@ object Transaction {
         }
     }
 
-    fun hexToTokenAmount(hexValue: String, decimals: Int): BigDecimal? {
+    fun hexToTokenAmount(value: String, decimals: Int): BigDecimal? {
         return try {
-            val cleanedHex = hexValue.removePrefix("0x")
-            val amountBigInt = cleanedHex.toBigInteger(16)
-            val divisor = BigDecimal.TEN.pow(decimals)
-            BigDecimal(amountBigInt).divide(divisor)
+            if (value.startsWith("0x")) {
+                val cleanedHex = value.removePrefix("0x")
+                val divisor = BigDecimal.TEN.pow(decimals)
+                BigDecimal(cleanedHex.toBigInteger(16)).divide(divisor)
+            } else {
+                BigDecimal(value).setScale(4, RoundingMode.HALF_UP)
+            }
+
+
         } catch (e: NumberFormatException) {
-            println("Invalid hexadecimal value: $hexValue")
+            println("Invalid hexadecimal value: $value")
             null
         }
     }
