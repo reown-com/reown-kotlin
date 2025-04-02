@@ -68,7 +68,7 @@ class TransactionViewModel : ViewModel() {
             println("initial tx: $initialTransaction")
             WalletKit.ChainAbstraction.prepare(
                 initialTransaction,
-                listOf(), //TODO: add accounts
+                listOf(SolanaAccountDelegate.keys.third),
                 onSuccess = { result ->
                     when (result) {
                         is Wallet.Model.PrepareSuccess.Available -> {
