@@ -148,15 +148,12 @@ class TransactionViewModel : ViewModel() {
                                 }
                             }
 
-                            println("kobe: balance: $balance; ${Pair(chain.name, token.name)}")
-
                             if (balance.isEmpty()) {
                                 _balanceState.update { currentState ->
                                     currentState + (Pair(chain, token) to "-.--")
                                 }
                             } else {
                                 val formattedBalance = Transaction.hexToTokenAmount(balance, token.decimals)?.toPlainString() ?: "0"
-                                println("kobe: formatted: $formattedBalance; ${Pair(chain.name, token.name)}")
                                 _balanceState.update { currentState ->
                                     currentState + (Pair(chain, token) to formattedBalance)
                                 }
