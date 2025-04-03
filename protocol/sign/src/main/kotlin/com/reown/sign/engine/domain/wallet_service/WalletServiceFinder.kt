@@ -11,16 +11,20 @@ internal class WalletServiceFinder(private val logger: Logger) {
      * Finds a matching wallet service URL for the given request based on scopedProperties
      */
     fun findMatchingWalletService(request: EngineDO.Request, session: SessionVO): URL? {
-        val scopedProperties = session.scopedProperties ?: return null
+        return try {
+            val scopedProperties = session.scopedProperties ?: return null
 
-        // Check for exact chain match first (e.g., "eip155:1")
-        findWalletService(request.method, scopedProperties, request.chainId)?.let { return it }
+            // Check for exact chain match first (e.g., "eip155:1")
+            findWalletService(request.method, scopedProperties, request.chainId)?.let { return it }
 
-        // Check for namespace match (e.g., "eip155" for any eip155 chain)
-        val namespace = request.chainId.split(":").first()
-        findWalletService(request.method, scopedProperties, namespace)?.let { return it }
+            // Check for namespace match (e.g., "eip155" for any eip155 chain)
+            val namespace = request.chainId.split(":").first()
+            findWalletService(request.method, scopedProperties, namespace)?.let { return it }
 
-        return null
+            null
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /**

@@ -214,10 +214,10 @@ class TransactionViewModel : ViewModel() {
                     return token.getString("value")
                 }
             }
-            println("kobe: Token not found for address: $tokenAddress")
+            println("Token not found for address: $tokenAddress")
             ""
         } else {
-            println("kobe: Error: ${response.body}")
+            println("Error: ${response.body}")
             ""
         }
     }

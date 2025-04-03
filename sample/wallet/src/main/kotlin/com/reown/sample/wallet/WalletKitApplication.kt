@@ -48,12 +48,11 @@ class WalletKitApplication : Application() {
         EthAccountDelegate.application = this
         SolanaAccountDelegate.application = this
 
-        println("kobe: solana keys: ${SolanaAccountDelegate.keys}")
-
         try {
-            SolanaAccountDelegate.getSolanaPubKeyForKeyPair().also { println("kobe: pubKey: $it") }
+            SolanaAccountDelegate.getSolanaPubKeyForKeyPair()
         } catch (e: Exception) {
-            println("kobe: error: $e")
+            Firebase.crashlytics.recordException(e)
+            println("Solana Keys Error: $e")
         }
 
         SmartAccountEnabler.init(this)
