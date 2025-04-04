@@ -54,6 +54,8 @@ class TransactionViewModel : ViewModel() {
 
     @OptIn(ChainAbstractionExperimentalApi::class)
     fun sendTransaction(chain: Chain, token: StableCoin, amount: String, to: String, from: String) {
+        println("kobe: ${chain.name}, token: ${token.name}; contractAddress: ${token.getAddressOn(chain)}")
+
         val hexAmount = stringToTokenHex(amount)
         _uiState.value = UIState.Loading
         try {

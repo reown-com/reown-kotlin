@@ -236,21 +236,51 @@ class WalletKitActivity : AppCompatActivity() {
             DividerModule(),
             TextModule(text = "EVM account"),
             TextModule(text = EthAccountDelegate.ethAccount) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Account", EthAccountDelegate.ethAccount))
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+                    ClipData.newPlainText(
+                        "Account",
+                        EthAccountDelegate.ethAccount
+                    )
+                )
             },
             PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "EVM private key"),
             TextModule(text = EthAccountDelegate.privateKey) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Private Key", EthAccountDelegate.privateKey))
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+                    ClipData.newPlainText(
+                        "Private Key",
+                        EthAccountDelegate.privateKey
+                    )
+                )
             },
-            TextModule(text = "Solana account"),
-            TextModule(text = SolanaAccountDelegate.keys.third) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Solana Account", SolanaAccountDelegate.keys.third))
+            TextModule(text = "Solana public key"),
+            TextModule(text = SolanaAccountDelegate.keys.second) {
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+                    ClipData.newPlainText(
+                        "Solana Account",
+                        SolanaAccountDelegate.keys.second
+                    )
+                )
             },
             PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "Solana private key"),
             TextModule(text = SolanaAccountDelegate.keys.first) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Solana Private Key", SolanaAccountDelegate.keys.first))
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+                    ClipData.newPlainText(
+                        "Solana Private Key",
+                        SolanaAccountDelegate.keys.first
+                    )
+                )
+            },
+            PaddingModule(size = PaddingModule.Size.LARGE),
+            TextModule(text = "Solana Key Pair"),
+            TextModule(text = SolanaAccountDelegate.keyPair) {
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+                    ClipData.newPlainText(
+                        "Solana Key Pair",
+                        SolanaAccountDelegate.keyPair
+                    )
+                )
             },
             PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "Client ID"),
@@ -259,7 +289,7 @@ class WalletKitActivity : AppCompatActivity() {
             },
             DividerModule(),
             TextInputModule(
-                text = "Import Private Key",
+                text = "Import EVM Private Key",
                 areRealTimeUpdatesEnabled = false,
                 validator = { text ->
                     !text.startsWith("0x") && text.length == 64
@@ -276,6 +306,14 @@ class WalletKitActivity : AppCompatActivity() {
                         },
                         onError = { println(it.throwable.stackTraceToString()) }
                     )
+                }
+            ),
+            DividerModule(),
+            TextInputModule(
+                text = "Import Solana Key Pair",
+                areRealTimeUpdatesEnabled = false,
+                onValueChanged = { text ->
+                    SolanaAccountDelegate.keyPair = text
                 }
             )
         )
@@ -295,7 +333,10 @@ class WalletKitActivity : AppCompatActivity() {
                     val signature = CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191)
 
                     NotifyClient.register(
-                        params = Notify.Params.Register(cacaoPayloadWithIdentityPrivateKey = cacaoPayloadWithIdentityPrivateKey, signature = signature),
+                        params = Notify.Params.Register(
+                            cacaoPayloadWithIdentityPrivateKey = cacaoPayloadWithIdentityPrivateKey,
+                            signature = signature
+                        ),
                         onSuccess = { println("Register Success") },
                         onError = { println(it.throwable.stackTraceToString()) }
                     )

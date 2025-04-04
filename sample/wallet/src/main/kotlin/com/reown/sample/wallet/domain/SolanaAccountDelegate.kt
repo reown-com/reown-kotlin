@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
-import com.reown.walletkit.utils.solanaGenerateKeypair
+import com.reown.walletkit.utils.solanaGenerateKeyPair
 import com.reown.walletkit.utils.solanaPublicKeyForKeypair
 import com.reown.walletkit.utils.solanaSignPrehash
 import io.ipfs.multibase.Base58
@@ -18,11 +18,17 @@ object SolanaAccountDelegate {
 
     private val isInitialized: Boolean get() = sharedPreferences.getString(KEY_PAIR_TAG, null) != null
 
-    private fun storeAccount(privateKey: String? = null): String =
-        solanaGenerateKeypair()
-            .also { keyPair ->
-                sharedPreferences.edit { putString(KEY_PAIR_TAG, keyPair) }
-            }
+    private fun storeAccount(keyPair: String? = null): String =
+        if (keyPair == null) {
+            solanaGenerateKeyPair()
+                .also { generatedKeyPair ->
+                    sharedPreferences.edit { putString(KEY_PAIR_TAG, generatedKeyPair) }
+                }
+        } else {
+            sharedPreferences.edit { putString(KEY_PAIR_TAG, keyPair) }
+            keyPair
+        }
+
 
     val keys: Triple<String, String, String>
         get() = (if (isInitialized) sharedPreferences.getString(KEY_PAIR_TAG, null)!! else storeAccount())
@@ -30,30 +36,38 @@ object SolanaAccountDelegate {
                 decodeKeyPair(this)
             }
 
-    fun getSolanaPubKeyForKeyPair(): String {
-        val keyPair = sharedPreferences.getString(KEY_PAIR_TAG, null)!!
-        return solanaPublicKeyForKeypair(keyPair)
+    var keyPair: String
+        get() = if (isInitialized) sharedPreferences.getString(KEY_PAIR_TAG, null)!! else storeAccount()
+        set(value) {
+            storeAccount(value)
+        }
+
+    fun getSolanaPubKeyForKeyPair(keyPair: String? = null): String {
+        val currentKeyPair = keyPair ?: sharedPreferences.getString(KEY_PAIR_TAG, null)!!
+        return solanaPublicKeyForKeypair(currentKeyPair)
     }
 
     fun signHash(hash: String): String {
         val keyPair = sharedPreferences.getString(KEY_PAIR_TAG, null)!!
         return solanaSignPrehash(keyPair, hash)
     }
+}
 
-    private fun decodeKeyPair(keyPair: String): Triple<String, String, String> {
-        // Decode from base58
-        val keypairBytes = Base58.decode(keyPair)
+context(SolanaAccountDelegate)
+fun decodeKeyPair(keyPair: String): Triple<String, String, String> {
+    println("kobe: keypair: $keyPair")
+    // Decode from base58
+    val keypairBytes = Base58.decode(keyPair)
 
-        // First 32 bytes are the private key
-        val privateKeyBytes = Arrays.copyOfRange(keypairBytes, 0, 32)
+    // First 32 bytes are the private key
+    val privateKeyBytes = Arrays.copyOfRange(keypairBytes, 0, 32)
 
-        // Last 32 bytes are the public key
-        val publicKeyBytes = Arrays.copyOfRange(keypairBytes, 32, 64)
+    // Last 32 bytes are the public key
+    val publicKeyBytes = Arrays.copyOfRange(keypairBytes, 32, 64)
 
-        // Convert to base58 strings
-        val privateKeyBase58 = Base58.encode(privateKeyBytes)
-        val publicKeyBase58 = Base58.encode(publicKeyBytes)
+    // Convert to base58 strings
+    val privateKeyBase58 = Base58.encode(privateKeyBytes)
+    val publicKeyBase58 = Base58.encode(publicKeyBytes)
 
-        return Triple(privateKeyBase58, publicKeyBase58, "${Chain.SOLANA.id}:$publicKeyBase58")
-    }
+    return Triple(privateKeyBase58, publicKeyBase58, "${Chain.SOLANA.id}:$publicKeyBase58")
 }
