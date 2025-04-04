@@ -21,6 +21,7 @@ import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.domain.SmartAccountEnabler
+import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
@@ -45,6 +46,14 @@ class WalletKitApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         EthAccountDelegate.application = this
+        SolanaAccountDelegate.application = this
+
+        try {
+            SolanaAccountDelegate.getSolanaPubKeyForKeyPair()
+        } catch (e: Exception) {
+            Firebase.crashlytics.recordException(e)
+            println("Solana Keys Error: $e")
+        }
 
         SmartAccountEnabler.init(this)
 
@@ -74,7 +83,8 @@ class WalletKitApplication : Application() {
 
         println("Account: ${EthAccountDelegate.address}")
 
-        WalletKit.initialize(Wallet.Params.Init(core = CoreClient),
+        WalletKit.initialize(
+            Wallet.Params.Init(core = CoreClient),
             onSuccess = { println("Web3Wallet initialized") },
             onError = { error ->
                 Firebase.crashlytics.recordException(error.throwable)
@@ -97,7 +107,8 @@ class WalletKitApplication : Application() {
         initializeBeagle()
 
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-            WalletKit.registerDeviceToken(firebaseAccessToken = token, enableEncrypted = true,
+            WalletKit.registerDeviceToken(
+                firebaseAccessToken = token, enableEncrypted = true,
                 onSuccess = {
                     println("Successfully registered firebase token for Web3Wallet: $token")
                 },

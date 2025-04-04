@@ -3,8 +3,10 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.transaction
 enum class Chain(val id: String) {
     BASE("eip155:8453"),
     ARBITRUM("eip155:42161"),
-    OPTIMISM("eip155:10")
+    OPTIMISM("eip155:10"),
+    SOLANA("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")
 }
+
 
 enum class StableCoin(val decimals: Int) {
     USDC(6),
@@ -26,6 +28,9 @@ object TokenAddresses {
         Chain.OPTIMISM to mapOf(
             StableCoin.USDC to "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
             StableCoin.USDT to "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58"
+        ),
+        Chain.SOLANA to mapOf(
+            StableCoin.USDC to "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
         )
     )
 

@@ -1,8 +1,10 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
 import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
+import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.walletkit.client.Wallet
 
 data class SessionProposalUI(
@@ -105,18 +107,16 @@ val walletMetaData = WalletMetaData(
             chains = listOf("cosmos:cosmoshub-4", "cosmos:cosmoshub-1"),
             methods = listOf("cosmos_signDirect", "cosmos_signAmino"),
             events = listOf(),
-            accounts = listOf("cosmos:cosmoshub-4:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc", "cosmos:cosmoshub-1:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc")
+            accounts = listOf(
+                "cosmos:cosmoshub-4:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc",
+                "cosmos:cosmoshub-1:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc"
+            )
         ),
         "solana" to Wallet.Model.Namespace.Session(
-            chains = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp", "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z", "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", "solana:8E9rvCKLFQia2Y35HXjjpWzj8weVo44K"),
+            chains = listOf(Chain.SOLANA.id),
             methods = listOf("solana_signMessage", "solana_signTransaction", "solana_signAndSendTransaction", "solana_signAllTransactions"),
             events = listOf("accountsChanged", "chainChanged"),
-            accounts = listOf(
-                "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:DoMfA4MGqmAhstknCtcFFen1pr8oSha8yK2KBPzjr7g5",
-                "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z:DoMfA4MGqmAhstknCtcFFen1pr8oSha8yK2KBPzjr7g5",
-                "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1:DoMfA4MGqmAhstknCtcFFen1pr8oSha8yK2KBPzjr7g5",
-                "solana:8E9rvCKLFQia2Y35HXjjpWzj8weVo44K:DoMfA4MGqmAhstknCtcFFen1pr8oSha8yK2KBPzjr7g5"
-            )
+            accounts = listOf(SolanaAccountDelegate.keys.third)
         )
     )
 )
