@@ -53,7 +53,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun SessionAuthenticateRoute(navController: NavHostController, connectionsViewModel: ConnectionsViewModel, sessionAuthenticateViewModel: SessionAuthenticateViewModel = viewModel()) {
+fun SessionAuthenticateRoute(
+    navController: NavHostController,
+    connectionsViewModel: ConnectionsViewModel,
+    sessionAuthenticateViewModel: SessionAuthenticateViewModel = viewModel()
+) {
     val authenticateRequestUI = sessionAuthenticateViewModel.sessionAuthenticateUI ?: throw Exception("Missing authenticate request")
     val composableScope = rememberCoroutineScope()
     val allowButtonColor = getValidationColor(authenticateRequestUI.peerContextUI.validation)
@@ -61,16 +65,40 @@ fun SessionAuthenticateRoute(navController: NavHostController, connectionsViewMo
 
     var shouldOpenProposalDialog by remember { mutableStateOf(false) }
     if (shouldOpenProposalDialog) {
-        SessionAuthenticateDialog(authenticateRequestUI, allowButtonColor, composableScope, sessionAuthenticateViewModel, connectionsViewModel, navController, context)
+        SessionAuthenticateDialog(
+            authenticateRequestUI,
+            allowButtonColor,
+            composableScope,
+            sessionAuthenticateViewModel,
+            connectionsViewModel,
+            navController,
+            context
+        )
     }
 
     if (authenticateRequestUI.peerContextUI.isScam == true && !shouldOpenProposalDialog) {
         ScammerScreen(authenticateRequestUI, navController) { shouldOpenProposalDialog = true }
     } else {
-        SessionAuthenticateDialog(authenticateRequestUI, allowButtonColor, composableScope, sessionAuthenticateViewModel, connectionsViewModel, navController, context)
+        SessionAuthenticateDialog(
+            authenticateRequestUI,
+            allowButtonColor,
+            composableScope,
+            sessionAuthenticateViewModel,
+            connectionsViewModel,
+            navController,
+            context
+        )
     }
 
-    SessionAuthenticateDialog(authenticateRequestUI, allowButtonColor, composableScope, sessionAuthenticateViewModel, connectionsViewModel, navController, context)
+    SessionAuthenticateDialog(
+        authenticateRequestUI,
+        allowButtonColor,
+        composableScope,
+        sessionAuthenticateViewModel,
+        connectionsViewModel,
+        navController,
+        context
+    )
 }
 
 @Composable
@@ -207,13 +235,13 @@ private fun SessionAuthenticateDialog(
     }
 }
 
-private fun showError(navController: NavHostController, throwable: Throwable?, coroutineScope: CoroutineScope, context: Context) {
-    coroutineScope.launch(Dispatchers.Main) {
+private fun showError(navController: NavHostController, throwable: Throwable?, composableScope: CoroutineScope, context: Context) {
+    android.os.Handler(android.os.Looper.getMainLooper()).post {
+        Toast.makeText(context, throwable?.message ?: "Session authenticate error, please check your Internet connection", Toast.LENGTH_SHORT).show()
+
         if (throwable !is NoConnectivityException) {
             navController.popBackStack()
         }
-
-        Toast.makeText(context, throwable?.message ?: "Session authenticate error, please check your Internet connection", Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -232,7 +260,11 @@ fun Messages(authRequestUI: SessionAuthenticateUI) {
             Text(
                 text = item,
                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 13.dp),
-                style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                style = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686))
+                )
             )
         }
     }
