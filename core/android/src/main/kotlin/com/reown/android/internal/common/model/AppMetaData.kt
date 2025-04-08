@@ -8,7 +8,7 @@ data class AppMetaData(
     @Json(name = "description")
     val description: String,
     @Json(name = "url")
-    val url: String,
+    val url: String = "",
     @Json(name = "icons")
     val icons: List<String>,
     @Json(name = "name")
