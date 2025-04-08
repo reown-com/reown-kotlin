@@ -6,7 +6,6 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.Core
 import com.reown.sample.wallet.BuildConfig
-import com.reown.sample.wallet.blockchain.createBlockChainApiService
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
@@ -19,17 +18,14 @@ import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import org.json.JSONObject
 import java.math.BigDecimal
 
@@ -42,7 +38,7 @@ sealed class UIState {
 }
 
 class TransactionViewModel : ViewModel() {
-    private val _balanceState = MutableStateFlow<Map<Pair<Chain, StableCoin>, String>>(emptyMap())
+    private val _balanceState = MutableStateFlow<Map<Pair<Chain, Token>, String>>(emptyMap())
     val balanceState = _balanceState.asStateFlow()
 
     private val _uiState = MutableStateFlow<UIState>(UIState.Ide)
@@ -53,13 +49,26 @@ class TransactionViewModel : ViewModel() {
     }
 
     @OptIn(ChainAbstractionExperimentalApi::class)
-    fun sendTransaction(chain: Chain, token: StableCoin, amount: String, to: String, from: String) {
-        println("kobe: ${chain.name}, token: ${token.name}; contractAddress: ${token.getAddressOn(chain)}")
+    fun sendTransaction(chain: Chain, token: Token, amount: String, to: String, from: String) {
+        //todo: erc20 or native token transfer
+        token as StableCoin
+
+        println(
+            "kobe: ${chain.name}, token: ${token.name}; contractAddress: ${
+                token.getAddressOn(
+                    chain
+                )
+            }"
+        )
 
         val hexAmount = stringToTokenHex(amount)
         _uiState.value = UIState.Loading
         try {
-            val transferCall = WalletKit.prepareErc20TransferCall(contractAddress = token.getAddressOn(chain), to = to, amount = hexAmount)
+            val transferCall = WalletKit.prepareErc20TransferCall(
+                contractAddress = token.getAddressOn(chain),
+                to = to,
+                amount = hexAmount
+            )
             val initialTransaction = Wallet.Model.InitialTransaction(
                 from = from,
                 to = transferCall.to,
@@ -123,67 +132,98 @@ class TransactionViewModel : ViewModel() {
 
     private fun refreshBalances() {
         viewModelScope.launch {
-            val initialState = Chain.values().flatMap { chain ->
-                StableCoin.entries.map { token ->
-                    Pair(chain, token) to "-.--"
-                }
-            }.toMap()
-            _balanceState.value = initialState
-
             Chain.entries.forEach { chain ->
-                StableCoin.entries.forEach { token ->
-                    viewModelScope.launch {
-                        try {
-                            val balance = if (chain.id == Chain.SOLANA.id) {
-                                withContext(Dispatchers.IO) {
-                                    println("kobe: getting solana balance: ${chain.id}; ${token.name}")
-                                    getSolanaBalance(chain.id, token.getAddressOn(chain))
+                when (chain.id) {
+                    Chain.ETHEREUM.id, Chain.BASE.id, Chain.ARBITRUM.id, Chain.OPTIMISM.id -> {
+                        withContext(Dispatchers.IO) {
+                            val balance = getBalance(
+                                chain.id,
+                                EthAccountDelegate.address,
+                                Coin.ETH.name
+                            )
 
-                                }
-                            } else {
-                                withContext(Dispatchers.IO) {
-                                    WalletKit.getERC20Balance(
-                                        chain.id,
-                                        token.getAddressOn(chain),
-                                        EthAccountDelegate.address
-                                    )
-                                }
-                            }
-
-                            if (balance.isEmpty()) {
-                                _balanceState.update { currentState ->
-                                    currentState + (Pair(chain, token) to "-.--")
-                                }
-                            } else {
-                                val formattedBalance = Transaction.hexToTokenAmount(balance, token.decimals)?.toPlainString() ?: "0"
-                                _balanceState.update { currentState ->
-                                    currentState + (Pair(chain, token) to formattedBalance)
-                                }
-                            }
-                        } catch (e: Exception) {
-                            recordError(e)
-                            println("getERC20Balance error for $chain $token: $e")
+                            val formattedBalance =
+                                Transaction.hexToTokenAmount(balance, Coin.ETH.decimals)
+                                    ?.toPlainString() ?: "0"
                             _balanceState.update { currentState ->
-                                currentState + (Pair(chain, token) to "-.--")
+                                currentState + (Pair(chain, Coin.ETH) to formattedBalance)
+                            }
+                        }
+                    }
+
+                    Chain.SOLANA.id -> {
+                        withContext(Dispatchers.IO) {
+                            val balance = getBalance(
+                                chain.id,
+                                SolanaAccountDelegate.keys.second,
+                                StableCoin.USDC.name
+                            )
+
+                            val formattedBalance =
+                                Transaction.hexToTokenAmount(balance, StableCoin.USDC.decimals)
+                                    ?.toPlainString() ?: "0"
+                            _balanceState.update { currentState ->
+                                currentState + (Pair(chain, StableCoin.USDC) to formattedBalance)
                             }
                         }
                     }
                 }
+
+                StableCoin.entries
+                    .filter { chain != Chain.SOLANA }
+                    .forEach { token ->
+                        viewModelScope.launch {
+                            try {
+                                val balance =
+                                    withContext(Dispatchers.IO) {
+                                        WalletKit.getERC20Balance(
+                                            chain.id,
+                                            token.getAddressOn(chain),
+                                            EthAccountDelegate.address
+                                        )
+                                    }
+                                if (balance.isEmpty()) {
+                                    _balanceState.update { currentState ->
+                                        currentState + (Pair(chain, token) to "-.--")
+                                    }
+                                } else {
+                                    val formattedBalance =
+                                        Transaction.hexToTokenAmount(balance, token.decimals)
+                                            ?.toPlainString() ?: "0"
+                                    _balanceState.update { currentState ->
+                                        currentState + (Pair(chain, token) to formattedBalance)
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                recordError(e)
+                                println("kobe: getERC20Balance error for $chain $token: $e")
+                                _balanceState.update { currentState ->
+                                    currentState + (Pair(chain, token) to "-.--")
+                                }
+                            }
+                        }
+                    }
             }
         }
     }
 
-    private suspend fun getSolanaBalance(chainId: String, tokenAddress: String): String {
-        val solanaKeys = SolanaAccountDelegate.keys
+    private suspend fun getBalance(
+        chainId: String,
+        ownerAddress: String,
+        tokenSymbol: String
+    ): String {
         val client = OkHttpClient()
 
+        println("kobe: GET owner: $ownerAddress; $tokenSymbol; $chainId")
+
         // Build the URL with path parameters and query parameters
-        val urlBuilder = "https://rpc.walletconnect.com/v1/account/${solanaKeys.second}/balance".toHttpUrlOrNull()
-            ?.newBuilder()
-            ?.addQueryParameter("currency", "usd")
-            ?.addQueryParameter("projectId", BuildConfig.PROJECT_ID)
-            ?.addQueryParameter("chainId", chainId)
-            ?.addQueryParameter("sv", "reown-kotlin-${BuildConfig.BOM_VERSION}")
+        val urlBuilder =
+            "https://rpc.walletconnect.com/v1/account/${ownerAddress}/balance".toHttpUrlOrNull()
+                ?.newBuilder()
+                ?.addQueryParameter("currency", "usd")
+                ?.addQueryParameter("projectId", BuildConfig.PROJECT_ID)
+                ?.addQueryParameter("chainId", chainId)
+                ?.addQueryParameter("sv", "reown-kotlin-${BuildConfig.BOM_VERSION}")
 
         val url = urlBuilder?.build() ?: throw IllegalArgumentException("Invalid URL")
 
@@ -209,17 +249,15 @@ class TransactionViewModel : ViewModel() {
             // Iterate through the array to find the matching token address
             for (i in 0 until balancesArray.length()) {
                 val token = balancesArray.getJSONObject(i)
-                if (token.getString("address") == tokenAddress ||
-                    token.getString("address") == "${Chain.SOLANA.id}:$tokenAddress"
-                ) {
-                    println("kobe: solana balance $tokenAddress; ${token.getString("value")}")
+                if (token.getString("symbol") == tokenSymbol) {
+                    println("kobe: FOUND ${token.getString("value")}")
                     return token.getString("value")
                 }
             }
-            println("Token not found for address: $tokenAddress")
+            println("kobe: Token not found for address: ${tokenSymbol}")
             ""
         } else {
-            println("Error: ${response.body}")
+            println("kobe: Error: ${response.body}")
             ""
         }
     }

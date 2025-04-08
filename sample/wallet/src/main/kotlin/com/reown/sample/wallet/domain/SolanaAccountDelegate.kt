@@ -55,7 +55,6 @@ object SolanaAccountDelegate {
 
 context(SolanaAccountDelegate)
 fun decodeKeyPair(keyPair: String): Triple<String, String, String> {
-    println("kobe: keypair: $keyPair")
     // Decode from base58
     val keypairBytes = Base58.decode(keyPair)
 
