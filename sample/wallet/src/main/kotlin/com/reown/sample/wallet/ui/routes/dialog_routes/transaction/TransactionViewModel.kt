@@ -250,8 +250,9 @@ class TransactionViewModel : ViewModel() {
             for (i in 0 until balancesArray.length()) {
                 val token = balancesArray.getJSONObject(i)
                 if (token.getString("symbol") == tokenSymbol) {
-                    println("kobe: FOUND ${token.getString("value")}")
-                    return token.getString("value")
+                    val numeric = token.getJSONObject("quantity").getString("numeric")
+                    println("kobe: FOUND $numeric")
+                    return numeric
                 }
             }
             println("kobe: Token not found for address: ${tokenSymbol}")

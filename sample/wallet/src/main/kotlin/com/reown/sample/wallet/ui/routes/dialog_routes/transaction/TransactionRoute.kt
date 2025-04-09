@@ -212,7 +212,7 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
                         fontSize = 16.sp
                     )
                     Text(
-                        text = "${balanceState[Pair(selectedChain, Coin.ETH)] ?: "-.--"} $",
+                        text = "${balanceState[Pair(selectedChain, Coin.ETH)] ?: "-.--"} ETH",
                         color = Color.White,
                         fontSize = 16.sp
                     )
