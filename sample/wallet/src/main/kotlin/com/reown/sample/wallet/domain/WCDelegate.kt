@@ -84,8 +84,10 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
         if (sessionRequest.request.method == "eth_sendTransaction") {
             try {
                 val initTx = getInitialTransaction(sessionRequest)
+                println("Init TX: $initTx")
                 WalletKit.ChainAbstraction.prepare(
                     initTx,
+                    listOf(SolanaAccountDelegate.keys.third),
                     onSuccess = { result ->
                         when (result) {
                             is Wallet.Model.PrepareSuccess.Available -> {

@@ -19,7 +19,6 @@ internal fun walletKitModule() = module {
         ChainAbstractionClient(
             projectId = get<ProjectId>().value,
             pulseMetadata = PulseMetadata(
-                packageName = null,
                 sdkPlatform = "mobile",
                 sdkVersion = "reown-kotlin-${BuildConfig.SDK_VERSION}",
                 bundleId = get(named(AndroidCommonDITags.PACKAGE_NAME)),

@@ -52,6 +52,7 @@ import com.reown.sample.common.ui.theme.UiModePreview
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.SmartAccountEnabler
+import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 
 @Composable
@@ -61,10 +62,17 @@ fun SettingsRoute(navController: NavHostController) {
 
     val sections = listOf(
         Section.SettingsSection(
-            "Account", listOf(
+            "EIP155 Account", listOf(
                 Item.SettingCopyableItem("CAIP-10", viewModel.caip10),
 //                Item.SettingCopyableItem("Safe Smart Account Address", viewModel.getSmartAccount()),
                 Item.SettingCopyableItem("Private key", viewModel.privateKey),
+            )
+        ),
+        Section.SettingsSection(
+            "Solana Account", listOf(
+                Item.SettingCopyableItem("Public key", viewModel.solanaKeys.second),
+                Item.SettingCopyableItem("Private key", viewModel.solanaKeys.first),
+                Item.SettingCopyableItem("Key pair", SolanaAccountDelegate.keyPair),
             )
         ),
         Section.SettingsSection(
@@ -79,7 +87,8 @@ fun SettingsRoute(navController: NavHostController) {
     val context: Context = LocalContext.current
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
 
-    SettingsScreen(sections,
+    SettingsScreen(
+        sections,
         onLogoutClicked = { navController.popBackStack() },
         onSettingClicked = {
             Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
@@ -102,6 +111,14 @@ private fun SettingsScreen(
         Divider()
         FeaturesSection()
         Divider()
+        Text(
+            modifier = Modifier
+                .clip(RoundedCornerShape(5.dp))
+                .clickable { onTransactionClick() }
+                .padding(vertical = 5.dp),
+            text = "Send Transaction",
+            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
+        Divider()
         LazyColumn {
             itemsIndexed(sections) { index, section ->
                 when (section) {
@@ -111,13 +128,6 @@ private fun SettingsScreen(
                 if (index != sections.lastIndex) Divider()
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(modifier = Modifier
-            .clip(RoundedCornerShape(5.dp))
-            .clickable { onTransactionClick() }
-            .padding(vertical = 5.dp),
-            text = "Send Transaction",
-            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
     }
 }
 
@@ -126,9 +136,9 @@ private fun FeaturesSection() {
     val isSafeEnabled by SmartAccountEnabler.isSmartAccountEnabled.collectAsState()
     Column(
         modifier =
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.Start,
     ) {
         Text(text = "Features", style = TextStyle(fontSize = 15.sp), fontWeight = FontWeight(700))
@@ -212,7 +222,11 @@ fun LogoutSection(onLogoutClicked: () -> Unit) {
             .border(width = 1.dp, color = color, shape = CircleShape)
             .clip(shape = CircleShape)
             .clickable { onLogoutClicked() }
-            .padding(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 12.dp), text = "Log out", color = color, textAlign = TextAlign.Center, fontWeight = FontWeight(600)
+            .padding(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 12.dp),
+        text = "Log out",
+        color = color,
+        textAlign = TextAlign.Center,
+        fontWeight = FontWeight(600)
     )
 }
 

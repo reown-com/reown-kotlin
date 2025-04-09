@@ -355,11 +355,12 @@ object WalletKit {
         @ChainAbstractionExperimentalApi
         fun prepare(
             initialTransaction: Wallet.Model.InitialTransaction,
+            accounts: List<String>,
             onSuccess: (Wallet.Model.PrepareSuccess) -> Unit,
             onError: (Wallet.Model.PrepareError) -> Unit
         ) {
             try {
-                prepareChainAbstractionUseCase(initialTransaction, onSuccess, onError)
+                prepareChainAbstractionUseCase(initialTransaction, accounts, onSuccess, onError)
             } catch (e: Exception) {
                 onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
             }
@@ -368,13 +369,13 @@ object WalletKit {
         @ChainAbstractionExperimentalApi
         fun execute(
             prepareAvailable: Wallet.Model.PrepareSuccess.Available,
-            prepareSignedTxs: List<String>,
+            signedTxs: List<Wallet.Model.RouteSig>,
             initSignedTx: String,
             onSuccess: (Wallet.Model.ExecuteSuccess) -> Unit,
             onError: (Wallet.Model.Error) -> Unit
         ) {
             try {
-                executeChainAbstractionUseCase(prepareAvailable, prepareSignedTxs, initSignedTx, onSuccess, onError)
+                executeChainAbstractionUseCase(prepareAvailable, signedTxs, initSignedTx, onSuccess, onError)
             } catch (e: Exception) {
                 onError(Wallet.Model.Error(e))
             }
