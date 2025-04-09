@@ -27,7 +27,6 @@ internal class OnSessionRequestResponseUseCase(
     private val getSessionRequestByIdUseCase: GetSessionRequestByIdUseCase,
     private val clientId: String
 ) {
-
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 

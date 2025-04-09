@@ -312,7 +312,8 @@ internal class SignEngine(
             onSessionSettleResponseUseCase.events,
             onSessionUpdateResponseUseCase.events,
             onSessionRequestResponseUseCase.events,
-            onSessionAuthenticateResponseUseCase.events
+            onSessionAuthenticateResponseUseCase.events,
+            sessionRequestUseCase.requestEvents
         )
             .onEach { event -> _engineEvent.emit(event) }
             .launchIn(scope)

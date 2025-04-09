@@ -74,6 +74,7 @@ class ProposeUseCaseTest {
             requiredNamespaces,
             null,
             null,
+            null,
             pairing,
             onSuccess = { },
             onFailure = { }
@@ -106,6 +107,7 @@ class ProposeUseCaseTest {
 
         proposeSessionUseCase.proposeSession(
             requiredNamespaces,
+            null,
             null,
             null,
             pairing,
@@ -141,6 +143,7 @@ class ProposeUseCaseTest {
             requiredNamespaces,
             null,
             null,
+            null,
             pairing,
             onSuccess = { },
             onFailure = onFailure
@@ -172,6 +175,7 @@ class ProposeUseCaseTest {
 
         proposeSessionUseCase.proposeSession(
             requiredNamespaces,
+            null,
             null,
             null,
             pairing,

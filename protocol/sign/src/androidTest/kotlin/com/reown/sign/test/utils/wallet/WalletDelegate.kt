@@ -4,6 +4,7 @@ import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.test.utils.globalOnError
 import com.reown.sign.test.utils.sessionNamespaces
+import com.reown.sign.test.utils.scopedProperties as scopedPropertiesTest
 import timber.log.Timber
 
 open class WalletDelegate : SignClient.WalletDelegate {
@@ -42,7 +43,7 @@ open class AutoApproveSessionWalletDelegate : WalletDelegate() {
 internal fun Sign.Model.SessionProposal.approveOnSessionProposal() {
     Timber.d("walletDelegate: onSessionProposal: $this")
 
-    WalletSignClient.approveSession(Sign.Params.Approve(proposerPublicKey, sessionNamespaces),
+    WalletSignClient.approveSession(Sign.Params.Approve(proposerPublicKey, sessionNamespaces, scopedProperties = scopedPropertiesTest),
         onSuccess = {}, onError = { globalOnError(it) }
     )
     Timber.d("WalletClient: approveSession")

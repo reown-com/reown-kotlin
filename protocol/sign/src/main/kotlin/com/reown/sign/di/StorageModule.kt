@@ -53,10 +53,12 @@ internal fun storageModule(dbName: String): Module = module {
         ),
         SessionDaoAdapter = SessionDao.Adapter(
             propertiesAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_MAP)),
+            scoped_propertiesAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_MAP)),
             transport_typeAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_TRANSPORT_TYPE))
         ),
         ProposalDaoAdapter = ProposalDao.Adapter(
             propertiesAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_MAP)),
+            scoped_propertiesAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_MAP)),
             iconsAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_LIST))
         )
     )

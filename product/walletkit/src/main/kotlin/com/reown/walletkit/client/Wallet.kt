@@ -26,6 +26,7 @@ object Wallet {
             val proposerPublicKey: String,
             val namespaces: Map<String, Model.Namespace.Session>,
             val properties: Map<String, String>? = null,
+            val scopedProperties: Map<String, String>? = null,
             val relayProtocol: String? = null,
         ) : Params()
 
@@ -215,6 +216,7 @@ object Wallet {
             val proposerPublicKey: String,
             val relayProtocol: String,
             val relayData: String?,
+            val scopedProperties: Map<String, String>?,
         ) : Model()
 
         data class SessionAuthenticate(
