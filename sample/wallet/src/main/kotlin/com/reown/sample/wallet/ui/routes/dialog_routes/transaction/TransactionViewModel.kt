@@ -50,33 +50,49 @@ class TransactionViewModel : ViewModel() {
 
     @OptIn(ChainAbstractionExperimentalApi::class)
     fun sendTransaction(chain: Chain, token: Token, amount: String, to: String, from: String) {
-        //todo: erc20 or native token transfer
-        token as StableCoin
-
-        println(
-            "kobe: ${chain.name}, token: ${token.name}; contractAddress: ${
-                token.getAddressOn(
-                    chain
-                )
-            }"
-        )
-
-        val hexAmount = stringToTokenHex(amount)
-        _uiState.value = UIState.Loading
         try {
-            val transferCall = WalletKit.prepareErc20TransferCall(
-                contractAddress = token.getAddressOn(chain),
-                to = to,
-                amount = hexAmount
-            )
-            val initialTransaction = Wallet.Model.InitialTransaction(
-                from = from,
-                to = transferCall.to,
-                chainId = chain.id,
-                input = transferCall.input,
-                value = transferCall.value,
-            )
+            println("kobe: Amount: $amount")
+            val initialTransaction = when (token) {
+                is StableCoin -> {
+                    println("kobe: ${chain.name}, token: ${token.name}; contractAddress: ${token.getAddressOn(chain)}")
+                    val hexAmount = stringToTokenHex(amount, token.decimals)
+                    _uiState.value = UIState.Loading
+
+                    val transferCall = WalletKit.prepareErc20TransferCall(
+                        contractAddress = token.getAddressOn(chain),
+                        to = to,
+                        amount = hexAmount
+                    )
+
+                    Wallet.Model.InitialTransaction(
+                        from = from,
+                        to = transferCall.to,
+                        chainId = chain.id,
+                        input = transferCall.input,
+                        value = transferCall.value,
+                    )
+                }
+
+                is Coin -> {
+                    val hexAmount = stringToTokenHex(amount, token.decimals)
+                    _uiState.value = UIState.Loading
+
+                    Wallet.Model.InitialTransaction(
+                        from = from,
+                        to = to,
+                        chainId = chain.id,
+                        input = "0x",
+                        value = hexAmount,
+                    )
+                }
+
+                else -> {
+                    throw Exception("Unknown token")
+                }
+            }
+
             println("initial tx: $initialTransaction")
+
             WalletKit.ChainAbstraction.prepare(
                 initialTransaction,
                 listOf(SolanaAccountDelegate.keys.third),
@@ -207,7 +223,7 @@ class TransactionViewModel : ViewModel() {
         }
     }
 
-    private suspend fun getBalance(
+    private fun getBalance(
         chainId: String,
         ownerAddress: String,
         tokenSymbol: String
@@ -263,9 +279,10 @@ class TransactionViewModel : ViewModel() {
         }
     }
 
-    private fun stringToTokenHex(amount: String): String {
+    private fun stringToTokenHex(amount: String, decimals: Int): String {
         return try {
-            val withDecimals = amount.toBigDecimal().multiply(BigDecimal("1000000"))
+            val multiplier = BigDecimal.TEN.pow(decimals)
+            val withDecimals = amount.toBigDecimal().multiply(multiplier)
             val hex = withDecimals.toBigInteger().toString(16)
             "0x$hex"
         } catch (e: Exception) {
