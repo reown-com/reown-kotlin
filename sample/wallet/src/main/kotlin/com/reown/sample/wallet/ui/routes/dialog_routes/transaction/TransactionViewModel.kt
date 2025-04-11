@@ -51,10 +51,8 @@ class TransactionViewModel : ViewModel() {
     @OptIn(ChainAbstractionExperimentalApi::class)
     fun sendTransaction(chain: Chain, token: Token, amount: String, to: String, from: String) {
         try {
-            println("kobe: Amount: $amount")
             val initialTransaction = when (token) {
                 is StableCoin -> {
-                    println("kobe: ${chain.name}, token: ${token.name}; contractAddress: ${token.getAddressOn(chain)}")
                     val hexAmount = stringToTokenHex(amount, token.decimals)
                     _uiState.value = UIState.Loading
 
@@ -212,7 +210,6 @@ class TransactionViewModel : ViewModel() {
                                 }
                             } catch (e: Exception) {
                                 recordError(e)
-                                println("kobe: getERC20Balance error for $chain $token: $e")
                                 _balanceState.update { currentState ->
                                     currentState + (Pair(chain, token) to "-.--")
                                 }
@@ -229,9 +226,6 @@ class TransactionViewModel : ViewModel() {
         tokenSymbol: String
     ): String {
         val client = OkHttpClient()
-
-        println("kobe: GET owner: $ownerAddress; $tokenSymbol; $chainId")
-
         // Build the URL with path parameters and query parameters
         val urlBuilder =
             "https://rpc.walletconnect.com/v1/account/${ownerAddress}/balance".toHttpUrlOrNull()
@@ -249,8 +243,6 @@ class TransactionViewModel : ViewModel() {
             .get()
             .build()
 
-        println("kobe: URL:${request.url}; ${request.headers}")
-
         // Execute the request
         val response = client.newCall(request).execute()
 
@@ -260,21 +252,19 @@ class TransactionViewModel : ViewModel() {
 
             // Get the balances array
             val balancesArray = jsonObject.getJSONArray("balances")
-            println("kobe: balances: $balancesArray")
-
+            println("balances: $balancesArray")
             // Iterate through the array to find the matching token address
             for (i in 0 until balancesArray.length()) {
                 val token = balancesArray.getJSONObject(i)
                 if (token.getString("symbol") == tokenSymbol) {
                     val numeric = token.getJSONObject("quantity").getString("numeric")
-                    println("kobe: FOUND $numeric")
                     return numeric
                 }
             }
-            println("kobe: Token not found for address: ${tokenSymbol}")
+            println("Token not found for address: $tokenSymbol")
             ""
         } else {
-            println("kobe: Error: ${response.body}")
+            println("Error: ${response.body}")
             ""
         }
     }
