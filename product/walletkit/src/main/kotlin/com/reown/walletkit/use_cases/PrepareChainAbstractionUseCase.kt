@@ -46,9 +46,9 @@ class PrepareChainAbstractionUseCase(private val chainAbstractionClient: ChainAb
 
                     is PrepareDetailedResponse.Error -> {
                         when (result.v1.error) {
-                            BridgingError.NO_ROUTES_AVAILABLE -> onError(Wallet.Model.PrepareError.NoRoutesAvailable)
-                            BridgingError.INSUFFICIENT_FUNDS -> onError(Wallet.Model.PrepareError.InsufficientFunds)
-                            BridgingError.INSUFFICIENT_GAS_FUNDS -> onError(Wallet.Model.PrepareError.InsufficientGasFunds)
+                            BridgingError.NO_ROUTES_AVAILABLE -> onError(Wallet.Model.PrepareError.NoRoutesAvailable(result.v1.reason))
+                            BridgingError.INSUFFICIENT_FUNDS -> onError(Wallet.Model.PrepareError.InsufficientFunds(result.v1.reason))
+                            BridgingError.INSUFFICIENT_GAS_FUNDS -> onError(Wallet.Model.PrepareError.InsufficientGasFunds(result.v1.reason))
                             BridgingError.UNKNOWN -> onError(Wallet.Model.PrepareError.Unknown("Unknown"))
                         }
                     }

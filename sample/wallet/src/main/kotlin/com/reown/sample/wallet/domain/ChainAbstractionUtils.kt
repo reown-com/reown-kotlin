@@ -108,9 +108,9 @@ fun emitChainAbstractionError(
 
 fun getErrorMessage(): String {
     return when (val error = WCDelegate.prepareError) {
-        Wallet.Model.PrepareError.InsufficientFunds -> "Insufficient funds"
-        Wallet.Model.PrepareError.InsufficientGasFunds -> "Insufficient gas funds"
-        Wallet.Model.PrepareError.NoRoutesAvailable -> "No routes available"
+        is Wallet.Model.PrepareError.InsufficientFunds -> error.message
+        is Wallet.Model.PrepareError.InsufficientGasFunds -> error.message
+        is Wallet.Model.PrepareError.NoRoutesAvailable -> error.message
         is Wallet.Model.PrepareError.Unknown -> error.message
         else -> "Unknown Error"
     }
