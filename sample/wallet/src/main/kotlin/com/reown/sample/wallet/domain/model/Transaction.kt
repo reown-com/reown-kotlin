@@ -235,7 +235,7 @@ object Transaction {
                 val divisor = BigDecimal.TEN.pow(decimals)
                 BigDecimal(cleanedHex.toBigInteger(16)).divide(divisor)
             } else {
-                BigDecimal(value).setScale(4, RoundingMode.HALF_UP)
+                BigDecimal(value)//.setScale(4, RoundingMode.HALF_UP)
             }
 
 
