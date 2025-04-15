@@ -256,6 +256,50 @@ class GenerateApprovedNamespacesUtilsTest {
     }
 
     @Test
+    fun `test if session namespaces doesn't have empty chains when they are not supoorted`() {
+        val required = emptyMap<String, Sign.Model.Namespace.Proposal>()
+        val optional = mapOf(
+            "eip155" to Sign.Model.Namespace.Proposal(
+                chains = listOf("eip155:1"),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged"),
+            ),
+            "solana" to Sign.Model.Namespace.Proposal(
+                chains = listOf("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", "solana:8E9rvCKLFQia2Y35HXjjpWzj8weVo44K"),
+                methods = listOf("solana_signMessage", " solana_signTransaction"),
+                events = listOf("chainChanged"),
+            )
+        )
+        val supported = mapOf(
+            "eip155" to Sign.Model.Namespace.Session(
+                chains = listOf("eip155:1"),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged"),
+                accounts = listOf("eip155:1:0x57f48fAFeC1d76B27e3f29b8d277b6218CDE6092")
+            ),
+            "solana" to Sign.Model.Namespace.Session(
+                chains = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"),
+                methods = listOf("solana_signMessage", " solana_signTransaction"),
+                events = listOf("chainChanged"),
+                accounts = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:5r9aH2Jm9K6N1QP247TByNg34jMsFvcM5fGBYpw4w5nm")
+            )
+        )
+        val proposal = Sign.Model.SessionProposal("", "", "", "", listOf(), "", requiredNamespaces = required, optionalNamespaces = optional, mapOf(), "", "", "", mapOf())
+
+        val approved = generateApprovedNamespaces(proposal, supported)
+        val expected = mapOf(
+            "eip155" to Sign.Model.Namespace.Session(
+                chains = listOf("eip155:1"),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged"),
+                accounts = listOf("eip155:1:0x57f48fAFeC1d76B27e3f29b8d277b6218CDE6092")
+            )
+        )
+
+        assertEquals(expected, approved)
+    }
+
+    @Test
     fun `test if methods in optional namespaces are satisfied if events are empty`() {
         val required = mapOf("eip155" to Sign.Model.Namespace.Proposal(chains = listOf("eip155:1"), methods = listOf(), events = listOf()))
         val optional = mapOf("eip155" to Sign.Model.Namespace.Proposal(chains = listOf("eip155:1"), methods = listOf("eth_sendTransaction"), events = listOf("")))
