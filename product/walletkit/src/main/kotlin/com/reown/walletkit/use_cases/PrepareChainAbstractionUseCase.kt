@@ -27,7 +27,14 @@ class PrepareChainAbstractionUseCase(private val chainAbstractionClient: ChainAb
                     try {
                         val call = Call(to = initialTransaction.to, value = initialTransaction.value, input = initialTransaction.input)
                         solanaGenerateKeypair()
-                        chainAbstractionClient.prepareDetailed(initialTransaction.chainId, initialTransaction.from, call, accounts, Currency.USD)
+                        chainAbstractionClient.prepareDetailed(
+                            initialTransaction.chainId,
+                            initialTransaction.from,
+                            call,
+                            accounts,
+                            Currency.USD,
+                            useLifi = false
+                        )
                     } catch (e: Exception) {
                         return@async onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
                     }
@@ -49,6 +56,7 @@ class PrepareChainAbstractionUseCase(private val chainAbstractionClient: ChainAb
                             BridgingError.NO_ROUTES_AVAILABLE -> onError(Wallet.Model.PrepareError.NoRoutesAvailable(result.v1.reason))
                             BridgingError.INSUFFICIENT_FUNDS -> onError(Wallet.Model.PrepareError.InsufficientFunds(result.v1.reason))
                             BridgingError.INSUFFICIENT_GAS_FUNDS -> onError(Wallet.Model.PrepareError.InsufficientGasFunds(result.v1.reason))
+                            BridgingError.ASSET_NOT_SUPPORTED -> onError(Wallet.Model.PrepareError.AssetNotSupported(result.v1.reason))
                             BridgingError.UNKNOWN -> onError(Wallet.Model.PrepareError.Unknown("Unknown"))
                         }
                     }

@@ -210,6 +210,7 @@ object Wallet {
             data class NoRoutesAvailable(val message: String) : PrepareError()
             data class InsufficientFunds(val message: String) : PrepareError()
             data class InsufficientGasFunds(val message: String) : PrepareError()
+            data class AssetNotSupported(val message: String) : PrepareError()
             data class Unknown(val message: String) : PrepareError()
         }
 

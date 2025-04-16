@@ -136,7 +136,7 @@ class ChainAbstractionViewModel : ViewModel() {
                         onFailure = {
                             println("Execution error: $it")
                             recordError(it)
-                            onError(Throwable("Execution error: $it"))
+                            onError(Throwable("Orchestrator ID: ${prepareAvailable?.orchestratorId}; Execution error: $it"))
                         }
                     )
                 }
