@@ -133,7 +133,7 @@ internal class ApproveSessionUseCase(
             trace.add(Trace.Session.PROPOSAL_NOT_EXPIRED)
             SignValidator.validateSessionNamespace(sessionNamespaces.toMapOfNamespacesVOSession(), proposal.requiredNamespaces) { error ->
                 insertEventUseCase(Props(type = EventType.Error.SESSION_APPROVE_NAMESPACE_VALIDATION_FAILURE, properties = Properties(trace = trace, topic = pairingTopic)))
-                    .also { logger.log("Session approve failure - invalid namespaces, error: $error") }
+                    .also { logger.log("Session approve failure - invalid namespaces, error: ${error.message}") }
                 throw InvalidNamespaceException(error.message)
             }
             trace.add(Trace.Session.SESSION_NAMESPACE_VALIDATION_SUCCESS)

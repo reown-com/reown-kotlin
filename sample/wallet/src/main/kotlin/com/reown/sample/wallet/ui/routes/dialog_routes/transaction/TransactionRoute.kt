@@ -24,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,15 +43,18 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
-import com.reown.sample.wallet.ui.routes.Route
 
 @Composable
-fun TransactionRoute(navController: NavHostController, viewModel: TransactionViewModel = viewModel()) {
-    var selectedCoin by remember { mutableStateOf(StableCoin.USDC) }
+fun TransactionRoute(
+    navController: NavHostController,
+    viewModel: TransactionViewModel = viewModel()
+) {
+    var selectedCoin by remember { mutableStateOf<Token>(Coin.ETH) }
     var amountToSend by remember { mutableStateOf("1") }
     var to by remember { mutableStateOf("") }
-    var selectedChain by remember { mutableStateOf(Chain.BASE) }
+    var selectedChain by remember { mutableStateOf(Chain.ETHEREUM) }
     val uiState by viewModel.uiState.collectAsState()
 
     SemiTransparentDialog {
@@ -91,7 +93,13 @@ fun TransactionRoute(navController: NavHostController, viewModel: TransactionVie
             )
         }
         SendButton(uiState = uiState) {
-            viewModel.sendTransaction(selectedChain, selectedCoin, amountToSend, to, EthAccountDelegate.address)
+            viewModel.sendTransaction(
+                selectedChain,
+                selectedCoin,
+                amountToSend,
+                to,
+                EthAccountDelegate.address
+            )
         }
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -100,7 +108,9 @@ fun TransactionRoute(navController: NavHostController, viewModel: TransactionVie
 @Composable
 fun AddressCard() {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray.copy(alpha = 0.3f))
     ) {
         Column(
@@ -113,7 +123,13 @@ fun AddressCard() {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = EthAccountDelegate.address,
+                text = "EVM: ${EthAccountDelegate.address}",
+                color = Color.White,
+                fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Solana: ${SolanaAccountDelegate.keys.second}",
                 color = Color.White,
                 fontSize = 14.sp
             )
@@ -126,7 +142,9 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
     val balanceState by viewModel.balanceState.collectAsState()
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray.copy(alpha = 0.3f))
     ) {
         Column(
@@ -143,7 +161,7 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "USD Coin",
+                    text = "USDC",
                     color = Color.Gray,
                     fontSize = 16.sp
                 )
@@ -158,7 +176,7 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Tether USD",
+                    text = "USDT",
                     color = Color.Gray,
                     fontSize = 16.sp
                 )
@@ -183,14 +201,31 @@ fun BalanceCard(viewModel: TransactionViewModel, selectedChain: Chain) {
                     fontSize = 16.sp
                 )
             }
+            if (selectedChain != Chain.SOLANA) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "ETH",
+                        color = Color.Gray,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = "${balanceState[Pair(selectedChain, Coin.ETH)] ?: "-.--"} ETH",
+                        color = Color.White,
+                        fontSize = 16.sp
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 fun TransactionCard(
-    selectedCoin: StableCoin,
-    onCoinSelected: (StableCoin) -> Unit,
+    selectedCoin: Token,
+    onCoinSelected: (Token) -> Unit,
     amountToSend: String,
     onAmountChanged: (String) -> Unit,
     recipient: String,
@@ -202,7 +237,9 @@ fun TransactionCard(
     var isRecipientDropdownExpanded by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray.copy(alpha = 0.3f))
     ) {
         Column(
@@ -225,6 +262,14 @@ fun TransactionCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                if (selectedNetwork != Chain.SOLANA) {
+                    CoinSelectionButton(
+                        text = Coin.ETH.name,
+                        selected = selectedCoin == Coin.ETH,
+                        onClick = { onCoinSelected(Coin.ETH) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
                 CoinSelectionButton(
                     text = StableCoin.USDC.name,
                     selected = selectedCoin == StableCoin.USDC,
@@ -355,7 +400,13 @@ fun TransactionCard(
                             .background(Color.DarkGray),
                         properties = PopupProperties(focusable = true)
                     ) {
-                        listOf(Chain.BASE, Chain.OPTIMISM, Chain.ARBITRUM).forEach { option ->
+                        listOf(
+                            Chain.ETHEREUM,
+                            Chain.BASE,
+                            Chain.OPTIMISM,
+                            Chain.ARBITRUM,
+                            Chain.SOLANA
+                        ).forEach { option ->
                             DropdownMenuItem(
                                 text = {
                                     Text(

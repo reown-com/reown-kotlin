@@ -10,6 +10,7 @@ import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.EthSigner
 import com.reown.sample.wallet.domain.Signer
+import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.WCDelegate.prepareAvailable
 import com.reown.sample.wallet.domain.clearSessionRequest
@@ -22,6 +23,7 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.S
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.reown.walletkit.utils.solanaSignPrehash
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -65,16 +67,36 @@ class ChainAbstractionViewModel : ViewModel() {
             try {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
-                    val signedFulfilmentTransactions = mutableListOf<String>()
+                    val signedFulfilmentTransactions = mutableListOf<Wallet.Model.RouteSig>()
 
                     //signing fulfilment txs
-                    prepareAvailable?.transactionsDetails?.details?.forEach { transactionDetail ->
-                        val signedTransaction = EthSigner.signHash(transactionDetail.transactionHashToSign, EthAccountDelegate.privateKey)
-                        signedFulfilmentTransactions.add(signedTransaction)
+                    prepareAvailable?.transactionsDetails?.route?.forEach { route ->
+                        when (route) {
+                            is Wallet.Model.Route.Eip155 -> {
+                                val eip155Signatures = mutableListOf<String>()
+                                route.transactionDetails.forEach { transactionDetails ->
+                                    val signedTransaction =
+                                        EthSigner.signHash(transactionDetails.transactionHashToSign, EthAccountDelegate.privateKey)
+                                    eip155Signatures.add(signedTransaction)
+
+                                }
+                                signedFulfilmentTransactions.add(Wallet.Model.RouteSig.Eip155(eip155Signatures))
+                            }
+
+                            is Wallet.Model.Route.Solana -> {
+                                val solanaSignatures = mutableListOf<String>()
+                                route.solanaTransactionDetails.forEach { transactionDetails ->
+                                    val signedTransaction = SolanaAccountDelegate.signHash(transactionDetails.transactionHashToSign)
+                                    solanaSignatures.add(signedTransaction)
+                                }
+                                signedFulfilmentTransactions.add(Wallet.Model.RouteSig.Solana(solanaSignatures))
+                            }
+                        }
                     }
 
                     //signing initial tx
-                    val initTransactionDetails = prepareAvailable?.transactionsDetails?.initialDetails ?: throw IllegalStateException("Initial transaction not found")
+                    val initTransactionDetails =
+                        prepareAvailable?.transactionsDetails?.initialDetails ?: throw IllegalStateException("Initial transaction not found")
                     val signedInitialTx = EthSigner.signHash(initTransactionDetails.transactionHashToSign, EthAccountDelegate.privateKey)
 
                     //call execute method from WalletKit
@@ -86,11 +108,15 @@ class ChainAbstractionViewModel : ViewModel() {
                             if (sessionRequest.topic.isNotEmpty()) {
                                 val response = Wallet.Params.SessionRequestResponse(
                                     sessionTopic = sessionRequest.topic,
-                                    jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, executeSuccess.initialTxHash)
+                                    jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
+                                        sessionRequest.requestId,
+                                        executeSuccess.initialTxHash
+                                    )
                                 )
 
                                 val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                                WalletKit.respondSessionRequest(response,
+                                WalletKit.respondSessionRequest(
+                                    response,
                                     onSuccess = {
                                         clearSessionRequest()
                                         onSuccess(TxSuccess(redirect, executeSuccess.initialTxHash))
@@ -110,7 +136,7 @@ class ChainAbstractionViewModel : ViewModel() {
                         onFailure = {
                             println("Execution error: $it")
                             recordError(it)
-                            onError(Throwable("Execution error: $it"))
+                            onError(Throwable("Orchestrator ID: ${prepareAvailable?.orchestratorId}; Execution error: $it"))
                         }
                     )
                 }
@@ -137,7 +163,8 @@ class ChainAbstractionViewModel : ViewModel() {
                     )
                 )
                 val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
-                WalletKit.respondSessionRequest(result,
+                WalletKit.respondSessionRequest(
+                    result,
                     onSuccess = {
                         clearSessionRequest()
                         onSuccess(redirect)
