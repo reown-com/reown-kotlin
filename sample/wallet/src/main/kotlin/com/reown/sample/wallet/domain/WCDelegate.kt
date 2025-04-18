@@ -29,6 +29,7 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     var sessionAuthenticateEvent: Pair<Wallet.Model.SessionAuthenticate, Wallet.Model.VerifyContext>? = null
     var sessionRequestEvent: Pair<Wallet.Model.SessionRequest, Wallet.Model.VerifyContext>? = null
     var currentId: Long? = null
+
     //CA
     var prepareAvailable: Wallet.Model.PrepareSuccess.Available? = null
     var prepareError: Wallet.Model.PrepareError? = null
@@ -84,8 +85,10 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
         if (sessionRequest.request.method == "eth_sendTransaction") {
             try {
                 val initTx = getInitialTransaction(sessionRequest)
+                println("Init TX: $initTx")
                 WalletKit.ChainAbstraction.prepare(
                     initTx,
+                    listOf(SolanaAccountDelegate.keys.third),
                     onSuccess = { result ->
                         when (result) {
                             is Wallet.Model.PrepareSuccess.Available -> {
@@ -101,8 +104,12 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
                     },
                     onError = { error ->
                         println("Prepare error: $error")
-                        respondWithError(getErrorMessage(), sessionRequest)
-                        emitChainAbstractionError(sessionRequest, error, verifyContext)
+                        if (error is Wallet.Model.PrepareError.Unknown) {
+                            emitSessionRequest(sessionRequest, verifyContext)
+                        } else {
+                            respondWithError(getErrorMessage(), sessionRequest)
+                            emitChainAbstractionError(sessionRequest, error, verifyContext)
+                        }
                     }
                 )
             } catch (e: Exception) {

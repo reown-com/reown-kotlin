@@ -90,7 +90,8 @@ internal class SessionRequestUseCase(
             return@supervisorScope onFailure(InvalidRequestException(error.message))
         }
 
-        val namespaces: Map<String, Namespace.Session> = sessionStorageRepository.getSessionWithoutMetadataByTopic(Topic(request.topic)).sessionNamespaces
+        val namespaces: Map<String, Namespace.Session> =
+            sessionStorageRepository.getSessionWithoutMetadataByTopic(Topic(request.topic)).sessionNamespaces
         SignValidator.validateChainIdWithMethodAuthorisation(request.chainId, request.method, namespaces) { error ->
             logger.error("Sending session request error: unauthorized method, ${error.message}")
             return@supervisorScope onFailure(UnauthorizedMethodException(error.message))
@@ -98,7 +99,12 @@ internal class SessionRequestUseCase(
 
         val params = SignParams.SessionRequestParams(SessionRequestVO(request.method, request.params, expiry.seconds), request.chainId)
         val sessionPayload = SignRpc.SessionRequest(params = params)
-        val walletServiceUrl = walletServiceFinder.findMatchingWalletService(request, session)
+        val walletServiceUrl = try {
+            walletServiceFinder.findMatchingWalletService(request, session)
+        } catch (e: Exception) {
+            null
+        }
+
 
         if (walletServiceUrl != null) {
             try {
@@ -107,7 +113,8 @@ internal class SessionRequestUseCase(
                 _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
             } catch (e: Exception) {
                 logger.error("Sending session request error: $e")
-                val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcError(id = sessionPayload.id, error = EngineDO.JsonRpcResponse.Error(0, e.message ?: ""))
+                val jsonRpcResult =
+                    EngineDO.JsonRpcResponse.JsonRpcError(id = sessionPayload.id, error = EngineDO.JsonRpcResponse.Error(0, e.message ?: ""))
                 _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
             }
         } else {
@@ -149,7 +156,8 @@ internal class SessionRequestUseCase(
         val requestTtlInSeconds = expiry.run { seconds - nowInSeconds }
 
         logger.log("Sending session request on topic: ${request.topic}}")
-        jsonRpcInteractor.publishJsonRpcRequest(Topic(request.topic), irnParams, sessionPayload,
+        jsonRpcInteractor.publishJsonRpcRequest(
+            Topic(request.topic), irnParams, sessionPayload,
             onSuccess = {
                 logger.log("Session request sent successfully on topic: ${request.topic}")
                 onSuccess(sessionPayload.id)

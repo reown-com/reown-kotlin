@@ -41,7 +41,9 @@ fun generateApprovedNamespaces(
         val chains = supportedNamespacesVO[key]?.chains?.filter { chain -> requiredNamespace.chains!!.contains(chain) } ?: emptyList()
         val methods = supportedNamespaces[key]?.methods?.filter { method -> requiredNamespace.methods.contains(method) } ?: emptyList()
         val events = supportedNamespaces[key]?.events?.filter { event -> requiredNamespace.events.contains(event) } ?: emptyList()
-        val accounts = chains.flatMap { chain -> supportedNamespaces[key]?.accounts?.filter { account -> SignValidator.getChainFromAccount(account) == chain } ?: emptyList() }
+        val accounts = chains.flatMap { chain ->
+            supportedNamespaces[key]?.accounts?.filter { account -> SignValidator.getChainFromAccount(account) == chain } ?: emptyList()
+        }
 
         approvedNamespaces[key] = Namespace.Session(chains = chains, methods = methods, events = events, accounts = accounts)
     }
@@ -51,14 +53,18 @@ fun generateApprovedNamespaces(
         val chains = supportedNamespacesVO[key]?.chains?.filter { chain -> optionalNamespace.chains!!.contains(chain) } ?: emptyList()
         val methods = supportedNamespaces[key]?.methods?.filter { method -> optionalNamespace.methods.contains(method) } ?: emptyList()
         val events = supportedNamespaces[key]?.events?.filter { event -> optionalNamespace.events.contains(event) } ?: emptyList()
-        val accounts = chains.flatMap { chain -> supportedNamespaces[key]?.accounts?.filter { account -> SignValidator.getChainFromAccount(account) == chain } ?: emptyList() }
+        val accounts = chains.flatMap { chain ->
+            supportedNamespaces[key]?.accounts?.filter { account -> SignValidator.getChainFromAccount(account) == chain } ?: emptyList()
+        }
 
-        approvedNamespaces[key] = Namespace.Session(
-            chains = approvedNamespaces[key]?.chains?.plus(chains)?.distinct() ?: chains,
-            methods = approvedNamespaces[key]?.methods?.plus(methods)?.distinct() ?: methods,
-            events = approvedNamespaces[key]?.events?.plus(events)?.distinct() ?: events,
-            accounts = approvedNamespaces[key]?.accounts?.plus(accounts)?.distinct() ?: accounts
-        )
+        if (chains.isNotEmpty()) {
+            approvedNamespaces[key] = Namespace.Session(
+                chains = approvedNamespaces[key]?.chains?.plus(chains)?.distinct() ?: chains,
+                methods = approvedNamespaces[key]?.methods?.plus(methods)?.distinct() ?: methods,
+                events = approvedNamespaces[key]?.events?.plus(events)?.distinct() ?: events,
+                accounts = approvedNamespaces[key]?.accounts?.plus(accounts)?.distinct() ?: accounts
+            )
+        }
     }
 
     return approvedNamespaces.toCore()
@@ -78,7 +84,9 @@ internal fun normalizeNamespaces(namespaces: Map<String, Namespace.Proposal>): M
     }.toMap()
 }
 
-private fun getNamespaceChains(key: String, namespace: Namespace) = if (CoreValidator.isChainIdCAIP2Compliant(key)) listOf(key) else namespace.chains!!
+private fun getNamespaceChains(key: String, namespace: Namespace) =
+    if (CoreValidator.isChainIdCAIP2Compliant(key)) listOf(key) else namespace.chains!!
+
 private fun normalizeKey(key: String): String = if (CoreValidator.isChainIdCAIP2Compliant(key)) SignValidator.getNamespaceKeyFromChainId(key) else key
 private fun MutableMap<String, Namespace.Proposal>.getChains(normalizedKey: String) = (this[normalizedKey]?.chains ?: emptyList())
 private fun MutableMap<String, Namespace.Proposal>.getMethods(normalizedKey: String) = (this[normalizedKey]?.methods ?: emptyList())
@@ -92,7 +100,11 @@ fun generateAuthObject(payload: Sign.Model.PayloadParams, issuer: String, signat
     )
 }
 
-fun generateAuthPayloadParams(payloadParams: Sign.Model.PayloadParams, supportedChains: List<String>, supportedMethods: List<String>): Sign.Model.PayloadParams {
+fun generateAuthPayloadParams(
+    payloadParams: Sign.Model.PayloadParams,
+    supportedChains: List<String>,
+    supportedMethods: List<String>
+): Sign.Model.PayloadParams {
     val reCapsJson: String? = payloadParams.resources.decodeReCaps()
     if (reCapsJson.isNullOrEmpty() || !reCapsJson.contains("eip155")) return payloadParams
 

@@ -14,9 +14,14 @@ import uniffi.yttrium.InitialTransactionMetadata
 import uniffi.yttrium.OwnerSignature
 import uniffi.yttrium.PrepareResponseAvailable
 import uniffi.yttrium.PreparedSendTransaction
+import uniffi.yttrium.Route
+import uniffi.yttrium.RouteSig
+import uniffi.yttrium.SolanaTransaction
+import uniffi.yttrium.SolanaTxnDetails
 import uniffi.yttrium.Metadata as YMetadata
 import uniffi.yttrium.Transaction
 import uniffi.yttrium.TransactionFee
+import uniffi.yttrium.Transactions
 import uniffi.yttrium.TxnDetails
 import uniffi.yttrium.UiFields
 
@@ -86,7 +91,13 @@ internal fun Wallet.Model.PayloadAuthRequestParams.toSign(): Sign.Model.PayloadP
 
 @JvmSynthetic
 internal fun Sign.Model.Session.toWallet(): Wallet.Model.Session = Wallet.Model.Session(
-    pairingTopic, topic, expiry, requiredNamespaces.toWalletProposalNamespaces(), optionalNamespaces?.toWalletProposalNamespaces(), namespaces.toWallet(), metaData
+    pairingTopic,
+    topic,
+    expiry,
+    requiredNamespaces.toWalletProposalNamespaces(),
+    optionalNamespaces?.toWalletProposalNamespaces(),
+    namespaces.toWallet(),
+    metaData
 )
 
 @JvmSynthetic
@@ -133,7 +144,8 @@ internal fun Sign.Model.SessionAuthenticate.toWallet(): Wallet.Model.SessionAuth
     Wallet.Model.SessionAuthenticate(id, topic, participant.toWallet(), payloadParams.toWallet())
 
 @JvmSynthetic
-internal fun Sign.Model.SessionAuthenticate.Participant.toWallet(): Wallet.Model.SessionAuthenticate.Participant = Wallet.Model.SessionAuthenticate.Participant(publicKey, metadata)
+internal fun Sign.Model.SessionAuthenticate.Participant.toWallet(): Wallet.Model.SessionAuthenticate.Participant =
+    Wallet.Model.SessionAuthenticate.Participant(publicKey, metadata)
 
 @JvmSynthetic
 internal fun Sign.Model.PayloadParams.toWallet(): Wallet.Model.PayloadAuthRequestParams =
@@ -323,7 +335,13 @@ internal fun UiFields.toWallet(): Wallet.Model.PrepareSuccess.Available =
     Wallet.Model.PrepareSuccess.Available(
         orchestratorId = routeResponse.orchestrationId,
         checkIn = routeResponse.metadata.checkIn.toLong(),
-        transactions = routeResponse.transactions.map { it.toWallet() },
+        transactions = routeResponse.transactions.map {
+            when (it) {
+                is Transactions.Eip155 -> Wallet.Model.Transactions.Eip155(it.v1.map { eip155 -> eip155.toWallet() })
+                is Transactions.Solana -> Wallet.Model.Transactions.Solana(it.v1.map { solana -> solana.toWallet() })
+                else -> throw Exception("Unsupported Transaction type")
+            }
+        },
         initialTransaction = routeResponse.initialTransaction.toWallet(),
         initialTransactionMetadata = routeResponse.metadata.initialTransaction.toWallet(),
         funding = routeResponse.metadata.fundingFrom.map { it.toWallet() },
@@ -333,7 +351,13 @@ internal fun UiFields.toWallet(): Wallet.Model.PrepareSuccess.Available =
 private fun UiFields.toTransactionsDetails() = Wallet.Model.TransactionsDetails(
     localTotal = localTotal.toWallet(),
     initialDetails = initial.toWallet(),
-    details = route.map { it.toWallet() },
+    route = route.map {
+        when (it) {
+            is Route.Eip155 -> Wallet.Model.Route.Eip155(it.v1.map { eip155 -> eip155.toWallet() })
+            is Route.Solana -> Wallet.Model.Route.Solana(it.v1.map { solana -> solana.toWallet() })
+            else -> throw Exception("Unsupported Route type")
+        }
+    },
     bridgeFees = bridge.map { it.toWallet() },
     localFulfilmentTotal = localRouteTotal.toWallet(),
     localBridgeTotal = localBridgeTotal.toWallet()
@@ -349,12 +373,28 @@ internal fun Wallet.Model.PrepareSuccess.Available.toResponseYttrium(): PrepareR
             fundingFrom = funding.map { it.toYttrium() }
         ),
         initialTransaction = initialTransaction.toYttrium(),
-        transactions = transactions.map { it.toYttrium() })
+        transactions = transactions.map {
+            when (it) {
+                is Wallet.Model.Transactions.Eip155 -> Transactions.Eip155(it.transactions.map { eip155 -> eip155.toYttrium() })
+                is Wallet.Model.Transactions.Solana -> Transactions.Solana(it.transactions.map { solana -> solana.toYttrium() })
+            }
+        })
+
+@JvmSynthetic
+internal fun Wallet.Model.RouteSig.toYttrium(): RouteSig = when (this) {
+    is Wallet.Model.RouteSig.Eip155 -> RouteSig.Eip155(this.signatures)
+    is Wallet.Model.RouteSig.Solana -> RouteSig.Solana(this.signatures)
+}
 
 @JvmSynthetic
 internal fun Wallet.Model.PrepareSuccess.Available.toYttrium(): UiFields =
     UiFields(
-        route = transactionsDetails.details.map { it.toYttrium() },
+        route = transactionsDetails.route.map {
+            when (it) {
+                is Wallet.Model.Route.Eip155 -> Route.Eip155(it.transactionDetails.map { eip155 -> eip155.toYttrium() })
+                is Wallet.Model.Route.Solana -> Route.Solana(it.solanaTransactionDetails.map { solana -> solana.toYttrium() })
+            }
+        },
         localTotal = transactionsDetails.localTotal.toYttrium(),
         localRouteTotal = transactionsDetails.localFulfilmentTotal.toYttrium(),
         bridge = transactionsDetails.bridgeFees.map { it.toYttrium() },
@@ -395,6 +435,13 @@ fun Transaction.toWallet(): Wallet.Model.Transaction = Wallet.Model.Transaction(
 )
 
 @JvmSynthetic
+fun SolanaTransaction.toWallet(): Wallet.Model.SolanaTransaction = Wallet.Model.SolanaTransaction(
+    from = from,
+    chainId = chainId,
+    versionedTransaction = transaction
+)
+
+@JvmSynthetic
 fun Wallet.Model.Transaction.toYttrium(): Transaction = Transaction(
     from = from,
     to = to,
@@ -406,13 +453,23 @@ fun Wallet.Model.Transaction.toYttrium(): Transaction = Transaction(
 )
 
 @JvmSynthetic
-private fun Wallet.Model.FundingMetadata.toYttrium(): FundingMetadata = FundingMetadata(chainId, tokenContract, symbol, amount = amount, bridgingFee = bridgingFee, decimals = decimals.toUByte())
+fun Wallet.Model.SolanaTransaction.toYttrium(): SolanaTransaction = SolanaTransaction(
+    from = from,
+    chainId = chainId,
+    transaction = versionedTransaction
+)
 
 @JvmSynthetic
-private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata = Wallet.Model.FundingMetadata(chainId, tokenContract, symbol, amount, bridgingFee, 1)
+private fun Wallet.Model.FundingMetadata.toYttrium(): FundingMetadata =
+    FundingMetadata(chainId, tokenContract, symbol, amount = amount, bridgingFee = bridgingFee, decimals = decimals.toUByte())
 
 @JvmSynthetic
-internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees = Wallet.Model.EstimatedFees(maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas)
+private fun FundingMetadata.toWallet(): Wallet.Model.FundingMetadata =
+    Wallet.Model.FundingMetadata(chainId, tokenContract, symbol, amount, bridgingFee, 1)
+
+@JvmSynthetic
+internal fun Eip1559Estimation.toWallet(): Wallet.Model.EstimatedFees =
+    Wallet.Model.EstimatedFees(maxFeePerGas = maxFeePerGas, maxPriorityFeePerGas = maxPriorityFeePerGas)
 
 @JvmSynthetic
 internal fun Amount.toWallet(): Wallet.Model.Amount = Wallet.Model.Amount(
@@ -438,9 +495,19 @@ private fun TxnDetails.toWallet(): Wallet.Model.TransactionDetails = Wallet.Mode
     transactionHashToSign = transactionHashToSign
 )
 
+private fun SolanaTxnDetails.toWallet(): Wallet.Model.SolanaTransactionDetails = Wallet.Model.SolanaTransactionDetails(
+    transaction = transaction.toWallet(),
+    transactionHashToSign = transactionHashToSign
+)
+
 private fun Wallet.Model.TransactionDetails.toYttrium(): TxnDetails = TxnDetails(
     transaction = feeEstimatedTransaction.toWallet(),
     fee = transactionFee.toYttrium(),
+    transactionHashToSign = transactionHashToSign
+)
+
+private fun Wallet.Model.SolanaTransactionDetails.toYttrium(): SolanaTxnDetails = SolanaTxnDetails(
+    transaction = SolanaTransaction(chainId = transaction.chainId, from = transaction.from, transaction = transaction.versionedTransaction),
     transactionHashToSign = transactionHashToSign
 )
 
