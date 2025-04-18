@@ -28,5 +28,5 @@ val jvmVersion = JavaVersion.VERSION_11
 const val MIN_SDK: Int = 23
 const val TARGET_SDK: Int = 34
 const val COMPILE_SDK: Int = TARGET_SDK
-val SAMPLE_VERSION_CODE = "13140".replace(".", "").toInt()
+val SAMPLE_VERSION_CODE = BOM_VERSION.replace(".", "").toInt()
 const val SAMPLE_VERSION_NAME = BOM_VERSION
