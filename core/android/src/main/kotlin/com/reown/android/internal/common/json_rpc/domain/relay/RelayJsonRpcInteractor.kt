@@ -143,6 +143,9 @@ internal class RelayJsonRpcInteractor(
 
         try {
             val responseJson = serializer.serialize(response) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Response Params")
+
+            println("kobe: Response: $responseJson")
+
             val encryptedResponse = chaChaPolyCodec.encrypt(topic, responseJson, envelopeType, participants)
             val encryptedResponseString = Base64.toBase64String(encryptedResponse)
             relay.publish(topic.value, encryptedResponseString, params.toRelay()) { result ->
@@ -169,6 +172,8 @@ internal class RelayJsonRpcInteractor(
         } catch (e: NoConnectivityException) {
             return onFailure(e)
         }
+
+        println("kobe: Subscribe: $topic")
 
         try {
             backoffStrategy.shouldBackoff(true)
@@ -365,6 +370,9 @@ internal class RelayJsonRpcInteractor(
                 Subscription(decryptMessage(topic, relayRequest), relayRequest.message, topic, relayRequest.publishedAt, relayRequest.attestation)
             }.collect { subscription ->
                 if (subscription.decryptedMessage.isNotEmpty()) {
+
+                    println("kobe: Message: ${subscription.decryptedMessage}")
+
                     try {
                         manageSubscriptions(subscription)
                     } catch (e: Exception) {
