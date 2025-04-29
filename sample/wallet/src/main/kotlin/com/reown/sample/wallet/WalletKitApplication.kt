@@ -94,6 +94,9 @@ class WalletKitApplication : Application() {
                 println(error.throwable.stackTraceToString())
             })
 
+
+        CoreClient.Relay.connect { error: Core.Model.Error -> println("kobe: connect error: $error") }
+
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
 //        NotifyClient.initialize(
 //            init = Notify.Params.Init(CoreClient)
