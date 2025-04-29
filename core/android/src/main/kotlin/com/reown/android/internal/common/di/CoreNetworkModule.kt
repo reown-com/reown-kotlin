@@ -113,7 +113,7 @@ fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, 
         DefaultConnectionLifecycle(androidApplication())
     }
 
-    single { ConditionalExponentialBackoffStrategy(INIT_BACKOFF_MILLIS, TimeUnit.SECONDS.toMillis(MAX_BACKOFF_SEC)) }
+    single { ConditionalExponentialBackoffStrategy(INIT_BACKOFF_MILLIS, TimeUnit.SECONDS.toMillis(MAX_BACKOFF_SEC), connectionType) }
 
     single { FlowStreamAdapter.Factory() }
 
