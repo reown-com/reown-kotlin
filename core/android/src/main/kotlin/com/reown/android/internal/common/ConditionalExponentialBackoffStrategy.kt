@@ -1,11 +1,13 @@
 package com.reown.android.internal.common
 
+import com.reown.android.relay.ConnectionType
 import com.tinder.scarlet.retry.BackoffStrategy
 import kotlin.math.pow
 
 class ConditionalExponentialBackoffStrategy(
     private val initialDurationMillis: Long,
-    private val maxDurationMillis: Long
+    private val maxDurationMillis: Long,
+    private val connectionType: ConnectionType
 ) : BackoffStrategy {
     init {
         require(initialDurationMillis > 0) { "initialDurationMillis, $initialDurationMillis, must be positive" }
@@ -15,7 +17,9 @@ class ConditionalExponentialBackoffStrategy(
     override var shouldBackoff: Boolean = false
 
     fun shouldBackoff(shouldBackoff: Boolean) {
-        this.shouldBackoff = shouldBackoff
+        if (connectionType != ConnectionType.MANUAL) {
+            this.shouldBackoff = shouldBackoff
+        }
     }
 
     override fun backoffDurationMillisAt(retryCount: Int): Long =
