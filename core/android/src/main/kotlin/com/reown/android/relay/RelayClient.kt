@@ -35,6 +35,7 @@ class RelayClient(private val koinApp: KoinApplication = wcKoinApp) : BaseRelayC
     private val _wssConnectionState: MutableStateFlow<WSSConnectionState> = MutableStateFlow(WSSConnectionState.Disconnected.ConnectionClosed())
     override val wssConnectionState: StateFlow<WSSConnectionState> = _wssConnectionState
     private lateinit var connectionType: ConnectionType
+
     override val onResubscribe: Flow<Any?>
         get() = merge(
             connectionLifecycle.onResume.filter { isResumed -> isResumed != null && isResumed },
@@ -83,21 +84,30 @@ class RelayClient(private val koinApp: KoinApplication = wcKoinApp) : BaseRelayC
                 _wssConnectionState.value = WSSConnectionState.Disconnected.ConnectionFailed(event.throwable.toWalletConnectException)
 
             event is Relay.Model.Event.OnConnectionClosed && _wssConnectionState.value is WSSConnectionState.Connected ->
-                _wssConnectionState.value = WSSConnectionState.Disconnected.ConnectionClosed("Connection closed: ${event.shutdownReason.reason} ${event.shutdownReason.code}")
+                _wssConnectionState.value =
+                    WSSConnectionState.Disconnected.ConnectionClosed("Connection closed: ${event.shutdownReason.reason} ${event.shutdownReason.code}")
         }
     }
 
     override fun connect(onError: (Core.Model.Error) -> Unit) {
-        when (connectionType) {
-            ConnectionType.AUTOMATIC -> onError(Core.Model.Error(IllegalStateException(WRONG_CONNECTION_TYPE)))
-            ConnectionType.MANUAL -> manualConnection.connect()
+        try {
+            when (connectionType) {
+                ConnectionType.AUTOMATIC -> onError(Core.Model.Error(IllegalStateException(WRONG_CONNECTION_TYPE)))
+                ConnectionType.MANUAL -> manualConnection.connect()
+            }
+        } catch (e: Exception) {
+            onError(Core.Model.Error(e))
         }
     }
 
     override fun disconnect(onError: (Core.Model.Error) -> Unit) {
-        when (connectionType) {
-            ConnectionType.AUTOMATIC -> onError(Core.Model.Error(IllegalStateException(WRONG_CONNECTION_TYPE)))
-            ConnectionType.MANUAL -> manualConnection.disconnect()
+        try {
+            when (connectionType) {
+                ConnectionType.AUTOMATIC -> onError(Core.Model.Error(IllegalStateException(WRONG_CONNECTION_TYPE)))
+                ConnectionType.MANUAL -> manualConnection.disconnect()
+            }
+        } catch (e: Exception) {
+            onError(Core.Model.Error(e))
         }
     }
 
@@ -112,7 +122,10 @@ class RelayClient(private val koinApp: KoinApplication = wcKoinApp) : BaseRelayC
         }
     }
 
-    @Deprecated("This has become deprecate in favor of the onError returning Core.Model.Error", replaceWith = ReplaceWith("this.connect(onErrorModel)"))
+    @Deprecated(
+        "This has become deprecate in favor of the onError returning Core.Model.Error",
+        replaceWith = ReplaceWith("this.connect(onErrorModel)")
+    )
     override fun connect(onErrorModel: (Core.Model.Error) -> Unit, onError: (String) -> Unit) {
         when (connectionType) {
             ConnectionType.AUTOMATIC -> onError(WRONG_CONNECTION_TYPE)
@@ -120,7 +133,10 @@ class RelayClient(private val koinApp: KoinApplication = wcKoinApp) : BaseRelayC
         }
     }
 
-    @Deprecated("This has become deprecate in favor of the onError returning Core.Model.Error", replaceWith = ReplaceWith("this.disconnect(onErrorModel)"))
+    @Deprecated(
+        "This has become deprecate in favor of the onError returning Core.Model.Error",
+        replaceWith = ReplaceWith("this.disconnect(onErrorModel)")
+    )
     override fun disconnect(onErrorModel: (Core.Model.Error) -> Unit, onError: (String) -> Unit) {
         when (connectionType) {
             ConnectionType.AUTOMATIC -> onError(WRONG_CONNECTION_TYPE)

@@ -82,9 +82,9 @@ class WalletKitActivity : AppCompatActivity() {
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
         askNotificationPermission()
-        handleErrors()
+//        handleErrors()
         handleAppLink(intent)
-        registerAccount()
+//        registerAccount()
         setBeagle()
     }
 
@@ -302,7 +302,7 @@ class WalletKitActivity : AppCompatActivity() {
                         onSuccess = {
                             println("Unregister Success")
                             EthAccountDelegate.privateKey = text
-                            registerAccount()
+//                            registerAccount()
                         },
                         onError = { println(it.throwable.stackTraceToString()) }
                     )

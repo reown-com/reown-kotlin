@@ -1,14 +1,9 @@
 package com.reown.sign.test.scenario
 
-import com.reown.android.internal.common.scope
-import com.reown.foundation.network.model.Relay
 import com.reown.sign.test.BuildConfig
 import com.reown.sign.test.utils.TestClient
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.rules.TestRule
@@ -34,29 +29,10 @@ class SignClientInstrumentedActivityScenario : TestRule, SignActivityScenario() 
     private fun beforeAll() {
         runBlocking {
             initLogging()
-            val isDappRelayReady = MutableStateFlow(false)
-            val isWalletRelayReady = MutableStateFlow(false)
-
             val timeoutDuration = BuildConfig.TEST_TIMEOUT_SECONDS.seconds
             TestClient.Wallet.Relay.isLoggingEnabled = true
             TestClient.Dapp.Relay.isLoggingEnabled = true
-
-            val dappRelayJob = TestClient.Dapp.Relay.eventsFlow.onEach { event ->
-                when (event) {
-                    is Relay.Model.Event.OnConnectionOpened<*> -> isDappRelayReady.compareAndSet(expect = false, update = true)
-                    else -> {}
-                }
-            }.launchIn(scope)
-
-
-            val walletRelayJob = TestClient.Wallet.Relay.eventsFlow.onEach { event ->
-                when (event) {
-                    is Relay.Model.Event.OnConnectionOpened<*> -> isWalletRelayReady.compareAndSet(expect = false, update = true)
-                    else -> {}
-                }
-            }.launchIn(scope)
-
-            fun isEverythingReady() = isDappRelayReady.value && isWalletRelayReady.value && TestClient.Wallet.isInitialized.value && TestClient.Dapp.isInitialized.value
+            fun isEverythingReady() = TestClient.Wallet.isInitialized.value && TestClient.Dapp.isInitialized.value
 
             runCatching {
                 withTimeout(timeoutDuration) {
@@ -68,9 +44,6 @@ class SignClientInstrumentedActivityScenario : TestRule, SignActivityScenario() 
                 onSuccess = { Timber.d("Connection established and peers initialized successfully") },
                 onFailure = { fail("Unable to establish connection OR initialize peers within $timeoutDuration") }
             )
-
-            dappRelayJob.cancel()
-            walletRelayJob.cancel()
         }
     }
 }
