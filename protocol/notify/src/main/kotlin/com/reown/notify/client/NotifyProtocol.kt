@@ -87,11 +87,13 @@ class NotifyProtocol(private val koinApp: KoinApplication = wcKoinApp) : NotifyI
 
 
     override fun getActiveSubscriptions(params: Notify.Params.GetActiveSubscriptions): Map<String, Notify.Model.Subscription> {
-        checkEngineInitialization()
-
-        return runBlocking {
-            notifyEngine.getActiveSubscriptions(params.account, params.timeout).mapValues { (_, subscriptionWMetadata) -> subscriptionWMetadata.toClient() }
-        }
+//        checkEngineInitialization()
+//
+//        return runBlocking {
+//            notifyEngine.getActiveSubscriptions(params.account, params.timeout).mapValues { (_, subscriptionWMetadata) -> subscriptionWMetadata.toClient() }
+//        }
+        //todo: revert
+        return emptyMap()
     }
 
     override fun getNotificationHistory(params: Notify.Params.GetNotificationHistory): Notify.Result.GetNotificationHistory {
