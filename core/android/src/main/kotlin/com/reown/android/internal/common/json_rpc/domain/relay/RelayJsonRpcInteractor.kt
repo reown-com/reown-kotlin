@@ -107,6 +107,8 @@ internal class RelayJsonRpcInteractor(
         try {
             val requestJson = serializer.serialize(payload) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
 
+            println("kobe: Request: $requestJson")
+
             if (jsonRpcHistory.setRequest(payload.id, topic, payload.method, requestJson, TransportType.RELAY)) {
                 val encryptedRequest = chaChaPolyCodec.encrypt(topic, requestJson, envelopeType, participants)
                 val encryptedRequestString = Base64.toBase64String(encryptedRequest)
@@ -144,6 +146,9 @@ internal class RelayJsonRpcInteractor(
 
         try {
             val responseJson = serializer.serialize(response) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Response Params")
+
+            println("kobe: Response: $responseJson")
+
             val encryptedResponse = chaChaPolyCodec.encrypt(topic, responseJson, envelopeType, participants)
             val encryptedResponseString = Base64.toBase64String(encryptedResponse)
             relay.publish(topic.value, encryptedResponseString, params.toRelay()) { result ->
@@ -171,6 +176,8 @@ internal class RelayJsonRpcInteractor(
             return onFailure(e)
         }
 
+        println("kobe: Subscribe: $topic")
+
         try {
             backoffStrategy.shouldBackoff(true)
             relay.subscribe(topic.value) { result ->
@@ -197,6 +204,8 @@ internal class RelayJsonRpcInteractor(
         } catch (e: NoConnectivityException) {
             return onFailure(e)
         }
+
+        println("kobe: BatchSubscribe: $topics")
 
         if (topics.isNotEmpty()) {
             backoffStrategy.shouldBackoff(true)
@@ -261,7 +270,8 @@ internal class RelayJsonRpcInteractor(
     ) {
         val result = JsonRpcResponse.JsonRpcResult(id = request.id, result = clientParams)
 
-        publishJsonRpcResponse(request.topic, irnParams, result, envelopeType = envelopeType, participants = participants,
+        publishJsonRpcResponse(
+            request.topic, irnParams, result, envelopeType = envelopeType, participants = participants,
             onFailure = { error -> onFailure(error) },
             onSuccess = { onSuccess() }
         )
@@ -279,7 +289,8 @@ internal class RelayJsonRpcInteractor(
     ) {
         val result = JsonRpcResponse.JsonRpcResult(id = requestId, result = clientParams)
 
-        publishJsonRpcResponse(topic, irnParams, result, envelopeType = envelopeType, participants = participants,
+        publishJsonRpcResponse(
+            topic, irnParams, result, envelopeType = envelopeType, participants = participants,
             onFailure = { error -> onFailure(error) },
             onSuccess = { onSuccess() }
         )
@@ -295,7 +306,8 @@ internal class RelayJsonRpcInteractor(
         val result = JsonRpcResponse.JsonRpcResult(id = request.id, result = true)
 
         try {
-            publishJsonRpcResponse(request.topic, irnParams, result, envelopeType = envelopeType, participants = participants,
+            publishJsonRpcResponse(
+                request.topic, irnParams, result, envelopeType = envelopeType, participants = participants,
                 onFailure = { error -> handleError("Cannot send the responseWithSuccess, error: ${error.stackTraceToString()}") })
         } catch (e: Exception) {
             handleError("publishFailure; ${e.stackTraceToString()}")
@@ -316,7 +328,8 @@ internal class RelayJsonRpcInteractor(
         val jsonRpcError = JsonRpcResponse.JsonRpcError(id = request.id, error = JsonRpcResponse.Error(error.code, error.message))
 
         try {
-            publishJsonRpcResponse(request.topic, irnParams, jsonRpcError, envelopeType = envelopeType, participants = participants,
+            publishJsonRpcResponse(
+                request.topic, irnParams, jsonRpcError, envelopeType = envelopeType, participants = participants,
                 onSuccess = { onSuccess(request) },
                 onFailure = { failure ->
                     onFailure(failure)
@@ -341,7 +354,8 @@ internal class RelayJsonRpcInteractor(
         val jsonRpcError = JsonRpcResponse.JsonRpcError(id = requestId, error = JsonRpcResponse.Error(error.code, error.message))
 
         try {
-            publishJsonRpcResponse(topic, irnParams, jsonRpcError, envelopeType = envelopeType, participants = participants,
+            publishJsonRpcResponse(
+                topic, irnParams, jsonRpcError, envelopeType = envelopeType, participants = participants,
                 onSuccess = { onSuccess() },
                 onFailure = { failure ->
                     onFailure(failure)
@@ -362,6 +376,9 @@ internal class RelayJsonRpcInteractor(
                 Subscription(decryptMessage(topic, relayRequest), relayRequest.message, topic, relayRequest.publishedAt, relayRequest.attestation)
             }.collect { subscription ->
                 if (subscription.decryptedMessage.isNotEmpty()) {
+
+                    println("kobe: Message: ${subscription.decryptedMessage}")
+
                     try {
                         manageSubscriptions(subscription)
                     } catch (e: Exception) {
@@ -378,7 +395,14 @@ internal class RelayJsonRpcInteractor(
             .onEach {
                 pushMessageStorage.notificationTags
                     .filter { tag -> tag == relayRequest.tag }
-                    .onEach { tag -> pushMessageStorage.insertPushMessage(sha256(relayRequest.message.toByteArray()), topic.value, relayRequest.message, tag) }
+                    .onEach { tag ->
+                        pushMessageStorage.insertPushMessage(
+                            sha256(relayRequest.message.toByteArray()),
+                            topic.value,
+                            relayRequest.message,
+                            tag
+                        )
+                    }
             }.launchIn(scope)
     }
 
@@ -401,7 +425,14 @@ internal class RelayJsonRpcInteractor(
     }
 
     private suspend fun handleRequest(clientJsonRpc: ClientJsonRpc, subscription: Subscription) {
-        if (jsonRpcHistory.setRequest(clientJsonRpc.id, subscription.topic, clientJsonRpc.method, subscription.decryptedMessage, TransportType.RELAY)) {
+        if (jsonRpcHistory.setRequest(
+                clientJsonRpc.id,
+                subscription.topic,
+                clientJsonRpc.method,
+                subscription.decryptedMessage,
+                TransportType.RELAY
+            )
+        ) {
             serializer.deserialize(clientJsonRpc.method, subscription.decryptedMessage)?.let { params ->
                 _clientSyncJsonRpc.emit(subscription.toWCRequest(clientJsonRpc, params, TransportType.RELAY))
             } ?: handleError("JsonRpcInteractor: Unknown request params")
@@ -425,7 +456,14 @@ internal class RelayJsonRpcInteractor(
     private suspend fun handleJsonRpcResponsesWithoutStoredRequest(jsonRpcResult: JsonRpcResponse.JsonRpcResult, topic: Topic) {
         // todo: HANDLE DUPLICATES! maybe store results to check for duplicates????? https://github.com/WalletConnect/WalletConnectKotlinV2/issues/871
         //  Currently it's engine/usecase responsibility to handle duplicate responses
-        if (jsonRpcResult.result is ChatNotifyResponseAuthParams.ResponseAuth) _peerResponse.emit(WCResponse(topic, String.Empty, jsonRpcResult, jsonRpcResult.result))
+        if (jsonRpcResult.result is ChatNotifyResponseAuthParams.ResponseAuth) _peerResponse.emit(
+            WCResponse(
+                topic,
+                String.Empty,
+                jsonRpcResult,
+                jsonRpcResult.result
+            )
+        )
     }
 
     private suspend fun handleJsonRpcError(jsonRpcError: JsonRpcResponse.JsonRpcError) {
