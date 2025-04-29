@@ -14,6 +14,8 @@ import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
+import com.reown.android.relay.ConnectionType
+import com.reown.foundation.network.model.Relay
 import com.reown.foundation.util.Logger
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
@@ -72,6 +74,7 @@ class WalletKitApplication : Application() {
             application = this,
             projectId = projectId,
             metaData = appMetaData,
+            connectionType = ConnectionType.MANUAL,
             onError = { error ->
                 Firebase.crashlytics.recordException(error.throwable)
                 println("Init error: ${error.throwable.stackTraceToString()}")
@@ -91,13 +94,16 @@ class WalletKitApplication : Application() {
                 println(error.throwable.stackTraceToString())
             })
 
+
+        CoreClient.Relay.connect { error: Core.Model.Error -> println("kobe: connect error: $error") }
+
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
-        NotifyClient.initialize(
-            init = Notify.Params.Init(CoreClient)
-        ) { error ->
-            Firebase.crashlytics.recordException(error.throwable)
-            println(error.throwable.stackTraceToString())
-        }
+//        NotifyClient.initialize(
+//            init = Notify.Params.Init(CoreClient)
+//        ) { error ->
+//            Firebase.crashlytics.recordException(error.throwable)
+//            println(error.throwable.stackTraceToString())
+//        }
 
         mixPanel = MixpanelAPI.getInstance(this, CommonBuildConfig.MIX_PANEL, true).apply {
             identify(CoreClient.Push.clientId)
@@ -130,7 +136,7 @@ class WalletKitApplication : Application() {
                     }
                 })
 
-                handleNotifyMessages()
+//                handleNotifyMessages()
             }
         }
     }
