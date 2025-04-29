@@ -56,8 +56,8 @@ class RelayTest {
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "")
 
         //Await connection
-        val connectionTime = measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds
-        println("Connection time: $connectionTime ms")
+//        val connectionTime = measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds
+//        println("Connection time: $connectionTime ms")
         testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
 
         //Lock until is finished or timed out
@@ -133,8 +133,8 @@ class RelayTest {
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "com.test")
 
         //Await connection
-        val connectionTime = measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds
-        println("Connection time: $connectionTime ms")
+//        val connectionTime = measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds
+//        println("Connection time: $connectionTime ms")
         testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
 
         //Lock until is finished or timed out
@@ -170,7 +170,7 @@ class RelayTest {
         }.launchIn(testScope)
 
         //Await connection
-        measureAwaitingForConnection(clientA, clientB)
+//        measureAwaitingForConnection(clientA, clientB)
 
         //Subscribe to topic
         clientB.subscribe(testTopic) { result ->
@@ -226,7 +226,7 @@ class RelayTest {
         }.launchIn(testScope)
 
         //Await connection
-        measureAwaitingForConnection(clientA, clientB)
+//        measureAwaitingForConnection(clientA, clientB)
 
         //Subscribe to topic
         clientB.subscribe(testTopic) { result ->
@@ -288,8 +288,8 @@ class RelayTest {
         val ttl: Long = 1
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients()
 
-        //Await connection
-        measureAwaitingForConnection(clientA, clientB)
+//        //Await connection
+//        measureAwaitingForConnection(clientA, clientB)
 
         //Publish message
         clientA.publish(testTopic, testMessage, Relay.Model.IrnParams(1114, ttl, correlationId = 1234L, prompt = true)) { result ->
@@ -320,10 +320,10 @@ class RelayTest {
         }
     }
 
-    @ExperimentalTime
-    private fun measureAwaitingForConnection(clientA: RelayInterface, clientB: RelayInterface) {
-        println("Connection established after ${measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds} ms with: $testRelayUrl")
-    }
+//    @ExperimentalTime
+//    private fun measureAwaitingForConnection(clientA: RelayInterface, clientB: RelayInterface) {
+//        println("Connection established after ${measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds} ms with: $testRelayUrl")
+//    }
 
     private fun startLoggingClientEventsFlow(client: RelayInterface, tag: String) =
         client.eventsFlow.onEach { println("$tag eventsFlow: $it") }.launchIn(testScope)
@@ -365,39 +365,39 @@ class RelayTest {
 
     private fun didTimeout(start: Long, timeout: Long): Boolean = System.currentTimeMillis() - start > timeout
 
-    private fun awaitConnection(clientA: RelayInterface, clientB: RelayInterface) = runBlocking {
-        val isClientAReady = MutableStateFlow(false)
-        val isClientBReady = MutableStateFlow(false)
-
-        val areBothReady: StateFlow<Boolean> =
-            combine(isClientAReady, isClientBReady) { clientA: Boolean, clientB: Boolean -> clientA && clientB }
-                .stateIn(testScope, SharingStarted.Eagerly, false)
-
-        val clientAJob = clientA.eventsFlow.onEach { event ->
-            when (event) {
-                is Relay.Model.Event.OnConnectionOpened<*> -> isClientAReady.compareAndSet(expect = false, update = true)
-                else -> {}
-            }
-        }.launchIn(testScope)
-
-        val clientBJob = clientB.eventsFlow.onEach { event ->
-            when (event) {
-                is Relay.Model.Event.OnConnectionOpened<*> -> isClientBReady.compareAndSet(expect = false, update = true)
-                else -> {}
-            }
-        }.launchIn(testScope)
-
-        //Lock until is finished or timed out
-        val start = System.currentTimeMillis()
-        while (!areBothReady.value && !didTimeout(start, 10000L)) {
-            delay(10)
-        }
-
-        if (didTimeout(start, 50000L)) {
-            throw Exception("Unable to establish socket connection")
-        }
-
-        clientAJob.cancel()
-        clientBJob.cancel()
-    }
+//    private fun awaitConnection(clientA: RelayInterface, clientB: RelayInterface) = runBlocking {
+//        val isClientAReady = MutableStateFlow(false)
+//        val isClientBReady = MutableStateFlow(false)
+//
+//        val areBothReady: StateFlow<Boolean> =
+//            combine(isClientAReady, isClientBReady) { clientA: Boolean, clientB: Boolean -> clientA && clientB }
+//                .stateIn(testScope, SharingStarted.Eagerly, false)
+//
+//        val clientAJob = clientA.eventsFlow.onEach { event ->
+//            when (event) {
+//                is Relay.Model.Event.OnConnectionOpened<*> -> isClientAReady.compareAndSet(expect = false, update = true)
+//                else -> {}
+//            }
+//        }.launchIn(testScope)
+//
+//        val clientBJob = clientB.eventsFlow.onEach { event ->
+//            when (event) {
+//                is Relay.Model.Event.OnConnectionOpened<*> -> isClientBReady.compareAndSet(expect = false, update = true)
+//                else -> {}
+//            }
+//        }.launchIn(testScope)
+//
+//        //Lock until is finished or timed out
+//        val start = System.currentTimeMillis()
+//        while (!areBothReady.value && !didTimeout(start, 10000L)) {
+//            delay(10)
+//        }
+//
+//        if (didTimeout(start, 50000L)) {
+//            throw Exception("Unable to establish socket connection")
+//        }
+//
+//        clientAJob.cancel()
+//        clientBJob.cancel()
+//    }
 }
