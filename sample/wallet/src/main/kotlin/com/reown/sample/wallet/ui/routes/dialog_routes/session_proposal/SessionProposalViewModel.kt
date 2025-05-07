@@ -20,9 +20,7 @@ class SessionProposalViewModel : ViewModel() {
             try {
                 Timber.d("Approving session proposal: $proposalPublicKey")
                 val (sessionNamespaces, sessionProperties) = getNamespacesAndProperties(proposal)
-                val scopedProperties = mapOf(
-                    "eip155" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=${BuildConfig.PROJECT_ID}&st=wkca&sv=reown-kotlin-${AndroidBuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
-                )
+                val scopedProperties = mapOf("eip155" to WalletKit.buildWalletService(BuildConfig.PROJECT_ID, listOf("wallet_getAssets")))
 
                 val approveProposal = Wallet.Params.SessionApprove(
                     proposerPublicKey = proposal.proposerPublicKey,
@@ -31,7 +29,8 @@ class SessionProposalViewModel : ViewModel() {
                     scopedProperties = scopedProperties
                 )
 
-                WalletKit.approveSession(approveProposal,
+                WalletKit.approveSession(
+                    approveProposal,
                     onError = { error ->
                         Firebase.crashlytics.recordException(error.throwable)
                         WCDelegate.sessionProposalEvent = null
@@ -82,7 +81,8 @@ class SessionProposalViewModel : ViewModel() {
                     reason = rejectionReason
                 )
 
-                WalletKit.rejectSession(reject,
+                WalletKit.rejectSession(
+                    reject,
                     onSuccess = {
                         WCDelegate.sessionProposalEvent = null
                         onSuccess(proposal.redirect)
