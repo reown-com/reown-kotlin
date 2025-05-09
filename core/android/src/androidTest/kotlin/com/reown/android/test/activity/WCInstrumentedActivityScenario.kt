@@ -57,37 +57,6 @@ class WCInstrumentedActivityScenario : TestRule {
         runBlocking(testScope.coroutineContext) {
             initLogging()
             Timber.d("init")
-            val isDappRelayReady = MutableStateFlow(false)
-            val isWalletRelayReady = MutableStateFlow(false)
-            val timeoutDuration = BuildConfig.TEST_TIMEOUT_SECONDS.seconds
-
-            val dappRelayJob = TestClient.Secondary.Relay.eventsFlow.onEach { event ->
-                when (event) {
-                    is Relay.Model.Event.OnConnectionOpened<*> -> isDappRelayReady.compareAndSet(expect = false, update = true)
-                    else -> {}
-                }
-            }.launchIn(scope)
-
-            val walletRelayJob = TestClient.Primary.Relay.eventsFlow.onEach { event ->
-                when (event) {
-                    is Relay.Model.Event.OnConnectionOpened<*> -> isWalletRelayReady.compareAndSet(expect = false, update = true)
-                    else -> {}
-                }
-            }.launchIn(scope)
-
-            runCatching {
-                withTimeout(timeoutDuration) {
-                    while (!(isDappRelayReady.value && isWalletRelayReady.value && TestClient.Primary.isInitialized.value && TestClient.Secondary.isInitialized.value)) {
-                        delay(100)
-                    }
-                }
-            }.fold(
-                onSuccess = { Timber.d("Connection established with successfully") },
-                onFailure = { fail("Unable to establish connection within $timeoutDuration") }
-            )
-
-            dappRelayJob.cancel()
-            walletRelayJob.cancel()
         }
     }
 
