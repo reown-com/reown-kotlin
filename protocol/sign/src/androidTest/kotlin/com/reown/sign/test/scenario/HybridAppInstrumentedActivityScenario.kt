@@ -31,36 +31,9 @@ class HybridAppInstrumentedActivityScenario : TestRule, SignActivityScenario() {
     private fun beforeAll() {
         runBlocking {
             initLogging()
-            val isDappRelayReady = MutableStateFlow(false)
-            val isWalletRelayReady = MutableStateFlow(false)
-            val isHybridAppRelayReady = MutableStateFlow(false)
-
             val timeoutDuration = BuildConfig.TEST_TIMEOUT_SECONDS.seconds
-
-            val dappRelayJob = TestClient.Dapp.Relay.eventsFlow.onEach { event ->
-                when (event) {
-                    is Relay.Model.Event.OnConnectionOpened<*> -> isDappRelayReady.compareAndSet(expect = false, update = true)
-                    else -> {}
-                }
-            }.launchIn(scope)
-
-
-            val walletRelayJob = TestClient.Wallet.Relay.eventsFlow.onEach { event ->
-                when (event) {
-                    is Relay.Model.Event.OnConnectionOpened<*> -> isWalletRelayReady.compareAndSet(expect = false, update = true)
-                    else -> {}
-                }
-            }.launchIn(scope)
-
-            val hybridAppRelayJob = TestClient.Hybrid.Relay.eventsFlow.onEach { event ->
-                when (event) {
-                    is Relay.Model.Event.OnConnectionOpened<*> -> isHybridAppRelayReady.compareAndSet(expect = false, update = true)
-                    else -> {}
-                }
-            }.launchIn(scope)
-
-            fun isEverythingReady() = isDappRelayReady.value && isWalletRelayReady.value && isHybridAppRelayReady.value &&
-                    TestClient.Wallet.isInitialized.value && TestClient.Dapp.isInitialized.value && TestClient.Hybrid.isInitialized.value
+            fun isEverythingReady() =
+                TestClient.Wallet.isInitialized.value && TestClient.Dapp.isInitialized.value && TestClient.Hybrid.isInitialized.value
 
             runCatching {
                 withTimeout(timeoutDuration) {
@@ -72,10 +45,6 @@ class HybridAppInstrumentedActivityScenario : TestRule, SignActivityScenario() {
                 onSuccess = { Timber.d("Connection established and peers initialized successfully") },
                 onFailure = { TestCase.fail("Unable to establish connection OR initialize peers within $timeoutDuration") }
             )
-
-            dappRelayJob.cancel()
-            walletRelayJob.cancel()
-            hybridAppRelayJob.cancel()
         }
     }
 }
