@@ -19,6 +19,48 @@ The Reown Kotlin SDK is a comprehensive mobile development kit that enables bloc
 
 The SDK supports multiple blockchain networks including Ethereum, Solana, and various Layer 2 chains.
 
+### Workflow Diagram
+
+```
+┌─────────────────────┐     ┌─────────────────────┐
+│                     │     │                     │
+│  Mobile Wallet App  │     │    dApp (Website)   │
+│  (using WalletKit)  │     │  (using AppKit)     │
+│                     │     │                     │
+└──────────┬──────────┘     └──────────┬──────────┘
+           │                           │
+           │                           │
+           ▼                           ▼
+┌─────────────────────┐     ┌─────────────────────┐
+│                     │     │                     │
+│   Sign Protocol     │◄────┤   Sign Protocol     │
+│                     │     │                     │
+└──────────┬──────────┘     └─────────────────────┘
+           │
+           │
+           ▼
+┌─────────────────────┐     ┌─────────────────────┐
+│                     │     │                     │
+│   Notify Protocol   │◄────┤   Blockchain        │
+│                     │     │   Networks          │
+└──────────┬──────────┘     └─────────────────────┘
+           │
+           │
+           ▼
+┌─────────────────────┐
+│                     │
+│  Chain Abstraction  │
+│  (Cross-chain txns) │
+│                     │
+└─────────────────────┘
+```
+
+The workflow illustrates how:
+1. Mobile wallet apps use WalletKit while dApps use AppKit
+2. Both communicate via the Sign Protocol for secure connections
+3. Wallets receive notifications through the Notify Protocol
+4. Chain Abstraction enables cross-chain transactions
+
 ## Project Structure
 
 The Reown Kotlin SDK is organized as a modular system with several layers:
