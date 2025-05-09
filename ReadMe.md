@@ -5,7 +5,189 @@ Reown protocols for Android applications.
 
 ## Overview
 
-This SDK enables blockchain wallet functionality and wallet-to-dApp communication for Android applications.
+The Reown Kotlin SDK is a comprehensive mobile development kit that enables blockchain wallet functionality and wallet-to-dApp communication for Android applications. It implements the WalletConnect protocol suite, allowing mobile wallets to securely connect with decentralized applications (dApps).
+
+### Key Features
+
+- **Wallet Implementation**: Manage crypto accounts and transactions
+- **Sign Protocol**: Secure connection between wallets and dApps
+- **Notify Protocol**: Blockchain-related notifications
+- **Chain Abstraction**: Simplified cross-chain transactions
+- **Authentication**: Wallet verification mechanisms
+
+### Supported Chains
+
+The SDK supports multiple blockchain networks including Ethereum, Solana, and various Layer 2 chains.
+
+## Project Structure
+
+The Reown Kotlin SDK is organized as a modular system with several layers:
+
+1. **Foundation Layer**: Base libraries providing core functionality
+   - `foundation/`: Fundamental libraries and utilities
+
+2. **Core Layer**: Essential platform-specific implementations
+   - `core/android/`: Core Android implementation
+   - `core/modal/`: Core modal UI components
+   - `core/bom/`: Bill of Materials for dependency version management
+
+3. **Protocol Layer**: Protocol-specific implementations
+   - `protocol/sign/`: Implementation of the WalletConnect Sign protocol
+   - `protocol/notify/`: Implementation of the WalletConnect Notify protocol
+
+4. **Product Layer**: High-level SDK features
+   - `product/walletkit/`: SDK for building wallet applications
+   - `product/appkit/`: SDK for building dApp applications
+
+5. **Sample Applications**: Example implementations
+   - `sample/wallet/`: Wallet sample application
+   - `sample/dapp/`: dApp sample application
+   - `sample/modal/`: Modal sample application
+
+## Installation
+
+To integrate the Reown Kotlin SDK into your project, use the Bill of Materials (BOM) to manage compatible dependencies:
+
+### Gradle Setup (build.gradle.kts)
+
+```kotlin
+dependencies {
+    implementation(platform("com.reown:android-bom:{BOM version}"))
+    
+    // Core SDK
+    implementation("com.reown:android-core")
+    
+    // For wallet applications
+    implementation("com.reown:walletkit")
+    
+    // For dApp applications
+    implementation("com.reown:appkit")
+}
+```
+
+Replace `{BOM version}` with the latest version from the SDK Chart below.
+
+## SDK Chart
+
+| BOM   | [Core SDK](core/android) | [Sign SDK](protocol/sign) | [WalletKit](product/walletkit) | [AppKit](product/appkit) |
+|-------|--------------------------|---------------------------|--------------------------------|--------------------------|
+| 1.0.0 | 1.0.0                    | 1.0.0                     | 1.0.0                          | 1.0.0                    |
+
+## Usage Examples
+
+### Initializing WalletKit
+
+```kotlin
+// Initialize WalletKit
+WalletKit.initialize(
+    Wallet.Params.Init(core = Core.Client()),
+    onSuccess = { /* Handle success */ },
+    onError = { error -> /* Handle error */ }
+)
+
+// Set wallet delegate to handle events
+WalletKit.setWalletDelegate(object : WalletKit.WalletDelegate {
+    override fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext) {
+        // Handle session proposal
+    }
+    
+    override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
+        // Handle session request
+    }
+    
+    override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
+        // Handle session deletion
+    }
+    
+    override fun onSessionExtend(session: Wallet.Model.Session) {
+        // Handle session extension
+    }
+    
+    override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
+        // Handle session settle response
+    }
+    
+    override fun onSessionUpdateResponse(sessionUpdateResponse: Wallet.Model.SessionUpdateResponse) {
+        // Handle session update response
+    }
+    
+    override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {
+        // Handle connection state changes
+    }
+    
+    override fun onError(error: Wallet.Model.Error) {
+        // Handle errors
+    }
+})
+```
+
+### Initializing AppKit
+
+```kotlin
+// Initialize AppKit
+AppKit.initialize(
+    Modal.Params.Init(core = Core.Client()),
+    onSuccess = { /* Handle success */ },
+    onError = { error -> /* Handle error */ }
+)
+
+// Set delegate to handle events
+AppKit.setDelegate(object : AppKit.ModalDelegate {
+    override fun onSessionApproved(approvedSession: Modal.Model.ApprovedSession) {
+        // Handle approved session
+    }
+    
+    override fun onSessionRejected(rejectedSession: Modal.Model.RejectedSession) {
+        // Handle rejected session
+    }
+    
+    override fun onSessionUpdate(updatedSession: Modal.Model.UpdatedSession) {
+        // Handle session update
+    }
+    
+    override fun onSessionEvent(sessionEvent: Modal.Model.Event) {
+        // Handle session events
+    }
+    
+    override fun onSessionExtend(session: Modal.Model.Session) {
+        // Handle session extension
+    }
+    
+    override fun onSessionDelete(deletedSession: Modal.Model.DeletedSession) {
+        // Handle session deletion
+    }
+    
+    override fun onSessionRequestResponse(response: Modal.Model.SessionRequestResponse) {
+        // Handle session request response
+    }
+    
+    override fun onConnectionStateChange(state: Modal.Model.ConnectionState) {
+        // Handle connection state changes
+    }
+    
+    override fun onError(error: Modal.Model.Error) {
+        // Handle errors
+    }
+    
+    override fun onProposalExpired(proposal: Modal.Model.ExpiredProposal) {
+        // Handle expired proposals
+    }
+    
+    override fun onRequestExpired(request: Modal.Model.ExpiredRequest) {
+        // Handle expired requests
+    }
+})
+```
+
+## Sample Applications
+
+The repository includes sample applications to demonstrate SDK usage:
+
+- **Wallet Sample**: Demonstrates how to build a wallet application using WalletKit
+- **dApp Sample**: Shows how to build a dApp that connects to wallets using AppKit
+- **Modal Sample**: Illustrates the use of modal UI components for wallet connections
+
+Check the `sample/` directory for complete implementations.
 
 
 ## BOM Instructions:
