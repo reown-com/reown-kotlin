@@ -3,7 +3,10 @@
 The communications protocol for web3, Reown brings the ecosystem together by enabling hundreds of wallets and apps to securely connect and interact. This repository contains Kotlin implementation of
 Reown protocols for Android applications.
 
-####
+## Overview
+
+This SDK enables blockchain wallet functionality and wallet-to-dApp communication for Android applications.
+
 
 ## BOM Instructions:
 
