@@ -15,51 +15,56 @@ The Reown Kotlin SDK is a comprehensive mobile development kit that enables bloc
 - **Chain Abstraction**: Simplified cross-chain transactions
 - **Authentication**: Wallet verification mechanisms
 
+### Core Components
+
+- **WalletKit**: SDK for building wallet applications with full blockchain capabilities
+- **AppKit**: SDK for building dApps that connect to wallets
+- **Web3Modal**: UI components for wallet connection and interaction
+- **Protocol Layer**: Implementations of Sign, Notify, and Auth protocols
+- **Chain Support**: Multi-chain support for Ethereum, Solana, and Layer 2 networks
+
 ### Supported Chains
 
 The SDK supports multiple blockchain networks including Ethereum, Solana, and various Layer 2 chains.
 
-### Workflow Diagram
+### Integration Flow Diagram
 
 ```
-┌─────────────────────┐     ┌─────────────────────┐
-│                     │     │                     │
-│  Mobile Wallet App  │     │    dApp (Website)   │
-│  (using WalletKit)  │     │  (using AppKit)     │
-│                     │     │                     │
-└──────────┬──────────┘     └──────────┬──────────┘
-           │                           │
-           │                           │
-           ▼                           ▼
-┌─────────────────────┐     ┌─────────────────────┐
-│                     │     │                     │
-│   Sign Protocol     │◄────┤   Sign Protocol     │
-│                     │     │                     │
-└──────────┬──────────┘     └─────────────────────┘
-           │
-           │
-           ▼
-┌─────────────────────┐     ┌─────────────────────┐
-│                     │     │                     │
-│   Notify Protocol   │◄────┤   Blockchain        │
-│                     │     │   Networks          │
-└──────────┬──────────┘     └─────────────────────┘
-           │
-           │
-           ▼
-┌─────────────────────┐
-│                     │
-│  Chain Abstraction  │
-│  (Cross-chain txns) │
-│                     │
-└─────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│                        Mobile Application                       │
+│                                                                 │
+├─────────────┬─────────────────────────────────┬─────────────────┤
+│             │                                 │                 │
+│  WalletKit  │           AppKit                │  Web3Modal     │
+│             │                                 │                 │
+└──────┬──────┴──────────────┬─────────────────┴────────┬─────────┘
+       │                     │                          │
+       ▼                     ▼                          ▼
+┌──────────────┐    ┌────────────────┐       ┌───────────────────┐
+│              │    │                │       │                   │
+│ Sign Protocol├───►│ Notify Protocol├──────►│ Auth Protocol     │
+│              │    │                │       │                   │
+└──────┬───────┘    └────────┬───────┘       └─────────┬─────────┘
+       │                     │                         │
+       │                     │                         │
+       ▼                     ▼                         ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                                                                  │
+│                      Blockchain Networks                         │
+│                                                                  │
+│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐           │
+│  │Ethereum │   │ Solana  │   │  Base   │   │ Others  │           │
+│  └─────────┘   └─────────┘   └─────────┘   └─────────┘           │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-The workflow illustrates how:
-1. Mobile wallet apps use WalletKit while dApps use AppKit
-2. Both communicate via the Sign Protocol for secure connections
-3. Wallets receive notifications through the Notify Protocol
-4. Chain Abstraction enables cross-chain transactions
+The integration flow shows how:
+1. Mobile applications integrate with the SDK through WalletKit, AppKit, or Web3Modal
+2. These components interact with the protocol layer (Sign, Notify, Auth)
+3. The protocols enable secure communication with various blockchain networks
+4. Cross-chain operations are handled seamlessly through the protocol layer
 
 ## Project Structure
 
@@ -105,6 +110,40 @@ dependencies {
     // For dApp applications
     implementation("com.reown:appkit")
 }
+```
+
+## Getting Started
+
+### For Wallet Applications
+
+```kotlin
+// Initialize WalletKit
+WalletKit.initialize(
+    context = applicationContext,
+    projectId = "YOUR_PROJECT_ID"
+)
+
+// Set up wallet delegate to handle events
+WalletKit.setWalletDelegate(yourWalletDelegate)
+
+// Register accounts
+WalletKit.registerAccounts(accounts)
+```
+
+### For dApp Applications
+
+```kotlin
+// Initialize AppKit
+AppKit.initialize(
+    context = applicationContext,
+    projectId = "YOUR_PROJECT_ID"
+)
+
+// Set up dApp delegate to handle events
+AppKit.setDappDelegate(yourDappDelegate)
+
+// Connect to a wallet
+AppKit.connect(chains, methods)
 ```
 
 ## Sample Applications
