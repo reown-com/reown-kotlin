@@ -19,7 +19,6 @@ The Reown Kotlin SDK is a comprehensive mobile development kit that enables bloc
 
 - **WalletKit**: SDK for building wallet applications with full blockchain capabilities
 - **AppKit**: SDK for building dApps that connect to wallets
-- **Web3Modal**: UI components for wallet connection and interaction
 - **Protocol Layer**: Implementations of Sign, Notify, and Auth protocols
 - **Chain Support**: Multi-chain support for Ethereum, Solana, and Layer 2 networks
 
@@ -75,39 +74,7 @@ dependencies {
 }
 ```
 
-## Getting Started
 
-### For Wallet Applications
-
-```kotlin
-// Initialize WalletKit
-WalletKit.initialize(
-    context = applicationContext,
-    projectId = "YOUR_PROJECT_ID"
-)
-
-// Set up wallet delegate to handle events
-WalletKit.setWalletDelegate(yourWalletDelegate)
-
-// Register accounts
-WalletKit.registerAccounts(accounts)
-```
-
-### For dApp Applications
-
-```kotlin
-// Initialize AppKit
-AppKit.initialize(
-    context = applicationContext,
-    projectId = "YOUR_PROJECT_ID"
-)
-
-// Set up dApp delegate to handle events
-AppKit.setDappDelegate(yourDappDelegate)
-
-// Connect to a wallet
-AppKit.connect(chains, methods)
-```
 
 ## Sample Applications
 
@@ -115,7 +82,6 @@ The repository includes sample applications to demonstrate SDK usage:
 
 - **Wallet Sample**: Demonstrates how to build a wallet application using WalletKit
 - **dApp Sample**: Shows how to build a dApp that connects to wallets using AppKit
-- **Modal Sample**: Illustrates the use of modal UI components for wallet connections
 
 Check the `sample/` directory for complete implementations.
 
