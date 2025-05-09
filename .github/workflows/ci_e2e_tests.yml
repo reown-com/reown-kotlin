@@ -118,7 +118,7 @@ jobs:
           api-level: 33
           target: google_apis
           arch: x86_64
-          ram-size: 2048M
+          ram-size: 4048M
           emulator-boot-timeout: 600 # 10min
           profile: pixel_7
           avd-name: test_device
