@@ -27,44 +27,7 @@ The Reown Kotlin SDK is a comprehensive mobile development kit that enables bloc
 
 The SDK supports multiple blockchain networks including Ethereum, Solana, and various Layer 2 chains.
 
-### Integration Flow Diagram
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│                        Mobile Application                       │
-│                                                                 │
-├─────────────┬─────────────────────────────────┬─────────────────┤
-│             │                                 │                 │
-│  WalletKit  │           AppKit                │  Web3Modal     │
-│             │                                 │                 │
-└──────┬──────┴──────────────┬─────────────────┴────────┬─────────┘
-       │                     │                          │
-       ▼                     ▼                          ▼
-┌──────────────┐    ┌────────────────┐       ┌───────────────────┐
-│              │    │                │       │                   │
-│ Sign Protocol├───►│ Notify Protocol├──────►│ Auth Protocol     │
-│              │    │                │       │                   │
-└──────┬───────┘    └────────┬───────┘       └─────────┬─────────┘
-       │                     │                         │
-       │                     │                         │
-       ▼                     ▼                         ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│                      Blockchain Networks                         │
-│                                                                  │
-│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐           │
-│  │Ethereum │   │ Solana  │   │  Base   │   │ Others  │           │
-│  └─────────┘   └─────────┘   └─────────┘   └─────────┘           │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-The integration flow shows how:
-1. Mobile applications integrate with the SDK through WalletKit, AppKit, or Web3Modal
-2. These components interact with the protocol layer (Sign, Notify, Auth)
-3. The protocols enable secure communication with various blockchain networks
-4. Cross-chain operations are handled seamlessly through the protocol layer
 
 ## Project Structure
 
