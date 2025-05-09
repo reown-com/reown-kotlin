@@ -51,7 +51,6 @@ The Reown Kotlin SDK is organized as a modular system with several layers:
 5. **Sample Applications**: Example implementations
    - `sample/wallet/`: Wallet sample application
    - `sample/dapp/`: dApp sample application
-   - `sample/modal/`: Modal sample application
 
 ## Installation
 
