@@ -3,6 +3,7 @@ package com.reown.walletkit.client
 import com.reown.android.BuildConfig
 import com.reown.android.Core
 import com.reown.android.CoreInterface
+import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
@@ -24,6 +25,7 @@ object WalletKit {
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
     private val getERC20TokenBalanceUseCase: GetERC20TokenBalanceUseCase by wcKoinApp.koin.inject()
     private val prepareCallERC20TransferCallUseCase: PrepareCallERC20TransferCallUseCase by wcKoinApp.koin.inject()
+    internal val projectId: ProjectId by lazy { wcKoinApp.koin.get<ProjectId>() }
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -421,8 +423,8 @@ object WalletKit {
     }
 
     @Throws(Exception::class)
-    fun buildWalletService(projectId: String, methods: List<String>): String {
+    fun buildWalletService(methods: List<String>): String {
         val methodsJson = if (methods.isNotEmpty()) methods.joinToString(separator = "\",\"", prefix = "\"", postfix = "\"") else ""
-        return "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=$projectId&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[$methodsJson]}]}"
+        return "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=${projectId.value}&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[$methodsJson]}]}"
     }
 }

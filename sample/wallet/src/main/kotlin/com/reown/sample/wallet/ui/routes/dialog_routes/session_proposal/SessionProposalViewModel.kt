@@ -20,7 +20,7 @@ class SessionProposalViewModel : ViewModel() {
             try {
                 Timber.d("Approving session proposal: $proposalPublicKey")
                 val (sessionNamespaces, sessionProperties) = getNamespacesAndProperties(proposal)
-                val scopedProperties = mapOf("eip155" to WalletKit.buildWalletService(BuildConfig.PROJECT_ID, listOf("wallet_getAssets")))
+                val scopedProperties = mapOf("eip155" to WalletKit.buildWalletService(listOf("wallet_getAssets")))
 
                 val approveProposal = Wallet.Params.SessionApprove(
                     proposerPublicKey = proposal.proposerPublicKey,

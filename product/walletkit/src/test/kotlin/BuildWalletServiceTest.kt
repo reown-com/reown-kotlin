@@ -1,11 +1,24 @@
 import com.reown.android.BuildConfig
+import com.reown.android.internal.common.model.ProjectId
 import com.reown.walletkit.client.WalletKit
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 
 class BuildWalletServiceTest {
+
+    private val testProjectId = ProjectId("test-project")
+
+    @Before
+    fun setup() {
+        mockkObject(WalletKit)
+        every { WalletKit.projectId } returns testProjectId
+    }
 
     @After
     fun tearDown() {
@@ -19,10 +32,11 @@ class BuildWalletServiceTest {
         val methods = emptyList<String>()
 
         // Act
-        val result = WalletKit.buildWalletService(projectId, methods)
+        val result = WalletKit.buildWalletService(methods)
 
         // Assert
-        val expected = "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[]}]}"
+        val expected =
+            "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[]}]}"
         assertEquals(expected, result)
     }
 
@@ -33,10 +47,11 @@ class BuildWalletServiceTest {
         val methods = listOf("wallet_getAssets")
 
         // Act
-        val result = WalletKit.buildWalletService(projectId, methods)
+        val result = WalletKit.buildWalletService(methods)
 
         // Assert
-        val expected = "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
+        val expected =
+            "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
         assertEquals(expected, result)
     }
 
@@ -47,24 +62,28 @@ class BuildWalletServiceTest {
         val methods = listOf("wallet_getAssets", "wallet_signMessage", "wallet_sendTransaction")
 
         // Act
-        val result = WalletKit.buildWalletService(projectId, methods)
+        val result = WalletKit.buildWalletService(methods)
 
         // Assert
-        val expected = "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\",\"wallet_signMessage\",\"wallet_sendTransaction\"]}]}"
+        val expected =
+            "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\",\"wallet_signMessage\",\"wallet_sendTransaction\"]}]}"
         assertEquals(expected, result)
     }
 
     @Test
     fun `test buildWalletService with special characters in projectId`() {
         // Arrange
-        val projectId = "test-project@123"
+        val projectId = ProjectId("test-project@123")
         val methods = listOf("wallet_getAssets")
 
+        every { WalletKit.projectId } returns projectId
+
         // Act
-        val result = WalletKit.buildWalletService(projectId, methods)
+        val result = WalletKit.buildWalletService(methods)
 
         // Assert
-        val expected = "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project@123&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
+        val expected =
+            "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project@123&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
         assertEquals(expected, result)
     }
 
@@ -75,24 +94,27 @@ class BuildWalletServiceTest {
         val methods = listOf("wallet_getAssets", "method-with:special@characters")
 
         // Act
-        val result = WalletKit.buildWalletService(projectId, methods)
+        val result = WalletKit.buildWalletService(methods)
 
         // Assert
-        val expected = "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\",\"method-with:special@characters\"]}]}"
+        val expected =
+            "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\",\"method-with:special@characters\"]}]}"
         assertEquals(expected, result)
     }
 
     @Test
     fun `test buildWalletService with empty projectId`() {
         // Arrange
-        val projectId = ""
+        val projectId = ProjectId("")
         val methods = listOf("wallet_getAssets")
 
+        every { WalletKit.projectId } returns projectId
         // Act
-        val result = WalletKit.buildWalletService(projectId, methods)
+        val result = WalletKit.buildWalletService(methods)
 
         // Assert
-        val expected = "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
+        val expected =
+            "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
         assertEquals(expected, result)
     }
 
@@ -103,10 +125,11 @@ class BuildWalletServiceTest {
         val methods = listOf("wallet_getAssets", "wallet_\"quoted\"_method")
 
         // Act
-        val result = WalletKit.buildWalletService(projectId, methods)
+        val result = WalletKit.buildWalletService(methods)
 
         // Assert
-        val expected = "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\",\"wallet_\"quoted\"_method\"]}]}"
+        val expected =
+            "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=test-project&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\",\"wallet_\"quoted\"_method\"]}]}"
         assertEquals(expected, result)
     }
 }
