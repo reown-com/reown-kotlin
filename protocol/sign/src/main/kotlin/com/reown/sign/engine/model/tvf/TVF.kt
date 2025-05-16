@@ -1,5 +1,6 @@
 package com.reown.sign.engine.model.tvf
 
+import com.reown.sign.engine.model.tvf.SignTransaction.calculateTransactionDigest
 import com.squareup.moshi.Moshi
 
 class TVF(private val moshi: Moshi) {
@@ -97,6 +98,21 @@ class TVF(private val moshi: Moshi) {
                         ?.let { listOf(it.tx_json.hash) }
                 }
 
+                SUI_SIGN_AND_EXECUTE_TRANSACTION -> {
+                    moshi.adapter(SignAndExecute.SuiTransactionResponse::class.java)
+                        .fromJson(rpcResult)
+                        ?.let { listOf(it.digest) }
+                }
+
+                SUI_SIGN_TRANSACTION -> {
+                    moshi.adapter(SignTransaction.SignatureResult::class.java)
+                        .fromJson(rpcResult)
+                        ?.let {
+                            calculateTransactionDigest(it.transactionBytes)
+                            listOf(it.signature)
+                        }
+                }
+
                 else -> null
             }
         } catch (e: Exception) {
@@ -112,11 +128,11 @@ class TVF(private val moshi: Moshi) {
         private const val SOLANA_SIGN_TRANSACTION = "solana_signTransaction"
         private const val SOLANA_SIGN_AND_SEND_TRANSACTION = "solana_signAndSendTransaction"
         private const val SOLANA_SIGN_ALL_TRANSACTION = "solana_signAllTransactions"
-        private const val SUI_SIGN_AND_EXECUTE_TRANSACTION = "sui_signAndExecuteTransaction"
-        private const val SUI_SIGN_TRANSACTION = "sui_signTransaction"
+        private const val POLKADOT_SIGN_TRANSACTION = "polkadot_signTransaction"
         private const val NEAR_SIGN_TRANSACTION = "near_signTransaction"
         private const val NEAR_SIGN_TRANSACTIONS = "near_signTransactions"
-        private const val POLKADOT_SIGN_TRANSACTION = "polkadot_signTransaction"
+        private const val SUI_SIGN_AND_EXECUTE_TRANSACTION = "sui_signAndExecuteTransaction"
+        private const val SUI_SIGN_TRANSACTION = "sui_signTransaction"
         private const val XRPL_SIGN_TRANSACTION = "xrpl_signTransaction"
         private const val XRPL_SIGN_TRANSACTION_FOR = "xrpl_signTransactionFor"
         private const val ALGO_SIGN_TXN = "algo_signTxn"
