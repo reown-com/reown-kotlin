@@ -2,6 +2,7 @@ package com.reown.sign.engine.model.tvf
 
 import com.reown.sign.engine.model.tvf.SignTransaction.calculateTransactionDigest
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 
 class TVF(private val moshi: Moshi) {
     private val evm: List<String>
@@ -108,9 +109,24 @@ class TVF(private val moshi: Moshi) {
                     moshi.adapter(SignTransaction.SignatureResult::class.java)
                         .fromJson(rpcResult)
                         ?.let {
-                            calculateTransactionDigest(it.transactionBytes)
-                            listOf(it.signature)
+                            val digest = calculateTransactionDigest(it.transactionBytes)
+                            listOf(digest)
                         }
+                }
+
+                NEAR_SIGN_TRANSACTION -> {
+                    moshi.adapter(NearSignTransaction.BufferData::class.java)
+                        .fromJson(rpcResult)
+                        ?.let {
+                            val hash = NearSignTransaction.calculateTransactionHash(it.toByteArray())
+                            listOf(hash)
+                        }
+                }
+
+                NEAR_SIGN_TRANSACTIONS -> {
+                    val type = Types.newParameterizedType(List::class.java, NearSignTransaction.BufferData::class.java)
+                    moshi.adapter<List<NearSignTransaction.BufferData>>(type).fromJson(rpcResult)
+                        ?.let { bufferDataList -> bufferDataList.map { NearSignTransaction.calculateTransactionHash(it.toByteArray()) } }
                 }
 
                 else -> null
