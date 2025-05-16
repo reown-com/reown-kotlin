@@ -3,11 +3,6 @@ package com.reown.sign.engine.model.tvf
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class TransactionResponse(
-    val result: TransactionResult
-)
-
-@JsonClass(generateAdapter = true)
 data class TransactionResult(
     val txID: String,
     val signature: List<String>,

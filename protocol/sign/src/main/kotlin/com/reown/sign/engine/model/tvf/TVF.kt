@@ -10,11 +10,7 @@ class TVF(private val moshi: Moshi) {
     private val wallet
         get() = listOf(WALLET_SEND_CALLS)
 
-    private val all get() = evm + solana + wallet
-
     fun collect(rpcMethod: String, rpcParams: String, chainId: String): Triple<List<String>, List<String>?, String> {
-//        if (rpcMethod !in all) return null
-
         val contractAddresses = if (rpcMethod == "eth_sendTransaction") {
             runCatching {
                 moshi.adapter(Array<EthSendTransaction>::class.java)
@@ -55,9 +51,9 @@ class TVF(private val moshi: Moshi) {
                 }
 
                 TRON_SIGN_TRANSACTION -> {
-                    moshi.adapter(TransactionResponse::class.java)
+                    moshi.adapter(TransactionResult::class.java)
                         .fromJson(rpcResult)
-                        ?.result?.txID
+                        ?.txID
                         ?.let { listOf(it) }
                 }
 
@@ -83,6 +79,24 @@ class TVF(private val moshi: Moshi) {
                         }
                 }
 
+                ALGO_SIGN_TXN -> {
+                    moshi.adapter(SignTxnResponse::class.java)
+                        .fromJson(rpcResult)
+                        ?.let { calculateTxIDs(it.result) }
+                }
+
+                XRPL_SIGN_TRANSACTION -> {
+                    moshi.adapter(XRPLSignTransaction.TransactionWrapper::class.java)
+                        .fromJson(rpcResult)
+                        ?.let { listOf(it.tx_json.hash) }
+                }
+
+                XRPL_SIGN_TRANSACTION_FOR -> {
+                    moshi.adapter(XRPLSignTransactionFor.TransactionWrapper::class.java)
+                        .fromJson(rpcResult)
+                        ?.let { listOf(it.tx_json.hash) }
+                }
+
                 else -> null
             }
         } catch (e: Exception) {
@@ -102,10 +116,10 @@ class TVF(private val moshi: Moshi) {
         private const val SUI_SIGN_TRANSACTION = "sui_signTransaction"
         private const val NEAR_SIGN_TRANSACTION = "near_signTransaction"
         private const val NEAR_SIGN_TRANSACTIONS = "near_signTransactions"
+        private const val POLKADOT_SIGN_TRANSACTION = "polkadot_signTransaction"
         private const val XRPL_SIGN_TRANSACTION = "xrpl_signTransaction"
         private const val XRPL_SIGN_TRANSACTION_FOR = "xrpl_signTransactionFor"
         private const val ALGO_SIGN_TXN = "algo_signTxn"
-        private const val POLKADOT_SIGN_TRANSACTION = "polkadot_signTransaction"
         private const val COSMOS_SIGN_DIRECT = "cosmos_signDirect"
         private const val COSMOS_SIGN_AMINO = "cosmos_signAmino"
         private const val TRON_SIGN_TRANSACTION = "tron_signTransaction"
