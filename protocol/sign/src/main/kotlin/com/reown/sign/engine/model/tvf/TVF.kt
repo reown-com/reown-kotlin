@@ -14,8 +14,8 @@ class TVF(private val moshi: Moshi) {
 
     private val all get() = evm + solana + wallet
 
-    fun collect(rpcMethod: String, rpcParams: String, chainId: String): Triple<List<String>, List<String>?, String>? {
-        if (rpcMethod !in all) return null
+    fun collect(rpcMethod: String, rpcParams: String, chainId: String): Triple<List<String>, List<String>?, String> {
+//        if (rpcMethod !in all) return null
 
         val contractAddresses = if (rpcMethod == "eth_sendTransaction") {
             runCatching {
@@ -56,6 +56,13 @@ class TVF(private val moshi: Moshi) {
                         ?.map { transaction -> extractSignature(transaction) }
                 }
 
+                TRON_SIGN_TRANSACTION -> {
+                    moshi.adapter(TransactionResponse::class.java)
+                        .fromJson(rpcResult)
+                        ?.result?.txID
+                        ?.let { listOf(it) }
+                }
+
                 else -> null
             }
         } catch (e: Exception) {
@@ -91,5 +98,16 @@ class TVF(private val moshi: Moshi) {
         private const val SOLANA_SIGN_TRANSACTION = "solana_signTransaction"
         private const val SOLANA_SIGN_AND_SEND_TRANSACTION = "solana_signAndSendTransaction"
         private const val SOLANA_SIGN_ALL_TRANSACTION = "solana_signAllTransactions"
+        private const val SUI_SIGN_AND_EXECUTE_TRANSACTION = "sui_signAndExecuteTransaction"
+        private const val SUI_SIGN_TRANSACTION = "sui_signTransaction"
+        private const val NEAR_SIGN_TRANSACTION = "near_signTransaction"
+        private const val NEAR_SIGN_TRANSACTIONS = "near_signTransactions"
+        private const val XRPL_SIGN_TRANSACTION = "xrpl_signTransaction"
+        private const val XRPL_SIGN_TRANSACTION_FOR = "xrpl_signTransactionFor"
+        private const val ALGO_SIGN_TXN = "algo_signTxn"
+        private const val POLKADOT_SIGN_TRANSACTION = "polkadot_signTransaction"
+        private const val COSMOS_SIGN_DIRECT = "cosmos_signDirect"
+        private const val COSMOS_SIGN_AMINO = "cosmos_signAmino"
+        private const val TRON_SIGN_TRANSACTION = "tron_signTransaction"
     }
 }

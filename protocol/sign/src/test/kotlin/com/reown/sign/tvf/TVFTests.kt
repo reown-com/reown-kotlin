@@ -25,7 +25,9 @@ class TVFTests {
         val result = tvf.collect(rpcMethod, rpcParams, chainId)
 
         // Assert
-        assertNull(result)
+        assertEquals("1", result.third)
+        assertEquals(listOf("unsupported_method"), result.first)
+        assertNull(result.second)
     }
 
     @Test
@@ -40,9 +42,9 @@ class TVFTests {
 
         // Assert
         assertNotNull(result)
-        assertEquals(listOf("eth_sendTransaction"), result?.first)
-        assertEquals(listOf("0x1234567890abcdef"), result?.second)
-        assertEquals("1", result?.third)
+        assertEquals(listOf("eth_sendTransaction"), result.first)
+        assertEquals(listOf("0x1234567890abcdef"), result.second)
+        assertEquals("1", result.third)
     }
 
     @Test
@@ -57,9 +59,9 @@ class TVFTests {
 
         // Assert
         assertNotNull(result)
-        assertEquals(listOf("eth_sendTransaction"), result?.first)
-        assertEquals(null, result?.second)
-        assertEquals("1", result?.third)
+        assertEquals(listOf("eth_sendTransaction"), result.first)
+        assertEquals(null, result.second)
+        assertEquals("1", result.third)
     }
 
     @Test

@@ -105,10 +105,10 @@ internal class RespondSessionRequestUseCase(
                 Tags.SESSION_REQUEST_RESPONSE,
                 Ttl(fiveMinutesInSeconds),
                 correlationId = jsonRpcResponse.id,
-                rpcMethods = tvfData?.first,
-                contractAddresses = tvfData?.second,
+                rpcMethods = tvfData.first,
+                contractAddresses = tvfData.second,
                 txHashes = txHashes,
-                chainId = tvfData?.third
+                chainId = tvfData.third
             )
             logger.log("Sending session request response on topic: $topic, id: ${jsonRpcResponse.id}")
             jsonRpcInteractor.publishJsonRpcResponse(topic = Topic(topic), params = irnParams, response = jsonRpcResponse,
