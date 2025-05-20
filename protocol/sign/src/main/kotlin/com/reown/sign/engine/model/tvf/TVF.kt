@@ -66,6 +66,13 @@ class TVF(private val moshi: Moshi) {
                         ?.let { listOf(it) }
                 }
 
+                STACKS_STX_TRANSFER -> {
+                    moshi.adapter(StacksTransactionData::class.java)
+                        .fromJson(rpcResult)
+                        ?.txId
+                        ?.let { listOf(it) }
+                }
+
                 COSMOS_SIGN_DIRECT -> {
                     moshi.adapter(CosmosSignDirect.SignatureData::class.java)
                         .fromJson(rpcResult)
@@ -164,5 +171,6 @@ class TVF(private val moshi: Moshi) {
         private const val TRON_SIGN_TRANSACTION = "tron_signTransaction"
         private const val HEDERA_SIGN_AND_EXECUTE_TRANSACTION = "hedera_signAndExecuteTransaction"
         private const val HEDERA_EXECUTE_TRANSACTION = "hedera_executeTransaction"
+        private const val STACKS_STX_TRANSFER = "stacks_stxTransfer"
     }
 }
