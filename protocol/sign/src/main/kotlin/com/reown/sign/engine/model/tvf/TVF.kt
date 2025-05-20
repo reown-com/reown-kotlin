@@ -59,6 +59,13 @@ class TVF(private val moshi: Moshi) {
                         ?.let { listOf(it) }
                 }
 
+                HEDERA_SIGN_AND_EXECUTE_TRANSACTION, HEDERA_EXECUTE_TRANSACTION -> {
+                    moshi.adapter(HederaSignAndExecuteTransactionResult::class.java)
+                        .fromJson(rpcResult)
+                        ?.transactionId
+                        ?.let { listOf(it) }
+                }
+
                 COSMOS_SIGN_DIRECT -> {
                     moshi.adapter(CosmosSignDirect.SignatureData::class.java)
                         .fromJson(rpcResult)
@@ -155,5 +162,7 @@ class TVF(private val moshi: Moshi) {
         private const val COSMOS_SIGN_DIRECT = "cosmos_signDirect"
         private const val COSMOS_SIGN_AMINO = "cosmos_signAmino"
         private const val TRON_SIGN_TRANSACTION = "tron_signTransaction"
+        private const val HEDERA_SIGN_AND_EXECUTE_TRANSACTION = "hedera_signAndExecuteTransaction"
+        private const val HEDERA_EXECUTE_TRANSACTION = "hedera_executeTransaction"
     }
 }
