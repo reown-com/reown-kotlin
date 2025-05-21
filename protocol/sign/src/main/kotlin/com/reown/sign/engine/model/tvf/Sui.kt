@@ -57,7 +57,7 @@ object SignAndExecute {
 object SignTransaction {
     @JsonClass(generateAdapter = true)
     data class SignatureResult(
-        val signature: String,
+        val signature: String?,
         val transactionBytes: String
     )
 
