@@ -150,6 +150,10 @@ class TVF(private val moshi: Moshi) {
                         ?.let { bufferDataList -> bufferDataList.map { NearSignTransaction.calculateTransactionHash(it.toByteArray()) } }
                 }
 
+                POLKADOT_SIGN_TRANSACTION -> {
+                    listOf("")
+                }
+
                 else -> null
             }
         } catch (e: Exception) {

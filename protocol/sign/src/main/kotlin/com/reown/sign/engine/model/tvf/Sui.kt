@@ -9,28 +9,28 @@ object SignAndExecute {
     @JsonClass(generateAdapter = true)
     data class SuiTransactionResponse(
         val digest: String,
-        val effects: Effects,
-        val events: List<Event>,
-        val object_changes: List<ObjectChange>,
-        val confirmed_local_execution: Boolean
+        val effects: Effects?,
+        val events: List<Event>?,
+        val object_changes: List<ObjectChange>?,
+        val confirmed_local_execution: Boolean?
     )
 
     @JsonClass(generateAdapter = true)
     data class Effects(
-        val status: Status,
-        val gas_used: GasUsed
+        val status: Status?,
+        val gas_used: GasUsed?
     )
 
     @JsonClass(generateAdapter = true)
     data class Status(
-        val status: String
+        val status: String?
     )
 
     @JsonClass(generateAdapter = true)
     data class GasUsed(
-        val computation_cost: Long,
-        val storage_cost: Long,
-        val storage_rebate: Long
+        val computation_cost: Long?,
+        val storage_cost: Long?,
+        val storage_rebate: Long?
     )
 
     @JsonClass(generateAdapter = true)
@@ -40,24 +40,24 @@ object SignAndExecute {
 
     @JsonClass(generateAdapter = true)
     data class CoinBalanceChange(
-        val owner: String,
-        val coin_type: String,
-        val amount: Long
+        val owner: String?,
+        val coin_type: String?,
+        val amount: Long?
     )
 
     @JsonClass(generateAdapter = true)
     data class ObjectChange(
-        val type: String,
-        val object_id: String,
-        val owner: String,
-        val version: Long
+        val type: String?,
+        val object_id: String?,
+        val owner: String?,
+        val version: Long?
     )
 }
 
 object SignTransaction {
     @JsonClass(generateAdapter = true)
     data class SignatureResult(
-        val signature: String,
+        val signature: String?,
         val transactionBytes: String
     )
 

@@ -4,6 +4,6 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class StacksTransactionData(
-    val txId: String,
-    val txRaw: String
+    val txId: String?,
+    val txRaw: String?
 )

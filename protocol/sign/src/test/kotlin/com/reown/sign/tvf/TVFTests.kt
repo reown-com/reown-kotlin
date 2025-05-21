@@ -175,6 +175,254 @@ class TVFTests {
     }
 
     @Test
+    fun `collectTxHashes should parse cosmos_signDirect and calculate transaction hash`() {
+        // Arrange
+        val rpcMethod = "cosmos_signDirect"
+        val rpcResult = """
+            {
+                "signature": {
+                    "pub_key": {
+                        "type": "tendermint/PubKeySecp256k1",
+                        "value": "A0uwn5KKyQOJRHOJEf+voctVp6RTbW89eaNPy2Ds6xfJ"
+                    },
+                    "signature": "2JzNmXJSA1I+LjWBoW9ZoE+VyhHTQ9kFHdv81jA6wf0s/vjdneeTrErp+wXfjACFkCoCTmUq8I28W8kmonEUDw=="
+                },
+                "signed": {
+                    "chainId": "cosmoshub-4",
+                    "accountNumber": "1",
+                    "authInfoBytes": "0a0a0a0012040a020801180112130a0d0a0575636f736d12043230303010c09a0c",
+                    "bodyBytes": "0a90010a1c2f636f736d6f732e62616e6b2e763162657461312e4d736753656e6412700a2d636f736d6f7331706b707472653766646b6c366766727a6c65736a6a766878686c63337234676d6d6b38727336122d636f736d6f7331717970717870713971637273737a673270767871367273307a716733797963356c7a763778751a100a0575636f736d120731323334353637"
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        println("Cosmos transaction hash: ${result?.firstOrNull()}")
+        assert(result!!.isNotEmpty())
+    }
+
+    @Test
+    fun `collectTxHashes should parse tron_signTransaction and extract txID`() {
+        // Arrange
+        val rpcMethod = "tron_signTransaction"
+        val rpcResult = """
+            {
+                "txID": "66e79c6993f29b02725da54ab146ffb0453ee6a43b4083568ad9585da305374a",
+                "signature": [
+                  "7e760cef94bc82a7533bc1e8d4ab88508c6e13224cd50cc8da62d3f4d4e19b99514f..."
+                ],
+                "raw_data": {
+                  "expiration": 1745849082000,
+                  "contract": [
+                    {
+                      "parameter": {
+                        "type_url": "type.googleapis.com/protocol.TriggerSmartContract",
+                        "value": {
+                          "data": "095ea7b30000000000000000000000001cb0b7348eded93b8d0816bbeb819fc1d7a51f310000000000000000000000000000000000000000000000000000000000000000",
+                          "contract_address": "41a614f803b6fd780986a42c78ec9c7f77e6ded13c",
+                          "owner_address": "411cb0b7348eded93b8d0816bbeb819fc1d7a51f31"
+                        }
+                      },
+                      "type": "TriggerSmartContract"
+                    }
+                  ],
+                  "ref_block_hash": "baa1c278fd0a309f",
+                  "fee_limit": 200000000,
+                  "timestamp": 1745849022978,
+                  "ref_block_bytes": "885b"
+                },
+                "visible": false,
+                "raw_data_hex": "0a02885b2208baa1c278fd0a309f4090c1dbe5e7325aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a15411cb0b7348eded93b8d0816bbeb819fc1d7a51f31121541a614f803b6fd780986a42c78ec9c7f77e6ded13c2244095ea7b30000000000000000000000001cb0b7348eded93b8d0816bbeb819fc1d7a51f3100000000000000000000000000000000000000000000000000000000000000007082f4d7e5e73290018084af5f"
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals("66e79c6993f29b02725da54ab146ffb0453ee6a43b4083568ad9585da305374a", result?.firstOrNull())
+        println("Tron transaction ID: ${result?.firstOrNull()}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse hedera_signAndExecuteTransaction and extract transactionId`() {
+        // Arrange
+        val rpcMethod = "hedera_signAndExecuteTransaction"
+        val rpcResult = """
+            {
+                "nodeId": "0.0.3",
+                "transactionHash": "252b8fd...",
+                "transactionId": "0.0.12345678@1689281510.675369303"
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals("0.0.12345678@1689281510.675369303", result?.firstOrNull())
+        println("Hedera transaction ID: ${result?.firstOrNull()}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse hedera_executeTransaction and extract transactionId`() {
+        // Arrange
+        val rpcMethod = "hedera_executeTransaction"
+        val rpcResult = """
+            {
+                "nodeId": "0.0.3",
+                "transactionHash": "252b8fd...",
+                "transactionId": "0.0.12345678@1689281510.675369303"
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals("0.0.12345678@1689281510.675369303", result?.firstOrNull())
+        println("Hedera transaction ID: ${result?.firstOrNull()}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse xrpl_signTransaction and extract hash`() {
+        // Arrange
+        val rpcMethod = "xrpl_signTransaction"
+        val rpcResult = """
+            {
+                "tx_json": {
+                    "Account": "rMBzp8CgpE441cp5PVyA9rpVV7oT8hP3ys",
+                    "Expiration": 595640108,
+                    "Fee": "10",
+                    "Flags": 524288,
+                    "OfferSequence": 1752791,
+                    "Sequence": 1752792,
+                    "LastLedgerSequence": 7108682,
+                    "SigningPubKey": "03EE83BB432547885C219634A1BC407A9DB0474145D69737D09CCDC63E1DEE7FE3",
+                    "TakerGets": "15000000000",
+                    "TakerPays": {
+                        "currency": "USD",
+                        "issuer": "rvYAfWj5gh67oV6fW32ZzP3Aw4Eubs59B",
+                        "value": "7072.8"
+                    },
+                    "TransactionType": "OfferCreate",
+                    "TxnSignature": "30440220143759437C04F7B61F012563AFE90D8DAFC46E86035E1D965A9CED282C97D4CE02204CFD241E86F17E011298FC1A39B63386C74306A5DE047E213B0F29EFA4571C2C",
+                    "hash": "73734B611DDA23D3F5F62E20A173B78AB8406AC5015094DA53F53D39B9EDB06C"
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals("73734B611DDA23D3F5F62E20A173B78AB8406AC5015094DA53F53D39B9EDB06C", result?.firstOrNull())
+        println("XRPL transaction hash: ${result?.firstOrNull()}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse xrpl_signTransactionFor and extract hash`() {
+        // Arrange
+        val rpcMethod = "xrpl_signTransactionFor"
+        val rpcResult = """
+            {
+                "submit": true,
+                "tx_signer": "rJ4wmkgK8n93UjtaqQTaj1vxBwQWdLrBjP",
+                "tx_json": {
+                    "Account": "rh2EsAe2xVE71ZBjx7oEL2zpD4zmSs3sY9",
+                    "TransactionType": "Payment",
+                    "Amount": "400000000000000",
+                    "Destination": "r9NpyVfLfUG8hatuCCHKzosyDtKnBdsEN3",
+                    "Fee": "5000",
+                    "Flags": 2147483648,
+                    "LastLedgerSequence": 73541531,
+                    "Sequence": 38,
+                    "Signers": [
+                        {
+                            "Signer": {
+                                "Account": "re3LGjhrCvthtWWwrfKbVJjXN9PYDeQDJ",
+                                "SigningPubKey": "0320ECD5569CAFA4E23147BE238DBFB268DB3B5A502ED339387AC7DCA0ADC6FB90",
+                                "TxnSignature": "3045022100EC2BF025E748A028187EDB3C350D518F91F05BC201EAFC9C92566DE9E48AA1B7022018847D172386E93679630E3905BD30481359E5766931944F79F1BA6D910F5C01"
+                            }
+                        },
+                        {
+                            "Signer": {
+                                "Account": "rpcL6T32dYb6FDgdm4CnC1DZQSoMvvkLRd",
+                                "SigningPubKey": "030BF97DA9A563A9A0679DD527F615CF8EA6B2DB55543075B72822B8D39910B5E1",
+                                "TxnSignature": "304402201A891AF3945C81E2D6B95213B79E9A31635209AF0FB94DA8C0983D15F454179B0220388679E02CE6DE2AAC904A9C2F42208418BEF60743A7F9F76FC36D519902DA8C"
+                            }
+                        },
+                        {
+                            "Signer": {
+                                "Account": "r3vw3FnkXn2L7St45tzpySZsXVgG75seNk",
+                                "SigningPubKey": "030BE281F6DFF9AFD260003375B64235DDBCD5B7A54511BE3DA1FEF1ADE4A85D87",
+                                "TxnSignature": "3044022049D36ACE39F1208B4C78A1550F458E54E21161FA4B52B3763C8FA9C4FE45B52C022003BE3579B5B5558A27BB7DC6A8ED163999A451665974138298469C1FDACA615F"
+                            }
+                        }
+                    ],
+                    "SigningPubKey": "",
+                    "hash": "31CB9DD1B9B7ADC7DCF820FAF4188053F47AE474B71AF0C6F88AF91440C0B822"
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals("31CB9DD1B9B7ADC7DCF820FAF4188053F47AE474B71AF0C6F88AF91440C0B822", result?.firstOrNull())
+        println("XRPL signTransactionFor hash: ${result?.firstOrNull()}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse sendTransfer and extract txid`() {
+        // Arrange
+        val rpcMethod = "sendTransfer"
+        val rpcResult = """
+            {
+                "txid": "f007551f169722ce74104d6673bd46ce193c624b8550889526d1b93820d725f7"
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals("f007551f169722ce74104d6673bd46ce193c624b8550889526d1b93820d725f7", result?.firstOrNull())
+        println("Bitcoin transaction ID: ${result?.firstOrNull()}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse stacks_stxTransfer and extract txId`() {
+        // Arrange
+        val rpcMethod = "stacks_stxTransfer"
+        val rpcResult = """
+            {
+                "txId": "stack_tx_id",
+                "txRaw": "raw_tx_hex"
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals("stack_tx_id", result?.firstOrNull())
+        println("Stacks transaction ID: ${result?.firstOrNull()}")
+    }
+
+    @Test
     fun `collectTxHashes should return null for unsupported methods`() {
         // Arrange
         val rpcMethod = "unsupported_method"

@@ -7,7 +7,7 @@ import org.bouncycastle.crypto.digests.SHA256Digest
 object NearSignTransaction {
     @JsonClass(generateAdapter = true)
     data class BufferData(
-        val type: String,
+        val type: String?,
         val data: List<Int>
     ) {
         fun toByteArray(): ByteArray = data.map { it.toByte() }.toByteArray()
