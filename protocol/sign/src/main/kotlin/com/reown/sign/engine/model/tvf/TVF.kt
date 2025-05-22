@@ -103,9 +103,10 @@ class TVF(private val moshi: Moshi) {
                 }
 
                 ALGO_SIGN_TXN -> {
-                    moshi.adapter(SignTxnResponse::class.java)
+                    val listOfStringsType = Types.newParameterizedType(List::class.java, String::class.java)
+                    moshi.adapter<List<String>>(listOfStringsType)
                         .fromJson(rpcResult)
-                        ?.let { calculateTxIDs(it.result) }
+                        ?.let { calculateTxIDs(it) }
                 }
 
                 XRPL_SIGN_TRANSACTION -> {

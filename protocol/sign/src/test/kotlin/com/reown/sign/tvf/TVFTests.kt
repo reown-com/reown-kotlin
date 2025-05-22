@@ -423,6 +423,79 @@ class TVFTests {
     }
 
     @Test
+    fun `collectTxHashes should calculate the correct hash for cosmos_signDirect`() {
+        // Arrange
+        val rpcMethod = "cosmos_signDirect"
+        val rpcResult = """
+            {
+              "signature": {
+                "pub_key": {
+                  "type": "tendermint/PubKeySecp256k1",
+                  "value": "AgSEjOuOr991QlHCORRmdE5ahVKeyBrmtgoYepCpQGOW"
+                },
+                "signature": "S7BJEbiXQ6vxvF9o4Wj7qAcocMQqBsqz+NVH4wilhidFsRpyqpSP5XiXoQZxTDrT9uET/S5SH6+5gUmjYntH/Q=="
+              },
+              "signed": {
+                "chainId": "cosmoshub-4",
+                "accountNumber": "1",
+                "authInfoBytes": "ClAKRgofL2Nvc21vcy5jcnlwdG8uc2VjcDI1NmsxLlB1YktleRIjCiEDNOXj4u60JFq00+VbLBCNBTYy76Pn864AvYNFG/9cQwMSBAoCCH8YAhITCg0KBXVhdG9tEgQ0NTM1EIaJCw==",
+                "bodyBytes": "CpoICikvaWJjLmFwcGxpY2F0aW9ucy50cmFuc2Zlci52MS5Nc2dUcmFuc2ZlchLsBwoIdHJhbnNmZXISC2NoYW5uZWwtMTQxGg8KBXVhdG9tEgYxODg4MDYiLWNvc21vczFhanBkZndsZmRqY240MG5yZXN5ZHJxazRhOGo2ZG0wemY0MGszcSo/b3NtbzEwYTNrNGh2azM3Y2M0aG54Y3R3NHA5NWZoc2NkMno2aDJybXgwYXVrYzZybTh1OXFxeDlzbWZzaDd1MgcIARDFt5YRQsgGeyJ3YXNtIjp7ImNvbnRyYWN0Ijoib3NtbzEwYTNrNGh2azM3Y2M0aG54Y3R3NHA5NWZoc2NkMno2aDJybXgwYXVrYzZybTh1OXFxeDlzbWZzaDd1IiwibXNnIjp7InN3YXBfYW5kX2FjdGlvbiI6eyJ1c2VyX3N3YXAiOnsic3dhcF9leGFjdF9hc3NldF9pbiI6eyJzd2FwX3ZlbnVlX25hbWUiOiJvc21vc2lzLXBvb2xtYW5hZ2VyIiwib3BlcmF0aW9ucyI6W3sicG9vbCI6IjE0MDAiLCJkZW5vbV9pbiI6ImliYy8yNzM5NEZCMDkyRDJFQ0NENTYxMjNDNzRGMzZFNEMxRjkyNjAwMUNFQURBOUNBOTdFQTYyMkIyNUY0MUU1RUIyIiwiZGVub21fb3V0IjoidW9zbW8ifSx7InBvb2wiOiIxMzQ3IiwiZGVub21faW4iOiJ1b3NtbyIsImRlbm9tX291dCI6ImliYy9ENzlFN0Q4M0FCMzk5QkZGRjkzNDMzRTU0RkFBNDgwQzE5MTI0OEZDNTU2OTI0QTJBODM1MUFFMjYzOEIzODc3In1dfX0sIm1pbl9hc3NldCI6eyJuYXRpdmUiOnsiZGVub20iOiJpYmMvRDc5RTdEODNBQjM5OUJGRkY5MzQzM0U1NEZBQTQ4MEMxOTEyNDhGQzU1NjkyNEEyQTgzNTFBRTI2MzhCMzg3NyIsImFtb3VudCI6IjMzOTQ2NyJ9fSwidGltZW91dF90aW1lc3RhbXAiOjE3NDc3NDY3MzM3OTU4OTgzNjQsInBvc3Rfc3dhcF9hY3Rpb24iOnsiaWJjX3RyYW5zZmVyIjp7ImliY19pbmZvIjp7InNvdXJjZV9jaGFubmVsIjoiY2hhbm5lbC02OTk0IiwicmVjZWl2ZXIiOiJjZWxlc3RpYTFhanBkZndsZmRqY240MG5yZXN5ZHJxazRhOGo2ZG0wemNsN3h0ZCIsIm1lbW8iOiIiLCJyZWNvdmVyX2FkZHJlc3MiOiJvc21vMWFqcGRmd2xmZGpjbjQwbnJlc3lkcnFrNGE4ajZkbTB6cHd1eDhqIn19fSwiYWZmaWxpYXRlcyI6W119fX19"
+              }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        val expectedHash = "A7284BA475C55983E5BCB7D52F5C82CBFF19FD75725F5E0E33BA4384FCFC6052"
+        assertEquals(expectedHash, result?.firstOrNull())
+        println("Cosmos transaction hash: ${result?.firstOrNull()}")
+    }
+
+    @Test
+    fun `collectTxHashes should calculate the correct txid for algo_signTxn`() {
+        // Arrange
+        val rpcMethod = "algo_signTxn"
+        val rpcResult = """
+                [
+                    "gqNzaWfEQNGPgbxS9pTu0sTikT3cJVO48WFltc8MM8meFR+aAnGwOo3FO+0nFkAludT0jNqHRM6E65gW6k/m92sHVCxVnQWjdHhuiaNhbXTOAAehIKNmZWXNA+iiZnbOAv0CO6NnZW6sbWFpbm5ldC12MS4womdoxCDAYcTY/B293tLXYEvkVo4/bQQZh6w3veS2ILWrOSSK36Jsds4C/QYjo3JjdsQgeqRNTBEXudHx2kO9Btq289aRzj5DlNUw0jwX9KEnaZqjc25kxCDH1s5tvgARbjtHceUG07Sj5IDfqzn7Zwx0P+XuvCYMz6R0eXBlo3BheQ=="
+                ]
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        val expectedTxId = "OM5JS3AE4HVAT5ZMCIMY32HPD6KJAQVPFS2LL2ZW2R5JKUKZFVNA"
+        println("Algorand transaction ID: ${result?.firstOrNull()}")
+        assertEquals(expectedTxId, result?.firstOrNull())
+    }
+
+    @Test
+    fun `collectTxHashes should calculate the correct txid for sui_signTransaction`() {
+        // Arrange
+        val rpcMethod = "sui_signTransaction"
+        val rpcResult = """
+                {
+                    "transactionBytes": "AAACAAhkAAAAAAAAAAAg1fZH7bd9T9ox0DBFBkR/s8kuVar3e8XtS3fDMt1GBfoCAgABAQAAAQEDAAAAAAEBANX2R+23fU/aMdAwRQZEf7PJLlWq93vF7Ut3wzLdRgX6At/pRJzj2VpZgqXpSvEtd3GzPvt99hR8e/yOCGz/8nbRmA7QFAAAAAAgBy5vStJizn76LmJTBlDiONdR/2rSuzzS4L+Tp/Zs4hZ8cBxYkcSlxBD6QXvgS11E6d+DNek8LiA/beba6iH3l5gO0BQAAAAAIMpdmZjiqJ5GG9di1MAgD4S3uRr2gaMC7S1WsaeBwNIx1fZH7bd9T9ox0DBFBkR/s8kuVar3e8XtS3fDMt1GBfroAwAAAAAAAECrPAAAAAAAAA==",
+                    "signature": "AGte9GqgPwHIzFSr/A4RdYqcgk2QJof0m8pHt06+WsIrw3vU40B+HGpQS/KaA9nPh12i/A7tIp6j5DGPoKM44AEZXLv/ORduxMYX0fw8dbHlnWC8WG0ymrlAmARpEibbhw=="
+                }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        val digest = "C98G1Uwh5soPMtZZmjUFwbVzWLMoAHzi5jrX2BtABe8v"
+        println("SUI digest: ${result?.firstOrNull()}")
+        assertEquals(digest, result?.firstOrNull())
+    }
+
+    @Test
     fun `collectTxHashes should return null for unsupported methods`() {
         // Arrange
         val rpcMethod = "unsupported_method"

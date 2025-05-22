@@ -1,6 +1,5 @@
 package com.reown.sign.engine.model.tvf
 
-import com.reown.util.hexToBytes
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
 import org.bouncycastle.crypto.digests.SHA256Digest
@@ -38,34 +37,36 @@ object CosmosSignDirect {
         val bodyBytes: String
     )
 
-    fun computeTxHash(bodyBytesHex: String, authInfoBytesHex: String, signatureBase64: String): String {
-        val baos = ByteArrayOutputStream()
-        val bodyBytes = bodyBytesHex.hexToBytes()
-        val authInfoBytes = authInfoBytesHex.hexToBytes()
+    fun computeTxHash(bodyBytesBase64: String, authInfoBytesBase64: String, signatureBase64: String): String =
+        try {
+            val baos = ByteArrayOutputStream()
+            val bodyBytes = Base64.decode(bodyBytesBase64)
+            val authInfoBytes = Base64.decode(authInfoBytesBase64)
+            val signature = Base64.decode(signatureBase64)
 
-        val signature = Base64.decode(signatureBase64)
+            baos.write(0x0A)
+            baos.write(encodeVarint(bodyBytes.size.toLong()))
+            baos.write(bodyBytes)
 
-        baos.write(0x0A)
-        baos.write(encodeVarint(bodyBytes.size.toLong()))
-        baos.write(bodyBytes)
+            baos.write(0x12)
+            baos.write(encodeVarint(authInfoBytes.size.toLong()))
+            baos.write(authInfoBytes)
 
-        baos.write(0x12)
-        baos.write(encodeVarint(authInfoBytes.size.toLong()))
-        baos.write(authInfoBytes)
+            baos.write(0x1A)
+            baos.write(encodeVarint(signature.size.toLong()))
+            baos.write(signature)
 
-        baos.write(0x1A)
-        baos.write(encodeVarint(signature.size.toLong()))
-        baos.write(signature)
+            val txRawBytes = baos.toByteArray()
 
-        val txRawBytes = baos.toByteArray()
+            val digest = SHA256Digest()
+            digest.update(txRawBytes, 0, txRawBytes.size)
+            val hashBytes = ByteArray(digest.digestSize)
+            digest.doFinal(hashBytes, 0)
 
-        val digest = SHA256Digest()
-        digest.update(txRawBytes, 0, txRawBytes.size)
-        val hashBytes = ByteArray(digest.digestSize)
-        digest.doFinal(hashBytes, 0)
-
-        return hashBytes.joinToString("") { "%02X".format(it) }
-    }
+            hashBytes.joinToString("") { "%02X".format(it) }
+        } catch (e: Exception) {
+            ""
+        }
 
     private fun encodeVarint(value: Long): ByteArray {
         val bytes = mutableListOf<Byte>()
