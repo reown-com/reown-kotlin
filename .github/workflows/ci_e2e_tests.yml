@@ -179,27 +179,11 @@ jobs:
             echo "Checking available activities for wallet app:"
             adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 10 "Activity" || true
             
-#            # Try launching with different methods
-#            echo "Testing app launch with am start..."
-#            adb shell am start -n com.reown.sample.wallet.internal/.MainActivity -W || {
-#              echo "Failed with MainActivity, trying other activities..."
-#              # Try to find the launcher activity
-#              LAUNCHER_ACTIVITY=$(adb shell cmd package resolve-activity -c android.intent.category.LAUNCHER com.reown.sample.wallet.internal | grep name= | head -1 | cut -d'=' -f2)
-#              echo "Found launcher activity: $LAUNCHER_ACTIVITY"
-#              if [ ! -z "$LAUNCHER_ACTIVITY" ]; then
-#                adb shell am start -n "$LAUNCHER_ACTIVITY" -W
-#              fi
-#            }
-            
             # Wait and capture state
             sleep 10
             
             # Capture comprehensive debug info
             echo "=== CAPTURING DEBUG INFO ==="
-            
-#            # Screenshot
-#            adb shell screencap /sdcard/app_launch.png
-#            adb pull /sdcard/app_launch.png debug-artifacts/ || true
             
             # Window state
             echo "Window state:" > debug-artifacts/window_state.txt
@@ -232,29 +216,11 @@ jobs:
             adb shell am force-stop com.reown.sample.dapp.internal
             sleep 5
             
-#            # Set environment variables that might be needed by the app
-#            export WC_CLOUD_PROJECT_ID="${{ secrets.WC_CLOUD_PROJECT_ID }}"
-            
-            # Run Maestro tests with extensive debugging
-            echo "Running Maestro tests..."
-            
-#            # First, let's see what Maestro sees
-#            maestro test --format junit --output debug-artifacts/maestro-report.xml .maestro/flows/native/connect_reject.yaml || {
-#              echo "Test failed, capturing additional debug info..."
-                    
-#              # Get Maestro hierarchy
-#              maestro hierarchy > debug-artifacts/maestro-hierarchy.txt || true
-#            
-#              # Try running with different wait strategy
-#              echo "Retrying with longer timeouts..."
-#              maestro test --debug --env APP_LAUNCH_TIMEOUT=60000 .maestro/flows/native/connect_reject.yaml || true
-#            }
-                    
             echo "Running Maestro native to native tests:"
             maestro test .maestro/flows/native/connect_reject.yaml
-    #            maestro test .maestro/flows/native/connect_confirm.yaml
-    #            maestro test .maestro/flows/native/personal_sign_reject.yaml
-    #            maestro test .maestro/flows/native/personal_sign_confirm.yaml
+            # maestro test .maestro/flows/native/connect_confirm.yaml
+            # maestro test .maestro/flows/native/personal_sign_reject.yaml
+            # maestro test .maestro/flows/native/personal_sign_confirm.yaml
             
             # Stop logcat capture
             kill $LOGCAT_PID || true
