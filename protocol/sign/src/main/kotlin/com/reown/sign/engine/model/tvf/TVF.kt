@@ -7,8 +7,6 @@ import com.squareup.moshi.Types
 class TVF(private val moshi: Moshi) {
     private val evm: List<String>
         get() = listOf(ETH_SEND_TRANSACTION, ETH_SEND_RAW_TRANSACTION)
-    private val solana
-        get() = listOf(SOLANA_SIGN_TRANSACTION, SOLANA_SIGN_AND_SEND_TRANSACTION, SOLANA_SIGN_ALL_TRANSACTION)
     private val wallet
         get() = listOf(WALLET_SEND_CALLS)
 

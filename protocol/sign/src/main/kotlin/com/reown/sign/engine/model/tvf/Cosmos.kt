@@ -1,13 +1,10 @@
 package com.reown.sign.engine.model.tvf
 
 import com.squareup.moshi.JsonClass
-import com.squareup.moshi.Types
+import com.squareup.moshi.Moshi
 import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.util.encoders.Base64
 import java.io.ByteArrayOutputStream
-import java.util.TreeMap
-import com.squareup.moshi.Moshi
-import okio.Buffer
 import java.security.MessageDigest
 
 object CosmosSignDirect {

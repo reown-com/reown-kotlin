@@ -61,30 +61,21 @@ object SignTransaction {
     )
 
     fun calculateTransactionDigest(txBytesBase64: String): String {
-        // Convert the tx to bytes
-        val txBytes = try {
-            Base64.decode(txBytesBase64)
+        try {
+            val txBytes = Base64.decode(txBytesBase64)
+            val typeTagBytes = "TransactionData::".toByteArray(Charsets.UTF_8)
+            val dataWithTag = ByteArray(typeTagBytes.size + txBytes.size)
+            System.arraycopy(typeTagBytes, 0, dataWithTag, 0, typeTagBytes.size)
+            System.arraycopy(txBytes, 0, dataWithTag, typeTagBytes.size, txBytes.size)
+            val hash = blake2b(dataWithTag, 32)
+            return toBase58(hash)
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("Invalid base64 string: ${e.message}")
         }
-
-        // Add required prefix `TransactionData::` else the digest will be wrong
-        val typeTagBytes = "TransactionData::".toByteArray(Charsets.UTF_8)
-
-        // Combine type tag and transaction bytes
-        val dataWithTag = ByteArray(typeTagBytes.size + txBytes.size)
-        System.arraycopy(typeTagBytes, 0, dataWithTag, 0, typeTagBytes.size)
-        System.arraycopy(txBytes, 0, dataWithTag, typeTagBytes.size, txBytes.size)
-
-        // Calculate Blake2b hash with 32 byte output
-        val hash = blake2b(dataWithTag, 32)
-
-        // Convert to Base58
-        return toBase58(hash)
     }
 
     private fun blake2b(data: ByteArray, outputLength: Int): ByteArray {
-        val digest = Blake2bDigest(outputLength * 8) // Blake2bDigest expects bits, not bytes
+        val digest = Blake2bDigest(outputLength * 8)
         digest.update(data, 0, data.size)
 
         val hash = ByteArray(outputLength)
@@ -95,14 +86,11 @@ object SignTransaction {
 
     private fun toBase58(bytes: ByteArray): String {
         val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-
-        // Count leading zeros
         var leadingZeros = 0
         for (b in bytes) {
             if (b == 0.toByte()) leadingZeros++ else break
         }
 
-        // Convert to base 58
         val input = bytes.copyOf()
         val encoded = mutableListOf<Char>()
 
@@ -116,11 +104,9 @@ object SignTransaction {
             encoded.add(alphabet[carry])
         }
 
-        // Add leading zeros as '1's
         val result = StringBuilder()
         repeat(leadingZeros) { result.append('1') }
         encoded.reversed().forEach { result.append(it) }
-
         return result.toString()
     }
 }

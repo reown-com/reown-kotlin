@@ -18,7 +18,6 @@ object NearSignTransaction {
         digest.update(signedTxBytes, 0, signedTxBytes.size)
         val hash = ByteArray(32)
         digest.doFinal(hash, 0)
-
         return Multibase.encode(Multibase.Base.Base58BTC, hash)
     }
 }
