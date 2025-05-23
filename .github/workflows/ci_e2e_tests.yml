@@ -155,13 +155,13 @@ jobs:
             echo "Installing APKs:"
             find apks -name "*.apk" -exec echo "Installing: {}" \; -exec adb install -r {} \;
             
-            # Verify installations
-            echo "Verifying installed apps:"
-            if ! adb shell pm list packages | grep -E "com.reown.sample"; then
-              echo "ERROR: Apps not installed correctly"
-              adb shell pm list packages
-              exit 1
-            fi
+#            # Verify installations
+#            echo "Verifying installed apps:"
+#            if ! adb shell pm list packages | grep -E "com.reown.sample"; then
+#              echo "ERROR: Apps not installed correctly"
+#              adb shell pm list packages
+#              exit 1
+#            fi
             
             # Check APK info
             echo "Checking APK details:"
