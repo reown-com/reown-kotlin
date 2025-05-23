@@ -72,7 +72,7 @@ jobs:
   run_e2e_tests:
     name: Run E2E Tests
     timeout-minutes: 20
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-16core
     needs: build_internal_samples
     steps:
       - name: Checkout repository
