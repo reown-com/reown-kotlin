@@ -129,6 +129,9 @@ jobs:
             echo "Running pre emulator launch script"
             pwd
           script: |
+            #!/bin/bash
+            set -e
+            
             # Setup debug directory
             mkdir -p debug-artifacts
             
@@ -136,19 +139,18 @@ jobs:
             echo "Waiting for emulator to be ready..."
             adb wait-for-device
             
-            # Wait for boot completion
-            boot_completed=false
-            for i in {1..60}; do
-              if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; then
-                boot_completed=true
-                break
-              fi
-              echo "Waiting for boot completion... attempt $i/60"
+            # Wait for boot completion with timeout
+            TIMEOUT=300
+            COUNTER=0
+            echo "Waiting for boot completion..."
+            until [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" == "1" ]] || [[ $COUNTER -eq $TIMEOUT ]]; do
+              echo "Waiting... ($COUNTER/$TIMEOUT)"
               sleep 5
+              COUNTER=$((COUNTER + 5))
             done
             
-            if [ "$boot_completed" = false ]; then
-              echo "ERROR: Boot did not complete within 5 minutes"
+            if [[ $COUNTER -eq $TIMEOUT ]]; then
+              echo "ERROR: Boot did not complete within $TIMEOUT seconds"
               exit 1
             fi
             
@@ -168,19 +170,27 @@ jobs:
             
             # Verify installations
             echo "Verifying installed apps:"
-            adb shell pm list packages | grep -E "com.reown.sample" || {
+            if ! adb shell pm list packages | grep -E "com.reown.sample"; then
               echo "ERROR: Apps not installed correctly"
+              adb shell pm list packages
               exit 1
-            }
+            fi
             
             # Check APK info
             echo "Checking APK details:"
-            adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 5 "versionName"
+            adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 5 "versionName" || true
             
             # Clear app data
             echo "Clearing app data..."
             adb shell pm clear com.reown.sample.wallet.internal || true
             adb shell pm clear com.reown.sample.dapp.internal || true
+            
+            # Grant permissions
+            echo "Granting permissions..."
+            adb shell pm grant com.reown.sample.wallet.internal android.permission.INTERNET || true
+            adb shell pm grant com.reown.sample.wallet.internal android.permission.ACCESS_NETWORK_STATE || true
+            adb shell pm grant com.reown.sample.dapp.internal android.permission.INTERNET || true
+            adb shell pm grant com.reown.sample.dapp.internal android.permission.ACCESS_NETWORK_STATE || true
             
             # Wait for system to settle
             sleep 10
@@ -195,13 +205,9 @@ jobs:
             # Capture comprehensive debug info
             echo "=== CAPTURING DEBUG INFO ==="
             
-            # Window state
-            echo "Window state:" > debug-artifacts/window_state.txt
-            adb shell dumpsys window windows >> debug-artifacts/window_state.txt
-            
             # Current activity
             echo "Current activity:" > debug-artifacts/current_activity.txt
-            adb shell dumpsys activity activities | grep -E "mResumedActivity|mFocusedActivity" >> debug-artifacts/current_activity.txt
+            adb shell dumpsys activity activities | grep -E "mResumedActivity|mFocusedActivity" >> debug-artifacts/current_activity.txt || true
             
             # Check for crashes
             echo "Checking for crashes..."
@@ -218,8 +224,8 @@ jobs:
             
             # Network state (important for WalletConnect)
             echo "Network state:" > debug-artifacts/network_state.txt
-            adb shell dumpsys connectivity >> debug-artifacts/network_state.txt
-            adb shell settings get global airplane_mode_on >> debug-artifacts/network_state.txt
+            adb shell dumpsys connectivity >> debug-artifacts/network_state.txt || true
+            adb shell settings get global airplane_mode_on >> debug-artifacts/network_state.txt || true
             
             # Force stop before Maestro tests
             adb shell am force-stop com.reown.sample.wallet.internal
