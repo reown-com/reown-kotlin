@@ -154,56 +154,18 @@ jobs:
               exit 1
             }
             
-            # Clear app data
-            echo "Clearing app data..."
-            adb shell pm clear com.reown.sample.wallet.internal || true
-            adb shell pm clear com.reown.sample.dapp.internal || true
-            
             # Wait for system to settle
             sleep 10
-            
-            # Function to capture debug info
-            capture_debug_info() {
-              local step_name=$1
-              echo "Capturing debug info for: $step_name"
-              adb shell screencap /sdcard/${step_name}.png
-              adb pull /sdcard/${step_name}.png || true
-              adb shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' || true
-              adb logcat -d -t 100 | grep -E "ActivityManager|System.err|AndroidRuntime" || true
-            }
-            
-            # Test manual app launch
-            echo "Testing wallet app launch..."
-            adb shell am start -n com.reown.sample.wallet.internal/.MainActivity
-            sleep 8
-            capture_debug_info "wallet_launch"
-            
-            # Check for crashes
-            if adb logcat -d | grep -E "FATAL EXCEPTION|AndroidRuntime.*com.reown.sample.wallet"; then
-              echo "ERROR: Wallet app crashed on launch"
-              adb logcat -d | grep -A 20 -B 5 "FATAL EXCEPTION"
-              exit 1
-            fi
-            
-            # Kill app before tests
-            adb shell am force-stop com.reown.sample.wallet.internal
-            sleep 2
             
             # Run Maestro tests with debug mode
             echo "Running Maestro native to native tests:"
             
-            # Run each test with error handling
-            for test_file in connect_reject.yaml connect_confirm.yaml personal_sign_reject.yaml personal_sign_confirm.yaml; do
-              echo "Running test: $test_file"
-              maestro test --debug .maestro/flows/native/$test_file || {
-                echo "Test $test_file failed"
-                capture_debug_info "failed_${test_file%.*}"
-                # Continue with other tests instead of failing immediately
-                # exit 1
-              }
-              sleep 5  # Wait between tests
-            done
-
+            echo "Running Maestro native to native tests:"
+            maestro test .maestro/flows/native/connect_reject.yaml
+            maestro test .maestro/flows/native/connect_confirm.yaml
+            maestro test .maestro/flows/native/personal_sign_reject.yaml
+            maestro test .maestro/flows/native/personal_sign_confirm.yaml
+            
       - name: Collect debug artifacts
         if: always()
         run: |
