@@ -177,11 +177,7 @@ jobs:
             
             # Check if the app needs to be enabled
             echo "Checking app state..."
-            APP_STATE=$(adb shell pm list packages -d | grep com.reown.sample.wallet.internal || echo "not_disabled")
-            if [ "$APP_STATE" != "not_disabled" ]; then
-              echo "App is disabled, enabling it..."
-              adb shell pm enable com.reown.sample.wallet.internal
-            fi
+            adb shell pm list packages -d | grep -q com.reown.sample.wallet.internal && adb shell pm enable com.reown.sample.wallet.internal || echo "App is not disabled"
             
             # Wait for system to settle
             sleep 10
@@ -277,6 +273,29 @@ jobs:
         with:
           name: debug-artifacts
           path: debug-artifacts/
+          if-no-files-found: warn
+
+      - name: Find video files in project root
+        if: always()
+        run: |
+          echo "Looking for video files in project root:"
+          find . -maxdepth 1 -type f -name "*.mp4" -o -name "*.mov"
+                
+          # Create videos directory if it doesn't exist
+          mkdir -p videos
+                
+          # Move any video files from root to videos directory
+          find . -maxdepth 1 -type f \( -name "*.mp4" -o -name "*.mov" \) -exec mv {} videos/ \;
+
+      - name: Upload test recordings from root
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-root-recordings
+          path: |
+            videos/
+            *.mp4
+            *.mov
           if-no-files-found: warn
 
       - name: Upload Maestro artifacts
