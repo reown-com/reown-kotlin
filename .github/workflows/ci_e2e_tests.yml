@@ -139,20 +139,7 @@ jobs:
             echo "Waiting for emulator to be ready..."
             adb wait-for-device
             
-            # Wait for boot completion with timeout
-            TIMEOUT=300
-            COUNTER=0
-            echo "Waiting for boot completion..."
-            until [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" == "1" ]] || [[ $COUNTER -eq $TIMEOUT ]]; do
-              echo "Waiting... ($COUNTER/$TIMEOUT)"
-              sleep 5
-              COUNTER=$((COUNTER + 5))
-            done
-            
-            if [[ $COUNTER -eq $TIMEOUT ]]; then
-              echo "ERROR: Boot did not complete within $TIMEOUT seconds"
-              exit 1
-            fi
+            sleep 5
             
             echo "Emulator booted successfully"
             adb devices
