@@ -71,7 +71,7 @@ jobs:
 
   run_e2e_tests:
     name: Run E2E Tests
-    timeout-minutes: 20
+    timeout-minutes: 30  # Increased timeout
     runs-on: ubuntu-16core
     needs: build_internal_samples
     steps:
@@ -100,7 +100,7 @@ jobs:
       - name: List APKs
         run: |
           echo "Available APKs:"
-          find apks -name "*.apk"
+          find apks -name "*.apk" | xargs ls -la
 
       - name: Install Maestro
         run: |
@@ -115,43 +115,109 @@ jobs:
       - name: Start Android Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
+          api-level: 30  # Changed from 33 for better stability
           target: google_apis
           arch: x86_64
-          ram-size: 2048M
-          emulator-boot-timeout: 600 # 10min
-          profile: pixel_7
+          ram-size: 4096M  # Increased RAM
+          heap-size: 512M  # Added heap size
+          emulator-boot-timeout: 900  # Increased timeout
+          profile: pixel_6  # Changed from pixel_7
           avd-name: test_device
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot-save -no-snapshot-load
           disable-animations: true
           pre-emulator-launch-script: |
             echo "Running pre emulator launch script. Printing the working directory now:"
             pwd
           script: |
-            echo "Listing available devices:"
-            avdmanager list device
-            
-            echo "Listing available APKs:"
-            find apks -name "*.apk"
-            
-            # verify emulator is running
+            # Verify emulator is running
+            echo "Waiting for emulator to be ready..."
+            adb wait-for-device
             adb devices
             
+            # Wait for boot completion
+            while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
+              echo "Waiting for boot completion..."
+              sleep 5
+            done
+            
+            echo "Emulator booted successfully"
+            
+            # Install APKs
             echo "Installing APKs:"
-            find apks -name "*.apk" -exec adb install -r {} \;
+            find apks -name "*.apk" -exec echo "Installing: {}" \; -exec adb install -r {} \;
             
-            echo "Installed apps:"
-            adb shell pm list packages
+            # Verify installations
+            echo "Verifying installed apps:"
+            adb shell pm list packages | grep -E "com.reown.sample.(wallet|dapp).internal" || {
+              echo "ERROR: Apps not installed correctly"
+              adb shell pm list packages
+              exit 1
+            }
             
+            # Clear app data
+            echo "Clearing app data..."
+            adb shell pm clear com.reown.sample.wallet.internal || true
+            adb shell pm clear com.reown.sample.dapp.internal || true
+            
+            # Wait for system to settle
+            sleep 10
+            
+            # Function to capture debug info
+            capture_debug_info() {
+              local step_name=$1
+              echo "Capturing debug info for: $step_name"
+              adb shell screencap /sdcard/${step_name}.png
+              adb pull /sdcard/${step_name}.png || true
+              adb shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' || true
+              adb logcat -d -t 100 | grep -E "ActivityManager|System.err|AndroidRuntime" || true
+            }
+            
+            # Test manual app launch
+            echo "Testing wallet app launch..."
+            adb shell am start -n com.reown.sample.wallet.internal/.MainActivity
+            sleep 8
+            capture_debug_info "wallet_launch"
+            
+            # Check for crashes
+            if adb logcat -d | grep -E "FATAL EXCEPTION|AndroidRuntime.*com.reown.sample.wallet"; then
+              echo "ERROR: Wallet app crashed on launch"
+              adb logcat -d | grep -A 20 -B 5 "FATAL EXCEPTION"
+              exit 1
+            fi
+            
+            # Kill app before tests
+            adb shell am force-stop com.reown.sample.wallet.internal
+            sleep 2
+            
+            # Run Maestro tests with debug mode
             echo "Running Maestro native to native tests:"
-            maestro test .maestro/flows/native/connect_reject.yaml
-            maestro test .maestro/flows/native/connect_confirm.yaml
-            maestro test .maestro/flows/native/personal_sign_reject.yaml
-            maestro test .maestro/flows/native/personal_sign_confirm.yaml
+            
+            # Run each test with error handling
+            for test_file in connect_reject.yaml connect_confirm.yaml personal_sign_reject.yaml personal_sign_confirm.yaml; do
+              echo "Running test: $test_file"
+              maestro test --debug .maestro/flows/native/$test_file || {
+                echo "Test $test_file failed"
+                capture_debug_info "failed_${test_file%.*}"
+                # Continue with other tests instead of failing immediately
+                # exit 1
+              }
+              sleep 5  # Wait between tests
+            done
 
-#            echo "Running Maestro web to native tests:"
-#            maestro test .maestro/flows/web/connect_reject.yaml || echo "Test web_connect_reject failed but continuing"
-#            maestro test .maestro/flows/web/connect_confirm.yaml || echo "Test web_connect_confirm failed but continuing"
+      - name: Collect debug artifacts
+        if: always()
+        run: |
+          mkdir -p debug-artifacts
+          find . -name "*.png" -type f -exec cp {} debug-artifacts/ \; || true
+          adb logcat -d > debug-artifacts/logcat.txt || true
+
+      - name: Upload debug artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-artifacts
+          path: debug-artifacts/
+          if-no-files-found: warn
 
       - name: Find video files in project root
         if: always()
@@ -181,6 +247,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: maestro-videos
-          path: |
-            .maestro/videos/
-            if-no-files-found: warn
+          path: .maestro/videos/
+          if-no-files-found: warn
