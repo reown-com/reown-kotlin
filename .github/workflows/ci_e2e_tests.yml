@@ -134,12 +134,6 @@ jobs:
             adb wait-for-device
             adb devices
             
-            # Wait for boot completion
-            while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
-              echo "Waiting for boot completion..."
-              sleep 5
-            done
-            
             echo "Emulator booted successfully"
             
             # Install APKs
