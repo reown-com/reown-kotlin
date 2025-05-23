@@ -129,9 +129,6 @@ jobs:
             echo "Running pre emulator launch script"
             pwd
           script: |
-            #!/bin/bash
-            set -e
-            
             # Setup debug directory
             mkdir -p debug-artifacts
             
@@ -139,22 +136,10 @@ jobs:
             echo "Waiting for emulator to be ready..."
             adb wait-for-device
             
-            # Wait for boot completion with timeout
+            # Wait for boot completion
             echo "Waiting for boot completion..."
-            BOOT_COMPLETE=false
-            for i in $(seq 1 60); do
-              if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; then
-                BOOT_COMPLETE=true
-                break
-              fi
-              echo "Waiting... attempt $i/60"
-              sleep 5
-            done
-            
-            if [ "$BOOT_COMPLETE" = "false" ]; then
-              echo "ERROR: Boot did not complete within 5 minutes"
-              exit 1
-            fi
+            adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
+            echo "Boot completed!"
             
             echo "Emulator booted successfully"
             adb devices
@@ -172,15 +157,11 @@ jobs:
             
             # Verify installations
             echo "Verifying installed apps:"
-            if ! adb shell pm list packages | grep -E "com.reown.sample"; then
-              echo "ERROR: Apps not installed correctly"
-              adb shell pm list packages
-              exit 1
-            fi
+            adb shell pm list packages | grep -E "com.reown.sample" || (echo "ERROR: Apps not installed correctly" && exit 1)
             
             # Check APK info
             echo "Checking APK details:"
-            adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 5 "versionName" || true
+            adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 5 "versionName"
             
             # Clear app data
             echo "Clearing app data..."
@@ -202,13 +183,6 @@ jobs:
               adb shell pm enable com.reown.sample.wallet.internal
             fi
             
-            # Grant permissions
-            echo "Granting permissions..."
-            adb shell pm grant com.reown.sample.wallet.internal android.permission.INTERNET || true
-            adb shell pm grant com.reown.sample.wallet.internal android.permission.ACCESS_NETWORK_STATE || true
-            adb shell pm grant com.reown.sample.dapp.internal android.permission.INTERNET || true
-            adb shell pm grant com.reown.sample.dapp.internal android.permission.ACCESS_NETWORK_STATE || true
-            
             # Wait for system to settle
             sleep 10
             
@@ -216,26 +190,11 @@ jobs:
             echo "Checking available activities for wallet app:"
             adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 10 "Activity" || true
             
-            # Test manual app launch
-            echo "Testing wallet app launch..."
-            adb shell am start -n com.reown.sample.wallet.internal/.MainActivity -W || {
-              echo "Failed to launch MainActivity, checking for launcher activity..."
-              LAUNCHER_ACTIVITY=$(adb shell cmd package resolve-activity -c android.intent.category.LAUNCHER com.reown.sample.wallet.internal | grep name= | head -1 | cut -d'=' -f2 | tr -d '\r')
-              if [[ ! -z "$LAUNCHER_ACTIVITY" ]]; then
-                echo "Found launcher activity: $LAUNCHER_ACTIVITY"
-                adb shell am start -n "$LAUNCHER_ACTIVITY" -W
-              fi
-            }
-            
             # Wait and capture state
             sleep 10
             
             # Capture comprehensive debug info
             echo "=== CAPTURING DEBUG INFO ==="
-            
-            # Screenshot
-            adb shell screencap /sdcard/app_launch.png
-            adb pull /sdcard/app_launch.png debug-artifacts/ || true
             
             # Window state
             echo "Window state:" > debug-artifacts/window_state.txt
@@ -243,7 +202,7 @@ jobs:
             
             # Current activity
             echo "Current activity:" > debug-artifacts/current_activity.txt
-            adb shell dumpsys activity activities | grep -E "mResumedActivity|mFocusedActivity" >> debug-artifacts/current_activity.txt || true
+            adb shell dumpsys activity activities | grep -E "mResumedActivity|mFocusedActivity" >> debug-artifacts/current_activity.txt
             
             # Check for crashes
             echo "Checking for crashes..."
@@ -260,8 +219,8 @@ jobs:
             
             # Network state (important for WalletConnect)
             echo "Network state:" > debug-artifacts/network_state.txt
-            adb shell dumpsys connectivity >> debug-artifacts/network_state.txt || true
-            adb shell settings get global airplane_mode_on >> debug-artifacts/network_state.txt || true
+            adb shell dumpsys connectivity >> debug-artifacts/network_state.txt
+            adb shell settings get global airplane_mode_on >> debug-artifacts/network_state.txt
             
             # Force stop before Maestro tests
             adb shell am force-stop com.reown.sample.wallet.internal
@@ -274,45 +233,12 @@ jobs:
             sleep 10
             
             # Check if app is running
-            if ! adb shell ps | grep -q "com.reown.sample.wallet.internal"; then
-              echo "ERROR: Wallet app is not running after launch attempt"
+            adb shell ps | grep -q "com.reown.sample.wallet.internal" || (echo "ERROR: Wallet app is not running after launch attempt" && adb shell am start -n com.reown.sample.wallet.internal/com.reown.sample.wallet.internal.MainActivity || true)
             
-              # Try alternative launch methods
-              echo "Trying am start with explicit activity..."
-              adb shell am start -n com.reown.sample.wallet.internal/com.reown.sample.wallet.internal.MainActivity || {
-                echo "MainActivity launch failed, trying to find launcher activity..."
+            sleep 10
             
-                # Get the main activity from package manager
-                MAIN_ACTIVITY=$(adb shell "cmd package dump com.reown.sample.wallet.internal | grep -A1 'android.intent.action.MAIN' | grep -o 'com.reown.sample.wallet.internal/[^ ]*' | head -1")
-                echo "Found activity: $MAIN_ACTIVITY"
-            
-                if [ ! -z "$MAIN_ACTIVITY" ]; then
-                  adb shell am start -n "$MAIN_ACTIVITY"
-                fi
-              }
-            
-              sleep 10
-            
-              # Final check
-              if ! adb shell ps | grep -q "com.reown.sample.wallet.internal"; then
-                echo "ERROR: Could not launch wallet app with any method"
-            
-                # Get more info about the APK
-                echo "APK installation details:"
-                adb shell pm path com.reown.sample.wallet.internal
-                adb shell pm dump com.reown.sample.wallet.internal | grep -E "versionCode|versionName|enabled|stopped"
-            
-                # Check if APK requires specific permissions at install time
-                echo "Checking required permissions:"
-                adb shell pm dump com.reown.sample.wallet.internal | grep -A20 "requested permissions"
-            
-                # Take a screenshot to see what's on screen
-                adb shell screencap /sdcard/failed_launch.png
-                adb pull /sdcard/failed_launch.png debug-artifacts/
-            
-                exit 1
-              fi
-            fi
+            # Final check
+            adb shell ps | grep -q "com.reown.sample.wallet.internal" || (echo "ERROR: Could not launch wallet app" && adb shell pm path com.reown.sample.wallet.internal && adb shell pm dump com.reown.sample.wallet.internal | grep -E "versionCode|versionName|enabled|stopped" && exit 1)
             
             echo "App is running, proceeding with Maestro tests..."
             
@@ -320,16 +246,11 @@ jobs:
             adb shell am force-stop com.reown.sample.wallet.internal
             sleep 2
             
-            # Set environment properties for the app
-            adb shell setprop debug.reown.project_id "${{ secrets.WC_CLOUD_PROJECT_ID }}" || true
-            
             echo "Running Maestro native to native tests:"
-            maestro test .maestro/flows/native/connect_reject.yaml || {
-              echo "Test failed, capturing additional debug info..."
-              adb shell screencap /sdcard/test_failed.png
-              adb pull /sdcard/test_failed.png debug-artifacts/ || true
-              maestro hierarchy > debug-artifacts/maestro-hierarchy.txt || true
-            }
+            maestro test .maestro/flows/native/connect_reject.yaml
+            # maestro test .maestro/flows/native/connect_confirm.yaml
+            # maestro test .maestro/flows/native/personal_sign_reject.yaml
+            # maestro test .maestro/flows/native/personal_sign_confirm.yaml
             
             # Stop logcat capture
             kill $LOGCAT_PID || true
