@@ -229,18 +229,20 @@ jobs:
             sleep 10
             
             # Check if app is running
-            adb shell ps | grep -q "com.reown.sample.wallet.internal" || (echo "ERROR: Wallet app is not running after launch attempt" && adb shell am start -n com.reown.sample.wallet.internal/com.reown.sample.wallet.internal.MainActivity || true)
+            adb shell ps | grep -q "com.reown.sample.wallet.internal" || (echo "ERROR: Wallet app is not running after launch attempt" && adb shell am start -n com.reown.sample.wallet.internal/com.reown.sample.wallet.ui.WalletKitActivity || true)
             
             sleep 10
             
-            # Final check
-            adb shell ps | grep -q "com.reown.sample.wallet.internal" || (echo "ERROR: Could not launch wallet app" && adb shell pm path com.reown.sample.wallet.internal && adb shell pm dump com.reown.sample.wallet.internal | grep -E "versionCode|versionName|enabled|stopped" && exit 1)
+            # Take a screenshot to see current state
+            adb shell screencap /sdcard/app_state_before_maestro.png
+            adb pull /sdcard/app_state_before_maestro.png debug-artifacts/ || true
             
-            echo "App is running, proceeding with Maestro tests..."
+            # Check current activity
+            echo "Current activity before Maestro:"
+            adb shell dumpsys activity activities | grep -E "mResumedActivity|mFocusedActivity" || true
             
-            # Kill the app so Maestro can launch it fresh
-            adb shell am force-stop com.reown.sample.wallet.internal
-            sleep 2
+            # DO NOT kill the app here - let's see if it's actually running properly
+            echo "App state check complete, proceeding with Maestro tests..."
             
             echo "Running Maestro native to native tests:"
             maestro test .maestro/flows/native/connect_reject.yaml
@@ -273,29 +275,6 @@ jobs:
         with:
           name: debug-artifacts
           path: debug-artifacts/
-          if-no-files-found: warn
-
-      - name: Find video files in project root
-        if: always()
-        run: |
-          echo "Looking for video files in project root:"
-          find . -maxdepth 1 -type f -name "*.mp4" -o -name "*.mov"
-                
-          # Create videos directory if it doesn't exist
-          mkdir -p videos
-                
-          # Move any video files from root to videos directory
-          find . -maxdepth 1 -type f \( -name "*.mp4" -o -name "*.mov" \) -exec mv {} videos/ \;
-
-      - name: Upload test recordings from root
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: maestro-root-recordings
-          path: |
-            videos/
-            *.mp4
-            *.mov
           if-no-files-found: warn
 
       - name: Upload Maestro artifacts
