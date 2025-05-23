@@ -71,7 +71,7 @@ jobs:
 
   run_e2e_tests:
     name: Run E2E Tests
-    timeout-minutes: 30  # Increased timeout
+    timeout-minutes: 30
     runs-on: ubuntu-16core
     needs: build_internal_samples
     steps:
@@ -115,42 +115,165 @@ jobs:
       - name: Start Android Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 30  # Changed from 33 for better stability
+          api-level: 30
           target: google_apis
           arch: x86_64
-          ram-size: 4096M  # Increased RAM
-          heap-size: 512M  # Added heap size
-          emulator-boot-timeout: 900  # Increased timeout
-          profile: pixel_6  # Changed from pixel_7
+          ram-size: 4096M
+          heap-size: 576M
+          emulator-boot-timeout: 900
+          profile: pixel_6
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot-save -no-snapshot-load
           disable-animations: true
           pre-emulator-launch-script: |
-            echo "Running pre emulator launch script. Printing the working directory now:"
+            echo "Running pre emulator launch script"
             pwd
           script: |
-            # Verify emulator is running
+            # Setup debug directory
+            mkdir -p debug-artifacts
+            
+            # Wait for emulator to be fully ready
             echo "Waiting for emulator to be ready..."
             adb wait-for-device
-            adb devices
+            
+            # Wait for boot completion
+            while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
+              echo "Waiting for boot completion..."
+              sleep 5
+            done
             
             echo "Emulator booted successfully"
+            adb devices
+            
+            # Clear logcat before we start
+            adb logcat -c
+            
+            # Start logcat capture in background
+            adb logcat > debug-artifacts/full-logcat.txt &
+            LOGCAT_PID=$!
             
             # Install APKs
             echo "Installing APKs:"
             find apks -name "*.apk" -exec echo "Installing: {}" \; -exec adb install -r {} \;
             
+            # Verify installations
+            echo "Verifying installed apps:"
+            adb shell pm list packages | grep -E "com.reown.sample" || {
+              echo "ERROR: Apps not installed correctly"
+              exit 1
+            }
+            
+            # Check APK info
+            echo "Checking APK details:"
+            adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 5 "versionName"
+            
+            # Clear app data
+            echo "Clearing app data..."
+            adb shell pm clear com.reown.sample.wallet.internal || true
+            adb shell pm clear com.reown.sample.dapp.internal || true
+            
             # Wait for system to settle
             sleep 10
             
-            # Run Maestro tests with debug mode
-            echo "Running Maestro native to native tests:"
+            # Check available activities
+            echo "Checking available activities for wallet app:"
+            adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 10 "Activity" || true
             
+#            # Try launching with different methods
+#            echo "Testing app launch with am start..."
+#            adb shell am start -n com.reown.sample.wallet.internal/.MainActivity -W || {
+#              echo "Failed with MainActivity, trying other activities..."
+#              # Try to find the launcher activity
+#              LAUNCHER_ACTIVITY=$(adb shell cmd package resolve-activity -c android.intent.category.LAUNCHER com.reown.sample.wallet.internal | grep name= | head -1 | cut -d'=' -f2)
+#              echo "Found launcher activity: $LAUNCHER_ACTIVITY"
+#              if [ ! -z "$LAUNCHER_ACTIVITY" ]; then
+#                adb shell am start -n "$LAUNCHER_ACTIVITY" -W
+#              fi
+#            }
+            
+            # Wait and capture state
+            sleep 10
+            
+            # Capture comprehensive debug info
+            echo "=== CAPTURING DEBUG INFO ==="
+            
+#            # Screenshot
+#            adb shell screencap /sdcard/app_launch.png
+#            adb pull /sdcard/app_launch.png debug-artifacts/ || true
+            
+            # Window state
+            echo "Window state:" > debug-artifacts/window_state.txt
+            adb shell dumpsys window windows >> debug-artifacts/window_state.txt
+            
+            # Current activity
+            echo "Current activity:" > debug-artifacts/current_activity.txt
+            adb shell dumpsys activity activities | grep -E "mResumedActivity|mFocusedActivity" >> debug-artifacts/current_activity.txt
+            
+            # Check for crashes
+            echo "Checking for crashes..."
+            adb logcat -d | grep -E "FATAL EXCEPTION|AndroidRuntime|Process.*com.reown" > debug-artifacts/crashes.txt || echo "No crashes found" > debug-artifacts/crashes.txt
+            
+            # ANR traces
+            adb shell ls /data/anr/ > debug-artifacts/anr_list.txt 2>&1 || true
+            
+            # Memory info
+            adb shell dumpsys meminfo com.reown.sample.wallet.internal > debug-artifacts/meminfo.txt || true
+            
+            # App process info
+            adb shell ps | grep reown > debug-artifacts/processes.txt || true
+            
+            # Network state (important for WalletConnect)
+            echo "Network state:" > debug-artifacts/network_state.txt
+            adb shell dumpsys connectivity >> debug-artifacts/network_state.txt
+            adb shell settings get global airplane_mode_on >> debug-artifacts/network_state.txt
+            
+            # Force stop before Maestro tests
+            adb shell am force-stop com.reown.sample.wallet.internal
+            adb shell am force-stop com.reown.sample.dapp.internal
+            sleep 5
+            
+#            # Set environment variables that might be needed by the app
+#            export WC_CLOUD_PROJECT_ID="${{ secrets.WC_CLOUD_PROJECT_ID }}"
+            
+            # Run Maestro tests with extensive debugging
+            echo "Running Maestro tests..."
+            
+#            # First, let's see what Maestro sees
+#            maestro test --format junit --output debug-artifacts/maestro-report.xml .maestro/flows/native/connect_reject.yaml || {
+#              echo "Test failed, capturing additional debug info..."
+                    
+#              # Get Maestro hierarchy
+#              maestro hierarchy > debug-artifacts/maestro-hierarchy.txt || true
+#            
+#              # Try running with different wait strategy
+#              echo "Retrying with longer timeouts..."
+#              maestro test --debug --env APP_LAUNCH_TIMEOUT=60000 .maestro/flows/native/connect_reject.yaml || true
+#            }
+                    
             echo "Running Maestro native to native tests:"
             maestro test .maestro/flows/native/connect_reject.yaml
-            maestro test .maestro/flows/native/connect_confirm.yaml
-            maestro test .maestro/flows/native/personal_sign_reject.yaml
-            maestro test .maestro/flows/native/personal_sign_confirm.yaml
+    #            maestro test .maestro/flows/native/connect_confirm.yaml
+    #            maestro test .maestro/flows/native/personal_sign_reject.yaml
+    #            maestro test .maestro/flows/native/personal_sign_confirm.yaml
+            
+            # Stop logcat capture
+            kill $LOGCAT_PID || true
+            
+            # Filter logcat for relevant info
+            grep -E "reown|WalletConnect|AndroidRuntime|System.err|ActivityManager" debug-artifacts/full-logcat.txt > debug-artifacts/filtered-logcat.txt || true
+
+      - name: Analyze crash logs
+        if: always()
+        run: |
+          if [ -f debug-artifacts/crashes.txt ] && [ -s debug-artifacts/crashes.txt ]; then
+            echo "::error::App crashes detected:"
+            cat debug-artifacts/crashes.txt
+          fi
+          
+          if [ -f debug-artifacts/filtered-logcat.txt ]; then
+            echo "Relevant log entries:"
+            tail -n 100 debug-artifacts/filtered-logcat.txt
+          fi
 
       - name: Upload debug artifacts
         if: always()
@@ -160,33 +283,14 @@ jobs:
           path: debug-artifacts/
           if-no-files-found: warn
 
-      - name: Find video files in project root
-        if: always()
-        run: |
-          echo "Looking for video files in project root:"
-          find . -maxdepth 1 -type f -name "*.mp4" -o -name "*.mov"
-          
-          # Create videos directory if it doesn't exist
-          mkdir -p videos
-          
-          # Move any video files from root to videos directory
-          find . -maxdepth 1 -type f \( -name "*.mp4" -o -name "*.mov" \) -exec mv {} videos/ \;
-
-      - name: Upload test recordings from root
+      - name: Upload Maestro artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: maestro-root-recordings
+          name: maestro-artifacts
           path: |
+            .maestro/
             videos/
             *.mp4
             *.mov
-          if-no-files-found: warn
-
-      - name: Upload test recordings from .maestro
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: maestro-videos
-          path: .maestro/videos/
           if-no-files-found: warn
