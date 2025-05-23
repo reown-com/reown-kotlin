@@ -137,10 +137,20 @@ jobs:
             adb wait-for-device
             
             # Wait for boot completion
-            while [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" != "1" ]; do
-              echo "Waiting for boot completion..."
+            boot_completed=false
+            for i in {1..60}; do
+              if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; then
+                boot_completed=true
+                break
+              fi
+              echo "Waiting for boot completion... attempt $i/60"
               sleep 5
             done
+            
+            if [ "$boot_completed" = false ]; then
+              echo "ERROR: Boot did not complete within 5 minutes"
+              exit 1
+            fi
             
             echo "Emulator booted successfully"
             adb devices
