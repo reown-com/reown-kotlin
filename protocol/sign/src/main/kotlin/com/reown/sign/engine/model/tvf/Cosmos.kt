@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream
 import java.util.TreeMap
 import com.squareup.moshi.Moshi
 import okio.Buffer
+import java.security.MessageDigest
 
 object CosmosSignDirect {
 
@@ -106,7 +107,7 @@ object CosmosSignAmino {
         val account_number: String,
         val sequence: String,
         val memo: String,
-        val msgs: List<Any>,
+        val msgs: List<Map<String, Any>>,
         val fee: Fee
     )
 
@@ -123,70 +124,89 @@ object CosmosSignAmino {
     )
 
     fun computeTxHash(signed: Signed, signature: Signature): String {
-        val txMap = TreeMap<String, Any?>().apply {
-            put("fee", signed.fee.toSortedMap())
-            put("memo", signed.memo)
-            put("msg", signed.msgs.map { it.toSortedMap() })
-            put("signatures", listOf(signature.toSortedMap()))
-        }
+        // Convert to canonical JSON
+        val canonicalJson = toCanonicalJson(signed)
 
-        val moshi = Moshi.Builder().build()
-        val adapter = moshi.adapter<Map<String, Any?>>(
-            Types.newParameterizedType(Map::class.java, String::class.java, Any::class.java)
-        )
-        val buffer = Buffer()
-        adapter.toJson(buffer, txMap)
-        val txBytes = buffer.readByteArray()
+        // Calculate SHA-256 hash
+        val hash = sha256(canonicalJson.toByteArray(Charsets.UTF_8))
 
-        val digest = SHA256Digest()
-        digest.update(txBytes, 0, txBytes.size)
-        val hashBytes = ByteArray(digest.digestSize)
-        digest.doFinal(hashBytes, 0)
-
-        return hashBytes.joinToString("") { "%02X".format(it) }
+        // Convert to uppercase hex
+        return hash.joinToString("") { "%02X".format(it) }
     }
 
-    private fun Any?.toSortedMap(): Any? {
-        return when (this) {
-            null -> null
-            is Map<*, *> -> {
-                val map = this as? Map<String, Any?> ?: return this
-                TreeMap<String, Any?>().apply {
-                    map.forEach { (k, v) -> put(k, v.toSortedMap()) }
-                }
-            }
+    private fun toCanonicalJson(signedDoc: Signed): String {
+        // Create a sorted map to ensure canonical ordering
+        val canonicalMap = sortedMapOf<String, Any>()
 
-            is List<*> -> this.map { it.toSortedMap() }
-            is Signed -> TreeMap<String, Any?>().apply {
-                put("chain_id", this@toSortedMap.chain_id)
-                put("account_number", this@toSortedMap.account_number)
-                put("sequence", this@toSortedMap.sequence)
-                put("fee", this@toSortedMap.fee.toSortedMap())
-                put("memo", this@toSortedMap.memo)
-                put("msg", this@toSortedMap.msgs.map { it.toSortedMap() })
-            }
+        canonicalMap["account_number"] = signedDoc.account_number
+        canonicalMap["chain_id"] = signedDoc.chain_id
+        canonicalMap["fee"] = createCanonicalFee(signedDoc.fee)
+        canonicalMap["memo"] = signedDoc.memo
+        canonicalMap["msgs"] = signedDoc.msgs.map { createCanonicalMsg(it) }
+        canonicalMap["sequence"] = signedDoc.sequence
 
-            is Fee -> TreeMap<String, Any?>().apply {
-                put("amount", this@toSortedMap.amount.map { it.toSortedMap() })
-                put("gas", this@toSortedMap.gas)
-            }
+        // Convert to JSON without whitespace
+        val moshi = Moshi.Builder().build()
+        val adapter = moshi.adapter(Map::class.java)
+        return adapter.toJson(canonicalMap)
+    }
 
-            is Amount -> TreeMap<String, Any?>().apply {
-                put("amount", this@toSortedMap.amount)
-                put("denom", this@toSortedMap.denom)
-            }
-
-            is Signature -> TreeMap<String, Any?>().apply {
-                put("pub_key", this@toSortedMap.pub_key.toSortedMap())
-                put("signature", this@toSortedMap.signature)
-            }
-
-            is PubKey -> TreeMap<String, Any?>().apply {
-                put("type", this@toSortedMap.type)
-                put("value", this@toSortedMap.value)
-            }
-
-            else -> this
+    private fun createCanonicalFee(fee: Fee): Map<String, Any> {
+        val canonicalFee = sortedMapOf<String, Any>()
+        canonicalFee["amount"] = fee.amount.map { coin ->
+            sortedMapOf<String, String>(
+                "amount" to coin.amount,
+                "denom" to coin.denom
+            )
         }
+        canonicalFee["gas"] = fee.gas
+        return canonicalFee
+    }
+
+    private fun createCanonicalMsg(msg: Map<String, Any>): Map<String, Any> {
+        val canonicalMsg = sortedMapOf<String, Any>()
+
+        // Sort all keys recursively
+        msg.forEach { (key, value) ->
+            canonicalMsg[key] = when (value) {
+                is Map<*, *> -> createCanonicalMap(value as Map<String, Any>)
+                is List<*> -> value.map { item ->
+                    when (item) {
+                        is Map<*, *> -> createCanonicalMap(item as Map<String, Any>)
+                        else -> item
+                    }
+                }
+                else -> value
+            }
+        }
+
+        return canonicalMsg
+    }
+
+    private fun createCanonicalMap(map: Map<String, Any>): Map<String, Any> {
+        val canonicalMap = sortedMapOf<String, Any>()
+
+        map.forEach { (key, value) ->
+            canonicalMap[key] = when (value) {
+                is Map<*, *> -> createCanonicalMap(value as Map<String, Any>)
+                is List<*> -> value.map { item ->
+                    when (item) {
+                        is Map<*, *> -> createCanonicalMap(item as Map<String, Any>)
+                        else -> item
+                    }
+                }
+                else -> value
+            }
+        }
+
+        return canonicalMap
+    }
+
+    /**
+     * Calculate SHA-256 hash
+     */
+    private fun sha256(data: ByteArray): ByteArray {
+        val digest = MessageDigest.getInstance("SHA-256")
+        return digest.digest(data)
     }
 }
