@@ -151,13 +151,6 @@ jobs:
             maestro test .maestro/flows/native/connect_confirm.yaml
             maestro test .maestro/flows/native/personal_sign_reject.yaml
             maestro test .maestro/flows/native/personal_sign_confirm.yaml
-            
-      - name: Collect debug artifacts
-        if: always()
-        run: |
-          mkdir -p debug-artifacts
-          find . -name "*.png" -type f -exec cp {} debug-artifacts/ \; || true
-          adb logcat -d > debug-artifacts/logcat.txt || true
 
       - name: Upload debug artifacts
         if: always()
