@@ -20,13 +20,6 @@ The Reown Kotlin SDK is a comprehensive mobile development kit that enables bloc
 - **WalletKit**: SDK for building wallet applications with full blockchain capabilities
 - **AppKit**: SDK for building dApps that connect to wallets
 - **Protocol Layer**: Implementations of Sign, Notify, and Auth protocols
-- **Chain Support**: Multi-chain support for Ethereum, Solana, and Layer 2 networks
-
-### Supported Chains
-
-The SDK supports multiple blockchain networks including Ethereum, Solana, and various Layer 2 chains.
-
-
 
 ## Project Structure
 
@@ -61,13 +54,13 @@ To integrate the Reown Kotlin SDK into your project, use the Bill of Materials (
 ```kotlin
 dependencies {
     implementation(platform("com.reown:android-bom:{BOM version}"))
-    
+
     // Core SDK
     implementation("com.reown:android-core")
-    
+
     // For wallet applications
     implementation("com.reown:walletkit")
-    
+
     // For dApp applications
     implementation("com.reown:appkit")
 }
