@@ -140,17 +140,19 @@ jobs:
             adb wait-for-device
             
             # Wait for boot completion with timeout
-            TIMEOUT=300
-            COUNTER=0
             echo "Waiting for boot completion..."
-            until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ] || [ $COUNTER -eq $TIMEOUT ]; do
-              echo "Waiting... ($COUNTER/$TIMEOUT)"
+            BOOT_COMPLETE=false
+            for i in $(seq 1 60); do
+              if [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; then
+                BOOT_COMPLETE=true
+                break
+              fi
+              echo "Waiting... attempt $i/60"
               sleep 5
-              COUNTER=$((COUNTER + 5))
             done
             
-            if [ $COUNTER -eq $TIMEOUT ]; then
-              echo "ERROR: Boot did not complete within $TIMEOUT seconds"
+            if [ "$BOOT_COMPLETE" = "false" ]; then
+              echo "ERROR: Boot did not complete within 5 minutes"
               exit 1
             fi
             
