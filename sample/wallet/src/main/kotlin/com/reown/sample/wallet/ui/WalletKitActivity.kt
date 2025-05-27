@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.Text
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -48,9 +47,9 @@ import com.reown.notify.client.cacao.CacaoSigner
 import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
-import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotifyDelegate
-import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost

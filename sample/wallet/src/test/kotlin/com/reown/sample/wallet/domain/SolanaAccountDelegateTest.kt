@@ -1,5 +1,7 @@
 package com.reown.sample.wallet.domain
 
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.decodeKeyPair
 import org.junit.Test
 
 internal class SolanaAccountDelegateTest {
