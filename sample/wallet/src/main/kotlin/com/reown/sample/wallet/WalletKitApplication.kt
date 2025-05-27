@@ -22,6 +22,7 @@ import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
@@ -49,6 +50,7 @@ class WalletKitApplication : Application() {
 
         EthAccountDelegate.application = this
         SolanaAccountDelegate.application = this
+        SuiAccountDelegate.application = this
         SuiUtils.init(projectId, this.packageName)
 
         try {
@@ -58,8 +60,14 @@ class WalletKitApplication : Application() {
             println("Solana Keys Error: $e")
         }
 
-        SmartAccountEnabler.init(this)
+        try {
+            SuiAccountDelegate.address
+        } catch (e: Exception) {
+            Firebase.crashlytics.recordException(e)
+            println("Sui Keys Error: $e")
+        }
 
+        SmartAccountEnabler.init(this)
 
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Wallet",
