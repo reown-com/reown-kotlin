@@ -50,6 +50,7 @@ import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
@@ -282,6 +283,16 @@ class WalletKitActivity : AppCompatActivity() {
                 )
             },
             PaddingModule(size = PaddingModule.Size.LARGE),
+            TextModule(text = "SUI Key Pair"),
+            TextModule(text = SuiAccountDelegate.keypair) {
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+                    ClipData.newPlainText(
+                        "SUI Key Pair",
+                        SuiAccountDelegate.keypair
+                    )
+                )
+            },
+            PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "Client ID"),
             TextModule(text = CoreClient.Push.clientId, id = CoreClient.Push.clientId) {
                 (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("ClientId", CoreClient.Push.clientId))
@@ -313,6 +324,14 @@ class WalletKitActivity : AppCompatActivity() {
                 areRealTimeUpdatesEnabled = false,
                 onValueChanged = { text ->
                     SolanaAccountDelegate.keyPair = text
+                }
+            ),
+            DividerModule(),
+            TextInputModule(
+                text = "Import SUI Key Pair",
+                areRealTimeUpdatesEnabled = false,
+                onValueChanged = { text ->
+                    SuiAccountDelegate.keypair = text
                 }
             )
         )

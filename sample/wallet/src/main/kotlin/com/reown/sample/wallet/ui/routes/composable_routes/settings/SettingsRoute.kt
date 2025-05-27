@@ -50,6 +50,7 @@ import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 
 @Composable
@@ -70,6 +71,13 @@ fun SettingsRoute(navController: NavHostController) {
                 Item.SettingCopyableItem("Public key", viewModel.solanaKeys.second),
                 Item.SettingCopyableItem("Private key", viewModel.solanaKeys.first),
                 Item.SettingCopyableItem("Key pair", SolanaAccountDelegate.keyPair),
+            )
+        ),
+        Section.SettingsSection(
+            "SUI Account", listOf(
+                Item.SettingCopyableItem("Address", SuiAccountDelegate.address),
+                Item.SettingCopyableItem("Key pair", SuiAccountDelegate.keypair),
+                Item.SettingCopyableItem("Public key", SuiAccountDelegate.publicKey)
             )
         ),
         Section.SettingsSection(
