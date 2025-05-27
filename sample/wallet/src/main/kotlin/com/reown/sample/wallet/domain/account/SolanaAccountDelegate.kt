@@ -1,13 +1,11 @@
-package com.reown.sample.wallet.domain
+package com.reown.sample.wallet.domain.account
 
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
-import com.reown.walletkit.utils.solanaGenerateKeyPair
-import com.reown.walletkit.utils.solanaPublicKeyForKeypair
-import com.reown.walletkit.utils.solanaSignPrehash
+import com.reown.walletkit.utils.solana.SolanaUtils
 import io.ipfs.multibase.Base58
 import java.util.Arrays
 
@@ -20,7 +18,7 @@ object SolanaAccountDelegate {
 
     private fun storeAccount(keyPair: String? = null): String =
         if (keyPair == null) {
-            solanaGenerateKeyPair()
+            SolanaUtils.generateKeyPair()
                 .also { generatedKeyPair ->
                     sharedPreferences.edit { putString(KEY_PAIR_TAG, generatedKeyPair) }
                 }
@@ -44,12 +42,12 @@ object SolanaAccountDelegate {
 
     fun getSolanaPubKeyForKeyPair(keyPair: String? = null): String {
         val currentKeyPair = keyPair ?: sharedPreferences.getString(KEY_PAIR_TAG, null)!!
-        return solanaPublicKeyForKeypair(currentKeyPair)
+        return SolanaUtils.publicKeyForKeypair(currentKeyPair)
     }
 
     fun signHash(hash: String): String {
         val keyPair = sharedPreferences.getString(KEY_PAIR_TAG, null)!!
-        return solanaSignPrehash(keyPair, hash)
+        return SolanaUtils.signPrehash(keyPair, hash)
     }
 }
 

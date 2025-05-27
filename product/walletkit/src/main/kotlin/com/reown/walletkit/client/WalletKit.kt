@@ -352,6 +352,7 @@ object WalletKit {
     }
 
     object ChainAbstraction {
+
         @ChainAbstractionExperimentalApi
         fun prepare(
             initialTransaction: Wallet.Model.InitialTransaction,

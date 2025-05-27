@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
 import com.reown.android.CoreClient
-import com.reown.sample.wallet.domain.EthAccountDelegate
-import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.walletkit.client.SmartAccountExperimentalApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

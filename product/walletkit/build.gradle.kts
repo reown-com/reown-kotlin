@@ -66,7 +66,7 @@ android {
 
 dependencies {
     implementation("net.java.dev.jna:jna:5.15.0@aar")
-    
+
     // Use specific yttrium version for CI builds, default version for local builds
     val yttriumVersion = if (System.getenv("CI") == "true") {
         System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.19-ci"

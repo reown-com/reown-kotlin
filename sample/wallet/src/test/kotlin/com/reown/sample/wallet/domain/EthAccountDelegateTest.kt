@@ -4,6 +4,8 @@ import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.signing.message.MessageSignatureVerifier
 import com.reown.android.utils.cacao.sign
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.generateKeys
 import com.reown.util.hexToBytes
 import com.reown.walletkit.utils.CacaoSigner
 import junit.framework.TestCase.assertEquals
