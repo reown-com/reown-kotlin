@@ -43,11 +43,13 @@ object SuiAccountDelegate {
 
     private fun getSuiAddressForKeyPair(keyPair: String? = null): String {
         val currentKeyPair = keyPair ?: sharedPreferences.getString(KEY_PAIR_TAG, null)!!
-        return SuiUtils.getAddressFromKeyPair(currentKeyPair)
+        val publicKey = SuiUtils.getPublicKeyFromKeyPair(currentKeyPair)
+        return SuiUtils.getAddressFromPublicKey(publicKey)
     }
 
     private fun getSuiPublicKeyForKeyPair(keyPair: String? = null): String {
         val currentKeyPair = keyPair ?: sharedPreferences.getString(KEY_PAIR_TAG, null)!!
+
         return SuiUtils.getPublicKeyFromKeyPair(currentKeyPair)
     }
 }

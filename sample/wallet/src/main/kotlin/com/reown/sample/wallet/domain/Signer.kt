@@ -1,13 +1,17 @@
 package com.reown.sample.wallet.domain
 
 import com.reown.sample.common.Chains
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.reown.walletkit.utils.sui.SuiUtils
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
+import org.bouncycastle.util.encoders.Base64
 import org.json.JSONArray
+import org.json.JSONObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -82,31 +86,38 @@ object Signer {
 //            }
 
 //            !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
-                sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
-                sessionRequest.method == ETH_SEND_TRANSACTION -> {
-                    val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
-                    txHash
-                }
-                //Note: Only for testing purposes - it will always fail on Dapp side
-                sessionRequest.chain?.contains(Chains.Info.Eth.chain, true) == true ->
-                    """0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"""
-                //Note: Only for testing purposes - it will always fail on Dapp side
-                sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
-                    """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+            sessionRequest.method == "sui_signPersonalMessage" -> {
+                println("kobe: ${sessionRequest.param}")
+                val message = JSONObject(sessionRequest.param).getString("message")
+                val signature = SuiUtils.personalSign(SuiAccountDelegate.keypair, Base64.decode(message))
+                println("kobe: sig: $signature")
+                signature
+            }
+            sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
+            sessionRequest.method == ETH_SEND_TRANSACTION -> {
+                val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
+                txHash
+            }
+            //Note: Only for testing purposes - it will always fail on Dapp side
+            sessionRequest.chain?.contains(Chains.Info.Eth.chain, true) == true ->
+                """0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"""
+            //Note: Only for testing purposes - it will always fail on Dapp side
+            sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
+                """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
 
-                sessionRequest.method == "solana_signAndSendTransaction" ||
-                        sessionRequest.method == "solana_signTransaction" -> {
-                    """{"signature":"2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"}"""
-                }
+            sessionRequest.method == "solana_signAndSendTransaction" ||
+                    sessionRequest.method == "solana_signTransaction" -> {
+                """{"signature":"2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"}"""
+            }
 
-                sessionRequest.method == "solana_signAllTransactions" -> {
-                    """{"transactions":["2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"]}"""
-                }
-                //Note: Only for testing purposes - it will always fail on Dapp side
-                sessionRequest.chain?.contains(Chains.Info.Solana.chain, true) == true ->
-                    """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+            sessionRequest.method == "solana_signAllTransactions" -> {
+                """{"transactions":["2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"]}"""
+            }
+            //Note: Only for testing purposes - it will always fail on Dapp side
+            sessionRequest.chain?.contains(Chains.Info.Solana.chain, true) == true ->
+                """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
 
-                else -> throw Exception("Unsupported Method")
+            else -> throw Exception("Unsupported Method")
 //            }
 
 //            else -> throw Exception("Unsupported Chain")

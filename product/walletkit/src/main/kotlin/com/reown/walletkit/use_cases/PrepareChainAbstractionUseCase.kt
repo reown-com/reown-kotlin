@@ -56,6 +56,7 @@ class PrepareChainAbstractionUseCase(private val chainAbstractionClient: ChainAb
                             BridgingError.INSUFFICIENT_FUNDS -> onError(Wallet.Model.PrepareError.InsufficientFunds(result.v1.reason))
                             BridgingError.INSUFFICIENT_GAS_FUNDS -> onError(Wallet.Model.PrepareError.InsufficientGasFunds(result.v1.reason))
                             BridgingError.ASSET_NOT_SUPPORTED -> onError(Wallet.Model.PrepareError.AssetNotSupported(result.v1.reason))
+                            BridgingError.TRANSACTION_SIMULATION_FAILED -> onError(Wallet.Model.PrepareError.TransactionSimulationFailed(result.v1.reason))
                             BridgingError.UNKNOWN -> onError(Wallet.Model.PrepareError.Unknown("Unknown"))
                             else -> onError(Wallet.Model.PrepareError.Unknown(result.v1.reason))
                         }
