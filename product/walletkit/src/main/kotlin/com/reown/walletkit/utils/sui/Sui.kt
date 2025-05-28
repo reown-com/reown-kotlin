@@ -5,9 +5,11 @@ import uniffi.yttrium.SuiClient
 import uniffi.yttrium.suiGenerateKeypair
 import uniffi.yttrium.suiGetAddress
 import uniffi.yttrium.suiGetPublicKey
+import uniffi.yttrium.suiPersonalSign
+import uniffi.yttrium.suiSignTransaction
 
 object SuiUtils {
-    private var client: SuiClient? = null
+    private lateinit var client: SuiClient
 
     fun init(projectId: String, packageName: String) {
         client = SuiClient(
@@ -20,7 +22,14 @@ object SuiUtils {
         )
     }
 
+    suspend fun signAndExecuteTransaction(chaiId: String, keyPair: String, txData: ByteArray): String {
+        check(::client.isInitialized) { "Initialize SuiUtils before using it." }
+        return client.signAndExecuteTransaction(chaiId, keyPair, txData)
+    }
+
+    fun signTransaction(keyPair: String, txData: ByteArray): String = suiSignTransaction(keyPair, txData)
+    fun personalSign(keyPair: String, message: ByteArray): String = suiPersonalSign(keyPair, message)
     fun generateKeyPair(): String = suiGenerateKeypair()
-    fun getAddressFromKeyPair(keyPair: String): String = suiGetAddress(keyPair)
+    fun getAddressFromPublicKey(publicKey: String): String = suiGetAddress(publicKey)
     fun getPublicKeyFromKeyPair(keyPair: String): String = suiGetPublicKey(keyPair)
 }
