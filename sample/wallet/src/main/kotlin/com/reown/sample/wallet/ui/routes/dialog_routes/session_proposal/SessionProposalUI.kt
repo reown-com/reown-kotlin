@@ -120,10 +120,10 @@ val walletMetaData = WalletMetaData(
             accounts = listOf(SolanaAccountDelegate.keys.third)
         ),
         "sui" to Wallet.Model.Namespace.Session(
-            chains = listOf(Chain.SUI.id),
+            chains = listOf(Chain.SUI.id, Chain.SUI_TESTNET.id),
             methods = listOf("sui_signAndExecuteTransaction", "sui_signTransaction", "sui_signPersonalMessage"),
             events = listOf("accountsChanged", "chainChanged"),
-            accounts = listOf(SuiAccountDelegate.caip10Address)
+            accounts = listOf(SuiAccountDelegate.mainnetAddress, SuiAccountDelegate.testnetAddress)
         )
     )
 )
