@@ -37,8 +37,11 @@ object SuiAccountDelegate {
     val publicKey: String
         get() = getSuiPublicKeyForKeyPair(keypair)
 
-    val caip10Address: String
+    val mainnetAddress: String
         get() = "${Chain.SUI.id}:$address"
+
+    val testnetAddress: String
+        get() = "${Chain.SUI_TESTNET.id}:$address"
 
 
     private fun getSuiAddressForKeyPair(keyPair: String? = null): String {
