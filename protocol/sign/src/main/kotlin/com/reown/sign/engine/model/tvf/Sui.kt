@@ -3,6 +3,7 @@ package com.reown.sign.engine.model.tvf
 import com.squareup.moshi.JsonClass
 import org.bouncycastle.crypto.digests.Blake2bDigest
 import org.bouncycastle.util.encoders.Base64
+import com.reown.sign.engine.model.tvf.TVF.Companion.toBase58
 
 object SignAndExecute {
     @JsonClass(generateAdapter = true)
@@ -82,31 +83,5 @@ object SignTransaction {
         digest.doFinal(hash, 0)
 
         return hash
-    }
-
-    private fun toBase58(bytes: ByteArray): String {
-        val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-        var leadingZeros = 0
-        for (b in bytes) {
-            if (b == 0.toByte()) leadingZeros++ else break
-        }
-
-        val input = bytes.copyOf()
-        val encoded = mutableListOf<Char>()
-
-        while (input.any { it != 0.toByte() }) {
-            var carry = 0
-            for (i in input.indices) {
-                carry = carry * 256 + (input[i].toInt() and 0xFF)
-                input[i] = (carry / 58).toByte()
-                carry %= 58
-            }
-            encoded.add(alphabet[carry])
-        }
-
-        val result = StringBuilder()
-        repeat(leadingZeros) { result.append('1') }
-        encoded.reversed().forEach { result.append(it) }
-        return result.toString()
     }
 }

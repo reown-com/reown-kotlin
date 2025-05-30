@@ -91,15 +91,6 @@ class TVF(private val moshi: Moshi) {
                         }
                 }
 
-                COSMOS_SIGN_AMINO -> {
-                    moshi.adapter(CosmosSignAmino.SignatureData::class.java)
-                        .fromJson(rpcResult)
-                        ?.let {
-                            val txHash = CosmosSignAmino.computeTxHash(it.signed, it.signature)
-                            listOf(txHash)
-                        }
-                }
-
                 ALGO_SIGN_TXN -> {
                     val listOfStringsType = Types.newParameterizedType(List::class.java, String::class.java)
                     moshi.adapter<List<String>>(listOfStringsType)
@@ -138,7 +129,7 @@ class TVF(private val moshi: Moshi) {
                     moshi.adapter(NearSignTransaction.BufferData::class.java)
                         .fromJson(rpcResult)
                         ?.let {
-                            val hash = NearSignTransaction.calculateTransactionHash(it.toByteArray())
+                            val hash = NearSignTransaction.calculateTxID(it)
                             listOf(hash)
                         }
                 }
@@ -146,7 +137,7 @@ class TVF(private val moshi: Moshi) {
                 NEAR_SIGN_TRANSACTIONS -> {
                     val type = Types.newParameterizedType(List::class.java, NearSignTransaction.BufferData::class.java)
                     moshi.adapter<List<NearSignTransaction.BufferData>>(type).fromJson(rpcResult)
-                        ?.let { bufferDataList -> bufferDataList.map { NearSignTransaction.calculateTransactionHash(it.toByteArray()) } }
+                        ?.let { bufferDataList -> bufferDataList.map { NearSignTransaction.calculateTxID(it) } }
                 }
 
                 POLKADOT_SIGN_TRANSACTION -> {
@@ -177,11 +168,36 @@ class TVF(private val moshi: Moshi) {
         private const val XRPL_SIGN_TRANSACTION_FOR = "xrpl_signTransactionFor"
         private const val ALGO_SIGN_TXN = "algo_signTxn"
         private const val COSMOS_SIGN_DIRECT = "cosmos_signDirect"
-        private const val COSMOS_SIGN_AMINO = "cosmos_signAmino"
         private const val TRON_SIGN_TRANSACTION = "tron_signTransaction"
         private const val HEDERA_SIGN_AND_EXECUTE_TRANSACTION = "hedera_signAndExecuteTransaction"
         private const val HEDERA_EXECUTE_TRANSACTION = "hedera_executeTransaction"
         private const val STACKS_STX_TRANSFER = "stacks_stxTransfer"
         private const val SEND_TRANSFER = "sendTransfer"
+
+        fun toBase58(bytes: ByteArray): String {
+            val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+            var leadingZeros = 0
+            for (b in bytes) {
+                if (b == 0.toByte()) leadingZeros++ else break
+            }
+
+            val input = bytes.copyOf()
+            val encoded = mutableListOf<Char>()
+
+            while (input.any { it != 0.toByte() }) {
+                var carry = 0
+                for (i in input.indices) {
+                    carry = carry * 256 + (input[i].toInt() and 0xFF)
+                    input[i] = (carry / 58).toByte()
+                    carry %= 58
+                }
+                encoded.add(alphabet[carry])
+            }
+
+            val result = StringBuilder()
+            repeat(leadingZeros) { result.append('1') }
+            encoded.reversed().forEach { result.append(it) }
+            return result.toString()
+        }
     }
 }
