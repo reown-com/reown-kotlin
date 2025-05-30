@@ -4,6 +4,8 @@ import android.content.Context
 import com.yttrium.YttriumKt
 import uniffi.yttrium.PulseMetadata
 import uniffi.yttrium.SuiClient
+import uniffi.yttrium.fundingMetadataToAmount
+import uniffi.yttrium.initializeAndroidTls
 import uniffi.yttrium.suiGenerateKeypair
 import uniffi.yttrium.suiGetAddress
 import uniffi.yttrium.suiGetPublicKey
@@ -23,6 +25,9 @@ object SuiUtils {
                 url = null
             )
         )
+
+//        Java_com_yttrium_YttriumKt_initializeTls()
+//        initializeAndroidTls()
     }
 
     suspend fun signAndExecuteTransaction(chaiId: String, keyPair: String, txData: ByteArray): String {
