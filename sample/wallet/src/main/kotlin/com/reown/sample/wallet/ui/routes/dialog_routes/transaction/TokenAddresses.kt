@@ -6,7 +6,8 @@ enum class Chain(val id: String) {
     ARBITRUM("eip155:42161"),
     OPTIMISM("eip155:10"),
     SOLANA("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"),
-    SUI("sui:mainnet")
+    SUI("sui:mainnet"),
+    SUI_TESTNET("sui:testnet")
 }
 
 interface Token

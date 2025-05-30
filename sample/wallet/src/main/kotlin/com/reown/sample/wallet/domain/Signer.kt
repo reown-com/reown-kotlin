@@ -4,11 +4,13 @@ import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
+import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.reown.walletkit.utils.sui.SuiUtils
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
+import okio.internal.commonToUtf8String
 import org.bouncycastle.util.encoders.Base64
 import org.json.JSONArray
 import org.json.JSONObject
@@ -87,12 +89,45 @@ object Signer {
 
 //            !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
             sessionRequest.method == "sui_signPersonalMessage" -> {
+                println("kobe: key pair: ${SuiAccountDelegate.keypair}")
                 println("kobe: ${sessionRequest.param}")
                 val message = JSONObject(sessionRequest.param).getString("message")
-                val signature = SuiUtils.personalSign(SuiAccountDelegate.keypair, Base64.decode(message))
+                val decoded = Base64.decode(message)
+                println("kobe: decoded: ${decoded.commonToUtf8String()}")
+                val signature = SuiUtils.personalSign(SuiAccountDelegate.keypair, decoded)
+
                 println("kobe: sig: $signature")
-                signature
+                """{"signature":"$signature"}"""
             }
+
+            sessionRequest.method == "sui_signTransaction" -> {
+                println("kobe: ${sessionRequest.param}")
+                val transaction = JSONObject(sessionRequest.param).getString("transaction")
+                val decoded = Base64.decode(transaction)
+
+                println("kobe: transaction: $transaction")
+                println("kobe: decoded: ${decoded.commonToUtf8String()}")
+
+                val signature = SuiUtils.signTransaction(SuiAccountDelegate.keypair, decoded)
+                println("kobe: signature: $signature")
+
+                """{"signature":"$signature", transactionBytes:$transaction}"""
+            }
+
+            sessionRequest.method == "sui_signAndExecuteTransaction" -> {
+                println("kobe: ${sessionRequest.param}")
+                val transaction = JSONObject(sessionRequest.param).getString("transaction")
+                val decoded = Base64.decode(transaction)
+
+                println("kobe: transaction: $transaction")
+                println("kobe: decoded: ${decoded.commonToUtf8String()}")
+
+                val digest = SuiUtils.signAndExecuteTransaction(Chain.SUI_TESTNET.id, SuiAccountDelegate.keypair, decoded)
+                println("kobe: digest: $digest")
+
+                """{"digest":"$digest"}"""
+            }
+
             sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
             sessionRequest.method == ETH_SEND_TRANSACTION -> {
                 val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
