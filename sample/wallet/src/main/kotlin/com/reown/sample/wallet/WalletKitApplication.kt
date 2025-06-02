@@ -51,7 +51,7 @@ class WalletKitApplication : Application() {
         EthAccountDelegate.application = this
         SolanaAccountDelegate.application = this
         SuiAccountDelegate.application = this
-        SuiUtils.init(projectId, this.packageName)
+        SuiUtils.init(projectId, this.packageName, applicationContext)
 
         try {
             SolanaAccountDelegate.getSolanaPubKeyForKeyPair()
