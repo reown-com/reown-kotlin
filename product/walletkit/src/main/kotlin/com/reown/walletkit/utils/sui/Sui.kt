@@ -1,8 +1,9 @@
 package com.reown.walletkit.utils.sui
 
+import android.content.Context
+import com.yttrium.YttriumKt
 import uniffi.yttrium.PulseMetadata
 import uniffi.yttrium.SuiClient
-import uniffi.yttrium.fundingMetadataToAmount
 import uniffi.yttrium.initializeAndroidTls
 import uniffi.yttrium.suiGenerateKeypair
 import uniffi.yttrium.suiGetAddress
@@ -13,7 +14,9 @@ import uniffi.yttrium.suiSignTransaction
 object SuiUtils {
     private lateinit var client: SuiClient
 
-    fun init(projectId: String, packageName: String) {
+    fun init(projectId: String, packageName: String, applicationContext: Context) {
+        YttriumKt.initializeTls(applicationContext)
+
         client = SuiClient(
             projectId = projectId, pulseMetadata = PulseMetadata(
                 sdkPlatform = "mobile",
@@ -22,9 +25,6 @@ object SuiUtils {
                 url = null
             )
         )
-
-//        Java_com_yttrium_YttriumKt_initializeTls()
-//        initializeAndroidTls()
     }
 
     suspend fun signAndExecuteTransaction(chaiId: String, keyPair: String, txData: ByteArray): String {

@@ -72,6 +72,7 @@ android {
 
 dependencies {
     implementation(project(":sample:common"))
+    implementation("rustls:rustls-platform-verifier:0.1.1")
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 
     implementation("org.web3j:core:4.9.4")
