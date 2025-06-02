@@ -1,10 +1,12 @@
 package com.reown.sign.engine.model.tvf
 
+import com.reown.sign.common.model.Request
+import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.engine.model.tvf.SignTransaction.calculateTransactionDigest
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 
-class TVF(private val moshi: Moshi) {
+internal class TVF(private val moshi: Moshi) {
     private val evm: List<String>
         get() = listOf(ETH_SEND_TRANSACTION, ETH_SEND_RAW_TRANSACTION)
     private val wallet
@@ -26,7 +28,7 @@ class TVF(private val moshi: Moshi) {
         return Triple(listOf(rpcMethod), contractAddresses, chainId)
     }
 
-    fun collectTxHashes(rpcMethod: String, rpcResult: String): List<String>? {
+    fun collectTxHashes(rpcMethod: String, rpcResult: String, rpcParams: String = ""): List<String>? {
         return try {
             when (rpcMethod) {
                 in evm + wallet -> listOf(rpcResult)
@@ -141,7 +143,15 @@ class TVF(private val moshi: Moshi) {
                 }
 
                 POLKADOT_SIGN_TRANSACTION -> {
-                    listOf("")
+                    moshi.adapter(PolkadotSignTransaction.SignatureResponse::class.java)
+                        .fromJson(rpcResult)
+                        ?.let { signatureResponse ->
+                            moshi.adapter(PolkadotSignTransaction.RequestParams::class.java)
+                                .fromJson(rpcParams)
+                                ?.let { requestParams ->
+                                    PolkadotSignTransaction.calculatePolkadotHash(signatureResponse, requestParams)?.let { listOf(it) }
+                                }
+                        }
                 }
 
                 else -> null

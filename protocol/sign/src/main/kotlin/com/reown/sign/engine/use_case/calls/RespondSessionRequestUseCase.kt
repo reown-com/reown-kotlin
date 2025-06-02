@@ -25,15 +25,10 @@ import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.exceptions.NO_SEQUENCE_FOR_TOPIC_MESSAGE
-import com.reown.sign.engine.model.tvf.EthSendTransaction
-import com.reown.sign.engine.model.tvf.SolanaSignAllTransactionsResult
-import com.reown.sign.engine.model.tvf.SolanaSignAndSendTransactionResult
-import com.reown.sign.engine.model.tvf.SolanaSignTransactionResult
 import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.engine.sessionRequestEventsQueue
 import com.reown.sign.json_rpc.domain.GetPendingJsonRpcHistoryEntryByIdUseCase
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.squareup.moshi.Moshi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -99,8 +94,15 @@ internal class RespondSessionRequestUseCase(
                 onFailure(e)
             }
         } else {
+            println("kobe: Params: ${pendingRequest.params.rpcParams}")
             val tvfData = tvf.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
-            val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let { tvf.collectTxHashes(pendingRequest.params.rpcMethod, it.result.toString()) }
+            val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let {
+                tvf.collectTxHashes(
+                    pendingRequest.params.rpcMethod,
+                    it.result.toString(),
+                    pendingRequest.params.rpcParams
+                )
+            }
             val irnParams = IrnParams(
                 Tags.SESSION_REQUEST_RESPONSE,
                 Ttl(fiveMinutesInSeconds),
@@ -111,7 +113,8 @@ internal class RespondSessionRequestUseCase(
                 chainId = tvfData.third
             )
             logger.log("Sending session request response on topic: $topic, id: ${jsonRpcResponse.id}")
-            jsonRpcInteractor.publishJsonRpcResponse(topic = Topic(topic), params = irnParams, response = jsonRpcResponse,
+            jsonRpcInteractor.publishJsonRpcResponse(
+                topic = Topic(topic), params = irnParams, response = jsonRpcResponse,
                 onSuccess = {
                     onSuccess()
                     logger.log("Session request response sent successfully on topic: $topic, id: ${jsonRpcResponse.id}")
