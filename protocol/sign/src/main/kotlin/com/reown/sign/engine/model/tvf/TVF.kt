@@ -1,7 +1,5 @@
 package com.reown.sign.engine.model.tvf
 
-import com.reown.sign.common.model.Request
-import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.engine.model.tvf.SignTransaction.calculateTransactionDigest
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
