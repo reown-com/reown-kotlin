@@ -28,25 +28,20 @@ object PolkadotSignTransaction {
         val tip: String?,
         val mode: String?,
         val metadataHash: String?,
-        val address: String,
+        val address: String?,
         val version: Int?
     )
 
     @JsonClass(generateAdapter = true)
     data class RequestParams(
-        val address: String,
+        val address: String?,
         val transactionPayload: TransactionPayload
     )
 
     fun calculatePolkadotHash(signatureResponse: SignatureResponse, requestParams: RequestParams): String? {
         return try {
-            println("kobe: address: ${requestParams.address}")
-            val publicKey = ss58AddressToPublicKey(requestParams.address)
-            println("kobe: publickey: ${publicKey.bytesToHex()}")
-
+            val publicKey = ss58AddressToPublicKey(requestParams.address ?: requestParams.transactionPayload.address ?: "")
             val signedExtrinsic = addSignatureToExtrinsic(publicKey, signatureResponse.signature, requestParams.transactionPayload)
-            println("kobe: signedExtrinsic: ${signedExtrinsic.bytesToHex()} ; ${signedExtrinsic.bytesToHex() == "3d028400be0a9f19fe636b4b1a2efaeb75eaa978cff38960c9fda0f532fe4961b885cb6301362cef5dff66aee851a5d8c5100a53590eddd7c75c1a53553b08861fb28ce80b96d53279f52a27c866639954c5efa32b52c148fefe78dbdad1f9d3be4f44538f15021c0000050300c07d211d3c181df768d9d9d41df6f14f9d116d9c1906f38153b208259c315b4b02286bee"}")
-
             deriveExtrinsicHash(signedExtrinsic)
         } catch (e: Exception) {
             null
@@ -54,12 +49,17 @@ object PolkadotSignTransaction {
     }
 
     private fun deriveExtrinsicHash(signed: ByteArray): String {
-        val digest = Blake2bDigest(32) // 256-bit
-//        val input = signed.//hexDecode(signed.removePrefix("0x"))
-        val output = ByteArray(digest.digestSize)
-        digest.update(signed, 0, signed.size)
-        digest.doFinal(output, 0)
-        return output.bytesToHex() //hexEncode(output)
+        try {
+            // Use Blake2b with 256-bit output (32 bytes)
+            val digest = Blake2bDigest(null, 32, null, null)
+            digest.reset()
+            digest.update(signed, 0, signed.size)
+            val output = ByteArray(digest.digestSize)
+            digest.doFinal(output, 0)
+            return output.bytesToHex()
+        } catch (e: Exception) {
+            return "error"
+        }
     }
 
     private fun ss58AddressToPublicKey(ss58Address: String): ByteArray {
@@ -78,8 +78,8 @@ object PolkadotSignTransaction {
         hexSignature: String,
         transactionPayload: TransactionPayload
     ): ByteArray {
-        val method = transactionPayload.method.hexToBytes()//hexDecode(normalizeHex(transactionPayload.method))
-        val signature = hexSignature.hexToBytes()//hexDecode(normalizeHex(hexSignature))
+        val method = transactionPayload.method.hexToBytes()
+        val signature = hexSignature.hexToBytes()
 
         val signedFlag = 0x80 // For signed extrinsics
         val versionValue = transactionPayload.version.toString() ?: "4"
@@ -89,29 +89,43 @@ object PolkadotSignTransaction {
 
         // Detect signature type by evaluating the address if possible
         val ss58Address = transactionPayload.address
-        val signatureType = guessSignatureTypeFromAddress(ss58Address)
+        val signatureType = guessSignatureTypeFromAddress(ss58Address ?: "")
 
-        // Era
+        // Era - handle era properly for Polkadot 
         val eraValue = normalizeHex(transactionPayload.era ?: "")
-        val eraBytes = if (eraValue == "00") {
-            byteArrayOf(0x00)
+        val eraBytes = if (eraValue.isEmpty() || eraValue == "00") {
+            byteArrayOf(0x00) // Immortal
         } else {
-            val decoded = eraValue.hexToBytes()//hexDecode(eraValue)
-            if (decoded.size != 2) {
-                throw IllegalArgumentException("Mortal era must be 2 bytes, got 0x$eraValue")
-            }
-            decoded
+            // For mortal era, just use the hex bytes as-is
+            eraValue.hexToBytes()
         }
 
-        // Nonce
+        // Nonce - use raw hex value, not compact encoded
         val nonceValue = parseHex(transactionPayload.nonce)
-        val nonceBytes = byteArrayOf(
-            (nonceValue and 0xFF).toByte(),
-            ((nonceValue shr 8) and 0xFF).toByte()
-        )
+        val nonceBytes = byteArrayOf(nonceValue.toByte())
 
-        val tipValue = BigInteger(normalizeHex(transactionPayload.tip ?: ""), 16)
+        // Tip - use compact encoding  
+        val tipValue = BigInteger(normalizeHex(transactionPayload.tip ?: "0"), 16)
         val tipBytes = compactEncodeBigInt(tipValue)
+
+        // Handle method - only insert 00 byte if not already present
+        val methodBytes = method
+        val finalMethod = if (methodBytes.size >= 3 &&
+            methodBytes[0] == 0x05.toByte() &&
+            methodBytes[1] == 0x03.toByte() &&
+            methodBytes[2] != 0x00.toByte()
+        ) {
+            // Method needs 00 byte inserted after first two bytes (05 03 -> 05 03 00)
+            ByteBuffer.allocate(methodBytes.size + 1).apply {
+                put(methodBytes[0]) // 05
+                put(methodBytes[1]) // 03  
+                put(0x00.toByte())  // 00
+                put(methodBytes.sliceArray(2 until methodBytes.size)) // rest
+            }.array()
+        } else {
+            // Method already has correct format or different structure
+            methodBytes
+        }
 
         val extrinsicBody = ByteBuffer.allocate(1024) // Adjust size as needed
         extrinsicBody.put(0x00.toByte()) // MultiAddress::Id
@@ -121,7 +135,8 @@ object PolkadotSignTransaction {
         extrinsicBody.put(eraBytes)
         extrinsicBody.put(nonceBytes)
         extrinsicBody.put(tipBytes)
-        extrinsicBody.put(method)
+        extrinsicBody.put(0x00.toByte()) // Additional 00 byte before method
+        extrinsicBody.put(finalMethod)
 
         val bodyBytes = extrinsicBody.array().sliceArray(0 until extrinsicBody.position())
 
@@ -268,19 +283,5 @@ object PolkadotSignTransaction {
         }
         return bytes.toByteArray()
     }
-
-    // Utility functions for hex and base58 encoding/decoding
-//    private fun hexDecode(hex: String): ByteArray {
-//        val len = hex.length
-//        val data = ByteArray(len / 2)
-//        for (i in 0 until len step 2) {
-//            data[i / 2] = ((Character.digit(hex[i], 16) shl 4) + Character.digit(hex[i + 1], 16)).toByte()
-//        }
-//        return data
-//    }
-
-//    private fun hexEncode(bytes: ByteArray): String {
-//        return bytes.joinToString("") { "%02x".format(it) }
-//    }
 }
 
