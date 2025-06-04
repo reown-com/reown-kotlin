@@ -26,7 +26,6 @@ class SessionRequestViewModel : ViewModel() {
             try {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
-                    println("kobe: method: ${sessionRequest.method}")
                     val result: String = Signer.sign(sessionRequest)
                     val response = Wallet.Params.SessionRequestResponse(
                         sessionTopic = sessionRequest.topic,
@@ -49,7 +48,6 @@ class SessionRequestViewModel : ViewModel() {
                     onError(Throwable("Approve - Cannot find session request"))
                 }
             } catch (e: Exception) {
-                println("kobe: error: $e")
                 Firebase.crashlytics.recordException(e)
                 reject(message = e.message ?: "Undefined error, please check your Internet connection")
                 clearSessionRequest()
