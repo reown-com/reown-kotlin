@@ -104,18 +104,19 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
                     },
                     onError = { error ->
                         println("Prepare error: $error")
-                        if (error is Wallet.Model.PrepareError.Unknown) {
-                            emitSessionRequest(sessionRequest, verifyContext)
-                        } else {
-                            respondWithError(getErrorMessage(), sessionRequest)
-                            emitChainAbstractionError(sessionRequest, error, verifyContext)
-                        }
+                        emitSessionRequest(sessionRequest, verifyContext)
+//                        if (error is Wallet.Model.PrepareError.Unknown) {
+//                            emitSessionRequest(sessionRequest, verifyContext)
+//                        } else {
+//                            respondWithError(getErrorMessage(), sessionRequest)
+//                            emitChainAbstractionError(sessionRequest, error, verifyContext)
+//                        }
                     }
                 )
             } catch (e: Exception) {
                 println("Prepare: Unknown error: $e")
                 respondWithError(e.message ?: "Prepare: Unknown error", sessionRequest)
-                emitChainAbstractionError(sessionRequest, Wallet.Model.PrepareError.Unknown(e.message ?: "Prepare: Unknown error"), verifyContext)
+                emitSessionRequest(sessionRequest, verifyContext)
             }
         } else {
             emitSessionRequest(sessionRequest, verifyContext)
