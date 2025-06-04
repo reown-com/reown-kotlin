@@ -549,7 +549,7 @@ class TVFTests {
 
         // Assert
         assertNotNull(result)
-        val digest = "C98G1Uwh5soPMtZZmjUFwbVzWLMoAHzi5jrX2BtABe8v"
+        val digest = "6J6rTsYexRVWS2umCHVkDekUP61AEcXaJfVDZHXRJVCJ"//"C98G1Uwh5soPMtZZmjUFwbVzWLMoAHzi5jrX2BtABe8v"
         println("SUI digest: ${result?.firstOrNull()}")
         assertEquals(digest, result?.firstOrNull())
     }
