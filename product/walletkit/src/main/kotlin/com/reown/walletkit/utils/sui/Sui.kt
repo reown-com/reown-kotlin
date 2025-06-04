@@ -4,12 +4,10 @@ import android.content.Context
 import com.yttrium.YttriumKt
 import uniffi.yttrium.PulseMetadata
 import uniffi.yttrium.SuiClient
-import uniffi.yttrium.initializeAndroidTls
 import uniffi.yttrium.suiGenerateKeypair
 import uniffi.yttrium.suiGetAddress
 import uniffi.yttrium.suiGetPublicKey
 import uniffi.yttrium.suiPersonalSign
-import uniffi.yttrium.suiSignTransaction
 
 object SuiUtils {
     private lateinit var client: SuiClient
@@ -32,7 +30,12 @@ object SuiUtils {
         return client.signAndExecuteTransaction(chaiId, keyPair, txData)
     }
 
-    fun signTransaction(keyPair: String, txData: ByteArray): String = suiSignTransaction(keyPair, txData)
+    suspend fun signTransaction(chaiId: String, keyPair: String, txData: ByteArray): Pair<String, String> {
+        check(::client.isInitialized) { "Initialize SuiUtils before using it." }
+        val result = client.signTransaction(chaiId, keyPair, txData)
+        return Pair(result.signature, result.txBytes)
+    }
+
     fun personalSign(keyPair: String, message: ByteArray): String = suiPersonalSign(keyPair, message)
     fun generateKeyPair(): String = suiGenerateKeypair()
     fun getAddressFromPublicKey(publicKey: String): String = suiGetAddress(publicKey)
