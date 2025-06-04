@@ -60,17 +60,6 @@ class WalletKitApplication : Application() {
             println("Solana Keys Error: $e")
         }
 
-        try {
-            val k = SuiAccountDelegate.keypair
-            println("kobe key pair: $k")
-            val pk = SuiAccountDelegate.publicKey
-            println("kobe pub key: $pk")
-            println("kobe address: ${SuiAccountDelegate.address}")
-        } catch (e: Exception) {
-            Firebase.crashlytics.recordException(e)
-            println("kobe: Sui Keys Error: $e")
-        }
-
         SmartAccountEnabler.init(this)
 
         val appMetaData = Core.Model.AppMetaData(

@@ -65,7 +65,6 @@ android {
 
 dependencies {
     implementation("net.java.dev.jna:jna:5.15.0@aar")
-//    implementation ("rustls:rustls-platform-verifier:0.1.1")
     implementation("com.github.reown-com:yttrium:unspecified")//0.9.12") //unspecified
 
     implementation(platform(libs.firebase.bom))
