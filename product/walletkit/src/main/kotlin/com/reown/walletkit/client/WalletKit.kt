@@ -1,7 +1,9 @@
 package com.reown.walletkit.client
 
+import com.reown.android.BuildConfig
 import com.reown.android.Core
 import com.reown.android.CoreInterface
+import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
@@ -23,6 +25,7 @@ object WalletKit {
     private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
     private val getERC20TokenBalanceUseCase: GetERC20TokenBalanceUseCase by wcKoinApp.koin.inject()
     private val prepareCallERC20TransferCallUseCase: PrepareCallERC20TransferCallUseCase by wcKoinApp.koin.inject()
+    internal val projectId: ProjectId by lazy { wcKoinApp.koin.get<ProjectId>() }
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -121,7 +124,12 @@ object WalletKit {
     }
 
     @Throws(IllegalStateException::class)
-    fun registerDeviceToken(firebaseAccessToken: String, enableEncrypted: Boolean = false, onSuccess: () -> Unit, onError: (Wallet.Model.Error) -> Unit) {
+    fun registerDeviceToken(
+        firebaseAccessToken: String,
+        enableEncrypted: Boolean = false,
+        onSuccess: () -> Unit,
+        onError: (Wallet.Model.Error) -> Unit
+    ) {
         coreClient.Echo.register(firebaseAccessToken, enableEncrypted, onSuccess) { error -> onError(Wallet.Model.Error(error)) }
     }
 
@@ -164,12 +172,21 @@ object WalletKit {
         onSuccess: (Wallet.Params.SessionApprove) -> Unit = {},
         onError: (Wallet.Model.Error) -> Unit,
     ) {
-        val signParams = Sign.Params.Approve(params.proposerPublicKey, params.namespaces.toSign(), params.properties, params.scopedProperties, params.relayProtocol)
+        val signParams = Sign.Params.Approve(
+            params.proposerPublicKey,
+            params.namespaces.toSign(),
+            params.properties,
+            params.scopedProperties,
+            params.relayProtocol
+        )
         SignClient.approveSession(signParams, { onSuccess(params) }, { error -> onError(Wallet.Model.Error(error.throwable)) })
     }
 
     @Throws(Exception::class)
-    fun generateApprovedNamespaces(sessionProposal: Wallet.Model.SessionProposal, supportedNamespaces: Map<String, Wallet.Model.Namespace.Session>): Map<String, Wallet.Model.Namespace.Session> {
+    fun generateApprovedNamespaces(
+        sessionProposal: Wallet.Model.SessionProposal,
+        supportedNamespaces: Map<String, Wallet.Model.Namespace.Session>
+    ): Map<String, Wallet.Model.Namespace.Session> {
         return com.reown.sign.client.utils.generateApprovedNamespaces(sessionProposal.toSign(), supportedNamespaces.toSign()).toWallet()
     }
 
@@ -204,12 +221,20 @@ object WalletKit {
     }
 
     @Throws(Exception::class)
-    fun generateAuthObject(payloadParams: Wallet.Model.PayloadAuthRequestParams, issuer: String, signature: Wallet.Model.Cacao.Signature): Wallet.Model.Cacao {
+    fun generateAuthObject(
+        payloadParams: Wallet.Model.PayloadAuthRequestParams,
+        issuer: String,
+        signature: Wallet.Model.Cacao.Signature
+    ): Wallet.Model.Cacao {
         return com.reown.sign.client.utils.generateAuthObject(payloadParams.toSign(), issuer, signature.toSign()).toWallet()
     }
 
     @Throws(Exception::class)
-    fun generateAuthPayloadParams(payloadParams: Wallet.Model.PayloadAuthRequestParams, supportedChains: List<String>, supportedMethods: List<String>): Wallet.Model.PayloadAuthRequestParams {
+    fun generateAuthPayloadParams(
+        payloadParams: Wallet.Model.PayloadAuthRequestParams,
+        supportedChains: List<String>,
+        supportedMethods: List<String>
+    ): Wallet.Model.PayloadAuthRequestParams {
         return com.reown.sign.client.utils.generateAuthPayloadParams(payloadParams.toSign(), supportedChains, supportedMethods).toWallet()
     }
 
@@ -395,5 +420,11 @@ object WalletKit {
     @Throws(Exception::class)
     fun prepareErc20TransferCall(contractAddress: String, to: String, amount: String): Wallet.Model.Call {
         return prepareCallERC20TransferCallUseCase(contractAddress, to, amount)
+    }
+
+    @Throws(Exception::class)
+    fun buildWalletService(methods: List<String>): String {
+        val methodsJson = if (methods.isNotEmpty()) methods.joinToString(separator = "\",\"", prefix = "\"", postfix = "\"") else ""
+        return "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=${projectId.value}&st=wkca&sv=reown-kotlin-${BuildConfig.SDK_VERSION}\", \"methods\":[$methodsJson]}]}"
     }
 }
