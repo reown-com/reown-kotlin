@@ -142,13 +142,27 @@ tasks.register("closeAndReleaseMultipleRepositories") {
             println("Repository: ${repo.key}, State: ${repo.state}")
         }
         
-        // Upload closed repositories to Central Portal
-        val closedRepos = repos.filter { it.state == "closed" }
-        if (closedRepos.isNotEmpty()) {
-            uploadRepositoriesToPortal(closedRepos)
+        // For OSSRH Staging API (Maven-like API), we upload using defaultRepository endpoint
+        // since repositories are typically in "open" state
+        val openRepos = repos.filter { it.state == "open" }
+        if (openRepos.isNotEmpty()) {
+            println("Uploading ${openRepos.size} open repositories to Central Portal using defaultRepository endpoint")
+            uploadRepositoriesToPortalViaDefaultEndpoint()
         } else {
-            println("No closed repositories to upload to Portal")
+            // Fallback: if there are closed repositories, upload them individually
+            val closedRepos = repos.filter { it.state == "closed" }
+            if (closedRepos.isNotEmpty()) {
+                println("Uploading ${closedRepos.size} closed repositories to Central Portal")
+                uploadRepositoriesToPortal(closedRepos)
+            } else {
+                println("No repositories to upload to Portal")
+                return@doLast
+            }
         }
+        
+        // Comment out artifact availability check since we're using user_managed publishing
+        // waitForArtifactsToBeAvailable()
+        println("Artifacts uploaded to Central Portal. Please check https://central.sonatype.com/publishing/deployments to manually publish them.")
     }
 }
 
@@ -209,7 +223,7 @@ fun uploadRepositoryToPortal(repositoryKey: String) {
     val httpPost = HttpPost(uploadUrl).apply {
         setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
         setHeader("Content-Type", "application/json")
-        // Use manual publishing type to automatically release if validation passes
+        // Use user_managed publishing type to allow manual release from Central Portal UI
         entity = StringEntity("""{"publishing_type": "user_managed"}""")
     }
 
@@ -223,3 +237,85 @@ fun uploadRepositoryToPortal(repositoryKey: String) {
         throw RuntimeException("Failed to upload repository $repositoryKey: HTTP ${response.statusLine.statusCode} - $responseBody")
     }
 }
+
+fun uploadRepositoriesToPortalViaDefaultEndpoint() {
+    val client = HttpClients.createDefault()
+    val namespace = "com.reown"
+    val uploadUrl = "$manualApiUrl/upload/defaultRepository/$namespace"
+    
+    val httpPost = HttpPost(uploadUrl).apply {
+        setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
+        setHeader("Content-Type", "application/json")
+        // Use user_managed publishing type to allow manual release from Central Portal UI
+        entity = StringEntity("""{"publishing_type": "user_managed"}""")
+    }
+
+    val response = client.execute(httpPost)
+    val responseBody = EntityUtils.toString(response.entity)
+    
+    if (response.statusLine.statusCode == 200 || response.statusLine.statusCode == 201) {
+        println("Successfully uploaded staging repositories to Central Portal via defaultRepository endpoint")
+        println("Response: $responseBody")
+    } else {
+        throw RuntimeException("Failed to upload via defaultRepository endpoint: HTTP ${response.statusLine.statusCode} - $responseBody")
+    }
+}
+
+// Function commented out since we're using user_managed publishing
+// fun waitForArtifactsToBeAvailable() {
+//     val repoIds: List<String> = repoIdWithVersion.map { it.first }
+//     val client = HttpClients.createDefault()
+//     val artifactUrls = repoIdWithVersion.map { (repoId, version) ->
+//         println("Checking: https://repo1.maven.org/maven2/com/reown/$repoId/$version/")
+//         "https://repo1.maven.org/maven2/com/reown/$repoId/$version/"
+//     }
+//     val maxRetries = 40
+//     var attempt = 0
+//     val availableRepos = mutableSetOf<String>()
+//
+//     while (availableRepos.size < repoIds.size && attempt < maxRetries) {
+//         artifactUrls.forEachIndexed { index, artifactUrl ->
+//             if (!availableRepos.contains(repoIds[index])) {
+//                 val httpGet = HttpGet(artifactUrl)
+//                 try {
+//                     val response = client.execute(httpGet)
+//                     val statusCode = response.statusLine.statusCode
+//                     EntityUtils.consume(response.entity) // Ensure the response is fully consumed
+//                     if (statusCode == 200 || statusCode == 201) {
+//                         println("Artifact for repository ${repoIds[index]} is now available.")
+//                         availableRepos.add(repoIds[index])
+//                     } else {
+//                         println("Artifact for repository ${repoIds[index]} not yet available. Status code: $statusCode")
+//                     }
+//                 } catch (e: Exception) {
+//                     println("Error checking artifact for repository ${repoIds[index]}: ${e.message}")
+//                 } finally {
+//                     httpGet.releaseConnection() // Ensure the connection is released
+//                 }
+//             }
+//         }
+//         if (availableRepos.size < repoIds.size) {
+//             println("Waiting for artifacts to be available... Attempt: ${attempt + 1}")
+//             attempt++
+//             Thread.sleep(45000) // Wait for 45 seconds before retrying
+//         }
+//     }
+//
+//     if (availableRepos.size < repoIds.size) {
+//         throw RuntimeException("Artifacts were not available after ${maxRetries * 45} seconds.")
+//     } else {
+//         println("All artifacts are now available.")
+//     }
+// }
+
+// List commented out since we're using user_managed publishing
+// private val repoIdWithVersion = listOf(
+//     Pair(ANDROID_BOM, BOM_VERSION),
+//     Pair(FOUNDATION, FOUNDATION_VERSION),
+//     Pair(ANDROID_CORE, CORE_VERSION),
+//     Pair(SIGN, SIGN_VERSION),
+//     Pair(NOTIFY, NOTIFY_VERSION),
+//     Pair(WALLETKIT, WALLETKIT_VERSION),
+//     Pair(APPKIT, APPKIT_VERSION),
+//     Pair(MODAL_CORE, MODAL_CORE_VERSION)
+// )
