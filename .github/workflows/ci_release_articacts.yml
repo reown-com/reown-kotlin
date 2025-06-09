@@ -1,9 +1,9 @@
 name: Release Artifacts - Sonatype
 
 on:
-#  push:
-#    branches:
-#      - master
+  push:
+    branches:
+      - central_portal_migration
   workflow_dispatch:
 
 jobs:
