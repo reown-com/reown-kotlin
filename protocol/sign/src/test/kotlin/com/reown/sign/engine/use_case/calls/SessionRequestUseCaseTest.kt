@@ -1,6 +1,5 @@
 package com.reown.sign.engine.use_case.calls
 
-import com.reown.android.BuildConfig
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
 import com.reown.android.internal.common.exception.InvalidExpiryException
 import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
