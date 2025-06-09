@@ -148,9 +148,9 @@ internal class SessionRequestUseCase(
             Tags.SESSION_REQUEST,
             irnParamsTtl,
             correlationId = sessionPayload.id,
-            rpcMethods = tvfData?.first,
-            contractAddresses = tvfData?.second,
-            chainId = tvfData?.third,
+            rpcMethods = tvfData.first,
+            contractAddresses = tvfData.second,
+            chainId = tvfData.third,
             prompt = true
         )
         val requestTtlInSeconds = expiry.run { seconds - nowInSeconds }
