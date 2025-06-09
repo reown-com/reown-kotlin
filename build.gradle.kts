@@ -142,22 +142,24 @@ tasks.register("closeAndReleaseMultipleRepositories") {
             println("Repository: ${repo.key}, State: ${repo.state}")
         }
         
-        // For OSSRH Staging API (Maven-like API), we upload using defaultRepository endpoint
-        // since repositories are typically in "open" state
+        // Upload each repository individually using their specific keys
+        // This works better with the OSSRH Staging API than the defaultRepository endpoint
         val openRepos = repos.filter { it.state == "open" }
+        val closedRepos = repos.filter { it.state == "closed" }
+        
         if (openRepos.isNotEmpty()) {
-            println("Uploading ${openRepos.size} open repositories to Central Portal using defaultRepository endpoint")
-            uploadRepositoriesToPortalViaDefaultEndpoint()
-        } else {
-            // Fallback: if there are closed repositories, upload them individually
-            val closedRepos = repos.filter { it.state == "closed" }
-            if (closedRepos.isNotEmpty()) {
-                println("Uploading ${closedRepos.size} closed repositories to Central Portal")
-                uploadRepositoriesToPortal(closedRepos)
-            } else {
-                println("No repositories to upload to Portal")
-                return@doLast
-            }
+            println("Uploading ${openRepos.size} open repositories to Central Portal using individual repository keys")
+            uploadRepositoriesToPortal(openRepos)
+        }
+        
+        if (closedRepos.isNotEmpty()) {
+            println("Uploading ${closedRepos.size} closed repositories to Central Portal using individual repository keys")
+            uploadRepositoriesToPortal(closedRepos)
+        }
+        
+        if (openRepos.isEmpty() && closedRepos.isEmpty()) {
+            println("No repositories to upload to Portal")
+            return@doLast
         }
         
         // Comment out artifact availability check since we're using user_managed publishing
