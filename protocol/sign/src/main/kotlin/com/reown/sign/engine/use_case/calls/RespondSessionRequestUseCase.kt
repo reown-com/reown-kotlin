@@ -94,7 +94,6 @@ internal class RespondSessionRequestUseCase(
                 onFailure(e)
             }
         } else {
-            println("kobe: Params: ${pendingRequest.params.rpcParams}")
             val tvfData = tvf.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
             val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let {
                 tvf.collectTxHashes(

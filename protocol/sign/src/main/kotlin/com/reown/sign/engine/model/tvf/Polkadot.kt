@@ -72,7 +72,6 @@ object PolkadotSignTransaction {
         return decoded.sliceArray(1..32)
     }
 
-    // SCALE-encoding of the unsigned payload along with the signature
     private fun addSignatureToExtrinsic(
         publicKey: ByteArray,
         hexSignature: String,
@@ -80,68 +79,51 @@ object PolkadotSignTransaction {
     ): ByteArray {
         val method = transactionPayload.method.hexToBytes()
         val signature = hexSignature.hexToBytes()
-
-        val signedFlag = 0x80 // For signed extrinsics
-        val versionValue = transactionPayload.version.toString() ?: "4"
+        val signedFlag = 0x80
+        val versionValue = transactionPayload.version.toString()
         val version = versionValue.toInt()
-        // Extrinsic version = signed flag + version
-        val extrinsicVersion = signedFlag or version // 0x80 + 0x04 = 0x84
-
-        // Detect signature type by evaluating the address if possible
+        val extrinsicVersion = signedFlag or version
         val ss58Address = transactionPayload.address
         val signatureType = guessSignatureTypeFromAddress(ss58Address ?: "")
-
-        // Era - handle era properly for Polkadot 
         val eraValue = normalizeHex(transactionPayload.era ?: "")
         val eraBytes = if (eraValue.isEmpty() || eraValue == "00") {
-            byteArrayOf(0x00) // Immortal
+            byteArrayOf(0x00)
         } else {
-            // For mortal era, just use the hex bytes as-is
             eraValue.hexToBytes()
         }
 
-        // Nonce - use raw hex value, not compact encoded
         val nonceValue = parseHex(transactionPayload.nonce)
         val nonceBytes = byteArrayOf(nonceValue.toByte())
-
-        // Tip - use compact encoding  
         val tipValue = BigInteger(normalizeHex(transactionPayload.tip ?: "0"), 16)
         val tipBytes = compactEncodeBigInt(tipValue)
-
-        // Handle method - only insert 00 byte if not already present
         val methodBytes = method
         val finalMethod = if (methodBytes.size >= 3 &&
             methodBytes[0] == 0x05.toByte() &&
             methodBytes[1] == 0x03.toByte() &&
             methodBytes[2] != 0x00.toByte()
         ) {
-            // Method needs 00 byte inserted after first two bytes (05 03 -> 05 03 00)
             ByteBuffer.allocate(methodBytes.size + 1).apply {
                 put(methodBytes[0]) // 05
-                put(methodBytes[1]) // 03  
+                put(methodBytes[1]) // 03
                 put(0x00.toByte())  // 00
-                put(methodBytes.sliceArray(2 until methodBytes.size)) // rest
+                put(methodBytes.sliceArray(2 until methodBytes.size))
             }.array()
         } else {
-            // Method already has correct format or different structure
             methodBytes
         }
 
-        val extrinsicBody = ByteBuffer.allocate(1024) // Adjust size as needed
-        extrinsicBody.put(0x00.toByte()) // MultiAddress::Id
+        val extrinsicBody = ByteBuffer.allocate(1024)
+        extrinsicBody.put(0x00.toByte())
         extrinsicBody.put(publicKey)
         extrinsicBody.put(signatureType.toByte())
         extrinsicBody.put(signature)
         extrinsicBody.put(eraBytes)
         extrinsicBody.put(nonceBytes)
         extrinsicBody.put(tipBytes)
-        extrinsicBody.put(0x00.toByte()) // Additional 00 byte before method
+        extrinsicBody.put(0x00.toByte())
         extrinsicBody.put(finalMethod)
-
         val bodyBytes = extrinsicBody.array().sliceArray(0 until extrinsicBody.position())
-
-        val lengthPrefix = compactEncodeInt(bodyBytes.size + 1) // +1 for version byte
-
+        val lengthPrefix = compactEncodeInt(bodyBytes.size + 1)
         val result = ByteBuffer.allocate(lengthPrefix.size + 1 + bodyBytes.size)
         result.put(lengthPrefix)
         result.put(extrinsicVersion.toByte())
@@ -153,11 +135,8 @@ object PolkadotSignTransaction {
     private fun guessSignatureTypeFromAddress(address: String): Int {
         return try {
             val decoded = toBase58(address.toByteArray())
-            if (decoded.isEmpty()) return 0x01 // default to sr25519
-
+            if (decoded.isEmpty()) return 0x01
             val prefix = decoded[0].toInt() and 0xFF
-
-            // https://github.com/paritytech/ss58-registry/blob/main/ss58-registry.json
             when (prefix) {
                 42 -> 0x00 // Ed25519
                 60 -> 0x02 // Secp256k1
@@ -178,7 +157,6 @@ object PolkadotSignTransaction {
         } else {
             input
         }
-
     }
 
     private fun parseHex(input: Any?): Int {
@@ -215,7 +193,6 @@ object PolkadotSignTransaction {
             }
 
             else -> {
-                // big-integer mode
                 val bytes = bigIntToLEBytes(bigValue)
                 val len = bytes.size
                 if (len > 67) {
@@ -230,16 +207,13 @@ object PolkadotSignTransaction {
         }
     }
 
-    // SCALE-encodes a BigInteger using compact encoding
     private fun compactEncodeBigInt(value: BigInteger): ByteArray {
         return when {
             value < BigInteger.valueOf(1L shl 6) -> {
-                // single-byte mode
                 byteArrayOf((value.toInt() shl 2).toByte())
             }
 
             value < BigInteger.valueOf(1L shl 14) -> {
-                // two-byte mode
                 val intValue = value.toInt() shl 2 or 0x01
                 byteArrayOf(
                     (intValue and 0xFF).toByte(),
@@ -248,7 +222,6 @@ object PolkadotSignTransaction {
             }
 
             value < BigInteger.valueOf(1L shl 30) -> {
-                // four-byte mode
                 val intValue = value.toInt() shl 2 or 0x02
                 byteArrayOf(
                     (intValue and 0xFF).toByte(),
@@ -259,7 +232,6 @@ object PolkadotSignTransaction {
             }
 
             else -> {
-                // big-integer mode
                 val bytes = bigIntToLEBytes(value)
                 val len = bytes.size
                 if (len > 67) {
