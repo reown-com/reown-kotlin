@@ -62,19 +62,12 @@ jobs:
         run: |
           ./gradlew ${{ matrix.conf.command }}
 
-      - name: List built APKs for debugging
-        run: |
-          echo "=== Built APKs ==="
-          find sample/${{ matrix.conf.name }}/build/outputs/apk -name "*.apk" -exec ls -la {} \;
-          echo "=== APK Info ==="
-          find sample/${{ matrix.conf.name }}/build/outputs/apk -name "*.apk" -exec aapt dump badging {} \; || true
-
       - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.conf.name }}-apk
           path: sample/${{ matrix.conf.name }}/build/outputs/apk/internal/*.apk
-          retention-days: 7  # Increased retention for debugging
+          retention-days: 1
 
   run_e2e_tests:
     name: Run E2E Tests
@@ -124,7 +117,7 @@ jobs:
         with:
           api-level: 30
           target: google_apis
-          arch: x86_64
+          arch: arm64-v8a #x86_64
           ram-size: 4096M
           heap-size: 576M
           emulator-boot-timeout: 900
@@ -160,155 +153,108 @@ jobs:
             
             # Install APKs
             echo "Installing APKs:"
-            ls -la apks/
-            
-            # Install wallet APK
-            if [ -f "apks/wallet-internal-release.apk" ]; then
-              echo "Installing wallet APK..."
-              adb install -r "apks/wallet-internal-release.apk"
-            fi
-            
-            # Install dapp APK
-            if [ -f "apks/dapp-internal-release.apk" ]; then
-              echo "Installing dapp APK..."
-              adb install -r "apks/dapp-internal-release.apk"
-            fi
-            
-            # Install any other APKs found
-            echo "Looking for additional APKs to install..."
-            for apk_file in apks/*.apk; do
-              if [ -f "$apk_file" ]; then
-                echo "Installing: $apk_file"
-                adb install -r "$apk_file" || echo "Failed to install $apk_file"
-              fi
-            done
+            find apks -name "*.apk" -exec echo "Installing: {}" \; -exec adb install -r {} \;
             
             # Verify installations
-            echo "=== Verifying installed apps ==="
-            adb shell pm list packages > debug-artifacts/all_packages.txt
-            if grep -q "com.reown.sample" debug-artifacts/all_packages.txt; then
-              echo "Reown sample apps found:"
-              grep "com.reown.sample" debug-artifacts/all_packages.txt
-            else
-              echo "No reown sample apps found"
-            fi
+            echo "Verifying installed apps:"
+            adb shell pm list packages | grep -E "com.reown.sample" || (echo "ERROR: Apps not installed correctly" && exit 1)
             
-            # Check specific packages
-            echo "=== Package details ==="
-            if grep -q "com.reown.sample.wallet" debug-artifacts/all_packages.txt; then
-              echo "Wallet app found"
-            else
-              echo "Wallet app not found"
-            fi
-            
-            if grep -q "com.reown.sample.dapp" debug-artifacts/all_packages.txt; then
-              echo "DApp found"
-            else
-              echo "DApp not found"
-            fi
+            # Check APK info
+            echo "Checking APK details:"
+            adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 5 "versionName"
             
             # Clear app data
             echo "Clearing app data..."
             adb shell pm clear com.reown.sample.wallet.internal || true
             adb shell pm clear com.reown.sample.dapp.internal || true
             
-            # Grant runtime permissions
+            # Grant runtime permissions that might be needed
             echo "Granting permissions..."
             adb shell pm grant com.reown.sample.wallet.internal android.permission.INTERNET || true
             adb shell pm grant com.reown.sample.wallet.internal android.permission.ACCESS_NETWORK_STATE || true
             adb shell pm grant com.reown.sample.wallet.internal android.permission.ACCESS_WIFI_STATE || true
             adb shell pm grant com.reown.sample.wallet.internal android.permission.CAMERA || true
             
-            # Check if app is disabled
+            # Check if the app needs to be enabled
             echo "Checking app state..."
-            adb shell pm list packages -d > debug-artifacts/disabled_packages.txt
-            if grep -q "com.reown.sample.wallet.internal" debug-artifacts/disabled_packages.txt; then
-              echo "App is disabled, enabling it..."
-              adb shell pm enable com.reown.sample.wallet.internal
-            else
-              echo "App is not disabled"
-            fi
+            adb shell pm list packages -d | grep -q com.reown.sample.wallet.internal && adb shell pm enable com.reown.sample.wallet.internal || echo "App is not disabled"
             
             # Wait for system to settle
             sleep 10
             
-            # Capture debug info
+            # Check available activities
+            echo "Checking available activities for wallet app:"
+            adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 10 "Activity" || true
+            
+            # Wait and capture state
+            sleep 10
+            
+            # Capture comprehensive debug info
             echo "=== CAPTURING DEBUG INFO ==="
-            adb shell dumpsys window windows > debug-artifacts/window_state.txt
-            adb shell dumpsys activity activities > debug-artifacts/current_activity_full.txt
+            
+            # Window state
+            echo "Window state:" > debug-artifacts/window_state.txt
+            adb shell dumpsys window windows >> debug-artifacts/window_state.txt
+            
+            # Current activity
+            echo "Current activity:" > debug-artifacts/current_activity.txt
+            adb shell dumpsys activity activities | grep -E "mResumedActivity|mFocusedActivity" >> debug-artifacts/current_activity.txt
             
             # Check for crashes
             echo "Checking for crashes..."
-            adb logcat -d > debug-artifacts/full_crash_logcat.txt
-            if [ -f debug-artifacts/full_crash_logcat.txt ]; then
-              grep -E "FATAL EXCEPTION|AndroidRuntime|Process.*com.reown" debug-artifacts/full_crash_logcat.txt > debug-artifacts/crashes.txt || echo "No crashes found" > debug-artifacts/crashes.txt
-            else
-              echo "No crashes found" > debug-artifacts/crashes.txt
-            fi
+            adb logcat -d | grep -E "FATAL EXCEPTION|AndroidRuntime|Process.*com.reown" > debug-artifacts/crashes.txt || echo "No crashes found" > debug-artifacts/crashes.txt
             
-            # Get process info
-            adb shell ps > debug-artifacts/all_processes.txt
-            if [ -f debug-artifacts/all_processes.txt ]; then
-              grep "reown" debug-artifacts/all_processes.txt > debug-artifacts/processes.txt || echo "No reown processes found" > debug-artifacts/processes.txt
-            fi
+            # ANR traces
+            adb shell ls /data/anr/ > debug-artifacts/anr_list.txt 2>&1 || true
             
-            # Network state
+            # Memory info
+            adb shell dumpsys meminfo com.reown.sample.wallet.internal > debug-artifacts/meminfo.txt || true
+            
+            # App process info
+            adb shell ps | grep reown > debug-artifacts/processes.txt || true
+            
+            # Network state (important for WalletConnect)
             echo "Network state:" > debug-artifacts/network_state.txt
             adb shell dumpsys connectivity >> debug-artifacts/network_state.txt
+            adb shell settings get global airplane_mode_on >> debug-artifacts/network_state.txt
             
-            # Force stop apps
+            # Force stop before Maestro tests
             adb shell am force-stop com.reown.sample.wallet.internal
             adb shell am force-stop com.reown.sample.dapp.internal
             sleep 5
             
-            # Launch wallet app
-            echo "=== LAUNCHING WALLET APP ==="
-            adb shell am start -n com.reown.sample.wallet.internal/.ui.WalletKitActivity || true
-            sleep 15
+            # Try to launch the app manually before Maestro
+            echo "Attempting manual app launch..."
+            adb shell monkey -p com.reown.sample.wallet.internal -c android.intent.category.LAUNCHER 1
+            sleep 10
             
             # Check if app is running
-            adb shell ps > debug-artifacts/running_processes.txt
-            if grep -q "com.reown.sample.wallet.internal" debug-artifacts/running_processes.txt; then
-              echo "✅ Wallet app is running"
-            else
-              echo "❌ Wallet app is NOT running - trying fallback launch"
-              adb shell monkey -p com.reown.sample.wallet.internal -c android.intent.category.LAUNCHER 1 || true
-              sleep 10
-            fi
+            adb shell ps | grep -q "com.reown.sample.wallet.internal" || (echo "ERROR: Wallet app is not running after launch attempt" && adb shell am start -n com.reown.sample.wallet.internal/com.reown.sample.wallet.ui.WalletKitActivity || true)
             
-            # Take screenshot
-            echo "Taking screenshot..."
-            adb shell screencap /sdcard/screenshot.png
-            adb pull /sdcard/screenshot.png debug-artifacts/ || true
+            sleep 10
             
-            # Check startup errors
-            echo "Checking for startup errors..."
-            adb logcat -d > debug-artifacts/startup_logcat.txt
-            if [ -f debug-artifacts/startup_logcat.txt ]; then
-              grep -E "com.reown.sample.wallet.internal.*E/|FATAL.*com.reown" debug-artifacts/startup_logcat.txt > debug-artifacts/wallet_errors.txt || echo "No errors found" > debug-artifacts/wallet_errors.txt
-            fi
+            # Take a screenshot to see current state
+            adb shell screencap /sdcard/app_state_before_maestro.png
+            adb pull /sdcard/app_state_before_maestro.png debug-artifacts/ || true
             
-            # Current activity check
+            # Check current activity
             echo "Current activity before Maestro:"
-            adb shell dumpsys activity activities > debug-artifacts/current_activity_maestro.txt
-            if [ -f debug-artifacts/current_activity_maestro.txt ]; then
-              grep -E "mResumedActivity|mFocusedActivity" debug-artifacts/current_activity_maestro.txt || echo "No resumed/focused activity found"
-            fi
+            adb shell dumpsys activity activities | grep -E "mResumedActivity|mFocusedActivity" || true
             
-            # Run Maestro tests
-            echo "Running Maestro tests:"
-            maestro test .maestro/flows/native/connect_reject.yaml || true
+            # DO NOT kill the app here - let's see if it's actually running properly
+            echo "App state check complete, proceeding with Maestro tests..."
             
-            # Stop logcat
+            echo "Running Maestro native to native tests:"
+            maestro test .maestro/flows/native/connect_reject.yaml
+            # maestro test .maestro/flows/native/connect_confirm.yaml
+            # maestro test .maestro/flows/native/personal_sign_reject.yaml
+            # maestro test .maestro/flows/native/personal_sign_confirm.yaml
+            
+            # Stop logcat capture
             kill $LOGCAT_PID || true
             
-            # Filter logcat
-            if [ -f debug-artifacts/full-logcat.txt ]; then
-              grep -E "reown|WalletConnect|AndroidRuntime|System.err|ActivityManager" debug-artifacts/full-logcat.txt > debug-artifacts/filtered-logcat.txt || echo "No relevant log entries found" > debug-artifacts/filtered-logcat.txt
-            fi
-            
-            # Cleanup temp files
-            rm -f debug-artifacts/all_packages.txt debug-artifacts/disabled_packages.txt debug-artifacts/full_crash_logcat.txt debug-artifacts/all_processes.txt debug-artifacts/running_processes.txt debug-artifacts/startup_logcat.txt || true
+            # Filter logcat for relevant info
+            grep -E "reown|WalletConnect|AndroidRuntime|System.err|ActivityManager" debug-artifacts/full-logcat.txt > debug-artifacts/filtered-logcat.txt || true
 
       - name: Analyze crash logs
         if: always()
