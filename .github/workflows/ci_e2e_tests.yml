@@ -136,6 +136,8 @@ jobs:
             echo "Running pre emulator launch script"
             pwd
           script: |
+            set -e  # Exit on any error
+            
             # Setup debug directory
             mkdir -p debug-artifacts
             
@@ -160,10 +162,12 @@ jobs:
             
             # Install APKs with detailed logging
             echo "Installing APKs:"
-            for apk in apks/*.apk
-            do
+            ls -la apks/
+            
+            # Use find instead of for loop to avoid shell parsing issues
+            find apks -name "*.apk" | while read apk; do
               echo "=== Installing: $apk ==="
-              aapt dump badging "$apk" | head -5
+              aapt dump badging "$apk" | head -5 || echo "Could not analyze APK"
               adb install -r "$apk"
               echo "Installation result: $?"
             done
@@ -172,11 +176,10 @@ jobs:
             echo "=== Verifying installed apps ==="
             adb shell pm list packages | grep -E "com.reown.sample" || (echo "ERROR: Apps not installed correctly" && exit 1)
             
-            # Check app details
-            for pkg in $(adb shell pm list packages | grep "com.reown.sample" | cut -d: -f2)
-            do
+            # Check app details using find and while read
+            adb shell pm list packages | grep "com.reown.sample" | cut -d: -f2 | while read pkg; do
               echo "=== Package: $pkg ==="
-              adb shell dumpsys package "$pkg" | grep -E "versionName|versionCode|enabled|targetSdk"
+              adb shell dumpsys package "$pkg" | grep -E "versionName|versionCode|enabled|targetSdk" || echo "Could not get package info"
             done
             
             # Check APK info
