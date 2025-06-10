@@ -246,28 +246,9 @@ jobs:
             
             echo "Running Maestro native to native tests:"
             maestro test .maestro/flows/native/connect_reject.yaml
-            # maestro test .maestro/flows/native/connect_confirm.yaml
-            # maestro test .maestro/flows/native/personal_sign_reject.yaml
-            # maestro test .maestro/flows/native/personal_sign_confirm.yaml
-            
-#            # Stop logcat capture
-#            kill $LOGCAT_PID || true
-#
-#            # Filter logcat for relevant info
-#            grep -E "reown|WalletConnect|AndroidRuntime|System.err|ActivityManager" debug-artifacts/full-logcat.txt > debug-artifacts/filtered-logcat.txt || true
-
-#      - name: Analyze crash logs
-#        if: always()
-#        run: |
-#          if [ -f debug-artifacts/crashes.txt ] && [ -s debug-artifacts/crashes.txt ]; then
-#            echo "::error::App crashes detected:"
-#            cat debug-artifacts/crashes.txt
-#          fi
-#
-#          if [ -f debug-artifacts/filtered-logcat.txt ]; then
-#            echo "Relevant log entries:"
-#            tail -n 100 debug-artifacts/filtered-logcat.txt
-#          fi
+            maestro test .maestro/flows/native/connect_confirm.yaml
+            maestro test .maestro/flows/native/personal_sign_reject.yaml
+            maestro test .maestro/flows/native/personal_sign_confirm.yaml
 
       - name: Upload debug artifacts
         if: always()
