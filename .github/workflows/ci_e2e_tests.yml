@@ -160,7 +160,8 @@ jobs:
             
             # Install APKs with detailed logging
             echo "Installing APKs:"
-            for apk in apks/*.apk; do
+            for apk in apks/*.apk
+            do
               echo "=== Installing: $apk ==="
               aapt dump badging "$apk" | head -5
               adb install -r "$apk"
@@ -172,7 +173,8 @@ jobs:
             adb shell pm list packages | grep -E "com.reown.sample" || (echo "ERROR: Apps not installed correctly" && exit 1)
             
             # Check app details
-            for pkg in $(adb shell pm list packages | grep "com.reown.sample" | cut -d: -f2); do
+            for pkg in $(adb shell pm list packages | grep "com.reown.sample" | cut -d: -f2)
+            do
               echo "=== Package: $pkg ==="
               adb shell dumpsys package "$pkg" | grep -E "versionName|versionCode|enabled|targetSdk"
             done
