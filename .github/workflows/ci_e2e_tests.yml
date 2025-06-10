@@ -54,6 +54,8 @@ jobs:
 
       - name: Build sample - Internal
         env:
+          CI: "true"
+          YTTRIUM_CI_VERSION: "0.9.18"  # Specify the yttrium version for CI builds
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
@@ -124,7 +126,6 @@ jobs:
           profile: pixel_6
           avd-name: test_device
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot-save -no-snapshot-load
-          disable-animations: true
           pre-emulator-launch-script: |
             echo "Running pre emulator launch script"
             pwd
