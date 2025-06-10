@@ -62,12 +62,19 @@ jobs:
         run: |
           ./gradlew ${{ matrix.conf.command }}
 
+      - name: List built APKs for debugging
+        run: |
+          echo "=== Built APKs ==="
+          find sample/${{ matrix.conf.name }}/build/outputs/apk -name "*.apk" -exec ls -la {} \;
+          echo "=== APK Info ==="
+          find sample/${{ matrix.conf.name }}/build/outputs/apk -name "*.apk" -exec aapt dump badging {} \; || true
+
       - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.conf.name }}-apk
           path: sample/${{ matrix.conf.name }}/build/outputs/apk/internal/*.apk
-          retention-days: 1
+          retention-days: 7  # Increased retention for debugging
 
   run_e2e_tests:
     name: Run E2E Tests
@@ -151,13 +158,24 @@ jobs:
             adb logcat > debug-artifacts/full-logcat.txt &
             LOGCAT_PID=$!
             
-            # Install APKs
+            # Install APKs with detailed logging
             echo "Installing APKs:"
-            find apks -name "*.apk" -exec echo "Installing: {}" \; -exec adb install -r {} \;
+            for apk in apks/*.apk; do
+              echo "=== Installing: $apk ==="
+              aapt dump badging "$apk" | head -5
+              adb install -r "$apk"
+              echo "Installation result: $?"
+            done
             
-            # Verify installations
-            echo "Verifying installed apps:"
+            # Verify installations with detailed info
+            echo "=== Verifying installed apps ==="
             adb shell pm list packages | grep -E "com.reown.sample" || (echo "ERROR: Apps not installed correctly" && exit 1)
+            
+            # Check app details
+            for pkg in $(adb shell pm list packages | grep "com.reown.sample" | cut -d: -f2); do
+              echo "=== Package: $pkg ==="
+              adb shell dumpsys package "$pkg" | grep -E "versionName|versionCode|enabled|targetSdk"
+            done
             
             # Check APK info
             echo "Checking APK details:"
@@ -223,19 +241,63 @@ jobs:
             adb shell am force-stop com.reown.sample.dapp.internal
             sleep 5
             
+            # === WHITE SCREEN DEBUGGING ===
+            echo "=== DEBUGGING WHITE SCREEN ISSUE ==="
+            
             # Try to launch the app manually before Maestro
             echo "Attempting manual app launch..."
-            adb shell monkey -p com.reown.sample.wallet.internal -c android.intent.category.LAUNCHER 1
-            sleep 10
+            
+            # Get the correct launcher activity
+            WALLET_ACTIVITY=$(adb shell dumpsys package com.reown.sample.wallet.internal | grep -A 5 "android.intent.action.MAIN" | grep "com.reown.sample.wallet" | head -1 | awk '{print $2}' | tr -d ' ')
+            echo "Detected wallet launcher activity: $WALLET_ACTIVITY"
+            
+            # Launch using correct activity
+            if [ -n "$WALLET_ACTIVITY" ]; then
+              adb shell am start -n "$WALLET_ACTIVITY" || true
+            else
+              echo "Fallback: using monkey to launch"
+              adb shell monkey -p com.reown.sample.wallet.internal -c android.intent.category.LAUNCHER 1
+            fi
+            
+            sleep 15
             
             # Check if app is running
-            adb shell ps | grep -q "com.reown.sample.wallet.internal" || (echo "ERROR: Wallet app is not running after launch attempt" && adb shell am start -n com.reown.sample.wallet.internal/com.reown.sample.wallet.ui.WalletKitActivity || true)
+            if adb shell ps | grep -q "com.reown.sample.wallet.internal"; then
+              echo "✅ Wallet app is running"
+            else
+              echo "❌ Wallet app is NOT running"
+              adb shell am start -n com.reown.sample.wallet.internal/com.reown.sample.wallet.ui.WalletKitActivity || true
+              sleep 10
+            fi
             
-            sleep 10
+            # Take screenshots at different stages
+            echo "Taking screenshots for white screen analysis..."
+            adb shell screencap /sdcard/screenshot_after_launch.png
+            adb pull /sdcard/screenshot_after_launch.png debug-artifacts/ || true
             
-            # Take a screenshot to see current state
-            adb shell screencap /sdcard/app_state_before_maestro.png
-            adb pull /sdcard/app_state_before_maestro.png debug-artifacts/ || true
+            # Check for any startup errors
+            echo "Checking for startup errors..."
+            adb logcat -d | grep -E "com.reown.sample.wallet.internal.*E/|FATAL.*com.reown" > debug-artifacts/wallet_errors.txt || true
+            
+            # Check current activity and window focus
+            echo "Current activity and window state:"
+            adb shell dumpsys activity activities | grep -A 10 -B 5 "mResumedActivity\|mFocusedActivity" > debug-artifacts/activity_state.txt
+            adb shell dumpsys window windows | grep -A 5 -B 5 "mCurrentFocus\|mFocusedApp" > debug-artifacts/window_focus.txt
+            
+            # Check if the app has proper permissions and is not disabled
+            echo "=== App State Check ==="
+            adb shell pm dump com.reown.sample.wallet.internal | grep -E "enabled|grantedPermissions|requiredPermissions" > debug-artifacts/app_permissions.txt || true
+            
+            # Force a fresh launch after clearing state
+            adb shell am force-stop com.reown.sample.wallet.internal
+            sleep 5
+            echo "Fresh launch attempt..."
+            adb shell am start -W -n com.reown.sample.wallet.internal/.ui.WalletKitActivity 2>&1 | tee debug-artifacts/fresh_launch.txt || true
+            sleep 15
+            
+            # Final screenshot
+            adb shell screencap /sdcard/screenshot_fresh_launch.png
+            adb pull /sdcard/screenshot_fresh_launch.png debug-artifacts/ || true
             
             # Check current activity
             echo "Current activity before Maestro:"
