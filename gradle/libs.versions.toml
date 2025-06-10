@@ -35,7 +35,7 @@ kethereum = "0.86.0"
 relinker = "1.4.5"
 coil = "2.6.0"
 customQrGenerator = "1.6.2"
-beagle = "2.9.0"
+beagle = "2.9.9"
 coinbase = "1.0.4"
 
 firebaseBOM = "33.3.0"
