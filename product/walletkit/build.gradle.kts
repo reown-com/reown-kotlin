@@ -51,6 +51,7 @@ android {
      packaging {
         jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium.so")
         jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium.so")
     }
 
     kotlinOptions {
@@ -65,7 +66,7 @@ android {
 
 dependencies {
     implementation("net.java.dev.jna:jna:5.15.0@aar")
-    implementation("com.github.reown-com:yttrium:0.9.17") //unspecified
+    implementation("com.github.reown-com:yttrium:0.9.18") //unspecified
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
