@@ -36,6 +36,7 @@ internal class ManualConnectionLifecycle(
     fun disconnect() {
         scope.launch {
             connectionMutex.withLock {
+                _onResume.value = false
                 lifecycleRegistry.onNext(Lifecycle.State.Stopped.WithReason())
             }
         }
