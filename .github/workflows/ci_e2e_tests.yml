@@ -248,8 +248,8 @@ jobs:
             echo "Running Maestro native to native tests:"
             maestro test .maestro/flows/native/connect_reject.yaml
             maestro test .maestro/flows/native/connect_confirm.yaml
+            maestro test .maestro/flows/native/personal_sign_confirm.yaml
 #            maestro test .maestro/flows/native/personal_sign_reject.yaml
-#            maestro test .maestro/flows/native/personal_sign_confirm.yaml
 
       - name: Upload debug artifacts
         if: always()
