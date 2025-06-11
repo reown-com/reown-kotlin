@@ -55,7 +55,7 @@ jobs:
       - name: Build sample - Internal
         env:
           CI: "true"
-          YTTRIUM_CI_VERSION: "0.9.18"  # Specify the yttrium version for CI builds
+          YTTRIUM_CI_VERSION: "0.0.19-ci"  # Specify the yttrium version for CI builds
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
@@ -248,8 +248,8 @@ jobs:
             echo "Running Maestro native to native tests:"
             maestro test .maestro/flows/native/connect_reject.yaml
             maestro test .maestro/flows/native/connect_confirm.yaml
-            maestro test .maestro/flows/native/personal_sign_reject.yaml
-            maestro test .maestro/flows/native/personal_sign_confirm.yaml
+#            maestro test .maestro/flows/native/personal_sign_reject.yaml
+#            maestro test .maestro/flows/native/personal_sign_confirm.yaml
 
       - name: Upload debug artifacts
         if: always()

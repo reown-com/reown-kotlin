@@ -64,19 +64,14 @@ android {
     }
 }
 
-// Dependencies configuration
-// Uses different yttrium versions for CI vs local builds:
-// - CI builds: Uses version specified by YTTRIUM_CI_VERSION env var (or 0.9.18-ci as fallback)
-// - Local builds: Uses the standard version (0.9.18)
-// This allows testing with specific yttrium versions in CI without affecting local development
 dependencies {
     implementation("net.java.dev.jna:jna:5.15.0@aar")
     
     // Use specific yttrium version for CI builds, default version for local builds
     val yttriumVersion = if (System.getenv("CI") == "true") {
-        System.getenv("YTTRIUM_CI_VERSION") ?: "0.9.18-ci"
+        System.getenv("YTTRIUM_CI_VERSION") ?: "0.9.19-ci"
     } else {
-        "0.9.18"
+        "0.9.4"
     }
     implementation("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
 
