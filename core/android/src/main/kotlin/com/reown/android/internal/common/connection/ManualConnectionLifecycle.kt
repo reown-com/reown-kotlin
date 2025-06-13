@@ -28,6 +28,7 @@ internal class ManualConnectionLifecycle(
     fun connect() {
         scope.launch {
             connectionMutex.withLock {
+                println("kobe: connect")
                 _onResume.value = true
             }
         }
@@ -36,7 +37,7 @@ internal class ManualConnectionLifecycle(
     fun disconnect() {
         scope.launch {
             connectionMutex.withLock {
-                _onResume.value = false
+                println("kobe: disconnect")
                 lifecycleRegistry.onNext(Lifecycle.State.Stopped.WithReason())
                 _onResume.value = false
             }
@@ -46,10 +47,13 @@ internal class ManualConnectionLifecycle(
     override fun reconnect() {
         scope.launch {
             connectionMutex.withLock {
+                println("kobe: MANUAL reconnect")
                 lifecycleRegistry.onNext(Lifecycle.State.Stopped.WithReason())
                 delay(100)
                 lifecycleRegistry.onNext(Lifecycle.State.Started)
             }
         }
+//        lifecycleRegistry.onNext(Lifecycle.State.Stopped.WithReason())
+//        lifecycleRegistry.onNext(Lifecycle.State.Started)
     }
 }
