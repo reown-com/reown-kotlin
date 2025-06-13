@@ -16,7 +16,8 @@ internal class GenerateJwtStoreClientIdUseCase(
     operator fun invoke(relayUrl: String): String =
         clientIdJwtRepository.generateJWT(relayUrl.strippedUrl()) { clientId ->
             sharedPreferences.edit {
-                putString(KEY_CLIENT_ID, clientId)
+                println("kobe: CLIENT_ID: $clientId")
+                putString(KEY_CLIENT_ID, "z6MkrffQNr9bPchkWqPMtTUGD4AxwMPyQbc55p8tvfc6P7ch")//clientId)
             }
         }
 }
