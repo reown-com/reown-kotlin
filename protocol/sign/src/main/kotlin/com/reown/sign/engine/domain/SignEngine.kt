@@ -214,31 +214,25 @@ internal class SignEngine(
         handleRelayRequestsAndResponses()
     }
 
-    var wasCalled: Boolean = false
-
     private fun handleRelayRequestsAndResponses() {
         jsonRpcInteractor.onResubscribe
             .onEach {
-//                if (!wasCalled) {
-                    wasCalled = true
-                    scope.launch {
-                        supervisorScope {
-                            launch(Dispatchers.IO) {
-                                println("kobe: SIGN RESUBSCRIBE")
-                                resubscribeToSession()
-                                resubscribeToPendingAuthenticateTopics()
-                            }
-                        }
-
-                        if (jsonRpcRequestsJob == null) {
-                            jsonRpcRequestsJob = collectJsonRpcRequests()
-                        }
-
-                        if (jsonRpcResponsesJob == null) {
-                            jsonRpcResponsesJob = collectJsonRpcResponses()
+                scope.launch {
+                    supervisorScope {
+                        launch(Dispatchers.IO) {
+                            resubscribeToSession()
+                            resubscribeToPendingAuthenticateTopics()
                         }
                     }
-//                }
+
+                    if (jsonRpcRequestsJob == null) {
+                        jsonRpcRequestsJob = collectJsonRpcRequests()
+                    }
+
+                    if (jsonRpcResponsesJob == null) {
+                        jsonRpcResponsesJob = collectJsonRpcResponses()
+                    }
+                }
             }.launchIn(scope)
     }
 
@@ -344,16 +338,7 @@ internal class SignEngine(
             val validSessionTopics = listOfValidSessions.map { it.topic.value }
             jsonRpcInteractor.batchSubscribe(
                 validSessionTopics,
-                onFailure = { error ->
-
-                    wasCalled = false
-                    println("kobe: session resubscribe error: $error")
-
-                    scope.launch { _engineEvent.emit(SDKError(error)) }
-                }, onSuccess = {
-                    wasCalled = false
-                    println("kobe: session resubscribe success: $validSessionTopics")
-                })
+                onFailure = { error -> scope.launch { _engineEvent.emit(SDKError(error)) } })
         } catch (e: Exception) {
             scope.launch { _engineEvent.emit(SDKError(e)) }
         }
