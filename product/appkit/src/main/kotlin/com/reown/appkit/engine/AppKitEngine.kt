@@ -6,7 +6,10 @@ import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import com.reown.android.internal.common.modal.domain.usecase.EnableAnalyticsUseCaseInterface
+import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.signing.eip6492.EIP6492Verifier
+import com.reown.android.internal.common.signing.signature.Signature
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pulse.domain.SendEventInterface
 import com.reown.android.pulse.model.EventType
@@ -43,6 +46,7 @@ import com.reown.appkit.utils.toChain
 import com.reown.appkit.utils.toConnectorType
 import com.reown.appkit.utils.toSession
 import kotlinx.coroutines.launch
+import uniffi.yttrium.Erc6492Client
 
 internal class AppKitEngine(
     private val getSessionUseCase: GetSessionUseCase,
@@ -61,6 +65,7 @@ internal class AppKitEngine(
     internal var siweRequestIdWithMessage: Pair<Long, String>? = null
     private lateinit var coinbaseClient: CoinbaseClient
     internal var shouldDisconnect: Boolean = true
+    private val projectId by lazy { wcKoinApp.koin.get<ProjectId>() }
 
     fun setup(
         init: Modal.Params.Init,
@@ -154,11 +159,16 @@ internal class AppKitEngine(
         when (session) {
             is Session.Coinbase -> {
                 checkEngineInitialization()
-                coinbaseClient.request(request, { onSuccess(SentRequestResult.Coinbase(request.method, request.params, selectedChain.id, it)) }, onError)
+                coinbaseClient.request(
+                    request,
+                    { onSuccess(SentRequestResult.Coinbase(request.method, request.params, selectedChain.id, it)) },
+                    onError
+                )
             }
 
             is Session.WalletConnect ->
-                SignClient.request(request.toSign(session.topic, selectedChain.id),
+                SignClient.request(
+                    request.toSign(session.topic, selectedChain.id),
                     {
                         onSuccess(it.toSentRequest())
                         openWalletApp(session.topic, onError)
@@ -183,6 +193,7 @@ internal class AppKitEngine(
                     onSuccess = { onSuccess() },
                     onError = { onError(it.throwable) }
                 )
+
             else -> onError(UnsupportedOperationException("Extend is only supported for WalletConnect sessions"))
         }
     }
@@ -224,7 +235,8 @@ internal class AppKitEngine(
             }
 
             is Session.WalletConnect -> {
-                SignClient.disconnect(Sign.Params.Disconnect(session.topic),
+                SignClient.disconnect(
+                    Sign.Params.Disconnect(session.topic),
                     onSuccess = {
                         sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.DISCONNECT_SUCCESS))
                         scope.launch {
@@ -314,6 +326,23 @@ internal class AppKitEngine(
                             signature = (response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result
                         )
                         siweRequestIdWithMessage = null
+
+//                        println("kobe: siweResponse: ${siweResponse}")
+
+                        val account = getAccount() ?: throw IllegalStateException("Account is null")
+
+                        EIP6492Verifier.init(account.chain.id, projectId.value)
+
+
+//                        println("kobe: address: ${account.address}")
+//                        println("kobe: signature: ${siweResponse.signature}")
+
+                        EIP6492Verifier.verify6492(
+                            originalMessage = siweResponse.message,
+                            signature = siweResponse.signature,
+                            address = account.address
+                        ).also { println("kobe: 6492 verified: $it") }
+
                         delegate.onSIWEAuthenticationResponse(siweResponse)
                     } else if (response.result is Sign.Model.JsonRpcResponse.JsonRpcError) {
                         val siweResponse = Modal.Model.SIWEAuthenticateResponse.Error(
@@ -354,7 +383,13 @@ internal class AppKitEngine(
 
     fun registerCoinbaseLauncher(activity: ComponentActivity) {
         if (::coinbaseClient.isInitialized) {
-            coinbaseClient.setLauncher(activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result -> result.data?.data?.let { coinbaseClient.handleResponse(it) } })
+            coinbaseClient.setLauncher(activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                result.data?.data?.let {
+                    coinbaseClient.handleResponse(
+                        it
+                    )
+                }
+            })
         }
     }
 

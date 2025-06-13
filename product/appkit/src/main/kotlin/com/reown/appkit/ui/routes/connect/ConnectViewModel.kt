@@ -102,13 +102,13 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
             val account = appKitEngine.getAccount() ?: throw IllegalStateException("Account is null")
             val issuer = "did:pkh:${account.chain.id}:${account.address}"
             val siweMessage = appKitEngine.formatSIWEMessage(AppKit.authPayloadParams!!, issuer)
-            val msg = siweMessage.encodeToByteArray().joinToString(separator = "", prefix = "0x") { eachByte -> "%02x".format(eachByte) }
+            val msg = "test message" //siweMessage.encodeToByteArray().joinToString(separator = "", prefix = "0x") { eachByte -> "%02x".format(eachByte) }
             val body = "[\"$msg\", \"${account.address}\"]"
             appKitEngine.request(
                 request = Request("personal_sign", body),
                 onSuccess = { sendRequest ->
                     logger.log("SIWE sent successfully")
-                    appKitEngine.siweRequestIdWithMessage = Pair((sendRequest as SentRequestResult.WalletConnect).requestId, siweMessage)
+                    appKitEngine.siweRequestIdWithMessage = Pair((sendRequest as SentRequestResult.WalletConnect).requestId, msg)
                 },
                 onError = {
                     if (it !is AppKitEngine.RedirectMissingThrowable) {
