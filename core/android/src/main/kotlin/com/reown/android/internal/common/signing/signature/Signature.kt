@@ -7,6 +7,7 @@ import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.signing.cacao.guaranteeNoHexPrefix
 import com.reown.android.internal.common.signing.eip1271.EIP1271Verifier
 import com.reown.android.internal.common.signing.eip191.EIP191Verifier
+import com.reown.android.internal.common.signing.eip6492.EIP6492Verifier
 import com.reown.util.bytesToHex
 import com.reown.util.hexToBytes
 import com.reown.utils.HexPrefix
@@ -16,25 +17,47 @@ import org.web3j.crypto.Sign
 
 internal fun Sign.SignatureData.toSignature(): Signature = Signature(v, r, s)
 
-fun Signature.toCacaoSignature(): String = String.HexPrefix + r.bytesToHex() + s.bytesToHex() + v.bytesToHex()
+fun Signature.toHexSignature(): String = String.HexPrefix + r.bytesToHex() + s.bytesToHex() + v.bytesToHex()
 
 @JvmSynthetic
 internal fun Signature.toSignatureData(): Sign.SignatureData = Sign.SignatureData(v, r, s)
 
+/**
+ * Verifies a signature using the appropriate method based on the signature type.
+ * For both EIP191 and EIP1271 signatures, if standard verification fails,
+ * falls back to ERC-6492 verification for smart contract wallets.
+ *
+ * ERC-6492 allows verification of signatures from contracts that are not yet deployed
+ * or deployed contracts that may use different signature validation logic.
+ */
 @JvmSynthetic
-internal fun Signature.verify(originalMessage: String, address: String, type: String, projectId: ProjectId): Boolean = when (type) {
-    SignatureType.EIP191.header -> EIP191Verifier.verify(this, originalMessage, address)
-    SignatureType.EIP1271.header -> EIP1271Verifier.verify(this, originalMessage, address, projectId.value)
-    else -> throw RuntimeException("Invalid signature type")
-}
+internal fun Signature.verify(originalMessage: String, address: String, chainId: String, type: String, projectId: ProjectId): Boolean {
+    EIP6492Verifier.init(chainId, projectId.value)
+    return when (type) {
+        SignatureType.EIP191.header -> {
+            val isVerified = EIP191Verifier.verify(this, originalMessage, address)
+            println("kobe: 191 $isVerified")
+            if (!isVerified) {
+                val signature = this.toHexSignature()//.removePrefix("0x")
+                EIP6492Verifier.verify6492(originalMessage, address, signature).also { println("kobe: 6492 $it") }
+            } else {
+                true
+            }
+        }
 
-@JvmSynthetic
-internal fun Signature.verifyHexMessage(hexMessage: String, address: String, type: String, projectId: ProjectId): Boolean = when (type) {
-    SignatureType.EIP191.header -> EIP191Verifier.verifyHex(this, hexMessage, address)
-    SignatureType.EIP1271.header -> EIP1271Verifier.verifyHex(this, hexMessage, address, projectId.value)
-    else -> throw RuntimeException("Invalid signature type")
-}
+        SignatureType.EIP1271.header -> {
+            val isVerified = EIP1271Verifier.verify(this, originalMessage, address, projectId.value)
+            if (!isVerified) {
+                val signature = this.toHexSignature()//.removePrefix("0x")
+                EIP6492Verifier.verify6492(originalMessage, address, signature)
+            } else {
+                true
+            }
+        }
 
+        else -> throw RuntimeException("Invalid signature type")
+    }
+}
 
 data class Signature(val v: ByteArray, val r: ByteArray, val s: ByteArray) {
     companion object {
