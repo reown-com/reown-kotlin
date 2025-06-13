@@ -359,7 +359,6 @@ abstract class BaseRelayClient : RelayInterface {
                 if (e !is CancellationException) {
                     onFailure(e)
                 }
-                cancelJobIfActive()
             }
         }
     }
