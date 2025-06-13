@@ -1,6 +1,5 @@
 package com.reown.foundation.network
 
-import com.tinder.scarlet.WebSocket
 import com.reown.foundation.common.model.SubscriptionId
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
@@ -13,11 +12,11 @@ import com.reown.foundation.network.model.RelayDTO
 import com.reown.foundation.util.Logger
 import com.reown.foundation.util.scope
 import com.reown.util.generateClientToServerId
+import com.tinder.scarlet.WebSocket
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,11 +36,8 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import org.koin.core.KoinApplication
-import java.util.concurrent.ConcurrentLinkedQueue
 
 sealed class ConnectionState {
     data object Open : ConnectionState()
@@ -362,6 +358,7 @@ abstract class BaseRelayClient : RelayInterface {
                 if (e !is CancellationException) {
                     onFailure(e)
                 }
+                cancelJobIfActive()
             }
         }
     }
