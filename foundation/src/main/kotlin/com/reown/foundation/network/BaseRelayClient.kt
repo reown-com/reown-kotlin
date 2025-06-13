@@ -12,11 +12,12 @@ import com.reown.foundation.network.model.RelayDTO
 import com.reown.foundation.util.Logger
 import com.reown.foundation.util.scope
 import com.reown.util.generateClientToServerId
-import com.tinder.scarlet.WebSocket
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
