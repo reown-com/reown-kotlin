@@ -78,7 +78,13 @@ abstract class BaseRelayClient : RelayInterface {
                 relayService.observeUnsubscribeAcknowledgement(),
                 relayService.observeUnsubscribeError()
             )
-                .catch { exception -> logger.error(exception) }
+                .catch { exception ->
+                    println("kobe: Relay Result Error: $exception")
+                    logger.error(exception)
+                }
+                .onEach {
+                    println("kobe: Relay Result: $it")
+                }
                 .collect { result ->
                     if (isLoggingEnabled) {
                         println("Result: $result; timestamp: ${System.currentTimeMillis()}")
@@ -100,7 +106,8 @@ abstract class BaseRelayClient : RelayInterface {
                 }
             }
             .map { event ->
-                logger.log("Event: $event")
+//                logger.log("Event: $event")
+                println("kobe: Relay Event: $event")
                 event.toRelayEvent()
             }
             .shareIn(scope, SharingStarted.Lazily, REPLAY)
@@ -123,9 +130,21 @@ abstract class BaseRelayClient : RelayInterface {
         connectAndCallRelay(
             onConnected = {
                 with(params) {
-                    val publishParams = RelayDTO.Publish.Request.Params(Topic(topic), message, Ttl(ttl), tag, prompt, correlationId, rpcMethods, chainId, txHashes, contractAddresses)
+                    val publishParams = RelayDTO.Publish.Request.Params(
+                        Topic(topic),
+                        message,
+                        Ttl(ttl),
+                        tag,
+                        prompt,
+                        correlationId,
+                        rpcMethods,
+                        chainId,
+                        txHashes,
+                        contractAddresses
+                    )
                     val publishRequest = RelayDTO.Publish.Request(id = id ?: generateClientToServerId(), params = publishParams)
                     observePublishResult(publishRequest.id, onResult)
+                    println("kobe: PublishRequest: $publishRequest")
                     relayService.publishRequest(publishRequest)
                 }
             },
@@ -141,6 +160,7 @@ abstract class BaseRelayClient : RelayInterface {
                         .filterIsInstance<RelayDTO.Publish.Result>()
                         .filter { relayResult -> relayResult.id == id }
                         .first { publishResult ->
+                            println("kobe: PublishResult: $publishResult")
                             when (publishResult) {
                                 is RelayDTO.Publish.Result.Acknowledgement -> onResult(Result.success(publishResult.toRelay()))
                                 is RelayDTO.Publish.Result.JsonRpcError -> onResult(Result.failure(Throwable(publishResult.error.errorMessage)))
@@ -162,7 +182,8 @@ abstract class BaseRelayClient : RelayInterface {
     override fun subscribe(topic: String, id: Long?, onResult: (Result<Relay.Model.Call.Subscribe.Acknowledgement>) -> Unit) {
         connectAndCallRelay(
             onConnected = {
-                val subscribeRequest = RelayDTO.Subscribe.Request(id = id ?: generateClientToServerId(), params = RelayDTO.Subscribe.Request.Params(Topic(topic)))
+                val subscribeRequest =
+                    RelayDTO.Subscribe.Request(id = id ?: generateClientToServerId(), params = RelayDTO.Subscribe.Request.Params(Topic(topic)))
                 if (isLoggingEnabled) {
                     logger.log("Sending SubscribeRequest: $subscribeRequest;  timestamp: ${System.currentTimeMillis()}")
                 }
@@ -208,31 +229,41 @@ abstract class BaseRelayClient : RelayInterface {
             onConnected = {
                 if (!unAckedTopics.containsAll(topics)) {
                     unAckedTopics.addAll(topics)
-                    val batchSubscribeRequest = RelayDTO.BatchSubscribe.Request(id = id ?: generateClientToServerId(), params = RelayDTO.BatchSubscribe.Request.Params(topics))
+                    val batchSubscribeRequest = RelayDTO.BatchSubscribe.Request(
+                        id = id ?: generateClientToServerId(),
+                        params = RelayDTO.BatchSubscribe.Request.Params(topics)
+                    )
                     observeBatchSubscribeResult(batchSubscribeRequest.id, topics, onResult)
+                    println("kobe: BatchSubscribeRequest: $batchSubscribeRequest")
                     relayService.batchSubscribeRequest(batchSubscribeRequest)
+                } else {
+                    println("kobe BatchSubscribeRequest ALREADY")
                 }
             },
             onFailure = { onResult(Result.failure(it)) }
         )
     }
 
-    private fun observeBatchSubscribeResult(id: Long, topics: List<String>, onResult: (Result<Relay.Model.Call.BatchSubscribe.Acknowledgement>) -> Unit) {
+    private fun observeBatchSubscribeResult(
+        id: Long,
+        topics: List<String>,
+        onResult: (Result<Relay.Model.Call.BatchSubscribe.Acknowledgement>) -> Unit
+    ) {
         scope.launch {
             try {
-                withTimeout(RESULT_TIMEOUT) {
-                    resultState
-                        .filterIsInstance<RelayDTO.BatchSubscribe.Result>()
-                        .onEach { if (unAckedTopics.isNotEmpty()) unAckedTopics.removeAll(topics) }
-                        .filter { relayResult -> relayResult.id == id }
-                        .first { batchSubscribeResult ->
-                            when (batchSubscribeResult) {
-                                is RelayDTO.BatchSubscribe.Result.Acknowledgement -> onResult(Result.success(batchSubscribeResult.toRelay()))
-                                is RelayDTO.BatchSubscribe.Result.JsonRpcError -> onResult(Result.failure(Throwable(batchSubscribeResult.error.errorMessage)))
-                            }
-                            true
+//                withTimeout(RESULT_TIMEOUT) {
+                resultState
+                    .filterIsInstance<RelayDTO.BatchSubscribe.Result>()
+                    .onEach { if (unAckedTopics.isNotEmpty()) unAckedTopics.removeAll(topics) }
+                    .filter { relayResult -> relayResult.id == id }
+                    .first { batchSubscribeResult ->
+                        when (batchSubscribeResult) {
+                            is RelayDTO.BatchSubscribe.Result.Acknowledgement -> onResult(Result.success(batchSubscribeResult.toRelay()))
+                            is RelayDTO.BatchSubscribe.Result.JsonRpcError -> onResult(Result.failure(Throwable(batchSubscribeResult.error.errorMessage)))
                         }
-                }
+                        true
+                    }
+//                }
             } catch (e: TimeoutCancellationException) {
                 onResult(Result.failure(e))
                 cancelJobIfActive()
@@ -291,9 +322,20 @@ abstract class BaseRelayClient : RelayInterface {
 
     private fun connectAndCallRelay(onConnected: () -> Unit, onFailure: (Throwable) -> Unit) {
         when {
-            shouldConnect() -> connect(onConnected, onFailure)
-            isConnecting -> awaitConnection(onConnected, onFailure)
-            connectionState.value == ConnectionState.Open -> onConnected()
+            shouldConnect() -> {
+                println("kobe: should connect")
+                connect(onConnected, onFailure)
+            }
+
+            isConnecting -> {
+                println("kobe: is connecting")
+                awaitConnection(onConnected, onFailure)
+            }
+
+            connectionState.value == ConnectionState.Open -> {
+                println("kobe: on connected")
+                onConnected()
+            }
         }
     }
 
@@ -304,6 +346,7 @@ abstract class BaseRelayClient : RelayInterface {
         awaitConnectionWithRetry(
             onConnected = {
                 reset()
+                println("kobe: CONNECT onConnected")
                 onConnected()
             },
             onFailure = { error ->

@@ -29,12 +29,14 @@ abstract class BaseClientIdJwtRepository : ClientIdJwtRepository {
         val subject = generateSubject()
         val (publicKey, privateKey) = getKeyPair()
 
-        val issuer = encodeEd25519DidKey(publicKey.hexToBytes())
-        val clientId = issuer.split(":").last()
+//        val issuer = encodeEd25519DidKey(publicKey.hexToBytes())
+//        println("kobe: issuer: $issuer")
+        val clientId = "z6MkrffQNr9bPchkWqPMtTUGD4AxwMPyQbc55p8tvfc6P7ch"//issuer.split(":").last()
+
         getIssuerClientId(clientId)
         // ClientId Did Jwt have issuedAt as seconds
         val (issuedAt, expiration) = jwtIatAndExp(timeunit = TimeUnit.SECONDS, expirySourceDuration = 1, expiryTimeUnit = TimeUnit.DAYS)
-        val payload = IrnJwtClaims(issuer, subject, serverUrl, issuedAt, expiration)
+        val payload = IrnJwtClaims("did:key:z6MkrffQNr9bPchkWqPMtTUGD4AxwMPyQbc55p8tvfc6P7ch", subject, serverUrl, issuedAt, expiration)
         val data = encodeData(JwtHeader.EdDSA.encoded, payload).toByteArray()
         val signature = signJwt(PrivateKey(privateKey), data).getOrThrow()
 
