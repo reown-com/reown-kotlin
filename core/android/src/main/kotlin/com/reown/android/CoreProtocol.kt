@@ -139,7 +139,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         keyServerUrl: String?
     ) {
         val packageName: String = application.packageName
-        val relayServerUrl = if (serverUrl.isNullOrEmpty()) "wss://staging-relay.walletconnect.com?projectId=$projectId" else serverUrl
+        val relayServerUrl = if (serverUrl.isNullOrEmpty()) "wss://relay.walletconnect.org?projectId=$projectId" else serverUrl
 
         with(koinApp) {
             androidContext(application)
