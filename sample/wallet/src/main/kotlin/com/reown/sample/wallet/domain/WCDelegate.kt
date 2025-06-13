@@ -41,8 +41,6 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     }
 
     override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {
-        println("kobe: CONNECTION STATE: $state")
-
         scope.launch {
             _connectionState.emit(state)
         }
