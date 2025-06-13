@@ -8,7 +8,10 @@ import com.reown.android.internal.common.di.KEY_CLIENT_ID
 import com.reown.android.utils.strippedUrl
 import com.reown.foundation.crypto.data.repository.ClientIdJwtRepository
 
-internal class GenerateJwtStoreClientIdUseCase(private val clientIdJwtRepository: ClientIdJwtRepository, private val sharedPreferences: SharedPreferences) {
+internal class GenerateJwtStoreClientIdUseCase(
+    private val clientIdJwtRepository: ClientIdJwtRepository,
+    private val sharedPreferences: SharedPreferences
+) {
 
     operator fun invoke(relayUrl: String): String =
         clientIdJwtRepository.generateJWT(relayUrl.strippedUrl()) { clientId ->

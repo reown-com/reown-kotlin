@@ -293,7 +293,12 @@ internal class SignEngine(
             }.launchIn(scope)
 
     private fun collectInternalErrors(): Job =
-        merge(jsonRpcInteractor.internalErrors, linkModeJsonRpcInteractor.internalErrors, pairingController.findWrongMethodsFlow, sessionRequestUseCase.errors)
+        merge(
+            jsonRpcInteractor.internalErrors,
+            linkModeJsonRpcInteractor.internalErrors,
+            pairingController.findWrongMethodsFlow,
+            sessionRequestUseCase.errors
+        )
             .onEach { exception -> _engineEvent.emit(exception) }
             .launchIn(scope)
 
@@ -331,7 +336,9 @@ internal class SignEngine(
                 }
 
             val validSessionTopics = listOfValidSessions.map { it.topic.value }
-            jsonRpcInteractor.batchSubscribe(validSessionTopics) { error -> scope.launch { _engineEvent.emit(SDKError(error)) } }
+            jsonRpcInteractor.batchSubscribe(
+                validSessionTopics,
+                onFailure = { error -> scope.launch { _engineEvent.emit(SDKError(error)) } })
         } catch (e: Exception) {
             scope.launch { _engineEvent.emit(SDKError(e)) }
         }
@@ -366,7 +373,14 @@ internal class SignEngine(
     private fun propagatePendingSessionRequestsQueue() = scope.launch {
         try {
             getPendingSessionRequests()
-                .map { pendingRequest -> pendingRequest.toSessionRequest(metadataStorageRepository.getByTopicAndType(pendingRequest.topic, AppMetaDataType.PEER)) }
+                .map { pendingRequest ->
+                    pendingRequest.toSessionRequest(
+                        metadataStorageRepository.getByTopicAndType(
+                            pendingRequest.topic,
+                            AppMetaDataType.PEER
+                        )
+                    )
+                }
                 .filter { sessionRequest -> sessionRequest.expiry?.isExpired() == false }
                 .filter { sessionRequest ->
                     try {
@@ -441,10 +455,17 @@ internal class SignEngine(
         pairingController.storedPairingFlow
             .onEach { (pairingTopic, trace) ->
                 try {
-                    val pendingAuthenticateRequests = getPendingAuthenticateRequestUseCase.getPendingAuthenticateRequests().filter { request -> request.topic == pairingTopic }
+                    val pendingAuthenticateRequests =
+                        getPendingAuthenticateRequestUseCase.getPendingAuthenticateRequests().filter { request -> request.topic == pairingTopic }
                     if (pendingAuthenticateRequests.isNotEmpty()) {
                         pendingAuthenticateRequests.forEach { request ->
-                            val context = verifyContextStorageRepository.get(request.id) ?: VerifyContext(request.id, String.Empty, Validation.UNKNOWN, String.Empty, null)
+                            val context = verifyContextStorageRepository.get(request.id) ?: VerifyContext(
+                                request.id,
+                                String.Empty,
+                                Validation.UNKNOWN,
+                                String.Empty,
+                                null
+                            )
                             val sessionAuthenticateEvent = EngineDO.SessionAuthenticateEvent(
                                 request.id,
                                 request.topic.value,
@@ -459,11 +480,22 @@ internal class SignEngine(
                     } else {
                         val proposal = proposalStorageRepository.getProposalByTopic(pairingTopic.value)
                         if (proposal.expiry?.isExpired() == true) {
-                            insertEventUseCase(Props(type = EventType.Error.PROPOSAL_EXPIRED, properties = Properties(trace = trace, topic = pairingTopic.value)))
+                            insertEventUseCase(
+                                Props(
+                                    type = EventType.Error.PROPOSAL_EXPIRED,
+                                    properties = Properties(trace = trace, topic = pairingTopic.value)
+                                )
+                            )
                             proposalStorageRepository.deleteProposal(proposal.proposerPublicKey)
                             scope.launch { _engineEvent.emit(proposal.toExpiredProposal()) }
                         } else {
-                            val context = verifyContextStorageRepository.get(proposal.requestId) ?: VerifyContext(proposal.requestId, String.Empty, Validation.UNKNOWN, String.Empty, null)
+                            val context = verifyContextStorageRepository.get(proposal.requestId) ?: VerifyContext(
+                                proposal.requestId,
+                                String.Empty,
+                                Validation.UNKNOWN,
+                                String.Empty,
+                                null
+                            )
                             val sessionProposalEvent = EngineDO.SessionProposalEvent(proposal = proposal.toEngineDO(), context = context.toEngineDO())
                             logger.log("Emitting session proposal from active pairing: $sessionProposalEvent")
                             trace.add(Trace.Pairing.EMIT_SESSION_PROPOSAL)
