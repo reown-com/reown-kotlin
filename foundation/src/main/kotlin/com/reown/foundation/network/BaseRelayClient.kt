@@ -6,7 +6,6 @@ import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.common.toRelay
 import com.reown.foundation.common.toRelayEvent
-import com.reown.foundation.di.FoundationDITags
 import com.reown.foundation.di.foundationCommonModule
 import com.reown.foundation.network.data.service.RelayService
 import com.reown.foundation.network.model.Relay
@@ -14,11 +13,11 @@ import com.reown.foundation.network.model.RelayDTO
 import com.reown.foundation.util.Logger
 import com.reown.foundation.util.scope
 import com.reown.util.generateClientToServerId
-import com.squareup.moshi.Moshi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,9 +37,11 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import org.koin.core.KoinApplication
-import org.koin.core.qualifier.named
+import java.util.concurrent.ConcurrentLinkedQueue
 
 sealed class ConnectionState {
     data object Open : ConnectionState()
@@ -78,13 +79,7 @@ abstract class BaseRelayClient : RelayInterface {
                 relayService.observeUnsubscribeAcknowledgement(),
                 relayService.observeUnsubscribeError()
             )
-                .catch { exception ->
-                    println("kobe: Relay Result Error: $exception")
-                    logger.error(exception)
-                }
-                .onEach {
-                    println("kobe: Relay Result: $it")
-                }
+                .catch { exception -> logger.error(exception) }
                 .collect { result ->
                     if (isLoggingEnabled) {
                         println("Result: $result; timestamp: ${System.currentTimeMillis()}")
@@ -106,8 +101,7 @@ abstract class BaseRelayClient : RelayInterface {
                 }
             }
             .map { event ->
-//                logger.log("Event: $event")
-                println("kobe: Relay Event: $event")
+                logger.log("Event: $event")
                 event.toRelayEvent()
             }
             .shareIn(scope, SharingStarted.Lazily, REPLAY)
@@ -144,7 +138,6 @@ abstract class BaseRelayClient : RelayInterface {
                     )
                     val publishRequest = RelayDTO.Publish.Request(id = id ?: generateClientToServerId(), params = publishParams)
                     observePublishResult(publishRequest.id, onResult)
-                    println("kobe: PublishRequest: $publishRequest")
                     relayService.publishRequest(publishRequest)
                 }
             },
@@ -160,7 +153,6 @@ abstract class BaseRelayClient : RelayInterface {
                         .filterIsInstance<RelayDTO.Publish.Result>()
                         .filter { relayResult -> relayResult.id == id }
                         .first { publishResult ->
-                            println("kobe: PublishResult: $publishResult")
                             when (publishResult) {
                                 is RelayDTO.Publish.Result.Acknowledgement -> onResult(Result.success(publishResult.toRelay()))
                                 is RelayDTO.Publish.Result.JsonRpcError -> onResult(Result.failure(Throwable(publishResult.error.errorMessage)))
@@ -229,15 +221,13 @@ abstract class BaseRelayClient : RelayInterface {
             onConnected = {
                 if (!unAckedTopics.containsAll(topics)) {
                     unAckedTopics.addAll(topics)
+
                     val batchSubscribeRequest = RelayDTO.BatchSubscribe.Request(
                         id = id ?: generateClientToServerId(),
                         params = RelayDTO.BatchSubscribe.Request.Params(topics)
                     )
                     observeBatchSubscribeResult(batchSubscribeRequest.id, topics, onResult)
-                    println("kobe: BatchSubscribeRequest: $batchSubscribeRequest")
                     relayService.batchSubscribeRequest(batchSubscribeRequest)
-                } else {
-                    println("kobe BatchSubscribeRequest ALREADY")
                 }
             },
             onFailure = { onResult(Result.failure(it)) }
@@ -251,19 +241,23 @@ abstract class BaseRelayClient : RelayInterface {
     ) {
         scope.launch {
             try {
-//                withTimeout(RESULT_TIMEOUT) {
-                resultState
-                    .filterIsInstance<RelayDTO.BatchSubscribe.Result>()
-                    .onEach { if (unAckedTopics.isNotEmpty()) unAckedTopics.removeAll(topics) }
-                    .filter { relayResult -> relayResult.id == id }
-                    .first { batchSubscribeResult ->
-                        when (batchSubscribeResult) {
-                            is RelayDTO.BatchSubscribe.Result.Acknowledgement -> onResult(Result.success(batchSubscribeResult.toRelay()))
-                            is RelayDTO.BatchSubscribe.Result.JsonRpcError -> onResult(Result.failure(Throwable(batchSubscribeResult.error.errorMessage)))
+                withTimeout(RESULT_TIMEOUT) {
+                    resultState
+                        .filterIsInstance<RelayDTO.BatchSubscribe.Result>()
+                        .onEach {
+                            if (unAckedTopics.isNotEmpty()) {
+                                unAckedTopics.removeAll(topics)
+                            }
                         }
-                        true
-                    }
-//                }
+                        .filter { relayResult -> relayResult.id == id }
+                        .first { batchSubscribeResult ->
+                            when (batchSubscribeResult) {
+                                is RelayDTO.BatchSubscribe.Result.Acknowledgement -> onResult(Result.success(batchSubscribeResult.toRelay()))
+                                is RelayDTO.BatchSubscribe.Result.JsonRpcError -> onResult(Result.failure(Throwable(batchSubscribeResult.error.errorMessage)))
+                            }
+                            true
+                        }
+                }
             } catch (e: TimeoutCancellationException) {
                 onResult(Result.failure(e))
                 cancelJobIfActive()
@@ -323,17 +317,10 @@ abstract class BaseRelayClient : RelayInterface {
     private fun connectAndCallRelay(onConnected: () -> Unit, onFailure: (Throwable) -> Unit) {
         when {
             shouldConnect() -> {
-                println("kobe: should connect")
                 connect(onConnected, onFailure)
             }
 
-            isConnecting -> {
-                println("kobe: is connecting")
-                awaitConnection(onConnected, onFailure)
-            }
-
             connectionState.value == ConnectionState.Open -> {
-                println("kobe: on connected")
                 onConnected()
             }
         }
@@ -342,11 +329,9 @@ abstract class BaseRelayClient : RelayInterface {
     private fun shouldConnect() = !isConnecting && (connectionState.value is ConnectionState.Closed || connectionState.value is ConnectionState.Idle)
     private fun connect(onConnected: () -> Unit, onFailure: (Throwable) -> Unit) {
         isConnecting = true
-        connectionLifecycle.reconnect()
-        awaitConnectionWithRetry(
+        connectWithRetry(
             onConnected = {
                 reset()
-                println("kobe: CONNECT onConnected")
                 onConnected()
             },
             onFailure = { error ->
@@ -356,16 +341,16 @@ abstract class BaseRelayClient : RelayInterface {
         )
     }
 
-    private fun awaitConnectionWithRetry(onConnected: () -> Unit, onFailure: (Throwable) -> Unit = {}) {
+    private fun connectWithRetry(onConnected: () -> Unit, onFailure: (Throwable) -> Unit = {}) {
         scope.launch {
             try {
                 withTimeout(CONNECTION_TIMEOUT) {
                     connectionState
-                        .filter { state -> state != ConnectionState.Idle }
                         .take(4)
-                        .onEach { state -> handleRetries(state, onFailure) }
+                        .onEach { state -> handleTries(state, onFailure) }
                         .filter { state -> state == ConnectionState.Open }
                         .firstOrNull {
+                            delay(500L)
                             onConnected()
                             true
                         }
@@ -381,31 +366,8 @@ abstract class BaseRelayClient : RelayInterface {
         }
     }
 
-    private fun awaitConnection(onConnected: () -> Unit, onFailure: (Throwable) -> Unit) {
-        scope.launch {
-            try {
-                withTimeout(CONNECTION_TIMEOUT) {
-                    connectionState
-                        .filter { state -> state is ConnectionState.Open }
-                        .firstOrNull {
-                            onConnected()
-                            true
-                        }
-                }
-            } catch (e: TimeoutCancellationException) {
-                onFailure(e)
-                cancelJobIfActive()
-            } catch (e: Exception) {
-                if (e !is CancellationException) {
-                    onFailure(e)
-                }
-                cancelJobIfActive()
-            }
-        }
-    }
-
-    private fun CoroutineScope.handleRetries(state: ConnectionState, onFailure: (Throwable) -> Unit) {
-        if (state is ConnectionState.Closed) {
+    private fun CoroutineScope.handleTries(state: ConnectionState, onFailure: (Throwable) -> Unit) {
+        if (state is ConnectionState.Closed || state is ConnectionState.Idle) {
             if (retryCount == MAX_RETRIES) {
                 onFailure(Throwable("Connectivity error, please check your Internet connection and try again"))
                 cancelJobIfActive()
