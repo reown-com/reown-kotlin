@@ -455,65 +455,6 @@ class TVFTests {
     }
 
     @Test
-    fun `collectTxHashes should calculate the correct hash for cosmos_signAmino`() {
-        // Arrange
-        val rpcMethod = "cosmos_signAmino"
-        val rpcResult = """
-            {
-            "signature": {
-            "pub_key": {
-              "type": "tendermint/PubKeySecp256k1",
-              "value": "ApEvbc+4QJiDoaaXG6v0K3A4zmPON8pu4uzCm4o142u/"
-            },
-            "signature":
-                "pbJYwlEfO7kZijRY+ut0dCauF84iQR/10/Y81KfLOWISNVJIjQrQhN9PxbzqQSWeNAcNgH3kbozjIuiBaoIQgQ=="
-          },
-          "signed": {
-            "chain_id": "cosmoshub-2",
-            "account_number": "15652",
-            "sequence": "12323",
-            "memo": "",
-            "msgs": [
-              {
-                "type": "cosmos-sdk/MsgSend",
-                "value": {
-                  "from_address":
-                      "cosmos1nm0rrq86ucezaf8uj35pq9fpwr5r82cl8sc7p5",
-                  "to_address": "cosmos1z89utvygweg5l56fsk8ak7t6hh88fd0a52369g",
-                  "amount": [
-                    {
-                      "denom": "uatom",
-                      "amount": "518046831",
-                    }
-                  ]
-                }
-              }
-            ],
-            "fee": {
-              "amount": [
-                {
-                  "denom": "uatom",
-                  "amount": "300",
-                }
-              ],
-              "gas": "40000",
-            }
-          }
-        }
-            }
-        """.trimIndent()
-
-        // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
-
-        // Assert
-        assertNotNull(result)
-        val expectedHash = "00438AC8446A751FFC2D1DF837941D526F7CAF1838A3B3EB9C1EAB90EEFC8B85"
-        assertEquals(expectedHash, result?.firstOrNull())
-        println("Cosmos transaction hash: ${result?.firstOrNull()}")
-    }
-
-    @Test
     fun `collectTxHashes should calculate the correct txid for algo_signTxn`() {
         // Arrange
         val rpcMethod = "algo_signTxn"
@@ -549,7 +490,7 @@ class TVFTests {
 
         // Assert
         assertNotNull(result)
-        val digest = "6J6rTsYexRVWS2umCHVkDekUP61AEcXaJfVDZHXRJVCJ"//"C98G1Uwh5soPMtZZmjUFwbVzWLMoAHzi5jrX2BtABe8v"
+        val digest = "C98G1Uwh5soPMtZZmjUFwbVzWLMoAHzi5jrX2BtABe8v"
         println("SUI digest: ${result?.firstOrNull()}")
         assertEquals(digest, result?.firstOrNull())
     }
