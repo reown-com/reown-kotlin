@@ -152,10 +152,6 @@ internal class TVF(private val moshi: Moshi) {
                         }
                 }
 
-                POLKADOT_SIGN_TRANSACTION -> {
-                    listOf("")
-                }
-
                 else -> null
             }
         } catch (e: Exception) {
