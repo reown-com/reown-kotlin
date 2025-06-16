@@ -318,43 +318,39 @@ internal class AppKitEngine(
             }
 
             override fun onSessionRequestResponse(response: Sign.Model.SessionRequestResponse) {
-                if (response.result.id == siweRequestIdWithMessage?.first) {
-                    if (response.result is Sign.Model.JsonRpcResponse.JsonRpcResult) {
-                        val siweResponse = Modal.Model.SIWEAuthenticateResponse.Result(
-                            id = response.result.id,
-                            message = siweRequestIdWithMessage!!.second,
-                            signature = (response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result
-                        )
-                        siweRequestIdWithMessage = null
+                try {
 
-//                        println("kobe: siweResponse: ${siweResponse}")
+                    if (response.result.id == siweRequestIdWithMessage?.first) {
+                        if (response.result is Sign.Model.JsonRpcResponse.JsonRpcResult) {
+                            val siweResponse = Modal.Model.SIWEAuthenticateResponse.Result(
+                                id = response.result.id,
+                                message = siweRequestIdWithMessage!!.second,
+                                signature = (response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result
+                            )
+                            siweRequestIdWithMessage = null
+                            val account = getAccount() ?: throw IllegalStateException("Account is null")
+                            EIP6492Verifier.init(account.chain.id, projectId.value)
+                            val isValid = EIP6492Verifier.verify6492(
+                                originalMessage = siweResponse.message,
+                                signature = siweResponse.signature,
+                                address = account.address
+                            )
 
-                        val account = getAccount() ?: throw IllegalStateException("Account is null")
+                            if (isValid) {
+                                delegate.onSIWEAuthenticationResponse(siweResponse)
+                            } else {
+                                emitSIWEErrorResponse(response, delegate)
+                            }
 
-                        EIP6492Verifier.init(account.chain.id, projectId.value)
-
-
-//                        println("kobe: address: ${account.address}")
-//                        println("kobe: signature: ${siweResponse.signature}")
-
-                        EIP6492Verifier.verify6492(
-                            originalMessage = siweResponse.message,
-                            signature = siweResponse.signature,
-                            address = account.address
-                        ).also { println("kobe: 6492 verified: $it") }
-
-                        delegate.onSIWEAuthenticationResponse(siweResponse)
-                    } else if (response.result is Sign.Model.JsonRpcResponse.JsonRpcError) {
-                        val siweResponse = Modal.Model.SIWEAuthenticateResponse.Error(
-                            id = response.result.id,
-                            message = (response.result as Sign.Model.JsonRpcResponse.JsonRpcError).message,
-                            code = (response.result as Sign.Model.JsonRpcResponse.JsonRpcError).code
-                        )
-                        siweRequestIdWithMessage = null
-                        delegate.onSIWEAuthenticationResponse(siweResponse)
+                        } else if (response.result is Sign.Model.JsonRpcResponse.JsonRpcError) {
+                            emitSIWEErrorResponse(response, delegate)
+                        }
+                    } else {
+                        delegate.onSessionRequestResponse(response.toModal())
                     }
-                } else {
-                    delegate.onSessionRequestResponse(response.toModal())
+                } catch (e: Exception) {
+                    logger.error(e)
+                    emitSIWEErrorResponse(response, delegate)
                 }
             }
 
@@ -379,6 +375,16 @@ internal class AppKitEngine(
             }
         }
         SignClient.setDappDelegate(signDelegate)
+    }
+
+    private fun emitSIWEErrorResponse(response: Sign.Model.SessionRequestResponse, delegate: AppKitDelegate) {
+        val siweResponse = Modal.Model.SIWEAuthenticateResponse.Error(
+            id = response.result.id,
+            message = (response.result as? Sign.Model.JsonRpcResponse.JsonRpcError)?.message ?: "Invalid signature, try again",
+            code = (response.result as? Sign.Model.JsonRpcResponse.JsonRpcError)?.code ?: 1000
+        )
+        siweRequestIdWithMessage = null
+        delegate.onSIWEAuthenticationResponse(siweResponse)
     }
 
     fun registerCoinbaseLauncher(activity: ComponentActivity) {
