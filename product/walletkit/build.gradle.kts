@@ -1,6 +1,3 @@
-import com.android.build.api.dsl.Packaging
-import java.net.URL
-
 plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
@@ -47,12 +44,6 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
-
-//     packaging {
-//        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium.so")
-//        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium.so")
-//        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium.so")
-//    }
 
     kotlinOptions {
         jvmTarget = jvmVersion.toString()
