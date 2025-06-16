@@ -1,9 +1,10 @@
-package com.reown.sample.wallet.domain
-
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.signing.message.MessageSignatureVerifier
 import com.reown.android.utils.cacao.sign
+import com.reown.sample.wallet.BuildConfig
+import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.generateKeys
 import com.reown.util.hexToBytes
 import com.reown.walletkit.utils.CacaoSigner
 import junit.framework.TestCase.assertEquals
@@ -15,7 +16,7 @@ import org.junit.Test
 internal class EthAccountDelegateTest {
 
     @Test
-    fun `can sign messages with generated account`() {
+    fun canSigMessagesWithGeneratedAccount() {
         with(EthAccountDelegate) {
             val (_, privateKey, address) = generateKeys()
             val message = "dummy message"
@@ -23,14 +24,14 @@ internal class EthAccountDelegateTest {
             assertEquals(SignatureType.EIP191, signatureType) // Will fail with other types i.e SignatureType.EIP1271 requires projectId
 
             val signature = CacaoSigner.sign(message, privateKey.hexToBytes(), signatureType)
-            val isValid = MessageSignatureVerifier(ProjectId("dummy projectid")).verify(signature.s, message, address, "eip155:1", signatureType)
+            val isValid = MessageSignatureVerifier(ProjectId(BuildConfig.PROJECT_ID)).verify(signature.s, message, address, "eip155:1", signatureType)
 
             assertTrue(isValid)
         }
     }
 
     @Test
-    fun `cannot verify signatures with another generated account`() {
+    fun cannotVerifySignaturesWithAnotherGeneratedAccount() {
         with(EthAccountDelegate) {
             val (_, privateKey, _) = generateKeys()
             val message = "dummy message"

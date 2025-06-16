@@ -58,7 +58,7 @@ internal class CacaoTest {
     }
 
     @Test
-    @Ignore("Test failing in pipeline")
+//    @Ignore("Test failing in pipeline")
     fun verifyEIP1271Success() {
         val iss = "did:pkh:eip155:1:0x6DF3d14554742D67068BB7294C80107a3c655A56"
         val payload = Cacao.Payload(
@@ -85,30 +85,6 @@ internal class CacaoTest {
 
     @Test
     fun verifyEIP1271Failure() {
-        val iss = "did:pkh:eip155:1:0x2faf83c542b68f1b4cdc0e770e8cb9f567b08f71"
-        val payload = Cacao.Payload(
-            iss = iss,
-            domain = "localhost",
-            aud = "http://localhost:3000/",
-            version = "1",
-            nonce = "1665443015700",
-            iat = "2022-10-10T23:03:35.700Z",
-            nbf = null,
-            exp = "2022-10-11T23:03:35.700Z",
-            statement = null,
-            requestId = null,
-            resources = null
-        )
-
-        val signatureString = "0xdeaddeaddead4095116db01baaf276361efd3a73c28cf8cc28dabefa945b8d536011289ac0a3b048600c1e692ff173ca944246cf7ceb319ac2262d27b395c82b1c"
-        val signature: Cacao.Signature = Cacao.Signature(SignatureType.EIP1271.header, signatureString, payload.toCAIP222Message())
-        val cacao = Cacao(CacaoType.EIP4361.toHeader(), payload, signature)
-        val result: Boolean = cacaoVerifier.verify(cacao)
-        Assert.assertFalse(result)
-    }
-
-    @Test
-    fun verify6492Failure() {
         val iss = "did:pkh:eip155:1:0x2faf83c542b68f1b4cdc0e770e8cb9f567b08f71"
         val payload = Cacao.Payload(
             iss = iss,

@@ -22,39 +22,12 @@ fun Signature.toHexSignature(): String = String.HexPrefix + r.bytesToHex() + s.b
 @JvmSynthetic
 internal fun Signature.toSignatureData(): Sign.SignatureData = Sign.SignatureData(v, r, s)
 
-/**
- * Verifies a signature using the appropriate method based on the signature type.
- * For both EIP191 and EIP1271 signatures, if standard verification fails,
- * falls back to ERC-6492 verification for smart contract wallets.
- *
- * ERC-6492 allows verification of signatures from contracts that are not yet deployed
- * or deployed contracts that may use different signature validation logic.
- */
 @JvmSynthetic
 internal fun Signature.verify(originalMessage: String, address: String, chainId: String, type: String, projectId: ProjectId): Boolean {
     EIP6492Verifier.init(chainId, projectId.value)
     return when (type) {
-        SignatureType.EIP191.header -> {
-            val isVerified = EIP191Verifier.verify(this, originalMessage, address)
-            println("kobe: 191 $isVerified")
-            if (!isVerified) {
-                val signature = this.toHexSignature()//.removePrefix("0x")
-                EIP6492Verifier.verify6492(originalMessage, address, signature).also { println("kobe: 6492 $it") }
-            } else {
-                true
-            }
-        }
-
-        SignatureType.EIP1271.header -> {
-            val isVerified = EIP1271Verifier.verify(this, originalMessage, address, projectId.value)
-            if (!isVerified) {
-                val signature = this.toHexSignature()//.removePrefix("0x")
-                EIP6492Verifier.verify6492(originalMessage, address, signature)
-            } else {
-                true
-            }
-        }
-
+        SignatureType.EIP191.header -> EIP6492Verifier.verify6492(originalMessage, address, this.toHexSignature())
+        SignatureType.EIP1271.header -> EIP6492Verifier.verify6492(originalMessage, address, this.toHexSignature())
         else -> throw RuntimeException("Invalid signature type")
     }
 }
