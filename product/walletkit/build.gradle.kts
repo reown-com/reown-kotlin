@@ -71,9 +71,9 @@ dependencies {
     val yttriumVersion = if (System.getenv("CI") == "true") {
         System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.19-ci"
     } else {
-        "0.9.4"
+        "0.9.22-stacks" //unspecified
     }
-    implementation("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
+    implementation("com.github.reown-com:yttrium:$yttriumVersion")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)

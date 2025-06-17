@@ -27,6 +27,7 @@ import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.reown.walletkit.utils.Stacks
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named
 import timber.log.Timber
+import java.util.Stack
 //import uniffi.uniffi_yttrium.AccountClient
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
@@ -54,6 +56,11 @@ class WalletKitApplication : Application() {
             Firebase.crashlytics.recordException(e)
             println("Solana Keys Error: $e")
         }
+
+        Stacks.init(BuildConfig.PROJECT_ID, applicationContext.packageName)
+
+        println("kobe: wallet: ${Stacks.generateWallet()}")
+        println("kobe: wallet: ${Stacks.getAddress(Stacks.generateWallet(), Stacks.Version.testnetP2SH)}")
 
         SmartAccountEnabler.init(this)
 
