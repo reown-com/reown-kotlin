@@ -117,6 +117,12 @@ val walletMetaData = WalletMetaData(
             methods = listOf("solana_signMessage", "solana_signTransaction", "solana_signAndSendTransaction", "solana_signAllTransactions"),
             events = listOf("accountsChanged", "chainChanged"),
             accounts = listOf(SolanaAccountDelegate.keys.third)
+        ),
+        "stacks" to Wallet.Model.Namespace.Session(
+            chains = listOf(Chain.STACKS_MAINNET.id, Chain.STACKS_TESTNET.id),
+            methods = listOf("stacks_stxTransfer", "stacks_signMessage"),
+            events = listOf("accountsChanged", "chainChanged"),
+            accounts = listOf(SolanaAccountDelegate.keys.third)
         )
     )
 )
