@@ -64,10 +64,10 @@ internal class TVF(private val moshi: Moshi) {
                         ?.let { listOf(it) }
                 }
 
-                STACKS_STX_TRANSFER -> {
+                STX_TRANSFER -> {
                     moshi.adapter(StacksTransactionData::class.java)
                         .fromJson(rpcResult)
-                        ?.txId
+                        ?.txid
                         ?.let { listOf(it) }
                 }
 
@@ -179,7 +179,7 @@ internal class TVF(private val moshi: Moshi) {
         private const val TRON_SIGN_TRANSACTION = "tron_signTransaction"
         private const val HEDERA_SIGN_AND_EXECUTE_TRANSACTION = "hedera_signAndExecuteTransaction"
         private const val HEDERA_EXECUTE_TRANSACTION = "hedera_executeTransaction"
-        private const val STACKS_STX_TRANSFER = "stacks_stxTransfer"
+        private const val STX_TRANSFER = "stx_transferStx"
         private const val SEND_TRANSFER = "sendTransfer"
 
         fun toBase58(bytes: ByteArray): String {
