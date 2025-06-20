@@ -26,9 +26,9 @@ object Stacks {
     fun getAddress(wallet: String, version: String): String = stacksGetAddress(wallet, version)
     fun signMessage(wallet: String, message: String): String = stacksSignMessage(wallet, message)
 
-    suspend fun transferStx(wallet: String, network: String, request: TransferStxRequest): Pair<String, String> {
+    suspend fun transferStx(wallet: String, network: String, recipient: String, amount: String, memo: String): Pair<String, String> {
         check(::client.isInitialized) { "Initialize SuiUtils before using it." }
-        val result = client.transferStx(wallet, network, request)
+        val result = client.transferStx(wallet, network, TransferStxRequest(recipient = recipient, amount = amount.toULong(), memo = memo))
         return Pair(result.txid, result.transaction)
     }
 

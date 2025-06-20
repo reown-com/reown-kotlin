@@ -51,6 +51,7 @@ import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
@@ -283,6 +284,16 @@ class WalletKitActivity : AppCompatActivity() {
                 )
             },
             PaddingModule(size = PaddingModule.Size.LARGE),
+            TextModule(text = "Stacks Menemonic"),
+            TextModule(text =  StacksAccountDelegate.importedWallet) {
+                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+                    ClipData.newPlainText(
+                        "Stacks Menemonic",
+                        StacksAccountDelegate.importedWallet
+                    )
+                )
+            },
+            PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "Client ID"),
             TextModule(text = CoreClient.Push.clientId, id = CoreClient.Push.clientId) {
                 (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("ClientId", CoreClient.Push.clientId))
@@ -314,6 +325,14 @@ class WalletKitActivity : AppCompatActivity() {
                 areRealTimeUpdatesEnabled = false,
                 onValueChanged = { text ->
                     SolanaAccountDelegate.keyPair = text
+                }
+            ),
+            DividerModule(),
+            TextInputModule(
+                text = "Import Stacks Wallet",
+                areRealTimeUpdatesEnabled = false,
+                onValueChanged = { text ->
+                    StacksAccountDelegate.importedWallet = text
                 }
             )
         )

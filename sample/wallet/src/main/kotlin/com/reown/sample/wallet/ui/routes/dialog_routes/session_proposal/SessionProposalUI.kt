@@ -2,6 +2,7 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
 import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
@@ -120,9 +121,9 @@ val walletMetaData = WalletMetaData(
         ),
         "stacks" to Wallet.Model.Namespace.Session(
             chains = listOf(Chain.STACKS_MAINNET.id, Chain.STACKS_TESTNET.id),
-            methods = listOf("stacks_stxTransfer", "stacks_signMessage"),
-            events = listOf("accountsChanged", "chainChanged"),
-            accounts = listOf(SolanaAccountDelegate.keys.third)
+            methods = listOf("stx_transferStx", "stx_signMessage"),
+            events = listOf("stx_accountsChanged", "stx_chainChanged"),
+            accounts = listOf(StacksAccountDelegate.mainnetAddress, StacksAccountDelegate.testnetAddress)
         )
     )
 )

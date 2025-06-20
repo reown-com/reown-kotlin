@@ -37,8 +37,8 @@ object StacksAccountDelegate {
         }
 
     val mainnetAddress: String
-        get() = "${Chain.STACKS_MAINNET}:${Stacks.getAddress(wallet, Stacks.Version.mainnetP2PKH)}"
+        get() = "${Chain.STACKS_MAINNET.id}:${Stacks.getAddress(wallet, Stacks.Version.mainnetP2PKH)}"
 
     val testnetAddress: String
-        get() = "${Chain.STACKS_MAINNET}:${Stacks.getAddress(wallet, Stacks.Version.testnetP2PKH)}"
+        get() = "${Chain.STACKS_TESTNET.id}:${Stacks.getAddress(wallet, Stacks.Version.testnetP2PKH)}"
 } 

@@ -3,11 +3,15 @@ package com.reown.sample.wallet.domain
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
+import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.reown.walletkit.utils.Stacks
 import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
+import org.json.JSONObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -82,31 +86,54 @@ object Signer {
 //            }
 
 //            !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
-                sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
-                sessionRequest.method == ETH_SEND_TRANSACTION -> {
-                    val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
-                    txHash
-                }
-                //Note: Only for testing purposes - it will always fail on Dapp side
-                sessionRequest.chain?.contains(Chains.Info.Eth.chain, true) == true ->
-                    """0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"""
-                //Note: Only for testing purposes - it will always fail on Dapp side
-                sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
-                    """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+            sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
+            sessionRequest.method == STACKS_SIGN_MESSAGE -> {
+                println("kobe: Params: ${sessionRequest.param}")
+                val message = JSONObject(sessionRequest.param).getString("message")
+                println("kobe: Message: $message ; wallet: ${StacksAccountDelegate.wallet}")
+                val signature = Stacks.signMessage(StacksAccountDelegate.wallet, message)
+                println("kobe: Signature: $signature")
 
-                sessionRequest.method == "solana_signAndSendTransaction" ||
-                        sessionRequest.method == "solana_signTransaction" -> {
-                    """{"signature":"2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"}"""
+                """{"signature":"$signature"}""".also { println("kobe: Result: $it") }
+            }
+
+            sessionRequest.method == STACKS_TRANSFER -> {
+                println("kobe: Params: ${sessionRequest.param}")
+                val sender = JSONObject(sessionRequest.param).getString("sender")
+                val amount = JSONObject(sessionRequest.param).getString("amount")
+                val recipient = JSONObject(sessionRequest.param).getString("recipient")
+
+                runBlocking {
+                    val result = Stacks.transferStx(StacksAccountDelegate.wallet, Chain.STACKS_TESTNET.id, recipient, amount, "")
+                    """"txid": ${result.first}, "transaction": ${result.second}"""
                 }
 
-                sessionRequest.method == "solana_signAllTransactions" -> {
-                    """{"transactions":["2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"]}"""
-                }
-                //Note: Only for testing purposes - it will always fail on Dapp side
-                sessionRequest.chain?.contains(Chains.Info.Solana.chain, true) == true ->
-                    """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+            }
 
-                else -> throw Exception("Unsupported Method")
+            sessionRequest.method == ETH_SEND_TRANSACTION -> {
+                val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
+                txHash
+            }
+            //Note: Only for testing purposes - it will always fail on Dapp side
+            sessionRequest.chain?.contains(Chains.Info.Eth.chain, true) == true ->
+                """0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"""
+            //Note: Only for testing purposes - it will always fail on Dapp side
+            sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
+                """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+
+            sessionRequest.method == "solana_signAndSendTransaction" ||
+                    sessionRequest.method == "solana_signTransaction" -> {
+                """{"signature":"2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"}"""
+            }
+
+            sessionRequest.method == "solana_signAllTransactions" -> {
+                """{"transactions":["2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"]}"""
+            }
+            //Note: Only for testing purposes - it will always fail on Dapp side
+            sessionRequest.chain?.contains(Chains.Info.Solana.chain, true) == true ->
+                """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+
+            else -> throw Exception("Unsupported Method")
 //            }
 
 //            else -> throw Exception("Unsupported Chain")
@@ -141,5 +168,7 @@ object Signer {
 //        }
 
     const val PERSONAL_SIGN = "personal_sign"
-    const val ETH_SEND_TRANSACTION = "eth_sendTransaction"
+    private const val ETH_SEND_TRANSACTION = "eth_sendTransaction"
+    const val STACKS_TRANSFER = "stx_transferStx"
+    const val STACKS_SIGN_MESSAGE = "stx_signMessage"
 }
