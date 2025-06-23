@@ -2,7 +2,7 @@ import kotlin.String;
 import kotlin.collections.List;
 
 CREATE TABLE TempNamespaceDao(
-    request_id INTEGER PRIMARY KEY NOT NULL,
+    request_id INTEGER NOT NULL,
     session_id INTEGER NOT NULL,
     topic TEXT NOT NULL,
     key TEXT NOT NULL,

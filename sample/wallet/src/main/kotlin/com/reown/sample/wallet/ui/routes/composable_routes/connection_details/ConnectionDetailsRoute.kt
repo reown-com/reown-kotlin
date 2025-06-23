@@ -81,7 +81,11 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
 
     connectionUI?.let { uiConnection ->
         Column(modifier = Modifier.fillMaxWidth()) {
-            TopButtons(navController, isEmitAndUpdateVisible = uiConnection.type is ConnectionType.Sign, isEmitLoading = isEmitLoading, isUpdateLoading = isUpdateLoading,
+            TopButtons(
+                navController,
+                isEmitAndUpdateVisible = uiConnection.type is ConnectionType.Sign,
+                isEmitLoading = isEmitLoading,
+                isUpdateLoading = isUpdateLoading,
                 onEmit = {
                     when (uiConnection.type) {
                         is ConnectionType.Sign -> {
@@ -123,7 +127,8 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                         is ConnectionType.Sign -> {
                             isUpdateLoading = true
                             try {
-                                val entry = uiConnection.type.namespaces.entries.find { entry -> entry.key == "eip155" } ?: throw Exception("Cannot find eip155 namespace")
+                                val entry = uiConnection.type.namespaces.entries.find { entry -> entry.key == "eip155" }
+                                    ?: throw Exception("Cannot find eip155 namespace")
                                 val newNamespaces: Map<String, Wallet.Model.Namespace.Session> =
                                     mapOf(
                                         "eip155" to entry.value.copy(
@@ -131,10 +136,17 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                             chains = entry.value.chains,
                                             methods = entry.value.methods,
                                             events = entry.value.events,
+                                        ),
+                                        "solana" to Wallet.Model.Namespace.Session(
+                                            chains = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"),
+                                            accounts = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:3AJ5ACUXvTC5tc8QudGt8R7thzAZXUQtVnCNj26e1qxT"),
+                                            methods = listOf("solana_signTransaction"),
+                                            events = listOf()
                                         )
                                     ).toMutableMap()
                                 val params = Wallet.Params.SessionUpdate(uiConnection.type.topic, newNamespaces)
-                                WalletKit.updateSession(params,
+                                WalletKit.updateSession(
+                                    params,
                                     onSuccess = {
                                         isUpdateLoading = false
                                         connectionsViewModel.refreshConnections()
@@ -146,7 +158,8 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                         isUpdateLoading = false
                                         Firebase.crashlytics.recordException(error.throwable)
                                         composableScope.launch(Dispatchers.Main) {
-                                            Toast.makeText(context, "Session update error. Error: ${error.throwable.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Session update error. Error: ${error.throwable.message}", Toast.LENGTH_SHORT)
+                                                .show()
                                         }
                                     }
                                 )
@@ -164,13 +177,15 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
             Spacer(modifier = Modifier.height(16.dp))
             Connection(uiConnection)
             Spacer(modifier = Modifier.height(16.dp))
-            ConnectionType(uiConnection, isDeleteLoading, connectionsViewModel,
+            ConnectionType(
+                uiConnection, isDeleteLoading, connectionsViewModel,
                 onDelete = {
                     when (uiConnection.type) {
                         is ConnectionType.Sign -> {
                             try {
                                 isDeleteLoading = true
-                                WalletKit.disconnectSession(Wallet.Params.SessionDisconnect(uiConnection.type.topic),
+                                WalletKit.disconnectSession(
+                                    Wallet.Params.SessionDisconnect(uiConnection.type.topic),
                                     onSuccess = {
                                         isDeleteLoading = false
                                         connectionsViewModel.refreshConnections()
@@ -184,7 +199,11 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                         isDeleteLoading = false
                                         connectionsViewModel.refreshConnections()
                                         composableScope.launch(Dispatchers.Main) {
-                                            Toast.makeText(context, "Session disconnection error: ${error.throwable.message ?: "Unknown error please contact support"}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                context,
+                                                "Session disconnection error: ${error.throwable.message ?: "Unknown error please contact support"}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
                                     })
                             } catch (e: Exception) {
@@ -192,7 +211,11 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                 isDeleteLoading = false
                                 connectionsViewModel.refreshConnections()
                                 composableScope.launch(Dispatchers.Main) {
-                                    Toast.makeText(context, "Session disconnection error: ${e.message ?: "Unknown error please contact support"}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        "Session disconnection error: ${e.message ?: "Unknown error please contact support"}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             }
                         }
@@ -209,7 +232,12 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
 
                             val chainId = "$namespace:$reference"
                             val accountsToChange = connectionsViewModel.getAccountsToChange()
-                            WalletKit.emitSessionEvent(Wallet.Params.SessionEmit(uiConnection.type.topic, Wallet.Model.SessionEvent("accountsChanged", accountsToChange), chainId),
+                            WalletKit.emitSessionEvent(
+                                Wallet.Params.SessionEmit(
+                                    uiConnection.type.topic,
+                                    Wallet.Model.SessionEvent("accountsChanged", accountsToChange),
+                                    chainId
+                                ),
                                 onSuccess = {
                                     composableScope.launch(Dispatchers.Main) {
                                         Toast.makeText(context, "Switching account", Toast.LENGTH_SHORT).show()
@@ -218,7 +246,11 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                 onError = { error ->
                                     Firebase.crashlytics.recordException(error.throwable)
                                     composableScope.launch(Dispatchers.Main) {
-                                        Toast.makeText(context, "Switch account error: ${error.throwable.message ?: "Unknown error please contact support"}", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            "Switch account error: ${error.throwable.message ?: "Unknown error please contact support"}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                 }
                             )
@@ -233,7 +265,13 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
 }
 
 @Composable
-fun ConnectionType(connectionUI: ConnectionUI, isLoading: Boolean, connectionsViewModel: ConnectionsViewModel, onDelete: () -> Unit, onSwitch: () -> Unit) {
+fun ConnectionType(
+    connectionUI: ConnectionUI,
+    isLoading: Boolean,
+    connectionsViewModel: ConnectionsViewModel,
+    onDelete: () -> Unit,
+    onSwitch: () -> Unit
+) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (val type = connectionUI.type) {
             is ConnectionType.Sign -> Namespace(type.namespaces, connectionsViewModel)
@@ -251,19 +289,29 @@ fun ConnectionType(connectionUI: ConnectionUI, isLoading: Boolean, connectionsVi
                 )
             } else {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(modifier = Modifier
-                        .clip(RoundedCornerShape(5.dp))
-                        .clickable { onSwitch() }
-                        .padding(vertical = 5.dp),
+                    Text(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .clickable { onSwitch() }
+                            .padding(vertical = 5.dp),
                         text = "Switch Account",
-                        style = TextStyle(fontWeight = FontWeight.Normal, fontSize = 16.sp, color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)))
+                        style = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp,
+                            color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+                        ))
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(modifier = Modifier
-                        .clip(RoundedCornerShape(5.dp))
-                        .clickable { onDelete() }
-                        .padding(vertical = 5.dp),
+                    Text(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .clickable { onDelete() }
+                            .padding(vertical = 5.dp),
                         text = "Delete",
-                        style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = themedColor(darkColor = 0xfff25a67, lightColor = 0xfff05142)))
+                        style = TextStyle(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 20.sp,
+                            color = themedColor(darkColor = 0xfff25a67, lightColor = 0xfff05142)
+                        ))
                 }
             }
         }
@@ -274,7 +322,8 @@ fun ConnectionType(connectionUI: ConnectionUI, isLoading: Boolean, connectionsVi
 fun Namespace(namespaces: Map<String, Wallet.Model.Namespace.Session>, connectionsViewModel: ConnectionsViewModel) {
     val pagerState = rememberPagerState()
     val accounts = namespaces.flatMap { (namespace, session) -> session.accounts }.distinctBy { "${it.split(":")[0]}:${it.split(":")[1]}" }
-    val accountsToSessions: Map<String, Wallet.Model.Namespace.Session> = namespaces.flatMap { (namespace, proposal) -> proposal.accounts.map { chain -> chain to proposal } }.toMap()
+    val accountsToSessions: Map<String, Wallet.Model.Namespace.Session> =
+        namespaces.flatMap { (namespace, proposal) -> proposal.accounts.map { chain -> chain to proposal } }.toMap()
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         HorizontalPager(
             modifier = Modifier.height(450.dp),
@@ -315,7 +364,12 @@ fun Accounts(accounts: List<String>) {
         Row {
             Text(
                 modifier = Modifier.padding(vertical = 10.dp, horizontal = 13.dp),
-                text = "Accounts", style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                text = "Accounts",
+                style = TextStyle(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686))
+                )
             )
         }
 
@@ -369,15 +423,36 @@ fun Connection(connectionUI: ConnectionUI) {
                 alignment = Alignment.Center
             )
         } else {
-            Icon(modifier = iconModifier.alpha(.7f), imageVector = ImageVector.vectorResource(id = R.drawable.sad_face), contentDescription = "Sad face")
+            Icon(
+                modifier = iconModifier.alpha(.7f),
+                imageVector = ImageVector.vectorResource(id = R.drawable.sad_face),
+                contentDescription = "Sad face"
+            )
         }
-        Text(text = connectionUI.name, style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)))
-        Text(text = connectionUI.uri, style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)))
+        Text(
+            text = connectionUI.name,
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 20.sp,
+                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+            )
+        )
+        Text(
+            text = connectionUI.uri,
+            style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686))
+        )
     }
 }
 
 @Composable
-fun TopButtons(navController: NavController, isEmitAndUpdateVisible: Boolean, isEmitLoading: Boolean, isUpdateLoading: Boolean, onEmit: () -> Unit, onUpdate: () -> Unit) {
+fun TopButtons(
+    navController: NavController,
+    isEmitAndUpdateVisible: Boolean,
+    isEmitLoading: Boolean,
+    isUpdateLoading: Boolean,
+    onEmit: () -> Unit,
+    onUpdate: () -> Unit
+) {
     val color = Color(0xFF3496ff)
     val style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 17.sp, color = color)
     Row(
@@ -387,11 +462,16 @@ fun TopButtons(navController: NavController, isEmitAndUpdateVisible: Boolean, is
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         val interactionSourceRow = remember { MutableInteractionSource() }
-        Row(modifier = Modifier
-            .clickable(interactionSource = interactionSourceRow, indication = null) { navController.popBackStack() }
-            .padding(5.dp)
+        Row(
+            modifier = Modifier
+                .clickable(interactionSource = interactionSourceRow, indication = null) { navController.popBackStack() }
+                .padding(5.dp)
         ) {
-            Icon(tint = color, imageVector = ImageVector.vectorResource(id = com.reown.sample.common.R.drawable.chevron_left), contentDescription = "Go back")
+            Icon(
+                tint = color,
+                imageVector = ImageVector.vectorResource(id = com.reown.sample.common.R.drawable.chevron_left),
+                contentDescription = "Go back"
+            )
             Spacer(modifier = Modifier.width(5.dp))
             Text(text = "Connections", style = style)
         }
