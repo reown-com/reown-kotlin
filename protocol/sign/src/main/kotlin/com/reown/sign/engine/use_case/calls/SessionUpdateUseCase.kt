@@ -52,7 +52,7 @@ internal class SessionUpdateUseCase(
                         },
                         onFailure = { error ->
                             logger.error("Sending session update error: $error, topic: $topic")
-                            sessionStorageRepository.deleteTempNamespacesByRequestId(sessionUpdate.id)
+                            sessionStorageRepository.deleteTempNamespacesByTopic(topic)
                             onFailure(error)
                         })
                 } catch (e: Exception) {
