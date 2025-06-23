@@ -92,13 +92,13 @@ class WalletKitActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        CoreClient.Relay.connect { error: Core.Model.Error -> println("kobe: connect error: $error") }
+//        CoreClient.Relay.connect { error: Core.Model.Error -> println("kobe: connect error: $error") }
     }
 
     override fun onPause() {
         super.onPause()
 
-        CoreClient.Relay.disconnect { error: Core.Model.Error -> println("kobe: disconnect error: $error") }
+//        CoreClient.Relay.disconnect { error: Core.Model.Error -> println("kobe: disconnect error: $error") }
     }
 
     private fun setContent(

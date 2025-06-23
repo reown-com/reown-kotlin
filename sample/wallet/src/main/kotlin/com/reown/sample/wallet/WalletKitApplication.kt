@@ -74,7 +74,7 @@ class WalletKitApplication : Application() {
             application = this,
             projectId = projectId,
             metaData = appMetaData,
-            connectionType = ConnectionType.MANUAL,
+            connectionType = ConnectionType.AUTOMATIC,
             onError = { error ->
                 Firebase.crashlytics.recordException(error.throwable)
                 println("Init error: ${error.throwable.stackTraceToString()}")
