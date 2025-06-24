@@ -316,6 +316,32 @@ abstract class BaseRelayClient : RelayInterface {
         when {
             shouldConnect() -> connect(onConnected, onFailure)
             connectionState.value == ConnectionState.Open -> onConnected()
+            isConnecting -> awaitConnection(onConnected, onFailure)
+
+        }
+    }
+
+    private fun awaitConnection(onConnected: () -> Unit, onFailure: (Throwable) -> Unit) {
+        scope.launch {
+            try {
+                withTimeout(CONNECTION_TIMEOUT) {
+                    connectionState
+                        .filter { state -> state is ConnectionState.Open }
+                        .firstOrNull {
+                            delay(500L)
+                            onConnected()
+                            true
+                        }
+                }
+            } catch (e: TimeoutCancellationException) {
+                onFailure(e)
+                cancelJobIfActive()
+            } catch (e: Exception) {
+                if (e !is CancellationException) {
+                    onFailure(e)
+                }
+                cancelJobIfActive()
+            }
         }
     }
 
