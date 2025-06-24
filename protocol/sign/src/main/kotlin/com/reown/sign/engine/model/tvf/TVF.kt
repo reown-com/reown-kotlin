@@ -51,8 +51,9 @@ internal class TVF(private val moshi: Moshi) {
                 }
 
                 TRON_SIGN_TRANSACTION -> {
-                    moshi.adapter(TransactionResult::class.java)
+                    moshi.adapter(TransactionResponse::class.java)
                         .fromJson(rpcResult)
+                        ?.result
                         ?.txID
                         ?.let { listOf(it) }
                 }
