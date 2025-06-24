@@ -21,7 +21,7 @@ object NotifyDelegate : NotifyClient.Delegate {
     val notifyErrors = _notifyErrors.asSharedFlow()
 
     init {
-//        NotifyClient.setDelegate(this)
+        NotifyClient.setDelegate(this)
     }
 
     override fun onNotifyNotification(notifyNotification: Notify.Event.Notification) {
