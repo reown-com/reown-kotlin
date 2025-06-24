@@ -54,7 +54,7 @@ abstract class BaseRelayClient : RelayInterface {
     protected var logger: Logger
     private val resultState: MutableSharedFlow<RelayDTO> = MutableSharedFlow()
     internal var connectionState: MutableStateFlow<ConnectionState> = MutableStateFlow(ConnectionState.Idle)
-    private var unAckedTopics: MutableList<String> = mutableListOf()
+    private var ackedTopics: MutableList<String> = mutableListOf()
     private var isConnecting: Boolean = false
     private var retryCount: Int = 0
     override var isLoggingEnabled: Boolean = false
@@ -94,6 +94,7 @@ abstract class BaseRelayClient : RelayInterface {
                 if (event is WebSocket.Event.OnConnectionOpened<*>) {
                     connectionState.value = ConnectionState.Open
                 } else if (event is WebSocket.Event.OnConnectionClosed || event is WebSocket.Event.OnConnectionFailed) {
+                    ackedTopics.clear()
                     connectionState.value = ConnectionState.Closed(getError(event))
                 }
             }
@@ -216,9 +217,7 @@ abstract class BaseRelayClient : RelayInterface {
     override fun batchSubscribe(topics: List<String>, id: Long?, onResult: (Result<Relay.Model.Call.BatchSubscribe.Acknowledgement>) -> Unit) {
         connectAndCallRelay(
             onConnected = {
-                if (!unAckedTopics.containsAll(topics)) {
-                    unAckedTopics.addAll(topics)
-
+                if (!ackedTopics.containsAll(topics)) {
                     val batchSubscribeRequest = RelayDTO.BatchSubscribe.Request(
                         id = id ?: generateClientToServerId(),
                         params = RelayDTO.BatchSubscribe.Request.Params(topics)
@@ -241,16 +240,18 @@ abstract class BaseRelayClient : RelayInterface {
                 withTimeout(RESULT_TIMEOUT) {
                     resultState
                         .filterIsInstance<RelayDTO.BatchSubscribe.Result>()
-                        .onEach {
-                            if (unAckedTopics.isNotEmpty()) {
-                                unAckedTopics.removeAll(topics)
-                            }
-                        }
                         .filter { relayResult -> relayResult.id == id }
                         .first { batchSubscribeResult ->
                             when (batchSubscribeResult) {
-                                is RelayDTO.BatchSubscribe.Result.Acknowledgement -> onResult(Result.success(batchSubscribeResult.toRelay()))
-                                is RelayDTO.BatchSubscribe.Result.JsonRpcError -> onResult(Result.failure(Throwable(batchSubscribeResult.error.errorMessage)))
+                                is RelayDTO.BatchSubscribe.Result.Acknowledgement -> {
+                                    ackedTopics.addAll(topics)
+                                    onResult(Result.success(batchSubscribeResult.toRelay()))
+                                }
+
+                                is RelayDTO.BatchSubscribe.Result.JsonRpcError -> {
+                                    ackedTopics.removeAll(topics)
+                                    onResult(Result.failure(Throwable(batchSubscribeResult.error.errorMessage)))
+                                }
                             }
                             true
                         }
@@ -313,13 +314,8 @@ abstract class BaseRelayClient : RelayInterface {
 
     private fun connectAndCallRelay(onConnected: () -> Unit, onFailure: (Throwable) -> Unit) {
         when {
-            shouldConnect() -> {
-                connect(onConnected, onFailure)
-            }
-
-            connectionState.value == ConnectionState.Open -> {
-                onConnected()
-            }
+            shouldConnect() -> connect(onConnected, onFailure)
+            connectionState.value == ConnectionState.Open -> onConnected()
         }
     }
 
@@ -359,7 +355,6 @@ abstract class BaseRelayClient : RelayInterface {
                 if (e !is CancellationException) {
                     onFailure(e)
                 }
-                cancelJobIfActive()
             }
         }
     }

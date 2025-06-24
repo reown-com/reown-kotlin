@@ -31,7 +31,6 @@ abstract class BaseClientIdJwtRepository : ClientIdJwtRepository {
 
         val issuer = encodeEd25519DidKey(publicKey.hexToBytes())
         val clientId = issuer.split(":").last()
-
         getIssuerClientId(clientId)
         // ClientId Did Jwt have issuedAt as seconds
         val (issuedAt, expiration) = jwtIatAndExp(timeunit = TimeUnit.SECONDS, expirySourceDuration = 1, expiryTimeUnit = TimeUnit.DAYS)

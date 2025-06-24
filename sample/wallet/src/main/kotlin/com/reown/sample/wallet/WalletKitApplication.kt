@@ -95,12 +95,12 @@ class WalletKitApplication : Application() {
             })
 
         FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
-//        NotifyClient.initialize(
-//            init = Notify.Params.Init(CoreClient)
-//        ) { error ->
-//            Firebase.crashlytics.recordException(error.throwable)
-//            println(error.throwable.stackTraceToString())
-//        }
+        NotifyClient.initialize(
+            init = Notify.Params.Init(CoreClient)
+        ) { error ->
+            Firebase.crashlytics.recordException(error.throwable)
+            println(error.throwable.stackTraceToString())
+        }
 
         mixPanel = MixpanelAPI.getInstance(this, CommonBuildConfig.MIX_PANEL, true).apply {
             identify(CoreClient.Push.clientId)
@@ -133,7 +133,7 @@ class WalletKitApplication : Application() {
                     }
                 })
 
-//                handleNotifyMessages()
+                handleNotifyMessages()
             }
         }
     }

@@ -368,7 +368,6 @@ class RelayTest {
     private fun awaitConnection(clientA: RelayInterface, clientB: RelayInterface) = runBlocking {
         val isClientAReady = MutableStateFlow(false)
         val isClientBReady = MutableStateFlow(false)
-
         val areBothReady: StateFlow<Boolean> =
             combine(isClientAReady, isClientBReady) { clientA: Boolean, clientB: Boolean -> clientA && clientB }
                 .stateIn(testScope, SharingStarted.Eagerly, false)

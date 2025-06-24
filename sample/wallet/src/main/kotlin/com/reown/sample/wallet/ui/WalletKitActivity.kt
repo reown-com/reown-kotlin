@@ -83,24 +83,25 @@ class WalletKitActivity : AppCompatActivity() {
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
         askNotificationPermission()
-//        handleErrors()
+        handleErrors()
         handleAppLink(intent)
-//        registerAccount()
+        registerAccount()
         setBeagle()
     }
 
-    override fun onResume() {
-        super.onResume()
-
+//    override fun onResume() {
+//        super.onResume()
+//
 //        CoreClient.Relay.connect { error: Core.Model.Error -> println("kobe: connect error: $error") }
-    }
-
-    override fun onPause() {
-        super.onPause()
-
+//    }
+//
+//    override fun onPause() {
+//        super.onPause()
+//
 //        CoreClient.Relay.disconnect { error: Core.Model.Error -> println("kobe: disconnect error: $error") }
-    }
+//    }
 
+    @OptIn(ExperimentalMaterialNavigationApi::class)
     private fun setContent(
         web3walletViewModel: Web3WalletViewModel,
         connectionsViewModel: ConnectionsViewModel,
@@ -315,7 +316,7 @@ class WalletKitActivity : AppCompatActivity() {
                         onSuccess = {
                             println("Unregister Success")
                             EthAccountDelegate.privateKey = text
-//                            registerAccount()
+                            registerAccount()
                         },
                         onError = { println(it.throwable.stackTraceToString()) }
                     )
