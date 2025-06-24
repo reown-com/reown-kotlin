@@ -37,6 +37,7 @@ internal class OnSessionUpdateResponseUseCase(
                     logger.log("Session update namespaces response received on topic: ${wcResponse.topic}")
                     val responseId = wcResponse.response.id
                     val namespaces = sessionStorageRepository.getTempNamespaces(responseId)
+                    sessionStorageRepository.deleteTempNamespacesByTopic(sessionTopic.value)
                     sessionStorageRepository.deleteNamespaceAndInsertNewNamespace(session.topic.value, namespaces, responseId)
                     sessionStorageRepository.markUnAckNamespaceAcknowledged(responseId)
                     _events.emit(EngineDO.SessionUpdateNamespacesResponse.Result(session.topic, namespaces.toMapOfEngineNamespacesSession()))

@@ -39,6 +39,7 @@ import com.pandulapeter.beagle.modules.PaddingModule
 import com.pandulapeter.beagle.modules.ScreenCaptureToolboxModule
 import com.pandulapeter.beagle.modules.TextInputModule
 import com.pandulapeter.beagle.modules.TextModule
+import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.utils.cacao.sign
@@ -88,6 +89,19 @@ class WalletKitActivity : AppCompatActivity() {
         setBeagle()
     }
 
+//    override fun onResume() {
+//        super.onResume()
+//
+//        CoreClient.Relay.connect { error: Core.Model.Error -> println("kobe: connect error: $error") }
+//    }
+//
+//    override fun onPause() {
+//        super.onPause()
+//
+//        CoreClient.Relay.disconnect { error: Core.Model.Error -> println("kobe: disconnect error: $error") }
+//    }
+
+    @OptIn(ExperimentalMaterialNavigationApi::class)
     private fun setContent(
         web3walletViewModel: Web3WalletViewModel,
         connectionsViewModel: ConnectionsViewModel,

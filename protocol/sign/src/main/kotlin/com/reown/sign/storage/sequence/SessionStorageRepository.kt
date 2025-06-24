@@ -166,6 +166,11 @@ internal class SessionStorageRepository(
     }
 
     @JvmSynthetic
+    fun deleteTempNamespacesByTopic(topic: String) {
+        tempNamespaceDaoQueries.deleteTempNamespacesByTopic(topic)
+    }
+
+    @JvmSynthetic
     fun deleteSession(topic: Topic) {
         sessionRequestEventsQueue.removeAll { event -> event.request.topic == topic.value }
         namespaceDaoQueries.deleteNamespacesByTopic(topic.value)

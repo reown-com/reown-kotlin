@@ -52,6 +52,12 @@ android {
         targetCompatibility = jvmVersion
     }
 
+    packaging {
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium.so")
+    }
+
     kotlinOptions {
         jvmTarget = jvmVersion.toString()
         freeCompilerArgs = listOf("-Xcontext-receivers")
@@ -91,6 +97,15 @@ sqldelight {
 dependencies {
     debugApi(project(":foundation"))
     releaseApi("com.reown:foundation:$FOUNDATION_VERSION")
+
+    // Use specific yttrium version for CI builds, default version for local builds
+    val yttriumVersion = if (System.getenv("CI") == "true") {
+        System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.19-ci"
+    } else {
+        "0.9.4"
+    }
+    api("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
+    implementation("net.java.dev.jna:jna:5.15.0@aar")
 
     api(libs.coroutines)
     implementation(libs.scarlet.android)

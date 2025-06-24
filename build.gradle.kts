@@ -113,41 +113,66 @@ nexusPublishing {
         sonatype {
             stagingProfileId.set(System.getenv("REOWN_SONATYPE_STAGING_PROFILE_ID"))
             packageGroup.set("com.reown")
-            username.set(System.getenv("OSSRH_USERNAME"))
-            password.set(System.getenv("OSSRH_PASSWORD"))
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(System.getenv("CENTRAL_PORTAL_USERNAME"))
+            password.set(System.getenv("CENTRAL_PORTAL_PASSWORD"))
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
         }
     }
 }
 
-val nexusUsername: String get() = System.getenv("OSSRH_USERNAME")
-val nexusPassword: String get() = System.getenv("OSSRH_PASSWORD")
-val nexusUrl = "https://s01.oss.sonatype.org/service/local/staging"
+val nexusUsername: String get() = System.getenv("CENTRAL_PORTAL_USERNAME")
+val nexusPassword: String get() = System.getenv("CENTRAL_PORTAL_PASSWORD")
+val stagingApiUrl = "https://ossrh-staging-api.central.sonatype.com"
+val manualApiUrl = "https://ossrh-staging-api.central.sonatype.com/manual"
 
 tasks.register("closeAndReleaseMultipleRepositories") {
     group = "release"
-    description = "Release all Sonatype staging repositories"
+    description = "Upload staging repositories to Central Portal and release"
 
     doLast {
-        val repos = fetchOpenRepositoryIds()
+        val repos = fetchStagingRepositories()
         if (repos.isEmpty()) {
-            println("No open repositories found")
+            println("No staging repositories found")
             return@doLast
         }
-        closeRepositories(repos)
-        waitForAllRepositoriesToDesireState(repos, "closed")
-        releaseRepositories(repos)
-        waitForAllRepositoriesToDesireState(repos, "released")
-        dropRepositories(repos)
+        
+        println("Found ${repos.size} staging repositories")
+        repos.forEach { repo ->
+            println("Repository: ${repo.key}, State: ${repo.state}")
+        }
+        
+        // Upload each repository individually using their specific keys
+        // This works better with the OSSRH Staging API than the defaultRepository endpoint
+        val openRepos = repos.filter { it.state == "open" }
+        val closedRepos = repos.filter { it.state == "closed" }
+        
+        if (openRepos.isNotEmpty()) {
+            println("Uploading ${openRepos.size} open repositories to Central Portal using individual repository keys")
+            uploadRepositoriesToPortal(openRepos)
+        }
+        
+        if (closedRepos.isNotEmpty()) {
+            println("Uploading ${closedRepos.size} closed repositories to Central Portal using individual repository keys")
+            uploadRepositoriesToPortal(closedRepos)
+        }
+        
+        if (openRepos.isEmpty() && closedRepos.isEmpty()) {
+            println("No repositories to upload to Portal")
+            return@doLast
+        }
+        
+        // Wait for artifacts to be available on Maven Central since we're using automatic publishing
         waitForArtifactsToBeAvailable()
     }
 }
 
-fun fetchOpenRepositoryIds(): List<String> {
+data class StagingRepository(val key: String, val state: String, val portalDeploymentId: String?)
+
+fun fetchStagingRepositories(): List<StagingRepository> {
     val client = HttpClients.createDefault()
-    val httpGet = HttpGet("$nexusUrl/profile_repositories").apply {
-        setHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
+    val httpGet = HttpGet("$manualApiUrl/search/repositories").apply {
+        setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
     }
 
     val response = client.execute(httpGet)
@@ -156,95 +181,61 @@ fun fetchOpenRepositoryIds(): List<String> {
         throw RuntimeException("Failed: HTTP error code : ${response.statusLine.statusCode} $responseBody")
     }
 
-    return parseRepositoryIds(responseBody)
+    return parseRepositoriesResponse(responseBody)
 }
 
-fun parseRepositoryIds(xmlResponse: String): List<String> {
-    val factory = DocumentBuilderFactory.newInstance()
-    val builder = factory.newDocumentBuilder()
-    val inputStream = xmlResponse.byteInputStream()
-    val doc = builder.parse(inputStream)
-    val nodeList = doc.getElementsByTagName("stagingProfileRepository")
-
-    val repositoryIds = mutableListOf<String>()
-    for (i in 0 until nodeList.length) {
-        val node = nodeList.item(i)
-        val element = node as? org.w3c.dom.Element
-        val repoId = element?.getElementsByTagName("repositoryId")?.item(0)?.textContent
-        val type = element?.getElementsByTagName("type")?.item(0)?.textContent
-        if (repoId != null && type == "open") {
-            repositoryIds.add(repoId)
-        }
+fun parseRepositoriesResponse(jsonResponse: String): List<StagingRepository> {
+    // Simple JSON parsing - in a real implementation you might want to use a proper JSON library
+    val repositories = mutableListOf<StagingRepository>()
+    
+    // Extract repositories array from JSON response
+    val repositoriesStart = jsonResponse.indexOf("\"repositories\":")
+    if (repositoriesStart == -1) return repositories
+    
+    val arrayStart = jsonResponse.indexOf("[", repositoriesStart)
+    val arrayEnd = jsonResponse.lastIndexOf("]")
+    if (arrayStart == -1 || arrayEnd == -1) return repositories
+    
+    val repositoriesArray = jsonResponse.substring(arrayStart + 1, arrayEnd)
+    
+    // Parse each repository object (simple regex-based parsing)
+    val repoPattern = """"key":\s*"([^"]+)".*?"state":\s*"([^"]+)".*?(?:"portal_deployment_id":\s*"([^"]*)")?""".toRegex()
+    repoPattern.findAll(repositoriesArray).forEach { match ->
+        val key = match.groupValues[1]
+        val state = match.groupValues[2]
+        val portalDeploymentId = match.groupValues.getOrNull(3)?.takeIf { it.isNotEmpty() }
+        repositories.add(StagingRepository(key, state, portalDeploymentId))
     }
-    return repositoryIds
+    
+    return repositories
 }
 
-fun closeRepositories(repoIds: List<String>) {
-    val closeUrl = "$nexusUrl/bulk/close"
-    val json = """
-            {
-                "data": {
-                    "stagedRepositoryIds": ${repoIds.joinToString(prefix = "[\"", separator = "\",\"", postfix = "\"]")}
-                }
-            }
-        """.trimIndent()
-    executePostRequest(closeUrl, json)
-    println("Closed repositories: ${repoIds.joinToString(", ")}")
+fun uploadRepositoriesToPortal(repositories: List<StagingRepository>) {
+    repositories.forEach { repo ->
+        println("Uploading repository ${repo.key} to Central Portal...")
+        uploadRepositoryToPortal(repo.key)
+    }
 }
 
-fun releaseRepositories(repoIds: List<String>) {
-    val releaseUrl = "$nexusUrl/bulk/promote"
-    val json = """
-            {
-                "data": {
-                    "stagedRepositoryIds": ${repoIds.joinToString(prefix = "[\"", separator = "\",\"", postfix = "\"]")}
-                }
-            }
-        """.trimIndent()
-    println("Released repositories: ${repoIds.joinToString(", ")}")
-    executePostRequest(releaseUrl, json)
-}
-
-fun dropRepositories(repoIds: List<String>) {
-    val dropUrl = "$nexusUrl/bulk/drop"
-    val json = """
-            {
-                "data": {
-                    "stagedRepositoryIds": ${repoIds.joinToString(prefix = "[\"", separator = "\",\"", postfix = "\"]")}
-                }
-            }
-        """.trimIndent()
-    executePostRequest(dropUrl, json)
-    println("Dropped repositories: ${repoIds.joinToString(", ")}")
-}
-
-fun waitForAllRepositoriesToDesireState(repoIds: List<String>, desireState: String) {
+fun uploadRepositoryToPortal(repositoryKey: String) {
     val client = HttpClients.createDefault()
-    val statusUrl = "$nexusUrl/repository/"
-    val closedRepos = mutableSetOf<String>()
+    val uploadUrl = "$manualApiUrl/upload/repository/$repositoryKey"
+    
+    val httpPost = HttpPost(uploadUrl).apply {
+        setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
+        setHeader("Content-Type", "application/json")
+        // Use automatic publishing type to automatically release if validation passes
+        entity = StringEntity("""{"publishing_type": "automatic"}""")
+    }
 
-    while (closedRepos.size < repoIds.size) {
-        repoIds.forEach { repoId ->
-            if (!closedRepos.contains(repoId)) {
-                val httpGet = HttpGet("$statusUrl$repoId").apply {
-                    setHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
-                }
-                val response = client.execute(httpGet)
-                println("GET request to $repoId returned status code: ${response.statusLine.statusCode}")
-                val responseBody = EntityUtils.toString(response.entity)
-
-                val state = parseRepositoryState(responseBody, repoId)
-                if (state == desireState) {
-                    println("Repository $repoId is now in state: $state")
-                    closedRepos.add(repoId)
-                } else {
-                    println("Waiting for repository $repoId to be $desireState, current state: $state")
-                }
-            }
-        }
-        if (closedRepos.size < repoIds.size) {
-            Thread.sleep(30000) // Wait for 30 seconds before retrying
-        }
+    val response = client.execute(httpPost)
+    val responseBody = EntityUtils.toString(response.entity)
+    
+    if (response.statusLine.statusCode == 200 || response.statusLine.statusCode == 201) {
+        println("Successfully uploaded repository $repositoryKey to Central Portal")
+        println("Response: $responseBody")
+    } else {
+        throw RuntimeException("Failed to upload repository $repositoryKey: HTTP ${response.statusLine.statusCode} - $responseBody")
     }
 }
 
@@ -283,48 +274,15 @@ fun waitForArtifactsToBeAvailable() {
         if (availableRepos.size < repoIds.size) {
             println("Waiting for artifacts to be available... Attempt: ${attempt + 1}")
             attempt++
-            Thread.sleep(45000) // Wait for 10 seconds before retrying
+            Thread.sleep(45000) // Wait for 45 seconds before retrying
         }
     }
 
     if (availableRepos.size < repoIds.size) {
-        throw RuntimeException("Artifacts were not available after ${maxRetries * 10} seconds.")
+        throw RuntimeException("Artifacts were not available after ${maxRetries * 45} seconds.")
     } else {
         println("All artifacts are now available.")
     }
-}
-
-fun executePostRequest(url: String, json: String) {
-    val client = HttpClients.createDefault()
-    val httpPost = HttpPost(url).apply {
-        setHeader("Content-type", "application/json")
-        entity = StringEntity(json)
-        setHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
-    }
-
-    val response = client.execute(httpPost)
-    val responseBody = EntityUtils.toString(response.entity)
-    if (response.statusLine.statusCode != 201) {
-        throw RuntimeException("Failed: HTTP error code : ${response.statusLine.statusCode} $responseBody")
-    }
-}
-
-fun parseRepositoryState(xmlResponse: String, repositoryId: String): String? {
-    val factory = DocumentBuilderFactory.newInstance()
-    val builder = factory.newDocumentBuilder()
-    val inputStream = xmlResponse.byteInputStream()
-    val doc = builder.parse(inputStream)
-    val nodeList = doc.getElementsByTagName("stagingProfileRepository")
-
-    for (i in 0 until nodeList.length) {
-        val node = nodeList.item(i)
-        val element = node as? org.w3c.dom.Element
-        val repoId = element?.getElementsByTagName("repositoryId")?.item(0)?.textContent
-        if (repoId == repositoryId) {
-            return element.getElementsByTagName("type").item(0)?.textContent
-        }
-    }
-    return null
 }
 
 private val repoIdWithVersion = listOf(

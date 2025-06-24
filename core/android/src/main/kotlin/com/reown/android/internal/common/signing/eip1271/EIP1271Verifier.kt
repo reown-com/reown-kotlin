@@ -1,7 +1,7 @@
 package com.reown.android.internal.common.signing.eip1271
 
 import com.reown.android.internal.common.signing.signature.Signature
-import com.reown.android.internal.common.signing.signature.toCacaoSignature
+import com.reown.android.internal.common.signing.signature.toHexSignature
 import com.reown.util.bytesToHex
 import com.reown.util.generateId
 import okhttp3.MediaType
@@ -60,7 +60,7 @@ internal object EIP1271Verifier {
     }
 
     private fun verify(messageHash: String, signature: Signature, projectId: String, address: String): Boolean {
-        val data: String = isValidSignatureHash + messageHash + dynamicTypeOffset + dynamicTypeLength + signature.toCacaoSignature().removePrefix(hexPrefix)
+        val data: String = isValidSignatureHash + messageHash + dynamicTypeOffset + dynamicTypeLength + signature.toHexSignature().removePrefix(hexPrefix)
 
         val id = generateId()
         val request: Request = Request.Builder().url(projectId.prefixWithRpcUrl()).post(createBody(address, data, id)).build()

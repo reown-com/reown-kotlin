@@ -8,7 +8,7 @@ import com.reown.android.cacao.signature.ISignatureType
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.signing.cacao.Cacao
 import com.reown.android.internal.common.signing.eip191.EIP191Signer
-import com.reown.android.internal.common.signing.signature.toCacaoSignature
+import com.reown.android.internal.common.signing.signature.toHexSignature
 import org.web3j.utils.Numeric.hexStringToByteArray
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.createType
@@ -24,7 +24,7 @@ inline fun <CoreSignature : SignatureInterface, reified SDKSignature : CoreSigna
 ): CoreSignature =
     when (type.header) {
         SignatureType.EIP191.header, SignatureType.EIP1271.header ->
-            Cacao.Signature(type.header, EIP191Signer.sign(message.toByteArray(), privateKey).toCacaoSignature()).run {
+            Cacao.Signature(type.header, EIP191Signer.sign(message.toByteArray(), privateKey).toHexSignature()).run {
                 SDKSignature::class.constructors.first(KFunction<SDKSignature>::hasCorrectOrderedParametersInConstructor).call(t, s, m)
             }
 
@@ -40,7 +40,7 @@ inline fun <CoreSignature : SignatureInterface, reified SDKSignature : CoreSigna
 ): CoreSignature =
     when (type.header) {
         SignatureType.EIP191.header, SignatureType.EIP1271.header ->
-            Cacao.Signature(type.header, EIP191Signer.sign(hexStringToByteArray(message), privateKey).toCacaoSignature()).run {
+            Cacao.Signature(type.header, EIP191Signer.sign(hexStringToByteArray(message), privateKey).toHexSignature()).run {
                 SDKSignature::class.constructors.first(KFunction<SDKSignature>::hasCorrectOrderedParametersInConstructor).call(t, s, m)
             }
 
@@ -51,7 +51,7 @@ inline fun <CoreSignature : SignatureInterface, reified SDKSignature : CoreSigna
 fun <T : SignatureInterface> sign(clazz: Class<T>, message: String, privateKey: ByteArray, type: ISignatureType): T =
     when (type.header) {
         SignatureType.EIP191.header, SignatureType.EIP1271.header ->
-            Cacao.Signature(type.header, EIP191Signer.sign(message.toByteArray(), privateKey).toCacaoSignature()).run {
+            Cacao.Signature(type.header, EIP191Signer.sign(message.toByteArray(), privateKey).toHexSignature()).run {
                 clazz.kotlin.constructors.first(KFunction<T>::hasCorrectOrderedParametersInConstructor).call(t, s, m)
             }
 
@@ -63,7 +63,7 @@ fun <T : SignatureInterface> sign(clazz: Class<T>, message: String, privateKey: 
 fun <T : SignatureInterface> signHex(clazz: Class<T>, message: String, privateKey: ByteArray, type: ISignatureType): T =
     when (type.header) {
         SignatureType.EIP191.header, SignatureType.EIP1271.header ->
-            Cacao.Signature(type.header, EIP191Signer.sign(hexStringToByteArray(message), privateKey).toCacaoSignature()).run {
+            Cacao.Signature(type.header, EIP191Signer.sign(hexStringToByteArray(message), privateKey).toHexSignature()).run {
                 clazz.kotlin.constructors.first(KFunction<T>::hasCorrectOrderedParametersInConstructor).call(t, s, m)
             }
 

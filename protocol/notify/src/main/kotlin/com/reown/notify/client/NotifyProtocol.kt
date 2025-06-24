@@ -90,7 +90,8 @@ class NotifyProtocol(private val koinApp: KoinApplication = wcKoinApp) : NotifyI
         checkEngineInitialization()
 
         return runBlocking {
-            notifyEngine.getActiveSubscriptions(params.account, params.timeout).mapValues { (_, subscriptionWMetadata) -> subscriptionWMetadata.toClient() }
+            notifyEngine.getActiveSubscriptions(params.account, params.timeout)
+                .mapValues { (_, subscriptionWMetadata) -> subscriptionWMetadata.toClient() }
         }
     }
 
@@ -118,9 +119,14 @@ class NotifyProtocol(private val koinApp: KoinApplication = wcKoinApp) : NotifyI
         }
     }
 
-    override fun decryptNotification(params: Notify.Params.DecryptNotification, onSuccess: (Notify.Model.Notification.Decrypted) -> Unit, onError: (Notify.Model.Error) -> Unit) {
+    override fun decryptNotification(
+        params: Notify.Params.DecryptNotification,
+        onSuccess: (Notify.Model.Notification.Decrypted) -> Unit,
+        onError: (Notify.Model.Error) -> Unit
+    ) {
         scope.launch {
-            notifyEngine.decryptNotification(params.topic, params.encryptedMessage,
+            notifyEngine.decryptNotification(
+                params.topic, params.encryptedMessage,
                 onSuccess = { notification ->
                     (notification as? Core.Model.Message.Notify)?.run { onSuccess(notification.toClient(params.topic)) }
                 },
