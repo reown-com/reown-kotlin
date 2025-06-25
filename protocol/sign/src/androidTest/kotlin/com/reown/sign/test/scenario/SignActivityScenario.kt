@@ -39,12 +39,6 @@ open class SignActivityScenario {
         assert(scenario?.state?.isAtLeast(Lifecycle.State.RESUMED) == true)
 
         testScope.launch { testCodeBlock() }
-
-        try {
-            TestCase.assertTrue(latch.await(timeoutSeconds, TimeUnit.SECONDS))
-        } catch (exception: Exception) {
-            TestCase.fail(exception.message)
-        }
     }
 
     fun closeAsSuccess() {

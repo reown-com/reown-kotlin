@@ -2,7 +2,6 @@ package com.reown.walletkit.use_cases
 
 import com.reown.android.internal.common.scope
 import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.WalletKit
 import com.reown.walletkit.client.toWallet
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch

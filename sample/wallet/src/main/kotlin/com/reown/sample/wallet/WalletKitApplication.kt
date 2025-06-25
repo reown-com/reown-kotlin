@@ -14,6 +14,8 @@ import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
+import com.reown.android.relay.ConnectionType
+import com.reown.foundation.network.model.Relay
 import com.reown.foundation.util.Logger
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
@@ -81,6 +83,7 @@ class WalletKitApplication : Application() {
             application = this,
             projectId = projectId,
             metaData = appMetaData,
+            connectionType = ConnectionType.AUTOMATIC,
             onError = { error ->
                 Firebase.crashlytics.recordException(error.throwable)
                 println("Init error: ${error.throwable.stackTraceToString()}")

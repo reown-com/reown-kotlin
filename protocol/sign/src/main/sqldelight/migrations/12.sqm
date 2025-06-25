@@ -1,0 +1,31 @@
+import kotlin.String;
+import kotlin.collections.List;
+
+-- migrates 12db to 13db
+
+-- CREATE V13 SCHEMA
+-- Remove PRIMARY KEY constraint from request_id in TempNamespaceDao
+
+-- Create new table without PRIMARY KEY constraint
+CREATE TABLE TempNamespaceDao_new(
+    request_id INTEGER NOT NULL,
+    session_id INTEGER NOT NULL,
+    topic TEXT NOT NULL,
+    key TEXT NOT NULL,
+    chains TEXT AS List<String>,
+    accounts TEXT AS List<String> NOT NULL,
+    methods TEXT AS List<String> NOT NULL,
+    events TEXT AS List<String> NOT NULL,
+    isAcknowledged INTEGER DEFAULT 0
+);
+
+-- Copy data from old table to new table
+INSERT INTO TempNamespaceDao_new 
+SELECT request_id, session_id, topic, key, chains, accounts, methods, events, isAcknowledged 
+FROM TempNamespaceDao;
+
+-- Drop the old table
+DROP TABLE TempNamespaceDao;
+
+-- Rename new table to original name
+ALTER TABLE TempNamespaceDao_new RENAME TO TempNamespaceDao;
