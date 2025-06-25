@@ -102,7 +102,7 @@ dependencies {
     val yttriumVersion = if (System.getenv("CI") == "true") {
         System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.19-ci"
     } else {
-        "0.9.4"
+        "0.9.24-stacks"
     }
     api("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
     implementation("net.java.dev.jna:jna:5.15.0@aar")
