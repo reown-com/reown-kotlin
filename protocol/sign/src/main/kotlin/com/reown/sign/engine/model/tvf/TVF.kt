@@ -113,7 +113,10 @@ internal class TVF(private val moshi: Moshi) {
                 SUI_SIGN_AND_EXECUTE_TRANSACTION -> {
                     moshi.adapter(SignAndExecute.SuiTransactionResponse::class.java)
                         .fromJson(rpcResult)
-                        ?.let { listOf(it.digest) }
+                        ?.let {
+                            println("kobe: sign and execute digest: ${it.digest}")
+                            listOf(it.digest)
+                        }
                 }
 
                 SUI_SIGN_TRANSACTION -> {
@@ -121,6 +124,7 @@ internal class TVF(private val moshi: Moshi) {
                         .fromJson(rpcResult)
                         ?.let {
                             val digest = calculateTransactionDigest(it.transactionBytes)
+                            println("kobe: sign digest: $digest")
                             listOf(digest)
                         }
                 }
