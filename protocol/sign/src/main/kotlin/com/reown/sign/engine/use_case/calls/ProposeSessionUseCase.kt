@@ -45,15 +45,24 @@ internal class ProposeSessionUseCase(
     ) = supervisorScope {
         val relay = RelayProtocolOptions(pairing.relayProtocol, pairing.relayData)
 
-        runCatching { validate(requiredNamespaces, optionalNamespaces, properties) }.fold(
+        // Map requiredNamespaces to optionalNamespaces if not null, ensuring no duplications
+        val mergedOptionalNamespaces = if (requiredNamespaces != null) {
+            val existingOptional = optionalNamespaces ?: emptyMap()
+            // Merge maps, with existing optional namespaces taking precedence to avoid duplications
+            existingOptional + requiredNamespaces
+        } else {
+            optionalNamespaces
+        }
+
+        runCatching { validate(null, mergedOptionalNamespaces, properties) }.fold(
             onSuccess = {
                 val expiry = Expiry(PROPOSAL_EXPIRY)
                 val selfPublicKey: PublicKey = crypto.generateAndStoreX25519KeyPair()
                 val sessionProposal: SignParams.SessionProposeParams =
                     toSessionProposeParams(
                         listOf(relay),
-                        requiredNamespaces ?: emptyMap(),
-                        optionalNamespaces ?: emptyMap(),
+                        emptyMap(), // Always pass empty map for required namespaces
+                        mergedOptionalNamespaces ?: emptyMap(),
                         properties, scopedProperties, selfPublicKey, selfAppMetaData, expiry
                     )
                 val request = SignRpc.SessionPropose(params = sessionProposal)

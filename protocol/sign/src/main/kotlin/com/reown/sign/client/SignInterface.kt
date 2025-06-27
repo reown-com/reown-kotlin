@@ -55,16 +55,39 @@ interface SignInterface {
     fun setWalletDelegate(delegate: WalletDelegate)
     fun setDappDelegate(delegate: DappDelegate)
     fun connect(
-        connect: Sign.Params.Connect, onSuccess: (String) -> Unit,
+        connect: Sign.Params.Connect,
+        onSuccess: (String) -> Unit,
         onError: (Sign.Model.Error) -> Unit,
     )
 
-    fun authenticate(authenticate: Sign.Params.Authenticate, walletAppLink: String? = null, onSuccess: (String) -> Unit, onError: (Sign.Model.Error) -> Unit)
+    fun connect(
+        connectParams: Sign.Params.ConnectParams,
+        onSuccess: (String) -> Unit,
+        onError: (Sign.Model.Error) -> Unit,
+    )
+
+    fun authenticate(
+        authenticate: Sign.Params.Authenticate,
+        walletAppLink: String? = null,
+        onSuccess: (String) -> Unit,
+        onError: (Sign.Model.Error) -> Unit
+    )
+
     fun dispatchEnvelope(urlWithEnvelope: String, onError: (Sign.Model.Error) -> Unit)
     fun approveSession(approve: Sign.Params.Approve, onSuccess: (Sign.Params.Approve) -> Unit = {}, onError: (Sign.Model.Error) -> Unit)
     fun rejectSession(reject: Sign.Params.Reject, onSuccess: (Sign.Params.Reject) -> Unit = {}, onError: (Sign.Model.Error) -> Unit)
-    fun approveAuthenticate(approve: Sign.Params.ApproveAuthenticate, onSuccess: (Sign.Params.ApproveAuthenticate) -> Unit, onError: (Sign.Model.Error) -> Unit)
-    fun rejectAuthenticate(reject: Sign.Params.RejectAuthenticate, onSuccess: (Sign.Params.RejectAuthenticate) -> Unit, onError: (Sign.Model.Error) -> Unit)
+    fun approveAuthenticate(
+        approve: Sign.Params.ApproveAuthenticate,
+        onSuccess: (Sign.Params.ApproveAuthenticate) -> Unit,
+        onError: (Sign.Model.Error) -> Unit
+    )
+
+    fun rejectAuthenticate(
+        reject: Sign.Params.RejectAuthenticate,
+        onSuccess: (Sign.Params.RejectAuthenticate) -> Unit,
+        onError: (Sign.Model.Error) -> Unit
+    )
+
     fun formatAuthMessage(formatMessage: Sign.Params.FormatMessage): String
 
     fun request(request: Sign.Params.Request, onSuccess: (Sign.Model.SentRequest) -> Unit = {}, onError: (Sign.Model.Error) -> Unit)

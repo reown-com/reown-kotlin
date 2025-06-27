@@ -109,6 +109,10 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
         }.launchIn(scope)
     }
 
+    @Deprecated(
+        "This method is deprecated. The requiredNamespaces parameter is no longer supported as all namespaces are now treated as optional to improve connection compatibility. Use connect(connectParams: Sign.Params.ConnectParams, onSuccess: (String) -> Unit, onError: (Sign.Model.Error) -> Unit) instead.",
+        replaceWith = ReplaceWith("connect(connect, onSuccess, onError)")
+    )
     @Throws(IllegalStateException::class)
     override fun connect(
         connect: Sign.Params.Connect,
@@ -122,6 +126,32 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                     signEngine.proposeSession(
                         namespaces?.toMapOfEngineNamespacesRequired(),
                         optionalNamespaces?.toMapOfEngineNamespacesOptional(),
+                        properties,
+                        scopedProperties,
+                        pairing.toPairing(),
+                        onSuccess = { onSuccess(pairing.uri) },
+                        onFailure = { error -> onError(Sign.Model.Error(error)) }
+                    )
+                }
+            } catch (error: Exception) {
+                onError(Sign.Model.Error(error))
+            }
+        }
+    }
+
+    @Throws(IllegalStateException::class)
+    override fun connect(
+        connectParams: Sign.Params.ConnectParams,
+        onSuccess: (String) -> Unit,
+        onError: (Sign.Model.Error) -> Unit,
+    ) {
+        checkEngineInitialization()
+        scope.launch {
+            try {
+                with(connectParams) {
+                    signEngine.proposeSession(
+                        null,
+                        sessionNamespaces?.toMapOfEngineNamespacesOptional(),
                         properties,
                         scopedProperties,
                         pairing.toPairing(),
