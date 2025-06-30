@@ -54,6 +54,11 @@ interface SignInterface {
     fun initialize(init: Sign.Params.Init, onSuccess: () -> Unit = {}, onError: (Sign.Model.Error) -> Unit)
     fun setWalletDelegate(delegate: WalletDelegate)
     fun setDappDelegate(delegate: DappDelegate)
+
+    @Deprecated(
+        "This method is deprecated. The requiredNamespaces parameter is no longer supported as all namespaces are now treated as optional to improve connection compatibility. Use connect(connectParams: Sign.Params.ConnectParams, onSuccess: (String) -> Unit, onError: (Sign.Model.Error) -> Unit) instead.",
+        replaceWith = ReplaceWith("connect(connect, onSuccess, onError)")
+    )
     fun connect(
         connect: Sign.Params.Connect,
         onSuccess: (String) -> Unit,
