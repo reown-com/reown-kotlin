@@ -23,6 +23,7 @@ import com.reown.sign.engine.model.mapper.toNamespacesVOOptional
 import com.reown.sign.engine.model.mapper.toNamespacesVORequired
 import com.reown.sign.engine.model.mapper.toSessionProposeParams
 import com.reown.sign.engine.model.mapper.toVO
+import com.reown.sign.engine.use_case.utils.NamespaceMerger
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import kotlinx.coroutines.supervisorScope
 
@@ -46,13 +47,7 @@ internal class ProposeSessionUseCase(
         val relay = RelayProtocolOptions(pairing.relayProtocol, pairing.relayData)
 
         // Map requiredNamespaces to optionalNamespaces if not null, ensuring no duplications
-        val mergedOptionalNamespaces = if (requiredNamespaces != null) {
-            val existingOptional = optionalNamespaces ?: emptyMap()
-            // Merge maps, with existing optional namespaces taking precedence to avoid duplications
-            existingOptional + requiredNamespaces
-        } else {
-            optionalNamespaces
-        }
+        val mergedOptionalNamespaces = NamespaceMerger.merge(requiredNamespaces, optionalNamespaces)
 
         runCatching { validate(null, mergedOptionalNamespaces, properties) }.fold(
             onSuccess = {
