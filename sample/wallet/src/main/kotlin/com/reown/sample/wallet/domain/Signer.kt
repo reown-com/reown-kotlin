@@ -104,8 +104,8 @@ object Signer {
                 val recipient = JSONObject(sessionRequest.param).getString("recipient")
 
                 runBlocking {
-                    val result = Stacks.transferStx(StacksAccountDelegate.wallet, Chain.STACKS_TESTNET.id, recipient, amount, "")
-                    """"txid": ${result.first}, "transaction": ${result.second}"""
+                    val result = Stacks.transferStx(StacksAccountDelegate.wallet, Chain.STACKS_TESTNET.id, recipient, amount, "", sender = sender)
+                    """{"txid": "${result.first}", "transaction": "${result.second}"}"""
                 }
 
             }
