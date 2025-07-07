@@ -85,7 +85,10 @@ internal fun Sign.Model.Ping.Success.toModal() = Modal.Model.Ping.Success(topic)
 internal fun Sign.Model.Ping.Error.toModal() = Modal.Model.Ping.Error(error)
 
 // toSign()
-internal fun Modal.Params.Connect.toSign() = Sign.Params.Connect(namespaces?.toSign(), optionalNamespaces?.toSign(), properties, scopedProperties, pairing)
+internal fun Modal.Params.Connect.toSign() =
+    Sign.Params.Connect(namespaces?.toSign(), optionalNamespaces?.toSign(), properties, scopedProperties, pairing)
+
+internal fun Modal.Params.ConnectParams.toSign() = Sign.Params.ConnectParams(sessionNamespaces?.toSign(), properties, scopedProperties, pairing)
 
 internal fun Modal.Params.Authenticate.toSign(): Sign.Params.Authenticate = with(this) {
     Sign.Params.Authenticate(
@@ -141,7 +144,8 @@ internal fun Modal.Model.AuthPayloadParams.toSign(issuer: String): Sign.Params.F
 }
 
 
-internal fun Map<String, Modal.Model.Namespace.Proposal>.toSign() = mapValues { (_, namespace) -> Sign.Model.Namespace.Proposal(namespace.chains, namespace.methods, namespace.events) }
+internal fun Map<String, Modal.Model.Namespace.Proposal>.toSign() =
+    mapValues { (_, namespace) -> Sign.Model.Namespace.Proposal(namespace.chains, namespace.methods, namespace.events) }
 
 internal fun Modal.Params.Disconnect.toSign() = Sign.Params.Disconnect(sessionTopic)
 

@@ -44,8 +44,7 @@ internal class PairingControllerImpl : ParingController {
     ) {
         try {
             generatePairing()
-            val connectParams = Modal.Params.Connect(
-                sessionParams.requiredNamespaces,
+            val connectParams = Modal.Params.ConnectParams(
                 sessionParams.optionalNamespaces,
                 sessionParams.properties,
                 sessionParams.scopedProperties,

@@ -110,9 +110,8 @@ class ChainSelectionViewModel : ViewModel() {
 
             if (pairing != null) {
                 val connectParams =
-                    Modal.Params.Connect(
-                        namespaces = getNamespaces(),
-                        optionalNamespaces = getOptionalNamespaces(),
+                    Modal.Params.ConnectParams(
+                        sessionNamespaces = getOptionalNamespaces(),
                         properties = getProperties(),
                         pairing = pairing
                     )
