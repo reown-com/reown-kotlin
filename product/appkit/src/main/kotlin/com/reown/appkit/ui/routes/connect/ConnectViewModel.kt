@@ -224,10 +224,7 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
     }
 
     private fun getSessionParamsSelectedChain() = with(AppKit.chains) {
-        Modal.Params.SessionParams(
-            requiredNamespaces = mapOf(),
-            optionalNamespaces = toOptionalNamespaces()
-        )
+        Modal.Params.SessionParams(optionalNamespaces = toOptionalNamespaces())
     }
 
     private fun List<Modal.Model.Chain>.toOptionalNamespaces() = groupBy { it.chainNamespace }
