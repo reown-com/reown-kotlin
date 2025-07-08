@@ -66,7 +66,11 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
         signEngine.engineEvent.onEach { event ->
             when (event) {
                 is EngineDO.SessionProposalEvent -> delegate.onSessionProposal(event.proposal.toClientSessionProposal(), event.context.toCore())
-                is EngineDO.SessionAuthenticateEvent -> delegate.onSessionAuthenticate?.invoke(event.toClientSessionAuthenticate(), event.verifyContext.toCore())
+                is EngineDO.SessionAuthenticateEvent -> delegate.onSessionAuthenticate?.invoke(
+                    event.toClientSessionAuthenticate(),
+                    event.verifyContext.toCore()
+                )
+
                 is EngineDO.SessionRequestEvent -> delegate.onSessionRequest(event.request.toClientSessionRequest(), event.context.toCore())
                 is EngineDO.SessionDelete -> delegate.onSessionDelete(event.toClientDeletedSession())
                 is EngineDO.SessionExtend -> delegate.onSessionExtend(event.toClientActiveSession())
@@ -109,6 +113,10 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
         }.launchIn(scope)
     }
 
+    @Deprecated(
+        "This method is deprecated. The requiredNamespaces parameter is no longer supported as all namespaces are now treated as optional to improve connection compatibility. Use connect(connectParams: Sign.Params.ConnectParams, onSuccess: (String) -> Unit, onError: (Sign.Model.Error) -> Unit) instead.",
+        replaceWith = ReplaceWith("connect(connect, onSuccess, onError)")
+    )
     @Throws(IllegalStateException::class)
     override fun connect(
         connect: Sign.Params.Connect,
@@ -136,6 +144,32 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
     }
 
     @Throws(IllegalStateException::class)
+    override fun connect(
+        connectParams: Sign.Params.ConnectParams,
+        onSuccess: (String) -> Unit,
+        onError: (Sign.Model.Error) -> Unit,
+    ) {
+        checkEngineInitialization()
+        scope.launch {
+            try {
+                with(connectParams) {
+                    signEngine.proposeSession(
+                        null,
+                        sessionNamespaces?.toMapOfEngineNamespacesOptional(),
+                        properties,
+                        scopedProperties,
+                        pairing.toPairing(),
+                        onSuccess = { onSuccess(pairing.uri) },
+                        onFailure = { error -> onError(Sign.Model.Error(error)) }
+                    )
+                }
+            } catch (error: Exception) {
+                onError(Sign.Model.Error(error))
+            }
+        }
+    }
+
+    @Throws(IllegalStateException::class)
     override fun authenticate(
         authenticate: Sign.Params.Authenticate,
         walletAppLink: String?,
@@ -145,7 +179,8 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
         checkEngineInitialization()
         scope.launch {
             try {
-                signEngine.authenticate(authenticate.toAuthenticate(),
+                signEngine.authenticate(
+                    authenticate.toAuthenticate(),
                     authenticate.methods, authenticate.pairingTopic,
                     if (authenticate.expiry == null) null else Expiry(authenticate.expiry),
                     walletAppLink,
@@ -212,7 +247,11 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
     }
 
     @Throws(IllegalStateException::class)
-    override fun approveAuthenticate(approve: Sign.Params.ApproveAuthenticate, onSuccess: (Sign.Params.ApproveAuthenticate) -> Unit, onError: (Sign.Model.Error) -> Unit) {
+    override fun approveAuthenticate(
+        approve: Sign.Params.ApproveAuthenticate,
+        onSuccess: (Sign.Params.ApproveAuthenticate) -> Unit,
+        onError: (Sign.Model.Error) -> Unit
+    ) {
         checkEngineInitialization()
 
         scope.launch {
@@ -230,12 +269,22 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
     }
 
     @Throws(IllegalStateException::class)
-    override fun rejectAuthenticate(reject: Sign.Params.RejectAuthenticate, onSuccess: (Sign.Params.RejectAuthenticate) -> Unit, onError: (Sign.Model.Error) -> Unit) {
+    override fun rejectAuthenticate(
+        reject: Sign.Params.RejectAuthenticate,
+        onSuccess: (Sign.Params.RejectAuthenticate) -> Unit,
+        onError: (Sign.Model.Error) -> Unit
+    ) {
         checkEngineInitialization()
 
         scope.launch {
             try {
-                signEngine.rejectSessionAuthenticate(reject.id, reject.reason, onSuccess = { onSuccess(reject) }) { error -> onError(Sign.Model.Error(error)) }
+                signEngine.rejectSessionAuthenticate(reject.id, reject.reason, onSuccess = { onSuccess(reject) }) { error ->
+                    onError(
+                        Sign.Model.Error(
+                            error
+                        )
+                    )
+                }
             } catch (error: Exception) {
                 onError(Sign.Model.Error(error))
             }
@@ -451,10 +500,20 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                     atomicBoolean = AtomicBoolean()
                     when (connectionState) {
                         is WSSConnectionState.Disconnected.ConnectionFailed ->
-                            onDelegate(Sign.Model.ConnectionState(false, Sign.Model.ConnectionState.Reason.ConnectionFailed(connectionState.throwable)))
+                            onDelegate(
+                                Sign.Model.ConnectionState(
+                                    false,
+                                    Sign.Model.ConnectionState.Reason.ConnectionFailed(connectionState.throwable)
+                                )
+                            )
 
                         is WSSConnectionState.Disconnected.ConnectionClosed ->
-                            onDelegate(Sign.Model.ConnectionState(false, Sign.Model.ConnectionState.Reason.ConnectionClosed(connectionState.message ?: "Connection closed")))
+                            onDelegate(
+                                Sign.Model.ConnectionState(
+                                    false,
+                                    Sign.Model.ConnectionState.Reason.ConnectionClosed(connectionState.message ?: "Connection closed")
+                                )
+                            )
 
                         else -> onDelegate(Sign.Model.ConnectionState(true))
                     }
@@ -467,7 +526,12 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
 
                 atomicBoolean?.get() == true && connectionState is WSSConnectionState.Disconnected.ConnectionClosed -> {
                     atomicBoolean?.set(false)
-                    onDelegate(Sign.Model.ConnectionState(false, Sign.Model.ConnectionState.Reason.ConnectionClosed(connectionState.message ?: "Connection closed")))
+                    onDelegate(
+                        Sign.Model.ConnectionState(
+                            false,
+                            Sign.Model.ConnectionState.Reason.ConnectionClosed(connectionState.message ?: "Connection closed")
+                        )
+                    )
                 }
 
                 atomicBoolean?.get() == false && connectionState is WSSConnectionState.Connected -> {

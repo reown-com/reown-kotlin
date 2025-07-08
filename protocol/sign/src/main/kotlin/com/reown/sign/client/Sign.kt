@@ -323,6 +323,13 @@ object Sign {
             val pairing: Core.Model.Pairing,
         ) : Params()
 
+        data class ConnectParams(
+            val sessionNamespaces: Map<String, Model.Namespace.Proposal>? = null, //optionalNM
+            val properties: Map<String, String>? = null,
+            val scopedProperties: Map<String, String>? = null,
+            val pairing: Core.Model.Pairing,
+        ) : Params()
+
         data class Authenticate(
             val pairingTopic: String? = null,
             val chains: List<String>,

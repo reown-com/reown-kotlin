@@ -23,6 +23,7 @@ import com.reown.sign.engine.model.mapper.toNamespacesVOOptional
 import com.reown.sign.engine.model.mapper.toNamespacesVORequired
 import com.reown.sign.engine.model.mapper.toSessionProposeParams
 import com.reown.sign.engine.model.mapper.toVO
+import com.reown.sign.engine.use_case.utils.NamespaceMerger
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import kotlinx.coroutines.supervisorScope
 
@@ -45,15 +46,18 @@ internal class ProposeSessionUseCase(
     ) = supervisorScope {
         val relay = RelayProtocolOptions(pairing.relayProtocol, pairing.relayData)
 
-        runCatching { validate(requiredNamespaces, optionalNamespaces, properties) }.fold(
+        // Map requiredNamespaces to optionalNamespaces if not null, ensuring no duplications
+        val mergedOptionalNamespaces = NamespaceMerger.merge(requiredNamespaces, optionalNamespaces)
+
+        runCatching { validate(null, mergedOptionalNamespaces, properties) }.fold(
             onSuccess = {
                 val expiry = Expiry(PROPOSAL_EXPIRY)
                 val selfPublicKey: PublicKey = crypto.generateAndStoreX25519KeyPair()
                 val sessionProposal: SignParams.SessionProposeParams =
                     toSessionProposeParams(
                         listOf(relay),
-                        requiredNamespaces ?: emptyMap(),
-                        optionalNamespaces ?: emptyMap(),
+                        emptyMap(), // Always pass empty map for required namespaces
+                        mergedOptionalNamespaces ?: emptyMap(),
                         properties, scopedProperties, selfPublicKey, selfAppMetaData, expiry
                     )
                 val request = SignRpc.SessionPropose(params = sessionProposal)

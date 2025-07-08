@@ -91,7 +91,7 @@ internal class AppKitEngine(
 
     fun connectWC(
         name: String, method: String,
-        connect: Modal.Params.Connect,
+        connect: Modal.Params.ConnectParams,
         onSuccess: (String) -> Unit,
         onError: (Throwable) -> Unit
     ) {

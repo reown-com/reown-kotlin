@@ -121,7 +121,11 @@ object AppKit {
                 appKitEngine.setup(init, onError)
                 appKitEngine.setInternalDelegate(AppKitDelegate)
                 wcKoinApp.modules(
-                    module { single(named(AndroidCommonDITags.ENABLE_WEB_3_MODAL_ANALYTICS)) { init.enableAnalytics ?: appKitEngine.fetchAnalyticsConfig() } }
+                    module {
+                        single(named(AndroidCommonDITags.ENABLE_WEB_3_MODAL_ANALYTICS)) {
+                            init.enableAnalytics ?: appKitEngine.fetchAnalyticsConfig()
+                        }
+                    }
                 )
             }
                 .onFailure { error -> return@onInitializedClient onError(Modal.Model.Error(error)) }
@@ -173,6 +177,10 @@ object AppKit {
         }.launchIn(scope)
     }
 
+    @Deprecated(
+        "This method is deprecated. The requiredNamespaces parameter is no longer supported as all namespaces are now treated as optional to improve connection compatibility. Use connect(connectParams: Modal.Params.ConnectParams, onSuccess: (String) -> Unit, onError: (Modal.Model.Error) -> Unit) instead.",
+        replaceWith = ReplaceWith("connect(connect, onSuccess, onError)")
+    )
     fun connect(
         connect: Modal.Params.Connect,
         onSuccess: (String) -> Unit,
@@ -185,6 +193,18 @@ object AppKit {
         )
     }
 
+    fun connect(
+        connectParams: Modal.Params.ConnectParams,
+        onSuccess: (String) -> Unit,
+        onError: (Modal.Model.Error) -> Unit
+    ) {
+        SignClient.connect(
+            connectParams = connectParams.toSign(),
+            onSuccess = { url -> onSuccess(url) },
+            onError = { onError(it.toModal()) }
+        )
+    }
+
     fun authenticate(
         authenticate: Modal.Params.Authenticate,
         walletAppLink: String? = null,
@@ -192,7 +212,8 @@ object AppKit {
         onError: (Modal.Model.Error) -> Unit,
     ) {
 
-        SignClient.authenticate(authenticate.toSign(), walletAppLink,
+        SignClient.authenticate(
+            authenticate.toSign(), walletAppLink,
             onSuccess = { url -> onSuccess(url) },
             onError = { onError(it.toModal()) })
     }
@@ -296,7 +317,7 @@ object AppKit {
 
     /**
      * Extends the expiry time of the current session.
-     * 
+     *
      * @param onSuccess Callback for successful session extension
      * @param onError Callback for errors during session extension
      */
