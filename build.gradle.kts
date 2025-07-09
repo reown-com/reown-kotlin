@@ -4,6 +4,7 @@ import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
+import org.apache.http.client.config.RequestConfig
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Base64
 import javax.xml.parsers.DocumentBuilderFactory
@@ -131,6 +132,9 @@ tasks.register("closeAndReleaseMultipleRepositories") {
     description = "Upload staging repositories to Central Portal and release"
 
     doLast {
+        println("Starting closeAndReleaseMultipleRepositories task...")
+        
+        println("Fetching staging repositories...")
         val repos = fetchStagingRepositories()
         if (repos.isEmpty()) {
             println("No staging repositories found")
@@ -147,6 +151,8 @@ tasks.register("closeAndReleaseMultipleRepositories") {
         val openRepos = repos.filter { it.state == "open" }
         val closedRepos = repos.filter { it.state == "closed" }
         
+        println("Processing ${openRepos.size} open repositories and ${closedRepos.size} closed repositories")
+        
         if (openRepos.isNotEmpty()) {
             println("Uploading ${openRepos.size} open repositories to Central Portal using individual repository keys")
             uploadRepositoriesToPortal(openRepos)
@@ -162,15 +168,24 @@ tasks.register("closeAndReleaseMultipleRepositories") {
             return@doLast
         }
         
+        println("Starting to wait for artifacts to be available on Maven Central...")
         // Wait for artifacts to be available on Maven Central since we're using automatic publishing
         waitForArtifactsToBeAvailable()
+        println("closeAndReleaseMultipleRepositories task completed successfully!")
     }
 }
 
 data class StagingRepository(val key: String, val state: String, val portalDeploymentId: String?)
 
 fun fetchStagingRepositories(): List<StagingRepository> {
-    val client = HttpClients.createDefault()
+    val client = HttpClients.custom()
+        .setDefaultRequestConfig(
+            RequestConfig.custom()
+                .setConnectTimeout(30000) // 30 seconds
+                .setSocketTimeout(60000) // 60 seconds
+                .build()
+        )
+        .build()
     val httpGet = HttpGet("$manualApiUrl/search/repositories").apply {
         setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
     }
@@ -211,15 +226,28 @@ fun parseRepositoriesResponse(jsonResponse: String): List<StagingRepository> {
 }
 
 fun uploadRepositoriesToPortal(repositories: List<StagingRepository>) {
-    repositories.forEach { repo ->
-        println("Uploading repository ${repo.key} to Central Portal...")
+    println("Starting upload of ${repositories.size} repositories to Central Portal...")
+    repositories.forEachIndexed { index, repo ->
+        println("Uploading repository ${index + 1}/${repositories.size}: ${repo.key}")
         uploadRepositoryToPortal(repo.key)
+        println("Completed upload of repository ${index + 1}/${repositories.size}: ${repo.key}")
     }
+    println("Completed upload of all ${repositories.size} repositories to Central Portal")
 }
 
 fun uploadRepositoryToPortal(repositoryKey: String) {
-    val client = HttpClients.createDefault()
+    val client = HttpClients.custom()
+        .setDefaultRequestConfig(
+            RequestConfig.custom()
+                .setConnectTimeout(30000) // 30 seconds
+                .setSocketTimeout(60000) // 60 seconds
+                .build()
+        )
+        .build()
     val uploadUrl = "$manualApiUrl/upload/repository/$repositoryKey"
+    
+    println("Starting upload for repository: $repositoryKey")
+    println("Upload URL: $uploadUrl")
     
     val httpPost = HttpPost(uploadUrl).apply {
         setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
@@ -228,20 +256,43 @@ fun uploadRepositoryToPortal(repositoryKey: String) {
         entity = StringEntity("""{"publishing_type": "automatic"}""")
     }
 
-    val response = client.execute(httpPost)
-    val responseBody = EntityUtils.toString(response.entity)
-    
-    if (response.statusLine.statusCode == 200 || response.statusLine.statusCode == 201) {
-        println("Successfully uploaded repository $repositoryKey to Central Portal")
-        println("Response: $responseBody")
-    } else {
-        throw RuntimeException("Failed to upload repository $repositoryKey: HTTP ${response.statusLine.statusCode} - $responseBody")
+    try {
+        println("Executing HTTP POST request...")
+        val response = client.execute(httpPost)
+        println("Received response with status: ${response.statusLine.statusCode}")
+        
+        val responseBody = EntityUtils.toString(response.entity)
+        println("Response body length: ${responseBody.length}")
+        
+        if (response.statusLine.statusCode == 200 || response.statusLine.statusCode == 201) {
+            println("Successfully uploaded repository $repositoryKey to Central Portal")
+            println("Response: $responseBody")
+        } else {
+            throw RuntimeException("Failed to upload repository $repositoryKey: HTTP ${response.statusLine.statusCode} - $responseBody")
+        }
+    } catch (e: Exception) {
+        println("Exception during upload of repository $repositoryKey: ${e.message}")
+        e.printStackTrace()
+        throw RuntimeException("Failed to upload repository $repositoryKey: ${e.message}", e)
+    } finally {
+        try {
+            httpPost.releaseConnection()
+        } catch (e: Exception) {
+            println("Warning: Failed to release connection: ${e.message}")
+        }
     }
 }
 
 fun waitForArtifactsToBeAvailable() {
     val repoIds: List<String> = repoIdWithVersion.map { it.first }
-    val client = HttpClients.createDefault()
+    val client = HttpClients.custom()
+        .setDefaultRequestConfig(
+            RequestConfig.custom()
+                .setConnectTimeout(30000) // 30 seconds
+                .setSocketTimeout(60000) // 60 seconds
+                .build()
+        )
+        .build()
     val artifactUrls = repoIdWithVersion.map { (repoId, version) ->
         println("Checking: https://repo1.maven.org/maven2/com/reown/$repoId/$version/")
         "https://repo1.maven.org/maven2/com/reown/$repoId/$version/"
