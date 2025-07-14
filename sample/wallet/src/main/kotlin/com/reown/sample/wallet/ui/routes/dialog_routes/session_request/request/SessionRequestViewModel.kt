@@ -27,9 +27,10 @@ class SessionRequestViewModel : ViewModel() {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
                     val result: String = Signer.sign(sessionRequest)
+
                     val response = Wallet.Params.SessionRequestResponse(
                         sessionTopic = sessionRequest.topic,
-                        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, result)
+                        jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, null)
                     )
                     val redirect = WalletKit.getActiveSessionByTopic(sessionRequest.topic)?.redirect?.toUri()
                     WalletKit.respondSessionRequest(response,
