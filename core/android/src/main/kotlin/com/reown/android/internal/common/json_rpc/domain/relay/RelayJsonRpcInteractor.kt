@@ -110,6 +110,8 @@ internal class RelayJsonRpcInteractor(
                 val encryptedRequest = chaChaPolyCodec.encrypt(topic, requestJson, envelopeType, participants)
                 val encryptedRequestString = Base64.toBase64String(encryptedRequest)
 
+
+
                 relay.publish(topic.value, encryptedRequestString, params.toRelay()) { result ->
                     result.fold(
                         onSuccess = { onSuccess() },

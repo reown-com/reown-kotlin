@@ -27,4 +27,13 @@ interface RelayInterface {
         id: Long? = null,
         onResult: (Result<Relay.Model.Call.Unsubscribe.Acknowledgement>) -> Unit,
     )
+
+    fun proposeSession(
+        pairingTopic: String,
+        sessionProposal: String,
+        attestation: String? = null,
+        correlationId: Long,
+        id: Long?,
+        onResult: (Result<Relay.Model.Call.ProposeSession.Acknowledgement>) -> Unit
+    )
 }
