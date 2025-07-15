@@ -21,6 +21,13 @@ interface RelayJsonRpcInteractorInterface : JsonRpcInteractorInterface {
 
     fun unsubscribe(topic: Topic, onSuccess: () -> Unit = {}, onFailure: (Throwable) -> Unit = {})
 
+    fun proposeSession(
+        topic: Topic,
+        payload: JsonRpcClientSync<*>,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    )
+
     fun publishJsonRpcRequest(
         topic: Topic,
         params: IrnParams,

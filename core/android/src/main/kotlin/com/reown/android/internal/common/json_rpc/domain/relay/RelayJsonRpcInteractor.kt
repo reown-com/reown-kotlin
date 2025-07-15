@@ -89,6 +89,39 @@ internal class RelayJsonRpcInteractor(
         }
     }
 
+    override fun proposeSession(
+        topic: Topic,
+        payload: JsonRpcClientSync<*>,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    ) {
+        try {
+            checkNetworkConnectivity()
+        } catch (e: NoConnectivityException) {
+            return onFailure(e)
+        }
+
+        try {
+            val requestJson = serializer.serialize(payload) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
+            if (jsonRpcHistory.setRequest(payload.id, topic, payload.method, requestJson, TransportType.RELAY)) {
+                val encryptedRequest = chaChaPolyCodec.encrypt(topic, requestJson, EnvelopeType.ZERO)
+                val encryptedRequestString = Base64.toBase64String(encryptedRequest)
+                relay.proposeSession(pairingTopic = topic, sessionProposal = encryptedRequestString, correlationId = payload.id) { result ->
+                    result.fold(
+                        onSuccess = { onSuccess() },
+                        onFailure = { error ->
+                            logger.error("JsonRpcInteractor: Cannot send the session proposal request, error: $error")
+                            onFailure(Throwable("Session proposal error: ${error.message}"))
+                        }
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("JsonRpcInteractor: Cannot send the request, exception: $e")
+            onFailure(Throwable("Publish Request Error: $e"))
+        }
+    }
+
     override fun publishJsonRpcRequest(
         topic: Topic,
         params: IrnParams,
@@ -109,9 +142,6 @@ internal class RelayJsonRpcInteractor(
             if (jsonRpcHistory.setRequest(payload.id, topic, payload.method, requestJson, TransportType.RELAY)) {
                 val encryptedRequest = chaChaPolyCodec.encrypt(topic, requestJson, envelopeType, participants)
                 val encryptedRequestString = Base64.toBase64String(encryptedRequest)
-
-
-
                 relay.publish(topic.value, encryptedRequestString, params.toRelay()) { result ->
                     result.fold(
                         onSuccess = { onSuccess() },

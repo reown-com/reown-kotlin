@@ -12,6 +12,7 @@ import com.reown.foundation.network.model.RelayDTO
 import com.reown.foundation.util.Logger
 import com.reown.foundation.util.scope
 import com.reown.util.generateClientToServerId
+import com.reown.util.generateId
 import com.tinder.scarlet.WebSocket
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -115,11 +116,10 @@ abstract class BaseRelayClient : RelayInterface {
             .onEach { relayRequest -> supervisorScope { publishSubscriptionAcknowledgement(relayRequest.id) } }
     }
 
-    @ExperimentalCoroutinesApi
+
     override fun proposeSession(
-        pairingTopic: String,
+        pairingTopic: Topic,
         sessionProposal: String,
-        attestation: String?,
         correlationId: Long,
         id: Long?,
         onResult: (Result<Relay.Model.Call.ProposeSession.Acknowledgement>) -> Unit,
@@ -127,13 +127,15 @@ abstract class BaseRelayClient : RelayInterface {
         connectAndCallRelay(
             onConnected = {
                 val proposeSessionParams = RelayDTO.ProposeSession.Request.Params(
-                    Topic(pairingTopic),
-                    sessionProposal,
-                    attestation,
-                    correlationId
+                    pairingTopic = pairingTopic,
+                    sessionProposal = sessionProposal,
+                    attestation = null,
+                    correlationId = correlationId
                 )
                 val proposeSessionRequest = RelayDTO.ProposeSession.Request(id = id ?: generateClientToServerId(), params = proposeSessionParams)
                 observeProposeSessionResult(proposeSessionRequest.id, onResult)
+
+                println("kobe: Propose Session: $proposeSessionRequest")
                 relayService.proposeSessionRequest(proposeSessionRequest)
             },
             onFailure = { onResult(Result.failure(it)) }
