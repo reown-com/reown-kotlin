@@ -18,6 +18,16 @@ interface RelayInterface {
         onResult: (Result<Relay.Model.Call.ProposeSession.Acknowledgement>) -> Unit
     )
 
+    fun approveSession(
+        pairingTopic: Topic,
+        sessionTopic: Topic,
+        sessionProposalResponse: String,
+        sessionSettlementRequest: String,
+        correlationId: Long,
+        id: Long? = null,
+        onResult: (Result<Relay.Model.Call.ApproveSession.Acknowledgement>) -> Unit,
+    )
+
     fun publish(
         topic: String,
         message: String,

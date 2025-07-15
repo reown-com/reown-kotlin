@@ -5,6 +5,7 @@ import com.reown.android.internal.common.model.EnvelopeType
 import com.reown.android.internal.common.model.IrnParams
 import com.reown.android.internal.common.model.Participants
 import com.reown.android.internal.common.model.WCRequest
+import com.reown.android.internal.common.model.params.CoreSignParams
 import com.reown.android.relay.WSSConnectionState
 import com.reown.foundation.common.model.Topic
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +25,16 @@ interface RelayJsonRpcInteractorInterface : JsonRpcInteractorInterface {
     fun proposeSession(
         topic: Topic,
         payload: JsonRpcClientSync<*>,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    )
+
+    fun approveSession(
+        pairingTopic: Topic,
+        sessionTopic: Topic,
+        sessionProposalResponse: CoreSignParams.ApprovalParams,
+        settleRequest: JsonRpcClientSync<*>,
+        correlationId: Long,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit,
     )

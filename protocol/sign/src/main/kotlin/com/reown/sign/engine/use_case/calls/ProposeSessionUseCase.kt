@@ -3,15 +3,11 @@ package com.reown.sign.engine.use_case.calls
 import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.Expiry
-import com.reown.android.internal.common.model.IrnParams
 import com.reown.android.internal.common.model.Pairing
 import com.reown.android.internal.common.model.RelayProtocolOptions
-import com.reown.android.internal.common.model.Tags
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.utils.PROPOSAL_EXPIRY
-import com.reown.android.internal.utils.fiveMinutesInSeconds
 import com.reown.foundation.common.model.PublicKey
-import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.exceptions.InvalidNamespaceException
 import com.reown.sign.common.exceptions.InvalidPropertiesException

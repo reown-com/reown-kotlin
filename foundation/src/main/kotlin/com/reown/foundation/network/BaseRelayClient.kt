@@ -167,10 +167,9 @@ abstract class BaseRelayClient : RelayInterface {
         }
     }
 
-    @ExperimentalCoroutinesApi
-    fun approveSession(
-        pairingTopic: String,
-        sessionTopic: String,
+    override fun approveSession(
+        pairingTopic: Topic,
+        sessionTopic: Topic,
         sessionProposalResponse: String,
         sessionSettlementRequest: String,
         correlationId: Long,
@@ -180,14 +179,16 @@ abstract class BaseRelayClient : RelayInterface {
         connectAndCallRelay(
             onConnected = {
                 val approveSessionParams = RelayDTO.ApproveSession.Request.Params(
-                    Topic(pairingTopic),
-                    Topic(sessionTopic),
-                    sessionProposalResponse,
-                    sessionSettlementRequest,
-                    correlationId
+                    pairingTopic = pairingTopic,
+                    sessionTopic = sessionTopic,
+                    sessionProposalResponse = sessionProposalResponse,
+                    sessionSettlementRequest = sessionSettlementRequest,
+                    correlationId = correlationId
                 )
                 val approveSessionRequest = RelayDTO.ApproveSession.Request(id = id ?: generateClientToServerId(), params = approveSessionParams)
                 observeApproveSessionResult(approveSessionRequest.id, onResult)
+
+                println("kobe: Approve Session: $approveSessionRequest")
                 relayService.approveSessionRequest(approveSessionRequest)
             },
             onFailure = { onResult(Result.failure(it)) }
