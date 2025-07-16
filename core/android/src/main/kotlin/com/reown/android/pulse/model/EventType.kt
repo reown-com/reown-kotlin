@@ -24,9 +24,6 @@ object EventType {
         const val MALFORMED_PAIRING_URI: String = "MALFORMED_PAIRING_URI"
 
         @get:JvmSynthetic
-        const val PAIRING_ALREADY_EXIST: String = "PAIRING_ALREADY_EXIST"
-
-        @get:JvmSynthetic
         const val PAIRING_SUBSCRIPTION_FAILURE: String = "FAILED_TO_SUBSCRIBE_TO_PAIRING_TOPIC"
 
         @get:JvmSynthetic
@@ -39,13 +36,7 @@ object EventType {
         const val PROPOSAL_EXPIRED: String = "PROPOSAL_EXPIRED"
 
         @get:JvmSynthetic
-        const val SESSION_SUBSCRIPTION_FAILURE: String = "SESSION_SUBSCRIPTION_FAILURE"
-
-        @get:JvmSynthetic
-        const val SESSION_APPROVE_PUBLISH_FAILURE: String = "SESSION_APPROVE_PUBLISH_FAILURE"
-
-        @get:JvmSynthetic
-        const val SESSION_SETTLE_PUBLISH_FAILURE: String = "SESSION_SETTLE_PUBLISH_FAILURE"
+        const val SESSION_APPROVE_FAILURE: String = "SESSION_APPROVE_FAILURE"
 
         @get:JvmSynthetic
         const val SESSION_APPROVE_NAMESPACE_VALIDATION_FAILURE: String = "SESSION_APPROVE_NAMESPACE_VALIDATION_FAILURE"

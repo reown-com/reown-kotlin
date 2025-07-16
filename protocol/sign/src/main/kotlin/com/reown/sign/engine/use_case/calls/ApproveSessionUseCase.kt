@@ -90,7 +90,6 @@ internal class ApproveSessionUseCase(
             val sessionTopic = crypto.generateTopicFromKeyAgreement(selfPublicKey, PublicKey(proposerPublicKey))
             trace.add(Trace.Session.CREATE_SESSION_TOPIC)
             val approvalParams = proposal.toSessionApproveParams(selfPublicKey)
-//            trace.add(Trace.Session.SUBSCRIBING_SESSION_TOPIC).also { logger.log("Subscribing to session topic: $sessionTopic") }
 
             //settlement
             val selfParticipant = SessionParticipant(selfPublicKey.keyAsHex, selfAppMetaData)
@@ -113,7 +112,7 @@ internal class ApproveSessionUseCase(
             trace.add(Trace.Session.STORE_SESSION)
             val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces, sessionProperties, scopedProperties)
             val sessionSettle = SignRpc.SessionSettle(params = params)
-
+            trace.add(Trace.Session.PUBLISHING_SESSION_APPROVE)
             jsonRpcInteractor.approveSession(
                 pairingTopic = proposal.pairingTopic,
                 sessionTopic = sessionTopic,
@@ -124,12 +123,25 @@ internal class ApproveSessionUseCase(
                     onSuccess()
                     scope.launch {
                         supervisorScope {
+                            trace.add(Trace.Session.SESSION_APPROVE_SUCCESS)
                             proposalStorageRepository.deleteProposal(proposerPublicKey)
                             verifyContextStorageRepository.delete(proposal.requestId)
                         }
                     }
                 },
-                onFailure = { error -> onFailure(error) }
+                onFailure = { error ->
+                    onFailure(error)
+                    scope.launch {
+                        supervisorScope {
+                            insertEventUseCase(
+                                Props(
+                                    type = EventType.Error.SESSION_APPROVE_FAILURE,
+                                    properties = Properties(trace = trace, topic = sessionTopic.value)
+                                )
+                            ).also { logger.error("Session approve failure, topic: ${sessionTopic.value}") }
+                        }
+                    }
+                }
             )
         } catch (e: Exception) {
             if (e is NoRelayConnectionException) {
