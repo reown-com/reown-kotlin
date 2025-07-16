@@ -63,3 +63,11 @@ fun RelayDTO.BatchSubscribe.Result.Acknowledgement.toRelay() =
 @JvmSynthetic
 fun RelayDTO.Unsubscribe.Result.Acknowledgement.toRelay() =
     Relay.Model.Call.Unsubscribe.Acknowledgement(id, jsonrpc, result)
+
+@JvmSynthetic
+fun RelayDTO.ProposeSession.Result.Acknowledgement.toRelay() =
+    Relay.Model.Call.ProposeSession.Acknowledgement(id, jsonrpc, result)
+
+@JvmSynthetic
+fun RelayDTO.ApproveSession.Result.Acknowledgement.toRelay() =
+    Relay.Model.Call.ApproveSession.Acknowledgement(id, jsonrpc, result)

@@ -94,9 +94,9 @@ class ApproveSessionUseCaseTest {
         )
 
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
-                eq(sessionTopic),
+            jsonRpcInteractor.approveSession(
                 any(),
+                eq(sessionTopic),
                 any(),
                 any(),
                 any(),
