@@ -3,7 +3,7 @@ package com.reown.sample.wallet.domain.model
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.blockchain.JsonRpcRequest
 import com.reown.sample.wallet.blockchain.createBlockChainApiService
-import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
@@ -17,7 +17,6 @@ import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Numeric
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 
 object Transaction {
     suspend fun send(sessionRequest: Wallet.Model.SessionRequest): String {

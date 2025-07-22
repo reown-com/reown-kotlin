@@ -7,4 +7,4 @@ data class HederaSignAndExecuteTransactionResult(
     val nodeId: String?,
     val transactionHash: String?,
     val transactionId: String?
-) 
+)
