@@ -183,7 +183,7 @@ object Modal {
 
             data class JsonRpcResult(
                 override val id: Long,
-                val result: String,
+                val result: String?,
             ) : JsonRpcResponse()
 
             data class JsonRpcError(
