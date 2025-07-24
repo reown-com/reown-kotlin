@@ -1,13 +1,13 @@
 import com.android.build.gradle.BaseExtension
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
-import org.apache.http.client.config.RequestConfig
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Base64
-import javax.xml.parsers.DocumentBuilderFactory
 
 plugins {
     alias(libs.plugins.nexusPublish)
@@ -18,8 +18,8 @@ plugins {
 
 allprojects {
     tasks.withType<KotlinCompile>().configureEach {
-        kotlinOptions {
-            jvmTarget = jvmVersion.toString()
+        compilerOptions {
+            jvmTarget.set(JvmTarget.fromTarget(jvmVersion.toString()))
         }
     }
 

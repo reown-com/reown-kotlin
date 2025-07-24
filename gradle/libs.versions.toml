@@ -1,9 +1,9 @@
 [versions]
 core = "1.6.1"
 jerseyCommon = "3.1.6"
-kotlin = "1.9.24"
+kotlin = "2.2.0"
 kotlinxCoroutinesTest = "1.5.2"
-ksp = "1.9.24-1.0.20"
+ksp = "2.2.0-2.0.2"
 agp = "8.9.1"
 
 minSdk = "23"
@@ -11,7 +11,7 @@ mockkAndroid = "1.12.0"
 targetSdk = "34"
 compileSdk = "34"
 
-composeCompiler = "1.5.14"
+composeCompiler = "1.6.0"
 composeBOM = "2024.05.00"
 composeViewModel = "2.8.0"
 accompanist = "0.34.0"
@@ -24,7 +24,7 @@ googleService = "4.4.2"
 scarlet = "1.0.2"
 koin = "3.5.6"
 retrofit = "2.11.0"
-okhttp = "4.12.0"
+okhttp = "5.1.0"
 bouncyCastle = "1.78.1"
 sqlCipher = "4.6.1"
 multibase = "1.1.1"
@@ -186,14 +186,16 @@ firebase = ["firebase-messaging", "firebase-crashlytics", "firebase-analytics"]
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+compose-compiler = { id = "org.jetbrains.compose.compiler", version = "1.6.0" }
+nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version = "1.3.0" }
+sonarqube = { id = "org.sonarqube", version = "4.4.1.3373" }
 
 dokka-core = { id = "org.jetbrains.dokka:dokka-core", version.ref = "dokka" }
 dokka-gradle = { id = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
-
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.2" }
 firebase-distribution = { id = "com.google.firebase.appdistribution", version.ref = "firebaseAppDistribution" }
@@ -204,6 +206,4 @@ google-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 javaLibrary = { id = "org.gradle.java-library" }
 
 sqlDelight = { id = "app.cash.sqldelight", version.ref = "sqlDelight" }
-sonarqube = { id = "org.sonarqube", version = "4.4.1.3373" }
-nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version = "2.0.0" }
 paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
