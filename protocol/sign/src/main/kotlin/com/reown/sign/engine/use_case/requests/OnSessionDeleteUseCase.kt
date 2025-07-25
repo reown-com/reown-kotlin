@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.supervisorScope
-import okhttp3.internal.cookieToString
 
 internal class OnSessionDeleteUseCase(
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,

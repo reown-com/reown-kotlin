@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.paparazzi)
     id("publish-module-android")
     id("jacoco-report")
+    alias(libs.plugins.compose.compiler)
 }
 
 project.apply {
