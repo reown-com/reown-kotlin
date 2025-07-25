@@ -14,6 +14,7 @@ plugins {
     alias(libs.plugins.sonarqube)
     id("release-scripts")
     id("version-bump")
+    alias(libs.plugins.compose.compiler) apply false
 }
 
 allprojects {
