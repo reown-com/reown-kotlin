@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
     id("signing-config")
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
