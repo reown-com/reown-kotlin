@@ -102,7 +102,6 @@ object WalletKit {
 
     @Throws(IllegalStateException::class)
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
-//        wcKoinApp.modules(walletKitModule())
         coreClient = params.core
 
         SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
