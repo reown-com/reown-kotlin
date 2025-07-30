@@ -36,7 +36,7 @@ fun coreJsonRpcModule() = module {
     addDeserializerEntry(PairingJsonRpcMethod.WC_PAIRING_PING, PairingRpc.PairingPing::class)
     addDeserializerEntry(PairingJsonRpcMethod.WC_PAIRING_DELETE, PairingRpc.PairingDelete::class)
 
-    factory {
+    single {
         JsonRpcSerializer(
             serializerEntries = getAll<KClass<SerializableJsonRpc>>().toSet(),
             deserializerEntries = getAll<Pair<String, KClass<*>>>().toMap(),

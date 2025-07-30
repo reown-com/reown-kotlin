@@ -7,22 +7,16 @@ import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
-import com.reown.walletkit.di.walletKitModule
-import com.reown.walletkit.use_cases.EstimateGasUseCase
-import com.reown.walletkit.use_cases.ExecuteChainAbstractionUseCase
-import com.reown.walletkit.use_cases.GetERC20TokenBalanceUseCase
-import com.reown.walletkit.use_cases.PrepareCallERC20TransferCallUseCase
-import com.reown.walletkit.use_cases.PrepareChainAbstractionUseCase
 import kotlinx.coroutines.*
 import java.util.*
 
 object WalletKit {
     private lateinit var coreClient: CoreInterface
-    private val prepareChainAbstractionUseCase: PrepareChainAbstractionUseCase by wcKoinApp.koin.inject()
-    private val executeChainAbstractionUseCase: ExecuteChainAbstractionUseCase by wcKoinApp.koin.inject()
-    private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
-    private val getERC20TokenBalanceUseCase: GetERC20TokenBalanceUseCase by wcKoinApp.koin.inject()
-    private val prepareCallERC20TransferCallUseCase: PrepareCallERC20TransferCallUseCase by wcKoinApp.koin.inject()
+//    private val prepareChainAbstractionUseCase: PrepareChainAbstractionUseCase by wcKoinApp.koin.inject()
+//    private val executeChainAbstractionUseCase: ExecuteChainAbstractionUseCase by wcKoinApp.koin.inject()
+//    private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
+//    private val getERC20TokenBalanceUseCase: GetERC20TokenBalanceUseCase by wcKoinApp.koin.inject()
+//    private val prepareCallERC20TransferCallUseCase: PrepareCallERC20TransferCallUseCase by wcKoinApp.koin.inject()
 
     interface WalletDelegate {
         fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext)
@@ -108,7 +102,6 @@ object WalletKit {
 
     @Throws(IllegalStateException::class)
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
-        wcKoinApp.modules(walletKitModule())
         coreClient = params.core
 
         SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
@@ -351,49 +344,49 @@ object WalletKit {
         return SignClient.getListOfVerifyContexts().map { verifyContext -> verifyContext.toWallet() }
     }
 
-    object ChainAbstraction {
-        @ChainAbstractionExperimentalApi
-        fun prepare(
-            initialTransaction: Wallet.Model.InitialTransaction,
-            accounts: List<String>,
-            onSuccess: (Wallet.Model.PrepareSuccess) -> Unit,
-            onError: (Wallet.Model.PrepareError) -> Unit
-        ) {
-            try {
-                prepareChainAbstractionUseCase(initialTransaction, accounts, onSuccess, onError)
-            } catch (e: Exception) {
-                onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
-            }
-        }
+//    object ChainAbstraction {
+//        @ChainAbstractionExperimentalApi
+//        fun prepare(
+//            initialTransaction: Wallet.Model.InitialTransaction,
+//            accounts: List<String>,
+//            onSuccess: (Wallet.Model.PrepareSuccess) -> Unit,
+//            onError: (Wallet.Model.PrepareError) -> Unit
+//        ) {
+//            try {
+//                prepareChainAbstractionUseCase(initialTransaction, accounts, onSuccess, onError)
+//            } catch (e: Exception) {
+//                onError(Wallet.Model.PrepareError.Unknown(e.message ?: "Unknown error"))
+//            }
+//        }
+//
+//        @ChainAbstractionExperimentalApi
+//        fun execute(
+//            prepareAvailable: Wallet.Model.PrepareSuccess.Available,
+//            signedTxs: List<Wallet.Model.RouteSig>,
+//            initSignedTx: String,
+//            onSuccess: (Wallet.Model.ExecuteSuccess) -> Unit,
+//            onError: (Wallet.Model.Error) -> Unit
+//        ) {
+//            try {
+//                executeChainAbstractionUseCase(prepareAvailable, signedTxs, initSignedTx, onSuccess, onError)
+//            } catch (e: Exception) {
+//                onError(Wallet.Model.Error(e))
+//            }
+//        }
+//    }
 
-        @ChainAbstractionExperimentalApi
-        fun execute(
-            prepareAvailable: Wallet.Model.PrepareSuccess.Available,
-            signedTxs: List<Wallet.Model.RouteSig>,
-            initSignedTx: String,
-            onSuccess: (Wallet.Model.ExecuteSuccess) -> Unit,
-            onError: (Wallet.Model.Error) -> Unit
-        ) {
-            try {
-                executeChainAbstractionUseCase(prepareAvailable, signedTxs, initSignedTx, onSuccess, onError)
-            } catch (e: Exception) {
-                onError(Wallet.Model.Error(e))
-            }
-        }
-    }
-
-    @Throws(Exception::class)
-    fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
-        return estimateGasUseCase(chainId)
-    }
-
-    @Throws(Exception::class)
-    fun getERC20Balance(chainId: String, tokenAddress: String, ownerAddress: String): String {
-        return getERC20TokenBalanceUseCase(chainId, tokenAddress, ownerAddress)
-    }
-
-    @Throws(Exception::class)
-    fun prepareErc20TransferCall(contractAddress: String, to: String, amount: String): Wallet.Model.Call {
-        return prepareCallERC20TransferCallUseCase(contractAddress, to, amount)
-    }
+//    @Throws(Exception::class)
+//    fun estimateFees(chainId: String): Wallet.Model.EstimatedFees {
+//        return estimateGasUseCase(chainId)
+//    }
+//
+//    @Throws(Exception::class)
+//    fun getERC20Balance(chainId: String, tokenAddress: String, ownerAddress: String): String {
+//        return getERC20TokenBalanceUseCase(chainId, tokenAddress, ownerAddress)
+//    }
+//
+//    @Throws(Exception::class)
+//    fun prepareErc20TransferCall(contractAddress: String, to: String, amount: String): Wallet.Model.Call {
+//        return prepareCallERC20TransferCallUseCase(contractAddress, to, amount)
+//    }
 }

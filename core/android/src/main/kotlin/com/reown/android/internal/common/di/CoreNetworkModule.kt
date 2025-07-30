@@ -34,7 +34,13 @@ internal const val KEY_CLIENT_ID = "clientId"
 
 @Suppress("LocalVariableName")
 @JvmSynthetic
-fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, sdkVersion: String, timeout: NetworkClientTimeout? = null, packageName: String) = module {
+fun coreAndroidNetworkModule(
+    serverUrl: String,
+    connectionType: ConnectionType,
+    sdkVersion: String,
+    timeout: NetworkClientTimeout? = null,
+    packageName: String
+) = module {
     val networkClientTimeout = timeout ?: NetworkClientTimeout.getDefaultTimeout()
     factory(named(AndroidCommonDITags.RELAY_URL)) {
         val jwt = get<GenerateJwtStoreClientIdUseCase>().invoke(serverUrl)
@@ -93,10 +99,6 @@ fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, 
                 if (BuildConfig.DEBUG) {
                     val loggingInterceptor = get<Interceptor>(named(AndroidCommonDITags.LOGGING_INTERCEPTOR))
                     addInterceptor(loggingInterceptor)
-                }
-
-                (BeagleOkHttpLogger.logger as Interceptor?)?.let { beagleHttpLoggerInterceptor ->
-                    addInterceptor(beagleHttpLoggerInterceptor)
                 }
             }
             .retryOnConnectionFailure(true)

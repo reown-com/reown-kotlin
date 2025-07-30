@@ -3,6 +3,7 @@ plugins {
     id(libs.plugins.kotlin.android.get().pluginId)
     alias(libs.plugins.google.ksp)
     id("publish-module-android")
+    alias(libs.plugins.compose.compiler)
 }
 
 project.apply {

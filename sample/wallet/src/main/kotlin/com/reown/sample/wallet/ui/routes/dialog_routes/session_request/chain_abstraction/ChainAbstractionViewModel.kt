@@ -10,7 +10,7 @@ import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.EthSigner
 import com.reown.sample.wallet.domain.Signer
-import com.reown.sample.wallet.domain.SolanaAccountDelegate
+//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.WCDelegate.prepareAvailable
 import com.reown.sample.wallet.domain.clearSessionRequest
@@ -23,7 +23,7 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.S
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import com.reown.walletkit.utils.solanaSignPrehash
+//import com.reown.walletkit.utils.solanaSignPrehash
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -44,13 +44,14 @@ class ChainAbstractionViewModel : ViewModel() {
         val initialTransaction = WCDelegate.sessionRequestEvent?.first
 
         val tokenAddress = prepareAvailable?.initialTransactionMetadata?.tokenContract ?: ""
-        return try {
-            WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, EthAccountDelegate.address ?: "")
-        } catch (e: Exception) {
-            println("getERC20Balance error: $e")
-            recordError(e)
-            ""
-        }
+//        return try {
+//            WalletKit.getERC20Balance(initialTransaction?.chainId ?: "", tokenAddress, EthAccountDelegate.address ?: "")
+//        } catch (e: Exception) {
+//            println("getERC20Balance error: $e")
+//            recordError(e)
+//            ""
+//        }
+       return ""
     }
 
     fun getTransferAmount(): String {
@@ -84,12 +85,12 @@ class ChainAbstractionViewModel : ViewModel() {
                             }
 
                             is Wallet.Model.Route.Solana -> {
-                                val solanaSignatures = mutableListOf<String>()
-                                route.solanaTransactionDetails.forEach { transactionDetails ->
-                                    val signedTransaction = SolanaAccountDelegate.signHash(transactionDetails.transactionHashToSign)
-                                    solanaSignatures.add(signedTransaction)
-                                }
-                                signedFulfilmentTransactions.add(Wallet.Model.RouteSig.Solana(solanaSignatures))
+//                                val solanaSignatures = mutableListOf<String>()
+//                                route.solanaTransactionDetails.forEach { transactionDetails ->
+//                                    val signedTransaction = SolanaAccountDelegate.signHash(transactionDetails.transactionHashToSign)
+//                                    solanaSignatures.add(signedTransaction)
+//                                }
+//                                signedFulfilmentTransactions.add(Wallet.Model.RouteSig.Solana(solanaSignatures))
                             }
                         }
                     }
