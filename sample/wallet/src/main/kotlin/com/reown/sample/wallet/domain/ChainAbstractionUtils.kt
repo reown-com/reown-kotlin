@@ -20,22 +20,22 @@ suspend fun execute(
     initialTx: String
 ): Result<Wallet.Model.ExecuteSuccess> =
     suspendCoroutine { continuation ->
-        try {
-            WalletKit.ChainAbstraction.execute(
-                prepareAvailable, signedTxs, initialTx,
-                onSuccess = { executeSuccess ->
-                    continuation.resume(Result.success(executeSuccess))
-                },
-                onError = { executeError ->
-                    recordError(executeError.throwable)
-                    continuation.resume(Result.failure(executeError.throwable))
-                }
-            )
-
-        } catch (e: Exception) {
-            recordError(e)
-            continuation.resume(Result.failure(e))
-        }
+//        try {
+//            WalletKit.ChainAbstraction.execute(
+//                prepareAvailable, signedTxs, initialTx,
+//                onSuccess = { executeSuccess ->
+//                    continuation.resume(Result.success(executeSuccess))
+//                },
+//                onError = { executeError ->
+//                    recordError(executeError.throwable)
+//                    continuation.resume(Result.failure(executeError.throwable))
+//                }
+//            )
+//
+//        } catch (e: Exception) {
+//            recordError(e)
+//            continuation.resume(Result.failure(e))
+//        }
     }
 
 fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionRequest?) {
