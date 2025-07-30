@@ -82,11 +82,8 @@ class ProposeUseCaseTest {
 
         verify { logger.log("Sending proposal on topic: test_topic") }
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
+            jsonRpcInteractor.proposeSession(
                 eq(pairing.topic),
-                any(),
-                any(),
-                any(),
                 any(),
                 any(),
                 any(),
@@ -133,8 +130,8 @@ class ProposeUseCaseTest {
         val publicKey = mockk<PublicKey>(relaxed = true)
 
         coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
-        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any(), captureLambda()) } answers {
-            lambda<(Throwable) -> Unit>().invoke(Exception("Subscription Error"))
+        coEvery { jsonRpcInteractor.proposeSession(pairing.topic, any(), any(), onFailure = captureLambda()) } answers {
+            arg<(Throwable) -> Unit>(3).invoke(Exception("Publishing Error"))
         }
 
         val onFailure = mockk<(Throwable) -> Unit>(relaxed = true)
@@ -165,11 +162,10 @@ class ProposeUseCaseTest {
         val publicKey = mockk<PublicKey>(relaxed = true)
 
         coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
-        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any()) } just Runs
         coEvery { proposalStorageRepository.insertProposal(any()) } just Runs
         every { logger.log(any<String>()) } just Runs
-        coEvery { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any(), any(), captureLambda()) } answers {
-            lambda<(Throwable) -> Unit>().invoke(Exception("Publishing Error"))
+        coEvery { jsonRpcInteractor.proposeSession(any(), any(), any(), captureLambda()) } answers {
+            arg<(Throwable) -> Unit>(3).invoke(Exception("Publishing Error"))
         }
         val onFailure = mockk<(Throwable) -> Unit>(relaxed = true)
 
@@ -224,11 +220,8 @@ class ProposeUseCaseTest {
         )
 
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
+            jsonRpcInteractor.proposeSession(
                 eq(pairing.topic),
-                any(),
-                any(),
-                any(),
                 any(),
                 any(),
                 any(),
@@ -273,11 +266,8 @@ class ProposeUseCaseTest {
         )
 
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
+            jsonRpcInteractor.proposeSession(
                 eq(pairing.topic),
-                any(),
-                any(),
-                any(),
                 any(),
                 any(),
                 any(),
@@ -322,11 +312,8 @@ class ProposeUseCaseTest {
         )
 
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
+            jsonRpcInteractor.proposeSession(
                 eq(pairing.topic),
-                any(),
-                any(),
-                any(),
                 any(),
                 any(),
                 any(),
@@ -376,11 +363,8 @@ class ProposeUseCaseTest {
         )
 
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
+            jsonRpcInteractor.proposeSession(
                 eq(pairing.topic),
-                any(),
-                any(),
-                any(),
                 any(),
                 any(),
                 any(),
@@ -417,11 +401,8 @@ class ProposeUseCaseTest {
         )
 
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
+            jsonRpcInteractor.proposeSession(
                 eq(pairing.topic),
-                any(),
-                any(),
-                any(),
                 any(),
                 any(),
                 any(),
@@ -458,11 +439,8 @@ class ProposeUseCaseTest {
         )
 
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
+            jsonRpcInteractor.proposeSession(
                 eq(pairing.topic),
-                any(),
-                any(),
-                any(),
                 any(),
                 any(),
                 any(),
@@ -492,11 +470,8 @@ class ProposeUseCaseTest {
         )
 
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
+            jsonRpcInteractor.proposeSession(
                 eq(pairing.topic),
-                any(),
-                any(),
-                any(),
                 any(),
                 any(),
                 any(),

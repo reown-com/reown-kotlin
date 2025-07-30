@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
     id("signing-config")
 //    id("io.sentry.android.gradle") version "3.12.0"
+    alias(libs.plugins.compose.compiler)
 }
 
 android {

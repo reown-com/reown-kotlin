@@ -36,7 +36,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "${rootDir.path}/gradle/proguard-rules/sdk-rules.pro")
         }
     }
@@ -102,7 +102,7 @@ dependencies {
     val yttriumVersion = if (System.getenv("CI") == "true") {
         System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.19-ci"
     } else {
-        "0.9.4"
+        "0.9.43"
     }
     api("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
     implementation("net.java.dev.jna:jna:5.15.0@aar")

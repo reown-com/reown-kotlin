@@ -12,6 +12,7 @@ import com.reown.foundation.network.model.RelayDTO
 import com.reown.foundation.util.Logger
 import com.reown.foundation.util.scope
 import com.reown.util.generateClientToServerId
+import com.reown.util.generateId
 import com.tinder.scarlet.WebSocket
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -54,7 +55,7 @@ abstract class BaseRelayClient : RelayInterface {
     protected var logger: Logger
     private val resultState: MutableSharedFlow<RelayDTO> = MutableSharedFlow()
     internal var connectionState: MutableStateFlow<ConnectionState> = MutableStateFlow(ConnectionState.Idle)
-    private var ackedTopics: MutableList<String> = mutableListOf()
+    internal var ackedTopics: MutableList<String> = mutableListOf()
     private var isConnecting: Boolean = false
     private var retryCount: Int = 0
     override var isLoggingEnabled: Boolean = false
@@ -69,6 +70,10 @@ abstract class BaseRelayClient : RelayInterface {
             merge(
                 relayService.observePublishAcknowledgement(),
                 relayService.observePublishError(),
+                relayService.observeProposeSessionAcknowledgement(),
+                relayService.observeProposeSessionError(),
+                relayService.observeApproveSessionAcknowledgement(),
+                relayService.observeApproveSessionError(),
                 relayService.observeBatchSubscribeAcknowledgement(),
                 relayService.observeBatchSubscribeError(),
                 relayService.observeSubscribeAcknowledgement(),
@@ -109,6 +114,106 @@ abstract class BaseRelayClient : RelayInterface {
         relayService.observeSubscriptionRequest()
             .map { request -> request.toRelay() }
             .onEach { relayRequest -> supervisorScope { publishSubscriptionAcknowledgement(relayRequest.id) } }
+    }
+
+
+    override fun proposeSession(
+        pairingTopic: Topic,
+        sessionProposal: String,
+        correlationId: Long,
+        id: Long?,
+        onResult: (Result<Relay.Model.Call.ProposeSession.Acknowledgement>) -> Unit,
+    ) {
+        connectAndCallRelay(
+            onConnected = {
+                val proposeSessionParams = RelayDTO.ProposeSession.Request.Params(
+                    pairingTopic = pairingTopic,
+                    sessionProposal = sessionProposal,
+                    attestation = null,
+                    correlationId = correlationId
+                )
+                val proposeSessionRequest = RelayDTO.ProposeSession.Request(id = id ?: generateClientToServerId(), params = proposeSessionParams)
+                observeProposeSessionResult(proposeSessionRequest.id, onResult)
+                relayService.proposeSessionRequest(proposeSessionRequest)
+            },
+            onFailure = { onResult(Result.failure(it)) }
+        )
+    }
+
+    private fun observeProposeSessionResult(id: Long, onResult: (Result<Relay.Model.Call.ProposeSession.Acknowledgement>) -> Unit) {
+        scope.launch {
+            try {
+                withTimeout(RESULT_TIMEOUT) {
+                    resultState
+                        .filterIsInstance<RelayDTO.ProposeSession.Result>()
+                        .filter { relayResult -> relayResult.id == id }
+                        .first { proposeSessionResult ->
+                            when (proposeSessionResult) {
+                                is RelayDTO.ProposeSession.Result.Acknowledgement -> onResult(Result.success(proposeSessionResult.toRelay()))
+                                is RelayDTO.ProposeSession.Result.JsonRpcError -> onResult(Result.failure(Throwable(proposeSessionResult.error.errorMessage)))
+                            }
+                            true
+                        }
+                }
+            } catch (e: TimeoutCancellationException) {
+                onResult(Result.failure(e))
+                cancelJobIfActive()
+            } catch (e: Exception) {
+                onResult(Result.failure(e))
+                cancelJobIfActive()
+            }
+        }
+    }
+
+    override fun approveSession(
+        pairingTopic: Topic,
+        sessionTopic: Topic,
+        sessionProposalResponse: String,
+        sessionSettlementRequest: String,
+        correlationId: Long,
+        id: Long?,
+        onResult: (Result<Relay.Model.Call.ApproveSession.Acknowledgement>) -> Unit,
+    ) {
+        connectAndCallRelay(
+            onConnected = {
+                val approveSessionParams = RelayDTO.ApproveSession.Request.Params(
+                    pairingTopic = pairingTopic,
+                    sessionTopic = sessionTopic,
+                    sessionProposalResponse = sessionProposalResponse,
+                    sessionSettlementRequest = sessionSettlementRequest,
+                    correlationId = correlationId
+                )
+                val approveSessionRequest = RelayDTO.ApproveSession.Request(id = id ?: generateClientToServerId(), params = approveSessionParams)
+                observeApproveSessionResult(approveSessionRequest.id, onResult)
+                relayService.approveSessionRequest(approveSessionRequest)
+            },
+            onFailure = { onResult(Result.failure(it)) }
+        )
+    }
+
+    private fun observeApproveSessionResult(id: Long, onResult: (Result<Relay.Model.Call.ApproveSession.Acknowledgement>) -> Unit) {
+        scope.launch {
+            try {
+                withTimeout(RESULT_TIMEOUT) {
+                    resultState
+                        .filterIsInstance<RelayDTO.ApproveSession.Result>()
+                        .filter { relayResult -> relayResult.id == id }
+                        .first { approveSessionResult ->
+                            when (approveSessionResult) {
+                                is RelayDTO.ApproveSession.Result.Acknowledgement -> onResult(Result.success(approveSessionResult.toRelay()))
+                                is RelayDTO.ApproveSession.Result.JsonRpcError -> onResult(Result.failure(Throwable(approveSessionResult.error.errorMessage)))
+                            }
+                            true
+                        }
+                }
+            } catch (e: TimeoutCancellationException) {
+                onResult(Result.failure(e))
+                cancelJobIfActive()
+            } catch (e: Exception) {
+                onResult(Result.failure(e))
+                cancelJobIfActive()
+            }
+        }
     }
 
     @ExperimentalCoroutinesApi

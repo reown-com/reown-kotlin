@@ -1,6 +1,7 @@
 package com.reown.android.internal.common.json_rpc.data
 
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.reown.android.internal.common.JsonRpcResponse
 import com.reown.android.internal.common.model.type.ClientParams
 import com.reown.android.internal.common.model.type.JsonRpcClientSync
@@ -17,8 +18,16 @@ class JsonRpcSerializer(
 ) {
     val moshi: Moshi
         get() = moshiBuilder.add { type, _, moshi ->
-            jsonAdapterEntries.firstOrNull { it.type == type }?.adapter?.invoke(moshi)
-        }.build()
+            try {
+                val entry = jsonAdapterEntries.firstOrNull { it.type == type }
+                entry?.adapter?.invoke(moshi)
+            } catch (e: Exception) {
+                // If custom adapter creation fails, return null to let Moshi use default behavior
+                null
+            }
+        }
+        .addLast(KotlinJsonAdapterFactory())
+        .build()
 
     fun deserialize(method: String, json: String): ClientParams? {
         val type = deserializerEntries[method] ?: return null
@@ -46,6 +55,12 @@ class JsonRpcSerializer(
 
     inline fun <reified T> tryDeserialize(json: String): T? = runCatching { moshi.adapter(T::class.java).fromJson(json) }.getOrNull()
     fun tryDeserialize(json: String, type: KClass<*>): Any? = runCatching { moshi.adapter(type.java).fromJson(json) }.getOrNull()
-    private inline fun <reified T> trySerialize(type: T): String = moshi.adapter(T::class.java).toJson(type)
-    fun trySerialize(payload: Any, type: KClass<*>): String = moshi.adapter<Any>(type.java).toJson(payload)
+    
+    private inline fun <reified T> trySerialize(type: T): String = runCatching { 
+        moshi.adapter(T::class.java).toJson(type) 
+    }.getOrElse { throw RuntimeException("Failed to serialize ${T::class.java.simpleName}: ${it.message}", it) }
+    
+    fun trySerialize(payload: Any, type: KClass<*>): String = runCatching { 
+        moshi.adapter<Any>(type.java).toJson(payload) 
+    }.getOrElse { throw RuntimeException("Failed to serialize ${type.simpleName}: ${it.message}", it) }
 }
