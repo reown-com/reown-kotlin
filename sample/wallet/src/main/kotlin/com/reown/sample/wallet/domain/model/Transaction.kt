@@ -30,7 +30,7 @@ object Transaction {
 
     @OptIn(ChainAbstractionExperimentalApi::class)
     fun getTransaction(sessionRequest: Wallet.Model.SessionRequest): Wallet.Model.FeeEstimatedTransaction {
-        val fees = WalletKit.estimateFees(sessionRequest.chainId!!)
+//        val fees = WalletKit.estimateFees(sessionRequest.chainId!!)
         val requestParams = JSONArray(sessionRequest.request.params).getJSONObject(0)
         val from = requestParams.getString("from")
         val to = requestParams.getString("to")
@@ -59,8 +59,9 @@ object Transaction {
             nonce = nonce,
             gasLimit = gas,
             chainId = sessionRequest.chainId!!,
-            maxFeePerGas = fees.maxFeePerGas,
-            maxPriorityFeePerGas = fees.maxPriorityFeePerGas
+            //TODO: add getting fees
+            maxFeePerGas = "0",//fees.maxFeePerGas,
+            maxPriorityFeePerGas = "0"//fees.maxPriorityFeePerGas
         )
     }
 
