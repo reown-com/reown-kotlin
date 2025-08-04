@@ -90,7 +90,7 @@ androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
-androidx-compose-ui-test-junit = { module = "androidx.compose.ui:ui-test-junit4", version = "1.7.1" }
+androidx-compose-ui-test-junit = { module = "androidx.compose.ui:ui-test-junit4", version = "1.8.3" }
 androidx-compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "androidxNavigation" }
 androidx-compose-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "androidxNavigation" }
 androidx-compose-lifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "composeViewModel" }
