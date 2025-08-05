@@ -104,7 +104,7 @@ dependencies {
     } else {
         "0.9.43"
     }
-    api("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
+    api("com.github.reown-com:yttrium:unspecified") //$yttriumVersion
     implementation("net.java.dev.jna:jna:5.15.0@aar")
 
     api(libs.coroutines)

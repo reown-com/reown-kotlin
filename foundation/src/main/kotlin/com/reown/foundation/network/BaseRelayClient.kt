@@ -132,6 +132,7 @@ abstract class BaseRelayClient : RelayInterface {
                     attestation = null,
                     correlationId = correlationId
                 )
+                println("kobe: Propose Session: $correlationId")
                 val proposeSessionRequest = RelayDTO.ProposeSession.Request(id = id ?: generateClientToServerId(), params = proposeSessionParams)
                 observeProposeSessionResult(proposeSessionRequest.id, onResult)
                 relayService.proposeSessionRequest(proposeSessionRequest)
@@ -184,6 +185,7 @@ abstract class BaseRelayClient : RelayInterface {
                     correlationId = correlationId
                 )
                 val approveSessionRequest = RelayDTO.ApproveSession.Request(id = id ?: generateClientToServerId(), params = approveSessionParams)
+                println("kobe: Approve Session: $correlationId")
                 observeApproveSessionResult(approveSessionRequest.id, onResult)
                 relayService.approveSessionRequest(approveSessionRequest)
             },

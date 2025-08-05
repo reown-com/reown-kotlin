@@ -6,6 +6,7 @@ import com.reown.android.Core
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.di.DatabaseConfig
 import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.model.SDKError
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
@@ -26,11 +27,13 @@ import kotlinx.coroutines.runBlocking
 import org.koin.core.KoinApplication
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import uniffi.yttrium.SignClient
 import java.util.concurrent.atomic.AtomicBoolean
 
 class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInterface {
     private lateinit var signEngine: SignEngine
     private var atomicBoolean: AtomicBoolean? = null
+    val signClient: SignClient by lazy { wcKoinApp.koin.get(named(AndroidCommonDITags.SIGN_RUST_CLIENT)) }
 
     companion object {
         val instance = SignProtocol()
@@ -38,6 +41,7 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
 
     override fun initialize(init: Sign.Params.Init, onSuccess: () -> Unit, onError: (Sign.Model.Error) -> Unit) {
         // TODO: re-init scope
+
         if (!::signEngine.isInitialized) {
             try {
                 koinApp.modules(
@@ -63,9 +67,15 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
 
         wcKoinApp.modules(module { single(named(AndroidCommonDITags.ENABLE_AUTHENTICATE)) { delegate.onSessionAuthenticate != null } })
         handleConnectionState { connectionState -> delegate.onConnectionStateChange(connectionState) }
+
         signEngine.engineEvent.onEach { event ->
             when (event) {
-                is EngineDO.SessionProposalEvent -> delegate.onSessionProposal(event.proposal.toClientSessionProposal(), event.context.toCore())
+                is EngineDO.SessionProposalEvent -> {
+                    println("kobe: Session Proposal: ${event.proposal}")
+
+                    delegate.onSessionProposal(event.proposal.toClientSessionProposal(), event.context.toCore())
+                }
+
                 is EngineDO.SessionAuthenticateEvent -> delegate.onSessionAuthenticate?.invoke(
                     event.toClientSessionAuthenticate(),
                     event.verifyContext.toCore()

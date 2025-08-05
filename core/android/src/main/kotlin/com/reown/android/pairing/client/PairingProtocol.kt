@@ -12,14 +12,15 @@ import com.reown.android.pairing.model.mapper.toCore
 import com.reown.android.pulse.domain.InsertTelemetryEventUseCase
 import com.reown.android.relay.RelayConnectionInterface
 import com.reown.foundation.util.Logger
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import org.koin.core.KoinApplication
+import org.koin.core.qualifier.named
+import uniffi.yttrium.SignClient
 
 internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp) : PairingInterface {
     private lateinit var pairingEngine: PairingEngine
-    private val logger: Logger by lazy { koinApp.koin.get() }
-    private val relayClient: RelayConnectionInterface by lazy { koinApp.koin.get() }
-    private val insertEventUseCase: InsertTelemetryEventUseCase by lazy { koinApp.koin.get() }
 
     override fun initialize() {
         pairingEngine = koinApp.koin.get()
@@ -68,6 +69,7 @@ internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp)
         onError: (Core.Model.Error) -> Unit,
     ) {
         checkEngineInitialization()
+
         try {
             pairingEngine.pair(
                 uri = pair.uri,

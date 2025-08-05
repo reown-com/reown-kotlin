@@ -96,7 +96,9 @@ internal fun callsModule() = module {
             sessionStorageRepository = get(),
             verifyContextStorageRepository = get(),
             insertEventUseCase = get(),
-            logger = get(named(AndroidCommonDITags.LOGGER))
+            logger = get(named(AndroidCommonDITags.LOGGER)),
+            signClient = get(named(AndroidCommonDITags.SIGN_RUST_CLIENT)),
+            pairingRepository = get()
         )
     }
 

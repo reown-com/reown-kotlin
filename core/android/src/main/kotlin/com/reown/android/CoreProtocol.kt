@@ -6,7 +6,9 @@ import com.reown.android.di.coreStorageModule
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.di.KEY_CLIENT_ID
 import com.reown.android.internal.common.di.coreAndroidNetworkModule
+import com.reown.android.internal.common.storage.key_chain.KeyStore
 import com.reown.android.internal.common.di.coreCommonModule
+import com.reown.util.hexToBytes
 import com.reown.android.internal.common.di.coreCryptoModule
 import com.reown.android.internal.common.di.coreJsonRpcModule
 import com.reown.android.internal.common.di.corePairingModule
@@ -41,6 +43,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import uniffi.yttrium.SignClient
 
 class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInterface {
     override val Pairing: PairingInterface = PairingProtocol(koinApp)
@@ -52,6 +55,8 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
     override val Push: PushInterface = PushClient
     override val Verify: VerifyInterface = VerifyClient(koinApp)
     override val Explorer: ExplorerInterface = ExplorerProtocol(koinApp)
+
+    lateinit var signClient: SignClient
 
     init {
         plantTimber()
@@ -78,6 +83,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
     ) {
         try {
             require(relayServerUrl.isValidRelayServerUrl()) { "Check the schema and projectId parameter of the Server Url" }
+            //TODO: Init Sign rust client
 
             setup(
                 application = application,
@@ -89,7 +95,8 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 relay = relay,
                 onError = onError,
                 metaData = metaData,
-                keyServerUrl = keyServerUrl
+                keyServerUrl = keyServerUrl,
+                signClient = signClient
             )
         } catch (e: Exception) {
             onError(Core.Model.Error(e))
@@ -110,6 +117,8 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         try {
             require(projectId.isNotEmpty()) { "Project Id cannot be empty" }
 
+            signClient = SignClient(projectId = projectId)
+
             setup(
                 application = application,
                 projectId = projectId,
@@ -119,7 +128,8 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 relay = relay,
                 onError = onError,
                 metaData = metaData,
-                keyServerUrl = keyServerUrl
+                keyServerUrl = keyServerUrl,
+                signClient = signClient
             )
         } catch (e: Exception) {
             onError(Core.Model.Error(e))
@@ -136,7 +146,8 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         relay: RelayConnectionInterface?,
         onError: (Core.Model.Error) -> Unit,
         metaData: Core.Model.AppMetaData,
-        keyServerUrl: String?
+        keyServerUrl: String?,
+        signClient: SignClient
     ) {
         val packageName: String = application.packageName
         val relayServerUrl = if (serverUrl.isNullOrEmpty()) "wss://relay.walletconnect.org?projectId=$projectId" else serverUrl
@@ -146,6 +157,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
             modules(
                 module { single(named(AndroidCommonDITags.PACKAGE_NAME)) { packageName } },
                 module { single { ProjectId(projectId) } },
+                module { single(named(AndroidCommonDITags.SIGN_RUST_CLIENT)) { signClient } },
                 module { single(named(AndroidCommonDITags.TELEMETRY_ENABLED)) { TelemetryEnabled(telemetryEnabled) } },
                 coreAndroidNetworkModule(relayServerUrl, connectionType, BuildConfig.SDK_VERSION, networkClientTimeout, packageName),
                 coreCommonModule(),

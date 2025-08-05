@@ -22,12 +22,16 @@ import com.reown.android.pulse.model.properties.Props
 import com.reown.android.push.notifications.DecryptMessageUseCaseInterface
 import com.reown.android.relay.WSSConnectionState
 import com.reown.android.verify.model.VerifyContext
+import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
+import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.engine.model.EngineDO
+import com.reown.sign.engine.model.mapper.toEngine
 import com.reown.sign.engine.model.mapper.toEngineDO
 import com.reown.sign.engine.model.mapper.toExpiredProposal
 import com.reown.sign.engine.model.mapper.toExpiredSessionRequest
+import com.reown.sign.engine.model.mapper.toNamespacesVOOptional
 import com.reown.sign.engine.model.mapper.toSessionRequest
 import com.reown.sign.engine.sessionRequestEventsQueue
 import com.reown.sign.engine.use_case.calls.ApproveSessionAuthenticateUseCaseInterface
@@ -73,6 +77,7 @@ import com.reown.sign.json_rpc.model.JsonRpcMethod
 import com.reown.sign.storage.authenticate.AuthenticateResponseTopicRepository
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
+import com.reown.util.bytesToHex
 import com.reown.utils.Empty
 import com.reown.utils.isSequenceValid
 import kotlinx.coroutines.Dispatchers
@@ -197,6 +202,8 @@ internal class SignEngine(
         emitReceivedPendingRequestsWhilePairingOnTheSameURL()
         sessionProposalExpiryWatcher()
         sessionRequestsExpiryWatcher()
+
+        emitSessionProposal()
     }
 
     fun setup() {
@@ -449,6 +456,54 @@ internal class SignEngine(
                     logger.error(e)
                 }
             }.launchIn(scope)
+    }
+
+    private fun emitSessionProposal() {
+        pairingController.sessionProposalFlow
+            .onEach { proposal ->
+                proposalStorageRepository.insertProposal(
+                    ProposalVO(
+                        pairingTopic = Topic(proposal.topic),
+                        name = "Rust Client",
+                        description = "Testing Rust Client",
+                        url = "",
+                        icons = listOf(),
+                        requiredNamespaces = emptyMap(),
+                        optionalNamespaces = proposal.requestedNamespaces.toEngine().toNamespacesVOOptional(),
+                        proposerPublicKey = proposal.proposerPublicKey.bytesToHex(),
+                        relayData = "",
+                        relayProtocol = "",
+                        redirect = "",
+                        properties = null,
+                        scopedProperties = null,
+                        expiry = null,
+                        requestId = proposal.id.toLong()
+                    )
+                )
+
+                val proposalEvent = EngineDO.SessionProposalEvent(
+                    proposal = EngineDO.SessionProposal(
+                        pairingTopic = proposal.topic,
+                        name = "Rust Client",
+                        description = "Testing Rust Client",
+                        url = "",
+                        icons = listOf(),
+                        requiredNamespaces = emptyMap(),
+                        optionalNamespaces = proposal.requestedNamespaces.toEngine(),
+                        proposerPublicKey = proposal.proposerPublicKey.bytesToHex(),
+                        relayData = "",
+                        relayProtocol = "",
+                        redirect = "",
+                        properties = null,
+                        scopedProperties = null,
+                    ),
+                    context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
+                )
+
+                println("kobe: emitSessionProposal: $proposal")
+                scope.launch { _engineEvent.emit(proposalEvent) }
+            }
+            .launchIn(scope)
     }
 
     private fun emitReceivedPendingRequestsWhilePairingOnTheSameURL() {

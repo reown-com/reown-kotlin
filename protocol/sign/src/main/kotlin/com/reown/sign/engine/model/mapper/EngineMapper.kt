@@ -30,6 +30,7 @@ import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.ValidationError
 import com.reown.sign.json_rpc.model.JsonRpcMethod
 import com.reown.util.Empty
+import uniffi.yttrium.ProposalNamespace
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -93,7 +94,11 @@ internal fun ProposalVO.toSessionProposeRequest(): WCRequest =
         params = SignParams.SessionProposeParams(
             relays = listOf(RelayProtocolOptions(protocol = relayProtocol, data = relayData)),
             proposer = SessionProposer(proposerPublicKey, AppMetaData(name = name, description = description, url = url, icons = icons)),
-            requiredNamespaces = requiredNamespaces, optionalNamespaces = optionalNamespaces, properties = properties, expiryTimestamp = expiry?.seconds, scopedProperties = scopedProperties
+            requiredNamespaces = requiredNamespaces,
+            optionalNamespaces = optionalNamespaces,
+            properties = properties,
+            expiryTimestamp = expiry?.seconds,
+            scopedProperties = scopedProperties
         ),
         transportType = TransportType.RELAY
     )
@@ -365,3 +370,14 @@ internal fun EngineDO.PayloadParams.toCacaoPayload(iss: Issuer): Cacao.Payload =
 @JvmSynthetic
 internal fun EngineDO.PayloadParams.toCAIP222Message(iss: Issuer, chainName: String): String =
     this.toCacaoPayload(iss).toCAIP222Message(chainName)
+
+
+internal fun Map<String, ProposalNamespace>.toEngine(): Map<String, EngineDO.Namespace.Proposal> =
+    this.mapValues { (_, namespace) ->
+        EngineDO.Namespace.Proposal(namespace.chains, namespace.methods, namespace.events)
+    }
+
+internal fun Map<String, EngineDO.Namespace.Session>.toYttrium(): Map<String, ProposalNamespace> =
+    this.mapValues { (_, namespace) ->
+        ProposalNamespace(namespace.chains!!, namespace.methods, namespace.events)
+    }

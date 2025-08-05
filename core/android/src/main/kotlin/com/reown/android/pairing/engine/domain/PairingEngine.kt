@@ -6,6 +6,7 @@ import com.reown.android.internal.NO_SEQUENCE_FOR_TOPIC_MESSAGE
 import com.reown.android.internal.Validator
 import com.reown.android.internal.common.JsonRpcResponse
 import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
 import com.reown.android.internal.common.exception.ExpiredPairingException
 import com.reown.android.internal.common.exception.ExpiredPairingURIException
@@ -29,6 +30,7 @@ import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterf
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.android.internal.common.storage.pairing.PairingStorageRepositoryInterface
+import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.internal.utils.CoreValidator.isExpired
 import com.reown.android.internal.utils.currentTimeInSeconds
 import com.reown.android.internal.utils.dayInSeconds
@@ -54,6 +56,7 @@ import com.reown.util.randomBytes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -73,6 +76,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeout
+import org.koin.core.qualifier.named
+import uniffi.yttrium.SessionProposalFfi
+import uniffi.yttrium.SignClient
 import java.util.concurrent.TimeUnit
 
 //Split into PairingProtocolEngine and PairingControllerEngine
@@ -103,6 +109,10 @@ internal class PairingEngine(
         merge(_engineEvent, _isPairingStateFlow.map { EngineDO.PairingState(it) })
             .shareIn(scope, SharingStarted.Lazily, 0)
 
+    //Rust
+    private val signClient: SignClient by lazy { wcKoinApp.koin.get(named(AndroidCommonDITags.SIGN_RUST_CLIENT)) }
+    private val _sessionProposalFlow: MutableSharedFlow<SessionProposalFfi> = MutableSharedFlow()
+    val sessionProposalFlow: SharedFlow<SessionProposalFfi> = _sessionProposalFlow.asSharedFlow()
 
     // TODO: emission of events can be missed since they are emitted potentially before there's a subscriber and the event gets missed by protocols
     init {
@@ -152,77 +162,106 @@ internal class PairingEngine(
     }
 
     fun pair(uri: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) {
-        scope.launch { _checkVerifyKeyFlow.emit(Unit) }
-        val trace: MutableList<String> = mutableListOf()
-        trace.add(Trace.Pairing.PAIRING_STARTED).also { logger.log("Pairing started") }
-        val walletConnectUri: WalletConnectUri = Validator.validateWCUri(uri) ?: run {
-            scope.launch { supervisorScope { insertTelemetryEventUseCase(Props(type = EventType.Error.MALFORMED_PAIRING_URI, properties = Properties(trace = trace))) } }
-            return onFailure(MalformedWalletConnectUri(MALFORMED_PAIRING_URI_MESSAGE))
-        }
-        trace.add(Trace.Pairing.PAIRING_URI_VALIDATION_SUCCESS)
-        val pairing = Pairing(walletConnectUri)
-        val pairingTopic = pairing.topic
-        val symmetricKey = walletConnectUri.symKey
-        try {
-            if (walletConnectUri.expiry?.isExpired() == true) {
-                scope.launch { supervisorScope { insertTelemetryEventUseCase(Props(type = EventType.Error.PAIRING_URI_EXPIRED, properties = Properties(trace = trace, topic = pairingTopic.value))) } }
-                    .also { logger.error("Pairing URI expired: $pairingTopic") }
-                return onFailure(ExpiredPairingURIException("Pairing URI expired: $pairingTopic"))
-            }
-            trace.add(Trace.Pairing.PAIRING_URI_NOT_EXPIRED)
-            if (pairingRepository.getPairingOrNullByTopic(pairingTopic) != null) {
-                val localPairing = pairingRepository.getPairingOrNullByTopic(pairingTopic)
-                trace.add(Trace.Pairing.EXISTING_PAIRING)
-                if (!localPairing!!.isNotExpired()) {
-                    scope.launch { supervisorScope { insertTelemetryEventUseCase(Props(type = EventType.Error.PAIRING_EXPIRED, properties = Properties(trace = trace, topic = pairingTopic.value))) } }
-                        .also { logger.error("Pairing expired: $pairingTopic") }
-                    return onFailure(ExpiredPairingException("Pairing expired: ${pairingTopic.value}"))
-                }
-                trace.add(Trace.Pairing.PAIRING_NOT_EXPIRED)
-                scope.launch {
-                    supervisorScope {
-                        trace.add(Trace.Pairing.EMIT_STORED_PAIRING).also { logger.log("Emitting stored pairing: $pairingTopic") }
-                        _storedPairingTopicFlow.emit(Pair(pairingTopic, trace))
+        scope.launch {
+            try {
+                println("kobe: pair uri: $uri")
+                val walletConnectUri = Validator.validateWCUri(uri) ?: throw Exception()
+
+                //TODO: store proposal only with pairing SymKey
+                pairingRepository.insertPairing(Pairing(walletConnectUri))
+
+                val proposal: SessionProposalFfi? = async {
+                    try {
+                        signClient.pair(uri = uri)
+                    } catch (e: Exception) {
+                        println("kobe: pair error 1: $e")
+                        null
                     }
+
+                }.await()
+
+                println("kobe: proposal: $proposal")
+                if (proposal != null) {
+                    _sessionProposalFlow.emit(proposal)
                 }
-            } else {
-                crypto.setKey(symmetricKey, pairingTopic.value)
-                pairingRepository.insertPairing(pairing)
-                trace.add(Trace.Pairing.STORE_NEW_PAIRING).also { logger.log("Storing a new pairing: $pairingTopic") }
+
+            } catch (e: Exception) {
+                println("kobe: pair error 2: $e")
+                onFailure(e)
             }
-            trace.add(Trace.Pairing.SUBSCRIBING_PAIRING_TOPIC).also { logger.log("Subscribing pairing topic: $pairingTopic") }
-            jsonRpcInteractor.subscribe(topic = pairingTopic,
-                onSuccess = {
-                    trace.add(Trace.Pairing.SUBSCRIBE_PAIRING_TOPIC_SUCCESS).also { logger.log("Subscribe pairing topic success: $pairingTopic") }
-                    onSuccess()
-                }, onFailure = { error ->
-                    scope.launch {
-                        supervisorScope {
-                            insertTelemetryEventUseCase(Props(type = EventType.Error.PAIRING_SUBSCRIPTION_FAILURE, properties = Properties(trace = trace, topic = pairingTopic.value)))
-                        }
-                    }.also { logger.error("Subscribe pairing topic error: $pairingTopic, error: $error") }
-                    onFailure(error)
-                }
-            )
-        } catch (e: Exception) {
-            logger.error("Subscribe pairing topic error: $pairingTopic, error: $e")
-            if (e is NoRelayConnectionException)
-                scope.launch { supervisorScope { insertTelemetryEventUseCase(Props(type = EventType.Error.NO_WSS_CONNECTION, properties = Properties(trace = trace, topic = pairingTopic.value))) } }
-            if (e is NoInternetConnectionException)
-                scope.launch {
-                    supervisorScope {
-                        insertTelemetryEventUseCase(
-                            Props(
-                                type = EventType.Error.NO_INTERNET_CONNECTION,
-                                properties = Properties(trace = trace, topic = pairingTopic.value)
-                            )
-                        )
-                    }
-                }
-            runCatching { crypto.removeKeys(pairingTopic.value) }.onFailure { logger.error("Remove keys error: $pairingTopic, error: $it") }
-            jsonRpcInteractor.unsubscribe(pairingTopic)
-            onFailure(e)
         }
+
+//        scope.launch { _checkVerifyKeyFlow.emit(Unit) }
+//        val trace: MutableList<String> = mutableListOf()
+//        trace.add(Trace.Pairing.PAIRING_STARTED).also { logger.log("Pairing started") }
+//        val walletConnectUri: WalletConnectUri = Validator.validateWCUri(uri) ?: run {
+//            scope.launch { supervisorScope { insertTelemetryEventUseCase(Props(type = EventType.Error.MALFORMED_PAIRING_URI, properties = Properties(trace = trace))) } }
+//            return onFailure(MalformedWalletConnectUri(MALFORMED_PAIRING_URI_MESSAGE))
+//        }
+//        trace.add(Trace.Pairing.PAIRING_URI_VALIDATION_SUCCESS)
+//        val pairing = Pairing(walletConnectUri)
+//        val pairingTopic = pairing.topic
+//        val symmetricKey = walletConnectUri.symKey
+//        try {
+//            if (walletConnectUri.expiry?.isExpired() == true) {
+//                scope.launch { supervisorScope { insertTelemetryEventUseCase(Props(type = EventType.Error.PAIRING_URI_EXPIRED, properties = Properties(trace = trace, topic = pairingTopic.value))) } }
+//                    .also { logger.error("Pairing URI expired: $pairingTopic") }
+//                return onFailure(ExpiredPairingURIException("Pairing URI expired: $pairingTopic"))
+//            }
+//            trace.add(Trace.Pairing.PAIRING_URI_NOT_EXPIRED)
+//            if (pairingRepository.getPairingOrNullByTopic(pairingTopic) != null) {
+//                val localPairing = pairingRepository.getPairingOrNullByTopic(pairingTopic)
+//                trace.add(Trace.Pairing.EXISTING_PAIRING)
+//                if (!localPairing!!.isNotExpired()) {
+//                    scope.launch { supervisorScope { insertTelemetryEventUseCase(Props(type = EventType.Error.PAIRING_EXPIRED, properties = Properties(trace = trace, topic = pairingTopic.value))) } }
+//                        .also { logger.error("Pairing expired: $pairingTopic") }
+//                    return onFailure(ExpiredPairingException("Pairing expired: ${pairingTopic.value}"))
+//                }
+//                trace.add(Trace.Pairing.PAIRING_NOT_EXPIRED)
+//                scope.launch {
+//                    supervisorScope {
+//                        trace.add(Trace.Pairing.EMIT_STORED_PAIRING).also { logger.log("Emitting stored pairing: $pairingTopic") }
+//                        _storedPairingTopicFlow.emit(Pair(pairingTopic, trace))
+//                    }
+//                }
+//            } else {
+//                crypto.setKey(symmetricKey, pairingTopic.value)
+//                pairingRepository.insertPairing(pairing)
+//                trace.add(Trace.Pairing.STORE_NEW_PAIRING).also { logger.log("Storing a new pairing: $pairingTopic") }
+//            }
+//            trace.add(Trace.Pairing.SUBSCRIBING_PAIRING_TOPIC).also { logger.log("Subscribing pairing topic: $pairingTopic") }
+//            jsonRpcInteractor.subscribe(topic = pairingTopic,
+//                onSuccess = {
+//                    trace.add(Trace.Pairing.SUBSCRIBE_PAIRING_TOPIC_SUCCESS).also { logger.log("Subscribe pairing topic success: $pairingTopic") }
+//                    onSuccess()
+//                }, onFailure = { error ->
+//                    scope.launch {
+//                        supervisorScope {
+//                            insertTelemetryEventUseCase(Props(type = EventType.Error.PAIRING_SUBSCRIPTION_FAILURE, properties = Properties(trace = trace, topic = pairingTopic.value)))
+//                        }
+//                    }.also { logger.error("Subscribe pairing topic error: $pairingTopic, error: $error") }
+//                    onFailure(error)
+//                }
+//            )
+//        } catch (e: Exception) {
+//            logger.error("Subscribe pairing topic error: $pairingTopic, error: $e")
+//            if (e is NoRelayConnectionException)
+//                scope.launch { supervisorScope { insertTelemetryEventUseCase(Props(type = EventType.Error.NO_WSS_CONNECTION, properties = Properties(trace = trace, topic = pairingTopic.value))) } }
+//            if (e is NoInternetConnectionException)
+//                scope.launch {
+//                    supervisorScope {
+//                        insertTelemetryEventUseCase(
+//                            Props(
+//                                type = EventType.Error.NO_INTERNET_CONNECTION,
+//                                properties = Properties(trace = trace, topic = pairingTopic.value)
+//                            )
+//                        )
+//                    }
+//                }
+//            runCatching { crypto.removeKeys(pairingTopic.value) }.onFailure { logger.error("Remove keys error: $pairingTopic, error: $it") }
+//            jsonRpcInteractor.unsubscribe(pairingTopic)
+//            onFailure(e)
+//        }
     }
 
     @Deprecated(message = "Disconnect method has been deprecated. It will be removed soon. Pairing will disconnect automatically internally.")
@@ -235,7 +274,8 @@ internal class PairingEngine(
         val pairingDelete = PairingRpc.PairingDelete(params = deleteParams)
         val irnParams = IrnParams(Tags.PAIRING_DELETE, Ttl(dayInSeconds), correlationId = pairingDelete.id)
         logger.log("Sending Pairing disconnect")
-        jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, pairingDelete,
+        jsonRpcInteractor.publishJsonRpcRequest(
+            Topic(topic), irnParams, pairingDelete,
             onSuccess = {
                 scope.launch {
                     supervisorScope {
@@ -259,7 +299,8 @@ internal class PairingEngine(
             val pingPayload = PairingRpc.PairingPing(params = PairingParams.PingParams())
             val irnParams = IrnParams(Tags.PAIRING_PING, Ttl(thirtySeconds), correlationId = pingPayload.id)
 
-            jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, pingPayload,
+            jsonRpcInteractor.publishJsonRpcRequest(
+                Topic(topic), irnParams, pingPayload,
                 onSuccess = { onPingSuccess(pingPayload, onSuccess, topic, onFailure) },
                 onFailure = { error -> onFailure(error) })
         } else {
@@ -318,7 +359,8 @@ internal class PairingEngine(
 
     private suspend fun sendBatchSubscribeForPairings() {
         try {
-            val pairingTopics = pairingRepository.getListOfPairings().filter { pairing -> pairing.isNotExpired() }.map { pairing -> pairing.topic.value }
+            val pairingTopics =
+                pairingRepository.getListOfPairings().filter { pairing -> pairing.isNotExpired() }.map { pairing -> pairing.topic.value }
             jsonRpcInteractor.batchSubscribe(pairingTopics) { error -> scope.launch { internalErrorFlow.emit(SDKError(error)) } }
         } catch (e: Exception) {
             scope.launch { internalErrorFlow.emit(SDKError(e)) }
