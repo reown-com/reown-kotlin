@@ -172,7 +172,7 @@ internal class PairingEngine(
 
                 val proposal: SessionProposalFfi? = async {
                     try {
-                        signClient.pair(uri = uri)
+                        signClient.pair(uri = walletConnectUri.toAbsoluteString())
                     } catch (e: Exception) {
                         println("kobe: pair error 1: $e")
                         null

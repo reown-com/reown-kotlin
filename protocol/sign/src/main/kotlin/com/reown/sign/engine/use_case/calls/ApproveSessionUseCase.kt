@@ -7,6 +7,7 @@ import com.reown.android.internal.common.exception.NoInternetConnectionException
 import com.reown.android.internal.common.exception.NoRelayConnectionException
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.model.RelayProtocolOptions
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
@@ -40,6 +41,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import uniffi.yttrium.Metadata
+import uniffi.yttrium.Redirect
+import uniffi.yttrium.Relay
 import uniffi.yttrium.SessionProposalFfi
 import uniffi.yttrium.SignClient
 
@@ -85,8 +88,18 @@ internal class ApproveSessionUseCase(
                         sessionProperties = sessionProperties,
                         scopedProperties = scopedProperties,
                         expiryTimestamp = proposal.expiry?.seconds?.toULong(),
+                        relays = listOf(Relay(proposal.relayProtocol)),
                         metadata = uniffi.yttrium.Metadata(
-                            name = proposal.name, description = proposal.description, icons = proposal.icons, url = proposal.url
+                            name = proposal.name,
+                            verifyUrl = null,
+                            description = proposal.description,
+                            icons = proposal.icons,
+                            url = proposal.url,
+                            redirect = Redirect(
+                                native = proposal.appMetaData.redirect?.native,
+                                universal = proposal.appMetaData.redirect?.universal ?: "",
+                                linkMode = proposal.appMetaData.redirect?.linkMode ?: false
+                            )
                         )
                     )
                 )
