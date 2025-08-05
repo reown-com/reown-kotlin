@@ -39,6 +39,7 @@ import com.reown.util.hexToBytes
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.Metadata
 import uniffi.yttrium.SessionProposalFfi
 import uniffi.yttrium.SignClient
 
@@ -77,9 +78,16 @@ internal class ApproveSessionUseCase(
                     SessionProposalFfi(
                         id = proposal.requestId.toString(),
                         topic = proposal.pairingTopic.value,
-                        pairingSymKey = wcURI.symKey.keyAsBytes ,
+                        pairingSymKey = wcURI.symKey.keyAsBytes,
                         proposerPublicKey = proposerPublicKey.hexToBytes(),
-                        requestedNamespaces = sessionNamespaces.toYttrium()
+                        requiredNamespaces = proposal.requiredNamespaces.toYttrium(),
+                        optionalNamespaces = proposal.optionalNamespaces.toYttrium(),
+                        sessionProperties = sessionProperties,
+                        scopedProperties = scopedProperties,
+                        expiryTimestamp = proposal.expiry?.seconds?.toULong(),
+                        metadata = uniffi.yttrium.Metadata(
+                            name = proposal.name, description = proposal.description, icons = proposal.icons, url = proposal.url
+                        )
                     )
                 )
             } catch (e: Exception) {

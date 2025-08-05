@@ -2,6 +2,7 @@ package com.reown.android
 
 import android.app.Application
 import android.content.SharedPreferences
+import android.util.Log
 import com.reown.android.di.coreStorageModule
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.di.KEY_CLIENT_ID
@@ -43,6 +44,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import uniffi.yttrium.Logger
 import uniffi.yttrium.SignClient
 
 class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInterface {
@@ -103,6 +105,12 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         }
     }
 
+    class AndroidLogger: Logger {
+        override fun log(message: String) {
+            println("kobe: Message from Rust: $message")
+        }
+    }
+
     override fun initialize(
         application: Application,
         projectId: String,
@@ -117,7 +125,9 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         try {
             require(projectId.isNotEmpty()) { "Project Id cannot be empty" }
 
-            signClient = SignClient(projectId = projectId)
+            println("kobe: Kotlin Rust Init")
+            signClient = SignClient(projectId = projectId, logger = AndroidLogger())
+
 
             setup(
                 application = application,

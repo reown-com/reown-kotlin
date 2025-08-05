@@ -377,7 +377,7 @@ internal fun Map<String, ProposalNamespace>.toEngine(): Map<String, EngineDO.Nam
         EngineDO.Namespace.Proposal(namespace.chains, namespace.methods, namespace.events)
     }
 
-internal fun Map<String, EngineDO.Namespace.Session>.toYttrium(): Map<String, ProposalNamespace> =
+internal fun Map<String, Namespace.Proposal>.toYttrium(): Map<String, ProposalNamespace> =
     this.mapValues { (_, namespace) ->
         ProposalNamespace(namespace.chains!!, namespace.methods, namespace.events)
     }

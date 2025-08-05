@@ -5,6 +5,7 @@ package com.reown.sign.engine.domain
 import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
 import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.SDKError
 import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.model.type.EngineEvent
@@ -94,6 +95,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import java.net.URI
 
 internal class SignEngine(
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
@@ -464,19 +466,19 @@ internal class SignEngine(
                 proposalStorageRepository.insertProposal(
                     ProposalVO(
                         pairingTopic = Topic(proposal.topic),
-                        name = "Rust Client",
-                        description = "Testing Rust Client",
-                        url = "",
-                        icons = listOf(),
-                        requiredNamespaces = emptyMap(),
-                        optionalNamespaces = proposal.requestedNamespaces.toEngine().toNamespacesVOOptional(),
+                        name = proposal.metadata.name,
+                        description = proposal.metadata.description,
+                        url = proposal.metadata.url,
+                        icons = proposal.metadata.icons,
+                        requiredNamespaces = proposal.requiredNamespaces.toEngine().toNamespacesVOOptional(),
+                        optionalNamespaces = proposal.optionalNamespaces?.toEngine()?.toNamespacesVOOptional() ?: emptyMap(),
                         proposerPublicKey = proposal.proposerPublicKey.bytesToHex(),
                         relayData = "",
                         relayProtocol = "",
                         redirect = "",
-                        properties = null,
-                        scopedProperties = null,
-                        expiry = null,
+                        properties =proposal.scopedProperties,
+                        scopedProperties = proposal.scopedProperties,
+                        expiry = if (proposal.expiryTimestamp != null) Expiry(proposal.expiryTimestamp!!.toLong()) else null,
                         requestId = proposal.id.toLong()
                     )
                 )
@@ -484,18 +486,18 @@ internal class SignEngine(
                 val proposalEvent = EngineDO.SessionProposalEvent(
                     proposal = EngineDO.SessionProposal(
                         pairingTopic = proposal.topic,
-                        name = "Rust Client",
-                        description = "Testing Rust Client",
-                        url = "",
-                        icons = listOf(),
-                        requiredNamespaces = emptyMap(),
-                        optionalNamespaces = proposal.requestedNamespaces.toEngine(),
+                        name = proposal.metadata.name,
+                        description = proposal.metadata.description,
+                        url = proposal.metadata.url,
+                        icons = proposal.metadata.icons.map { URI(it) },
+                        requiredNamespaces = proposal.optionalNamespaces?.toEngine() ?: emptyMap(),
+                        optionalNamespaces = proposal.optionalNamespaces?.toEngine() ?: emptyMap(),
                         proposerPublicKey = proposal.proposerPublicKey.bytesToHex(),
                         relayData = "",
                         relayProtocol = "",
                         redirect = "",
-                        properties = null,
-                        scopedProperties = null,
+                        properties = proposal.sessionProperties,
+                        scopedProperties = proposal.scopedProperties,
                     ),
                     context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
                 )
