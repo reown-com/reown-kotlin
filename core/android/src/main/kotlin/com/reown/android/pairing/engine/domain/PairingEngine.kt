@@ -164,29 +164,23 @@ internal class PairingEngine(
     fun pair(uri: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) {
         scope.launch {
             try {
-                println("kobe: pair uri: $uri")
                 val walletConnectUri = Validator.validateWCUri(uri) ?: throw Exception()
-
-                //TODO: store proposal only with pairing SymKey
-                pairingRepository.insertPairing(Pairing(walletConnectUri))
-
+                //TODO: check if proposal already stored to safe latency?
                 val proposal: SessionProposalFfi? = async {
                     try {
                         signClient.pair(uri = walletConnectUri.toAbsoluteString())
                     } catch (e: Exception) {
-                        println("kobe: pair error 1: $e")
+                        println("kobe: Pair error 1: $e")
                         null
                     }
-
                 }.await()
 
-                println("kobe: proposal: $proposal")
                 if (proposal != null) {
                     _sessionProposalFlow.emit(proposal)
                 }
 
             } catch (e: Exception) {
-                println("kobe: pair error 2: $e")
+                println("kobe: Pair error 2: $e")
                 onFailure(e)
             }
         }

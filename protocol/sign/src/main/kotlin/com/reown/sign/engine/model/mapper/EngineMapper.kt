@@ -30,7 +30,14 @@ import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.ValidationError
 import com.reown.sign.json_rpc.model.JsonRpcMethod
 import com.reown.util.Empty
+import com.reown.util.bytesToHex
+import com.reown.util.hexToBytes
+import uniffi.yttrium.Metadata
 import uniffi.yttrium.ProposalNamespace
+import uniffi.yttrium.Redirect
+import uniffi.yttrium.Relay
+import uniffi.yttrium.SessionProposalFfi
+import uniffi.yttrium.SettleNamespace
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -82,7 +89,8 @@ internal fun SignParams.SessionProposeParams.toVO(topic: Topic, requestId: Long)
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
         expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp) else null,
-        scopedProperties = scopedProperties
+        scopedProperties = scopedProperties,
+        pairingSymKey = ""
     )
 
 @JvmSynthetic
@@ -377,7 +385,72 @@ internal fun Map<String, ProposalNamespace>.toEngine(): Map<String, EngineDO.Nam
         EngineDO.Namespace.Proposal(namespace.chains, namespace.methods, namespace.events)
     }
 
-internal fun Map<String, Namespace.Proposal>.toYttrium(): Map<String, ProposalNamespace> =
+internal fun Map<String, Namespace.Proposal>.toProposalYttrium(): Map<String, ProposalNamespace> =
     this.mapValues { (_, namespace) ->
         ProposalNamespace(namespace.chains!!, namespace.methods, namespace.events)
     }
+
+internal fun Map<String, EngineDO.Namespace.Session>.toSettleYttrium(): Map<String, SettleNamespace> =
+    this.mapValues { (_, namespace) ->
+        SettleNamespace(accounts = namespace.accounts, chains = namespace.chains!!, methods = namespace.methods, events = namespace.events)
+    }
+
+internal fun AppMetaData.toYttrium(): Metadata =
+    Metadata(
+        name = name,
+        verifyUrl = null,
+        description = description,
+        icons = icons,
+        url = url,
+        redirect = Redirect(
+            native = redirect?.native,
+            universal = redirect?.universal ?: "",
+            linkMode = redirect?.linkMode ?: false
+        )
+    )
+
+internal fun SessionProposalFfi.toVO(): ProposalVO =
+    ProposalVO(
+        pairingTopic = Topic(topic),
+        name = metadata.name,
+        description = metadata.description,
+        url = metadata.url,
+        icons = metadata.icons,
+        requiredNamespaces = requiredNamespaces.toEngine().toNamespacesVOOptional(),
+        optionalNamespaces = optionalNamespaces?.toEngine()?.toNamespacesVOOptional() ?: emptyMap(),
+        proposerPublicKey = proposerPublicKey.bytesToHex(),
+        relayData = "",
+        relayProtocol = relays[0].protocol,
+        redirect = metadata.redirect?.native ?: "",
+        properties = scopedProperties,
+        scopedProperties = scopedProperties,
+        expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp!!.toLong()) else null,
+        requestId = id.toLong(),
+        pairingSymKey = pairingSymKey.bytesToHex()
+    )
+
+internal fun ProposalVO.toProposalFfi(): SessionProposalFfi =
+    SessionProposalFfi(
+        id = requestId.toString(),
+        topic = pairingTopic.value,
+        pairingSymKey = pairingSymKey.hexToBytes(),
+        proposerPublicKey = proposerPublicKey.hexToBytes(),
+        requiredNamespaces = requiredNamespaces.toProposalYttrium(),
+        optionalNamespaces = optionalNamespaces.toProposalYttrium(),
+        sessionProperties = properties,
+        scopedProperties = scopedProperties,
+        expiryTimestamp = expiry?.seconds?.toULong(),
+        relays = listOf(Relay(relayProtocol)),
+        metadata = uniffi.yttrium.Metadata(
+            name = name,
+            verifyUrl = null,
+            description = description,
+            icons = icons,
+            url = url,
+            redirect = Redirect(
+                native = appMetaData.redirect?.native,
+                universal = appMetaData.redirect?.universal ?: "",
+                linkMode = appMetaData.redirect?.linkMode ?: false
+            )
+        )
+    )

@@ -1,46 +1,24 @@
 package com.reown.sign.engine.use_case.calls
 
 import com.reown.android.internal.Validator
-import java.net.URI
 import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
-import com.reown.android.internal.common.exception.NoInternetConnectionException
-import com.reown.android.internal.common.exception.NoRelayConnectionException
 import com.reown.android.internal.common.model.AppMetaData
-import com.reown.android.internal.common.model.AppMetaDataType
-import com.reown.android.internal.common.model.RelayProtocolOptions
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.android.internal.common.storage.pairing.PairingStorageRepositoryInterface
 import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
-import com.reown.android.internal.utils.ACTIVE_SESSION
-import com.reown.android.internal.utils.CoreValidator.isExpired
 import com.reown.android.pulse.domain.InsertTelemetryEventUseCase
-import com.reown.android.pulse.model.EventType
-import com.reown.android.pulse.model.Trace
-import com.reown.android.pulse.model.properties.Properties
-import com.reown.android.pulse.model.properties.Props
-import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.util.Logger
-import com.reown.sign.common.exceptions.InvalidNamespaceException
-import com.reown.sign.common.exceptions.SessionProposalExpiredException
-import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
-import com.reown.sign.common.model.vo.clientsync.session.SignRpc
-import com.reown.sign.common.model.vo.sequence.SessionVO
-import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
-import com.reown.sign.engine.model.mapper.toMapOfNamespacesVOSession
-import com.reown.sign.engine.model.mapper.toSessionApproveParams
-import com.reown.sign.engine.model.mapper.toSessionProposeRequest
-import com.reown.sign.engine.model.mapper.toSessionSettleParams
+import com.reown.sign.engine.model.mapper.toProposalFfi
+import com.reown.sign.engine.model.mapper.toProposalYttrium
+import com.reown.sign.engine.model.mapper.toSettleYttrium
 import com.reown.sign.engine.model.mapper.toYttrium
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import com.reown.util.hexToBytes
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import uniffi.yttrium.Metadata
 import uniffi.yttrium.Redirect
 import uniffi.yttrium.Relay
 import uniffi.yttrium.SessionProposalFfi
@@ -70,46 +48,17 @@ internal class ApproveSessionUseCase(
     ) = supervisorScope {
 //        val trace: MutableList<String> = mutableListOf()
 //        trace.add(Trace.Session.SESSION_APPROVE_STARTED).also { logger.log(Trace.Session.SESSION_APPROVE_STARTED) }
-
         val proposal = proposalStorageRepository.getProposalByKey(proposerPublicKey)
-        val pairing = pairingRepository.getPairingOrNullByTopic(proposal.pairingTopic) ?: throw Exception("No pairing")
-        val wcURI = Validator.validateWCUri(pairing.uri) ?: throw Exception("Malformed WC URI")
-
         val result = async {
             try {
-                signClient.approve(
-                    SessionProposalFfi(
-                        id = proposal.requestId.toString(),
-                        topic = proposal.pairingTopic.value,
-                        pairingSymKey = wcURI.symKey.keyAsBytes,
-                        proposerPublicKey = proposerPublicKey.hexToBytes(),
-                        requiredNamespaces = proposal.requiredNamespaces.toYttrium(),
-                        optionalNamespaces = proposal.optionalNamespaces.toYttrium(),
-                        sessionProperties = sessionProperties,
-                        scopedProperties = scopedProperties,
-                        expiryTimestamp = proposal.expiry?.seconds?.toULong(),
-                        relays = listOf(Relay(proposal.relayProtocol)),
-                        metadata = uniffi.yttrium.Metadata(
-                            name = proposal.name,
-                            verifyUrl = null,
-                            description = proposal.description,
-                            icons = proposal.icons,
-                            url = proposal.url,
-                            redirect = Redirect(
-                                native = proposal.appMetaData.redirect?.native,
-                                universal = proposal.appMetaData.redirect?.universal ?: "",
-                                linkMode = proposal.appMetaData.redirect?.linkMode ?: false
-                            )
-                        )
-                    )
-                )
+                signClient.approve(proposal = proposal.toProposalFfi(), approvedNamespaces = sessionNamespaces.toSettleYttrium(), selfMetadata = selfAppMetaData.toYttrium())
             } catch (e: Exception) {
                 println("kobe: Approve Error: $e")
                 onFailure(e)
             }
 
         }.await()
-        println("kobe: Result: $result")
+        println("kobe: Session Approve Result: $result")
         onSuccess()
     }
 }

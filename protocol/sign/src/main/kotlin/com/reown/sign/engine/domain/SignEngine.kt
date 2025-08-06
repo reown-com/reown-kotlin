@@ -34,6 +34,8 @@ import com.reown.sign.engine.model.mapper.toExpiredProposal
 import com.reown.sign.engine.model.mapper.toExpiredSessionRequest
 import com.reown.sign.engine.model.mapper.toNamespacesVOOptional
 import com.reown.sign.engine.model.mapper.toSessionRequest
+import com.reown.sign.engine.model.mapper.toVO
+import com.reown.sign.engine.model.mapper.toYttrium
 import com.reown.sign.engine.sessionRequestEventsQueue
 import com.reown.sign.engine.use_case.calls.ApproveSessionAuthenticateUseCaseInterface
 import com.reown.sign.engine.use_case.calls.ApproveSessionUseCaseInterface
@@ -91,6 +93,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -462,48 +465,17 @@ internal class SignEngine(
 
     private fun emitSessionProposal() {
         pairingController.sessionProposalFlow
+            .map { it.toVO() }
+            .onEach { proposalStorageRepository.insertProposal(it) }
             .onEach { proposal ->
-                proposalStorageRepository.insertProposal(
-                    ProposalVO(
-                        pairingTopic = Topic(proposal.topic),
-                        name = proposal.metadata.name,
-                        description = proposal.metadata.description,
-                        url = proposal.metadata.url,
-                        icons = proposal.metadata.icons,
-                        requiredNamespaces = proposal.requiredNamespaces.toEngine().toNamespacesVOOptional(),
-                        optionalNamespaces = proposal.optionalNamespaces?.toEngine()?.toNamespacesVOOptional() ?: emptyMap(),
-                        proposerPublicKey = proposal.proposerPublicKey.bytesToHex(),
-                        relayData = "",
-                        relayProtocol = proposal.relays[0].protocol,
-                        redirect = proposal.metadata.redirect?.native ?: "",
-                        properties = proposal.scopedProperties,
-                        scopedProperties = proposal.scopedProperties,
-                        expiry = if (proposal.expiryTimestamp != null) Expiry(proposal.expiryTimestamp!!.toLong()) else null,
-                        requestId = proposal.id.toLong()
+                scope.launch {
+                    _engineEvent.emit(
+                        EngineDO.SessionProposalEvent(
+                            proposal = proposal.toEngineDO(),
+                            context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
+                        )
                     )
-                )
-
-                val proposalEvent = EngineDO.SessionProposalEvent(
-                    proposal = EngineDO.SessionProposal(
-                        pairingTopic = proposal.topic,
-                        name = proposal.metadata.name,
-                        description = proposal.metadata.description,
-                        url = proposal.metadata.url,
-                        icons = proposal.metadata.icons.map { URI(it) },
-                        requiredNamespaces = proposal.optionalNamespaces?.toEngine() ?: emptyMap(),
-                        optionalNamespaces = proposal.optionalNamespaces?.toEngine() ?: emptyMap(),
-                        proposerPublicKey = proposal.proposerPublicKey.bytesToHex(),
-                        relayData = "",
-                        relayProtocol = proposal.relays[0].protocol,
-                        redirect = proposal.metadata.redirect?.native ?: "",
-                        properties = proposal.sessionProperties,
-                        scopedProperties = proposal.scopedProperties,
-                    ),
-                    context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
-                )
-
-                println("kobe: emitSessionProposal: $proposal")
-                scope.launch { _engineEvent.emit(proposalEvent) }
+                }
             }
             .launchIn(scope)
     }
