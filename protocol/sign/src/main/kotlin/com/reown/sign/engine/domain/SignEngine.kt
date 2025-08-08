@@ -98,6 +98,9 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.SessionRequestJsonRpcFfi
+import uniffi.yttrium.SessionRequestListener
+import uniffi.yttrium.SignClient
 import java.net.URI
 
 internal class SignEngine(
@@ -151,7 +154,8 @@ internal class SignEngine(
     private val onSessionRequestResponseUseCase: OnSessionRequestResponseUseCase,
     private val insertEventUseCase: InsertTelemetryEventUseCase,
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
-    private val logger: Logger
+    private val logger: Logger,
+    private val signClient: SignClient
 ) : ProposeSessionUseCaseInterface by proposeSessionUseCase,
     SessionAuthenticateUseCaseInterface by authenticateSessionUseCase,
     PairUseCaseInterface by pairUseCase,
@@ -212,6 +216,10 @@ internal class SignEngine(
     }
 
     fun setup() {
+        scope.launch {
+            signClient.registerSessionRequestListener(onSessionRequestUseCase)
+        }
+
         handleLinkModeRequests()
         handleLinkModeResponses()
 

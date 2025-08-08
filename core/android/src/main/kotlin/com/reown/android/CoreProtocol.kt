@@ -21,6 +21,7 @@ import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.model.Redirect
 import com.reown.android.internal.common.model.TelemetryEnabled
+import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pairing.client.PairingInterface
 import com.reown.android.pairing.client.PairingProtocol
@@ -37,6 +38,7 @@ import com.reown.android.utils.plantTimber
 import com.reown.android.utils.projectId
 import com.reown.android.verify.client.VerifyClient
 import com.reown.android.verify.client.VerifyInterface
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
 import org.koin.core.qualifier.named
@@ -124,6 +126,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
             require(projectId.isNotEmpty()) { "Project Id cannot be empty" }
             registerLogger(AndroidLogger())
             signClient = SignClient(projectId = projectId)
+
             setup(
                 application = application,
                 projectId = projectId,
