@@ -142,7 +142,13 @@ internal fun callsModule() = module {
         )
     }
 
-    single<SessionUpdateUseCaseInterface> { SessionUpdateUseCase(jsonRpcInteractor = get(), sessionStorageRepository = get(), logger = get(named(AndroidCommonDITags.LOGGER))) }
+    single<SessionUpdateUseCaseInterface> {
+        SessionUpdateUseCase(
+            jsonRpcInteractor = get(),
+            sessionStorageRepository = get(),
+            logger = get(named(AndroidCommonDITags.LOGGER))
+        )
+    }
 
     single<SessionRequestUseCaseInterface> {
         SessionRequestUseCase(
@@ -170,7 +176,8 @@ internal fun callsModule() = module {
             metadataStorageRepository = get(),
             insertEventUseCase = get(),
             clientId = get(named(AndroidCommonDITags.CLIENT_ID)),
-            tvf = get()
+            tvf = get(),
+            signClient = get(named(AndroidCommonDITags.SIGN_RUST_CLIENT))
         )
     }
 
@@ -182,19 +189,50 @@ internal fun callsModule() = module {
             pushMessageStorage = get(),
         )
 
-        get<MutableMap<String, DecryptMessageUseCaseInterface>>(named(AndroidCommonDITags.DECRYPT_USE_CASES))[Tags.SESSION_PROPOSE.id.toString()] = useCase
+        get<MutableMap<String, DecryptMessageUseCaseInterface>>(named(AndroidCommonDITags.DECRYPT_USE_CASES))[Tags.SESSION_PROPOSE.id.toString()] =
+            useCase
         useCase
     }
 
-    single<PingUseCaseInterface> { PingUseCase(sessionStorageRepository = get(), jsonRpcInteractor = get(), logger = get(named(AndroidCommonDITags.LOGGER))) }
+    single<PingUseCaseInterface> {
+        PingUseCase(
+            sessionStorageRepository = get(),
+            jsonRpcInteractor = get(),
+            logger = get(named(AndroidCommonDITags.LOGGER))
+        )
+    }
 
-    single<EmitEventUseCaseInterface> { EmitEventUseCase(jsonRpcInteractor = get(), sessionStorageRepository = get(), logger = get(named(AndroidCommonDITags.LOGGER))) }
+    single<EmitEventUseCaseInterface> {
+        EmitEventUseCase(
+            jsonRpcInteractor = get(),
+            sessionStorageRepository = get(),
+            logger = get(named(AndroidCommonDITags.LOGGER))
+        )
+    }
 
-    single<ExtendSessionUseCaseInterface> { ExtendSessionUseCase(jsonRpcInteractor = get(), sessionStorageRepository = get(), logger = get(named(AndroidCommonDITags.LOGGER))) }
+    single<ExtendSessionUseCaseInterface> {
+        ExtendSessionUseCase(
+            jsonRpcInteractor = get(),
+            sessionStorageRepository = get(),
+            logger = get(named(AndroidCommonDITags.LOGGER))
+        )
+    }
 
-    single<DisconnectSessionUseCaseInterface> { DisconnectSessionUseCase(jsonRpcInteractor = get(), sessionStorageRepository = get(), logger = get(named(AndroidCommonDITags.LOGGER))) }
+    single<DisconnectSessionUseCaseInterface> {
+        DisconnectSessionUseCase(
+            jsonRpcInteractor = get(),
+            sessionStorageRepository = get(),
+            logger = get(named(AndroidCommonDITags.LOGGER))
+        )
+    }
 
-    single<GetSessionsUseCaseInterface> { GetSessionsUseCase(sessionStorageRepository = get(), metadataStorageRepository = get(), selfAppMetaData = get()) }
+    single<GetSessionsUseCaseInterface> {
+        GetSessionsUseCase(
+            sessionStorageRepository = get(),
+            metadataStorageRepository = get(),
+            selfAppMetaData = get()
+        )
+    }
 
     single<GetPairingsUseCaseInterface> { GetPairingsUseCase(pairingInterface = get()) }
 
@@ -204,7 +242,13 @@ internal fun callsModule() = module {
 
     single<GetPendingRequestsUseCaseByTopicInterface> { GetPendingRequestsUseCaseByTopic(serializer = get(), jsonRpcHistory = get()) }
 
-    single<GetPendingSessionRequestByTopicUseCaseInterface> { GetPendingSessionRequestByTopicUseCase(jsonRpcHistory = get(), serializer = get(), metadataStorageRepository = get()) }
+    single<GetPendingSessionRequestByTopicUseCaseInterface> {
+        GetPendingSessionRequestByTopicUseCase(
+            jsonRpcHistory = get(),
+            serializer = get(),
+            metadataStorageRepository = get()
+        )
+    }
 
     single<GetSessionProposalsUseCaseInterface> { GetSessionProposalsUseCase(proposalStorageRepository = get()) }
 

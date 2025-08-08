@@ -29,11 +29,14 @@ import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.engine.sessionRequestEventsQueue
 import com.reown.sign.json_rpc.domain.GetPendingJsonRpcHistoryEntryByIdUseCase
 import com.reown.sign.storage.sequence.SessionStorageRepository
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.SessionRequestResponseJsonRpcFfi
+import uniffi.yttrium.SignClient
 
 internal class RespondSessionRequestUseCase(
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
@@ -45,7 +48,8 @@ internal class RespondSessionRequestUseCase(
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
-    private val tvf: TVF
+    private val tvf: TVF,
+    private val signClient: SignClient
 ) : RespondSessionRequestUseCaseInterface {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     override val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
@@ -55,80 +59,103 @@ internal class RespondSessionRequestUseCase(
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit,
     ) = supervisorScope {
-        val topicWrapper = Topic(topic)
-        if (!sessionStorageRepository.isSessionValid(topicWrapper)) {
-            logger.error("Request response -  invalid session: $topic, id: ${jsonRpcResponse.id}")
-            return@supervisorScope onFailure(CannotFindSequenceForTopic("$NO_SEQUENCE_FOR_TOPIC_MESSAGE$topic"))
-        }
-        val session = sessionStorageRepository.getSessionWithoutMetadataByTopic(topicWrapper)
-            .run {
-                val peerAppMetaData = metadataStorageRepository.getByTopicAndType(this.topic, AppMetaDataType.PEER)
-                this.copy(peerAppMetaData = peerAppMetaData)
-            }
-
-        val pendingRequest = getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id)
-        if (pendingRequest == null) {
-            logger.error("Request doesn't exist: $topic, id: ${jsonRpcResponse.id}")
-            return@supervisorScope onFailure(RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}"))
-        }
-        pendingRequest.params.expiry?.let {
-            if (Expiry(it).isExpired()) {
-                logger.error("Request Expired: $topic, id: ${jsonRpcResponse.id}")
-                return@supervisorScope onFailure(RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}"))
-            }
-        }
-
-        if (session.transportType == TransportType.LINK_MODE && session.peerLinkMode == true) {
-            if (session.peerAppLink.isNullOrEmpty()) return@supervisorScope onFailure(IllegalStateException("App link is missing"))
-            try {
-                removePendingSessionRequestAndEmit(jsonRpcResponse.id)
-                linkModeJsonRpcInteractor.triggerResponse(Topic(topic), jsonRpcResponse, session.peerAppLink)
-                insertEventUseCase(
-                    Props(
-                        EventType.SUCCESS,
-                        Tags.SESSION_REQUEST_LINK_MODE_RESPONSE.id.toString(),
-                        Properties(correlationId = jsonRpcResponse.id, clientId = clientId, direction = Direction.SENT.state)
-                    )
-                )
-            } catch (e: Exception) {
-                onFailure(e)
-            }
-        } else {
-            val tvfData = tvf.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
-            val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let {
-                tvf.collectTxHashes(
-                    pendingRequest.params.rpcMethod,
-                    it.result.toString(),
-                    pendingRequest.params.rpcParams
-                )
-            }
-            val irnParams = IrnParams(
-                Tags.SESSION_REQUEST_RESPONSE,
-                Ttl(fiveMinutesInSeconds),
-                correlationId = jsonRpcResponse.id,
-                rpcMethods = tvfData.first,
-                contractAddresses = tvfData.second,
-                txHashes = txHashes,
-                chainId = tvfData.third
+        try {
+            val responseFfi = SessionRequestResponseJsonRpcFfi(
+                id = jsonRpcResponse.id.toULong(),
+                jsonrpc = "2.0",
+                result = (jsonRpcResponse as JsonRpcResponse.JsonRpcResult).result.toString()
             )
-            logger.log("Sending session request response on topic: $topic, id: ${jsonRpcResponse.id}")
-            jsonRpcInteractor.publishJsonRpcResponse(
-                topic = Topic(topic), params = irnParams, response = jsonRpcResponse,
-                onSuccess = {
-                    onSuccess()
-                    logger.log("Session request response sent successfully on topic: $topic, id: ${jsonRpcResponse.id}")
-                    scope.launch {
-                        supervisorScope {
-                            removePendingSessionRequestAndEmit(jsonRpcResponse.id)
-                        }
-                    }
-                },
-                onFailure = { error ->
-                    logger.error("Sending session response error: $error, id: ${jsonRpcResponse.id}")
-                    onFailure(error)
+
+            val result = async {
+                try {
+                    signClient.respond(topic, responseFfi)
+                } catch (e: Exception) {
+                    println("kobe: session request error: $e")
+                    onFailure(e)
                 }
-            )
+            }.await()
+
+            println("kobe: session request responded: $result")
+            onSuccess()
+
+        } catch (e: Exception) {
+            println("kobe: session request error: $e")
+            onFailure(e)
         }
+//        val topicWrapper = Topic(topic)
+//        if (!sessionStorageRepository.isSessionValid(topicWrapper)) {
+//            logger.error("Request response -  invalid session: $topic, id: ${jsonRpcResponse.id}")
+//            return@supervisorScope onFailure(CannotFindSequenceForTopic("$NO_SEQUENCE_FOR_TOPIC_MESSAGE$topic"))
+//        }
+//        val session = sessionStorageRepository.getSessionWithoutMetadataByTopic(topicWrapper)
+//            .run {
+//                val peerAppMetaData = metadataStorageRepository.getByTopicAndType(this.topic, AppMetaDataType.PEER)
+//                this.copy(peerAppMetaData = peerAppMetaData)
+//            }
+//
+//        val pendingRequest = getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id)
+//        if (pendingRequest == null) {
+//            logger.error("Request doesn't exist: $topic, id: ${jsonRpcResponse.id}")
+//            return@supervisorScope onFailure(RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}"))
+//        }
+//        pendingRequest.params.expiry?.let {
+//            if (Expiry(it).isExpired()) {
+//                logger.error("Request Expired: $topic, id: ${jsonRpcResponse.id}")
+//                return@supervisorScope onFailure(RequestExpiredException("This request has expired, id: ${jsonRpcResponse.id}"))
+//            }
+//        }
+//
+//        if (session.transportType == TransportType.LINK_MODE && session.peerLinkMode == true) {
+//            if (session.peerAppLink.isNullOrEmpty()) return@supervisorScope onFailure(IllegalStateException("App link is missing"))
+//            try {
+//                removePendingSessionRequestAndEmit(jsonRpcResponse.id)
+//                linkModeJsonRpcInteractor.triggerResponse(Topic(topic), jsonRpcResponse, session.peerAppLink)
+//                insertEventUseCase(
+//                    Props(
+//                        EventType.SUCCESS,
+//                        Tags.SESSION_REQUEST_LINK_MODE_RESPONSE.id.toString(),
+//                        Properties(correlationId = jsonRpcResponse.id, clientId = clientId, direction = Direction.SENT.state)
+//                    )
+//                )
+//            } catch (e: Exception) {
+//                onFailure(e)
+//            }
+//        } else {
+//            val tvfData = tvf.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
+//            val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let {
+//                tvf.collectTxHashes(
+//                    pendingRequest.params.rpcMethod,
+//                    it.result.toString(),
+//                    pendingRequest.params.rpcParams
+//                )
+//            }
+//            val irnParams = IrnParams(
+//                Tags.SESSION_REQUEST_RESPONSE,
+//                Ttl(fiveMinutesInSeconds),
+//                correlationId = jsonRpcResponse.id,
+//                rpcMethods = tvfData.first,
+//                contractAddresses = tvfData.second,
+//                txHashes = txHashes,
+//                chainId = tvfData.third
+//            )
+//            logger.log("Sending session request response on topic: $topic, id: ${jsonRpcResponse.id}")
+//            jsonRpcInteractor.publishJsonRpcResponse(
+//                topic = Topic(topic), params = irnParams, response = jsonRpcResponse,
+//                onSuccess = {
+//                    onSuccess()
+//                    logger.log("Session request response sent successfully on topic: $topic, id: ${jsonRpcResponse.id}")
+//                    scope.launch {
+//                        supervisorScope {
+//                            removePendingSessionRequestAndEmit(jsonRpcResponse.id)
+//                        }
+//                    }
+//                },
+//                onFailure = { error ->
+//                    logger.error("Sending session response error: $error, id: ${jsonRpcResponse.id}")
+//                    onFailure(error)
+//                }
+//            )
+//        }
     }
 
     private suspend fun removePendingSessionRequestAndEmit(id: Long) {
