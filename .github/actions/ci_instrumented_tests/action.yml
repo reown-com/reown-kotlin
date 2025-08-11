@@ -37,7 +37,6 @@ runs:
     - name: Run instrumented tests
       shell: bash
       env:
-        CI: "false"
         WC_CLOUD_PROJECT_ID: ${{ inputs.projectId}}
         TEST_TIMEOUT_SECONDS: ${{ inputs.testTimeoutSeconds }}
         NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ inputs.notifyProjectId }}

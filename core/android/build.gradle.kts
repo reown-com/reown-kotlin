@@ -100,9 +100,9 @@ dependencies {
 
     // Use specific yttrium version for CI builds, default version for local builds
     val yttriumVersion = if (System.getenv("CI") == "true") {
-        System.getenv("YTTRIUM_CI_VERSION") ?: "0.9.53"
+        System.getenv("YTTRIUM_CI_VERSION") ?: "0.9.55"
     } else {
-        "0.9.53"
+        "0.9.55"
     }
     api("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
     implementation("net.java.dev.jna:jna:5.15.0@aar")
