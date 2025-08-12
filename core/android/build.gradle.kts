@@ -100,7 +100,7 @@ dependencies {
 
     // Use specific yttrium version for CI builds, default version for local builds
     val yttriumVersion = if (System.getenv("CI") == "true") {
-        System.getenv("YTTRIUM_CI_VERSION") ?: "0.9.55"
+        System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.20-ci"
     } else {
         "0.9.55"
     }
