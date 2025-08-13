@@ -10,7 +10,7 @@ sealed class JsonRpcResponse : SerializableJsonRpc {
     data class JsonRpcResult(
         override val id: Long,
         val jsonrpc: String = "2.0",
-        val result: Any,
+        val result: Any?,
     ) : JsonRpcResponse()
 
     @JsonClass(generateAdapter = true)

@@ -27,6 +27,7 @@ class SessionRequestViewModel : ViewModel() {
                 val sessionRequest = sessionRequestUI as? SessionRequestUI.Content
                 if (sessionRequest != null) {
                     val result: String = Signer.sign(sessionRequest)
+
                     val response = Wallet.Params.SessionRequestResponse(
                         sessionTopic = sessionRequest.topic,
                         jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(sessionRequest.requestId, result)

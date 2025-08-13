@@ -5,15 +5,15 @@ import com.reown.sign.client.Sign
 import com.squareup.moshi.Moshi
 //import uniffi.uniffi_yttrium.Eip1559Estimation
 //import uniffi.yttrium.Amount
-import uniffi.yttrium.Call
-import uniffi.yttrium.DoSendTransactionParams
+//import uniffi.yttrium.Call
+//import uniffi.yttrium.DoSendTransactionParams
 //import uniffi.yttrium.ExecuteDetails
 //import uniffi.yttrium.FeeEstimatedTransaction
 //import uniffi.yttrium.FundingMetadata
 //import uniffi.yttrium.InitialTransactionMetadata
-import uniffi.yttrium.OwnerSignature
+//import uniffi.yttrium.OwnerSignature
 //import uniffi.yttrium.PrepareResponseAvailable
-import uniffi.yttrium.PreparedSendTransaction
+//import uniffi.yttrium.PreparedSendTransaction
 //import uniffi.yttrium.Route
 //import uniffi.yttrium.RouteSig
 ////import uniffi.yttrium.SolanaTransaction
@@ -312,17 +312,17 @@ internal fun Sign.Model.ConnectionState.Reason.toWallet(): Wallet.Model.Connecti
     is Sign.Model.ConnectionState.Reason.ConnectionFailed -> Wallet.Model.ConnectionState.Reason.ConnectionFailed(this.throwable)
 }
 
-@JvmSynthetic
-internal fun PreparedSendTransaction.toWallet(moshi: Moshi): Wallet.Params.PrepareSendTransactionsResult {
-    val jsonParams = moshi.adapter(DoSendTransactionParams::class.java).toJson(doSendTransactionParams)
-    return Wallet.Params.PrepareSendTransactionsResult(hash = hash, doSendTransactionParams = jsonParams, eip712Domain = domain)
-}
+//@JvmSynthetic
+//internal fun PreparedSendTransaction.toWallet(moshi: Moshi): Wallet.Params.PrepareSendTransactionsResult {
+//    val jsonParams = moshi.adapter(DoSendTransactionParams::class.java).toJson(doSendTransactionParams)
+//    return Wallet.Params.PrepareSendTransactionsResult(hash = hash, doSendTransactionParams = jsonParams, eip712Domain = domain)
+//}
 
-@JvmSynthetic
-internal fun Call.toWallet(): Wallet.Model.Call = Wallet.Model.Call(to = to, value = value, input = input)
+//@JvmSynthetic
+//internal fun Call.toWallet(): Wallet.Model.Call = Wallet.Model.Call(to = to, value = value, input = input)
 
-@JvmSynthetic
-internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)
+//@JvmSynthetic
+//internal fun Wallet.Params.OwnerSignature.toYttrium(): OwnerSignature = OwnerSignature(owner = address, signature = signature)
 
 //@JvmSynthetic
 //internal fun ExecuteDetails.toWallet(): Wallet.Model.ExecuteSuccess = Wallet.Model.ExecuteSuccess(
