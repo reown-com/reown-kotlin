@@ -2,7 +2,6 @@ package com.reown.android.internal.common.di
 
 import android.net.Uri
 import android.os.Build
-import com.pandulapeter.beagle.logOkHttp.BeagleOkHttpLogger
 import com.squareup.moshi.Moshi
 import com.tinder.scarlet.Lifecycle
 import com.tinder.scarlet.Scarlet
@@ -41,7 +40,7 @@ fun coreAndroidNetworkModule(
     timeout: NetworkClientTimeout? = null,
     packageName: String
 ) = module {
-    val networkClientTimeout = timeout ?: NetworkClientTimeout.getDefaultTimeout()
+    val networkClientTimeout = timeout ?: NetworkClientTimeout.getDefaultNetworkTimeout()
     factory(named(AndroidCommonDITags.RELAY_URL)) {
         val jwt = get<GenerateJwtStoreClientIdUseCase>().invoke(serverUrl)
         Uri.parse(serverUrl)

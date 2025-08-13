@@ -6,25 +6,22 @@ data class NetworkClientTimeout(
     val timeout: Long,
     val timeUnit: TimeUnit
 ) {
+    private val timeoutInMillis: Long by lazy {
+        TimeUnit.MILLISECONDS.convert(timeout, timeUnit)
+    }
 
     init {
-        require(isTimeoutInRequiredRange()) {
-            "Timeout must be in range of $MIN_TIMEOUT_LIMIT_AS_MILLIS .. $MAX_TIMEOUT_LIMIT_AS_MILLIS milliseconds"
+        require(timeoutInMillis in MIN_TIMEOUT_LIMIT..MAX_TIMEOUT_LIMIT) {
+            "Timeout must be in range of $MIN_TIMEOUT_LIMIT..$MAX_TIMEOUT_LIMIT milliseconds"
         }
     }
 
-    private fun isTimeoutInRequiredRange(): Boolean {
-        val timeoutAsMillis = TimeUnit.MILLISECONDS.convert(timeout, timeUnit)
-        return timeoutAsMillis in MIN_TIMEOUT_LIMIT_AS_MILLIS..MAX_TIMEOUT_LIMIT_AS_MILLIS
-    }
-
     companion object {
+        private const val MIN_TIMEOUT_LIMIT = 15_000L
+        private const val MAX_TIMEOUT_LIMIT = 60_000L
 
-        private const val MIN_TIMEOUT_LIMIT_AS_MILLIS = 15_000L
-        private const val MAX_TIMEOUT_LIMIT_AS_MILLIS = 60_000L
-
-        fun getDefaultTimeout() = NetworkClientTimeout(
-            timeout = MIN_TIMEOUT_LIMIT_AS_MILLIS,
+        fun getDefaultNetworkTimeout() = NetworkClientTimeout(
+            timeout = MIN_TIMEOUT_LIMIT,
             timeUnit = TimeUnit.MILLISECONDS
         )
     }
