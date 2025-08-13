@@ -642,7 +642,7 @@ internal class SessionRequestVOJsonAdapterTest {
     }
 
     @Test
-    fun jsonParamsObjectWithOneArrayField() {
+    fun `json params object with one array field`() {
         @Language("json")
         params = """
             {
@@ -650,16 +650,11 @@ internal class SessionRequestVOJsonAdapterTest {
             }
         """.trimIndent()
 
-        val expectedParamsJsonObj = JSONObject(params)
-        val actualParamsJsonObj = JSONObject(serializedParams)
-
-        assertEquals(expectedParamsJsonObj.length(), actualParamsJsonObj.length())
-
-        iterateJsonObjects(expectedParamsJsonObj, actualParamsJsonObj)
+        assertJsonObjectsMatch(params)
     }
 
     @Test
-    fun jsonParamsObjectWithOneObjectField() {
+    fun `json params object with one object field`() {
         @Language("json")
         params = """
             {
@@ -670,27 +665,27 @@ internal class SessionRequestVOJsonAdapterTest {
               }
             }
         """.trimIndent()
-        val expectedParamsJsonObj = JSONObject(params)
-        val actualParamsJsonObj = JSONObject(serializedParams)
-
-        assertEquals(expectedParamsJsonObj.length(), actualParamsJsonObj.length())
-
-        iterateJsonObjects(expectedParamsJsonObj, actualParamsJsonObj)
+        
+        assertJsonObjectsMatch(params)
     }
 
     @Test
-    fun jsonParamsObjectWithOneStringField() {
+    fun `json params object with one string field`() {
         @Language("json")
         params = """
             {
               "filter": "id,date"
             }
         """.trimIndent()
-        val expectedParamsJsonObj = JSONObject(params)
+        
+        assertJsonObjectsMatch(params)
+    }
+
+    private fun assertJsonObjectsMatch(expectedParams: String) {
+        val expectedParamsJsonObj = JSONObject(expectedParams)
         val actualParamsJsonObj = JSONObject(serializedParams)
 
         assertEquals(expectedParamsJsonObj.length(), actualParamsJsonObj.length())
-
         iterateJsonObjects(expectedParamsJsonObj, actualParamsJsonObj)
     }
 }

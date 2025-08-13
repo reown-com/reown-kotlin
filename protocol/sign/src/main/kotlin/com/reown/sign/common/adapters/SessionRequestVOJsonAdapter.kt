@@ -39,7 +39,7 @@ internal class SessionRequestVOJsonAdapter(moshi: Moshi) : JsonAdapter<SessionRe
                         upsertArray(JSONArray(), paramsAny).toString()
                     } else {
                         val paramsMap = paramsAny as Map<*, *>
-                        upsertObject(JSONObject(), paramsMap).toString()
+                        processObject(JSONObject(), paramsMap).toString()
                     }
                 }
 
@@ -61,23 +61,19 @@ internal class SessionRequestVOJsonAdapter(moshi: Moshi) : JsonAdapter<SessionRe
         )
     }
 
-    private fun upsertObject(rootObject: JSONObject, paramsMap: Map<*, *>): JSONObject {
-        (paramsMap as Map<String, Any?>).entries.forEach { (key, value) ->
-            when (value) {
-                is List<*> -> rootObject.putOpt(key, upsertArray(JSONArray(), value))
-                is Map<*, *> -> rootObject.putOpt(key, upsertObject(JSONObject(), value))
-                is Number -> {
-                    val castedNumber = if (value.toDouble() % 1 == 0.0) {
-                        value.toLong()
-                    } else {
-                        value.toDouble()
-                    }
-
-                    rootObject.put(key, castedNumber)
+    private fun processObject(rootObject: JSONObject, paramsMap: Map<*, *>): JSONObject {
+        (paramsMap as Map<String, Any?>).forEach { (key, value) ->
+            val processedValue = when (value) {
+                is List<*> -> upsertArray(JSONArray(), value)
+                is Map<*, *> -> processObject(JSONObject(), value)
+                is Number -> when {
+                    value.toDouble() % 1 == 0.0 -> value.toLong()
+                    else -> value.toDouble()
                 }
-
-                else -> rootObject.putOpt(key, value ?: JSONObject.NULL)
+                else -> value ?: JSONObject.NULL
             }
+            
+            rootObject.putOpt(key, processedValue)
         }
 
         return rootObject
@@ -87,11 +83,11 @@ internal class SessionRequestVOJsonAdapter(moshi: Moshi) : JsonAdapter<SessionRe
         paramsList.forEach { value ->
             when (value) {
                 is List<*> -> rootArray.put(upsertArray(JSONArray(), value))
-                is Map<*, *> -> rootArray.put(upsertObject(JSONObject(), value))
+                is Map<*, *> -> rootArray.put(processObject(JSONObject(), value))
                 is String -> try {
                     when (val deserializedJson = anyAdapter.fromJson(value)) {
                         is List<*> -> rootArray.put(upsertArray(JSONArray(), deserializedJson))
-                        is Map<*, *> -> rootArray.put(upsertObject(JSONObject(), deserializedJson))
+                        is Map<*, *> -> rootArray.put(processObject(JSONObject(), deserializedJson))
                         is Number -> rootArray.put(value.toString())
                         else -> throw IllegalArgumentException("Failed Deserializing Unknown Type $value")
                     }
