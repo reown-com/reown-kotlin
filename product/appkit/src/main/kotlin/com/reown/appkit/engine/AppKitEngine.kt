@@ -323,7 +323,7 @@ internal class AppKitEngine(
                             val siweResponse = Modal.Model.SIWEAuthenticateResponse.Result(
                                 id = response.result.id,
                                 message = siweRequestIdWithMessage!!.second,
-                                signature = (response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result
+                                signature = (response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result ?: ""
                             )
                             siweRequestIdWithMessage = null
                             val account = getAccount() ?: throw IllegalStateException("Account is null")
