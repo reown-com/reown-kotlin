@@ -51,7 +51,7 @@ import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotifyDelegate
-import com.reown.sample.wallet.domain.SolanaAccountDelegate
+//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
@@ -267,35 +267,35 @@ class WalletKitActivity : AppCompatActivity() {
                     )
                 )
             },
-            TextModule(text = "Solana public key"),
-            TextModule(text = SolanaAccountDelegate.keys.second) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
-                    ClipData.newPlainText(
-                        "Solana Account",
-                        SolanaAccountDelegate.keys.second
-                    )
-                )
-            },
-            PaddingModule(size = PaddingModule.Size.LARGE),
-            TextModule(text = "Solana private key"),
-            TextModule(text = SolanaAccountDelegate.keys.first) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
-                    ClipData.newPlainText(
-                        "Solana Private Key",
-                        SolanaAccountDelegate.keys.first
-                    )
-                )
-            },
-            PaddingModule(size = PaddingModule.Size.LARGE),
-            TextModule(text = "Solana Key Pair"),
-            TextModule(text = SolanaAccountDelegate.keyPair) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
-                    ClipData.newPlainText(
-                        "Solana Key Pair",
-                        SolanaAccountDelegate.keyPair
-                    )
-                )
-            },
+//            TextModule(text = "Solana public key"),
+//            TextModule(text = SolanaAccountDelegate.keys.second) {
+//                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+//                    ClipData.newPlainText(
+//                        "Solana Account",
+//                        SolanaAccountDelegate.keys.second
+//                    )
+//                )
+//            },
+//            PaddingModule(size = PaddingModule.Size.LARGE),
+//            TextModule(text = "Solana private key"),
+//            TextModule(text = SolanaAccountDelegate.keys.first) {
+//                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+//                    ClipData.newPlainText(
+//                        "Solana Private Key",
+//                        SolanaAccountDelegate.keys.first
+//                    )
+//                )
+//            },
+//            PaddingModule(size = PaddingModule.Size.LARGE),
+//            TextModule(text = "Solana Key Pair"),
+//            TextModule(text = SolanaAccountDelegate.keyPair) {
+//                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
+//                    ClipData.newPlainText(
+//                        "Solana Key Pair",
+//                        SolanaAccountDelegate.keyPair
+//                    )
+//                )
+//            },
             PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "Client ID"),
             TextModule(text = CoreClient.Push.clientId, id = CoreClient.Push.clientId) {
@@ -322,14 +322,14 @@ class WalletKitActivity : AppCompatActivity() {
                     )
                 }
             ),
-            DividerModule(),
-            TextInputModule(
-                text = "Import Solana Key Pair",
-                areRealTimeUpdatesEnabled = false,
-                onValueChanged = { text ->
-                    SolanaAccountDelegate.keyPair = text
-                }
-            )
+//            DividerModule(),
+//            TextInputModule(
+//                text = "Import Solana Key Pair",
+//                areRealTimeUpdatesEnabled = false,
+//                onValueChanged = { text ->
+//                    SolanaAccountDelegate.keyPair = text
+//                }
+//            )
         )
     }
 

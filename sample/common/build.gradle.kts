@@ -2,6 +2,7 @@ plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
     id(libs.plugins.kotlin.kapt.get().pluginId)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
