@@ -12,6 +12,7 @@ import com.reown.android.internal.common.crypto.codec.Codec
 import com.reown.android.internal.common.crypto.kmr.BouncyCastleKeyManagementRepository
 import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.jwt.clientid.ClientIdJwtRepositoryAndroid
+import com.reown.android.internal.common.jwt.clientid.GetKeyPair
 import com.reown.android.internal.common.storage.key_chain.KeyChain
 import com.reown.foundation.crypto.data.repository.ClientIdJwtRepository
 import com.reown.foundation.util.Logger
@@ -29,12 +30,18 @@ private const val KEY_STORE_ALIAS = "wc_keystore_key"
 private const val KEY_SIZE = 256
 
 @JvmSynthetic
-fun coreCryptoModule(sharedPrefsFile: String = SHARED_PREFS_FILE, keyStoreAlias: String = KEY_STORE_ALIAS) = module {
+fun coreCryptoModule(
+    sharedPrefsFile: String = SHARED_PREFS_FILE,
+    keyStoreAlias: String = KEY_STORE_ALIAS
+) = module {
 
     @Synchronized
     fun Scope.createSharedPreferences(): SharedPreferences {
         val keyGenParameterSpec: KeyGenParameterSpec =
-            KeyGenParameterSpec.Builder(keyStoreAlias, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+            KeyGenParameterSpec.Builder(
+                keyStoreAlias,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(KEY_SIZE)
@@ -70,7 +77,8 @@ fun coreCryptoModule(sharedPrefsFile: String = SHARED_PREFS_FILE, keyStoreAlias:
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         deleteSharedPreferences(sharedPrefsFile)
                     } else {
-                        getSharedPreferences(sharedPrefsFile, Context.MODE_PRIVATE).edit().clear().apply()
+                        getSharedPreferences(sharedPrefsFile, Context.MODE_PRIVATE).edit().clear()
+                            .apply()
                         val dir = File(applicationInfo.dataDir, "shared_prefs")
                         File(dir, "$sharedPrefsFile.xml").delete()
                     }
@@ -95,7 +103,9 @@ fun coreCryptoModule(sharedPrefsFile: String = SHARED_PREFS_FILE, keyStoreAlias:
 
     single<WCKeyStore> { KeyChain(sharedPreferences = get()) }
 
-    single<ClientIdJwtRepository> { ClientIdJwtRepositoryAndroid(keyChain = get(), signClient = get(named(AndroidCommonDITags.SIGN_RUST_CLIENT))) }
+    single<ClientIdJwtRepository> { ClientIdJwtRepositoryAndroid(keyChain = get()) }
+
+    single { GetKeyPair(keyChain = get()) }
 
     single<KeyManagementRepository> { BouncyCastleKeyManagementRepository(keyChain = get()) }
 
