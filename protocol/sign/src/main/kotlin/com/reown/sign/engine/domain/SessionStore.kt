@@ -17,9 +17,8 @@ internal class SessionStore(
     private val selfAppMetaData: AppMetaData
 ) : SessionStore {
     override fun addSession(session: SessionFfi) {
-        println("kobe: addSession: $session")
+        println("kobe: SessionStore: addSession: $session")
 
-        //TODO: request ID
         val sessionVO = session.toVO()
         sessionStorageRepository.insertSession(session = session.toVO(), requestId = session.requestId.toLong())
         metadataStorageRepository.insertOrAbortMetadata(
@@ -35,7 +34,7 @@ internal class SessionStore(
     }
 
     override fun getAllSessions(): List<SessionFfi> {
-        println("kobe: get all sessions")
+        println("kobe: SessionStore: get all sessions")
 
         return sessionStorageRepository.getListOfSessionVOsWithoutMetadata()
             .filter { session -> session.isAcknowledged && session.expiry.isSequenceValid() }
@@ -49,11 +48,11 @@ internal class SessionStore(
     }
 
     override fun deleteSession(topic: String) {
-        println("kobe: deleteSession: $topic")
+        println("kobe: SessionStore: deleteSession: $topic")
     }
 
     override fun getSession(topic: String): SessionFfi? {
-        println("kobe: get session: $topic")
+        println("kobe: SessionStore: get session: $topic")
         TODO("Not yet implemented")
     }
 }
