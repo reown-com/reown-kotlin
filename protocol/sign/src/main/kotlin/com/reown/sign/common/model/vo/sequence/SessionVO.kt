@@ -33,7 +33,8 @@ internal data class SessionVO(
     val scopedProperties: Map<String, String>? = null,
     val isAcknowledged: Boolean,
     val pairingTopic: String,
-    val transportType: TransportType?
+    val transportType: TransportType?,
+    val symKey: String? = null
 ) : Sequence {
     val isPeerController: Boolean = peerPublicKey?.keyAsHex == controllerKey?.keyAsHex
     val isSelfController: Boolean = selfPublicKey.keyAsHex == controllerKey?.keyAsHex

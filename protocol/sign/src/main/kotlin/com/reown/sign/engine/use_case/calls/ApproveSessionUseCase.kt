@@ -1,6 +1,5 @@
 package com.reown.sign.engine.use_case.calls
 
-import com.reown.android.internal.Validator
 import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
@@ -11,17 +10,12 @@ import com.reown.android.pulse.domain.InsertTelemetryEventUseCase
 import com.reown.foundation.util.Logger
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toProposalFfi
-import com.reown.sign.engine.model.mapper.toProposalYttrium
 import com.reown.sign.engine.model.mapper.toSettleYttrium
 import com.reown.sign.engine.model.mapper.toYttrium
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.reown.util.hexToBytes
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
-import uniffi.yttrium.Redirect
-import uniffi.yttrium.Relay
-import uniffi.yttrium.SessionProposalFfi
 import uniffi.yttrium.SignClient
 
 internal class ApproveSessionUseCase(
@@ -49,7 +43,7 @@ internal class ApproveSessionUseCase(
 //        val trace: MutableList<String> = mutableListOf()
 //        trace.add(Trace.Session.SESSION_APPROVE_STARTED).also { logger.log(Trace.Session.SESSION_APPROVE_STARTED) }
         val proposal = proposalStorageRepository.getProposalByKey(proposerPublicKey)
-        val result = async {
+        val sessionFfi = async {
             try {
                 signClient.approve(proposal = proposal.toProposalFfi(), approvedNamespaces = sessionNamespaces.toSettleYttrium(), selfMetadata = selfAppMetaData.toYttrium())
             } catch (e: Exception) {
@@ -58,7 +52,7 @@ internal class ApproveSessionUseCase(
             }
 
         }.await()
-        println("kobe: Session Approve Result: $result")
+        println("kobe: Session Approve Result: $sessionFfi")
         onSuccess()
     }
 }

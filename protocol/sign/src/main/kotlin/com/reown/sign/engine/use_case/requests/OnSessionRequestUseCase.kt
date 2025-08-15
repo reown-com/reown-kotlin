@@ -42,7 +42,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import uniffi.yttrium.SessionRequestJsonRpcFfi
-import uniffi.yttrium.SessionRequestListener
+import uniffi.yttrium.SignListener
 
 internal class OnSessionRequestUseCase(
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
@@ -52,7 +52,7 @@ internal class OnSessionRequestUseCase(
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
     private val logger: Logger
-) : SessionRequestListener {
+) : SignListener {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
@@ -131,7 +131,7 @@ internal class OnSessionRequestUseCase(
     }
 
     override fun onSessionRequest(topic: String, sessionRequest: SessionRequestJsonRpcFfi) {
-        println("jordan: Session Request: $topic ; $sessionRequest")
+        println("kobe: Session Request: $topic ; $sessionRequest")
 
         val sessionRequestEvent = EngineDO.SessionRequestEvent(
             request = EngineDO.SessionRequest(

@@ -49,7 +49,7 @@ import uniffi.yttrium.registerLogger
 
 class AndroidLogger: Logger {
     override fun log(message: String) {
-        println("jordan: Message from Rust: $message")
+        println("kobe: Message from Rust: $message")
     }
 }
 
