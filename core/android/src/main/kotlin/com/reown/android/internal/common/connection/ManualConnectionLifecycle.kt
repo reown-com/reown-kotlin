@@ -25,6 +25,7 @@ internal class ManualConnectionLifecycle(
     private val _onResume = MutableStateFlow<Boolean?>(null)
     override val onResume: StateFlow<Boolean?> = _onResume.asStateFlow()
 
+    //TODO: call method from Rust Client
     fun connect() {
         scope.launch {
             connectionMutex.withLock {
@@ -33,6 +34,7 @@ internal class ManualConnectionLifecycle(
         }
     }
 
+    //TODO: call method from Rust Client
     fun disconnect() {
         scope.launch {
             connectionMutex.withLock {

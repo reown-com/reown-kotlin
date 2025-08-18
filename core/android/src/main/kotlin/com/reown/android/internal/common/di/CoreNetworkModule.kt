@@ -111,7 +111,7 @@ fun coreAndroidNetworkModule(
     }
 
     single<DefaultConnectionLifecycle>(named(AndroidCommonDITags.DEFAULT_CONNECTION_LIFECYCLE)) {
-        DefaultConnectionLifecycle(androidApplication())
+        DefaultConnectionLifecycle(androidApplication(), signClient = get(named(AndroidCommonDITags.SIGN_RUST_CLIENT)))
     }
 
     single { ConditionalExponentialBackoffStrategy(INIT_BACKOFF_MILLIS, TimeUnit.SECONDS.toMillis(MAX_BACKOFF_SEC), connectionType) }

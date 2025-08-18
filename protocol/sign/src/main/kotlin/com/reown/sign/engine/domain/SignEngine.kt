@@ -92,6 +92,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import uniffi.yttrium.SignClient
+import kotlin.math.sign
 
 internal class SignEngine(
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
