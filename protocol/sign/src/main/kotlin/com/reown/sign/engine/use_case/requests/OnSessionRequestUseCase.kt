@@ -150,6 +150,10 @@ internal class OnSessionRequestUseCase(
         scope.launch { _events.emit(sessionRequestEvent) }
     }
 
+    override fun onSessionRequestJson(topic: String, sessionRequestJson: String) {
+        //Nothing
+    }
+
     private fun emitSessionRequest(
         params: SignParams.SessionRequestParams,
         request: WCRequest,
