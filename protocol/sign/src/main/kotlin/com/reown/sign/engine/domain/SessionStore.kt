@@ -3,13 +3,14 @@ package com.reown.sign.engine.domain
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.AppMetaDataType
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.reown.sign.engine.model.mapper.toEngineDO
+import com.reown.foundation.common.model.Topic
 import com.reown.sign.engine.model.mapper.toSessionFfi
 import com.reown.sign.engine.model.mapper.toVO
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import com.reown.utils.isSequenceValid
 import uniffi.yttrium.SessionFfi
 import uniffi.yttrium.SessionStore
+import kotlin.collections.filter
 
 internal class SessionStore(
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
@@ -49,10 +50,17 @@ internal class SessionStore(
 
     override fun deleteSession(topic: String) {
         println("kobe: SessionStore: deleteSession: $topic")
+
+        sessionStorageRepository.deleteSession(topic = Topic(topic))
     }
 
     override fun getSession(topic: String): SessionFfi? {
         println("kobe: SessionStore: get session: $topic")
-        TODO("Not yet implemented")
+
+        return sessionStorageRepository.getSessionWithoutMetadataByTopic(topic = Topic(topic))
+            .run {
+                val peerAppMetaData = metadataStorageRepository.getByTopicAndType(this.topic, AppMetaDataType.PEER)
+                this.copy(peerAppMetaData = peerAppMetaData)
+            }.toSessionFfi()
     }
 }
