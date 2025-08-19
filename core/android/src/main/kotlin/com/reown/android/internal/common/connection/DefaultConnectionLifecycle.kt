@@ -18,11 +18,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.SignClient
 import java.util.concurrent.TimeUnit
 
 internal class DefaultConnectionLifecycle(
     application: Application,
-    private val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry()
+    private val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(),
+    private val signClient: SignClient
 ) : Lifecycle by lifecycleRegistry, ConnectionLifecycle {
     private val job = SupervisorJob()
     private var scope = CoroutineScope(job + Dispatchers.Default)
@@ -35,38 +38,26 @@ internal class DefaultConnectionLifecycle(
     }
 
     override fun reconnect() {
-        lifecycleRegistry.onNext(Lifecycle.State.Stopped.WithReason())
-        lifecycleRegistry.onNext(Lifecycle.State.Started)
+//        lifecycleRegistry.onNext(Lifecycle.State.Stopped.WithReason())
+//        lifecycleRegistry.onNext(Lifecycle.State.Started)
     }
 
     private inner class ActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
         var isResumed: Boolean = false
         var job: Job? = null
 
-        override fun onActivityPaused(activity: Activity) {
-            isResumed = false
 
-            job = scope.launch {
-                delay(TimeUnit.SECONDS.toMillis(30))
-                if (!isResumed) {
-                    lifecycleRegistry.onNext(Lifecycle.State.Stopped.WithReason(ShutdownReason(1000, "App is paused")))
-                    job = null
-                    _onResume.value = false
-                }
-            }
+        override fun onActivityPaused(activity: Activity) {
+            //TODO: call method from Rust Client
         }
 
         override fun onActivityResumed(activity: Activity) {
-            isResumed = true
-
-            if (job?.isActive == true) {
-                job?.cancel()
-                job = null
-            }
-
+            println("kobe: onResume")
 
             scope.launch {
-                _onResume.value = true
+                supervisorScope {
+                    signClient.online()
+                }
             }
         }
 
