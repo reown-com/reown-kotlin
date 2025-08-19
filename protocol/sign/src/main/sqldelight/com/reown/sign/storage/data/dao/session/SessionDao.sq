@@ -16,12 +16,13 @@ CREATE TABLE SessionDao(
    is_acknowledged INTEGER AS Boolean NOT NULL,
    properties TEXT AS Map<String, String>,
    transport_type TEXT AS TransportType,
-   scoped_properties TEXT AS Map<String, String>
+   scoped_properties TEXT AS Map<String, String>,
+   sym_key TEXT
 );
 
 insertOrAbortSession:
-INSERT OR ABORT INTO SessionDao(topic, pairingTopic, expiry, relay_protocol, relay_data, controller_key, self_participant, peer_participant, is_acknowledged, properties, transport_type, scoped_properties)
-VALUES (?,  ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR ABORT INTO SessionDao(topic, pairingTopic, expiry, relay_protocol, relay_data, controller_key, self_participant, peer_participant, is_acknowledged, properties, transport_type, scoped_properties, sym_key)
+VALUES (?,  ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 lastInsertedRow:
 SELECT id
@@ -29,11 +30,11 @@ FROM SessionDao
 WHERE id = (SELECT MAX(id) FROM SessionDao);
 
 getListOfSessionDaos:
-SELECT sd.id, sd.topic, sd.expiry, sd.relay_protocol, sd.relay_data, sd.controller_key, sd.self_participant, sd.peer_participant, sd.is_acknowledged, sd.pairingTopic, sd.properties, sd.transport_type, sd.scoped_properties
+SELECT sd.id, sd.topic, sd.expiry, sd.relay_protocol, sd.relay_data, sd.controller_key, sd.self_participant, sd.peer_participant, sd.is_acknowledged, sd.pairingTopic, sd.properties, sd.transport_type, sd.scoped_properties, sd.sym_key
 FROM SessionDao sd;
 
 getSessionByTopic:
-SELECT sd.id, sd.topic, sd.expiry, sd.relay_protocol, sd.relay_data, sd.controller_key, sd.self_participant, sd.peer_participant, sd.is_acknowledged, sd.pairingTopic, sd.properties, sd.transport_type, sd.scoped_properties
+SELECT sd.id, sd.topic, sd.expiry, sd.relay_protocol, sd.relay_data, sd.controller_key, sd.self_participant, sd.peer_participant, sd.is_acknowledged, sd.pairingTopic, sd.properties, sd.transport_type, sd.scoped_properties, sd.sym_key
 FROM SessionDao sd
 WHERE topic = ?;
 

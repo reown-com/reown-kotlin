@@ -4,6 +4,7 @@ package com.reown.sign.di
 
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.signing.cacao.CacaoVerifier
+import com.reown.sign.engine.domain.SessionStore
 import com.reown.sign.engine.domain.SignEngine
 import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
 import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
@@ -53,6 +54,14 @@ internal fun engineModule() = module {
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .build()
+        )
+    }
+
+    single {
+        SessionStore(
+            sessionStorageRepository = get(),
+            metadataStorageRepository = get(),
+            selfAppMetaData = get()
         )
     }
 
@@ -109,7 +118,8 @@ internal fun engineModule() = module {
             insertEventUseCase = get(),
             linkModeJsonRpcInteractor = get(),
             logger = get(named(AndroidCommonDITags.LOGGER)),
-            signClient = get(named(AndroidCommonDITags.SIGN_RUST_CLIENT))
+            signClient = get(named(AndroidCommonDITags.SIGN_RUST_CLIENT)),
+            sessionStore = get()
         )
     }
 }

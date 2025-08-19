@@ -1,0 +1,5 @@
+-- migrates 14db to 15db
+
+-- CREATE V15 SCHEMA
+
+ALTER TABLE SessionDao ADD COLUMN sym_key TEXT;

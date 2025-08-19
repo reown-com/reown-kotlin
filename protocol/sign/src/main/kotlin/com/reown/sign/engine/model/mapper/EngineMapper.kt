@@ -28,6 +28,7 @@ import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.ValidationError
+import com.reown.sign.engine.model.mapper.toSettleYttrium
 import com.reown.sign.json_rpc.model.JsonRpcMethod
 import com.reown.util.Empty
 import com.reown.util.bytesToHex
@@ -36,6 +37,7 @@ import uniffi.yttrium.Metadata
 import uniffi.yttrium.ProposalNamespace
 import uniffi.yttrium.Redirect
 import uniffi.yttrium.Relay
+import uniffi.yttrium.SessionFfi
 import uniffi.yttrium.SessionProposalFfi
 import uniffi.yttrium.SettleNamespace
 import java.net.URI
@@ -441,7 +443,7 @@ internal fun ProposalVO.toProposalFfi(): SessionProposalFfi =
         scopedProperties = scopedProperties,
         expiryTimestamp = expiry?.seconds?.toULong(),
         relays = listOf(Relay(relayProtocol)),
-        metadata = uniffi.yttrium.Metadata(
+        metadata = Metadata(
             name = name,
             verifyUrl = null,
             description = description,
@@ -454,3 +456,101 @@ internal fun ProposalVO.toProposalFfi(): SessionProposalFfi =
             )
         )
     )
+
+internal fun Map<String, ProposalNamespace>.toProposalNamespaceVO(): Map<String, Namespace.Proposal> =
+    this.mapValues { (_, namespace) ->
+        Namespace.Proposal(namespace.chains, namespace.methods, namespace.events)
+    }
+
+internal fun Map<String, SettleNamespace>.toSessionVO(): Map<String, Namespace.Session> =
+    this.mapValues { (_, namespace) ->
+        Namespace.Session(chains = namespace.chains, methods = namespace.methods, events = namespace.events, accounts = namespace.accounts)
+    }
+
+internal fun Map<String, Namespace.Session>.toYttriumSettle(): Map<String, SettleNamespace> =
+    this.mapValues { (_, namespace) ->
+        SettleNamespace(
+            chains = namespace.chains ?: emptyList(),
+            methods = namespace.methods,
+            events = namespace.events,
+            accounts = namespace.accounts
+        )
+    }
+
+internal fun SessionFfi.toVO(): SessionVO {
+    return SessionVO(
+        topic = Topic(this.topic),
+        expiry = Expiry(this.expiry.toLong()),
+        relayProtocol = "irn",
+        relayData = null,
+        controllerKey = PublicKey(this.controllerKey?.bytesToHex() ?: ""),
+        selfPublicKey = PublicKey(this.selfPublicKey.bytesToHex()),
+        selfAppMetaData = AppMetaData(
+            name = this.selfMetaData.name,
+            description = this.selfMetaData.description,
+            url = this.selfMetaData.url,
+            icons = this.selfMetaData.icons,
+            redirect = com.reown.android.internal.common.model.Redirect(
+                native = this.selfMetaData.redirect?.native,
+                linkMode = this.selfMetaData.redirect?.linkMode ?: false,
+                universal = this.selfMetaData.redirect?.universal
+            )
+        ),
+        peerPublicKey = PublicKey(this.peerPublicKey?.bytesToHex() ?: ""),
+        peerAppMetaData = AppMetaData(
+            name = this.peerMetaData?.name ?: "",
+            description = this.peerMetaData?.description ?: "",
+            url = this.peerMetaData?.url ?: "",
+            icons = this.peerMetaData?.icons ?: emptyList(),
+            redirect = com.reown.android.internal.common.model.Redirect(
+                native = this.peerMetaData?.redirect?.native,
+                linkMode = this.peerMetaData?.redirect?.linkMode ?: false,
+                universal = this.peerMetaData?.redirect?.universal
+            )
+        ),
+        sessionNamespaces = this.sessionNamespaces.toSessionVO(),
+        requiredNamespaces = this.requiredNamespaces.toProposalNamespaceVO(),
+        optionalNamespaces = this.optionalNamespaces?.toProposalNamespaceVO(),
+        properties = this.properties,
+        scopedProperties = this.scopedProperties,
+        isAcknowledged = true,
+        pairingTopic = this.pairingTopic,
+        transportType = TransportType.RELAY, //TODO change for LinkMode
+        symKey = this.sessionSymKey.bytesToHex()
+    )
+}
+
+internal fun SessionVO.toSessionFfi(): SessionFfi {
+    return SessionFfi(
+        topic = this.topic.value,
+        expiry = this.expiry.seconds.toULong(),
+        controllerKey = this.controllerKey?.keyAsHex?.hexToBytes(),
+        selfPublicKey = this.selfPublicKey.keyAsHex.hexToBytes(),
+        selfMetaData = this.selfAppMetaData?.toYttrium() ?: Metadata(
+            name = this.selfAppMetaData?.name ?: "",
+            verifyUrl = null,
+            description = this.selfAppMetaData?.description ?: "",
+            icons = this.selfAppMetaData?.icons ?: emptyList(),
+            url = this.selfAppMetaData?.url ?: "",
+            redirect = Redirect(
+                native = this.selfAppMetaData?.redirect?.native ?: "",
+                universal = this.selfAppMetaData?.redirect?.universal ?: "",
+                linkMode = this.selfAppMetaData?.redirect?.linkMode ?: false,
+            )
+        ),
+        peerPublicKey = this.peerPublicKey?.keyAsHex?.hexToBytes(),
+        peerMetaData = this.peerAppMetaData?.toYttrium(),
+        sessionNamespaces = this.sessionNamespaces.toYttriumSettle(),
+        requiredNamespaces = this.requiredNamespaces.toProposalYttrium(),
+        optionalNamespaces = this.optionalNamespaces?.toProposalYttrium(),
+        properties = this.properties,
+        scopedProperties = this.scopedProperties,
+        pairingTopic = this.pairingTopic,
+        sessionSymKey = this.symKey?.hexToBytes() ?: ByteArray(0),
+        relayProtocol = this.relayProtocol,
+        relayData = this.relayData,
+        isAcknowledged = this.isAcknowledged,
+        transportType = uniffi.yttrium.TransportType.RELAY, //TODO: change for link mode
+        requestId = 0.toULong()
+    )
+}

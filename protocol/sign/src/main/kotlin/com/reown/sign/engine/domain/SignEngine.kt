@@ -5,7 +5,6 @@ package com.reown.sign.engine.domain
 import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
 import com.reown.android.internal.common.model.AppMetaDataType
-import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.SDKError
 import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.model.type.EngineEvent
@@ -23,19 +22,14 @@ import com.reown.android.pulse.model.properties.Props
 import com.reown.android.push.notifications.DecryptMessageUseCaseInterface
 import com.reown.android.relay.WSSConnectionState
 import com.reown.android.verify.model.VerifyContext
-import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
-import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.engine.model.EngineDO
-import com.reown.sign.engine.model.mapper.toEngine
 import com.reown.sign.engine.model.mapper.toEngineDO
 import com.reown.sign.engine.model.mapper.toExpiredProposal
 import com.reown.sign.engine.model.mapper.toExpiredSessionRequest
-import com.reown.sign.engine.model.mapper.toNamespacesVOOptional
 import com.reown.sign.engine.model.mapper.toSessionRequest
 import com.reown.sign.engine.model.mapper.toVO
-import com.reown.sign.engine.model.mapper.toYttrium
 import com.reown.sign.engine.sessionRequestEventsQueue
 import com.reown.sign.engine.use_case.calls.ApproveSessionAuthenticateUseCaseInterface
 import com.reown.sign.engine.use_case.calls.ApproveSessionUseCaseInterface
@@ -80,7 +74,6 @@ import com.reown.sign.json_rpc.model.JsonRpcMethod
 import com.reown.sign.storage.authenticate.AuthenticateResponseTopicRepository
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.reown.util.bytesToHex
 import com.reown.utils.Empty
 import com.reown.utils.isSequenceValid
 import kotlinx.coroutines.Dispatchers
@@ -98,10 +91,8 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import uniffi.yttrium.SessionRequestJsonRpcFfi
-import uniffi.yttrium.SessionRequestListener
 import uniffi.yttrium.SignClient
-import java.net.URI
+import kotlin.math.sign
 
 internal class SignEngine(
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
@@ -155,7 +146,8 @@ internal class SignEngine(
     private val insertEventUseCase: InsertTelemetryEventUseCase,
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
     private val logger: Logger,
-    private val signClient: SignClient
+    private val signClient: SignClient,
+    private val sessionStore: SessionStore
 ) : ProposeSessionUseCaseInterface by proposeSessionUseCase,
     SessionAuthenticateUseCaseInterface by authenticateSessionUseCase,
     PairUseCaseInterface by pairUseCase,
@@ -217,7 +209,8 @@ internal class SignEngine(
 
     fun setup() {
         scope.launch {
-            signClient.registerSessionRequestListener(onSessionRequestUseCase)
+            signClient.registerSignListener(onSessionRequestUseCase)
+            signClient.registerSessionStore(sessionStore)
         }
 
         handleLinkModeRequests()

@@ -80,7 +80,8 @@ internal class SessionStorageRepository(
                 is_acknowledged = isAcknowledged,
                 properties = properties,
                 scoped_properties = scopedProperties,
-                transport_type = transportType
+                transport_type = transportType,
+                sym_key = symKey
             )
         }
 
@@ -225,6 +226,7 @@ internal class SessionStorageRepository(
         properties: Map<String, String>?,
         transportType: TransportType?,
         scoped_properties: Map<String, String>?,
+        sym_key: String?
     ): SessionVO {
         val sessionNamespaces: Map<String, Namespace.Session> = getSessionNamespaces(id)
         val requiredNamespaces: Map<String, Namespace.Proposal> = getRequiredNamespaces(id)
@@ -247,7 +249,8 @@ internal class SessionStorageRepository(
             properties = properties,
             scopedProperties = scoped_properties,
             pairingTopic = pairingTopic,
-            transportType = transportType
+            transportType = transportType,
+            symKey = sym_key
         )
     }
 
