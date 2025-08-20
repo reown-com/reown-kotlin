@@ -1,5 +1,6 @@
 package com.reown.pos.client
 
+import android.app.Application
 import java.net.URI
 
 /**
@@ -63,7 +64,7 @@ object POS {
             val projectId: String,
             val deviceId: String,
             val metaData: Model.MetaData,
-            val application: Any
+            val application: Application
         ) : Params()
     }
 }

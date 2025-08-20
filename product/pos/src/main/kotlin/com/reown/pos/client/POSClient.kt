@@ -2,6 +2,7 @@ package com.reown.pos.client
 
 import android.app.Application
 import com.reown.android.Core
+import com.reown.android.CoreClient
 import com.reown.android.CoreInterface
 import com.reown.android.CoreProtocol
 import com.reown.android.internal.common.scope
@@ -14,7 +15,6 @@ import kotlinx.coroutines.supervisorScope
 import java.net.URI
 
 object POSClient {
-    private lateinit var coreClient: CoreInterface
     private lateinit var posDelegate: POSDelegate
     private val sessionNamespaces = mutableMapOf<String, POS.Model.Namespace>()
     private var paymentIntents: List<POS.Model.PaymentIntent> = emptyList()
@@ -43,9 +43,8 @@ object POSClient {
                 redirect = null
             )
 
-            coreClient = CoreProtocol.instance
-            coreClient.initialize(
-                application = init.application as Application,
+            CoreClient.initialize(
+                application = init.application,
                 projectId = init.projectId,
                 metaData = coreMetaData,
                 connectionType = ConnectionType.AUTOMATIC,
@@ -53,7 +52,7 @@ object POSClient {
             )
 
             SignClient.initialize(
-                Sign.Params.Init(coreClient),
+                Sign.Params.Init(core = CoreClient),
                 onSuccess = { onSuccess() },
                 onError = { error -> onError(POS.Model.Error(error.throwable)) })
 
@@ -90,7 +89,7 @@ object POSClient {
         paymentIntents = intents
 
 
-        val pairing = coreClient.Pairing.create { error ->
+        val pairing = CoreClient.Pairing.create { error ->
             posDelegate.onEvent(POS.Model.PaymentEvent.ConnectionFailed(error.throwable))
         }
 
