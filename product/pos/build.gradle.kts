@@ -55,6 +55,14 @@ android {
 }
 
 dependencies {
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+
+    debugImplementation(project(":core:android"))
+    debugImplementation(project(":protocol:sign"))
+
+    releaseImplementation("com.reown:android-core:$CORE_VERSION")
+    releaseImplementation("com.reown:sign:$SIGN_VERSION")
 
     implementation(libs.androidx.core)
     implementation(libs.androidx.appCompat)
