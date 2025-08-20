@@ -59,6 +59,8 @@ turbine = "1.1.0"
 paparazzi = "1.3.4"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
+activity = "1.10.1"
+constraintlayout = "2.2.1"
 
 [libraries]
 core = { module = "androidx.test:core", version.ref = "core" }
@@ -166,6 +168,8 @@ qrCodeGenerator = { module = "com.github.alexzhirkevich:custom-qr-generator", ve
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 
 [bundles]
 sqlDelight = ["sqlDelight-android", "sqlDelight-coroutines", "sqlDelight-adapters", "sqlDelight-async"]
