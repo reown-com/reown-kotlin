@@ -147,6 +147,7 @@ object POSClient {
                         print("kobe: Request built success")
 
 
+                        //TODO: revisit
                         approvedSession.namespaces.forEach { (namespace, session) ->
                             // Check if the namespace key matches the chain ID from payment intent
                             senderAddress = when {
@@ -214,7 +215,15 @@ object POSClient {
                                 //TODO: get txHash and receipt from server
                                 posDelegate.onEvent(POS.Model.PaymentEvent.PaymentSuccessful(txHash = txHash, receipt = "test"))
 
-                                //TODO: disconnect session when payment is successful
+
+                                SignClient.disconnect(
+                                    disconnect = Sign.Params.Disconnect(response.topic),
+                                    onSuccess = {
+                                        println("kobe: Disconnect Success")
+                                    },
+                                    onError = {
+                                        println("kobe: Disconnect Error")
+                                    })
                             }
                         }
                     }
@@ -222,6 +231,15 @@ object POSClient {
                     is Sign.Model.JsonRpcResponse.JsonRpcError -> {
                         val error = POS.Model.PosError.RejectedByUser(message = result.message)
                         posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRejected(error))
+
+                        SignClient.disconnect(
+                            disconnect = Sign.Params.Disconnect(response.topic),
+                            onSuccess = {
+                                println("kobe: Disconnect Success")
+                            },
+                            onError = {
+                                println("kobe: Disconnect Error")
+                            })
                     }
                 }
             }
