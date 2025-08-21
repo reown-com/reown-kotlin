@@ -84,6 +84,16 @@ class POSViewModel : ViewModel() {
         })
     }
 
+    fun navigateToAmountScreen() {
+        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToAmount) }
+    }
+
+    fun navigateToTokenScreen(amount: String) {
+        //todo: save amount
+        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectToken) }
+    }
+
+
     fun createPaymentIntent(paymentIntents: List<POS.Model.PaymentIntent>) {
         try {
             POSClient.createPaymentIntent(intents = paymentIntents)

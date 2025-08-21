@@ -87,9 +87,10 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material)
     implementation(libs.androidx.compose.navigation)
     implementation(libs.androidx.compose.lifecycle)
+
+    implementation("androidx.compose.material3:material3:1.3.2")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
@@ -99,10 +100,10 @@ dependencies {
     implementation(libs.androidx.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    
+
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
-    
+
     testImplementation(libs.jUnit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
