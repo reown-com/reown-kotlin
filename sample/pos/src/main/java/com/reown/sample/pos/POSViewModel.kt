@@ -3,56 +3,81 @@ package com.reown.sample.pos
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reown.pos.client.POS
+import com.reown.pos.client.POS.Model.PaymentEvent
 import com.reown.pos.client.POSClient
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import java.net.URI
+
+sealed interface PosNavEvent {
+    data object ToStart : PosNavEvent
+    data object ToAmount : PosNavEvent
+    data object ToSelectToken : PosNavEvent
+    data object ToSelectNetwork : PosNavEvent
+    data object FlowFinished : PosNavEvent
+    data class QrReady(val uri: URI) : PosNavEvent
+}
+
+sealed interface PosEvent {
+    data object Connected : PosEvent
+    data object ConnectedRejected : PosEvent
+    data class ConnectionFailed(val error: String) : PosEvent
+    data object PaymentRequested : PosEvent
+    data object PaymentBroadcasted : PosEvent
+    data class PaymentRejected(val error: String) : PosEvent
+    data class PaymentSuccessful(val txHash: String, val receipt: String) : PosEvent
+    data class Error(val error: String) : PosEvent
+}
 
 class POSViewModel : ViewModel() {
 
-    private val _posEventsFlow: MutableSharedFlow<POS.Model.PaymentEvent> = MutableSharedFlow()
+    private val _posNavEventsFlow: MutableSharedFlow<PosNavEvent> = MutableSharedFlow()
+    val posNavEventsFlow = _posNavEventsFlow.asSharedFlow()
+
+    private val _posEventsFlow: MutableSharedFlow<PosEvent> = MutableSharedFlow()
     val posEventsFlow = _posEventsFlow.asSharedFlow()
 
     init {
         POSClient.setDelegate(object : POSClient.POSDelegate {
-            override fun onEvent(event: POS.Model.PaymentEvent) {
-
-                viewModelScope.launch { _posEventsFlow.emit(event) }
+            override fun onEvent(event: PaymentEvent) {
+                println("kobe: Event: $event")
 
                 when (event) {
-                    is POS.Model.PaymentEvent.QrReady -> {
-
+                    is PaymentEvent.QrReady -> {
+                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.QrReady(event.uri)) }
                     }
 
-                    is POS.Model.PaymentEvent.Connected -> {
-
+                    is PaymentEvent.Connected -> {
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.Connected) }
                     }
 
-                    is POS.Model.PaymentEvent.ConnectionFailed -> {
-
+                    is PaymentEvent.ConnectionFailed -> {
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.ConnectionFailed(event.error.message ?: "Connection Error")) }
                     }
 
-                    is POS.Model.PaymentEvent.PaymentRequested -> {
-
+                    is PaymentEvent.PaymentRequested -> {
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentRequested) }
                     }
 
-                    is POS.Model.PaymentEvent.PaymentBroadcasted -> {
-
+                    is PaymentEvent.PaymentBroadcasted -> {
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentBroadcasted) }
                     }
 
-                    is POS.Model.PaymentEvent.PaymentSuccessful -> {
+                    is PaymentEvent.PaymentSuccessful -> {
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentSuccessful(event.txHash, event.receipt)) }
                     }
 
-                    POS.Model.PaymentEvent.ConnectedRejected -> {
-
+                    PaymentEvent.ConnectedRejected -> {
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.ConnectedRejected) }
                     }
 
-                    is POS.Model.PaymentEvent.Error -> {
-
+                    is PaymentEvent.Error -> {
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.Error(event.error.cause?.message ?: "Payment Error")) }
                     }
 
-                    is POS.Model.PaymentEvent.PaymentRejected -> {
-
+                    is PaymentEvent.PaymentRejected -> {
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentRejected(event.error.message)) }
                     }
                 }
             }
