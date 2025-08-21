@@ -1,5 +1,6 @@
 package com.reown.sample.pos
 
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
@@ -8,9 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.reown.sample.pos.screens.AmountScreen
 import com.reown.sample.pos.screens.PaymentScreen
 import com.reown.sample.pos.screens.SelectNetworkScreen
@@ -22,7 +25,10 @@ sealed class Screen(val route: String, val label: String) {
     object AmountScreen : Screen("amount", "Profile")
     object SelectTokenScreen : Screen("token", "Token")
     object SelectNetworkScreen : Screen("network", "Network")
-    object PaymentScreen : Screen("payment", "Payment")
+    object PaymentScreen : Screen("payment?qrUrl={qrUrl}", "Payment") {
+        fun routeWith(qrUrl: String) = "payment?qrUrl=${Uri.encode(qrUrl)}"
+        const val arg = "qrUrl"
+    }
 }
 
 @Composable
@@ -39,7 +45,26 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
             composable(Screen.AmountScreen.route) { AmountScreen(viewModel) }
             composable(Screen.SelectTokenScreen.route) { SelectTokenScreen(viewModel) }
             composable(Screen.SelectNetworkScreen.route) { SelectNetworkScreen(viewModel) }
-            composable(Screen.PaymentScreen.route) { PaymentScreen(viewModel) }
+            composable(
+                route = Screen.PaymentScreen.route,
+                arguments = listOf(navArgument(Screen.PaymentScreen.arg) {
+                    type = NavType.StringType
+                    nullable = true   // allow navigating even if you temporarily have no URL
+                    defaultValue = null
+                })
+            ) { backStackEntry ->
+                val qrUrl = backStackEntry.arguments?.getString(Screen.PaymentScreen.arg)
+                PaymentScreen(
+                    viewModel = viewModel,
+                    qrUrl = qrUrl.orEmpty(),            // pass to your composable
+                    onReturnToStart = {
+                        navController.navigate(Screen.StartPaymentScreen.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
         }
     }
 
@@ -63,7 +88,7 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                     launchSingleTop = true
                 }
 
-                is PosNavEvent.QrReady -> navController.navigate(Screen.PaymentScreen.route) {
+                is PosNavEvent.QrReady -> navController.navigate("payment?qrUrl=${Uri.encode(event.uri.toString())}") {
                     launchSingleTop = true
                 }
 

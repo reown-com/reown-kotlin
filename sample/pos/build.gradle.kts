@@ -91,6 +91,9 @@ dependencies {
     implementation(libs.androidx.compose.lifecycle)
 
     implementation("androidx.compose.material3:material3:1.3.2")
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
+    implementation("com.google.zxing:core:3.5.3")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)

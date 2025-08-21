@@ -38,8 +38,9 @@ class POSViewModel : ViewModel() {
     private val _posEventsFlow: MutableSharedFlow<PosEvent> = MutableSharedFlow()
     val posEventsFlow = _posEventsFlow.asSharedFlow()
 
-    private var token: String? = null
-    private var amount: String? = null
+    internal var token: String? = null
+    internal var amount: String? = null
+    internal var network: String? = null
 
     init {
         POSClient.setDelegate(object : POSClient.POSDelegate {
@@ -102,6 +103,7 @@ class POSViewModel : ViewModel() {
     }
 
     fun createPaymentIntent(network: String) {
+        this.network = network
         val paymentIntents =
             listOf(POS.Model.PaymentIntent(chainId = network, amount = amount ?: "", token = token ?: "", recipient = "0x123456789"))
         try {

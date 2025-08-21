@@ -93,7 +93,7 @@ fun StartPaymentScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
             ) {
-                Text("Start Payment", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text("Start", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(Modifier.height(12.dp))

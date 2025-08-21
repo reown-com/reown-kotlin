@@ -32,6 +32,9 @@ fun SelectNetworkScreen(
 
     // ✅ store the selected CHAIN ID
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
+    
+    // Loading state for the payment button
+    var isLoading by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = modifier.fillMaxSize().imePadding()
@@ -71,13 +74,26 @@ fun SelectNetworkScreen(
             Spacer(Modifier.weight(1f))
 
             Button(
-                onClick = { selectedId?.let { viewModel.createPaymentIntent(it) } },
-                enabled = selectedId != null,
+                onClick = { 
+                    selectedId?.let { 
+//                        isLoading = true
+                        viewModel.createPaymentIntent(it)
+                    } 
+                },
+                enabled = selectedId != null && !isLoading,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
             ) {
-                Text("Generate QR Code", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text("Start Payment", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold)
+                }
             }
 
             Spacer(Modifier.height(16.dp))

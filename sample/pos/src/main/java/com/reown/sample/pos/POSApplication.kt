@@ -11,8 +11,6 @@ import kotlinx.coroutines.SupervisorJob
 import timber.log.Timber
 
 class POSApplication : Application() {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
     override fun onCreate() {
         super.onCreate()
 
@@ -46,6 +44,6 @@ class POSApplication : Application() {
             }
         )
 
-        POSClient.setChains(listOf("eip155:1"))
+        POSClient.setChains(listOf("eip155:137"))
     }
 }

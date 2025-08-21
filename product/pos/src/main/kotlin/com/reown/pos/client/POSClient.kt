@@ -145,7 +145,7 @@ object POSClient {
 
                         //TODO: Build Request using server
                         print("kobe: Building request: $chainId, $amount, $token, $recipient ")
-                        delay(2000)
+                        delay(3000)
                         print("kobe: Request built success")
 
 
@@ -210,7 +210,7 @@ object POSClient {
 
                                 // TODO: Check transaction status on blockchain, handle server errors and timeout
                                 print("kobe: Checking payment status..")
-                                delay(2000)
+                                delay(4000)
                                 print("kobe: Payment successful")
 
                                 val txHash = result.toString()
