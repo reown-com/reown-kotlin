@@ -82,6 +82,9 @@ object POSClient {
      */
     @Throws(IllegalStateException::class)
     fun createPaymentIntent(intents: List<POS.Model.PaymentIntent>) {
+
+        println("kobe: createPaymentIntent called: $intents")
+
         //TODO: add intent fields validation
         checkPOSDelegateInitialization()
         if (sessionNamespaces.isEmpty()) throw IllegalStateException("No chain set, call setChains method first")

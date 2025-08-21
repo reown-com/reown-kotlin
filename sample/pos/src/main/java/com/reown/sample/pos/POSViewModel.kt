@@ -38,6 +38,9 @@ class POSViewModel : ViewModel() {
     private val _posEventsFlow: MutableSharedFlow<PosEvent> = MutableSharedFlow()
     val posEventsFlow = _posEventsFlow.asSharedFlow()
 
+    private var token: String? = null
+    private var amount: String? = null
+
     init {
         POSClient.setDelegate(object : POSClient.POSDelegate {
             override fun onEvent(event: PaymentEvent) {
@@ -89,18 +92,18 @@ class POSViewModel : ViewModel() {
     }
 
     fun navigateToTokenScreen(amount: String) {
-        //todo: save amount
+        this.amount = amount
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectToken) }
     }
 
     fun navigateToNetworkScreen(token: String) {
-        //todo: save token
+        this.token = token
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectNetwork) }
     }
 
-
-
-    fun createPaymentIntent(paymentIntents: List<POS.Model.PaymentIntent>) {
+    fun createPaymentIntent(network: String) {
+        val paymentIntents =
+            listOf(POS.Model.PaymentIntent(chainId = network, amount = amount ?: "", token = token ?: "", recipient = "0x123456789"))
         try {
             POSClient.createPaymentIntent(intents = paymentIntents)
         } catch (e: Exception) {
