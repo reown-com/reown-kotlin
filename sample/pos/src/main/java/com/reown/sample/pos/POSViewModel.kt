@@ -93,6 +93,12 @@ class POSViewModel : ViewModel() {
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectToken) }
     }
 
+    fun navigateToNetworkScreen(token: String) {
+        //todo: save token
+        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectNetwork) }
+    }
+
+
 
     fun createPaymentIntent(paymentIntents: List<POS.Model.PaymentIntent>) {
         try {
