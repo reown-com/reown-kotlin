@@ -125,6 +125,8 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                         launchSingleTop = true
                     }
                 }
+
+                is PosNavEvent.ToErrorScreen -> navController.navigate("error?message=${event.error}") { launchSingleTop = true }
             }
         }
     }

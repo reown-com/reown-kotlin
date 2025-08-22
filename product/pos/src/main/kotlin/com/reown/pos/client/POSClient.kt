@@ -104,6 +104,7 @@ object POSClient {
                     posDelegate.onEvent(POS.Model.PaymentEvent.QrReady(URI(pairing.uri)))
                 },
                 onError = { error ->
+                    println("kobe: connect error: $error")
                     posDelegate.onEvent(POS.Model.PaymentEvent.ConnectionFailed(error.throwable))
                 }
             )

@@ -17,17 +17,17 @@ sealed interface PosNavEvent {
     data object ToSelectNetwork : PosNavEvent
     data object FlowFinished : PosNavEvent
     data class QrReady(val uri: URI) : PosNavEvent
+
+    data class ToErrorScreen(val error: String) : PosNavEvent
 }
 
 sealed interface PosEvent {
     data object Connected : PosEvent
     data object ConnectedRejected : PosEvent
-    data class ConnectionFailed(val error: String) : PosEvent
     data object PaymentRequested : PosEvent
     data object PaymentBroadcasted : PosEvent
     data class PaymentRejected(val error: String) : PosEvent
     data class PaymentSuccessful(val txHash: String, val receipt: String) : PosEvent
-    data class Error(val error: String) : PosEvent
 }
 
 class POSViewModel : ViewModel() {
@@ -57,7 +57,7 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.ConnectionFailed -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.ConnectionFailed(error = event.error.message ?: "Connection Error")) }
+                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = event.error.message ?: "Connection Error")) }
                     }
 
                     is PaymentEvent.PaymentRequested -> {
@@ -77,7 +77,7 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.Error -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.Error(error = event.error.cause?.message ?: "Payment Error")) }
+                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = event.error.message ?: "Connection Error")) }
                     }
 
                     is PaymentEvent.PaymentRejected -> {

@@ -70,8 +70,6 @@ fun PaymentScreen(
 
                 PosEvent.ConnectedRejected -> navigateToErrorScreen("Connection rejected by a user")
 
-                is PosEvent.ConnectionFailed -> navigateToErrorScreen("Connection failed: ${e.error}")
-
                 // User is being asked to approve → start "Sending transaction…"
                 PosEvent.PaymentRequested -> {
                     sendTx = StepState.Done
@@ -91,8 +89,6 @@ fun PaymentScreen(
                 }
 
                 is PosEvent.PaymentRejected -> navigateToErrorScreen("Payment rejected: ${e.error}")
-
-                is PosEvent.Error -> navigateToErrorScreen("Error: ${e.error}")
             }
         }
     }
