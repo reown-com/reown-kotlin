@@ -5,9 +5,6 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.pos.client.POS
 import com.reown.pos.client.POSClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import timber.log.Timber
 
 class POSApplication : Application() {
@@ -34,7 +31,7 @@ class POSApplication : Application() {
 
         // Initialize POSClient
         POSClient.initialize(
-            init = initParams,
+            initParams = initParams,
             onSuccess = {
                 Timber.d("kobe: POSClient initialized successfully")
             },

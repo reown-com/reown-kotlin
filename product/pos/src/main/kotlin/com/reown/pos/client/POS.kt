@@ -3,14 +3,8 @@ package com.reown.pos.client
 import android.app.Application
 import java.net.URI
 
-/**
- * Basic POS models and parameters as specified in the documentation
- */
 object POS {
 
-    /**
-     * Basic POS models
-     */
     sealed class Model {
         data class Error(val throwable: Throwable) : Model()
 
@@ -56,9 +50,6 @@ object POS {
         ) : Model()
     }
 
-    /**
-     * Basic POS parameters
-     */
     sealed class Params {
         data class Init(
             val projectId: String,
