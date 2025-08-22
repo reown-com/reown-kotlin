@@ -70,14 +70,14 @@ object POSClient {
         checkPOSDelegateInitialization()
         require(sessionNamespaces.isNotEmpty()) { "No chains set, call setChains method first" }
         require(intents.isNotEmpty()) { "No payment intents provided" }
-        
+
         intents.forEach { intent ->
             require(intent.chainId.isNotBlank()) { "Chain ID cannot be empty" }
             require(intent.amount.isNotBlank()) { "Amount cannot be empty" }
             require(intent.token.isNotBlank()) { "Token cannot be empty" }
             require(intent.recipient.isNotBlank()) { "Recipient cannot be empty" }
         }
-        
+
         paymentIntents = intents
 
         val pairing = CoreClient.Pairing.create { error ->
@@ -126,7 +126,7 @@ object POSClient {
                     try {
                         handleSessionApproved(approvedSession)
                     } catch (e: Exception) {
-                        posDelegate.onEvent(POS.Model.PaymentEvent.Error(POS.Model.PosError.General(e)))
+                        posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = e))
                         disconnectSession(approvedSession.topic)
                     }
                 }
@@ -145,7 +145,7 @@ object POSClient {
                             try {
                                 handleSessionRequestResult(result, response.topic)
                             } catch (e: Exception) {
-                                posDelegate.onEvent(POS.Model.PaymentEvent.Error(POS.Model.PosError.General(e)))
+                                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = e))
                                 disconnectSession(response.topic)
                             }
                         }
@@ -153,15 +153,14 @@ object POSClient {
                 }
 
                 is Sign.Model.JsonRpcResponse.JsonRpcError -> {
-                    val error = POS.Model.PosError.RejectedByUser(message = result.message)
-                    posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRejected(error))
+                    posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRejected(message = result.message))
                     disconnectSession(response.topic)
                 }
             }
         }
 
         override fun onError(error: Sign.Model.Error) {
-            posDelegate.onEvent(POS.Model.PaymentEvent.Error(POS.Model.PosError.General(error.throwable)))
+            posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = error.throwable))
             currentSessionTopic?.let { disconnectSession(it) }
         }
 
@@ -176,13 +175,13 @@ object POSClient {
 
     private suspend fun handleSessionApproved(approvedSession: Sign.Model.ApprovedSession) {
         posDelegate.onEvent(POS.Model.PaymentEvent.Connected)
-        
-        val paymentIntent = paymentIntents.firstOrNull() 
+
+        val paymentIntent = paymentIntents.firstOrNull()
             ?: throw IllegalStateException("No payment intent available")
-        
+
         val namespace = sessionNamespaces.values.firstOrNull()
             ?: throw IllegalStateException("No namespace available")
-        
+
         val method = namespace.methods.firstOrNull()
             ?: throw IllegalStateException("No method available")
 
@@ -201,10 +200,10 @@ object POSClient {
 
         SignClient.request(
             request = request,
-            onSuccess = { sentRequest -> 
-                posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRequested) 
+            onSuccess = { sentRequest ->
+                posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRequested)
             },
-            onError = { error -> 
+            onError = { error ->
                 posDelegate.onEvent(POS.Model.PaymentEvent.ConnectionFailed(error.throwable))
                 disconnectSession(approvedSession.topic)
             }
@@ -212,7 +211,7 @@ object POSClient {
     }
 
     private suspend fun handleSessionRequestResult(
-        result: Sign.Model.JsonRpcResponse.JsonRpcResult, 
+        result: Sign.Model.JsonRpcResponse.JsonRpcResult,
         topic: String
     ) {
         posDelegate.onEvent(POS.Model.PaymentEvent.PaymentBroadcasted)
@@ -228,7 +227,7 @@ object POSClient {
     }
 
     private fun findSenderAddress(
-        approvedSession: Sign.Model.ApprovedSession, 
+        approvedSession: Sign.Model.ApprovedSession,
         chainId: String
     ): String? {
         return approvedSession.namespaces.entries.firstNotNullOfOrNull { (namespace, session) ->
@@ -240,6 +239,7 @@ object POSClient {
                         }
                     }
                 }
+
                 namespace == chainId -> session.accounts.firstOrNull()
                 else -> null
             }

@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.reown.sample.pos.screens.AmountScreen
+import com.reown.sample.pos.screens.ErrorScreen
 import com.reown.sample.pos.screens.PaymentScreen
 import com.reown.sample.pos.screens.SelectNetworkScreen
 import com.reown.sample.pos.screens.SelectTokenScreen
@@ -28,6 +29,11 @@ sealed class Screen(val route: String, val label: String) {
     object PaymentScreen : Screen("payment?qrUrl={qrUrl}", "Payment") {
         fun routeWith(qrUrl: String) = "payment?qrUrl=${Uri.encode(qrUrl)}"
         const val arg = "qrUrl"
+    }
+
+    object ErrorScreen : Screen("error?message={message}", "Error") {
+        fun routeWith(message: String) = "error?message=$message"
+        const val arg = "message"
     }
 }
 
@@ -62,9 +68,29 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                             popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             launchSingleTop = true
                         }
+                    },
+                    navigateToErrorScreen = { error ->
+                        navController.navigate("error?message=${error}") { launchSingleTop = true }
                     }
                 )
             }
+            composable(
+                route = Screen.ErrorScreen.route,
+                arguments = listOf(navArgument(Screen.ErrorScreen.arg) {
+                    type = NavType.StringType
+                    nullable = true   // allow navigating even if you temporarily have no URL
+                    defaultValue = null
+                })
+            ) { backStackEntry ->
+                val message = backStackEntry.arguments?.getString(Screen.ErrorScreen.arg)
+                ErrorScreen(message = message.orEmpty()) {
+                    navController.navigate(Screen.StartPaymentScreen.route) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+
         }
     }
 

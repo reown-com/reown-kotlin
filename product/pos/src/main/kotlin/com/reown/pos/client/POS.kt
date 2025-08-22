@@ -28,18 +28,9 @@ object POS {
             data class ConnectionFailed(val error: Throwable) : PaymentEvent
             data object PaymentRequested : PaymentEvent
             data object PaymentBroadcasted : PaymentEvent
-            data class PaymentRejected(val error: PosError.RejectedByUser) : PaymentEvent
+            data class PaymentRejected(val message: String) : PaymentEvent
             data class PaymentSuccessful(val txHash: String, val receipt: String) : PaymentEvent
-            data class Error(val error: PosError.General) : PaymentEvent
-        }
-
-        sealed interface PosError {
-            data object Timeout : PosError
-            data class RejectedByUser(val message: String) : PosError
-            data class Backend(val code: Int, val message: String) : PosError
-            data object Network : PosError
-            data object WalletUnsupported : PosError
-            data class General(val cause: Throwable?) : PosError
+            data class Error(val error: Throwable) : PaymentEvent
         }
 
         data class PaymentIntent(

@@ -49,7 +49,7 @@ class POSViewModel : ViewModel() {
 
                 when (event) {
                     is PaymentEvent.QrReady -> {
-                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.QrReady(event.uri)) }
+                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.QrReady(uri = event.uri)) }
                     }
 
                     is PaymentEvent.Connected -> {
@@ -57,7 +57,7 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.ConnectionFailed -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.ConnectionFailed(event.error.message ?: "Connection Error")) }
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.ConnectionFailed(error = event.error.message ?: "Connection Error")) }
                     }
 
                     is PaymentEvent.PaymentRequested -> {
@@ -77,11 +77,11 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.Error -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.Error(event.error.cause?.message ?: "Payment Error")) }
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.Error(error = event.error.cause?.message ?: "Payment Error")) }
                     }
 
                     is PaymentEvent.PaymentRejected -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentRejected(event.error.message)) }
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentRejected(error = event.message)) }
                     }
                 }
             }

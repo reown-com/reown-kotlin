@@ -44,6 +44,7 @@ fun PaymentScreen(
     viewModel: POSViewModel,
     qrUrl: String,
     onReturnToStart: () -> Unit,
+    navigateToErrorScreen: (error: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val brandGreen = Color(0xFF0A8F5B)
@@ -67,19 +68,13 @@ fun PaymentScreen(
                     sendTx = StepState.InProgress
                 }
 
-                PosEvent.ConnectedRejected -> {
-                    Toast.makeText(context, "Connection rejected", Toast.LENGTH_SHORT).show()
-                    onReturnToStart()
-                }
+                PosEvent.ConnectedRejected -> navigateToErrorScreen("Connection rejected by a user")
 
-                is PosEvent.ConnectionFailed -> {
-                    Toast.makeText(context, "Connection failed: ${e.error}", Toast.LENGTH_SHORT).show()
-                    onReturnToStart()
-                }
+                is PosEvent.ConnectionFailed -> navigateToErrorScreen("Connection failed: ${e.error}")
 
                 // User is being asked to approve → start "Sending transaction…"
                 PosEvent.PaymentRequested -> {
-                     sendTx = StepState.Done
+                    sendTx = StepState.Done
                     confirming = StepState.InProgress
                 }
 
@@ -95,22 +90,18 @@ fun PaymentScreen(
                     uiState = PaymentUiState.Success
                 }
 
-                is PosEvent.PaymentRejected -> {
-                    Toast.makeText(context, "Payment rejected: ${e.error}", Toast.LENGTH_SHORT).show()
-                    onReturnToStart()
-                }
+                is PosEvent.PaymentRejected -> navigateToErrorScreen("Payment rejected: ${e.error}")
 
-                is PosEvent.Error -> {
-                    Toast.makeText(context, "Error: ${e.error}", Toast.LENGTH_SHORT).show()
-                    onReturnToStart()
-                }
+                is PosEvent.Error -> navigateToErrorScreen("Error: ${e.error}")
             }
         }
     }
 
-    Column(modifier = modifier
-        .fillMaxSize()
-        .imePadding()) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding()
+    ) {
         // Header
         Column(
             modifier = Modifier
@@ -125,9 +116,11 @@ fun PaymentScreen(
         }
 
         // Content
-        Box(Modifier
-            .weight(1f)
-            .fillMaxWidth()) {
+        Box(
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
             when (uiState) {
                 PaymentUiState.ScanToPay ->
                     ScanToPayContent(
