@@ -13,7 +13,7 @@ targetSdk = "34"
 compileSdk = "34"
 
 composeCompiler = "1.6.0"
-composeBOM = "2024.05.00"
+composeBOM = "2025.08.00"
 composeViewModel = "2.8.0"
 accompanist = "0.34.0"
 
