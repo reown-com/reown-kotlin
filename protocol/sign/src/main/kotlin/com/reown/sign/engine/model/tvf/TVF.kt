@@ -29,7 +29,23 @@ internal class TVF(private val moshi: Moshi) {
     fun collectTxHashes(rpcMethod: String, rpcResult: String, rpcParams: String = ""): List<String>? {
         return try {
             when (rpcMethod) {
-                in evm + wallet -> listOf(rpcResult)
+                in evm + wallet -> {
+                    if (rpcMethod == WALLET_SEND_CALLS) {
+                        val result = moshi.adapter(Wallet::class.java)
+                            .fromJson(rpcResult)
+                            ?.let { 
+                                val caip345 = it.capabilities?.caip345
+                                val transactionHashes = caip345?.transactionHashes
+                                val transactionHashesList = transactionHashes ?: emptyList()
+                                listOf(it.id) + transactionHashesList
+                            }
+
+                        result ?: listOf(rpcResult)
+
+                    } else {
+                        listOf(rpcResult)
+                    }
+                }
 
                 SOLANA_SIGN_TRANSACTION ->
                     moshi.adapter(SolanaSignTransactionResult::class.java)
