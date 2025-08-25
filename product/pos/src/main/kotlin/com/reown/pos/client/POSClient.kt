@@ -78,6 +78,14 @@ object POSClient {
             require(intent.recipient.isNotBlank()) { "Recipient cannot be empty" }
         }
 
+        //Only EVM for now
+        val availableChains = sessionNamespaces["eip155"]?.chains ?: emptyList()
+        val intentChainIds = intents.map { it.chainId }
+        val missingChainIds = intentChainIds.filter { chainId -> !availableChains.contains(chainId) }
+        require(missingChainIds.isEmpty()) { 
+            "Chain IDs [${missingChainIds.joinToString(", ")}] are not available in session namespaces. Available chains: [${availableChains.joinToString(", ")}]" 
+        }
+
         paymentIntents = intents
 
         val pairing = CoreClient.Pairing.create { error ->
