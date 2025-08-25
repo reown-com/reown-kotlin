@@ -141,8 +141,8 @@ internal class PairingEngine(
                 crypto.removeKeys(pairingTopic.value)
                 pairingRepository.deletePairing(pairingTopic)
                 metadataRepository.deleteMetaData(pairingTopic)
-                jsonRpcInteractor.unsubscribe(pairingTopic)
-                logger.error("Pairing - subscribed failure on pairing topic: $pairingTopic, error: $throwable")
+//                jsonRpcInteractor.unsubscribe(pairingTopic)
+//                logger.error("Pairing - subscribed failure on pairing topic: $pairingTopic, error: $throwable")
                 onFailure(throwable)
             } catch (e: Exception) {
                 logger.error("Pairing - subscribed failure on pairing topic: $pairingTopic, error: $e")
