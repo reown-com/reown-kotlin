@@ -43,4 +43,6 @@ enum class AndroidCommonDITags {
     ENABLE_AUTHENTICATE,
     TELEMETRY_ENABLED,
     PACKAGE_NAME,
+    POC_RETROFIT,
+    POC_OK_HTTP
 }

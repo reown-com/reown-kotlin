@@ -60,6 +60,7 @@ class WalletKitApplication : Application() {
         SmartAccountEnabler.init(this)
 
         val projectId = BuildConfig.PROJECT_ID
+        println("kobe: project id: $projectId")
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Wallet",
             description = "Kotlin Wallet Implementation",
