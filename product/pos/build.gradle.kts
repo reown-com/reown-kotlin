@@ -47,6 +47,7 @@ android {
 
     kotlinOptions {
         jvmTarget = "11"
+        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
     }
 
     buildFeatures {
@@ -63,6 +64,8 @@ dependencies {
 
     releaseImplementation("com.reown:android-core:$CORE_VERSION")
     releaseImplementation("com.reown:sign:$SIGN_VERSION")
+
+    ksp(libs.moshi.ksp)
 
     implementation(libs.androidx.core)
     implementation(libs.androidx.appCompat)

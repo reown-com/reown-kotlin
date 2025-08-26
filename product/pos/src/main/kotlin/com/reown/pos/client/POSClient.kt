@@ -3,7 +3,10 @@ package com.reown.pos.client
 import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.relay.ConnectionType
+import com.reown.pos.client.service.BlockchainApi
+import com.reown.pos.client.service.createBlockchainApiModule
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import kotlinx.coroutines.delay
@@ -16,6 +19,7 @@ object POSClient {
     private val sessionNamespaces = mutableMapOf<String, POS.Model.Namespace>()
     private var paymentIntents: List<POS.Model.PaymentIntent> = emptyList()
     private var currentSessionTopic: String? = null
+    private val blockchainApi: BlockchainApi by lazy { wcKoinApp.koin.get() }
 
     interface POSDelegate {
         fun onEvent(event: POS.Model.PaymentEvent)
@@ -48,6 +52,8 @@ object POSClient {
                 onSuccess = { onSuccess() },
                 onError = { error -> onError(POS.Model.Error(error.throwable)) }
             )
+
+            wcKoinApp.modules(createBlockchainApiModule(projectId = initParams.projectId, deviceId = initParams.deviceId))
         } catch (e: Exception) {
             onError(POS.Model.Error(e))
         }
@@ -82,8 +88,10 @@ object POSClient {
         val availableChains = sessionNamespaces["eip155"]?.chains ?: emptyList()
         val intentChainIds = intents.map { it.chainId }
         val missingChainIds = intentChainIds.filter { chainId -> !availableChains.contains(chainId) }
-        require(missingChainIds.isEmpty()) { 
-            "Chain IDs [${missingChainIds.joinToString(", ")}] are not available in session namespaces. Available chains: [${availableChains.joinToString(", ")}]" 
+        require(missingChainIds.isEmpty()) {
+            "Chain IDs [${missingChainIds.joinToString(", ")}] are not available in session namespaces. Available chains: [${
+                availableChains.joinToString(", ")
+            }]"
         }
 
         paymentIntents = intents
@@ -196,6 +204,10 @@ object POSClient {
 
         //TODO: Mocking endpoint to build the transaction
         delay(3000)
+//        val buildRequest = JsonRpcRequest(
+//
+//        )
+//        blockchainApi.sendJsonRpcRequest()
 
         val senderAddress = findSenderAddress(approvedSession, paymentIntent.chainId)
             ?: throw IllegalStateException("No matching account found for chain ${paymentIntent.chainId}")
