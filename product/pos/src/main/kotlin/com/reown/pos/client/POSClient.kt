@@ -23,7 +23,7 @@ import java.net.URI
 object POSClient {
     private lateinit var posDelegate: POSDelegate
     private val sessionNamespaces = mutableMapOf<String, POS.Model.Namespace>()
-    private var paymentIntents: List<POS.Model.PaymentIntent> = emptyList()
+    private lateinit var paymentIntent: POS.Model.PaymentIntent
     private var currentSessionTopic: String? = null
     private var transactionId: String? = null
     private val blockchainApi: BlockchainApi by lazy { wcKoinApp.koin.get() }
@@ -84,12 +84,12 @@ object POSClient {
         require(sessionNamespaces.isNotEmpty()) { "No chains set, call setChains method first" }
         require(intents.isNotEmpty()) { "No payment intents provided" }
 
-        intents.forEach { intent ->
-            require(intent.chainId.isNotBlank()) { "Chain ID cannot be empty" }
-            require(intent.amount.isNotBlank()) { "Amount cannot be empty" }
-            require(intent.token.isNotBlank()) { "Token cannot be empty" }
-            require(intent.recipient.isNotBlank()) { "Recipient cannot be empty" }
-        }
+        //TODO: Validation for chainId CAIP2 and receipient CAIP10
+        val paymentIntent = intents.first()
+        require(paymentIntent.chainId.isNotBlank()) { "Chain ID cannot be empty" }
+        require(paymentIntent.amount.isNotBlank()) { "Amount cannot be empty" }
+        require(paymentIntent.token.isNotBlank()) { "Token cannot be empty" }
+        require(paymentIntent.recipient.isNotBlank()) { "Recipient cannot be empty" }
 
         //Only EVM for now
         val availableChains = sessionNamespaces["eip155"]?.chains ?: emptyList()
@@ -101,7 +101,10 @@ object POSClient {
             }]"
         }
 
-        paymentIntents = intents
+        //token: asset_type:chain_id + "/" + asset_namespace + ":" + asset_reference
+        //map of USDC/USDT on chainID to assetnamespace and reference?
+
+        this.paymentIntent = paymentIntent
 
         val pairing = CoreClient.Pairing.create { error ->
             posDelegate.onEvent(POS.Model.PaymentEvent.ConnectionFailed(error.throwable))
@@ -200,14 +203,8 @@ object POSClient {
     private suspend fun handleSessionApproved(approvedSession: Sign.Model.ApprovedSession) {
         posDelegate.onEvent(POS.Model.PaymentEvent.Connected)
 
-        val paymentIntent = paymentIntents.firstOrNull()
-            ?: throw IllegalStateException("No payment intent available")
-
         val namespace = sessionNamespaces.values.firstOrNull()
             ?: throw IllegalStateException("No namespace available")
-
-        val method = namespace.methods.firstOrNull()
-            ?: throw IllegalStateException("No method available")
 
         val senderAddress = findSenderAddress(approvedSession, paymentIntent.chainId)
             ?: throw IllegalStateException("No matching account found for chain ${paymentIntent.chainId}")

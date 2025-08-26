@@ -34,7 +34,7 @@ object POS {
         }
 
         data class PaymentIntent(
-            val token: String,
+            var token: String, //CAIP19
             val amount: String,
             val chainId: String,
             val recipient: String

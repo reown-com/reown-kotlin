@@ -105,7 +105,14 @@ class POSViewModel : ViewModel() {
     fun createPaymentIntent(network: String) {
         this.network = network
         val paymentIntents =
-            listOf(POS.Model.PaymentIntent(chainId = network, amount = amount ?: "", token = token ?: "", recipient = "0x123456789"))
+            listOf(
+                POS.Model.PaymentIntent(
+                    chainId = network,
+                    amount = amount ?: "",
+                    token = token ?: "",
+                    recipient = "${network}:0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD"
+                )
+            )
         try {
             POSClient.createPaymentIntent(intents = paymentIntents)
         } catch (e: Exception) {
