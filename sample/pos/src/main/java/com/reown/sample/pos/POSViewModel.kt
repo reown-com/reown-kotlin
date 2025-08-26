@@ -27,7 +27,7 @@ sealed interface PosEvent {
     data object PaymentRequested : PosEvent
     data object PaymentBroadcasted : PosEvent
     data class PaymentRejected(val error: String) : PosEvent
-    data class PaymentSuccessful(val txHash: String, val receipt: String) : PosEvent
+    data class PaymentSuccessful(val txHash: String) : PosEvent
 }
 
 class POSViewModel : ViewModel() {
@@ -69,7 +69,7 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.PaymentSuccessful -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentSuccessful(event.txHash, event.receipt)) }
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentSuccessful(event.txHash)) }
                     }
 
                     PaymentEvent.ConnectedRejected -> {
@@ -110,6 +110,8 @@ class POSViewModel : ViewModel() {
             POSClient.createPaymentIntent(intents = paymentIntents)
         } catch (e: Exception) {
             println("kobe: createPaymentIntent error: ${e.message}")
+
+            viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = e.message ?: "Create intent error")) }
         }
     }
 }

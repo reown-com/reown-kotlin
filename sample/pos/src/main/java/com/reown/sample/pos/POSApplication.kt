@@ -41,6 +41,6 @@ class POSApplication : Application() {
             }
         )
 
-        POSClient.setChains(listOf("eip155:137"))
+        POSClient.setChains(listOf("eip155:137", "eip155:8453"))
     }
 }

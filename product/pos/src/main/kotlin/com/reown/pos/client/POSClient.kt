@@ -1,5 +1,6 @@
 package com.reown.pos.client
 
+import android.util.Log
 import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.internal.common.scope
@@ -7,6 +8,11 @@ import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.relay.ConnectionType
 import com.reown.pos.client.service.BlockchainApi
 import com.reown.pos.client.service.createBlockchainApiModule
+import com.reown.pos.client.service.model.JsonRpcBuildTransactionRequest
+import com.reown.pos.client.service.model.BuildTransactionParams
+import com.reown.pos.client.service.model.TransactionParam
+import com.reown.pos.client.service.model.JsonRpcCheckTransactionRequest
+import com.reown.pos.client.service.model.CheckTransactionParams
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import kotlinx.coroutines.delay
@@ -19,6 +25,7 @@ object POSClient {
     private val sessionNamespaces = mutableMapOf<String, POS.Model.Namespace>()
     private var paymentIntents: List<POS.Model.PaymentIntent> = emptyList()
     private var currentSessionTopic: String? = null
+    private var transactionId: String? = null
     private val blockchainApi: BlockchainApi by lazy { wcKoinApp.koin.get() }
 
     interface POSDelegate {
@@ -202,48 +209,182 @@ object POSClient {
         val method = namespace.methods.firstOrNull()
             ?: throw IllegalStateException("No method available")
 
-        //TODO: Mocking endpoint to build the transaction
-        delay(3000)
-//        val buildRequest = JsonRpcRequest(
-//
-//        )
-//        blockchainApi.sendJsonRpcRequest()
-
         val senderAddress = findSenderAddress(approvedSession, paymentIntent.chainId)
             ?: throw IllegalStateException("No matching account found for chain ${paymentIntent.chainId}")
 
-        val request = Sign.Params.Request(
-            sessionTopic = approvedSession.topic,
-            method = method,
-            params = buildTransactionParams(senderAddress, paymentIntent),
-            chainId = paymentIntent.chainId
+        val buildTransactionRequest = JsonRpcBuildTransactionRequest(
+            params = BuildTransactionParams(
+                asset = paymentIntent.token,
+                recipient = paymentIntent.recipient,
+                sender = senderAddress,
+                amount = paymentIntent.amount
+            )
         )
 
-        SignClient.request(
-            request = request,
-            onSuccess = { sentRequest ->
-                posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRequested)
-            },
-            onError = { error ->
-                posDelegate.onEvent(POS.Model.PaymentEvent.ConnectionFailed(error.throwable))
+        try {
+            val buildTransactionResponse = blockchainApi.buildTransaction(buildTransactionRequest)
+
+            if (buildTransactionResponse.error != null) {
+                val errorMessage =
+                    "Build transaction failed: ${buildTransactionResponse.error.message} (code: ${buildTransactionResponse.error.code})"
+                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
                 disconnectSession(approvedSession.topic)
+                return
             }
-        )
+
+            val result = buildTransactionResponse.result
+            if (result == null) {
+                val errorMessage = "Build transaction response is null"
+                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+                disconnectSession(approvedSession.topic)
+                return
+            }
+
+            transactionId = buildTransactionResponse.result.id
+            val transactionRpc = result.transactionRpc
+            if (transactionRpc.method != "eth_sendTransaction") {
+                val errorMessage = "Unexpected transaction method: ${transactionRpc.method}, expected: eth_sendTransaction"
+                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+                disconnectSession(approvedSession.topic)
+                return
+            }
+
+            if (transactionRpc.params.isEmpty()) {
+                val errorMessage = "Transaction parameters are empty"
+                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+                disconnectSession(approvedSession.topic)
+                return
+            }
+
+            val transactionParam = transactionRpc.params.first()
+            if (transactionParam.to.isBlank() || transactionParam.from.isBlank() ||
+                transactionParam.gas.isBlank() || transactionParam.value.isBlank() ||
+                transactionParam.data.isBlank() || transactionParam.gasPrice.isBlank()
+            ) {
+                val errorMessage = "Transaction parameters contain empty values"
+                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+                disconnectSession(approvedSession.topic)
+                return
+            }
+
+            val request = Sign.Params.Request(
+                sessionTopic = approvedSession.topic,
+                method = transactionRpc.method,
+                params = buildTransactionParamsFromResponse(transactionParam), //TODO: check if passing transactionRpc.params directly works
+                chainId = paymentIntent.chainId
+            )
+
+            SignClient.request(
+                request = request,
+                onSuccess = { sentRequest ->
+                    posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRequested)
+                },
+                onError = { error ->
+                    posDelegate.onEvent(POS.Model.PaymentEvent.ConnectionFailed(error.throwable))
+                    disconnectSession(approvedSession.topic)
+                }
+            )
+
+        } catch (e: Exception) {
+            val errorMessage = "Failed to build transaction: ${e.message}"
+            posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+            disconnectSession(approvedSession.topic)
+        }
     }
 
     private suspend fun handleSessionRequestResult(
-        result: Sign.Model.JsonRpcResponse.JsonRpcResult,
+        response: Sign.Model.JsonRpcResponse.JsonRpcResult,
         topic: String
     ) {
-        posDelegate.onEvent(POS.Model.PaymentEvent.PaymentBroadcasted)
+        if (response.result != null) {
+            posDelegate.onEvent(POS.Model.PaymentEvent.PaymentBroadcasted)
+            checkTransactionStatusWithPolling(response.result!!, topic)
+        } else {
+            Log.e("POSClient", "Unexpected result type: ${null}")
+            posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception("Invalid transaction result format")))
+            disconnectSession(topic)
+            return
+        }
+    }
 
-        // TODO: Mocking transaction status check on server
-        delay(4000)
+    private suspend fun checkTransactionStatusWithPolling(txHash: String, topic: String) {
+        val maxAttempts = 10
+        var currentAttempt = 0
 
-        //TODO: get txHash and receipt from server
-        val txHash = result.toString()
-        posDelegate.onEvent(POS.Model.PaymentEvent.PaymentSuccessful(txHash = txHash, receipt = "tx_hash_test"))
+        while (currentAttempt < maxAttempts) {
+            try {
+                if (transactionId.isNullOrBlank()) {
+                    val errorMessage = "Check transaction status transaction id not defined"
+                    Log.e("POSClient", errorMessage)
+                    posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+                    disconnectSession(topic)
+                    return
+                }
 
+                val checkTransactionRequest = JsonRpcCheckTransactionRequest(params = CheckTransactionParams(id = transactionId!!))
+                val checkTransactionResponse = blockchainApi.checkTransactionStatus(checkTransactionRequest)
+
+                if (checkTransactionResponse.error != null) {
+                    val errorMessage =
+                        "Check transaction status failed: ${checkTransactionResponse.error.message} (code: ${checkTransactionResponse.error.code})"
+                    Log.e("POSClient", errorMessage)
+                    posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+                    disconnectSession(topic)
+                    return
+                }
+
+                val result = checkTransactionResponse.result
+                if (result == null) {
+                    val errorMessage = "Check transaction status response is null"
+                    Log.e("POSClient", errorMessage)
+                    posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+                    disconnectSession(topic)
+                    return
+                }
+
+                when (result.status.uppercase()) {
+                    "CONFIRMED" -> {
+                        Log.d("POSClient", "Transaction confirmed: $txHash")
+                        posDelegate.onEvent(POS.Model.PaymentEvent.PaymentSuccessful(txHash = txHash))
+                        disconnectSession(topic)
+                        return
+                    }
+
+//                    "FAILED" -> {
+//                        Log.e("POSClient", "Transaction failed: $txHash")
+//                        posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRejected(message = "Transaction failed on blockchain"))
+//                        disconnectSession(topic)
+//                        return
+//                    }
+
+                    "PENDING" -> {
+                        Log.d("POSClient", "Transaction pending, attempt ${currentAttempt + 1}/$maxAttempts")
+                        currentAttempt++
+                        if (currentAttempt < maxAttempts) {
+                            delay(3000) // Wait 3 seconds before next attempt
+                        }
+                    }
+
+                    else -> {
+                        val errorMessage = "Unknown transaction status: ${result.status}"
+                        Log.e("POSClient", errorMessage)
+                        posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+                        disconnectSession(topic)
+                        return
+                    }
+                }
+            } catch (e: Exception) {
+                val errorMessage = "Failed to check transaction status: ${e.message}"
+                Log.e("POSClient", errorMessage, e)
+                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+                disconnectSession(topic)
+                return
+            }
+        }
+
+        // If we reach here, the transaction is still pending after 30 seconds
+        Log.w("POSClient", "Transaction still pending after 30 seconds: $txHash")
+        posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception("Transaction still pending after timeout")))
         disconnectSession(topic)
     }
 
@@ -267,16 +408,15 @@ object POSClient {
         }
     }
 
-    //TODO: Get from the server
-    private fun buildTransactionParams(senderAddress: String, paymentIntent: POS.Model.PaymentIntent): String {
-        return """[{"from":"$senderAddress","to":"${paymentIntent.recipient}","data":"0x","gasLimit":"0x5208","gasPrice":"0x0649534e00","value":"${paymentIntent.amount}","nonce":"0x07"}]"""
+    private fun buildTransactionParamsFromResponse(transactionParam: TransactionParam): String {
+        return """[{"from":"${transactionParam.from}","to":"${transactionParam.to}","data":"${transactionParam.data}","gasLimit":"${transactionParam.gas}","gasPrice":"${transactionParam.gasPrice}","value":"${transactionParam.value}"}]"""
     }
 
     private fun disconnectSession(topic: String) {
         SignClient.disconnect(
             disconnect = Sign.Params.Disconnect(topic),
-            onSuccess = { /* Session disconnected successfully */ },
-            onError = { /* Log disconnect error if needed */ }
+            onSuccess = { Log.d("POSClient", "Session disconnected") },
+            onError = { e -> Log.d("POSClient", "Session disconnected error: $e") }
         )
         currentSessionTopic = null
     }

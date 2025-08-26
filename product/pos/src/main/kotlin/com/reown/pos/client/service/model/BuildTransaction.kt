@@ -1,12 +1,13 @@
 package com.reown.pos.client.service.model
 
+import com.reown.util.generateId
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class JsonRpcBuildTransactionRequest(
     @param:Json(name = "id")
-    val id: Int,
+    val id: Long = generateId(),
     @param:Json(name = "jsonrpc")
     val jsonrpc: String = "2.0",
     @param:Json(name = "method")
@@ -21,6 +22,8 @@ data class BuildTransactionParams(
     val asset: String,
     @param:Json(name = "recipient")
     val recipient: String,
+    @param:Json(name = "sender")
+    val sender: String,
     @param:Json(name = "amount")
     val amount: String
 )
