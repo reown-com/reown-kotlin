@@ -81,7 +81,7 @@ The repository includes several sample applications that demonstrate different u
 
 ### Setup Steps
 1. **Configure Keystore Properties**
-   Create a `secrets.properties` file in the root directory with your keystore information:
+   Create a `secrets.properties` file in the root directory with empty strings:
    ```properties
    WC_KEYSTORE_ALIAS=""
    WC_KEYSTORE_ALIAS_DEBUG=""
@@ -96,7 +96,7 @@ The repository includes several sample applications that demonstrate different u
    WC_KEY_PASSWORD_UPLOAD=""
    ```
 
-3. **Configure Google Services**
+2. **Configure Google Services**
    Each sample app requires a `google-services.json` file in its `src` directory. The file should contain:
    - `mobilesdk_app_id`: Your Firebase project ID
    - `package_name`: The sample app's package name
