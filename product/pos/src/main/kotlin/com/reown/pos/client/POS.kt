@@ -34,10 +34,24 @@ object POS {
         }
 
         data class PaymentIntent(
-            var token: String, //CAIP19
+            var token: Token,
             val amount: String,
-            val chainId: String,
             val recipient: String
+        ) : Model() {
+            val caip19Token = "${token.network.chainId}/${token.standard}:${token.address}"
+            val caip10Receipient = "${token.network.chainId}:${recipient}"
+        }
+
+        data class Token(
+            val network: Network,
+            val symbol: String,
+            val standard: String,
+            val address: String
+        ) : Model()
+
+        data class Network(
+            val name: String,
+            val chainId: String
         ) : Model()
     }
 
@@ -46,6 +60,7 @@ object POS {
             val projectId: String,
             val deviceId: String,
             val metaData: Model.MetaData,
+            val chains: List<String>,
             val application: Application
         ) : Params()
     }

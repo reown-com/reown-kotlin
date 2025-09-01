@@ -26,18 +26,21 @@ fun SelectNetworkScreen(
 
     val networks = listOf(
         NetItem("Ethereum", "$2.50", Badge.Ethereum, "eip155:1"),
-        NetItem("Base",     "$0.05", Badge.Base,     "eip155:8453"),
-        NetItem("Polygon",  "$0.01", Badge.Polygon,  "eip155:137")
+        NetItem("Base", "$0.05", Badge.Base, "eip155:8453"),
+        NetItem("Polygon", "$0.01", Badge.Polygon, "eip155:137"),
+        NetItem("Sepolia", "$0.01", Badge.Sepolia, "eip155:11155111")
     )
 
     // ✅ store the selected CHAIN ID
-    var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
-    
+    var selectedId by rememberSaveable { mutableStateOf<NetItem?>(null) }
+
     // Loading state for the payment button
     var isLoading by rememberSaveable { mutableStateOf(false) }
 
     Column(
-        modifier = modifier.fillMaxSize().imePadding()
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding()
     ) {
         // header ...
         Column(
@@ -53,20 +56,28 @@ fun SelectNetworkScreen(
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(24.dp))
             Text("Select Network", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
             Spacer(Modifier.height(6.dp))
-            Text("Step 4: Choose blockchain network", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+            Text(
+                "Step 4: Choose blockchain network",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
             Spacer(Modifier.height(20.dp))
 
             networks.forEach { item ->
                 NetworkCard(
                     item = item,
-                    selected = selectedId == item.chainId,          // ✅ compare to chainId
-                    onClick = { selectedId = item.chainId }         // ✅ set chainId
+                    selected = selectedId == item,          // ✅ compare to chainId
+                    onClick = { selectedId = item }         // ✅ set chainId
                 )
                 Spacer(Modifier.height(12.dp))
             }
@@ -74,14 +85,16 @@ fun SelectNetworkScreen(
             Spacer(Modifier.weight(1f))
 
             Button(
-                onClick = { 
-                    selectedId?.let { 
+                onClick = {
+                    selectedId?.let {
 //                        isLoading = true
-                        viewModel.createPaymentIntent(it)
-                    } 
+                        viewModel.createPaymentIntent(it.chainId, it.name)
+                    }
                 },
                 enabled = selectedId != null && !isLoading,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
             ) {
@@ -101,7 +114,10 @@ fun SelectNetworkScreen(
 
         Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Box(
-                modifier = Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars).padding(vertical = 14.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center
             ) { Text("Powered by DTC Pay", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
@@ -111,7 +127,7 @@ fun SelectNetworkScreen(
 /* ---------- UI Pieces ---------- */
 
 private data class NetItem(val name: String, val fee: String, val badge: Badge, val chainId: String)
-private enum class Badge { Ethereum, Base, Polygon }
+private enum class Badge { Ethereum, Base, Polygon, Sepolia }
 
 @Composable
 private fun NetworkCard(
@@ -123,8 +139,8 @@ private fun NetworkCard(
     val green = Color(0xFF0A8F5B)
 
     val containerColor = if (selected) green else MaterialTheme.colorScheme.surface
-    val contentColor   = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
-    val feeColor       = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+    val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
+    val feeColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
 
     Surface(
         shape = shape,
@@ -137,7 +153,9 @@ private fun NetworkCard(
             .clickable(onClick = onClick)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             NetworkBadge(item.badge, tint = LocalContentColor.current) // ✅ uses contentColor
@@ -155,11 +173,20 @@ private fun NetworkBadge(badge: Badge, tint: Color) {
     when (badge) {
         Badge.Ethereum -> Text("◇", style = MaterialTheme.typography.titleLarge, color = tint)
         Badge.Base -> Box(
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier
+                .size(24.dp)
                 .background(Brush.radialGradient(listOf(Color(0xFF4DA3FF), Color(0xFF0A51C2))), shape = CircleShape)
         )
+
         Badge.Polygon -> Box(
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier
+                .size(24.dp)
+                .background(Brush.radialGradient(listOf(Color(0xFFB16CEA), Color(0xFF6A00F4))), shape = CircleShape)
+        )
+
+        else -> Box(
+            modifier = Modifier
+                .size(24.dp)
                 .background(Brush.radialGradient(listOf(Color(0xFFB16CEA), Color(0xFF6A00F4))), shape = CircleShape)
         )
     }

@@ -105,28 +105,38 @@ The repository includes several sample applications that demonstrate different u
    **Example `google-services.json` file:**
    ```json
    {
-     "client_info": {
-       "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
-       "android_client_info": {
-         "package_name": "com.reown.sample.{sample_name}.debug"
-       }
+     "project_info": {
+       "project_number": "1234567890",
+       "project_id": "dummy-project-id",
+       "storage_bucket": "dummy-project-id.appspot.com"
      },
-     "oauth_client": [
+     "client": [
        {
-         "client_id": "1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com",
-         "client_type": 3
+         "client_info": {
+           "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
+           "android_client_info": {
+             "package_name": "com.reown.sample.{sample_name}.debug"
+           }
+         },
+         "oauth_client": [
+           {
+             "client_id": "1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com",
+             "client_type": 3
+           }
+         ],
+         "api_key": [
+           {
+             "current_key": "AIzaDummyKeyForSample123456"
+           }
+         ],
+         "services": {
+           "appinvite_service": {
+             "other_platform_oauth_client": []
+           }
+         }
        }
      ],
-     "api_key": [
-       {
-         "current_key": "AIzaDummyKeyForSample123456"
-       }
-     ],
-     "services": {
-       "appinvite_service": {
-         "other_platform_oauth_client": []
-       }
-     }
+     "configuration_version": "1"
    }
    ```
 

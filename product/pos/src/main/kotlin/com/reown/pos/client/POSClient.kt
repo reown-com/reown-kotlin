@@ -38,6 +38,15 @@ object POSClient {
         onError: (POS.Model.Error) -> Unit
     ) {
         try {
+            require(initParams.chains.isNotEmpty()) { "Chains list cannot be empty" }
+            require(initParams.chains.all { it.startsWith("eip155") }) { "Only EVM chains are supported, please provide eip155 chains" }
+
+            sessionNamespaces["eip155"] = POS.Model.Namespace(
+                chains = initParams.chains,
+                methods = listOf("eth_sendTransaction"),
+                events = listOf("chainChanged", "accountsChanged")
+            )
+
             val coreMetaData = Core.Model.AppMetaData(
                 name = initParams.metaData.merchantName,
                 description = initParams.metaData.description,
@@ -67,42 +76,29 @@ object POSClient {
     }
 
     @Throws(IllegalStateException::class)
-    fun setChains(chainIds: List<String>) {
-        require(chainIds.isNotEmpty()) { "Chain IDs list cannot be empty" }
-        require(chainIds.all { it.startsWith("eip155") }) { "Only EVM chains are supported, please provide eip155 chains" }
-
-        sessionNamespaces["eip155"] = POS.Model.Namespace(
-            chains = chainIds,
-            methods = listOf("eth_sendTransaction"),
-            events = listOf("chainChanged", "accountsChanged")
-        )
-    }
-
-    @Throws(IllegalStateException::class)
     fun createPaymentIntent(intents: List<POS.Model.PaymentIntent>) {
         checkPOSDelegateInitialization()
-        require(sessionNamespaces.isNotEmpty()) { "No chains set, call setChains method first" }
+        require(sessionNamespaces.isNotEmpty()) { "No chains set during the initialization" }
         require(intents.isNotEmpty()) { "No payment intents provided" }
 
         //TODO: Validation for chainId CAIP2 and receipient CAIP10
         val paymentIntent = intents.first()
-        require(paymentIntent.chainId.isNotBlank()) { "Chain ID cannot be empty" }
+        require(paymentIntent.token.network.chainId.isNotBlank()) { "Chain ID cannot be empty" }
         require(paymentIntent.amount.isNotBlank()) { "Amount cannot be empty" }
-        require(paymentIntent.token.isNotBlank()) { "Token cannot be empty" }
         require(paymentIntent.recipient.isNotBlank()) { "Recipient cannot be empty" }
+        require(paymentIntent.token.standard.isNotBlank()) { "Recipient cannot be empty" }
+        require(paymentIntent.token.symbol.isNotBlank()) { "Recipient cannot be empty" }
+        require(paymentIntent.token.network.name.isNotBlank()) { "Recipient cannot be empty" }
 
         //Only EVM for now
         val availableChains = sessionNamespaces["eip155"]?.chains ?: emptyList()
-        val intentChainIds = intents.map { it.chainId }
+        val intentChainIds = intents.map { it.token.network.chainId }
         val missingChainIds = intentChainIds.filter { chainId -> !availableChains.contains(chainId) }
         require(missingChainIds.isEmpty()) {
-            "Chain IDs [${missingChainIds.joinToString(", ")}] are not available in session namespaces. Available chains: [${
+            "Chains [${missingChainIds.joinToString(", ")}] are not available in session namespaces. Available chains: [${
                 availableChains.joinToString(", ")
             }]"
         }
-
-        //token: asset_type:chain_id + "/" + asset_namespace + ":" + asset_reference
-        //map of USDC/USDT on chainID to assetnamespace and reference?
 
         this.paymentIntent = paymentIntent
 
@@ -206,13 +202,13 @@ object POSClient {
         val namespace = sessionNamespaces.values.firstOrNull()
             ?: throw IllegalStateException("No namespace available")
 
-        val senderAddress = findSenderAddress(approvedSession, paymentIntent.chainId)
-            ?: throw IllegalStateException("No matching account found for chain ${paymentIntent.chainId}")
+        val senderAddress = findSenderAddress(approvedSession, paymentIntent.token.network.chainId)
+            ?: throw IllegalStateException("No matching account found for chain ${paymentIntent.token.network.chainId}")
 
         val buildTransactionRequest = JsonRpcBuildTransactionRequest(
             params = BuildTransactionParams(
-                asset = paymentIntent.token,
-                recipient = paymentIntent.recipient,
+                asset = paymentIntent.caip19Token,
+                recipient = paymentIntent.caip10Receipient,
                 sender = senderAddress,
                 amount = paymentIntent.amount
             )
@@ -239,12 +235,12 @@ object POSClient {
 
             transactionId = buildTransactionResponse.result.id
             val transactionRpc = result.transactionRpc
-            if (transactionRpc.method != "eth_sendTransaction") {
-                val errorMessage = "Unexpected transaction method: ${transactionRpc.method}, expected: eth_sendTransaction"
-                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
-                disconnectSession(approvedSession.topic)
-                return
-            }
+//            if (transactionRpc.method != "eth_sendTransaction") {
+//                val errorMessage = "Unexpected transaction method: ${transactionRpc.method}, expected: eth_sendTransaction"
+//                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+//                disconnectSession(approvedSession.topic)
+//                return
+//            }
 
             if (transactionRpc.params.isEmpty()) {
                 val errorMessage = "Transaction parameters are empty"
@@ -254,21 +250,21 @@ object POSClient {
             }
 
             val transactionParam = transactionRpc.params.first()
-            if (transactionParam.to.isBlank() || transactionParam.from.isBlank() ||
-                transactionParam.gas.isBlank() || transactionParam.value.isBlank() ||
-                transactionParam.data.isBlank() || transactionParam.gasPrice.isBlank()
-            ) {
-                val errorMessage = "Transaction parameters contain empty values"
-                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
-                disconnectSession(approvedSession.topic)
-                return
-            }
+//            if (transactionParam.to.isBlank() || transactionParam.from.isBlank() ||
+//                transactionParam.gas.isBlank() || transactionParam.value.isBlank() ||
+//                transactionParam.data.isBlank() || transactionParam.gasPrice.isBlank()
+//            ) {
+//                val errorMessage = "Transaction parameters contain empty values"
+//                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+//                disconnectSession(approvedSession.topic)
+//                return
+//            }
 
             val request = Sign.Params.Request(
                 sessionTopic = approvedSession.topic,
                 method = transactionRpc.method,
                 params = buildTransactionParamsFromResponse(transactionParam), //TODO: check if passing transactionRpc.params directly works
-                chainId = paymentIntent.chainId
+                chainId = paymentIntent.token.network.chainId
             )
 
             SignClient.request(

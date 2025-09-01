@@ -26,7 +26,8 @@ class POSApplication : Application() {
             projectId = projectId,
             deviceId = "sample_pos_device_${System.currentTimeMillis()}",
             metaData = metaData,
-            application = this
+            application = this,
+            chains = listOf("eip155:137", "eip155:8453", "eip155:11155111", "eip155:1", )
         )
 
         // Initialize POSClient
@@ -40,7 +41,5 @@ class POSApplication : Application() {
                 Timber.e("kobe: POSClient initialization failed: ${error.throwable}")
             }
         )
-
-        POSClient.setChains(listOf("eip155:137", "eip155:8453"))
     }
 }

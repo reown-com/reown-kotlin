@@ -102,15 +102,22 @@ class POSViewModel : ViewModel() {
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectNetwork) }
     }
 
-    fun createPaymentIntent(network: String) {
-        this.network = network
+    fun createPaymentIntent(chainId: String, name: String) {
+        this.network = chainId
         val paymentIntents =
             listOf(
                 POS.Model.PaymentIntent(
-                    chainId = network,
+                    token = POS.Model.Token(
+                        network = POS.Model.Network(
+                            chainId = chainId,
+                            name = name
+                        ),
+                        standard = "erc20", //TODO: add dynamic values from UI
+                        symbol = "USDC", //TODO: add dynamic values from UI
+                        address = "0xf08A50178dfcDe18524640EA6618a1f965821715" //USDC Sepolia TODO: add dynamic values from UI
+                    ),
                     amount = amount ?: "",
-                    token = token ?: "",
-                    recipient = "${network}:0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD"
+                    recipient = "${chainId}:0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD"
                 )
             )
         try {
