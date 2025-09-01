@@ -44,6 +44,8 @@ The Reown Kotlin SDK is organized as a modular system with several layers:
 5. **Sample Applications**: Example implementations
    - `sample/wallet/`: Wallet sample application
    - `sample/dapp/`: dApp sample application
+   - `sample/pos/`: POS sample application
+   - `sample/modal/`: Modal sample application
 
 ## Installation
 
@@ -66,16 +68,105 @@ dependencies {
 }
 ```
 
+## Building Sample Applications
 
+The repository includes several sample applications that demonstrate different use cases of the Reown Kotlin SDK. Follow these instructions to build and run the sample apps:
 
-## Sample Applications
+### Prerequisites
 
-The repository includes sample applications to demonstrate SDK usage:
+- Android Studio Arctic Fox or later
+- Android SDK API level 21 or higher
+- Gradle 7.0 or later
+- JDK 11 or later
 
-- **Wallet Sample**: Demonstrates how to build a wallet application using WalletKit
-- **dApp Sample**: Shows how to build a dApp that connects to wallets using AppKit
+### Setup Steps
+1. **Configure Keystore Properties**
+   Create a `secrets.properties` file in the root directory with your keystore information:
+   ```properties
+   WC_KEYSTORE_ALIAS=""
+   WC_KEYSTORE_ALIAS_DEBUG=""
+   WC_FILENAME_DEBUG=""
+   WC_STORE_PASSWORD_DEBUG=""
+   WC_KEY_PASSWORD_DEBUG=""
+   WC_FILENAME_INTERNAL=""
+   WC_STORE_PASSWORD_INTERNAL=""
+   WC_KEY_PASSWORD_INTERNAL=""
+   WC_FILENAME_UPLOAD=""
+   WC_STORE_PASSWORD_UPLOAD=""
+   WC_KEY_PASSWORD_UPLOAD=""
+   ```
 
-Check the `sample/` directory for complete implementations.
+3. **Configure Google Services**
+   Each sample app requires a `google-services.json` file in its `src` directory. The file should contain:
+   - `mobilesdk_app_id`: Your Firebase project ID
+   - `package_name`: The sample app's package name
+   - `api_key`: Your Firebase API key
+
+   **Example `google-services.json` file:**
+   ```json
+   {
+     "client_info": {
+       "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
+       "android_client_info": {
+         "package_name": "com.reown.sample.{sample_name}.debug"
+       }
+     },
+     "oauth_client": [
+       {
+         "client_id": "1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com",
+         "client_type": 3
+       }
+     ],
+     "api_key": [
+       {
+         "current_key": "AIzaDummyKeyForSample123456"
+       }
+     ],
+     "services": {
+       "appinvite_service": {
+         "other_platform_oauth_client": []
+       }
+     }
+   }
+   ```
+
+   **Note:** Replace `{sample_name}` with the actual sample name: `wallet`, `dapp`, `pos`, or `modal`. You need to create this file for each sample app you want to build. Use the example content if you want to just build samples locally.
+
+### Available Sample Apps
+
+#### Wallet Sample (`sample/wallet/`)
+- **Purpose**: Demonstrates a complete wallet implementation
+- **Package**: `com.reown.sample.wallet`
+- **Build Command**: `./gradlew :sample:wallet:assembleDebug`
+
+#### dApp Sample (`sample/dapp/`)
+- **Purpose**: Shows how to build a dApp that connects to wallets
+- **Package**: `com.reown.sample.dapp`
+- **Build Command**: `./gradlew :sample:dapp:assembleDebug`
+
+#### POS Sample (`sample/pos/`)
+- **Purpose**: Point of Sale application example
+- **Package**: `com.reown.sample.pos`
+- **Build Command**: `./gradlew :sample:pos:assembleDebug`
+
+#### Modal Sample (`sample/modal/`)
+- **Purpose**: Modal UI integration example
+- **Package**: `com.reown.sample.modal`
+- **Build Command**: `./gradlew :sample:modal:assembleDebug`
+
+### Build Commands
+
+- **Build all samples**: `./gradlew :sample:assembleDebug`
+- **Build specific sample**: `./gradlew :sample:{sample_name}:assembleDebug`
+- **Install on device**: `./gradlew :sample:{sample_name}:installDebug`
+- **Run tests**: `./gradlew :sample:{sample_name}:testDebugUnitTest`
+
+### Troubleshooting
+
+- **Build errors**: Ensure all dependencies are synced with `./gradlew build`
+- **Keystore issues**: Verify `secrets.properties` contains valid keystore information
+- **Google Services**: Ensure `google-services.json` is properly configured for each sample
+- **Gradle sync**: Try `./gradlew clean` followed by `./gradlew build`
 
 ## License
 
