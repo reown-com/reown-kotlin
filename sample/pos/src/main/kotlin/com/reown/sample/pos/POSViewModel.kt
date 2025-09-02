@@ -56,7 +56,13 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.ConnectionFailed -> {
-                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = paymentEvent.error.message ?: "Connection Error")) }
+                        viewModelScope.launch {
+                            _posNavEventsFlow.emit(
+                                PosNavEvent.ToErrorScreen(
+                                    error = paymentEvent.error.message ?: "Connection Error"
+                                )
+                            )
+                        }
                     }
 
                     is PaymentEvent.PaymentRequested -> {
@@ -76,7 +82,13 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.Error -> {
-                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = paymentEvent.error.message ?: "Connection Error")) }
+                        viewModelScope.launch {
+                            _posNavEventsFlow.emit(
+                                PosNavEvent.ToErrorScreen(
+                                    error = paymentEvent.error.message ?: "Connection Error"
+                                )
+                            )
+                        }
                     }
 
                     is PaymentEvent.PaymentRejected -> {
@@ -101,7 +113,8 @@ class POSViewModel : ViewModel() {
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectNetwork) }
     }
 
-    fun createPaymentIntent(chainId: String, name: String) {
+    fun createPaymentIntent(chainId: String, name: String, amount: String) {
+        this.amount = amount
         this.network = chainId
         val paymentIntents =
             listOf(

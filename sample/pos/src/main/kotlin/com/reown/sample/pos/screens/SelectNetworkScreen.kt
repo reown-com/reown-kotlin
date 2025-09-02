@@ -89,7 +89,7 @@ fun SelectNetworkScreen(
                 onClick = {
                     selectedId?.let {
 //                        isLoading = true
-                        viewModel.createPaymentIntent(it.chainId, it.name)
+//                        viewModel.createPaymentIntent(it.chainId, it.name)
                     }
                 },
                 enabled = selectedId != null && !isLoading,

@@ -360,7 +360,6 @@ object POSClient {
     private fun clear() {
         Log.d(TAG, "Clearing client state")
         currentSessionTopic = null
-        sessionNamespaces = mutableMapOf()
         paymentIntent = null
         transactionId = null
     }

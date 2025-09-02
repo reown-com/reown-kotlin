@@ -136,7 +136,7 @@ fun AmountScreen(
 
             // CTA
             Button(
-                onClick = { viewModel.navigateToTokenScreen(amount.trim()) },
+                onClick = { viewModel.createPaymentIntent("eip155:11155111", "Sepolia", amount.trim()) },
                 enabled = amount.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -145,7 +145,7 @@ fun AmountScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
             ) {
                 Text(
-                    "Select Token",
+                    "Start Payment",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold
