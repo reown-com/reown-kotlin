@@ -42,14 +42,13 @@ class POSViewModel : ViewModel() {
     internal var amount: String? = null
     internal var network: String? = null
 
-    init {
-        POSClient.setDelegate(object : POSClient.POSDelegate {
-            override fun onEvent(event: PaymentEvent) {
-                println("kobe: Event: $event")
 
-                when (event) {
+    init {
+        viewModelScope.launch {
+            PosSampleDelegate.paymentEventFlow.collect { paymentEvent ->
+                when (paymentEvent) {
                     is PaymentEvent.QrReady -> {
-                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.QrReady(uri = event.uri)) }
+                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.QrReady(uri = paymentEvent.uri)) }
                     }
 
                     is PaymentEvent.Connected -> {
@@ -57,7 +56,7 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.ConnectionFailed -> {
-                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = event.error.message ?: "Connection Error")) }
+                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = paymentEvent.error.message ?: "Connection Error")) }
                     }
 
                     is PaymentEvent.PaymentRequested -> {
@@ -69,7 +68,7 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.PaymentSuccessful -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentSuccessful(event.txHash)) }
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentSuccessful(paymentEvent.txHash)) }
                     }
 
                     PaymentEvent.ConnectedRejected -> {
@@ -77,15 +76,15 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.Error -> {
-                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = event.error.message ?: "Connection Error")) }
+                        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = paymentEvent.error.message ?: "Connection Error")) }
                     }
 
                     is PaymentEvent.PaymentRejected -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentRejected(error = event.message)) }
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentRejected(error = paymentEvent.message)) }
                     }
                 }
             }
-        })
+        }
     }
 
     fun navigateToAmountScreen() {

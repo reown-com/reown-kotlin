@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,8 +32,8 @@ fun SelectNetworkScreen(
         NetItem("Sepolia", "$0.01", Badge.Sepolia, "eip155:11155111")
     )
 
-    // ✅ store the selected CHAIN ID
-    var selectedId by rememberSaveable { mutableStateOf<NetItem?>(null) }
+    // ✅ store the selected CHAIN ID using custom saver
+    var selectedId by rememberSaveable(saver = NetItemSaver) { mutableStateOf<NetItem?>(null) }
 
     // Loading state for the payment button
     var isLoading by rememberSaveable { mutableStateOf(false) }
@@ -128,6 +129,45 @@ fun SelectNetworkScreen(
 
 private data class NetItem(val name: String, val fee: String, val badge: Badge, val chainId: String)
 private enum class Badge { Ethereum, Base, Polygon, Sepolia }
+
+// Custom Saver for NetItem to make it compatible with rememberSaveable
+private val NetItemSaver = Saver<MutableState<NetItem?>, List<Any>>(
+    save = { state: MutableState<NetItem?> ->
+        val netItem = state.value
+        if (netItem == null) {
+            listOf("", "", "", "")
+        } else {
+            listOf(
+                netItem.name,
+                netItem.fee,
+                netItem.badge.name,
+                netItem.chainId
+            )
+        }
+    },
+    restore = { saved: List<Any> ->
+        try {
+            val name = saved[0] as String
+            val fee = saved[1] as String
+            val badgeName = saved[2] as String
+            val chainId = saved[3] as String
+            
+            val netItem = if (name.isEmpty() && fee.isEmpty() && badgeName.isEmpty() && chainId.isEmpty()) {
+                null
+            } else {
+                NetItem(
+                    name = name,
+                    fee = fee,
+                    badge = Badge.valueOf(badgeName),
+                    chainId = chainId
+                )
+            }
+            mutableStateOf(netItem)
+        } catch (e: Exception) {
+            mutableStateOf<NetItem?>(null)
+        }
+    }
+)
 
 @Composable
 private fun NetworkCard(

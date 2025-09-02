@@ -83,6 +83,8 @@ object POSClient {
 
         //TODO: Validation for chainId CAIP2 and receipient CAIP10
         val paymentIntent = intents.first()
+
+        println("kobe: PaymentIntent: $paymentIntent")
         require(paymentIntent.token.network.chainId.isNotBlank()) { "Chain ID cannot be empty" }
         require(paymentIntent.amount.isNotBlank()) { "Amount cannot be empty" }
         require(paymentIntent.recipient.isNotBlank()) { "Recipient cannot be empty" }
@@ -208,7 +210,7 @@ object POSClient {
         val buildTransactionRequest = JsonRpcBuildTransactionRequest(
             params = BuildTransactionParams(
                 asset = paymentIntent.caip19Token,
-                recipient = paymentIntent.caip10Receipient,
+                recipient = paymentIntent.recipient,
                 sender = senderAddress,
                 amount = paymentIntent.amount
             )
@@ -385,20 +387,13 @@ object POSClient {
         approvedSession: Sign.Model.ApprovedSession,
         chainId: String
     ): String? {
-        return approvedSession.namespaces.entries.firstNotNullOfOrNull { (namespace, session) ->
-            when {
-                session.chains?.isNotEmpty() == true -> {
-                    session.accounts.firstOrNull { account ->
-                        session.chains!!.any { chain ->
-                            chain == chainId || account.startsWith("$chain:")
-                        }
-                    }
-                }
-
-                namespace == chainId -> session.accounts.firstOrNull()
-                else -> null
+        println("kobe: Sender ChainID: $chainId")
+        
+        return approvedSession.namespaces.values
+            .flatMap { session -> session.accounts }
+            .firstOrNull { account ->
+                account.startsWith(chainId)
             }
-        }
     }
 
     private fun buildTransactionParamsFromResponse(transactionParam: TransactionParam): String {

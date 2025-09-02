@@ -56,8 +56,8 @@ android {
 }
 
 dependencies {
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.messaging)
+//    implementation(platform(libs.firebase.bom))
+//    implementation(libs.firebase.messaging)
 
     debugImplementation(project(":core:android"))
     debugImplementation(project(":protocol:sign"))
