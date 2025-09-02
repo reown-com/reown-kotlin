@@ -3,26 +3,18 @@ package com.reown.pos.client
 import android.util.Log
 import com.reown.android.Core
 import com.reown.android.CoreClient
-import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.relay.ConnectionType
-import com.reown.pos.client.service.BlockchainApi
 import com.reown.pos.client.service.createBlockchainApiModule
-import com.reown.pos.client.service.model.BuildTransactionParams
-import com.reown.pos.client.service.model.CheckTransactionParams
-import com.reown.pos.client.service.model.JsonRpcBuildTransactionRequest
-import com.reown.pos.client.service.model.JsonRpcCheckTransactionRequest
+import com.reown.pos.client.use_case.BuildTransactionUseCase
 import com.reown.pos.client.use_case.CheckTransactionStatusUseCase
 import com.reown.pos.client.use_case.createPOSModule
 import com.reown.pos.client.utils.CaipUtil
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
-import com.squareup.moshi.Moshi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import org.koin.core.qualifier.named
 import java.net.URI
 
 object POSClient {
@@ -31,9 +23,8 @@ object POSClient {
     private var paymentIntent: POS.Model.PaymentIntent? = null
     private var currentSessionTopic: String? = null
     private var transactionId: String? = null
-    private val blockchainApi: BlockchainApi by lazy { wcKoinApp.koin.get() }
     private val checkTransactionStatusUseCase: CheckTransactionStatusUseCase by lazy { wcKoinApp.koin.get() }
-    private val moshi: Moshi by lazy { wcKoinApp.koin.get(named(AndroidCommonDITags.MOSHI)) }
+    private val buildTransactionUseCase: BuildTransactionUseCase by lazy { wcKoinApp.koin.get() }
 
     interface POSDelegate {
         fun onEvent(event: POS.Model.PaymentEvent)
@@ -207,70 +198,16 @@ object POSClient {
 
     private suspend fun handleSessionApproved(approvedSession: Sign.Model.ApprovedSession) {
         posDelegate.onEvent(POS.Model.PaymentEvent.Connected)
-        if (paymentIntent == null) {
-            val errorMessage = "PaymentIntent undefined, please try again"
-            posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
-            disconnectSession(approvedSession.topic)
-            return
-        }
-
-        val senderAddress = findSenderAddress(approvedSession, paymentIntent!!.token.network.chainId)
-            ?: throw IllegalStateException("No matching account found for chain ${paymentIntent!!.token.network.chainId}")
-
-        val buildTransactionRequest = JsonRpcBuildTransactionRequest(
-            params = BuildTransactionParams(
-                asset = paymentIntent!!.caip19Token,
-                recipient = paymentIntent!!.recipient,
-                sender = senderAddress,
-                amount = paymentIntent!!.amount
-            )
-        )
-
-        try {
-            val buildTransactionResponse = blockchainApi.buildTransaction(buildTransactionRequest)
-
-            if (buildTransactionResponse.error != null) {
-                val errorMessage =
-                    "Build transaction failed: ${buildTransactionResponse.error.message} (code: ${buildTransactionResponse.error.code})"
-                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+        buildTransactionUseCase.build(
+            paymentIntent, approvedSession,
+            onSuccess = { (event, transactionId) ->
+                this.transactionId = transactionId
+                posDelegate.onEvent(event)
+            },
+            onError = { event ->
+                posDelegate.onEvent(event)
                 disconnectSession(approvedSession.topic)
-                return
-            }
-
-            val result = buildTransactionResponse.result
-            if (result == null) {
-                val errorMessage = "Build transaction response is null"
-                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
-                disconnectSession(approvedSession.topic)
-                return
-            }
-
-            transactionId = buildTransactionResponse.result.id
-            val transactionRpc = result.transactionRpc
-            val paramsJson = moshi.adapter(Any::class.java).toJson(transactionRpc.params)
-            val request = Sign.Params.Request(
-                sessionTopic = approvedSession.topic,
-                method = transactionRpc.method,
-                params = paramsJson,
-                chainId = paymentIntent!!.token.network.chainId
-            )
-
-            SignClient.request(
-                request = request,
-                onSuccess = { sentRequest ->
-                    posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRequested)
-                },
-                onError = { error ->
-                    posDelegate.onEvent(POS.Model.PaymentEvent.ConnectionFailed(error.throwable))
-                    disconnectSession(approvedSession.topic)
-                }
-            )
-
-        } catch (e: Exception) {
-            val errorMessage = "Failed to build transaction: ${e.message}"
-            posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
-            disconnectSession(approvedSession.topic)
-        }
+            })
     }
 
     private suspend fun handleSessionRequestResult(
@@ -293,19 +230,6 @@ object POSClient {
             disconnectSession(topic)
             return
         }
-    }
-
-    private fun findSenderAddress(
-        approvedSession: Sign.Model.ApprovedSession,
-        chainId: String
-    ): String? {
-        println("kobe: Sender ChainID: $chainId")
-
-        return approvedSession.namespaces.values
-            .flatMap { session -> session.accounts }
-            .firstOrNull { account ->
-                account.startsWith(chainId)
-            }
     }
 
     private fun disconnectSession(topic: String) {

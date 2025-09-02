@@ -12,7 +12,7 @@ internal class CheckTransactionStatusUseCase(
     private val blockchainApi: BlockchainApi
 ) {
     companion object {
-        private const val MAX_POLLING_ATTEMPTS = 10
+        private const val MAX_POLLING_ATTEMPTS = 45
         private const val DEFAULT_CHECK_INTERVAL_MS = 3000L
         private const val TAG = "CheckTransactionStatusUseCase"
     }
@@ -101,9 +101,6 @@ internal class CheckTransactionStatusUseCase(
         }
     }
 
-    /**
-     * Sealed class representing the result of a transaction status check.
-     */
     private sealed class TransactionStatusResult {
         data class Success(val result: CheckTransactionResult) : TransactionStatusResult()
         data class Error(val message: String) : TransactionStatusResult()
