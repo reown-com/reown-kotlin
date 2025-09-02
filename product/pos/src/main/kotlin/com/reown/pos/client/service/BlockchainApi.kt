@@ -14,3 +14,5 @@ interface BlockchainApi {
     @POST("/v1/json-rpc")
     suspend fun checkTransactionStatus(@Body request: JsonRpcCheckTransactionRequest): JsonRpcCheckTransactionResponse
 }
+
+fun generateId(): Int = ("${(10..999).random()}").toInt()

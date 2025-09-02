@@ -113,7 +113,7 @@ class POSViewModel : ViewModel() {
                         ),
                         standard = "erc20", //TODO: add dynamic values from UI
                         symbol = "USDC", //TODO: add dynamic values from UI
-                        address = "0xf08A50178dfcDe18524640EA6618a1f965821715" //USDC Sepolia TODO: add dynamic values from UI
+                        address = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238" //USDC Sepolia TODO: add dynamic values from UI
                     ),
                     amount = amount ?: "",
                     recipient = "${chainId}:0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD"

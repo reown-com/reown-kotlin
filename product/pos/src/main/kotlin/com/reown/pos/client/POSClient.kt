@@ -3,6 +3,7 @@ package com.reown.pos.client
 import android.util.Log
 import com.reown.android.Core
 import com.reown.android.CoreClient
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.relay.ConnectionType
@@ -15,9 +16,11 @@ import com.reown.pos.client.service.model.JsonRpcCheckTransactionRequest
 import com.reown.pos.client.service.model.CheckTransactionParams
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import org.koin.core.qualifier.named
 import java.net.URI
 
 object POSClient {
@@ -27,6 +30,7 @@ object POSClient {
     private var currentSessionTopic: String? = null
     private var transactionId: String? = null
     private val blockchainApi: BlockchainApi by lazy { wcKoinApp.koin.get() }
+    private val moshi: Moshi by lazy { wcKoinApp.koin.get(named(AndroidCommonDITags.MOSHI)) }
 
     interface POSDelegate {
         fun onEvent(event: POS.Model.PaymentEvent)
@@ -244,14 +248,13 @@ object POSClient {
 //                return
 //            }
 
-            if (transactionRpc.params.isEmpty()) {
-                val errorMessage = "Transaction parameters are empty"
-                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
-                disconnectSession(approvedSession.topic)
-                return
-            }
+//            if (transactionRpc.params.isEmpty()) {
+//                val errorMessage = "Transaction parameters are empty"
+//                posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+//                disconnectSession(approvedSession.topic)
+//                return
+//            }
 
-            val transactionParam = transactionRpc.params.first()
 //            if (transactionParam.to.isBlank() || transactionParam.from.isBlank() ||
 //                transactionParam.gas.isBlank() || transactionParam.value.isBlank() ||
 //                transactionParam.data.isBlank() || transactionParam.gasPrice.isBlank()
@@ -262,10 +265,13 @@ object POSClient {
 //                return
 //            }
 
+
+            val paramsJson = moshi.adapter(Any::class.java).toJson(transactionRpc.params)
+            println("kobe: Sending transaction params: $paramsJson")
             val request = Sign.Params.Request(
                 sessionTopic = approvedSession.topic,
                 method = transactionRpc.method,
-                params = buildTransactionParamsFromResponse(transactionParam), //TODO: check if passing transactionRpc.params directly works
+                params = paramsJson,
                 chainId = paymentIntent.token.network.chainId
             )
 
@@ -302,7 +308,7 @@ object POSClient {
         }
     }
 
-    private suspend fun checkTransactionStatusWithPolling(txHash: String, topic: String) {
+    private suspend fun checkTransactionStatusWithPolling(sendResult: String, topic: String) {
         val maxAttempts = 10
         var currentAttempt = 0
 
@@ -316,7 +322,8 @@ object POSClient {
                     return
                 }
 
-                val checkTransactionRequest = JsonRpcCheckTransactionRequest(params = CheckTransactionParams(id = transactionId!!))
+                val checkTransactionRequest =
+                    JsonRpcCheckTransactionRequest(params = CheckTransactionParams(id = transactionId!!, sendResult = sendResult))
                 val checkTransactionResponse = blockchainApi.checkTransactionStatus(checkTransactionRequest)
 
                 if (checkTransactionResponse.error != null) {
@@ -339,24 +346,28 @@ object POSClient {
 
                 when (result.status.uppercase()) {
                     "CONFIRMED" -> {
-                        Log.d("POSClient", "Transaction confirmed: $txHash")
-                        posDelegate.onEvent(POS.Model.PaymentEvent.PaymentSuccessful(txHash = txHash))
+                        Log.d("POSClient", "Transaction confirmed: $sendResult")
+                        posDelegate.onEvent(POS.Model.PaymentEvent.PaymentSuccessful(txHash = sendResult))
                         disconnectSession(topic)
                         return
                     }
 
-//                    "FAILED" -> {
-//                        Log.e("POSClient", "Transaction failed: $txHash")
-//                        posDelegate.onEvent(POS.Model.PaymentEvent.PaymentRejected(message = "Transaction failed on blockchain"))
-//                        disconnectSession(topic)
-//                        return
-//                    }
+                    "FAILED" -> {
+                        Log.e("POSClient", "Transaction failed: $sendResult")
+                        posDelegate.onEvent(
+                            POS.Model.PaymentEvent.PaymentRejected(
+                                message = checkTransactionResponse.error?.message ?: "Failed transaction error"
+                            )
+                        )
+                        disconnectSession(topic)
+                        return
+                    }
 
                     "PENDING" -> {
                         Log.d("POSClient", "Transaction pending, attempt ${currentAttempt + 1}/$maxAttempts")
                         currentAttempt++
                         if (currentAttempt < maxAttempts) {
-                            delay(3000) // Wait 3 seconds before next attempt
+                            delay(checkTransactionResponse.result.checkIn ?: 3000) // Wait 3 seconds before next attempt
                         }
                     }
 
@@ -378,7 +389,7 @@ object POSClient {
         }
 
         // If we reach here, the transaction is still pending after 30 seconds
-        Log.w("POSClient", "Transaction still pending after 30 seconds: $txHash")
+        Log.w("POSClient", "Transaction still pending after 30 seconds: $sendResult")
         posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception("Transaction still pending after timeout")))
         disconnectSession(topic)
     }
@@ -388,7 +399,7 @@ object POSClient {
         chainId: String
     ): String? {
         println("kobe: Sender ChainID: $chainId")
-        
+
         return approvedSession.namespaces.values
             .flatMap { session -> session.accounts }
             .firstOrNull { account ->
@@ -396,9 +407,9 @@ object POSClient {
             }
     }
 
-    private fun buildTransactionParamsFromResponse(transactionParam: TransactionParam): String {
-        return """[{"from":"${transactionParam.from}","to":"${transactionParam.to}","data":"${transactionParam.data}","gasLimit":"${transactionParam.gas}","gasPrice":"${transactionParam.gasPrice}","value":"${transactionParam.value}"}]"""
-    }
+//    private fun buildTransactionParamsFromResponse(transactionParam: TransactionParam): String {
+//        return """[{"from":"${transactionParam.from}","to":"${transactionParam.to}","data":"${transactionParam.data}","gasLimit":"${transactionParam.gas}","gasPrice":"${transactionParam.gasPrice}","value":"${transactionParam.value}"}]"""
+//    }
 
     private fun disconnectSession(topic: String) {
         SignClient.disconnect(
