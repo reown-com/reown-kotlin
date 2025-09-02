@@ -9,11 +9,10 @@ import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.relay.ConnectionType
 import com.reown.pos.client.service.BlockchainApi
 import com.reown.pos.client.service.createBlockchainApiModule
-import com.reown.pos.client.service.model.JsonRpcBuildTransactionRequest
 import com.reown.pos.client.service.model.BuildTransactionParams
-import com.reown.pos.client.service.model.TransactionParam
-import com.reown.pos.client.service.model.JsonRpcCheckTransactionRequest
 import com.reown.pos.client.service.model.CheckTransactionParams
+import com.reown.pos.client.service.model.JsonRpcBuildTransactionRequest
+import com.reown.pos.client.service.model.JsonRpcCheckTransactionRequest
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.squareup.moshi.Moshi
@@ -25,8 +24,8 @@ import java.net.URI
 
 object POSClient {
     private lateinit var posDelegate: POSDelegate
-    private val sessionNamespaces = mutableMapOf<String, POS.Model.Namespace>()
-    private lateinit var paymentIntent: POS.Model.PaymentIntent
+    private var sessionNamespaces = mutableMapOf<String, POS.Model.Namespace>()
+    private var paymentIntent: POS.Model.PaymentIntent? = null
     private var currentSessionTopic: String? = null
     private var transactionId: String? = null
     private val blockchainApi: BlockchainApi by lazy { wcKoinApp.koin.get() }
@@ -163,7 +162,7 @@ object POSClient {
         }
 
         override fun onSessionRejected(rejectedSession: Sign.Model.RejectedSession) {
-            posDelegate.onEvent(POS.Model.PaymentEvent.ConnectedRejected)
+            posDelegate.onEvent(POS.Model.PaymentEvent.ConnectionRejected)
         }
 
         override fun onSessionRequestResponse(response: Sign.Model.SessionRequestResponse) {
@@ -197,7 +196,10 @@ object POSClient {
         override fun onSessionUpdate(updatedSession: Sign.Model.UpdatedSession) {}
         override fun onSessionEvent(sessionEvent: Sign.Model.SessionEvent) {}
         override fun onSessionExtend(session: Sign.Model.Session) {}
-        override fun onSessionDelete(deletedSession: Sign.Model.DeletedSession) {}
+        override fun onSessionDelete(deletedSession: Sign.Model.DeletedSession) {
+            posDelegate.onEvent(POS.Model.PaymentEvent.ConnectionRejected)
+        }
+
         override fun onProposalExpired(proposal: Sign.Model.ExpiredProposal) {}
         override fun onRequestExpired(request: Sign.Model.ExpiredRequest) {}
     }
@@ -205,18 +207,25 @@ object POSClient {
     private suspend fun handleSessionApproved(approvedSession: Sign.Model.ApprovedSession) {
         posDelegate.onEvent(POS.Model.PaymentEvent.Connected)
 
+        if (paymentIntent == null) {
+            val errorMessage = "PaymentIntent undefined, please try again"
+            posDelegate.onEvent(POS.Model.PaymentEvent.Error(error = Exception(errorMessage)))
+            disconnectSession(approvedSession.topic)
+            return
+        }
+
         val namespace = sessionNamespaces.values.firstOrNull()
             ?: throw IllegalStateException("No namespace available")
 
-        val senderAddress = findSenderAddress(approvedSession, paymentIntent.token.network.chainId)
-            ?: throw IllegalStateException("No matching account found for chain ${paymentIntent.token.network.chainId}")
+        val senderAddress = findSenderAddress(approvedSession, paymentIntent!!.token.network.chainId)
+            ?: throw IllegalStateException("No matching account found for chain ${paymentIntent!!.token.network.chainId}")
 
         val buildTransactionRequest = JsonRpcBuildTransactionRequest(
             params = BuildTransactionParams(
-                asset = paymentIntent.caip19Token,
-                recipient = paymentIntent.recipient,
+                asset = paymentIntent!!.caip19Token,
+                recipient = paymentIntent!!.recipient,
                 sender = senderAddress,
-                amount = paymentIntent.amount
+                amount = paymentIntent!!.amount
             )
         )
 
@@ -267,12 +276,11 @@ object POSClient {
 
 
             val paramsJson = moshi.adapter(Any::class.java).toJson(transactionRpc.params)
-            println("kobe: Sending transaction params: $paramsJson")
             val request = Sign.Params.Request(
                 sessionTopic = approvedSession.topic,
                 method = transactionRpc.method,
                 params = paramsJson,
-                chainId = paymentIntent.token.network.chainId
+                chainId = paymentIntent!!.token.network.chainId
             )
 
             SignClient.request(
@@ -407,17 +415,21 @@ object POSClient {
             }
     }
 
-//    private fun buildTransactionParamsFromResponse(transactionParam: TransactionParam): String {
-//        return """[{"from":"${transactionParam.from}","to":"${transactionParam.to}","data":"${transactionParam.data}","gasLimit":"${transactionParam.gas}","gasPrice":"${transactionParam.gasPrice}","value":"${transactionParam.value}"}]"""
-//    }
-
     private fun disconnectSession(topic: String) {
         SignClient.disconnect(
             disconnect = Sign.Params.Disconnect(topic),
             onSuccess = { Log.d("POSClient", "Session disconnected") },
             onError = { e -> Log.d("POSClient", "Session disconnected error: $e") }
         )
+        clear()
+    }
+
+    private fun clear() {
         currentSessionTopic = null
+        sessionNamespaces = mutableMapOf()
+        paymentIntent = null
+        currentSessionTopic = null
+        transactionId = null
     }
 
     private fun checkPOSDelegateInitialization() {

@@ -24,7 +24,7 @@ object POS {
         sealed interface PaymentEvent {
             data class QrReady(val uri: URI) : PaymentEvent
             data object Connected : PaymentEvent
-            data object ConnectedRejected : PaymentEvent
+            data object ConnectionRejected : PaymentEvent
             data class ConnectionFailed(val error: Throwable) : PaymentEvent
             data object PaymentRequested : PaymentEvent
             data object PaymentBroadcasted : PaymentEvent

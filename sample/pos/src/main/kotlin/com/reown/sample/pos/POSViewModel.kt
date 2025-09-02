@@ -71,7 +71,7 @@ class POSViewModel : ViewModel() {
                         viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentSuccessful(paymentEvent.txHash)) }
                     }
 
-                    PaymentEvent.ConnectedRejected -> {
+                    PaymentEvent.ConnectionRejected -> {
                         viewModelScope.launch { _posEventsFlow.emit(PosEvent.ConnectedRejected) }
                     }
 
