@@ -36,7 +36,7 @@ kethereum = "0.86.0"
 relinker = "1.4.5"
 coil = "2.6.0"
 customQrGenerator = "1.6.2"
-beagle = "2.9.0"
+beagle = "2.9.10"
 coinbase = "1.0.4"
 
 firebaseBOM = "33.3.0"
@@ -47,7 +47,7 @@ androidxAppCompat = "1.7.0"
 andoridxMaterial = "1.12.0"
 androidxLifecycle = "2.8.5"
 androidxTest = "1.6.1"
-androidxTestOrchestration = "1.5.0"
+androidxTestOrchestration = "1.6.1"
 androidxSecurity = "1.1.0-alpha06"
 androidxDatastore = "1.1.1"
 androidxNavigation = "2.8.0"
@@ -90,7 +90,7 @@ androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
-androidx-compose-ui-test-junit = { module = "androidx.compose.ui:ui-test-junit4", version = "1.7.1" }
+androidx-compose-ui-test-junit = { module = "androidx.compose.ui:ui-test-junit4", version = "1.9.0" }
 androidx-compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "androidxNavigation" }
 androidx-compose-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "androidxNavigation" }
 androidx-compose-lifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "composeViewModel" }

@@ -76,7 +76,3 @@ The repository includes sample applications to demonstrate SDK usage:
 - **dApp Sample**: Shows how to build a dApp that connects to wallets using AppKit
 
 Check the `sample/` directory for complete implementations.
-
-## License
-
-Reown is released under the Apache 2.0 license. [See LICENSE](/LICENSE) for details.
