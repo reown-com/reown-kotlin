@@ -1,0 +1,112 @@
+name: Claude Auto Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [master, develop]
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request'
+      || (
+        github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && contains(github.event.comment.body, '@claude review')
+      )
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Review
+        uses: WalletConnect/actions/claude/auto-review@master
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          project_context: |
+            Repository: reown-kotlin (https://github.com/reown-com/reown-kotlin)
+
+            ## Project Overview
+            The Reown Kotlin SDK is a comprehensive Android development kit that implements the WalletConnect protocol suite for blockchain wallet functionality and wallet-to-dApp communication. It serves as the communications protocol for web3, enabling secure connections between hundreds of wallets and decentralized applications.
+
+            ## Core Architecture & Components
+
+            ### Main Products
+            1. **WalletKit**: Complete toolkit for building and connecting wallets
+               - Enables wallet users to connect to dApps across multiple chains
+               - Provides One-Click Authentication, Web3 Notifications, and App Verification
+               - Chain-agnostic design supporting any blockchain
+
+            2. **AppKit**: All-in-one stack for building dApps
+
+            3. **Sign Protocol**: Core protocol for secure wallet-dApp connections
+               - Handles transaction and message signing requests
+               - Manages session approvals and namespace configurations
+
+            ### SDK Structure
+            - **Core SDK** (`android-core`): Foundation layer with common functionality
+            - **WalletKit** (`walletkit`): Wallet-specific features and APIs
+            - **AppKit** (`appkit`): dApp integration capabilities
+            - **BOM (Bill of Materials)**: Manages compatible dependency versions
+
+            ## Key Features & APIs
+
+            ### WalletKit Features
+            - Session management between wallets and dApps
+            - Namespace builder for parsing required/optional namespaces
+            - WalletDelegate for handling connection events
+            - Sign API for transaction/message signing
+
+            ### AppKit Features
+            - Multi-chain support with single integration
+            
+            ## Technical Implementation
+
+            ### Architecture Patterns
+            - Kotlin-first Android SDK
+            - Delegate pattern for event handling
+            - Builder pattern for configuration objects
+            - Protocol-based communication using WalletConnect standards
+
+            ### Key Classes & Components
+            - `CoreClient`: Foundation initialization and metadata management
+            - `WalletKit`: Main wallet functionality interface
+            - `AppKit`: dApp integration interface
+            - `Wallet.Params.Init`: Initialization parameters
+            - `SessionProposal`: Connection request handling
+            - `NamespaceBuilder`: Utility for parsing supported namespaces
+
+            ### Configuration Requirements
+            - Project ID from Reown Cloud (cloud.reown.com)
+            - App metadata (name, description, URL, icons, redirect URI)
+            - Connection type (AUTOMATIC or MANUAL)
+            - Custom redirect URIs for deep linking
+
+            ## Development Guidelines
+
+            ### Sample Applications
+            - **Wallet Sample**: Demonstrates WalletKit implementation
+            - **dApp Sample**: Shows AppKit integration for dApps
+            - Complete reference implementations for common use cases
+
+            ## Integration Context
+            - Supports 500+ wallet partners and 6,000+ app integrations
+            - Handles billions in monthly transaction volume
+
+            ## Review Focus Areas
+            When reviewing code, pay attention to:
+            - Proper SDK initialization patterns and error handling
+            - Correct namespace configuration and session management
+            - Security best practices for wallet-dApp communication
+            - Multi-chain compatibility and protocol compliance
+            - Sample app accuracy and documentation alignment
+            - Breaking changes that affect the large partner ecosystem
