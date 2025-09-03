@@ -2,6 +2,7 @@ import com.android.build.gradle.BaseExtension
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.HttpDelete
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
@@ -176,6 +177,38 @@ tasks.register("closeAndReleaseMultipleRepositories") {
     }
 }
 
+tasks.register("dropStagingRepositories") {
+    group = "release"
+    description = "Drop all staging repositories to clean up problematic ones"
+
+    doLast {
+        println("Starting dropStagingRepositories task...")
+        
+        println("Fetching staging repositories...")
+        val repos = fetchStagingRepositories()
+        if (repos.isEmpty()) {
+            println("No staging repositories found to drop")
+            return@doLast
+        }
+        
+        println("Found ${repos.size} staging repositories")
+        repos.forEach { repo ->
+            println("Repository: ${repo.key}, State: ${repo.state}")
+        }
+        
+        // Drop all repositories regardless of state
+        println("Dropping all ${repos.size} staging repositories...")
+        repos.forEachIndexed { index, repo ->
+            println("Dropping repository ${index + 1}/${repos.size}: ${repo.key}")
+            dropStagingRepository(repo.key)
+            println("Completed dropping repository ${index + 1}/${repos.size}: ${repo.key}")
+        }
+        
+        println("All staging repositories have been dropped successfully!")
+        println("You can now run the closeAndReleaseMultipleRepositories task again to create fresh staging repositories.")
+    }
+}
+
 data class StagingRepository(val key: String, val state: String, val portalDeploymentId: String?)
 
 fun fetchStagingRepositories(): List<StagingRepository> {
@@ -278,6 +311,57 @@ fun uploadRepositoryToPortal(repositoryKey: String) {
     } finally {
         try {
             httpPost.releaseConnection()
+        } catch (e: Exception) {
+            println("Warning: Failed to release connection: ${e.message}")
+        }
+    }
+}
+
+fun dropStagingRepository(repositoryKey: String) {
+    val client = HttpClients.custom()
+        .setDefaultRequestConfig(
+            RequestConfig.custom()
+                .setConnectTimeout(30000) // 30 seconds
+                .setSocketTimeout(60000) // 60 seconds
+                .build()
+        )
+        .build()
+    val dropUrl = "$manualApiUrl/drop/repository/$repositoryKey"
+    
+    println("Starting drop for repository: $repositoryKey")
+    println("Drop URL: $dropUrl")
+    
+    val httpDelete = HttpDelete(dropUrl).apply {
+        setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
+    }
+
+    try {
+        println("Executing HTTP DELETE request...")
+        val response = client.execute(httpDelete)
+        println("Received response with status: ${response.statusLine.statusCode}")
+        
+        val responseBody = if (response.entity != null) {
+            EntityUtils.toString(response.entity)
+        } else {
+            ""
+        }
+        println("Response body length: ${responseBody.length}")
+        
+        if (response.statusLine.statusCode == 200 || response.statusLine.statusCode == 201 || response.statusLine.statusCode == 204) {
+            println("Successfully dropped repository $repositoryKey")
+            if (responseBody.isNotEmpty()) {
+                println("Response: $responseBody")
+            }
+        } else {
+            throw RuntimeException("Failed to drop repository $repositoryKey: HTTP ${response.statusLine.statusCode} - $responseBody")
+        }
+    } catch (e: Exception) {
+        println("Exception during drop of repository $repositoryKey: ${e.message}")
+        e.printStackTrace()
+        throw RuntimeException("Failed to drop repository $repositoryKey: ${e.message}", e)
+    } finally {
+        try {
+            httpDelete.releaseConnection()
         } catch (e: Exception) {
             println("Warning: Failed to release connection: ${e.message}")
         }
