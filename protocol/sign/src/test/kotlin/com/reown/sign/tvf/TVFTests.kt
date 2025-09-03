@@ -1051,4 +1051,234 @@ class TVFTests {
         assertEquals("665cd321870f1e416dc61bac60010614d7a0892328feec468c57540b8ba1a99e", result.firstOrNull())
         println("Polkadot transaction hash: ${result.firstOrNull()}")
     }
+
+    // Wallet SendCalls Tests
+    @Test
+    fun `collectTxHashes should parse wallet_sendCalls with complete wallet data`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = """
+            {
+                "id": "0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930",
+                "capabilities": {
+                    "caip345": {
+                        "caip2": "eip155:1",
+                        "transactionHashes": ["0xabc123", "0xdef456"]
+                    }
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(3, result!!.size)
+        assertEquals("0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930", result[0])
+        assertEquals("0xabc123", result[1])
+        assertEquals("0xdef456", result[2])
+        println("Wallet sendCalls result: ${result}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse wallet_sendCalls with null capabilities`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = """
+            {
+                "id": "0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930"
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(1, result!!.size)
+        assertEquals("0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930", result.first())
+        println("Wallet sendCalls result with null capabilities: ${result.first()}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse wallet_sendCalls with null caip345`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = """
+            {
+                "id": "0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930",
+                "capabilities": {}
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(1, result!!.size)
+        assertEquals("0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930", result.first())
+        println("Wallet sendCalls result with null caip345: ${result.first()}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse wallet_sendCalls with null caip2`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = """
+            {
+                "id": "0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930",
+                "capabilities": {
+                    "caip345": {
+                        "transactionHashes": ["0xabc123", "0xdef456"]
+                    }
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(3, result!!.size)
+        assertEquals("0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930", result[0])
+        assertEquals("0xabc123", result[1])
+        assertEquals("0xdef456", result[2])
+        println("Wallet sendCalls result with null caip2: ${result}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse wallet_sendCalls with null transactionHashes`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = """
+            {
+                "id": "0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930",
+                "capabilities": {
+                    "caip345": {
+                        "caip2": "eip155:1"
+                    }
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(1, result!!.size)
+        assertEquals("0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930", result[0])
+        println("Wallet sendCalls result with null transactionHashes: ${result}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse wallet_sendCalls with empty transactionHashes`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = """
+            {
+                "id": "0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930",
+                "capabilities": {
+                    "caip345": {
+                        "caip2": "eip155:1",
+                        "transactionHashes": []
+                    }
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(1, result!!.size)
+        assertEquals("0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930", result[0])
+        println("Wallet sendCalls result with empty transactionHashes: ${result}")
+    }
+
+    @Test
+    fun `collectTxHashes should parse wallet_sendCalls with single transaction hash`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = """
+            {
+                "id": "0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930",
+                "capabilities": {
+                    "caip345": {
+                        "caip2": "eip155:137",
+                        "transactionHashes": ["0x1234567890abcdef"]
+                    }
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(2, result!!.size)
+        assertEquals("0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930", result[0])
+        assertEquals("0x1234567890abcdef", result[1])
+        println("Wallet sendCalls result with single transaction hash: ${result}")
+    }
+
+    @Test
+    fun `collectTxHashes should handle wallet_sendCalls with malformed JSON`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = "{malformed_json}"
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun `collectTxHashes should handle wallet_sendCalls with empty result`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = ""
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun `collectTxHashes should handle wallet_sendCalls with different chain IDs`() {
+        // Arrange
+        val rpcMethod = "wallet_sendCalls"
+        val rpcResult = """
+            {
+                "id": "0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930",
+                "capabilities": {
+                    "caip345": {
+                        "caip2": "eip155:56",
+                        "transactionHashes": ["0xabc123", "0xdef456", "0x789ghi"]
+                    }
+                }
+            }
+        """.trimIndent()
+
+        // Act
+        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(4, result!!.size)
+        assertEquals("0x159d1cf182eac62e4ec025cbf32ad35b33ab2d32669f8f93988ffa5623473930", result[0])
+        assertEquals("0xabc123", result[1])
+        assertEquals("0xdef456", result[2])
+        assertEquals("0x789ghi", result[3])
+        println("Wallet sendCalls result with BSC chain: ${result}")
+    }
 }

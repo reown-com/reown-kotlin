@@ -352,7 +352,8 @@ class SignClientInstrumentedAndroidTest {
 					is Sign.Model.JsonRpcResponse.JsonRpcError -> fail("Expected result response not error: ${(response.result as Sign.Model.JsonRpcResponse.JsonRpcError).message}")
 					is Sign.Model.JsonRpcResponse.JsonRpcResult -> {
 						assert(response.method == "wallet_getAssets")
-						assert((response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result.contains("balance"))
+						assert(response.result.result != null)
+						assert(response.result.result!!.contains("balance"))
 						scenarioExtension.closeAsSuccess()
 							.also { Timber.d("receive session request response: finish: ${(response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result}") }
 					}
