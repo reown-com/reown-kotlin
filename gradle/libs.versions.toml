@@ -5,7 +5,7 @@ kotlin = "2.2.0"
 kapt = "2.2.0"
 kotlinxCoroutinesTest = "1.5.2"
 ksp = "2.2.0-2.0.2"
-agp = "8.9.1"
+agp = "8.12.2"
 
 minSdk = "23"
 mockkAndroid = "1.12.0"
