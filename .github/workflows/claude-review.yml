@@ -1,0 +1,49 @@
+name: Claude Auto Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [master, develop]
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request'
+      || (
+        github.event_name == 'issue_comment'
+        && github.event.issue.pull_request
+        && contains(github.event.comment.body, '@claude review')
+      )
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Review
+        uses: WalletConnect/actions/claude/auto-review@master
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          project_context: |
+            This is a Kotlin Android SDK implementing the WalletConnect protocol using:
+            - Kotlin with Android SDK/NDK
+            - Modular architecture with BOM dependency management
+            - WebSocket/HTTP for protocol communication
+            - Coroutines for asynchronous operations
+            - Delegate pattern for event handling
+
+            Key considerations:
+            - Follow WalletConnect protocol specifications strictly
+            - Ensure proper session lifecycle management
+            - Maintain backward compatibility across SDK versions
+            - Implement secure cryptographic operations for wallet-dApp communication
+            - Use Builder pattern for configuration objects
+            - Handle multi-chain namespace parsing with NamespaceBuilder utility
