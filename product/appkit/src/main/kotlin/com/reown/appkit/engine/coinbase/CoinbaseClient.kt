@@ -137,7 +137,7 @@ internal class CoinbaseClient(
     internal class ActivityResultLauncherHolder<I> {
         var launcher: ActivityResultLauncher<I>? = null
 
-        fun launch(input: I?, options: ActivityOptionsCompat? = null) {
+        fun launch(input: I, options: ActivityOptionsCompat? = null) {
             launcher?.launch(input, options) ?: error("Launcher has not been initialized")
         }
 
