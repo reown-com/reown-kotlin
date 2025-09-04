@@ -211,6 +211,7 @@ internal class SignEngine(
         scope.launch {
             signClient.registerSignListener(onSessionRequestUseCase)
             signClient.registerSessionStore(sessionStore)
+            signClient.start()
         }
 
         handleLinkModeRequests()

@@ -35,7 +35,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import uniffi.yttrium.SessionRequestResponseJsonRpcFfi
+import uniffi.yttrium.SessionRequestJsonRpcErrorResponseFfi
+import uniffi.yttrium.SessionRequestJsonRpcResponseFfi
+import uniffi.yttrium.SessionRequestJsonRpcResultResponseFfi
 import uniffi.yttrium.SignClient
 
 internal class RespondSessionRequestUseCase(
@@ -60,7 +62,8 @@ internal class RespondSessionRequestUseCase(
         onFailure: (Throwable) -> Unit,
     ) = supervisorScope {
         try {
-            val responseFfi = SessionRequestResponseJsonRpcFfi(
+            //todo: add error response
+            val responseResultFfi = SessionRequestJsonRpcResultResponseFfi(
                 id = jsonRpcResponse.id.toULong(),
                 jsonrpc = "2.0",
                 result = (jsonRpcResponse as JsonRpcResponse.JsonRpcResult).result.toString()
@@ -68,7 +71,7 @@ internal class RespondSessionRequestUseCase(
 
             val result = async {
                 try {
-                    signClient.respond(topic, responseFfi)
+                    signClient.respond(topic, SessionRequestJsonRpcResponseFfi.Result(responseResultFfi))
                 } catch (e: Exception) {
                     println("kobe: session request error: $e")
                     onFailure(e)

@@ -35,7 +35,7 @@ fun WCTopAppBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 6.dp),
+            .padding(start = 20.dp, top = 60.dp, end = 20.dp, bottom = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -42,6 +42,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import uniffi.yttrium.SessionRequestJsonRpcFfi
+import uniffi.yttrium.SessionRequestJsonRpcResponseFfi
+import uniffi.yttrium.SettleNamespace
 import uniffi.yttrium.SignListener
 
 internal class OnSessionRequestUseCase(
@@ -52,7 +54,7 @@ internal class OnSessionRequestUseCase(
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
     private val logger: Logger
-) : SignListener {
+) : SignListener { //TODO: create global SignListener
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
@@ -130,6 +132,22 @@ internal class OnSessionRequestUseCase(
         }
     }
 
+    override fun onSessionConnect(id: ULong) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onSessionDisconnect(id: ULong, topic: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onSessionEvent(id: ULong, topic: String, params: Boolean) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onSessionExtend(id: ULong, topic: String) {
+        TODO("Not yet implemented")
+    }
+
     override fun onSessionRequest(topic: String, sessionRequest: SessionRequestJsonRpcFfi) {
         println("kobe: Session Request: $topic ; $sessionRequest")
 
@@ -150,8 +168,16 @@ internal class OnSessionRequestUseCase(
         scope.launch { _events.emit(sessionRequestEvent) }
     }
 
-    override fun onSessionRequestJson(topic: String, sessionRequestJson: String) {
-        //Nothing
+    override fun onSessionRequestResponse(id: ULong, topic: String, response: SessionRequestJsonRpcResponseFfi) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onSessionUpdate(
+        id: ULong,
+        topic: String,
+        namespaces: Map<String, SettleNamespace>
+    ) {
+        TODO("Not yet implemented")
     }
 
     private fun emitSessionRequest(

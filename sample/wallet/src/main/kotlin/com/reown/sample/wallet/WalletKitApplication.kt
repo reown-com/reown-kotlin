@@ -103,7 +103,8 @@ class WalletKitApplication : Application() {
         }
 
         mixPanel = MixpanelAPI.getInstance(this, CommonBuildConfig.MIX_PANEL, true).apply {
-            identify(CoreClient.Push.clientId)
+            println("kobe: UID: ${this@WalletKitApplication.applicationInfo.uid}")
+            identify(this@WalletKitApplication.applicationInfo.uid.toString())
             people.set("\$name", EthAccountDelegate.ethAccount)
         }
 

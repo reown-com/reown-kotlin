@@ -8,15 +8,16 @@ import com.reown.sign.engine.model.mapper.toSessionFfi
 import com.reown.sign.engine.model.mapper.toVO
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import com.reown.utils.isSequenceValid
+import uniffi.yttrium.PairingFfi
 import uniffi.yttrium.SessionFfi
-import uniffi.yttrium.SessionStore
+import uniffi.yttrium.StorageFfi
 import kotlin.collections.filter
 
 internal class SessionStore(
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
     private val sessionStorageRepository: SessionStorageRepository,
     private val selfAppMetaData: AppMetaData
-) : SessionStore {
+) : StorageFfi {
     override fun addSession(session: SessionFfi) {
         println("kobe: SessionStore: addSession: $session")
 
@@ -48,12 +49,6 @@ internal class SessionStore(
             .map { session -> session.toSessionFfi() }
     }
 
-    override fun deleteSession(topic: String) {
-        println("kobe: SessionStore: deleteSession: $topic")
-
-        sessionStorageRepository.deleteSession(topic = Topic(topic))
-    }
-
     override fun getSession(topic: String): SessionFfi? {
         println("kobe: SessionStore: get session: $topic")
 
@@ -62,5 +57,31 @@ internal class SessionStore(
                 val peerAppMetaData = metadataStorageRepository.getByTopicAndType(this.topic, AppMetaDataType.PEER)
                 this.copy(peerAppMetaData = peerAppMetaData)
             }.toSessionFfi()
+    }
+
+    override fun savePairing(topic: String, rpcId: ULong, symKey: ByteArray, selfKey: ByteArray) {
+        TODO("Not yet implemented")
+    }
+
+    override fun savePartialSession(topic: String, symKey: ByteArray) {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAllTopics(): List<uniffi.yttrium.Topic> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getDecryptionKeyForTopic(topic: String): ByteArray? {
+        TODO("Not yet implemented")
+    }
+
+    override fun getPairing(topic: String, rpcId: ULong): PairingFfi? {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteSession(topic: String) {
+        println("kobe: SessionStore: deleteSession: $topic")
+
+        sessionStorageRepository.deleteSession(topic = Topic(topic))
     }
 }

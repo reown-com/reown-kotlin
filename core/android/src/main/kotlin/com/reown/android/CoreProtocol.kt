@@ -120,7 +120,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 onError = onError,
                 metaData = metaData,
                 keyServerUrl = keyServerUrl,
-                signClient = signClient
             )
         } catch (e: Exception) {
             onError(Core.Model.Error(e))
@@ -141,7 +140,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         try {
             require(projectId.isNotEmpty()) { "Project Id cannot be empty" }
             registerLogger(AndroidLogger())
-            signClient = SignClient(projectId = projectId)
 
             setup(
                 application = application,
@@ -153,7 +151,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 onError = onError,
                 metaData = metaData,
                 keyServerUrl = keyServerUrl,
-                signClient = signClient
             )
         } catch (e: Exception) {
             onError(Core.Model.Error(e))
@@ -171,7 +168,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         onError: (Core.Model.Error) -> Unit,
         metaData: Core.Model.AppMetaData,
         keyServerUrl: String?,
-        signClient: SignClient
     ) {
         val packageName: String = application.packageName
         val relayServerUrl = if (serverUrl.isNullOrEmpty()) "wss://relay.walletconnect.org?projectId=$projectId" else serverUrl
@@ -179,24 +175,17 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         with(koinApp) {
             androidContext(application)
             modules(
+                module { single(named(AndroidCommonDITags.SIGN_RUST_CLIENT)) { signClient } },
                 module { single(named(AndroidCommonDITags.PACKAGE_NAME)) { packageName } },
                 module { single { ProjectId(projectId) } },
-                module { single(named(AndroidCommonDITags.SIGN_RUST_CLIENT)) { signClient } },
                 module { single(named(AndroidCommonDITags.TELEMETRY_ENABLED)) { TelemetryEnabled(telemetryEnabled) } },
                 coreAndroidNetworkModule(relayServerUrl, connectionType, BuildConfig.SDK_VERSION, networkClientTimeout, packageName),
                 coreCommonModule(),
                 coreCryptoModule(),
             )
 
-
             val (_, privateKey) = keyStore.getKeyPair()
-            scope.launch {
-                supervisorScope {
-                    println("kobe: Setting key: $privateKey")
-                    signClient.setKey(privateKey.hexToBytes())
-                }
-            }
-
+            signClient = SignClient(projectId = projectId, key = privateKey.hexToBytes())
 
             if (relay == null) {
                 Relay.initialize(connectionType) { error -> onError(Core.Model.Error(error)) }
