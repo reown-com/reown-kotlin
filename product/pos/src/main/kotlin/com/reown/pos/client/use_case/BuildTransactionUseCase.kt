@@ -52,6 +52,7 @@ internal class BuildTransactionUseCase(
             }
 
             is BuildTransactionResult.Error -> {
+                println("kobe: build error: ${buildResult.message}")
                 onError(POS.Model.PaymentEvent.Error(error = Exception(buildResult.message)))
             }
         }

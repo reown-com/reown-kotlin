@@ -125,10 +125,10 @@ class POSViewModel : ViewModel() {
                             name = name
                         ),
                         standard = "erc20", //TODO: add dynamic values from UI
-                        symbol = "USDC", //TODO: add dynamic values from UI
-                        address = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238" //USDC Sepolia TODO: add dynamic values from UI
+                        symbol = "NRFSampleToken", //TODO: add dynamic values from UI
+                        address = "0xFAaCe025BDd1f75869B84201Ce0b9248b0818e47" //TODO: add dynamic values from UI
                     ),
-                    amount = amount ?: "",
+                    amount = amount,
                     recipient = "${chainId}:0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD"
                 )
             )
