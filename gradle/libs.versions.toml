@@ -67,7 +67,7 @@ sqlDelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", 
 sqlDelight-adapters = { module = "app.cash.sqldelight:primitive-adapters", version.ref = "sqlDelight" }
 sqlDelight-test = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqlDelight" }
 sqlDelight-async = { module = "app.cash.sqldelight:async-extensions", version.ref = "sqlDelight" }
-sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.8.10.2" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.50.3.0" }
 
 androidx-lifecycleLiveData = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "androidxLifecycle" }
 androidx-lifecycleViewModel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidxLifecycle" }
