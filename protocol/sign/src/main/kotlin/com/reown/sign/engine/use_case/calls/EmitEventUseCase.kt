@@ -23,7 +23,7 @@ import com.reown.util.generateId
 import kotlinx.coroutines.supervisorScope
 
 internal class EmitEventUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val sessionStorageRepository: SessionStorageRepository,
     private val logger: Logger,
 ) : EmitEventUseCaseInterface {
@@ -36,16 +36,16 @@ internal class EmitEventUseCase(
                 val irnParams = IrnParams(Tags.SESSION_EVENT, Ttl(fiveMinutesInSeconds), correlationId = sessionEvent.id, prompt = true)
 
                 logger.log("Emitting event on topic: $topic")
-                jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, sessionEvent,
-                    onSuccess = {
-                        logger.log("Event sent successfully, on topic: $topic")
-                        onSuccess()
-                    },
-                    onFailure = { error ->
-                        logger.error("Sending event error: $error, on topic: $topic")
-                        onFailure(error)
-                    }
-                )
+//                jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, sessionEvent,
+//                    onSuccess = {
+//                        logger.log("Event sent successfully, on topic: $topic")
+//                        onSuccess()
+//                    },
+//                    onFailure = { error ->
+//                        logger.error("Sending event error: $error, on topic: $topic")
+//                        onFailure(error)
+//                    }
+//                )
             },
             onFailure = { error ->
                 logger.error("Sending event error: $error, on topic: $topic")

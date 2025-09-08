@@ -17,14 +17,10 @@ import com.reown.android.internal.common.di.pulseModule
 import com.reown.android.internal.common.di.pushModule
 import com.reown.android.internal.common.explorer.ExplorerInterface
 import com.reown.android.internal.common.explorer.ExplorerProtocol
-import com.reown.android.internal.common.jwt.clientid.ClientIdJwtRepositoryAndroid
-import com.reown.android.internal.common.jwt.clientid.GetKeyPair
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.model.Redirect
 import com.reown.android.internal.common.model.TelemetryEnabled
-import com.reown.android.internal.common.scope
-import com.reown.android.internal.common.storage.key_chain.KeyStore
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pairing.client.PairingInterface
 import com.reown.android.pairing.client.PairingProtocol
@@ -41,46 +37,21 @@ import com.reown.android.utils.plantTimber
 import com.reown.android.utils.projectId
 import com.reown.android.verify.client.VerifyClient
 import com.reown.android.verify.client.VerifyInterface
-import com.reown.foundation.common.model.PrivateKey
-import com.reown.foundation.common.model.PublicKey
-import com.reown.foundation.crypto.data.repository.BaseClientIdJwtRepository.Companion.CLIENT_ID_KEYPAIR_TAG
-import com.reown.util.bytesToHex
-import com.reown.util.hexToBytes
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
-import org.bouncycastle.crypto.AsymmetricCipherKeyPair
-import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
-import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters
-import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
-import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import uniffi.yttrium.Logger
-import uniffi.yttrium.SignClient
-import uniffi.yttrium.registerLogger
-import java.security.SecureRandom
-
-class AndroidLogger : Logger {
-    override fun log(message: String) {
-        println("kobe: Message from Rust: $message")
-    }
-}
 
 class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInterface {
     override val Pairing: PairingInterface = PairingProtocol(koinApp)
     override val PairingController: PairingControllerInterface = PairingController(koinApp)
     override var Relay = RelayClient(koinApp)
-    private val keyStore: GetKeyPair by lazy { koinApp.koin.get() }
 
     @Deprecated(message = "Replaced with Push")
     override val Echo: PushInterface = PushClient
     override val Push: PushInterface = PushClient
     override val Verify: VerifyInterface = VerifyClient(koinApp)
     override val Explorer: ExplorerInterface = ExplorerProtocol(koinApp)
-
-    lateinit var signClient: SignClient
 
     init {
         plantTimber()
@@ -139,7 +110,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
     ) {
         try {
             require(projectId.isNotEmpty()) { "Project Id cannot be empty" }
-            registerLogger(AndroidLogger())
 
             setup(
                 application = application,
@@ -175,7 +145,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         with(koinApp) {
             androidContext(application)
             modules(
-                module { single(named(AndroidCommonDITags.SIGN_RUST_CLIENT)) { signClient } },
+//                module { single(named(AndroidCommonDITags.SIGN_RUST_CLIENT)) { signClient } },
                 module { single(named(AndroidCommonDITags.PACKAGE_NAME)) { packageName } },
                 module { single { ProjectId(projectId) } },
                 module { single(named(AndroidCommonDITags.TELEMETRY_ENABLED)) { TelemetryEnabled(telemetryEnabled) } },
@@ -184,8 +154,8 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 coreCryptoModule(),
             )
 
-            val (_, privateKey) = keyStore.getKeyPair()
-            signClient = SignClient(projectId = projectId, key = privateKey.hexToBytes())
+//            val (_, privateKey) = keyStore.getKeyPair()
+//            signClient = SignClient(projectId = projectId, key = privateKey.hexToBytes())
 
             if (relay == null) {
                 Relay.initialize(connectionType) { error -> onError(Core.Model.Error(error)) }

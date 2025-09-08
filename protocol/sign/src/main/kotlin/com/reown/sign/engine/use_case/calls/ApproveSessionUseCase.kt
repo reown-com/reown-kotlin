@@ -19,14 +19,14 @@ import kotlinx.coroutines.supervisorScope
 import uniffi.yttrium.SignClient
 
 internal class ApproveSessionUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val crypto: KeyManagementRepository,
     private val sessionStorageRepository: SessionStorageRepository,
     private val proposalStorageRepository: ProposalStorageRepository,
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
     private val verifyContextStorageRepository: VerifyContextStorageRepository,
     private val selfAppMetaData: AppMetaData,
-    private val insertEventUseCase: InsertTelemetryEventUseCase,
+//    private val insertEventUseCase: InsertTelemetryEventUseCase,
     private val logger: Logger,
     private val signClient: SignClient,
     private val pairingRepository: PairingStorageRepositoryInterface

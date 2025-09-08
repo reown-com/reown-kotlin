@@ -12,7 +12,6 @@ import com.reown.android.internal.common.crypto.codec.Codec
 import com.reown.android.internal.common.crypto.kmr.BouncyCastleKeyManagementRepository
 import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.jwt.clientid.ClientIdJwtRepositoryAndroid
-import com.reown.android.internal.common.jwt.clientid.GetKeyPair
 import com.reown.android.internal.common.storage.key_chain.KeyChain
 import com.reown.foundation.crypto.data.repository.ClientIdJwtRepository
 import com.reown.foundation.util.Logger
@@ -104,8 +103,6 @@ fun coreCryptoModule(
     single<WCKeyStore> { KeyChain(sharedPreferences = get()) }
 
     single<ClientIdJwtRepository> { ClientIdJwtRepositoryAndroid(keyChain = get()) }
-
-    single { GetKeyPair(keyChain = get()) }
 
     single<KeyManagementRepository> { BouncyCastleKeyManagementRepository(keyChain = get()) }
 

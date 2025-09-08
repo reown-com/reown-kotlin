@@ -20,7 +20,7 @@ import kotlinx.coroutines.supervisorScope
 
 internal class RejectSessionUseCase(
     private val verifyContextStorageRepository: VerifyContextStorageRepository,
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val proposalStorageRepository: ProposalStorageRepository,
     private val logger: Logger
 ) : RejectSessionUseCaseInterface {
@@ -35,23 +35,23 @@ internal class RejectSessionUseCase(
         }
 
         logger.log("Sending session rejection, topic: ${proposal.pairingTopic.value}")
-        jsonRpcInteractor.respondWithError(
-            proposal.toSessionProposeRequest(),
-            PeerError.EIP1193.UserRejectedRequest(reason),
-            IrnParams(Tags.SESSION_PROPOSE_RESPONSE_REJECT, Ttl(fiveMinutesInSeconds), correlationId = proposal.requestId),
-            onSuccess = {
-                logger.log("Session rejection sent successfully, topic: ${proposal.pairingTopic.value}")
-                scope.launch {
-                    proposalStorageRepository.deleteProposal(proposerPublicKey)
-                    verifyContextStorageRepository.delete(proposal.requestId)
-                    jsonRpcInteractor.unsubscribe(proposal.pairingTopic)
-                }
-                onSuccess()
-            },
-            onFailure = { error ->
-                logger.error("Session rejection sent failure, topic: ${proposal.pairingTopic.value}. Error: $error")
-                onFailure(error)
-            })
+//        jsonRpcInteractor.respondWithError(
+//            proposal.toSessionProposeRequest(),
+//            PeerError.EIP1193.UserRejectedRequest(reason),
+//            IrnParams(Tags.SESSION_PROPOSE_RESPONSE_REJECT, Ttl(fiveMinutesInSeconds), correlationId = proposal.requestId),
+//            onSuccess = {
+//                logger.log("Session rejection sent successfully, topic: ${proposal.pairingTopic.value}")
+//                scope.launch {
+//                    proposalStorageRepository.deleteProposal(proposerPublicKey)
+//                    verifyContextStorageRepository.delete(proposal.requestId)
+//                    jsonRpcInteractor.unsubscribe(proposal.pairingTopic)
+//                }
+//                onSuccess()
+//            },
+//            onFailure = { error ->
+//                logger.error("Session rejection sent failure, topic: ${proposal.pairingTopic.value}. Error: $error")
+//                onFailure(error)
+//            })
     }
 }
 

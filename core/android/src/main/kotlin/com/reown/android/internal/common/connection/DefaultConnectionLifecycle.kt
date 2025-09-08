@@ -13,19 +13,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import uniffi.yttrium.SignClient
-import java.util.concurrent.TimeUnit
+
 
 internal class DefaultConnectionLifecycle(
     application: Application,
     private val lifecycleRegistry: LifecycleRegistry = LifecycleRegistry(),
-    private val signClient: SignClient
 ) : Lifecycle by lifecycleRegistry, ConnectionLifecycle {
     private val job = SupervisorJob()
     private var scope = CoroutineScope(job + Dispatchers.Default)
@@ -54,11 +51,11 @@ internal class DefaultConnectionLifecycle(
         override fun onActivityResumed(activity: Activity) {
             println("kobe: onResume")
 
-            scope.launch {
-                supervisorScope {
-                    signClient.online()
-                }
-            }
+//            scope.launch {
+//                supervisorScope {
+//                    signClient.online()
+//                }
+//            }
         }
 
         override fun onActivityStarted(activity: Activity) {}

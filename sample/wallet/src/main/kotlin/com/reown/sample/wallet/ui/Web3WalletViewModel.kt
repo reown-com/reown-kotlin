@@ -49,9 +49,9 @@ class Web3WalletViewModel : ViewModel() {
     val sessionRequestStateFlow = _sessionRequestStateFlow.asSharedFlow()
 
     init {
-        WCDelegate.coreEvents.onEach { coreEvent ->
-            _isLoadingFlow.value = (coreEvent as? Core.Model.PairingState)?.isPairingState ?: false
-        }.launchIn(viewModelScope)
+//        WCDelegate.coreEvents.onEach { coreEvent ->
+//            _isLoadingFlow.value = (coreEvent as? Core.Model.PairingState)?.isPairingState ?: false
+//        }.launchIn(viewModelScope)
 
         flow {
             while (true) {

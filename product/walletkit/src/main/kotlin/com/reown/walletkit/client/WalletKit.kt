@@ -102,9 +102,15 @@ object WalletKit {
 
     @Throws(IllegalStateException::class)
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
-        coreClient = params.core
+//        coreClient = params.core
 
-        SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
+        SignClient.initialize(
+            Sign.Params.Init(
+                projectId = params.projectId,
+                metaData = params.metaData.toSignMetaData(),
+                application = params.application
+            ), onSuccess = onSuccess
+        ) { error ->
             if (error.throwable is SignClientAlreadyInitializedException) {
                 onSuccess()
             } else {
@@ -114,7 +120,12 @@ object WalletKit {
     }
 
     @Throws(IllegalStateException::class)
-    fun registerDeviceToken(firebaseAccessToken: String, enableEncrypted: Boolean = false, onSuccess: () -> Unit, onError: (Wallet.Model.Error) -> Unit) {
+    fun registerDeviceToken(
+        firebaseAccessToken: String,
+        enableEncrypted: Boolean = false,
+        onSuccess: () -> Unit,
+        onError: (Wallet.Model.Error) -> Unit
+    ) {
         coreClient.Echo.register(firebaseAccessToken, enableEncrypted, onSuccess) { error -> onError(Wallet.Model.Error(error)) }
     }
 
@@ -157,12 +168,21 @@ object WalletKit {
         onSuccess: (Wallet.Params.SessionApprove) -> Unit = {},
         onError: (Wallet.Model.Error) -> Unit,
     ) {
-        val signParams = Sign.Params.Approve(params.proposerPublicKey, params.namespaces.toSign(), params.properties, params.scopedProperties, params.relayProtocol)
+        val signParams = Sign.Params.Approve(
+            params.proposerPublicKey,
+            params.namespaces.toSign(),
+            params.properties,
+            params.scopedProperties,
+            params.relayProtocol
+        )
         SignClient.approveSession(signParams, { onSuccess(params) }, { error -> onError(Wallet.Model.Error(error.throwable)) })
     }
 
     @Throws(Exception::class)
-    fun generateApprovedNamespaces(sessionProposal: Wallet.Model.SessionProposal, supportedNamespaces: Map<String, Wallet.Model.Namespace.Session>): Map<String, Wallet.Model.Namespace.Session> {
+    fun generateApprovedNamespaces(
+        sessionProposal: Wallet.Model.SessionProposal,
+        supportedNamespaces: Map<String, Wallet.Model.Namespace.Session>
+    ): Map<String, Wallet.Model.Namespace.Session> {
         return com.reown.sign.client.utils.generateApprovedNamespaces(sessionProposal.toSign(), supportedNamespaces.toSign()).toWallet()
     }
 
@@ -197,12 +217,20 @@ object WalletKit {
     }
 
     @Throws(Exception::class)
-    fun generateAuthObject(payloadParams: Wallet.Model.PayloadAuthRequestParams, issuer: String, signature: Wallet.Model.Cacao.Signature): Wallet.Model.Cacao {
+    fun generateAuthObject(
+        payloadParams: Wallet.Model.PayloadAuthRequestParams,
+        issuer: String,
+        signature: Wallet.Model.Cacao.Signature
+    ): Wallet.Model.Cacao {
         return com.reown.sign.client.utils.generateAuthObject(payloadParams.toSign(), issuer, signature.toSign()).toWallet()
     }
 
     @Throws(Exception::class)
-    fun generateAuthPayloadParams(payloadParams: Wallet.Model.PayloadAuthRequestParams, supportedChains: List<String>, supportedMethods: List<String>): Wallet.Model.PayloadAuthRequestParams {
+    fun generateAuthPayloadParams(
+        payloadParams: Wallet.Model.PayloadAuthRequestParams,
+        supportedChains: List<String>,
+        supportedMethods: List<String>
+    ): Wallet.Model.PayloadAuthRequestParams {
         return com.reown.sign.client.utils.generateAuthPayloadParams(payloadParams.toSign(), supportedChains, supportedMethods).toWallet()
     }
 
@@ -389,4 +417,20 @@ object WalletKit {
 //    fun prepareErc20TransferCall(contractAddress: String, to: String, amount: String): Wallet.Model.Call {
 //        return prepareCallERC20TransferCallUseCase(contractAddress, to, amount)
 //    }
+}
+
+/**
+ * Extension function to convert Wallet.Model.MetaData to Sign.Model.MetaData
+ */
+private fun Wallet.Model.MetaData.toSignMetaData(): Sign.Model.MetaData {
+    return Sign.Model.MetaData(
+        name = name,
+        description = description,
+        url = url,
+        icons = icons,
+        redirect = redirect,
+        appLink = appLink,
+        linkMode = linkMode,
+        verifyUrl = verifyUrl
+    )
 }

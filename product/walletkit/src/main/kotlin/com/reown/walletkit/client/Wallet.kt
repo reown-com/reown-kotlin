@@ -1,8 +1,8 @@
 package com.reown.walletkit.client
 
+import android.app.Application
 import androidx.annotation.Keep
 import com.reown.android.Core
-import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
 import java.net.URI
 import kotlin.time.Duration
@@ -18,7 +18,11 @@ object Wallet {
     }
 
     sealed class Params {
-        data class Init(val core: CoreInterface) : Params()
+        data class Init(
+            val projectId: String,
+            val metaData: Model.MetaData,
+            val application: Application,
+        ) : Params()
 
         data class Pair(val uri: String) : Params()
 
@@ -89,6 +93,17 @@ object Wallet {
             var input: String,
             var nonce: String,
             var chainId: String
+        ) : Model()
+
+        data class MetaData(
+            val name: String,
+            val description: String,
+            val url: String,
+            val icons: List<String>,
+            val redirect: String?,
+            val appLink: String? = null,
+            val linkMode: Boolean = false,
+            val verifyUrl: String? = null
         ) : Model()
 
         data class SolanaTransaction(

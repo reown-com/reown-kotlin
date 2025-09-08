@@ -52,13 +52,13 @@ import java.util.concurrent.TimeUnit
 
 internal class SessionRequestUseCase(
     private val sessionStorageRepository: SessionStorageRepository,
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
-    private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
-    private val insertEventUseCase: InsertEventUseCase,
-    private val clientId: String,
+//    private val insertEventUseCase: InsertEventUseCase,
+//    private val clientId: String,
     private val logger: Logger,
-    private val tvf: TVF,
+//    private val tvf: TVF,
     private val walletServiceFinder: WalletServiceFinder,
     private val walletServiceRequester: WalletServiceRequester
 ) : SessionRequestUseCaseInterface {
@@ -143,39 +143,39 @@ internal class SessionRequestUseCase(
             Ttl(newTtl)
         }
 
-        val tvfData = tvf.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
-        val irnParams = IrnParams(
-            Tags.SESSION_REQUEST,
-            irnParamsTtl,
-            correlationId = sessionPayload.id,
-            rpcMethods = tvfData.first,
-            contractAddresses = tvfData.second,
-            chainId = tvfData.third,
-            prompt = true
-        )
-        val requestTtlInSeconds = expiry.run { seconds - nowInSeconds }
+//        val tvfData = tvf.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
+//        val irnParams = IrnParams(
+//            Tags.SESSION_REQUEST,
+//            irnParamsTtl,
+//            correlationId = sessionPayload.id,
+//            rpcMethods = tvfData.first,
+//            contractAddresses = tvfData.second,
+//            chainId = tvfData.third,
+//            prompt = true
+//        )
+//        val requestTtlInSeconds = expiry.run { seconds - nowInSeconds }
 
         logger.log("Sending session request on topic: ${request.topic}}")
-        jsonRpcInteractor.publishJsonRpcRequest(
-            Topic(request.topic), irnParams, sessionPayload,
-            onSuccess = {
-                logger.log("Session request sent successfully on topic: ${request.topic}")
-                onSuccess(sessionPayload.id)
-                scope.launch {
-                    try {
-                        withTimeout(TimeUnit.SECONDS.toMillis(requestTtlInSeconds)) {
-                            collectResponse(sessionPayload.id) { cancel() }
-                        }
-                    } catch (e: TimeoutCancellationException) {
-                        _errors.emit(SDKError(e))
-                    }
-                }
-            },
-            onFailure = { error ->
-                logger.error("Sending session request error: $error")
-                onFailure(error)
-            }
-        )
+//        jsonRpcInteractor.publishJsonRpcRequest(
+//            Topic(request.topic), irnParams, sessionPayload,
+//            onSuccess = {
+//                logger.log("Session request sent successfully on topic: ${request.topic}")
+//                onSuccess(sessionPayload.id)
+//                scope.launch {
+//                    try {
+//                        withTimeout(TimeUnit.SECONDS.toMillis(requestTtlInSeconds)) {
+//                            collectResponse(sessionPayload.id) { cancel() }
+//                        }
+//                    } catch (e: TimeoutCancellationException) {
+//                        _errors.emit(SDKError(e))
+//                    }
+//                }
+//            },
+//            onFailure = { error ->
+//                logger.error("Sending session request error: $error")
+//                onFailure(error)
+//            }
+//        )
     }
 
     private suspend fun SessionRequestUseCase.triggerLinkModeRequest(
@@ -185,29 +185,29 @@ internal class SessionRequestUseCase(
         onFailure: (Throwable) -> Unit
     ) {
         try {
-            linkModeJsonRpcInteractor.triggerRequest(sessionPayload, Topic(request.topic), peerAppLink)
-            insertEventUseCase(
-                Props(
-                    EventType.SUCCESS,
-                    Tags.SESSION_REQUEST_LINK_MODE.id.toString(),
-                    Properties(correlationId = sessionPayload.id, clientId = clientId, direction = Direction.SENT.state)
-                )
-            )
+//            linkModeJsonRpcInteractor.triggerRequest(sessionPayload, Topic(request.topic), peerAppLink)
+//            insertEventUseCase(
+//                Props(
+//                    EventType.SUCCESS,
+//                    Tags.SESSION_REQUEST_LINK_MODE.id.toString(),
+//                    Properties(correlationId = sessionPayload.id, clientId = clientId, direction = Direction.SENT.state)
+//                )
+//            )
         } catch (e: Exception) {
             onFailure(e)
         }
     }
 
-    private suspend fun collectResponse(id: Long, onResponse: (Result<JsonRpcResponse.JsonRpcResult>) -> Unit = {}) {
-        jsonRpcInteractor.peerResponse
-            .filter { response -> response.response.id == id }
-            .collect { response ->
-                when (val result = response.response) {
-                    is JsonRpcResponse.JsonRpcResult -> onResponse(Result.success(result))
-                    is JsonRpcResponse.JsonRpcError -> onResponse(Result.failure(Throwable(result.errorMessage)))
-                }
-            }
-    }
+//    private suspend fun collectResponse(id: Long, onResponse: (Result<JsonRpcResponse.JsonRpcResult>) -> Unit = {}) {
+//        jsonRpcInteractor.peerResponse
+//            .filter { response -> response.response.id == id }
+//            .collect { response ->
+//                when (val result = response.response) {
+//                    is JsonRpcResponse.JsonRpcResult -> onResponse(Result.success(result))
+//                    is JsonRpcResponse.JsonRpcError -> onResponse(Result.failure(Throwable(result.errorMessage)))
+//                }
+//            }
+//    }
 }
 
 internal interface SessionRequestUseCaseInterface {

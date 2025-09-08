@@ -24,7 +24,7 @@ import com.reown.sign.storage.proposal.ProposalStorageRepository
 import kotlinx.coroutines.supervisorScope
 
 internal class ProposeSessionUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val crypto: KeyManagementRepository,
     private val proposalStorageRepository: ProposalStorageRepository,
     private val selfAppMetaData: AppMetaData,
@@ -56,17 +56,17 @@ internal class ProposeSessionUseCase(
                 proposalStorageRepository.insertProposal(sessionProposal.toVO(pairing.topic, request.id))
                 logger.log("Sending proposal on topic: ${pairing.topic.value}")
 
-                jsonRpcInteractor.proposeSession(
-                    topic = pairing.topic, payload = request,
-                    onSuccess = {
-                        logger.log("Session proposal sent successfully, topic: ${pairing.topic}")
-                        onSuccess()
-                    },
-                    onFailure = { error ->
-                        logger.error("Failed to send a session proposal: $error")
-                        onFailure(error)
-                    }
-                )
+//                jsonRpcInteractor.proposeSession(
+//                    topic = pairing.topic, payload = request,
+//                    onSuccess = {
+//                        logger.log("Session proposal sent successfully, topic: ${pairing.topic}")
+//                        onSuccess()
+//                    },
+//                    onFailure = { error ->
+//                        logger.error("Failed to send a session proposal: $error")
+//                        onFailure(error)
+//                    }
+//                )
             },
             onFailure = { error ->
                 logger.error("Failed to validate session proposal: $error")

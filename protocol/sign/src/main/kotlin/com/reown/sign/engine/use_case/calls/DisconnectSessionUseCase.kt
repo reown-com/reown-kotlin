@@ -16,7 +16,7 @@ import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.supervisorScope
 
 internal class DisconnectSessionUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val sessionStorageRepository: SessionStorageRepository,
     private val logger: Logger,
 ) : DisconnectSessionUseCaseInterface {
@@ -31,18 +31,18 @@ internal class DisconnectSessionUseCase(
         val irnParams = IrnParams(Tags.SESSION_DELETE, Ttl(dayInSeconds), correlationId = sessionDelete.id)
 
         logger.log("Sending session disconnect on topic: $topic")
-        jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, sessionDelete,
-            onSuccess = {
-                logger.log("Disconnect sent successfully on topic: $topic")
-                sessionStorageRepository.deleteSession(Topic(topic))
-                jsonRpcInteractor.unsubscribe(Topic(topic))
-                onSuccess()
-            },
-            onFailure = { error ->
-                logger.error("Sending session disconnect error: $error on topic: $topic")
-                onFailure(error)
-            }
-        )
+//        jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, sessionDelete,
+//            onSuccess = {
+//                logger.log("Disconnect sent successfully on topic: $topic")
+//                sessionStorageRepository.deleteSession(Topic(topic))
+//                jsonRpcInteractor.unsubscribe(Topic(topic))
+//                onSuccess()
+//            },
+//            onFailure = { error ->
+//                logger.error("Sending session disconnect error: $error on topic: $topic")
+//                onFailure(error)
+//            }
+//        )
     }
 }
 

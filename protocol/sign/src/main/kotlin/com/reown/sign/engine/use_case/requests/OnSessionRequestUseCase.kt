@@ -54,7 +54,7 @@ internal class OnSessionRequestUseCase(
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
     private val logger: Logger
-) : SignListener { //TODO: create global SignListener
+) {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
@@ -132,53 +132,53 @@ internal class OnSessionRequestUseCase(
         }
     }
 
-    override fun onSessionConnect(id: ULong) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onSessionDisconnect(id: ULong, topic: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onSessionEvent(id: ULong, topic: String, params: Boolean) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onSessionExtend(id: ULong, topic: String) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onSessionRequest(topic: String, sessionRequest: SessionRequestJsonRpcFfi) {
-        println("kobe: Session Request: $topic ; $sessionRequest")
-
-        val sessionRequestEvent = EngineDO.SessionRequestEvent(
-            request = EngineDO.SessionRequest(
-                topic = topic,
-                chainId = sessionRequest.params.chainId,
-                peerAppMetaData = null,
-                expiry = if (sessionRequest.params.request.expiry != null) Expiry(sessionRequest.params.request.expiry!!.toLong()) else null,
-                request = EngineDO.SessionRequest.JSONRPCRequest(
-                    id = sessionRequest.id.toLong(),
-                    method = sessionRequest.params.request.method,
-                    params = sessionRequest.params.request.params
-                )
-            ),
-            context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
-        )
-        scope.launch { _events.emit(sessionRequestEvent) }
-    }
-
-    override fun onSessionRequestResponse(id: ULong, topic: String, response: SessionRequestJsonRpcResponseFfi) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onSessionUpdate(
-        id: ULong,
-        topic: String,
-        namespaces: Map<String, SettleNamespace>
-    ) {
-        TODO("Not yet implemented")
-    }
+//    override fun onSessionConnect(id: ULong) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionDisconnect(id: ULong, topic: String) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionEvent(id: ULong, topic: String, params: Boolean) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionExtend(id: ULong, topic: String) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionRequest(topic: String, sessionRequest: SessionRequestJsonRpcFfi) {
+//        println("kobe: Session Request: $topic ; $sessionRequest")
+//
+//        val sessionRequestEvent = EngineDO.SessionRequestEvent(
+//            request = EngineDO.SessionRequest(
+//                topic = topic,
+//                chainId = sessionRequest.params.chainId,
+//                peerAppMetaData = null,
+//                expiry = if (sessionRequest.params.request.expiry != null) Expiry(sessionRequest.params.request.expiry!!.toLong()) else null,
+//                request = EngineDO.SessionRequest.JSONRPCRequest(
+//                    id = sessionRequest.id.toLong(),
+//                    method = sessionRequest.params.request.method,
+//                    params = sessionRequest.params.request.params
+//                )
+//            ),
+//            context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
+//        )
+//        scope.launch { _events.emit(sessionRequestEvent) }
+//    }
+//
+//    override fun onSessionRequestResponse(id: ULong, topic: String, response: SessionRequestJsonRpcResponseFfi) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionUpdate(
+//        id: ULong,
+//        topic: String,
+//        namespaces: Map<String, SettleNamespace>
+//    ) {
+//        TODO("Not yet implemented")
+//    }
 
     private fun emitSessionRequest(
         params: SignParams.SessionRequestParams,

@@ -41,16 +41,16 @@ import uniffi.yttrium.SessionRequestJsonRpcResultResponseFfi
 import uniffi.yttrium.SignClient
 
 internal class RespondSessionRequestUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val sessionStorageRepository: SessionStorageRepository,
-    private val getPendingJsonRpcHistoryEntryByIdUseCase: GetPendingJsonRpcHistoryEntryByIdUseCase,
-    private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
-    private val logger: Logger,
+//    private val getPendingJsonRpcHistoryEntryByIdUseCase: GetPendingJsonRpcHistoryEntryByIdUseCase,
+//    private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
+//    private val logger: Logger,
     private val verifyContextStorageRepository: VerifyContextStorageRepository,
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
-    private val insertEventUseCase: InsertEventUseCase,
-    private val clientId: String,
-    private val tvf: TVF,
+//    private val insertEventUseCase: InsertEventUseCase,
+//    private val clientId: String,
+//    private val tvf: TVF,
     private val signClient: SignClient
 ) : RespondSessionRequestUseCaseInterface {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()

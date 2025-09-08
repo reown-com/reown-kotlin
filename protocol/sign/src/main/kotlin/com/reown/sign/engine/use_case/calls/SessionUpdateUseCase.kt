@@ -24,7 +24,7 @@ import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.supervisorScope
 
 internal class SessionUpdateUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val sessionStorageRepository: SessionStorageRepository,
     private val logger: Logger,
 ) : SessionUpdateUseCaseInterface {
@@ -44,17 +44,17 @@ internal class SessionUpdateUseCase(
                 try {
                     logger.log("Sending session update on topic: $topic")
                     sessionStorageRepository.insertTempNamespaces(topic, namespaces.toMapOfNamespacesVOSession(), sessionUpdate.id)
-                    jsonRpcInteractor.publishJsonRpcRequest(
-                        Topic(topic), irnParams, sessionUpdate,
-                        onSuccess = {
-                            logger.log("Update sent successfully, topic: $topic")
-                            onSuccess()
-                        },
-                        onFailure = { error ->
-                            logger.error("Sending session update error: $error, topic: $topic")
-                            sessionStorageRepository.deleteTempNamespacesByTopic(topic)
-                            onFailure(error)
-                        })
+//                    jsonRpcInteractor.publishJsonRpcRequest(
+//                        Topic(topic), irnParams, sessionUpdate,
+//                        onSuccess = {
+//                            logger.log("Update sent successfully, topic: $topic")
+//                            onSuccess()
+//                        },
+//                        onFailure = { error ->
+//                            logger.error("Sending session update error: $error, topic: $topic")
+//                            sessionStorageRepository.deleteTempNamespacesByTopic(topic)
+//                            onFailure(error)
+//                        })
                 } catch (e: Exception) {
                     logger.error("Error updating namespaces: $e")
                     onFailure(GenericException("Error updating namespaces: $e"))

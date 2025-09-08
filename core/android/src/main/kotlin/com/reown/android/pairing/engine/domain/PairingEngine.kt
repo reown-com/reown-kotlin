@@ -77,8 +77,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeout
 import org.koin.core.qualifier.named
-import uniffi.yttrium.SessionProposalFfi
-import uniffi.yttrium.SignClient
 import java.util.concurrent.TimeUnit
 
 //Split into PairingProtocolEngine and PairingControllerEngine
@@ -109,10 +107,6 @@ internal class PairingEngine(
         merge(_engineEvent, _isPairingStateFlow.map { EngineDO.PairingState(it) })
             .shareIn(scope, SharingStarted.Lazily, 0)
 
-    //Rust
-    private val signClient: SignClient by lazy { wcKoinApp.koin.get(named(AndroidCommonDITags.SIGN_RUST_CLIENT)) }
-    private val _sessionProposalFlow: MutableSharedFlow<SessionProposalFfi> = MutableSharedFlow()
-    val sessionProposalFlow: SharedFlow<SessionProposalFfi> = _sessionProposalFlow.asSharedFlow()
 
     // TODO: emission of events can be missed since they are emitted potentially before there's a subscriber and the event gets missed by protocols
     init {
@@ -162,28 +156,28 @@ internal class PairingEngine(
     }
 
     fun pair(uri: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) {
-        scope.launch {
-            try {
-                val walletConnectUri = Validator.validateWCUri(uri) ?: throw Exception()
-                //TODO: check if proposal already stored to safe latency?
-                val proposal: SessionProposalFfi? = async {
-                    try {
-                        signClient.pair(uri = walletConnectUri.toAbsoluteString())
-                    } catch (e: Exception) {
-                        println("kobe: Pair error 1: $e")
-                        null
-                    }
-                }.await()
-
-                if (proposal != null) {
-                    _sessionProposalFlow.emit(proposal)
-                }
-
-            } catch (e: Exception) {
-                println("kobe: Pair error 2: $e")
-                onFailure(e)
-            }
-        }
+//        scope.launch {
+//            try {
+//                val walletConnectUri = Validator.validateWCUri(uri) ?: throw Exception()
+//                //TODO: check if proposal already stored to safe latency?
+//                val proposal: SessionProposalFfi? = async {
+//                    try {
+//                        signClient.pair(uri = walletConnectUri.toAbsoluteString())
+//                    } catch (e: Exception) {
+//                        println("kobe: Pair error 1: $e")
+//                        null
+//                    }
+//                }.await()
+//
+//                if (proposal != null) {
+//                    _sessionProposalFlow.emit(proposal)
+//                }
+//
+//            } catch (e: Exception) {
+//                println("kobe: Pair error 2: $e")
+//                onFailure(e)
+//            }
+//        }
 
 //        scope.launch { _checkVerifyKeyFlow.emit(Unit) }
 //        val trace: MutableList<String> = mutableListOf()

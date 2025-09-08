@@ -18,7 +18,7 @@ import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.supervisorScope
 
 internal class ExtendSessionUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val sessionStorageRepository: SessionStorageRepository,
     private val logger: Logger,
 ) : ExtendSessionUseCaseInterface {
@@ -40,16 +40,16 @@ internal class ExtendSessionUseCase(
         val irnParams = IrnParams(Tags.SESSION_EXTEND, Ttl(dayInSeconds), correlationId = sessionExtend.id)
 
         logger.log("Sending session extend on topic: $topic")
-        jsonRpcInteractor.publishJsonRpcRequest(
-            Topic(topic), irnParams, sessionExtend,
-            onSuccess = {
-                logger.log("Session extend sent successfully on topic: $topic")
-                onSuccess()
-            },
-            onFailure = { error ->
-                logger.error("Sending session extend error: $error on topic: $topic")
-                onFailure(error)
-            })
+//        jsonRpcInteractor.publishJsonRpcRequest(
+//            Topic(topic), irnParams, sessionExtend,
+//            onSuccess = {
+//                logger.log("Session extend sent successfully on topic: $topic")
+//                onSuccess()
+//            },
+//            onFailure = { error ->
+//                logger.error("Sending session extend error: $error on topic: $topic")
+//                onFailure(error)
+//            })
     }
 }
 

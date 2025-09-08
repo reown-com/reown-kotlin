@@ -5,6 +5,7 @@ import org.web3j.crypto.Sign
 import org.web3j.utils.Numeric
 import uniffi.yttrium.Erc6492Client
 
+//TODO: move to Sign SDK
 object EIP6492Verifier {
     private lateinit var erc6492Client: Erc6492Client
 

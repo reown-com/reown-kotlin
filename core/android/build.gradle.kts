@@ -98,6 +98,7 @@ dependencies {
     debugApi(project(":foundation"))
     releaseApi("com.reown:foundation:$FOUNDATION_VERSION")
 
+    //todo: remove yttrium from android-core - move all needed parts to sign sdk
     // Use specific yttrium version for CI builds, default version for local builds
     // Release builds use stable version, regular CI builds use CI version for e2e tests
     val yttriumVersion = if (System.getenv("IS_RELEASE_BUILD") == "true") {

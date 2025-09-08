@@ -32,13 +32,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 
 internal class RejectSessionAuthenticateUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val getPendingSessionAuthenticateRequest: GetPendingSessionAuthenticateRequest,
     private val crypto: KeyManagementRepository,
     private val verifyContextStorageRepository: VerifyContextStorageRepository,
-    private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
-    private val insertEventUseCase: InsertEventUseCase,
-    private val clientId: String,
+//    private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
+//    private val insertEventUseCase: InsertEventUseCase,
+//    private val clientId: String,
     private val logger: Logger
 ) : RejectSessionAuthenticateUseCaseInterface {
     override suspend fun rejectSessionAuthenticate(id: Long, reason: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) = supervisorScope {
@@ -68,40 +68,40 @@ internal class RejectSessionAuthenticateUseCase(
 
         if (jsonRpcHistoryEntry.transportType == TransportType.LINK_MODE && receiverMetadata.redirect?.linkMode == true) {
             if (receiverMetadata.redirect?.universal.isNullOrEmpty()) return@supervisorScope onFailure(IllegalStateException("App link is missing"))
-            try {
-                linkModeJsonRpcInteractor.triggerResponse(
-                    responseTopic,
-                    response,
-                    receiverMetadata.redirect?.universal!!,
-                    Participants(senderPublicKey, receiverPublicKey),
-                    EnvelopeType.ONE
-                )
-                insertEventUseCase(
-                    Props(
-                        EventType.SUCCESS,
-                        Tags.SESSION_AUTHENTICATE_LINK_MODE_RESPONSE_REJECT.id.toString(),
-                        Properties(clientId = clientId, correlationId = id, direction = Direction.SENT.state)
-                    )
-                )
-            } catch (e: Exception) {
-                onFailure(e)
-            }
+//            try {
+//                linkModeJsonRpcInteractor.triggerResponse(
+//                    responseTopic,
+//                    response,
+//                    receiverMetadata.redirect?.universal!!,
+//                    Participants(senderPublicKey, receiverPublicKey),
+//                    EnvelopeType.ONE
+//                )
+//                insertEventUseCase(
+//                    Props(
+//                        EventType.SUCCESS,
+//                        Tags.SESSION_AUTHENTICATE_LINK_MODE_RESPONSE_REJECT.id.toString(),
+//                        Properties(clientId = clientId, correlationId = id, direction = Direction.SENT.state)
+//                    )
+//                )
+//            } catch (e: Exception) {
+//                onFailure(e)
+//            }
         } else {
             val irnParams = IrnParams(Tags.SESSION_AUTHENTICATE_RESPONSE_REJECT, Ttl(dayInSeconds), correlationId = response.id, prompt = false)
             logger.log("Sending Session Authenticate Reject on topic: $responseTopic")
-            jsonRpcInteractor.publishJsonRpcResponse(
-                responseTopic, irnParams, response, envelopeType = EnvelopeType.ONE, participants = Participants(senderPublicKey, receiverPublicKey),
-                onSuccess = {
-                    logger.log("Session Authenticate Reject Responded on topic: $responseTopic")
-                    scope.launch { supervisorScope { verifyContextStorageRepository.delete(id) } }
-                    onSuccess()
-                },
-                onFailure = { error ->
-                    logger.error("Session Authenticate Error Responded on topic: $responseTopic")
-                    scope.launch { supervisorScope { verifyContextStorageRepository.delete(id) } }
-                    onFailure(error)
-                }
-            )
+//            jsonRpcInteractor.publishJsonRpcResponse(
+//                responseTopic, irnParams, response, envelopeType = EnvelopeType.ONE, participants = Participants(senderPublicKey, receiverPublicKey),
+//                onSuccess = {
+//                    logger.log("Session Authenticate Reject Responded on topic: $responseTopic")
+//                    scope.launch { supervisorScope { verifyContextStorageRepository.delete(id) } }
+//                    onSuccess()
+//                },
+//                onFailure = { error ->
+//                    logger.error("Session Authenticate Error Responded on topic: $responseTopic")
+//                    scope.launch { supervisorScope { verifyContextStorageRepository.delete(id) } }
+//                    onFailure(error)
+//                }
+//            )
         }
     }
 }

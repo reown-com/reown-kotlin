@@ -76,7 +76,16 @@ object AppKit {
         onError: (Modal.Model.Error) -> Unit,
     ) {
         SignClient.initialize(
-            init = Sign.Params.Init(init.core),
+            init = Sign.Params.Init(projectId = "", metaData = Sign.Model.MetaData(
+                name = TODO(),
+                description = TODO(),
+                url = TODO(),
+                icons = TODO(),
+                redirect = TODO(),
+                appLink = TODO(),
+                linkMode = TODO(),
+                verifyUrl = TODO()
+            )), //TODO: pass project id
             onSuccess = {
                 onInitializedClient(init, onSuccess, onError)
             },

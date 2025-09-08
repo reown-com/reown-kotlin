@@ -1,7 +1,9 @@
 package com.reown.sign.client
 
+import android.app.Application
 import androidx.annotation.Keep
 import com.reown.android.Core
+import com.reown.android.Core.Model
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
 import com.reown.android.internal.common.signing.cacao.Issuer
@@ -49,6 +51,17 @@ object Sign {
             val relayProtocol: String,
             val relayData: String?,
             val scopedProperties: Map<String, String>?,
+        ) : Model()
+
+        data class MetaData(
+            val name: String,
+            val description: String,
+            val url: String,
+            val icons: List<String>,
+            val redirect: String?,
+            val appLink: String? = null,
+            val linkMode: Boolean = false,
+            val verifyUrl: String? = null
         ) : Model()
 
         data class ExpiredProposal(val pairingTopic: String, val proposerPublicKey: String) : Model()
@@ -312,7 +325,9 @@ object Sign {
     sealed class Params {
 
         data class Init constructor(
-            val core: CoreInterface,
+            val projectId: String,
+            val metaData: Sign.Model.MetaData,
+            val application: Application,
         ) : Params()
 
         data class Connect(

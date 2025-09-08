@@ -1,4 +1,4 @@
-package com.reown.sign.engine.domain
+package com.reown.sign.client
 
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.AppMetaDataType
@@ -7,13 +7,13 @@ import com.reown.foundation.common.model.Topic
 import com.reown.sign.engine.model.mapper.toSessionFfi
 import com.reown.sign.engine.model.mapper.toVO
 import com.reown.sign.storage.sequence.SessionStorageRepository
+import com.reown.util.hexToBytes
 import com.reown.utils.isSequenceValid
 import uniffi.yttrium.PairingFfi
 import uniffi.yttrium.SessionFfi
 import uniffi.yttrium.StorageFfi
-import kotlin.collections.filter
 
-internal class SessionStore(
+internal class SignStorage(
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
     private val sessionStorageRepository: SessionStorageRepository,
     private val selfAppMetaData: AppMetaData
@@ -68,11 +68,13 @@ internal class SessionStore(
     }
 
     override fun getAllTopics(): List<uniffi.yttrium.Topic> {
-        TODO("Not yet implemented")
+        println("kobe: SessionStore: getAllTopics")
+        return sessionStorageRepository.getListOfSessionVOsWithoutMetadata().map { it.topic.value }
     }
 
     override fun getDecryptionKeyForTopic(topic: String): ByteArray? {
-        TODO("Not yet implemented")
+        println("kobe: SessionStore: getDecryptionKeyForTopic: $topic")
+        return sessionStorageRepository.getSessionWithoutMetadataByTopic(Topic(topic)).symKey?.hexToBytes() ?: ByteArray(0)
     }
 
     override fun getPairing(topic: String, rpcId: ULong): PairingFfi? {

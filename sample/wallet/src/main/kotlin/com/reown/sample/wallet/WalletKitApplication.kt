@@ -10,12 +10,9 @@ import com.pandulapeter.beagle.Beagle
 import com.pandulapeter.beagle.common.configuration.Behavior
 import com.pandulapeter.beagle.log.BeagleLogger
 import com.pandulapeter.beagle.logOkHttp.BeagleOkHttpLogger
-import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
-import com.reown.android.relay.ConnectionType
-import com.reown.foundation.network.model.Relay
 import com.reown.foundation.util.Logger
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
@@ -23,10 +20,9 @@ import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.domain.SmartAccountEnabler
+import com.reown.sample.wallet.domain.WCDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
-import com.reown.sample.wallet.ui.state.ConnectionState
-import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.CoroutineScope
@@ -60,7 +56,7 @@ class WalletKitApplication : Application() {
         SmartAccountEnabler.init(this)
 
         val projectId = BuildConfig.PROJECT_ID
-        val appMetaData = Core.Model.AppMetaData(
+        val walletMetaData = Wallet.Model.MetaData(
             name = "Kotlin Wallet",
             description = "Kotlin Wallet Implementation",
             url = "https://appkit-lab.reown.com",
@@ -70,73 +66,79 @@ class WalletKitApplication : Application() {
             linkMode = true
         )
 
-        CoreClient.initialize(
-            application = this,
-            projectId = projectId,
-            metaData = appMetaData,
-            connectionType = ConnectionType.AUTOMATIC,
-            onError = { error ->
-                Firebase.crashlytics.recordException(error.throwable)
-                println("Init error: ${error.throwable.stackTraceToString()}")
-                scope.launch {
-                    connectionStateFlow.emit(ConnectionState.Error(error.throwable.message ?: ""))
-                }
-            }
-        )
+//        CoreClient.initialize(
+//            application = this,
+//            projectId = projectId,
+//            metaData = appMetaData,
+//            connectionType = ConnectionType.AUTOMATIC,
+//            onError = { error ->
+//                Firebase.crashlytics.recordException(error.throwable)
+//                println("Init error: ${error.throwable.stackTraceToString()}")
+//                scope.launch {
+//                    connectionStateFlow.emit(ConnectionState.Error(error.throwable.message ?: ""))
+//                }
+//            }
+//        )
 
         println("Account: ${EthAccountDelegate.address}")
 
         WalletKit.initialize(
-            Wallet.Params.Init(core = CoreClient),
-            onSuccess = { println("Web3Wallet initialized") },
+            Wallet.Params.Init(projectId = projectId, metaData = walletMetaData, application = this),
+            onSuccess = {
+                println("kobe: WalletKit initialized")
+
+                WalletKit.setWalletDelegate(WCDelegate)
+            },
             onError = { error ->
+                println("kobe: init error: $error")
                 Firebase.crashlytics.recordException(error.throwable)
                 println(error.throwable.stackTraceToString())
             })
 
-        FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
-        NotifyClient.initialize(
-            init = Notify.Params.Init(CoreClient)
-        ) { error ->
-            Firebase.crashlytics.recordException(error.throwable)
-            println(error.throwable.stackTraceToString())
-        }
 
-        mixPanel = MixpanelAPI.getInstance(this, CommonBuildConfig.MIX_PANEL, true).apply {
-            println("kobe: UID: ${this@WalletKitApplication.applicationInfo.uid}")
-            identify(this@WalletKitApplication.applicationInfo.uid.toString())
-            people.set("\$name", EthAccountDelegate.ethAccount)
-        }
+//        FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
+//        NotifyClient.initialize(
+//            init = Notify.Params.Init(CoreClient)
+//        ) { error ->
+//            Firebase.crashlytics.recordException(error.throwable)
+//            println(error.throwable.stackTraceToString())
+//        }
+//
+//        mixPanel = MixpanelAPI.getInstance(this, CommonBuildConfig.MIX_PANEL, true).apply {
+//            println("kobe: UID: ${this@WalletKitApplication.applicationInfo.uid}")
+//            identify(this@WalletKitApplication.applicationInfo.uid.toString())
+//            people.set("\$name", EthAccountDelegate.ethAccount)
+//        }
 
         initializeBeagle()
 
-        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-            WalletKit.registerDeviceToken(
-                firebaseAccessToken = token, enableEncrypted = true,
-                onSuccess = {
-                    println("Successfully registered firebase token for Web3Wallet: $token")
-                },
-                onError = {
-                    println("Error while registering firebase token for Web3Wallet: ${it.throwable}")
-                }
-            )
-        }
+//        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+//            WalletKit.registerDeviceToken(
+//                firebaseAccessToken = token, enableEncrypted = true,
+//                onSuccess = {
+//                    println("Successfully registered firebase token for Web3Wallet: $token")
+//                },
+//                onError = {
+//                    println("Error while registering firebase token for Web3Wallet: ${it.throwable}")
+//                }
+//            )
+//        }
 
-        scope.launch {
-            supervisorScope {
-                wcKoinApp.koin.get<Timber.Forest>().plant(object : Timber.Tree() {
-                    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-                        if (t != null) {
-                            mixPanel.track("error: $t, message: $message")
-                        } else {
-                            mixPanel.track(message)
-                        }
-                    }
-                })
-
-                handleNotifyMessages()
-            }
-        }
+//        scope.launch {
+//            supervisorScope {
+//                wcKoinApp.koin.get<Timber.Forest>().plant(object : Timber.Tree() {
+//                    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+//                        if (t != null) {
+//                            mixPanel.track("error: $t, message: $message")
+//                        } else {
+//                            mixPanel.track(message)
+//                        }
+//                    }
+//                })
+//
+////                handleNotifyMessages()
+//            }
+//        }
     }
 
     private fun initializeBeagle() {

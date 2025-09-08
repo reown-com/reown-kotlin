@@ -6,7 +6,6 @@ import com.reown.android.internal.common.model.SDKError
 import com.reown.foundation.common.model.Topic
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
-import uniffi.yttrium.SessionProposalFfi
 
 interface PairingControllerInterface {
     val findWrongMethodsFlow: Flow<SDKError>
@@ -24,7 +23,4 @@ interface PairingControllerInterface {
     fun register(vararg method: String)
 
     fun getPairingByTopic(topic: Topic): Pairing?
-
-
-    val sessionProposalFlow: SharedFlow<SessionProposalFfi>
 }

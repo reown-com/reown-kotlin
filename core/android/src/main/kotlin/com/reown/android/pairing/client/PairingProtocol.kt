@@ -9,15 +9,9 @@ import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pairing.engine.domain.PairingEngine
 import com.reown.android.pairing.engine.model.EngineDO
 import com.reown.android.pairing.model.mapper.toCore
-import com.reown.android.pulse.domain.InsertTelemetryEventUseCase
-import com.reown.android.relay.RelayConnectionInterface
-import com.reown.foundation.util.Logger
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.core.KoinApplication
-import org.koin.core.qualifier.named
-import uniffi.yttrium.SignClient
 
 internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp) : PairingInterface {
     private lateinit var pairingEngine: PairingEngine
