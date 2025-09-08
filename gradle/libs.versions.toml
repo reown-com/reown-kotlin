@@ -1,6 +1,6 @@
 [versions]
 core = "1.6.1"
-jerseyCommon = "3.1.6"
+jerseyCommon = "3.1.11"
 kotlin = "2.2.0"
 kapt = "2.2.0"
 kotlinxCoroutinesTest = "1.5.2"
