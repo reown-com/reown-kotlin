@@ -511,6 +511,7 @@ internal class SignEngine(
                 val proposal: uniffi.yttrium.SessionProposalFfi? = try {
                     signClient.pair(uri = walletConnectUri.toAbsoluteString())
                 } catch (e: Exception) {
+                    println("kobe: pairing exception yttrium: $e")
                     onFailure(e)
                     return@launch
                 }
@@ -534,6 +535,7 @@ internal class SignEngine(
                     onFailure(Exception("Failed to get session proposal from pairing"))
                 }
             } catch (e: Exception) {
+                println("kobe: pairing exception: $e")
                 onFailure(e)
             }
         }

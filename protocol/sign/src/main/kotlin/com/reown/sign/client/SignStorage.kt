@@ -69,13 +69,15 @@ internal class SignStorage(
     override fun getAllTopics(): List<uniffi.yttrium.Topic> {
         println("kobe: SessionStore: getAllTopics")
 
-        return sessionStorage.getListOfSessionVOsWithoutMetadata().map { it.topic.value }
+        return sessionStorage.getListOfSessionVOsWithoutMetadata().map { it.topic.value }.also { println("kobe: $it") }
     }
 
     override fun getDecryptionKeyForTopic(topic: String): ByteArray? {
         println("kobe: SessionStore: getDecryptionKeyForTopic: $topic")
 
-        return sessionStorage.getSymKeyByTopic(Topic(topic))?.hexToBytes() ?: ByteArray(0)
+        return sessionStorage.getSymKeyByTopic(Topic(topic))
+            .also { println("kobe: session symkey: $it") }
+            ?.hexToBytes() ?: ByteArray(0)
     }
 
     override fun savePartialSession(topic: String, symKey: ByteArray) {

@@ -56,12 +56,14 @@ import com.reown.sign.di.storageModule
 import com.reown.sign.engine.domain.SignEngine
 import com.reown.sign.engine.model.EngineDO
 import com.reown.util.hexToBytes
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
 import org.koin.core.qualifier.named
@@ -99,10 +101,11 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
         }
 
         override fun onActivityResumed(activity: Activity) {
-            println("kobe: onResume")
+
 
             scope.launch {
                 supervisorScope {
+                    println("kobe: online")
                     signClient.online() //TODO: this as first trigger or SignClient init
                 }
             }
@@ -184,12 +187,18 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                 )
 
                 scope.launch {
-                    signClient.registerSignListener(SignListener())
+                    println("kobe: start")
                     signClient.start()
+                    println("kobe: register listener")
+                    signClient.registerSignListener(SignListener())
+
+                    withContext(Dispatchers.Main) {
+                        println("kobe: register lifecycle")
+                        init.application.registerActivityLifecycleCallbacks(ActivityLifecycleCallbacks())
+                    }
+
                 }
 
-
-                init.application.registerActivityLifecycleCallbacks(ActivityLifecycleCallbacks())
                 signEngine = koinApp.koin.get()
                 signEngine.setup()
                 onSuccess()
