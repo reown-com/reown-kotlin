@@ -1,0 +1,5 @@
+-- migration from 12.db to 13.db
+
+ALTER TABLE Pairing ADD COLUMN rpc_id INTEGER;
+ALTER TABLE Pairing ADD COLUMN self_public_key TEXT;
+ALTER TABLE Pairing ADD COLUMN sym_key TEXT;

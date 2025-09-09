@@ -103,7 +103,6 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
 
             scope.launch {
                 supervisorScope {
-                    signClient.close()
                     signClient.online() //TODO: this as first trigger or SignClient init
                 }
             }

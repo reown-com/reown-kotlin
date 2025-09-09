@@ -56,6 +56,32 @@ internal class SessionStorageRepository(
     }
 
     @JvmSynthetic
+    fun getSymKeyByTopic(topic: Topic): String? {
+        return sessionDaoQueries.getSymKey(topic.value).executeAsOneOrNull().toString()
+    }
+
+    @Synchronized
+    @JvmSynthetic
+    @Throws(SQLiteException::class)
+    fun insertPartialSession(topic: String, symKey: String) {
+        sessionDaoQueries.insertOrAbortSession(
+            topic = topic,
+            pairingTopic = "", // Default empty pairing topic
+            expiry = 0L, // Default expiry - will be updated later
+            self_participant = "", // Default empty - will be updated later
+            relay_protocol = "irn", // Default relay protocol
+            controller_key = null,
+            peer_participant = null,
+            relay_data = null,
+            is_acknowledged = false, // Default not acknowledged
+            properties = null,
+            scoped_properties = null,
+            transport_type = TransportType.RELAY, // Default transport type
+            sym_key = symKey
+        )
+    }
+
+    @JvmSynthetic
     fun getSessionWithoutMetadataByTopic(topic: Topic): SessionVO =
         sessionDaoQueries.getSessionByTopic(topic.value, mapper = this@SessionStorageRepository::mapSessionDaoToSessionVO).executeAsOne()
 

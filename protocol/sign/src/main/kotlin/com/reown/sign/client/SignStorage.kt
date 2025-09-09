@@ -2,12 +2,17 @@ package com.reown.sign.client
 
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.model.Expiry
+import com.reown.android.internal.common.model.Pairing
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.android.internal.common.storage.pairing.PairingStorageRepository
+import com.reown.android.internal.common.storage.pairing.PairingStorageRepositoryInterface
+import com.reown.android.pairing.model.pairingExpiry
 import com.reown.foundation.common.model.Topic
 import com.reown.sign.engine.model.mapper.toSessionFfi
 import com.reown.sign.engine.model.mapper.toVO
 import com.reown.sign.storage.sequence.SessionStorageRepository
+import com.reown.util.bytesToHex
 import com.reown.util.hexToBytes
 import com.reown.utils.isSequenceValid
 import uniffi.yttrium.PairingFfi
@@ -17,7 +22,7 @@ import uniffi.yttrium.StorageFfi
 internal class SignStorage(
     private val metadataStorage: MetadataStorageRepositoryInterface,
     private val sessionStorage: SessionStorageRepository,
-    private val pairingStorage: PairingStorageRepository,
+    private val pairingStorage: PairingStorageRepositoryInterface,
     private val selfAppMetaData: AppMetaData,
 ) : StorageFfi {
     override fun addSession(session: SessionFfi) {
@@ -70,7 +75,13 @@ internal class SignStorage(
     override fun getDecryptionKeyForTopic(topic: String): ByteArray? {
         println("kobe: SessionStore: getDecryptionKeyForTopic: $topic")
 
-        return sessionStorage.getSessionWithoutMetadataByTopic(Topic(topic)).symKey?.hexToBytes() ?: ByteArray(0)
+        return sessionStorage.getSymKeyByTopic(Topic(topic))?.hexToBytes() ?: ByteArray(0)
+    }
+
+    override fun savePartialSession(topic: String, symKey: ByteArray) {
+        println("kobe: SessionStore: savePartialSession: topic=$topic")
+
+        sessionStorage.insertPartialSession(topic = topic, symKey = symKey.bytesToHex())
     }
 
     override fun deleteSession(topic: String) {
@@ -80,14 +91,37 @@ internal class SignStorage(
     }
 
     override fun getPairing(topic: String, rpcId: ULong): PairingFfi? {
-        TODO("Not yet implemented")
+        println("kobe: SessionStore: getPairing: topic=$topic, rpcId=$rpcId")
+
+        val pairing = pairingStorage.getPairingOrNullByTopicAndRpcId(Topic(topic), rpcId.toLong())
+        return pairing?.toPairingFfi()
     }
 
     override fun savePairing(topic: String, rpcId: ULong, symKey: ByteArray, selfKey: ByteArray) {
-        TODO("Not yet implemented")
-    }
+        println("kobe: SessionStore: savePairing: topic=$topic, rpcId=$rpcId")
 
-    override fun savePartialSession(topic: String, symKey: ByteArray) {
-        TODO("Not yet implemented")
+        val pairing = Pairing(
+            topic = Topic(topic),
+            expiry = Expiry(pairingExpiry),
+            relayProtocol = "irn", // Default relay protocol
+            relayData = null,
+            uri = "", // Will be set when needed
+            isProposalReceived = false,
+            methods = null,
+            selfPublicKey = selfKey.bytesToHex(),
+            symKey = symKey.bytesToHex(),
+            rpcId = rpcId.toLong()
+        )
+
+        pairingStorage.insertPairing(pairing)
     }
+}
+
+// Extension function to convert Pairing to PairingFfi
+private fun Pairing.toPairingFfi(): PairingFfi {
+    return PairingFfi(
+        rpcId = rpcId?.toULong() ?: (-1L).toULong(),
+        selfKey = selfPublicKey?.hexToBytes() ?: ByteArray(0),
+        symKey = symKey?.hexToBytes() ?: ByteArray(0)
+    )
 }

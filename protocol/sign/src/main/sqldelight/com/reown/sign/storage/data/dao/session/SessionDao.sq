@@ -71,3 +71,8 @@ getExpiry:
 SELECT expiry
 FROM SessionDao
 WHERE ? = topic;
+
+getSymKey:
+SELECT sym_key
+FROM SessionDao
+WHERE ? = topic;
