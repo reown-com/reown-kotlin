@@ -101,13 +101,8 @@ dependencies {
     implementation(libs.androidx.core)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.material)
-    implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
-
     testImplementation(libs.jUnit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

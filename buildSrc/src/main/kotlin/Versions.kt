@@ -13,6 +13,7 @@ const val NOTIFY_VERSION = "1.4.10"
 const val WALLETKIT_VERSION = "1.4.10"
 const val APPKIT_VERSION = "1.4.10"
 const val MODAL_CORE_VERSION = "1.4.10"
+const val POS_VERSION = "1.0.0"
 
 //Artifact ids
 const val ANDROID_BOM = "android-bom"
