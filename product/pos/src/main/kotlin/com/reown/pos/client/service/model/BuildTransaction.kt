@@ -11,13 +11,20 @@ data class JsonRpcBuildTransactionRequest(
     @param:Json(name = "jsonrpc")
     val jsonrpc: String = "2.0",
     @param:Json(name = "method")
-    val method: String = "reown_pos_buildTransaction",
+    val method: String = "wc_pos_buildTransaction",
     @param:Json(name = "params")
     val params: BuildTransactionParams,
 )
 
 @JsonClass(generateAdapter = true)
 data class BuildTransactionParams(
+    @param:Json(name = "paymentIntents")
+    val paymentIntents: List<PaymentIntent>,
+    @param:Json(name = "capabilities")
+    val capabilities: Any? = null
+)
+
+data class PaymentIntent(
     @param:Json(name = "asset")
     val asset: String,
     @param:Json(name = "recipient")
@@ -42,8 +49,8 @@ data class JsonRpcBuildTransactionResponse(
 
 @JsonClass(generateAdapter = true)
 data class BuildTransactionParamsResponse(
-    @Json(name = "transactionRpc")
-    val transactionRpc: TransactionRpc,
+    @Json(name = "transactions")
+    val transactions: List<TransactionRpc>,
     @Json(name = "id")
     val id: String
 )
@@ -52,24 +59,8 @@ data class BuildTransactionParamsResponse(
 data class TransactionRpc(
     @Json(name = "method")
     val method: String,
+    @Json(name = "chainId")
+    val chainId: String,
     @Json(name = "params")
     val params: Any
-)
-
-@JsonClass(generateAdapter = true)
-data class TransactionParam(
-    @Json(name = "to")
-    val to: String,
-    @Json(name = "from")
-    val from: String,
-    @Json(name = "gas")
-    val gas: String,
-    @Json(name = "value")
-    val value: String,
-    @Json(name = "data")
-    val data: String,
-    @Json(name = "maxFeePerGas")
-    val maxFeePerGas: String,
-    @Json(name = "maxPriorityFeePerGas")
-    val maxPriorityFeePerGas: String
 )

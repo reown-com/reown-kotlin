@@ -11,7 +11,7 @@ data class JsonRpcCheckTransactionRequest(
     @param:Json(name = "jsonrpc")
     val jsonrpc: String = "2.0",
     @param:Json(name = "method")
-    val method: String = "reown_pos_checkTransaction",
+    val method: String = "wc_pos_checkTransaction",
     @param:Json(name = "params")
     val params: CheckTransactionParams,
 )

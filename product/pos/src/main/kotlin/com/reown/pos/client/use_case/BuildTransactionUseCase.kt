@@ -7,11 +7,11 @@ import com.reown.pos.client.POS
 import com.reown.pos.client.service.BlockchainApi
 import com.reown.pos.client.service.model.BuildTransactionParams
 import com.reown.pos.client.service.model.JsonRpcBuildTransactionRequest
+import com.reown.pos.client.service.model.PaymentIntent
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.squareup.moshi.Moshi
 import org.koin.core.qualifier.named
-import kotlin.io.path.Path
 
 internal class BuildTransactionUseCase(
     private val blockchainApi: BlockchainApi
@@ -42,7 +42,7 @@ internal class BuildTransactionUseCase(
         when (buildResult) {
             is BuildTransactionResult.Success -> {
                 sendTransactionRequest(
-                    transactionRpc = buildResult.transactionRpc,
+                    transactionRpc = buildResult.transactions[0], //TODO: Update to send all transactions one by one to the wallet
                     transactionId = buildResult.transactionId,
                     paymentIntent = paymentIntent,
                     approvedSession = approvedSession,
@@ -65,10 +65,14 @@ internal class BuildTransactionUseCase(
         return try {
             val request = JsonRpcBuildTransactionRequest(
                 params = BuildTransactionParams(
-                    asset = paymentIntent.caip19Token,
-                    recipient = paymentIntent.recipient,
-                    sender = senderAddress,
-                    amount = paymentIntent.amount
+                    paymentIntents = listOf(
+                        PaymentIntent(
+                            asset = paymentIntent.caip19Token,
+                            recipient = paymentIntent.recipient,
+                            sender = senderAddress,
+                            amount = paymentIntent.amount
+                        )
+                    )
                 )
             )
 
@@ -90,7 +94,7 @@ internal class BuildTransactionUseCase(
                 else -> {
                     Log.d(TAG, "Transaction built successfully")
                     BuildTransactionResult.Success(
-                        transactionRpc = response.result.transactionRpc,
+                        transactions = response.result.transactions,
                         transactionId = response.result.id
                     )
                 }
@@ -147,7 +151,7 @@ internal class BuildTransactionUseCase(
 
     sealed class BuildTransactionResult {
         data class Success(
-            val transactionRpc: com.reown.pos.client.service.model.TransactionRpc,
+            val transactions: List<com.reown.pos.client.service.model.TransactionRpc>,
             val transactionId: String
         ) : BuildTransactionResult()
 
