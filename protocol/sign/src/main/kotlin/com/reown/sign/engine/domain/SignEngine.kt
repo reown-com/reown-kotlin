@@ -2,12 +2,17 @@
 
 package com.reown.sign.engine.domain
 
+import com.reown.android.internal.Validator
 import com.reown.android.internal.common.model.type.EngineEvent
+import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.foundation.util.Logger
 import com.reown.sign.client.SignListener
 import com.reown.sign.client.SignStorage
+import com.reown.sign.engine.model.EngineDO
+import com.reown.sign.engine.model.mapper.toEngineDO
+import com.reown.sign.engine.model.mapper.toVO
 import com.reown.sign.engine.use_case.calls.ApproveSessionUseCaseInterface
 import com.reown.sign.engine.use_case.calls.DisconnectSessionUseCaseInterface
 import com.reown.sign.engine.use_case.calls.EmitEventUseCaseInterface
@@ -102,7 +107,7 @@ internal class SignEngine(
 //    private val insertEventUseCase: InsertTelemetryEventUseCase,
 //    private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
 //    private val logger: Logger,
-//    private val signClient: SignClient,
+    private val signClient: SignClient,
 //    private val signStorage: SignStorage
 ) : ProposeSessionUseCaseInterface by proposeSessionUseCase,
 //    SessionAuthenticateUseCaseInterface by authenticateSessionUseCase,
@@ -496,6 +501,43 @@ internal class SignEngine(
 //                }
 //            }.launchIn(scope)
 //    }
+
+    fun pair(uri: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) {
+        scope.launch {
+            try {
+                val walletConnectUri = Validator.validateWCUri(uri) ?: throw Exception("Invalid WalletConnect URI")
+                
+                // Call the Rust client to pair and get the proposal
+                val proposal: uniffi.yttrium.SessionProposalFfi? = try {
+                    signClient.pair(uri = walletConnectUri.toAbsoluteString())
+                } catch (e: Exception) {
+                    onFailure(e)
+                    return@launch
+                }
+
+                if (proposal != null) {
+                    // Convert SessionProposalFfi to ProposalVO
+                    val proposalVO = proposal.toVO()
+                    
+                    // Store the proposal
+                    proposalStorageRepository.insertProposal(proposalVO)
+                    
+                    // Emit the session proposal event using _engineEvent
+                    val sessionProposalEvent = EngineDO.SessionProposalEvent(
+                        proposal = proposalVO.toEngineDO(),
+                        context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
+                    )
+                    
+                    _engineEvent.emit(sessionProposalEvent)
+                    onSuccess()
+                } else {
+                    onFailure(Exception("Failed to get session proposal from pairing"))
+                }
+            } catch (e: Exception) {
+                onFailure(e)
+            }
+        }
+    }
 
     private fun repeatableFlow() = flow {
         while (true) {

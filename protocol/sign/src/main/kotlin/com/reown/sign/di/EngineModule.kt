@@ -57,9 +57,10 @@ internal fun engineModule() = module {
 
     single<StorageFfi> {
         SignStorage(
-            sessionStorageRepository = get(),
-            metadataStorageRepository = get(),
-            selfAppMetaData = get()
+            sessionStorage = get(),
+            metadataStorage = get(),
+            selfAppMetaData = get(),
+            pairingStorage = get()
         )
     }
 
@@ -95,6 +96,7 @@ internal fun engineModule() = module {
 //            getPendingSessionRequestByTopicUseCase = get(),
 //            onSessionProposalResponseUseCase = get(),
 //            onSessionProposeUse = get(),
+            signClient = get(named(AndroidCommonDITags.SIGN_RUST_CLIENT)),
 //            onSessionRequestResponseUseCase = get(),
 //            onSessionRequestUseCase = get(),
 //            onSessionSettleResponseUseCase = get(),

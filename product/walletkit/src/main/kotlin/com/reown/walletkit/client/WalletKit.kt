@@ -159,7 +159,10 @@ object WalletKit {
 
     @Throws(IllegalStateException::class)
     fun pair(params: Wallet.Params.Pair, onSuccess: (Wallet.Params.Pair) -> Unit = {}, onError: (Wallet.Model.Error) -> Unit = {}) {
-        coreClient.Pairing.pair(Core.Params.Pair(params.uri), { onSuccess(params) }, { error -> onError(Wallet.Model.Error(error.throwable)) })
+        SignClient.pair(
+            params.uri,
+            onSuccess = { onSuccess(Wallet.Params.Pair(params.uri)) },
+            onFailure = { error -> onError(Wallet.Model.Error(error)) })
     }
 
     @Throws(IllegalStateException::class)

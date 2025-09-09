@@ -103,6 +103,7 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
 
             scope.launch {
                 supervisorScope {
+                    signClient.close()
                     signClient.online() //TODO: this as first trigger or SignClient init
                 }
             }
@@ -317,6 +318,11 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                 onError(Sign.Model.Error(error))
             }
         }
+    }
+
+    override fun pair(uri: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) {
+        checkEngineInitialization()
+        signEngine.pair(uri, onSuccess, onFailure)
     }
 
     @Throws(IllegalStateException::class)

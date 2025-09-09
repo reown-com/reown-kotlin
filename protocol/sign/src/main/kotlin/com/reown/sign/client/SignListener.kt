@@ -19,19 +19,19 @@ class SignListener() : SignListener {
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
     override fun onSessionConnect(id: ULong) {
-        TODO("Not yet implemented")
+        println("kobe: onSessionConnect: $id")
     }
 
     override fun onSessionDisconnect(id: ULong, topic: String) {
-        TODO("Not yet implemented")
+        println("kobe: onSessionDisconnect: $id; $topic")
     }
 
     override fun onSessionEvent(id: ULong, topic: String, params: Boolean) {
-        TODO("Not yet implemented")
+        println("kobe: onSessionEvent: $id; $topic")
     }
 
     override fun onSessionExtend(id: ULong, topic: String) {
-        TODO("Not yet implemented")
+        println("kobe: onSessionExtend: $id; $topic")
     }
 
     override fun onSessionRequest(topic: String, sessionRequest: SessionRequestJsonRpcFfi) {
@@ -53,7 +53,7 @@ class SignListener() : SignListener {
     }
 
     override fun onSessionRequestResponse(id: ULong, topic: String, response: SessionRequestJsonRpcResponseFfi) {
-        TODO("Not yet implemented")
+        println("kobe: onSessionRequestResponse: $id; $topic")
     }
 
     override fun onSessionUpdate(
@@ -61,6 +61,6 @@ class SignListener() : SignListener {
         topic: String,
         namespaces: Map<String, SettleNamespace>
     ) {
-        TODO("Not yet implemented")
+        println("kobe: onSessionUpdate: $id; $topic; $namespaces")
     }
 }

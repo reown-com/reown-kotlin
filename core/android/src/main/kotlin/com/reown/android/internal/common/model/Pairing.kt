@@ -13,6 +13,9 @@ data class Pairing(
     val uri: String,
     val isProposalReceived: Boolean = false,
     val methods: String? = null,
+    val selfPublicKey: String = "",
+    val symKey: String = "",
+    val rpcId: Long = -1L
 ) : Sequence {
 
     constructor(topic: Topic, relay: RelayProtocolOptions, symmetricKey: SymmetricKey, expiry: Expiry, methods: String?) : this(

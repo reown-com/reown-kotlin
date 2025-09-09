@@ -71,6 +71,8 @@ interface SignInterface {
         onError: (Sign.Model.Error) -> Unit,
     )
 
+    fun pair(uri: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit)
+
     fun authenticate(
         authenticate: Sign.Params.Authenticate,
         walletAppLink: String? = null,

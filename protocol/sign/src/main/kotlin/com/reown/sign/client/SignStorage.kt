@@ -3,6 +3,7 @@ package com.reown.sign.client
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.AppMetaDataType
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
+import com.reown.android.internal.common.storage.pairing.PairingStorageRepository
 import com.reown.foundation.common.model.Topic
 import com.reown.sign.engine.model.mapper.toSessionFfi
 import com.reown.sign.engine.model.mapper.toVO
@@ -14,21 +15,22 @@ import uniffi.yttrium.SessionFfi
 import uniffi.yttrium.StorageFfi
 
 internal class SignStorage(
-    private val metadataStorageRepository: MetadataStorageRepositoryInterface,
-    private val sessionStorageRepository: SessionStorageRepository,
-    private val selfAppMetaData: AppMetaData
+    private val metadataStorage: MetadataStorageRepositoryInterface,
+    private val sessionStorage: SessionStorageRepository,
+    private val pairingStorage: PairingStorageRepository,
+    private val selfAppMetaData: AppMetaData,
 ) : StorageFfi {
     override fun addSession(session: SessionFfi) {
         println("kobe: SessionStore: addSession: $session")
 
         val sessionVO = session.toVO()
-        sessionStorageRepository.insertSession(session = session.toVO(), requestId = session.requestId.toLong())
-        metadataStorageRepository.insertOrAbortMetadata(
+        sessionStorage.insertSession(session = session.toVO(), requestId = session.requestId.toLong())
+        metadataStorage.insertOrAbortMetadata(
             topic = sessionVO.topic,
             appMetaData = selfAppMetaData,
             appMetaDataType = AppMetaDataType.SELF
         )
-        metadataStorageRepository.insertOrAbortMetadata(
+        metadataStorage.insertOrAbortMetadata(
             topic = sessionVO.topic,
             appMetaData = sessionVO.peerAppMetaData!!,
             appMetaDataType = AppMetaDataType.PEER
@@ -38,12 +40,12 @@ internal class SignStorage(
     override fun getAllSessions(): List<SessionFfi> {
         println("kobe: SessionStore: get all sessions")
 
-        return sessionStorageRepository.getListOfSessionVOsWithoutMetadata()
+        return sessionStorage.getListOfSessionVOsWithoutMetadata()
             .filter { session -> session.isAcknowledged && session.expiry.isSequenceValid() }
             .map { session ->
                 session.copy(
                     selfAppMetaData = selfAppMetaData,
-                    peerAppMetaData = metadataStorageRepository.getByTopicAndType(session.topic, AppMetaDataType.PEER)
+                    peerAppMetaData = metadataStorage.getByTopicAndType(session.topic, AppMetaDataType.PEER)
                 )
             }
             .map { session -> session.toSessionFfi() }
@@ -52,11 +54,33 @@ internal class SignStorage(
     override fun getSession(topic: String): SessionFfi? {
         println("kobe: SessionStore: get session: $topic")
 
-        return sessionStorageRepository.getSessionWithoutMetadataByTopic(topic = Topic(topic))
+        return sessionStorage.getSessionWithoutMetadataByTopic(topic = Topic(topic))
             .run {
-                val peerAppMetaData = metadataStorageRepository.getByTopicAndType(this.topic, AppMetaDataType.PEER)
+                val peerAppMetaData = metadataStorage.getByTopicAndType(this.topic, AppMetaDataType.PEER)
                 this.copy(peerAppMetaData = peerAppMetaData)
             }.toSessionFfi()
+    }
+
+    override fun getAllTopics(): List<uniffi.yttrium.Topic> {
+        println("kobe: SessionStore: getAllTopics")
+
+        return sessionStorage.getListOfSessionVOsWithoutMetadata().map { it.topic.value }
+    }
+
+    override fun getDecryptionKeyForTopic(topic: String): ByteArray? {
+        println("kobe: SessionStore: getDecryptionKeyForTopic: $topic")
+
+        return sessionStorage.getSessionWithoutMetadataByTopic(Topic(topic)).symKey?.hexToBytes() ?: ByteArray(0)
+    }
+
+    override fun deleteSession(topic: String) {
+        println("kobe: SessionStore: deleteSession: $topic")
+
+        sessionStorage.deleteSession(topic = Topic(topic))
+    }
+
+    override fun getPairing(topic: String, rpcId: ULong): PairingFfi? {
+        TODO("Not yet implemented")
     }
 
     override fun savePairing(topic: String, rpcId: ULong, symKey: ByteArray, selfKey: ByteArray) {
@@ -65,25 +89,5 @@ internal class SignStorage(
 
     override fun savePartialSession(topic: String, symKey: ByteArray) {
         TODO("Not yet implemented")
-    }
-
-    override fun getAllTopics(): List<uniffi.yttrium.Topic> {
-        println("kobe: SessionStore: getAllTopics")
-        return sessionStorageRepository.getListOfSessionVOsWithoutMetadata().map { it.topic.value }
-    }
-
-    override fun getDecryptionKeyForTopic(topic: String): ByteArray? {
-        println("kobe: SessionStore: getDecryptionKeyForTopic: $topic")
-        return sessionStorageRepository.getSessionWithoutMetadataByTopic(Topic(topic)).symKey?.hexToBytes() ?: ByteArray(0)
-    }
-
-    override fun getPairing(topic: String, rpcId: ULong): PairingFfi? {
-        TODO("Not yet implemented")
-    }
-
-    override fun deleteSession(topic: String) {
-        println("kobe: SessionStore: deleteSession: $topic")
-
-        sessionStorageRepository.deleteSession(topic = Topic(topic))
     }
 }
