@@ -35,10 +35,10 @@ class DappSampleActivity : ComponentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        if (intent?.dataString?.contains("wc_ev") == true) {
+        if (intent.dataString?.contains("wc_ev") == true) {
             AppKit.handleDeepLink(intent.dataString ?: "") {
                 lifecycleScope.launch(Dispatchers.Main) {
                     Toast.makeText(this@DappSampleActivity, "Error dispatching envelope: ${it.throwable.message}", Toast.LENGTH_SHORT).show()

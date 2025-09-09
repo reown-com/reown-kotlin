@@ -5,7 +5,7 @@ kotlin = "2.2.0"
 kapt = "2.2.0"
 kotlinxCoroutinesTest = "1.5.2"
 ksp = "2.2.0-2.0.2"
-agp = "8.12.1"
+agp = "8.13.0"
 
 minSdk = "23"
 mockkAndroid = "1.12.0"
@@ -15,15 +15,15 @@ compileSdk = "34"
 composeCompiler = "1.6.0"
 composeBOM = "2024.05.00"
 composeViewModel = "2.8.0"
-accompanist = "0.34.0"
+accompanist = "0.36.0"
 
-coroutines = "1.8.1"
+coroutines = "1.10.2"
 sqlDelight = "2.0.2"
 dokka = "1.9.20"
 moshi = "1.15.2"
 googleService = "4.4.2"
 scarlet = "1.0.2"
-koin = "3.5.6"
+koin = "4.1.0"
 retrofit = "2.11.0"
 okhttp = "5.1.0"
 bouncyCastle = "1.78.1"
@@ -45,9 +45,9 @@ firebaseAppDistribution = "5.0.0"
 androidxCore = "1.13.1"
 androidxAppCompat = "1.7.0"
 andoridxMaterial = "1.12.0"
-androidxLifecycle = "2.8.5"
+androidxLifecycle = "2.9.2"
 androidxTest = "1.6.1"
-androidxTestOrchestration = "1.5.0"
+androidxTestOrchestration = "1.6.1"
 androidxSecurity = "1.1.0-alpha06"
 androidxDatastore = "1.1.1"
 androidxNavigation = "2.8.0"
@@ -57,10 +57,6 @@ robolectric = "4.12.2"
 mockk = "1.13.11"
 turbine = "1.1.0"
 paparazzi = "1.3.4"
-junitVersion = "1.3.0"
-espressoCore = "3.7.0"
-activity = "1.10.1"
-constraintlayout = "2.2.1"
 
 [libraries]
 core = { module = "androidx.test:core", version.ref = "core" }
@@ -94,7 +90,7 @@ androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
-androidx-compose-ui-test-junit = { module = "androidx.compose.ui:ui-test-junit4", version = "1.7.1" }
+androidx-compose-ui-test-junit = { module = "androidx.compose.ui:ui-test-junit4", version = "1.9.0" }
 androidx-compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "androidxNavigation" }
 androidx-compose-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "androidxNavigation" }
 androidx-compose-lifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "composeViewModel" }
@@ -166,10 +162,6 @@ coinbaseWallet = { module = "com.coinbase:coinbase-wallet-sdk", version.ref = "c
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 qrCodeGenerator = { module = "com.github.alexzhirkevich:custom-qr-generator", version.ref = "customQrGenerator" }
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
-androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 
 [bundles]
 sqlDelight = ["sqlDelight-android", "sqlDelight-coroutines", "sqlDelight-adapters", "sqlDelight-async"]

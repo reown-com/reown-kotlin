@@ -177,7 +177,3 @@ The repository includes several sample applications that demonstrate different u
 - **Keystore issues**: Verify `secrets.properties` contains valid keystore information
 - **Google Services**: Ensure `google-services.json` is properly configured for each sample
 - **Gradle sync**: Try `./gradlew clean` followed by `./gradlew build`
-
-## License
-
-Reown is released under the Apache 2.0 license. [See LICENSE](/LICENSE) for details.

@@ -43,8 +43,8 @@ afterEvaluate {
 
                     licenses {
                         license {
-                            name.set("The Apache License, Version 2.0")
-                            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                            name.set("WALLETCONNECT COMMUNITY LICENSE")
+                            url.set("https://github.com/reown-com/reown-kotlin/blob/master/LICENSE")
                         }
                         license {
                             name.set("SQLCipher Community Edition")
