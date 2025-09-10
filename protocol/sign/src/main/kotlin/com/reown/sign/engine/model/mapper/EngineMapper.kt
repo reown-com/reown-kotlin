@@ -151,6 +151,10 @@ internal fun SessionVO.toEngineDO(): EngineDO.Session =
     )
 
 @JvmSynthetic
+internal fun SessionFfi.toEngineDO(): EngineDO.Session =
+    this.toVO().toEngineDO()
+
+@JvmSynthetic
 internal fun SessionVO.toEngineDOSessionExtend(expiryVO: Expiry): EngineDO.SessionExtend =
     EngineDO.SessionExtend(
         topic,

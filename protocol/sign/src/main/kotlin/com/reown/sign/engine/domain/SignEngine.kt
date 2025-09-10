@@ -7,9 +7,7 @@ import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.reown.foundation.util.Logger
 import com.reown.sign.client.SignListener
-import com.reown.sign.client.SignStorage
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toEngineDO
 import com.reown.sign.engine.model.mapper.toVO
@@ -17,29 +15,13 @@ import com.reown.sign.engine.use_case.calls.ApproveSessionUseCaseInterface
 import com.reown.sign.engine.use_case.calls.DisconnectSessionUseCaseInterface
 import com.reown.sign.engine.use_case.calls.EmitEventUseCaseInterface
 import com.reown.sign.engine.use_case.calls.ExtendSessionUseCaseInterface
-import com.reown.sign.engine.use_case.calls.GetListOfVerifyContextsUseCaseInterface
 import com.reown.sign.engine.use_case.calls.GetSessionProposalsUseCaseInterface
 import com.reown.sign.engine.use_case.calls.GetSessionsUseCaseInterface
-import com.reown.sign.engine.use_case.calls.GetVerifyContextByIdUseCaseInterface
 import com.reown.sign.engine.use_case.calls.ProposeSessionUseCaseInterface
 import com.reown.sign.engine.use_case.calls.RejectSessionUseCaseInterface
 import com.reown.sign.engine.use_case.calls.RespondSessionRequestUseCaseInterface
 import com.reown.sign.engine.use_case.calls.SessionRequestUseCaseInterface
 import com.reown.sign.engine.use_case.calls.SessionUpdateUseCaseInterface
-import com.reown.sign.engine.use_case.requests.OnPingUseCase
-import com.reown.sign.engine.use_case.requests.OnSessionAuthenticateUseCase
-import com.reown.sign.engine.use_case.requests.OnSessionDeleteUseCase
-import com.reown.sign.engine.use_case.requests.OnSessionEventUseCase
-import com.reown.sign.engine.use_case.requests.OnSessionExtendUseCase
-import com.reown.sign.engine.use_case.requests.OnSessionProposalUseCase
-import com.reown.sign.engine.use_case.requests.OnSessionRequestUseCase
-import com.reown.sign.engine.use_case.requests.OnSessionSettleUseCase
-import com.reown.sign.engine.use_case.requests.OnSessionUpdateUseCase
-import com.reown.sign.engine.use_case.responses.OnSessionProposalResponseUseCase
-import com.reown.sign.engine.use_case.responses.OnSessionRequestResponseUseCase
-import com.reown.sign.engine.use_case.responses.OnSessionSettleResponseUseCase
-import com.reown.sign.engine.use_case.responses.OnSessionUpdateResponseUseCase
-import com.reown.sign.json_rpc.domain.GetPendingSessionRequestByTopicUseCaseInterface
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.Job
@@ -133,7 +115,6 @@ internal class SignEngine(
     GetSessionProposalsUseCaseInterface by getSessionProposalsUseCase
 //    GetVerifyContextByIdUseCaseInterface by getVerifyContextByIdUseCase,
 //    GetListOfVerifyContextsUseCaseInterface by getListOfVerifyContextsUseCase
-
 {
     private var jsonRpcRequestsJob: Job? = null
     private var jsonRpcResponsesJob: Job? = null
@@ -146,6 +127,9 @@ internal class SignEngine(
 
     private val _engineEvent: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     val engineEvent: SharedFlow<EngineEvent> = _engineEvent.asSharedFlow()
+    
+    // Resolve diamond inheritance: both ApproveSessionUseCaseInterface and RespondSessionRequestUseCaseInterface have 'events'
+
 //    val wssConnection: StateFlow<WSSConnectionState> = jsonRpcInteractor.wssConnectionState
 
     init {
@@ -188,6 +172,31 @@ internal class SignEngine(
 
 //        handleRelayRequestsAndResponses()
     }
+
+    private fun collectSignEvents(): Job =
+        merge(
+            signListener.events,
+            respondSessionRequestUseCase.events,
+//            onSessionRequestUseCase.events,
+//            onSessionDeleteUseCase.events,
+//            onSessionProposeUse.events,
+//            onAuthenticateSessionUseCase.events,
+//            onSessionEventUseCase.events,
+//            onSessionSettleUseCase.events,
+//            onSessionUpdateUseCase.events,
+//            onSessionExtendUseCase.events,
+//            onSessionProposalResponseUseCase.events,
+//            onSessionSettleResponseUseCase.events,
+//            onSessionUpdateResponseUseCase.events,
+//            onSessionRequestResponseUseCase.events,
+//            onSessionAuthenticateResponseUseCase.events,
+            sessionRequestUseCase.requestEvents,
+            approveSessionUseCase.approveEvents
+        )
+            .onEach { event ->
+                println("kobe: engine event received: $event")
+                _engineEvent.emit(event)
+            }.launchIn(scope)
 
     private fun handleRelayRequestsAndResponses() {
 //        jsonRpcInteractor.onResubscribe
@@ -277,30 +286,6 @@ internal class SignEngine(
 //            .onEach { exception -> _engineEvent.emit(exception) }
 //            .launchIn(scope)
 
-    private fun collectSignEvents(): Job =
-        merge(
-            signListener.events,
-            respondSessionRequestUseCase.events,
-//            onSessionRequestUseCase.events,
-//            onSessionDeleteUseCase.events,
-//            onSessionProposeUse.events,
-//            onAuthenticateSessionUseCase.events,
-//            onSessionEventUseCase.events,
-//            onSessionSettleUseCase.events,
-//            onSessionUpdateUseCase.events,
-//            onSessionExtendUseCase.events,
-//            onSessionProposalResponseUseCase.events,
-//            onSessionSettleResponseUseCase.events,
-//            onSessionUpdateResponseUseCase.events,
-//            onSessionRequestResponseUseCase.events,
-//            onSessionAuthenticateResponseUseCase.events,
-            sessionRequestUseCase.requestEvents
-        )
-            .onEach { event ->
-                println("kobe: engine event received: $event")
-                println("kobe: engine event type: ${event::class.simpleName}")
-                _engineEvent.emit(event)
-            }.launchIn(scope)
 
 //    private fun resubscribeToSession() {
 //        try {

@@ -2,20 +2,24 @@ package com.reown.sign.engine.use_case.calls
 
 import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.model.AppMetaData
-import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
+import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.android.internal.common.storage.pairing.PairingStorageRepositoryInterface
 import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
-import com.reown.android.pulse.domain.InsertTelemetryEventUseCase
 import com.reown.foundation.util.Logger
 import com.reown.sign.engine.model.EngineDO
+import com.reown.sign.engine.model.mapper.toEngineDO
 import com.reown.sign.engine.model.mapper.toProposalFfi
 import com.reown.sign.engine.model.mapper.toSettleYttrium
 import com.reown.sign.engine.model.mapper.toYttrium
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.SessionFfi
 import uniffi.yttrium.SignClient
 
 internal class ApproveSessionUseCase(
@@ -31,6 +35,8 @@ internal class ApproveSessionUseCase(
     private val signClient: SignClient,
     private val pairingRepository: PairingStorageRepositoryInterface
 ) : ApproveSessionUseCaseInterface {
+    private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
+    override val approveEvents: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
     override suspend fun approve(
         proposerPublicKey: String,
@@ -42,19 +48,29 @@ internal class ApproveSessionUseCase(
     ) = supervisorScope {
 //        val trace: MutableList<String> = mutableListOf()
 //        trace.add(Trace.Session.SESSION_APPROVE_STARTED).also { logger.log(Trace.Session.SESSION_APPROVE_STARTED) }
-        val proposal = proposalStorageRepository.getProposalByKey(proposerPublicKey)
-        val sessionFfi = async {
-            try {
-                signClient.approve(proposal = proposal.toProposalFfi(), approvedNamespaces = sessionNamespaces.toSettleYttrium(), selfMetadata = selfAppMetaData.toYttrium())
-            } catch (e: Exception) {
-                println("kobe: Approve Error: $e")
-                onFailure(e)
-            }
 
-        }.await()
-        println("kobe: Session Approve Result: $sessionFfi")
-        //TODO: emit onSessionSettleReponse
-        onSuccess()
+        val proposal = proposalStorageRepository.getProposalByKey(proposerPublicKey)
+
+        try {
+            val sessionFfi: SessionFfi = async {
+                signClient.approve(
+                    proposal = proposal.toProposalFfi(),
+                    approvedNamespaces = sessionNamespaces.toSettleYttrium(),
+                    selfMetadata = selfAppMetaData.toYttrium()
+                )
+            }.await()
+            println("kobe: Session Approve Result: $sessionFfi")
+
+            //TODO: emit onSessionSettleReponse
+            _events.emit(EngineDO.SettledSessionResponse.Result(sessionFfi.toEngineDO()))
+            onSuccess()
+        } catch (e: Exception) {
+            println("kobe: Approve Error: $e")
+
+            //TODO: keep it or remove it?
+//            _events.emit(EngineDO.SettledSessionResponse.Result(sessionFfi.toEngineDO()))
+            onFailure(e)
+        }
     }
 }
 //        val request = proposal.toSessionProposeRequest()
@@ -149,6 +165,7 @@ internal class ApproveSessionUseCase(
 //}
 
 internal interface ApproveSessionUseCaseInterface {
+    val approveEvents: SharedFlow<EngineEvent>
     suspend fun approve(
         proposerPublicKey: String,
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
