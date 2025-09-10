@@ -35,6 +35,8 @@ class SignListener() : SignListener {
     }
 
     override fun onSessionRequest(topic: String, sessionRequest: SessionRequestJsonRpcFfi) {
+        println("kobe: onSessionRequest: $sessionRequest")
+
         val sessionRequestEvent = EngineDO.SessionRequestEvent(
             request = EngineDO.SessionRequest(
                 topic = topic,
@@ -49,7 +51,11 @@ class SignListener() : SignListener {
             ),
             context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
         )
-        scope.launch { _events.emit(sessionRequestEvent) }
+
+        scope.launch { 
+            _events.emit(sessionRequestEvent)
+            println("kobe: session request event emitted successfully")
+        }
     }
 
     override fun onSessionRequestResponse(id: ULong, topic: String, response: SessionRequestJsonRpcResponseFfi) {

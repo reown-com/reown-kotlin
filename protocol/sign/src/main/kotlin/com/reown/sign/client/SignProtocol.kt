@@ -186,22 +186,19 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                     storageModule(koinApp.koin.get<DatabaseConfig>().SIGN_SDK_DB_NAME)
                 )
 
+                signEngine = koinApp.koin.get()
+                signEngine.setup()
+                
                 scope.launch {
                     println("kobe: start")
                     signClient.start()
                     println("kobe: register listener")
-                    signClient.registerSignListener(SignListener())
-
-                    withContext(Dispatchers.Main) {
-                        println("kobe: register lifecycle")
-                        init.application.registerActivityLifecycleCallbacks(ActivityLifecycleCallbacks())
-                    }
-
+                    signClient.registerSignListener(signEngine.signListener)
+                    println("kobe: register lifecycle")
+                    init.application.registerActivityLifecycleCallbacks(ActivityLifecycleCallbacks())
+                    onSuccess()
                 }
 
-                signEngine = koinApp.koin.get()
-                signEngine.setup()
-                onSuccess()
             } catch (e: Exception) {
                 onError(Sign.Model.Error(e))
             }

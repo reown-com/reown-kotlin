@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 import uniffi.yttrium.SignClient
 
 internal class SignEngine(
-    private val signListener: SignListener,
+    internal val signListener: SignListener,
 //    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
 //    private val getPendingRequestsByTopicUseCase: GetPendingRequestsUseCaseByTopicInterface,
 //    private val getPendingSessionRequestByTopicUseCase: GetPendingSessionRequestByTopicUseCaseInterface,
@@ -186,7 +186,7 @@ internal class SignEngine(
 //            internalErrorsJob = collectInternalErrors()
 //        }
 
-        handleRelayRequestsAndResponses()
+//        handleRelayRequestsAndResponses()
     }
 
     private fun handleRelayRequestsAndResponses() {
@@ -279,6 +279,7 @@ internal class SignEngine(
 
     private fun collectSignEvents(): Job =
         merge(
+            signListener.events,
             respondSessionRequestUseCase.events,
 //            onSessionRequestUseCase.events,
 //            onSessionDeleteUseCase.events,
@@ -293,11 +294,13 @@ internal class SignEngine(
 //            onSessionUpdateResponseUseCase.events,
 //            onSessionRequestResponseUseCase.events,
 //            onSessionAuthenticateResponseUseCase.events,
-            sessionRequestUseCase.requestEvents,
-            signListener.events
+            sessionRequestUseCase.requestEvents
         )
-            .onEach { event -> _engineEvent.emit(event) }
-            .launchIn(scope)
+            .onEach { event ->
+                println("kobe: engine event received: $event")
+                println("kobe: engine event type: ${event::class.simpleName}")
+                _engineEvent.emit(event)
+            }.launchIn(scope)
 
 //    private fun resubscribeToSession() {
 //        try {
@@ -506,7 +509,7 @@ internal class SignEngine(
         scope.launch {
             try {
                 val walletConnectUri = Validator.validateWCUri(uri) ?: throw Exception("Invalid WalletConnect URI")
-                
+
                 // Call the Rust client to pair and get the proposal
                 val proposal: uniffi.yttrium.SessionProposalFfi? = try {
                     signClient.pair(uri = walletConnectUri.toAbsoluteString())
@@ -519,16 +522,16 @@ internal class SignEngine(
                 if (proposal != null) {
                     // Convert SessionProposalFfi to ProposalVO
                     val proposalVO = proposal.toVO()
-                    
+
                     // Store the proposal
                     proposalStorageRepository.insertProposal(proposalVO)
-                    
+
                     // Emit the session proposal event using _engineEvent
                     val sessionProposalEvent = EngineDO.SessionProposalEvent(
                         proposal = proposalVO.toEngineDO(),
                         context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
                     )
-                    
+
                     _engineEvent.emit(sessionProposalEvent)
                     onSuccess()
                 } else {

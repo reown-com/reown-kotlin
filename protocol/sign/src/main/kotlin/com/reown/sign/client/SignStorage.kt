@@ -29,7 +29,10 @@ internal class SignStorage(
         println("kobe: SessionStore: addSession: $session")
 
         val sessionVO = session.toVO()
-        sessionStorage.insertSession(session = session.toVO(), requestId = session.requestId.toLong())
+
+        println("kobe: insert: ${sessionVO.symKey}")
+
+        sessionStorage.insertSession(session = sessionVO, requestId = session.requestId.toLong())
         metadataStorage.insertOrAbortMetadata(
             topic = sessionVO.topic,
             appMetaData = selfAppMetaData,
@@ -75,9 +78,14 @@ internal class SignStorage(
     override fun getDecryptionKeyForTopic(topic: String): ByteArray? {
         println("kobe: SessionStore: getDecryptionKeyForTopic: $topic")
 
-        return sessionStorage.getSymKeyByTopic(Topic(topic))
-            .also { println("kobe: session symkey: $it") }
-            ?.hexToBytes() ?: ByteArray(0)
+        return try {
+            val symKeyHex = sessionStorage.getSymKeyByTopic(Topic(topic))
+
+            symKeyHex?.hexToBytes()
+        } catch (e: Exception) {
+            println("kobe: error: $e")
+            ByteArray(0)
+        }
     }
 
     override fun savePartialSession(topic: String, symKey: ByteArray) {

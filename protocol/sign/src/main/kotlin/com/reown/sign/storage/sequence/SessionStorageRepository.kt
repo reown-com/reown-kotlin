@@ -57,7 +57,7 @@ internal class SessionStorageRepository(
 
     @JvmSynthetic
     fun getSymKeyByTopic(topic: Topic): String? {
-        return sessionDaoQueries.getSymKey(topic.value).executeAsOneOrNull().toString()
+        return sessionDaoQueries.getSymKey(topic.value).executeAsOneOrNull()?.sym_key
     }
 
     @Synchronized
