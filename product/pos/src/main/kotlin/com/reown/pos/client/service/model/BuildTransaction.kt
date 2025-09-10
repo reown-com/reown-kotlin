@@ -11,7 +11,7 @@ data class JsonRpcBuildTransactionRequest(
     @param:Json(name = "jsonrpc")
     val jsonrpc: String = "2.0",
     @param:Json(name = "method")
-    val method: String = "wc_pos_buildTransaction",
+    val method: String = "wc_pos_buildTransactions",
     @param:Json(name = "params")
     val params: BuildTransactionParams,
 )
@@ -50,9 +50,7 @@ data class JsonRpcBuildTransactionResponse(
 @JsonClass(generateAdapter = true)
 data class BuildTransactionParamsResponse(
     @Json(name = "transactions")
-    val transactions: List<TransactionRpc>,
-    @Json(name = "id")
-    val id: String
+    val transactions: List<TransactionRpc>
 )
 
 @JsonClass(generateAdapter = true)
@@ -61,6 +59,8 @@ data class TransactionRpc(
     val method: String,
     @Json(name = "chainId")
     val chainId: String,
+    @Json(name = "id")
+    val id: String,
     @Json(name = "params")
     val params: Any
 )

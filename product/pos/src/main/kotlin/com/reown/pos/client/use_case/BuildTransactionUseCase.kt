@@ -43,7 +43,7 @@ internal class BuildTransactionUseCase(
             is BuildTransactionResult.Success -> {
                 sendTransactionRequest(
                     transactionRpc = buildResult.transactions[0], //TODO: Update to send all transactions one by one to the wallet
-                    transactionId = buildResult.transactionId,
+                    transactionId = buildResult.transactions[0].id, //TODO: Update to send all transactions one by one to the wallet
                     paymentIntent = paymentIntent,
                     approvedSession = approvedSession,
                     onSuccess = onSuccess,
@@ -93,10 +93,7 @@ internal class BuildTransactionUseCase(
 
                 else -> {
                     Log.d(TAG, "Transaction built successfully")
-                    BuildTransactionResult.Success(
-                        transactions = response.result.transactions,
-                        transactionId = response.result.id
-                    )
+                    BuildTransactionResult.Success(transactions = response.result.transactions)
                 }
             }
         } catch (e: Exception) {
@@ -150,10 +147,7 @@ internal class BuildTransactionUseCase(
         .firstOrNull { account -> account.startsWith(chainId) }
 
     sealed class BuildTransactionResult {
-        data class Success(
-            val transactions: List<com.reown.pos.client.service.model.TransactionRpc>,
-            val transactionId: String
-        ) : BuildTransactionResult()
+        data class Success(val transactions: List<com.reown.pos.client.service.model.TransactionRpc>) : BuildTransactionResult()
 
         data class Error(val message: String) : BuildTransactionResult()
     }
