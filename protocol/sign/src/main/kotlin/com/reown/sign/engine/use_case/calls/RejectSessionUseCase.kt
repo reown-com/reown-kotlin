@@ -1,28 +1,22 @@
 package com.reown.sign.engine.use_case.calls
 
-import com.reown.android.Core
-import com.reown.android.internal.common.model.IrnParams
-import com.reown.android.internal.common.model.Tags
-import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
 import com.reown.android.internal.utils.CoreValidator.isExpired
-import com.reown.android.internal.utils.fiveMinutesInSeconds
-import com.reown.android.pairing.handler.PairingControllerInterface
-import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
-import com.reown.sign.common.exceptions.PeerError
 import com.reown.sign.common.exceptions.SessionProposalExpiredException
-import com.reown.sign.engine.model.mapper.toSessionProposeRequest
+import com.reown.sign.engine.model.mapper.toProposalFfi
 import com.reown.sign.storage.proposal.ProposalStorageRepository
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.RejectionReason
+import uniffi.yttrium.SignClient
 
 internal class RejectSessionUseCase(
     private val verifyContextStorageRepository: VerifyContextStorageRepository,
-//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val proposalStorageRepository: ProposalStorageRepository,
-    private val logger: Logger
+    private val logger: Logger,
+    private val signClient: SignClient,
 ) : RejectSessionUseCaseInterface {
 
     override suspend fun reject(proposerPublicKey: String, reason: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) = supervisorScope {
@@ -35,23 +29,27 @@ internal class RejectSessionUseCase(
         }
 
         logger.log("Sending session rejection, topic: ${proposal.pairingTopic.value}")
-//        jsonRpcInteractor.respondWithError(
-//            proposal.toSessionProposeRequest(),
-//            PeerError.EIP1193.UserRejectedRequest(reason),
-//            IrnParams(Tags.SESSION_PROPOSE_RESPONSE_REJECT, Ttl(fiveMinutesInSeconds), correlationId = proposal.requestId),
-//            onSuccess = {
-//                logger.log("Session rejection sent successfully, topic: ${proposal.pairingTopic.value}")
-//                scope.launch {
-//                    proposalStorageRepository.deleteProposal(proposerPublicKey)
-//                    verifyContextStorageRepository.delete(proposal.requestId)
-//                    jsonRpcInteractor.unsubscribe(proposal.pairingTopic)
-//                }
-//                onSuccess()
-//            },
-//            onFailure = { error ->
-//                logger.error("Session rejection sent failure, topic: ${proposal.pairingTopic.value}. Error: $error")
-//                onFailure(error)
-//            })
+        try {
+            async {
+                signClient.reject(
+                    proposal = proposal.toProposalFfi(),
+                    reason = RejectionReason.USER_REJECTED
+                )
+            }.await()
+            
+            logger.log("Session rejection sent successfully, topic: ${proposal.pairingTopic.value}")
+            
+            // Cleanup storage
+            launch {
+                proposalStorageRepository.deleteProposal(proposerPublicKey)
+                verifyContextStorageRepository.delete(proposal.requestId)
+            }
+            
+            onSuccess()
+        } catch (e: Exception) {
+            logger.error("Session rejection sent failure, topic: ${proposal.pairingTopic.value}. Error: $e")
+            onFailure(e)
+        }
     }
 }
 
