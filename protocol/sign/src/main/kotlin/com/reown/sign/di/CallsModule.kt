@@ -222,7 +222,8 @@ internal fun callsModule() = module {
         DisconnectSessionUseCase(
 //            jsonRpcInteractor = get(),
             sessionStorageRepository = get(),
-            logger = get(named(AndroidCommonDITags.LOGGER))
+            logger = get(named(AndroidCommonDITags.LOGGER)),
+            signClient = get(named(AndroidCommonDITags.SIGN_RUST_CLIENT))
         )
     }
 
