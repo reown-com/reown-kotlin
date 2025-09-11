@@ -12,7 +12,7 @@ CREATE TABLE OptionalNamespaceDao (
 );
 
 insertOrAbortOptionalNamespace:
-INSERT OR ABORT INTO OptionalNamespaceDao(session_id, key, chains, methods, events)
+INSERT OR REPLACE INTO OptionalNamespaceDao(session_id, key, chains, methods, events)
 VALUES (?, ?, ?, ?, ?);
 
 deleteOptionalNamespacesByTopic:

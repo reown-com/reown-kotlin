@@ -21,7 +21,7 @@ CREATE TABLE SessionDao(
 );
 
 insertOrAbortSession:
-INSERT OR ABORT INTO SessionDao(topic, pairingTopic, expiry, relay_protocol, relay_data, controller_key, self_participant, peer_participant, is_acknowledged, properties, transport_type, scoped_properties, sym_key)
+INSERT OR REPLACE INTO SessionDao(topic, pairingTopic, expiry, relay_protocol, relay_data, controller_key, self_participant, peer_participant, is_acknowledged, properties, transport_type, scoped_properties, sym_key)
 VALUES (?,  ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 lastInsertedRow:

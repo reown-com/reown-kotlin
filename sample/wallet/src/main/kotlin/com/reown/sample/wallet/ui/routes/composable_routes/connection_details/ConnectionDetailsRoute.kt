@@ -76,6 +76,7 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
     var isEmitLoading by remember { mutableStateOf(false) }
     var isDeleteLoading by remember { mutableStateOf(false) }
     var isUpdateLoading by remember { mutableStateOf(false) }
+    var isExtendLoading by remember { mutableStateOf(false) }
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -86,6 +87,7 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                 isEmitAndUpdateVisible = uiConnection.type is ConnectionType.Sign,
                 isEmitLoading = isEmitLoading,
                 isUpdateLoading = isUpdateLoading,
+                isExtendLoading = isExtendLoading,
                 onEmit = {
                     when (uiConnection.type) {
                         is ConnectionType.Sign -> {
@@ -168,6 +170,38 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                 Firebase.crashlytics.recordException(e)
                                 composableScope.launch(Dispatchers.Main) {
                                     Toast.makeText(context, "Session update error. Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
+                },
+                onExtend = {
+                    when (uiConnection.type) {
+                        is ConnectionType.Sign -> {
+                            isExtendLoading = true
+                            try {
+                                val params = Wallet.Params.SessionExtend(uiConnection.type.topic)
+                                WalletKit.extendSession(
+                                    params,
+                                    onSuccess = {
+                                        isExtendLoading = false
+                                        composableScope.launch(Dispatchers.Main) {
+                                            Toast.makeText(context, "Session extended", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    onError = { error ->
+                                        isExtendLoading = false
+                                        Firebase.crashlytics.recordException(error.throwable)
+                                        composableScope.launch(Dispatchers.Main) {
+                                            Toast.makeText(context, "Session extend error. Error: ${error.throwable.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                )
+                            } catch (e: Exception) {
+                                isExtendLoading = false
+                                Firebase.crashlytics.recordException(e)
+                                composableScope.launch(Dispatchers.Main) {
+                                    Toast.makeText(context, "Session extend error. Error: ${e.message}", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
@@ -450,15 +484,17 @@ fun TopButtons(
     isEmitAndUpdateVisible: Boolean,
     isEmitLoading: Boolean,
     isUpdateLoading: Boolean,
+    isExtendLoading: Boolean,
     onEmit: () -> Unit,
-    onUpdate: () -> Unit
+    onUpdate: () -> Unit,
+    onExtend: () -> Unit
 ) {
     val color = Color(0xFF3496ff)
     val style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 17.sp, color = color)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 9.dp),
+            .padding(horizontal = 9.dp, vertical = 54.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         val interactionSourceRow = remember { MutableInteractionSource() }
@@ -513,6 +549,26 @@ fun TopButtons(
                             .clickable { onUpdate() }
                             .padding(horizontal = 5.dp, vertical = 5.dp),
                         text = "Update", style = style
+                    )
+                }
+            }
+            AnimatedContent(targetState = isExtendLoading, label = "Loading") { state ->
+                if (state) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .padding(8.dp)
+                            .wrapContentWidth(align = Alignment.CenterHorizontally)
+                            .wrapContentHeight(align = Alignment.CenterVertically),
+                        color = color, strokeWidth = 4.dp
+                    )
+                } else {
+                    Text(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(5.dp))
+                            .clickable { onExtend() }
+                            .padding(horizontal = 5.dp, vertical = 5.dp),
+                        text = "Extend", style = style
                     )
                 }
             }
