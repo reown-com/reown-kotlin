@@ -24,6 +24,10 @@ class SignListener() : SignListener {
 
     override fun onSessionDisconnect(id: ULong, topic: String) {
         println("kobe: onSessionDisconnect: $id; $topic")
+
+        scope.launch {
+            _events.emit(EngineDO.SessionDelete(topic, "User disconnected"))
+        }
     }
 
     override fun onSessionEvent(id: ULong, topic: String, params: Boolean) {
@@ -52,7 +56,7 @@ class SignListener() : SignListener {
             context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
         )
 
-        scope.launch { 
+        scope.launch {
             _events.emit(sessionRequestEvent)
             println("kobe: session request event emitted successfully")
         }
