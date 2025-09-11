@@ -4,7 +4,10 @@ import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.scope
+import com.reown.foundation.common.model.Topic
 import com.reown.sign.engine.model.EngineDO
+import com.reown.sign.engine.model.mapper.toEngineDOSessionExtend
+import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -14,7 +17,7 @@ import uniffi.yttrium.SessionRequestJsonRpcResponseFfi
 import uniffi.yttrium.SettleNamespace
 import uniffi.yttrium.SignListener
 
-class SignListener() : SignListener {
+internal class SignListener(private val sessionStorage: SessionStorageRepository) : SignListener {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
@@ -36,6 +39,13 @@ class SignListener() : SignListener {
 
     override fun onSessionExtend(id: ULong, topic: String) {
         println("kobe: onSessionExtend: $id; $topic")
+
+        //Storage already update with new expiry, called from Rust
+        val session = sessionStorage.getSessionWithoutMetadataByTopic(Topic(topic))
+
+        scope.launch {
+            _events.emit(session.toEngineDOSessionExtend())
+        }
     }
 
     override fun onSessionRequest(topic: String, sessionRequest: SessionRequestJsonRpcFfi) {
