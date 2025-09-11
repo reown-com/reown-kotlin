@@ -35,10 +35,20 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.squareup.moshi.JsonClass
 import uniffi.yttrium.SessionRequestJsonRpcErrorResponseFfi
 import uniffi.yttrium.SessionRequestJsonRpcResponseFfi
 import uniffi.yttrium.SessionRequestJsonRpcResultResponseFfi
 import uniffi.yttrium.SignClient
+
+@JsonClass(generateAdapter = true)
+data class JsonRpcErrorData(
+    val code: Int,
+    val message: String,
+    val data: String? = null
+)
 
 internal class RespondSessionRequestUseCase(
 //    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
@@ -53,6 +63,9 @@ internal class RespondSessionRequestUseCase(
 //    private val tvf: TVF,
     private val signClient: SignClient
 ) : RespondSessionRequestUseCaseInterface {
+    private val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     override val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
     override suspend fun respondSessionRequest(
@@ -62,16 +75,33 @@ internal class RespondSessionRequestUseCase(
         onFailure: (Throwable) -> Unit,
     ) = supervisorScope {
         try {
-            //todo: add error response
-            val responseResultFfi = SessionRequestJsonRpcResultResponseFfi(
-                id = jsonRpcResponse.id.toULong(),
-                jsonrpc = "2.0",
-                result = (jsonRpcResponse as JsonRpcResponse.JsonRpcResult).result.toString()
-            )
+            val responseFfi = when (jsonRpcResponse) {
+                is JsonRpcResponse.JsonRpcResult -> {
+                    val responseResultFfi = SessionRequestJsonRpcResultResponseFfi(
+                        id = jsonRpcResponse.id.toULong(),
+                        jsonrpc = "2.0",
+                        result = jsonRpcResponse.result.toString()
+                    )
+                    SessionRequestJsonRpcResponseFfi.Result(responseResultFfi)
+                }
+
+                is JsonRpcResponse.JsonRpcError -> {
+                    val errorJson = moshi.adapter(JsonRpcResponse.Error::class.java).toJson(jsonRpcResponse.error)
+                    println("kobe: parsed error JSON: $errorJson")
+                    
+                    val responseErrorFfi = SessionRequestJsonRpcErrorResponseFfi(
+                        id = jsonRpcResponse.id.toULong(),
+                        jsonrpc = "2.0",
+                        error = errorJson
+                    )
+                    SessionRequestJsonRpcResponseFfi.Error(responseErrorFfi)
+                }
+            }
 
             val result = async {
                 try {
-                    signClient.respond(topic, SessionRequestJsonRpcResponseFfi.Result(responseResultFfi))
+                    println("kobe: sending response: $responseFfi")
+                    signClient.respond(topic, responseFfi)
                 } catch (e: Exception) {
                     println("kobe: session request error: $e")
                     onFailure(e)
