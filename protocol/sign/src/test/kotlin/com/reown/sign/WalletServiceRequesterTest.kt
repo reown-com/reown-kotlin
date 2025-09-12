@@ -125,7 +125,7 @@ class WalletServiceRequesterTest {
         // Arrange
         val mockResponse = mockk<Response> {
             every { isSuccessful } returns true
-            every { body } returns null
+            every { body } returns "".toResponseBody(null)
         }
 
         every { mockCall.execute() } returns mockResponse

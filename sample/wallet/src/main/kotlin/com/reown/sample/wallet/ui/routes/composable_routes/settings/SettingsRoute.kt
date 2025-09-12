@@ -66,13 +66,13 @@ fun SettingsRoute(navController: NavHostController) {
                 Item.SettingCopyableItem("Private key", viewModel.privateKey),
             )
         ),
-        Section.SettingsSection(
-            "Solana Account", listOf(
-                Item.SettingCopyableItem("Public key", viewModel.solanaKeys.second),
-                Item.SettingCopyableItem("Private key", viewModel.solanaKeys.first),
-                Item.SettingCopyableItem("Key pair", SolanaAccountDelegate.keyPair),
-            )
-        ),
+//        Section.SettingsSection(
+//            "Solana Account", listOf(
+//                Item.SettingCopyableItem("Public key", viewModel.solanaKeys.second),
+//                Item.SettingCopyableItem("Private key", viewModel.solanaKeys.first),
+//                Item.SettingCopyableItem("Key pair", SolanaAccountDelegate.keyPair),
+//            )
+//        ),
         Section.SettingsSection(
             "SUI Account", listOf(
                 Item.SettingCopyableItem("Address", SuiAccountDelegate.address),
@@ -115,14 +115,14 @@ private fun SettingsScreen(
         WCTopAppBar(titleText = "Settings")
         Divider()
         FeaturesSection()
-        Divider()
-        Text(
-            modifier = Modifier
-                .clip(RoundedCornerShape(5.dp))
-                .clickable { onTransactionClick() }
-                .padding(vertical = 5.dp),
-            text = "Send Transaction",
-            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
+//        Divider()
+//        Text(
+//            modifier = Modifier
+//                .clip(RoundedCornerShape(5.dp))
+//                .clickable { onTransactionClick() }
+//                .padding(vertical = 5.dp),
+//            text = "Send Transaction",
+//            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
         Divider()
         LazyColumn {
             itemsIndexed(sections) { index, section ->

@@ -83,45 +83,47 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
 
     @OptIn(ChainAbstractionExperimentalApi::class)
     override fun onSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
-        if (sessionRequest.request.method == "eth_sendTransaction") {
-            try {
-                val initTx = getInitialTransaction(sessionRequest)
-                println("Init TX: $initTx")
-                WalletKit.ChainAbstraction.prepare(
-                    initTx,
-                    listOf(SolanaAccountDelegate.keys.third),
-                    onSuccess = { result ->
-                        when (result) {
-                            is Wallet.Model.PrepareSuccess.Available -> {
-                                println("Prepare success available: $result")
-                                emitChainAbstractionRequest(sessionRequest, result, verifyContext)
-                            }
+        emitSessionRequest(sessionRequest, verifyContext)
 
-                            is Wallet.Model.PrepareSuccess.NotRequired -> {
-                                println("Prepare success not required: $result")
-                                emitSessionRequest(sessionRequest, verifyContext)
-                            }
-                        }
-                    },
-                    onError = { error ->
-                        println("Prepare error: $error")
-                        emitSessionRequest(sessionRequest, verifyContext)
-//                        if (error is Wallet.Model.PrepareError.Unknown) {
-//                            emitSessionRequest(sessionRequest, verifyContext)
-//                        } else {
-//                            respondWithError(getErrorMessage(), sessionRequest)
-//                            emitChainAbstractionError(sessionRequest, error, verifyContext)
+//        if (sessionRequest.request.method == "eth_sendTransaction") {
+//            try {
+//                val initTx = getInitialTransaction(sessionRequest)
+//                println("Init TX: $initTx")
+//                WalletKit.ChainAbstraction.prepare(
+//                    initTx,
+//                    listOf(SolanaAccountDelegate.keys.third),
+//                    onSuccess = { result ->
+//                        when (result) {
+//                            is Wallet.Model.PrepareSuccess.Available -> {
+//                                println("Prepare success available: $result")
+//                                emitChainAbstractionRequest(sessionRequest, result, verifyContext)
+//                            }
+//
+//                            is Wallet.Model.PrepareSuccess.NotRequired -> {
+//                                println("Prepare success not required: $result")
+//                                emitSessionRequest(sessionRequest, verifyContext)
+//                            }
 //                        }
-                    }
-                )
-            } catch (e: Exception) {
-                println("Prepare: Unknown error: $e")
-                respondWithError(e.message ?: "Prepare: Unknown error", sessionRequest)
-                emitSessionRequest(sessionRequest, verifyContext)
-            }
-        } else {
-            emitSessionRequest(sessionRequest, verifyContext)
-        }
+//                    },
+//                    onError = { error ->
+//                        println("Prepare error: $error")
+//                        emitSessionRequest(sessionRequest, verifyContext)
+////                        if (error is Wallet.Model.PrepareError.Unknown) {
+////                            emitSessionRequest(sessionRequest, verifyContext)
+////                        } else {
+////                            respondWithError(getErrorMessage(), sessionRequest)
+////                            emitChainAbstractionError(sessionRequest, error, verifyContext)
+////                        }
+//                    }
+//                )
+//            } catch (e: Exception) {
+//                println("Prepare: Unknown error: $e")
+//                respondWithError(e.message ?: "Prepare: Unknown error", sessionRequest)
+//                emitSessionRequest(sessionRequest, verifyContext)
+//            }
+//        } else {
+//            emitSessionRequest(sessionRequest, verifyContext)
+//        }
     }
 
     override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {

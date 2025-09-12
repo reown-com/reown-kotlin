@@ -36,7 +36,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "${rootDir.path}/gradle/proguard-rules/sdk-rules.pro")
         }
     }
@@ -99,8 +99,11 @@ dependencies {
     releaseApi("com.reown:foundation:$FOUNDATION_VERSION")
 
     // Use specific yttrium version for CI builds, default version for local builds
-    val yttriumVersion = if (System.getenv("CI") == "true") {
-        System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.19-ci"
+    // Release builds use stable version, regular CI builds use CI version for e2e tests
+    val yttriumVersion = if (System.getenv("IS_RELEASE_BUILD") == "true") {
+        "0.9.55" // Use stable version for release builds
+    } else if (System.getenv("CI") == "true") {
+        System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.20-ci" // Use CI version for e2e tests
     } else {
         "0.9.26"
     }

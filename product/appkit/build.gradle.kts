@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.paparazzi)
     id("publish-module-android")
     id("jacoco-report")
+    alias(libs.plugins.compose.compiler)
 }
 
 project.apply {
@@ -34,7 +35,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "${rootDir.path}/gradle/proguard-rules/sdk-rules.pro")
         }
     }

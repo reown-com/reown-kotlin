@@ -34,6 +34,13 @@ object Modal {
             val pairing: Core.Model.Pairing,
         ) : Params()
 
+        data class ConnectParams(
+            val sessionNamespaces: Map<String, Model.Namespace.Proposal>? = null,
+            val properties: Map<String, String>? = null,
+            val scopedProperties: Map<String, String>? = null,
+            val pairing: Core.Model.Pairing,
+        ) : Params()
+
         data class Authenticate(
             val pairingTopic: String? = null,
             val chains: List<String>,
@@ -69,7 +76,6 @@ object Modal {
         ) : Params()
 
         data class SessionParams(
-            val requiredNamespaces: Map<String, Model.Namespace.Proposal>,
             val optionalNamespaces: Map<String, Model.Namespace.Proposal>? = null,
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null
@@ -177,7 +183,7 @@ object Modal {
 
             data class JsonRpcResult(
                 override val id: Long,
-                val result: String,
+                val result: String?,
             ) : JsonRpcResponse()
 
             data class JsonRpcError(

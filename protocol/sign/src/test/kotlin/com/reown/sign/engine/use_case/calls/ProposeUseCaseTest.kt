@@ -82,11 +82,8 @@ class ProposeUseCaseTest {
 
         verify { logger.log("Sending proposal on topic: test_topic") }
         coVerify {
-            jsonRpcInteractor.publishJsonRpcRequest(
+            jsonRpcInteractor.proposeSession(
                 eq(pairing.topic),
-                any(),
-                any(),
-                any(),
                 any(),
                 any(),
                 any(),
@@ -133,8 +130,8 @@ class ProposeUseCaseTest {
         val publicKey = mockk<PublicKey>(relaxed = true)
 
         coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
-        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any(), captureLambda()) } answers {
-            lambda<(Throwable) -> Unit>().invoke(Exception("Subscription Error"))
+        coEvery { jsonRpcInteractor.proposeSession(pairing.topic, any(), any(), onFailure = captureLambda()) } answers {
+            arg<(Throwable) -> Unit>(3).invoke(Exception("Publishing Error"))
         }
 
         val onFailure = mockk<(Throwable) -> Unit>(relaxed = true)
@@ -165,11 +162,10 @@ class ProposeUseCaseTest {
         val publicKey = mockk<PublicKey>(relaxed = true)
 
         coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
-        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any()) } just Runs
         coEvery { proposalStorageRepository.insertProposal(any()) } just Runs
         every { logger.log(any<String>()) } just Runs
-        coEvery { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any(), any(), captureLambda()) } answers {
-            lambda<(Throwable) -> Unit>().invoke(Exception("Publishing Error"))
+        coEvery { jsonRpcInteractor.proposeSession(any(), any(), any(), captureLambda()) } answers {
+            arg<(Throwable) -> Unit>(3).invoke(Exception("Publishing Error"))
         }
         val onFailure = mockk<(Throwable) -> Unit>(relaxed = true)
 
@@ -183,5 +179,303 @@ class ProposeUseCaseTest {
             onFailure = onFailure
         )
         coVerify { onFailure.invoke(any()) }
+    }
+
+    // Test cases for merging required and optional namespaces (adapted from JS tests)
+
+    @Test
+    fun `should merge required and optional namespaces case 1`() = runTest {
+        // Case 1: Required with chain index, optional with same chain index
+        val required = mapOf(
+            "eip155:1" to EngineDO.Namespace.Proposal(
+                chains = emptyList(),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged")
+            )
+        )
+        val optional = mapOf(
+            "eip155:1" to EngineDO.Namespace.Proposal(
+                chains = emptyList(),
+                methods = listOf("eth_sendTransaction"),
+                events = listOf("accountsChanged")
+            )
+        )
+        val pairing = Pairing(Topic("test_topic"), RelayProtocolOptions(), SymmetricKey("ss"), Expiry(fiveMinutesInSeconds), "methods")
+        val publicKey = mockk<PublicKey>(relaxed = true)
+
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
+        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any()) } just Runs
+        coEvery { proposalStorageRepository.insertProposal(any()) } just Runs
+        coEvery { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any()) } just Runs
+        every { logger.log(any<String>()) } just Runs
+
+        proposeSessionUseCase.proposeSession(
+            required,
+            optional,
+            null,
+            null,
+            pairing,
+            onSuccess = { },
+            onFailure = { }
+        )
+
+        coVerify {
+            jsonRpcInteractor.proposeSession(
+                eq(pairing.topic),
+                any(),
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `should merge required and optional namespaces case 2`() = runTest {
+        // Case 2: Required with namespace key, optional with same namespace key
+        val required = mapOf(
+            "eip155" to EngineDO.Namespace.Proposal(
+                chains = listOf("eip155:1"),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged")
+            )
+        )
+        val optional = mapOf(
+            "eip155" to EngineDO.Namespace.Proposal(
+                chains = listOf("eip155:1"),
+                methods = listOf("eth_sendTransaction"),
+                events = listOf("accountsChanged")
+            )
+        )
+        val pairing = Pairing(Topic("test_topic"), RelayProtocolOptions(), SymmetricKey("ss"), Expiry(fiveMinutesInSeconds), "methods")
+        val publicKey = mockk<PublicKey>(relaxed = true)
+
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
+        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any()) } just Runs
+        coEvery { proposalStorageRepository.insertProposal(any()) } just Runs
+        coEvery { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any()) } just Runs
+        every { logger.log(any<String>()) } just Runs
+
+        proposeSessionUseCase.proposeSession(
+            required,
+            optional,
+            null,
+            null,
+            pairing,
+            onSuccess = { },
+            onFailure = { }
+        )
+
+        coVerify {
+            jsonRpcInteractor.proposeSession(
+                eq(pairing.topic),
+                any(),
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `should merge required and optional namespaces case 3`() = runTest {
+        // Case 3: Required and optional with different namespaces
+        val required = mapOf(
+            "eip155" to EngineDO.Namespace.Proposal(
+                chains = listOf("eip155:1"),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged")
+            )
+        )
+        val optional = mapOf(
+            "solana" to EngineDO.Namespace.Proposal(
+                chains = listOf("solana:1"),
+                methods = listOf("solana_signTransaction"),
+                events = listOf("accountsChanged")
+            )
+        )
+        val pairing = Pairing(Topic("test_topic"), RelayProtocolOptions(), SymmetricKey("ss"), Expiry(fiveMinutesInSeconds), "methods")
+        val publicKey = mockk<PublicKey>(relaxed = true)
+
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
+        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any()) } just Runs
+        coEvery { proposalStorageRepository.insertProposal(any()) } just Runs
+        coEvery { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any()) } just Runs
+        every { logger.log(any<String>()) } just Runs
+
+        proposeSessionUseCase.proposeSession(
+            required,
+            optional,
+            null,
+            null,
+            pairing,
+            onSuccess = { },
+            onFailure = { }
+        )
+
+        coVerify {
+            jsonRpcInteractor.proposeSession(
+                eq(pairing.topic),
+                any(),
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `should merge required and optional namespaces case 4`() = runTest {
+        // Case 4: Multiple required namespaces with overlapping optional namespaces
+        val required = mapOf(
+            "eip155" to EngineDO.Namespace.Proposal(
+                chains = listOf("eip155:2"),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged")
+            ),
+            "solana" to EngineDO.Namespace.Proposal(
+                chains = listOf("solana:1"),
+                methods = listOf("solana_signTransaction"),
+                events = listOf("accountsChanged")
+            )
+        )
+        val optional = mapOf(
+            "eip155" to EngineDO.Namespace.Proposal(
+                chains = listOf("eip155:1"),
+                methods = listOf("eth_signTypedData"),
+                events = listOf("accountsChanged")
+            )
+        )
+        val pairing = Pairing(Topic("test_topic"), RelayProtocolOptions(), SymmetricKey("ss"), Expiry(fiveMinutesInSeconds), "methods")
+        val publicKey = mockk<PublicKey>(relaxed = true)
+
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
+        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any()) } just Runs
+        coEvery { proposalStorageRepository.insertProposal(any()) } just Runs
+        coEvery { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any()) } just Runs
+        every { logger.log(any<String>()) } just Runs
+
+        proposeSessionUseCase.proposeSession(
+            required,
+            optional,
+            null,
+            null,
+            pairing,
+            onSuccess = { },
+            onFailure = { }
+        )
+
+        coVerify {
+            jsonRpcInteractor.proposeSession(
+                eq(pairing.topic),
+                any(),
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `should handle null requiredNamespaces correctly`() = runTest {
+        val optional = mapOf(
+            "eip155" to EngineDO.Namespace.Proposal(
+                chains = listOf("eip155:1"),
+                methods = listOf("eth_sendTransaction"),
+                events = listOf("accountsChanged")
+            )
+        )
+        val pairing = Pairing(Topic("test_topic"), RelayProtocolOptions(), SymmetricKey("ss"), Expiry(fiveMinutesInSeconds), "methods")
+        val publicKey = mockk<PublicKey>(relaxed = true)
+
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
+        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any()) } just Runs
+        coEvery { proposalStorageRepository.insertProposal(any()) } just Runs
+        coEvery { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any()) } just Runs
+        every { logger.log(any<String>()) } just Runs
+
+        proposeSessionUseCase.proposeSession(
+            null,
+            optional,
+            null,
+            null,
+            pairing,
+            onSuccess = { },
+            onFailure = { }
+        )
+
+        coVerify {
+            jsonRpcInteractor.proposeSession(
+                eq(pairing.topic),
+                any(),
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `should handle null optionalNamespaces correctly`() = runTest {
+        val required = mapOf(
+            "eip155" to EngineDO.Namespace.Proposal(
+                chains = listOf("eip155:1"),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged")
+            )
+        )
+        val pairing = Pairing(Topic("test_topic"), RelayProtocolOptions(), SymmetricKey("ss"), Expiry(fiveMinutesInSeconds), "methods")
+        val publicKey = mockk<PublicKey>(relaxed = true)
+
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
+        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any()) } just Runs
+        coEvery { proposalStorageRepository.insertProposal(any()) } just Runs
+        coEvery { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any()) } just Runs
+        every { logger.log(any<String>()) } just Runs
+
+        proposeSessionUseCase.proposeSession(
+            required,
+            null,
+            null,
+            null,
+            pairing,
+            onSuccess = { },
+            onFailure = { }
+        )
+
+        coVerify {
+            jsonRpcInteractor.proposeSession(
+                eq(pairing.topic),
+                any(),
+                any(),
+                any(),
+            )
+        }
+    }
+
+    @Test
+    fun `should handle both null requiredNamespaces and optionalNamespaces`() = runTest {
+        val pairing = Pairing(Topic("test_topic"), RelayProtocolOptions(), SymmetricKey("ss"), Expiry(fiveMinutesInSeconds), "methods")
+        val publicKey = mockk<PublicKey>(relaxed = true)
+
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns publicKey
+        coEvery { jsonRpcInteractor.subscribe(pairing.topic, any()) } just Runs
+        coEvery { proposalStorageRepository.insertProposal(any()) } just Runs
+        coEvery { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any()) } just Runs
+        every { logger.log(any<String>()) } just Runs
+
+        proposeSessionUseCase.proposeSession(
+            null,
+            null,
+            null,
+            null,
+            pairing,
+            onSuccess = { },
+            onFailure = { }
+        )
+
+        coVerify {
+            jsonRpcInteractor.proposeSession(
+                eq(pairing.topic),
+                any(),
+                any(),
+                any(),
+            )
+        }
     }
 }

@@ -19,13 +19,9 @@ object Trace {
         const val PROPOSAL_NOT_EXPIRED = "proposal_not_expired"
         const val SESSION_NAMESPACE_VALIDATION_SUCCESS = "session_namespaces_validation_success"
         const val CREATE_SESSION_TOPIC = "create_session_topic"
-        const val SUBSCRIBING_SESSION_TOPIC = "subscribing_session_topic"
-        const val SUBSCRIBE_SESSION_TOPIC_SUCCESS = "subscribe_session_topic_success"
         const val PUBLISHING_SESSION_APPROVE = "publishing_session_approve"
-        const val SESSION_APPROVE_PUBLISH_SUCCESS = "session_approve_publish_success"
         const val STORE_SESSION = "store_session"
-        const val PUBLISHING_SESSION_SETTLE = "publishing_session_settle"
-        const val SESSION_SETTLE_PUBLISH_SUCCESS = "session_settle_publish_success"
+        const val SESSION_APPROVE_SUCCESS = "session_approve_publish_success"
     }
 
     object SessionAuthenticate {

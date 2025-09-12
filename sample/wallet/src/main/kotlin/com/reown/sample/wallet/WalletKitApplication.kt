@@ -14,12 +14,16 @@ import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
+import com.reown.android.relay.ConnectionType
+import com.reown.foundation.network.model.Relay
 import com.reown.foundation.util.Logger
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
+import com.reown.sample.wallet.domain.SmartAccountEnabler
+//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
@@ -49,16 +53,16 @@ class WalletKitApplication : Application() {
         val projectId = BuildConfig.PROJECT_ID
 
         EthAccountDelegate.application = this
-        SolanaAccountDelegate.application = this
         SuiAccountDelegate.application = this
         SuiUtils.init(projectId, this.packageName, applicationContext)
+//        SolanaAccountDelegate.application = this
 
-        try {
-            SolanaAccountDelegate.getSolanaPubKeyForKeyPair()
-        } catch (e: Exception) {
-            Firebase.crashlytics.recordException(e)
-            println("Solana Keys Error: $e")
-        }
+//        try {
+//            SolanaAccountDelegate.getSolanaPubKeyForKeyPair()
+//        } catch (e: Exception) {
+//            Firebase.crashlytics.recordException(e)
+//            println("Solana Keys Error: $e")
+//        }
 
         SmartAccountEnabler.init(this)
 
@@ -76,6 +80,7 @@ class WalletKitApplication : Application() {
             application = this,
             projectId = projectId,
             metaData = appMetaData,
+            connectionType = ConnectionType.AUTOMATIC,
             onError = { error ->
                 Firebase.crashlytics.recordException(error.throwable)
                 println("Init error: ${error.throwable.stackTraceToString()}")

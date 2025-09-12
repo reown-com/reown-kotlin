@@ -981,4 +981,53 @@ class GenerateApprovedNamespacesUtilsTest {
         val exception = assertThrows(Exception::class.java) { generateApprovedNamespaces(proposal, supported) }
         assertEquals("Accounts must be CAIP-10 compliant", "${exception.message}")
     }
+
+    @Test
+    fun `test optional namespaces with unsupported chains are excluded from result`() {
+        val required = emptyMap<String, Sign.Model.Namespace.Proposal>()
+        val optional = mapOf(
+            "eip155" to Sign.Model.Namespace.Proposal(
+                chains = listOf("eip155:1", "eip155:2"),
+                methods = listOf(
+                    "personal_sign",
+                    "eth_sendTransaction",
+                    "eth_signTransaction",
+                    "eth_signTypedData"
+                ),
+                events = listOf("chainChanged", "accountsChanged")
+            ),
+            "bip122" to Sign.Model.Namespace.Proposal(
+                chains = listOf("bip122:000000000019d6689c085ae165831e93"),
+                methods = listOf("bip122_signTransaction"),
+                events = listOf("chainChanged")
+            )
+        )
+        val supported = mapOf(
+            "eip155" to Sign.Model.Namespace.Session(
+                chains = listOf("eip155:1"),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged"),
+                accounts = listOf("eip155:1:0x57f48fAFeC1d76B27e3f29b8d277b6218CDE6092")
+            ),
+            "bip122" to Sign.Model.Namespace.Session(
+                chains = listOf("bip122:000000000019d6689c085ae165831e92"),
+                methods = listOf("bip122_signTransaction"),
+                events = listOf("chainChanged"),
+                accounts = listOf("bip122:000000000019d6689c085ae165831e92:0x57f48fAFeC1d76B27e3f29b8d277b6218CDE6092")
+            )
+        )
+        val proposal = Sign.Model.SessionProposal("", "", "", "", listOf(), "", requiredNamespaces = required, optionalNamespaces = optional, mapOf(), "", "", "", mapOf())
+
+        val approved = generateApprovedNamespaces(proposal, supported)
+        val expected = mapOf(
+            "eip155" to Sign.Model.Namespace.Session(
+                chains = listOf("eip155:1"),
+                methods = listOf("personal_sign", "eth_sendTransaction"),
+                events = listOf("chainChanged"),
+                accounts = listOf("eip155:1:0x57f48fAFeC1d76B27e3f29b8d277b6218CDE6092")
+            )
+        )
+
+        assertEquals(expected, approved)
+    }
 }
