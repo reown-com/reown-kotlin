@@ -3,8 +3,6 @@ package com.reown.sample.wallet.domain
 import android.util.Log
 import com.reown.android.Core
 import com.reown.android.CoreClient
-import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
-import com.reown.sample.wallet.domain.model.Transaction.getInitialTransaction
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit

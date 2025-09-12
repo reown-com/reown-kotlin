@@ -101,13 +101,13 @@ dependencies {
     // Use specific yttrium version for CI builds, default version for local builds
     // Release builds use stable version, regular CI builds use CI version for e2e tests
     val yttriumVersion = if (System.getenv("IS_RELEASE_BUILD") == "true") {
-        "0.9.55" // Use stable version for release builds
+        "0.9.26" // Use stable version for release builds
     } else if (System.getenv("CI") == "true") {
         System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.20-ci" // Use CI version for e2e tests
     } else {
         "0.9.26"
     }
-    api("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
+    api("com.github.reown-com:yttrium:unspecified") //unspecified
     implementation("net.java.dev.jna:jna:5.15.0@aar")
 
     api(libs.coroutines)

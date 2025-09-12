@@ -10,7 +10,6 @@ import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.EthSigner
 import com.reown.sample.wallet.domain.Signer
-import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.WCDelegate.prepareAvailable
