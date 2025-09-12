@@ -1,13 +1,7 @@
 package com.reown.sign.engine.use_case.calls
 
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
-import com.reown.android.internal.common.exception.GenericException
-import com.reown.android.internal.common.model.IrnParams
-import com.reown.android.internal.common.model.Tags
-import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.reown.android.internal.utils.dayInSeconds
 import com.reown.foundation.common.model.Topic
-import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.exceptions.InvalidNamespaceException
 import com.reown.sign.common.exceptions.NO_SEQUENCE_FOR_TOPIC_MESSAGE
@@ -15,18 +9,20 @@ import com.reown.sign.common.exceptions.NotSettledSessionException
 import com.reown.sign.common.exceptions.SESSION_IS_NOT_ACKNOWLEDGED_MESSAGE
 import com.reown.sign.common.exceptions.UNAUTHORIZED_UPDATE_MESSAGE
 import com.reown.sign.common.exceptions.UnauthorizedPeerException
-import com.reown.sign.common.model.vo.clientsync.session.SignRpc
-import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toMapOfNamespacesVOSession
+import com.reown.sign.engine.model.mapper.toSettleYttrium
 import com.reown.sign.storage.sequence.SessionStorageRepository
+import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.SignClient
 
 internal class SessionUpdateUseCase(
 //    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val sessionStorageRepository: SessionStorageRepository,
     private val logger: Logger,
+    private val signClient: SignClient,
 ) : SessionUpdateUseCaseInterface {
 
     override suspend fun sessionUpdate(
@@ -37,31 +33,20 @@ internal class SessionUpdateUseCase(
     ) = supervisorScope {
         runCatching { validate(topic, namespaces) }.fold(
             onSuccess = {
-                val params = SignParams.UpdateNamespacesParams(namespaces.toMapOfNamespacesVOSession())
-                val sessionUpdate = SignRpc.SessionUpdate(params = params)
-                val irnParams = IrnParams(Tags.SESSION_UPDATE, Ttl(dayInSeconds), correlationId = sessionUpdate.id)
+                logger.log("kobe: Sending session update on topic: $topic; $namespaces")
 
                 try {
-                    logger.log("Sending session update on topic: $topic")
-                    sessionStorageRepository.insertTempNamespaces(topic, namespaces.toMapOfNamespacesVOSession(), sessionUpdate.id)
-//                    jsonRpcInteractor.publishJsonRpcRequest(
-//                        Topic(topic), irnParams, sessionUpdate,
-//                        onSuccess = {
-//                            logger.log("Update sent successfully, topic: $topic")
-//                            onSuccess()
-//                        },
-//                        onFailure = { error ->
-//                            logger.error("Sending session update error: $error, topic: $topic")
-//                            sessionStorageRepository.deleteTempNamespacesByTopic(topic)
-//                            onFailure(error)
-//                        })
+                    async { signClient.update(topic = topic, namespaces = namespaces.toSettleYttrium()) }.await()
+
+                    logger.log("kobe: Update sent successfully, topic: $topic")
+                    onSuccess()
                 } catch (e: Exception) {
-                    logger.error("Error updating namespaces: $e")
-                    onFailure(GenericException("Error updating namespaces: $e"))
+                    logger.error("kobe: Sending session update error: $e, topic: $topic")
+                    onFailure(e)
                 }
             },
             onFailure = {
-                logger.error("Error updating namespaces: $it")
+                logger.error("kobe: Error updating namespaces: $it")
                 onFailure(it)
             }
         )

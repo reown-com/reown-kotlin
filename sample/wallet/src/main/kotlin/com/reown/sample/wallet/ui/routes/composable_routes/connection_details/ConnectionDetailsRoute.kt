@@ -139,12 +139,12 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                             methods = entry.value.methods,
                                             events = entry.value.events,
                                         ),
-                                        "solana" to Wallet.Model.Namespace.Session(
-                                            chains = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"),
-                                            accounts = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:3AJ5ACUXvTC5tc8QudGt8R7thzAZXUQtVnCNj26e1qxT"),
-                                            methods = listOf("solana_signTransaction"),
-                                            events = listOf()
-                                        )
+//                                        "solana" to Wallet.Model.Namespace.Session(
+//                                            chains = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"),
+//                                            accounts = listOf("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:3AJ5ACUXvTC5tc8QudGt8R7thzAZXUQtVnCNj26e1qxT"),
+//                                            methods = listOf("solana_signTransaction"),
+//                                            events = listOf()
+//                                        )
                                     ).toMutableMap()
                                 val params = Wallet.Params.SessionUpdate(uiConnection.type.topic, newNamespaces)
                                 WalletKit.updateSession(

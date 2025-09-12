@@ -111,7 +111,7 @@ dependencies {
     } else {
         "0.9.55" // Use stable version for local builds
     }
-    api("com.github.reown-com:yttrium:unspecified") //$yttriumVersion
+    api("com.github.reown-com:yttrium:unspecified")//$yttriumVersion
 
     implementation("org.msgpack:msgpack-core:0.9.1")
 

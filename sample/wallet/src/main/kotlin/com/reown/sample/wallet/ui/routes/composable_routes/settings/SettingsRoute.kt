@@ -77,7 +77,7 @@ fun SettingsRoute(navController: NavHostController) {
 //        ),
         Section.SettingsSection(
             "Device", listOf(
-                Item.SettingCopyableItem("Client ID", viewModel.clientId),
+//                Item.SettingCopyableItem("Client ID", viewModel.clientId),
                 Item.SettingCopyableItem("Device token", deviceToken),
                 Item.SettingCopyableItem("App Version", BuildConfig.VERSION_NAME)
             )
