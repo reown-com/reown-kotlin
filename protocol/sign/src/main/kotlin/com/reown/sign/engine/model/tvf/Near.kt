@@ -14,7 +14,7 @@ object NearSignTransaction {
             return when (data) {
                 is List<*> -> {
                     val intList = data
-                    intList.map { 
+                    intList.map {
                         when (it) {
                             is Number -> it.toInt().toByte()
                             else -> throw IllegalArgumentException("Invalid number type: ${it?.javaClass}")
@@ -25,7 +25,7 @@ object NearSignTransaction {
                     @Suppress("UNCHECKED_CAST")
                     val intMap = data as Map<String, *>
                     val sortedEntries = intMap.entries.sortedBy { it.key.toInt() }
-                    sortedEntries.map { 
+                    sortedEntries.map {
                         when (val value = it.value) {
                             is Number -> value.toInt().toByte()
                             else -> throw IllegalArgumentException("Invalid number type: ${value?.javaClass}")
@@ -43,10 +43,10 @@ object NearSignTransaction {
         val transactionBytes = bufferData.toByteArray()
         val sha256 = SHA256Digest()
         val hash = ByteArray(sha256.digestSize)
-        
+
         sha256.update(transactionBytes, 0, transactionBytes.size)
         sha256.doFinal(hash, 0)
-        
+
         return toBase58(hash)
     }
 }

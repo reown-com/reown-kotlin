@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
-import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.ui.common.subscriptions.ActiveSubscriptionsUI
 import com.reown.sample.wallet.ui.common.subscriptions.toUI
@@ -37,7 +37,8 @@ class UpdateSubscriptionViewModel(val topic: String) : ViewModel() {
         .filterIsInstance<Notify.Event.SubscriptionsChanged>()
         .debounce(500L)
         .map { event -> event.subscriptions }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAccount)).values.toList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(
+            EthAccountDelegate.ethAccount)).values.toList())
 
     private val currentSubscription: Notify.Model.Subscription =
         _activeSubscriptions.value.firstOrNull { it.topic == topic } ?: throw IllegalStateException("No subscription found for topic $topic")

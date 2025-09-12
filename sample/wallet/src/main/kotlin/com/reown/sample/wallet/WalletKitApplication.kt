@@ -19,16 +19,18 @@ import com.reown.foundation.network.model.Relay
 import com.reown.foundation.util.Logger
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
-import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
-import com.reown.sample.wallet.domain.SmartAccountEnabler
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SmartAccountEnabler
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.reown.walletkit.utils.sui.SuiUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -39,7 +41,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named
 import timber.log.Timber
-//import uniffi.uniffi_yttrium.AccountClient
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
 class WalletKitApplication : Application() {
@@ -47,7 +48,11 @@ class WalletKitApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        val projectId = BuildConfig.PROJECT_ID
+
         EthAccountDelegate.application = this
+        SuiAccountDelegate.application = this
+        SuiUtils.init(projectId, this.packageName, applicationContext)
 //        SolanaAccountDelegate.application = this
 
 //        try {
@@ -59,7 +64,6 @@ class WalletKitApplication : Application() {
 
         SmartAccountEnabler.init(this)
 
-        val projectId = BuildConfig.PROJECT_ID
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Wallet",
             description = "Kotlin Wallet Implementation",

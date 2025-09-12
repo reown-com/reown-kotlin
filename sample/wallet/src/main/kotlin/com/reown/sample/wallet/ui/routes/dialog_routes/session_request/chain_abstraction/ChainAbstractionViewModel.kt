@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
-import com.reown.sample.wallet.domain.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.EthSigner
 import com.reown.sample.wallet.domain.Signer
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
