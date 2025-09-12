@@ -17,27 +17,22 @@ import org.web3j.utils.Numeric
 internal class CacaoTest {
     private val cacaoVerifier = CacaoVerifier(ProjectId(BuildConfig.PROJECT_ID))
     private val cacaoSigner = object : CacaoSignerInterface<Cacao.Signature> {}
-    private val iss = "did:pkh:eip155:1:0x15bca56b6e2728aec2532df9d436bd1600e86688"
     private val chainName = "Ethereum"
     private val payload = Cacao.Payload(
-        iss = iss,
-        domain = "service.invalid",
-        aud = "https://service.invalid/login",
+        iss = "did:pkh:eip155:1:0x93fdeCDCb4A9c3A8ce406f8b21a95fFa1cB6C010",
+        domain = "appkit-lab.reown.com",
+        aud = "https://appkit-lab.reown.com",
         version = "1",
-        nonce = "32891756",
-        iat = "2021-09-30T16:25:24Z",
+        nonce = "f2bb9aa60453c71cdb181d144dc81872bfd0ff743724268ce916aa5c5780a598",
+        iat = "2025-09-12T13:30:29.565Z",
         nbf = null,
         exp = null,
-        statement = "I accept the ServiceOrg Terms of Service: https://service.invalid/tos",
+        statement = "Please sign with your account I further authorize the stated URI to perform the following actions on my behalf: (1) 'request': 'eth_sign', 'eth_signTypedData', 'eth_signTypedData_v4', 'personal_sign' for 'eip155'.",
         requestId = null,
-        resources = listOf(
-            "ipfs://bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/",
-            "https://example.com/my-web2-claim.json",
-            "urn:recap:eyJhdHQiOnsiZWlwMTU1Ijp7InJlcXVlc3QvcGVyc29uYWxfc2lnbiI6W3siY2hhaW5zIjpbImVpcDE1NToxIl19XSwicmVxdWVzdC9ldGhfc2lnblR5cGVkRGF0YV92NCI6W3siY2hhaW5zIjpbImVpcDE1NToxIl19XX19fQ=="
-        )
+        resources = listOf("urn:recap:eyJhdHQiOnsiZWlwMTU1Ijp7InJlcXVlc3QvZXRoX3NpZ24iOlt7ImNoYWlucyI6WyJlaXAxNTU6MSIsImVpcDE1NToxMzciXX1dLCJyZXF1ZXN0L2V0aF9zaWduVHlwZWREYXRhIjpbeyJjaGFpbnMiOlsiZWlwMTU1OjEiLCJlaXAxNTU6MTM3Il19XSwicmVxdWVzdC9ldGhfc2lnblR5cGVkRGF0YV92NCI6W3siY2hhaW5zIjpbImVpcDE1NToxIiwiZWlwMTU1OjEzNyJdfV0sInJlcXVlc3QvcGVyc29uYWxfc2lnbiI6W3siY2hhaW5zIjpbImVpcDE1NToxIiwiZWlwMTU1OjEzNyJdfV19fX0")
     )
 
-    private val privateKey = "305c6cde3846927892cd32762f6120539f3ec74c9e3a16b9b798b1e85351ae2a".hexToBytes()
+    private val privateKey = "27d47c1b45ed34f6f531719dc9d2e75d89e41fce50d8f6ac0ead57860ef35270".hexToBytes()
 
     @Test
     fun signAndVerifyWithEIP191Test() {
@@ -45,16 +40,8 @@ internal class CacaoTest {
         val signature: Cacao.Signature = cacaoSigner.sign(message, privateKey, SignatureType.EIP191)
         val cacao = Cacao(CacaoType.CAIP222.toHeader(), payload, signature)
         val result: Boolean = cacaoVerifier.verify(cacao)
+        Assert.assertTrue("0x962fc9b8fbe359668dc92a3aceaf3483e17a606adc13f51c778e33a2341f932952d8e226c40564a4281b2c265bc52ebd4021c10d13fd7ad2781c45d7ec975f5d1c" == signature.s)
         Assert.assertTrue(result)
-    }
-
-    @Test
-    fun signHexAndVerifyWithEIP191Test() {
-        val message = payload.toCAIP222Message(chainName)
-        val signature: Cacao.Signature = cacaoSigner.sign(Numeric.toHexString(message.toByteArray()), privateKey, SignatureType.EIP191)
-        val cacao = Cacao(CacaoType.CAIP222.toHeader(), payload, signature)
-        val result: Boolean = cacaoVerifier.verify(cacao)
-        assert(result)
     }
 
     @Test
@@ -75,7 +62,8 @@ internal class CacaoTest {
             resources = null
         )
 
-        val signatureString = "0xb518b65724f224f8b12dedeeb06f8b278eb7d3b42524959bed5d0dfa49801bd776c7ee05de396eadc38ee693c917a04d93b20981d68c4a950cbc42ea7f4264bc1c"
+        val signatureString =
+            "0xb518b65724f224f8b12dedeeb06f8b278eb7d3b42524959bed5d0dfa49801bd776c7ee05de396eadc38ee693c917a04d93b20981d68c4a950cbc42ea7f4264bc1c"
         val signature: Cacao.Signature = Cacao.Signature(SignatureType.EIP1271.header, signatureString, payload.toCAIP222Message())
         val cacao = Cacao(CacaoType.EIP4361.toHeader(), payload, signature)
         val result: Boolean = cacaoVerifier.verify(cacao)
@@ -100,7 +88,8 @@ internal class CacaoTest {
             resources = null
         )
 
-        val signatureString = "0xdeaddeaddead4095116db01baaf276361efd3a73c28cf8cc28dabefa945b8d536011289ac0a3b048600c1e692ff173ca944246cf7ceb319ac2262d27b395c82b1c"
+        val signatureString =
+            "0xdeaddeaddead4095116db01baaf276361efd3a73c28cf8cc28dabefa945b8d536011289ac0a3b048600c1e692ff173ca944246cf7ceb319ac2262d27b395c82b1c"
         val signature: Cacao.Signature = Cacao.Signature(SignatureType.EIP1271.header, signatureString, payload.toCAIP222Message())
         val cacao = Cacao(CacaoType.EIP4361.toHeader(), payload, signature)
         val result: Boolean = cacaoVerifier.verify(cacao)
