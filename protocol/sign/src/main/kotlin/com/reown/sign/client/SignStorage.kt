@@ -25,6 +25,8 @@ internal class SignStorage(
     private val pairingStorage: PairingStorageRepositoryInterface,
     private val selfAppMetaData: AppMetaData,
 ) : StorageFfi {
+    //todo: add local coroutines scope
+
     override fun addSession(session: SessionFfi) {
         println("kobe: SessionStore: addSession: $session")
 
@@ -33,14 +35,19 @@ internal class SignStorage(
         println("kobe: insert: ${sessionVO.symKey}")
 
         sessionStorage.insertSession(session = sessionVO, requestId = session.requestId.toLong())
+
+
+        println("kobe: insert self metadata: ${selfAppMetaData}")
         metadataStorage.insertOrAbortMetadata(
             topic = sessionVO.topic,
             appMetaData = selfAppMetaData,
             appMetaDataType = AppMetaDataType.SELF
         )
+
+        println("kobe: insert peer metadata: ${sessionVO.peerAppMetaData!!}")
         metadataStorage.insertOrAbortMetadata(
             topic = sessionVO.topic,
-            appMetaData = sessionVO.peerAppMetaData!!,
+            appMetaData = sessionVO.peerAppMetaData,
             appMetaDataType = AppMetaDataType.PEER
         )
     }
@@ -64,9 +71,14 @@ internal class SignStorage(
 
         return sessionStorage.getSessionWithoutMetadataByTopic(topic = Topic(topic))
             .run {
+                println("kobe: session: $this")
                 val peerAppMetaData = metadataStorage.getByTopicAndType(this.topic, AppMetaDataType.PEER)
-                this.copy(peerAppMetaData = peerAppMetaData)
-            }.toSessionFfi()
+                println("kobe: metadata: $peerAppMetaData")
+                this.copy(
+                    selfAppMetaData = selfAppMetaData,
+                    peerAppMetaData = peerAppMetaData
+                )
+            }.toSessionFfi().also { println("kobe: sessionFfi: $it") }
     }
 
     override fun getAllTopics(): List<uniffi.yttrium.Topic> {
@@ -81,7 +93,15 @@ internal class SignStorage(
         return try {
             val symKeyHex = sessionStorage.getSymKeyByTopic(Topic(topic))
 
-            symKeyHex?.hexToBytes()
+            if (symKeyHex.isNullOrBlank()) {
+                pairingStorage.getPairingOrNullByTopic(Topic(topic))?.symKey?.also { println("kobe: Pairing symKey: $it") }?.hexToBytes()
+            } else {
+                println("kobe: SymKey: $symKeyHex")
+
+                symKeyHex.hexToBytes()
+            }
+
+
         } catch (e: Exception) {
             println("kobe: error: $e")
             ByteArray(0)
@@ -97,6 +117,7 @@ internal class SignStorage(
     override fun deleteSession(topic: String) {
         println("kobe: SessionStore: deleteSession: $topic")
 
+        metadataStorage.deleteMetaData(Topic(topic))
         sessionStorage.deleteSession(topic = Topic(topic))
     }
 

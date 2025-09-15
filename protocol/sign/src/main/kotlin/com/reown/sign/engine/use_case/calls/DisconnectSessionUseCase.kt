@@ -15,10 +15,10 @@ internal class DisconnectSessionUseCase(
     private val signClient: SignClient,
 ) : DisconnectSessionUseCaseInterface {
     override suspend fun disconnect(topic: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) = supervisorScope {
-        if (!sessionStorageRepository.isSessionValid(Topic(topic))) {
-            logger.error("Sending session disconnect error: invalid session $topic")
-            return@supervisorScope onFailure(CannotFindSequenceForTopic("$NO_SEQUENCE_FOR_TOPIC_MESSAGE$topic"))
-        }
+//        if (!sessionStorageRepository.isSessionValid(Topic(topic))) {
+//            logger.error("Sending session disconnect error: invalid session $topic")
+//            return@supervisorScope onFailure(CannotFindSequenceForTopic("$NO_SEQUENCE_FOR_TOPIC_MESSAGE$topic"))
+//        }
 
         logger.log("Sending session disconnect on topic: $topic")
         

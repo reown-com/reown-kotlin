@@ -1,12 +1,15 @@
 package com.reown.sign.client
 
+import com.reown.android.internal.common.model.AppMetaDataType
 import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.foundation.common.model.Topic
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toEngineDOSessionExtend
+import com.reown.sign.engine.model.mapper.toSessionApproved
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -17,12 +20,33 @@ import uniffi.yttrium.SessionRequestJsonRpcResponseFfi
 import uniffi.yttrium.SettleNamespace
 import uniffi.yttrium.SignListener
 
-internal class SignListener(private val sessionStorage: SessionStorageRepository) : SignListener {
+internal class SignListener(
+    private val sessionStorage: SessionStorageRepository,
+    private val metadataStorage: MetadataStorageRepositoryInterface
+) : SignListener {
+    //todo: add local coroutines scope
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
 
-    override fun onSessionConnect(id: ULong) {
-        println("kobe: onSessionConnect: $id")
+    override fun onSessionConnect(id: ULong, topic: String) {
+        println("kobe: onSessionConnect: $id; topic: $topic")
+        scope.launch {
+            val session = sessionStorage.getSessionWithoutMetadataByTopic(Topic(topic))
+                .run {
+                    val peerAppMetaData = metadataStorage.getByTopicAndType(this.topic, AppMetaDataType.PEER)
+                    this.copy(peerAppMetaData = peerAppMetaData)
+                }
+
+            _events.emit(session.toSessionApproved())
+        }
+    }
+
+    override fun onSessionReject(id: ULong, topic: String) {
+        println("kobe: onSessionReject: $id; topic: $topic")
+
+        scope.launch {
+            _events.emit(EngineDO.SessionRejected(topic, "User rejected"))
+        }
     }
 
     override fun onSessionDisconnect(id: ULong, topic: String) {

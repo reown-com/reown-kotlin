@@ -64,7 +64,12 @@ internal fun engineModule() = module {
         )
     }
 
-    single { SignListener(sessionStorage = get()) }
+    single {
+        SignListener(
+            sessionStorage = get(),
+            metadataStorage = get()
+        )
+    }
 
     single {
         SignEngine(
