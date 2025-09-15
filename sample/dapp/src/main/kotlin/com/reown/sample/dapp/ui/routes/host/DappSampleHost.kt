@@ -35,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.reown.appkit.client.AppKit
+import com.reown.appkit.client.models.Account
 import com.reown.sample.dapp.R
 import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sample.dapp.ui.DappSampleNavGraph
@@ -42,7 +43,7 @@ import com.reown.sample.dapp.ui.routes.Route
 import kotlinx.coroutines.delay
 
 @Composable
-fun DappSampleHost() {
+fun DappSampleHost(account: Account?) {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     var isOfflineState: Boolean? by remember { mutableStateOf(null) }
     val sheetState = rememberModalBottomSheetState(
@@ -53,7 +54,7 @@ fun DappSampleHost() {
     val bottomSheetNavigator = BottomSheetNavigator(sheetState)
     val navController = rememberNavController(bottomSheetNavigator)
     val viewModel: DappSampleViewModel = viewModel()
-    val isConnected = AppKit.getAccount() != null
+    val isConnected = account != null
     val startDestination = if (isConnected) Route.Session.path else Route.ChainSelection.path
 
     LaunchedEffect(Unit) {

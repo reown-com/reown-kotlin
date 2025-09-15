@@ -2,6 +2,11 @@ package com.reown.appkit.client
 
 import androidx.activity.ComponentActivity
 import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.di.coreAppKitModule
+import com.reown.android.internal.common.di.explorerModule
+import com.reown.android.internal.common.di.pulseModule
+import com.reown.android.internal.common.model.ProjectId
+import com.reown.android.internal.common.model.TelemetryEnabled
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pulse.model.EventType
@@ -76,16 +81,11 @@ object AppKit {
         onError: (Modal.Model.Error) -> Unit,
     ) {
         SignClient.initialize(
-            init = Sign.Params.Init(projectId = "", metaData = Sign.Model.MetaData(
-                name = TODO(),
-                description = TODO(),
-                url = TODO(),
-                icons = TODO(),
-                redirect = TODO(),
-                appLink = TODO(),
-                linkMode = TODO(),
-                verifyUrl = TODO()
-            )), //TODO: pass project id
+            init = Sign.Params.Init(
+                projectId = init.projectId,
+                metaData = init.metaData.toSign(),
+                application = init.application,
+            ),
             onSuccess = {
                 onInitializedClient(init, onSuccess, onError)
             },
@@ -125,17 +125,44 @@ object AppKit {
     ) {
         if (!::appKitEngine.isInitialized) {
             runCatching {
-                wcKoinApp.modules(appKitModule())
-                appKitEngine = wcKoinApp.koin.get()
-                appKitEngine.setup(init, onError)
-                appKitEngine.setInternalDelegate(AppKitDelegate)
                 wcKoinApp.modules(
+                    //todo: add telemetry flag to sign client
+                    module { single(named(AndroidCommonDITags.TELEMETRY_ENABLED)) { TelemetryEnabled(false) } },
                     module {
                         single(named(AndroidCommonDITags.ENABLE_WEB_3_MODAL_ANALYTICS)) {
-                            init.enableAnalytics ?: appKitEngine.fetchAnalyticsConfig()
+                            true
+                            //init.enableAnalytics ?: appKitEngine.fetchAnalyticsConfig()
+                        }
+                    },
+                    module {
+                        single { ProjectId(init.projectId) }
+                    },
+//                    coreCommonModule(),
+                    coreAppKitModule(init.projectId),
+                    explorerModule(init.projectId),
+                    appKitModule(init.projectId),
+                    pulseModule(init.application.packageName),
+                    module {
+                        single {
+                            AppKitEngine(
+                                getSessionUseCase = get(),
+                                getSelectedChainUseCase = get(),
+                                deleteSessionDataUseCase = get(),
+                                saveSessionUseCase = get(),
+                                connectionEventRepository = get(),
+                                enableAnalyticsUseCase = get(),
+                                sendEventUseCase = get(),
+                                logger = get(named(AndroidCommonDITags.LOGGER)),
+                            )
                         }
                     }
                 )
+                appKitEngine = wcKoinApp.koin.get()
+                appKitEngine.setup(init, onError)
+                appKitEngine.setInternalDelegate(AppKitDelegate)
+//                wcKoinApp.modules(
+//
+//                )
             }
                 .onFailure { error -> return@onInitializedClient onError(Modal.Model.Error(error)) }
                 .onSuccess {

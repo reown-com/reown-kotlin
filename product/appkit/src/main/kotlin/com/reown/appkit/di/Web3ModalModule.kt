@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.appkit.domain.RecentWalletsRepository
 import com.reown.appkit.domain.SessionRepository
@@ -19,13 +17,15 @@ import com.reown.appkit.domain.usecase.ObserveSessionUseCase
 import com.reown.appkit.domain.usecase.SaveChainSelectionUseCase
 import com.reown.appkit.domain.usecase.SaveRecentWalletUseCase
 import com.reown.appkit.domain.usecase.SaveSessionUseCase
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 private val Context.sessionDataStore: DataStore<Preferences> by preferencesDataStore(name = "session_store")
 
-internal fun appKitModule() = module {
+internal fun appKitModule(projectId: String) = module {
 
     single { RecentWalletsRepository(sharedPreferences = get()) }
 
@@ -45,7 +45,12 @@ internal fun appKitModule() = module {
     }
 
     single(named(AppKitDITags.SESSION_DATA_STORE)) { androidContext().sessionDataStore }
-    single { SessionRepository(sessionStore = get(named(AppKitDITags.SESSION_DATA_STORE)), moshi = get(named(AppKitDITags.MOSHI))) }
+    single {
+        SessionRepository(
+            sessionStore = get(named(AppKitDITags.SESSION_DATA_STORE)),
+            moshi = get<Moshi>(named(AppKitDITags.MOSHI))
+        )
+    }
 
     single { GetSessionUseCase(repository = get()) }
     single { SaveSessionUseCase(repository = get()) }
@@ -55,5 +60,5 @@ internal fun appKitModule() = module {
     single { ObserveSessionUseCase(repository = get()) }
     single { ObserveSelectedChainUseCase(repository = get()) }
 
-    includes(blockchainApiModule(), balanceRpcModule(), engineModule())
+    includes(blockchainApiModule(projectId), balanceRpcModule(), engineModule())
 }

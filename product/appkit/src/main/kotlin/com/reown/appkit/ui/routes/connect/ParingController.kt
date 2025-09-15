@@ -1,7 +1,5 @@
 package com.reown.appkit.ui.routes.connect
 
-import com.reown.android.Core
-import com.reown.android.CoreClient
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.toModel
@@ -24,17 +22,17 @@ internal interface ParingController {
         onError: (Throwable) -> Unit
     )
 
-    val uri: String
+    val pairingUri: String
 }
 
 internal class PairingControllerImpl : ParingController {
 
     private val appKitEngine: AppKitEngine = wcKoinApp.koin.get()
 
-    private var _pairing: Core.Model.Pairing? = null
+    private var _uri: String? = null
 
-    private val pairing: Core.Model.Pairing
-        get() = _pairing ?: generatePairing()
+    private val uri: String
+        get() = _uri ?: ""
 
     override fun connect(
         name: String, method: String,
@@ -43,17 +41,20 @@ internal class PairingControllerImpl : ParingController {
         onError: (Throwable) -> Unit
     ) {
         try {
-            generatePairing()
+//            generatePairing()
             val connectParams = Modal.Params.ConnectParams(
                 sessionParams.optionalNamespaces,
                 sessionParams.properties,
                 sessionParams.scopedProperties,
-                pairing
             )
+
             appKitEngine.connectWC(
                 name = name, method = method,
                 connect = connectParams,
-                onSuccess = onSuccess,
+                onSuccess = { uri ->
+                    _uri = uri
+                    onSuccess(uri)
+                },
                 onError = onError
             )
         } catch (e: Exception) {
@@ -70,13 +71,16 @@ internal class PairingControllerImpl : ParingController {
         onError: (Throwable) -> Unit
     ) {
         try {
-            generateAuthenticatedPairing()
+//            generateAuthenticatedPairing()
             appKitEngine.authenticate(
                 name = name,
                 method = method,
-                authenticate = authParams.toModel(pairing.topic),
+                authenticate = authParams.toModel(""), //TODO: revisit 1CA
                 walletAppLink = walletAppLink,
-                onSuccess = onSuccess,
+                onSuccess = { uri ->
+                    _uri = uri
+                    onSuccess(uri)
+                },
                 onError = onError
             )
         } catch (e: Exception) {
@@ -84,16 +88,16 @@ internal class PairingControllerImpl : ParingController {
         }
     }
 
-    override val uri: String
-        get() = pairing.uri
+    override val pairingUri: String
+        get() = uri
 
-    private fun generatePairing(): Core.Model.Pairing =
-        CoreClient.Pairing.create { error -> throw IllegalStateException("Creating Pairing failed: ${error.throwable.stackTraceToString()}") }!!.also { _pairing = it }
-
-
-    private fun generateAuthenticatedPairing(): Core.Model.Pairing =
-        CoreClient.Pairing
-            .create(methods = "wc_sessionAuthenticate", onError = { error -> throw IllegalStateException("Creating Pairing failed: ${error.throwable.stackTraceToString()}") })!!
-            .also { _pairing = it }
+//    private fun generatePairing(): Core.Model.Pairing =
+//        CoreClient.Pairing.create { error -> throw IllegalStateException("Creating Pairing failed: ${error.throwable.stackTraceToString()}") }!!.also { _pairing = it }
+//
+//
+//    private fun generateAuthenticatedPairing(): Core.Model.Pairing =
+//        CoreClient.Pairing
+//            .create(methods = "wc_sessionAuthenticate", onError = { error -> throw IllegalStateException("Creating Pairing failed: ${error.throwable.stackTraceToString()}") })!!
+//            .also { _pairing = it }
 
 }

@@ -289,7 +289,7 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                         properties,
                         scopedProperties,
                         pairing.toPairing(),
-                        onSuccess = { onSuccess(pairing.uri) },
+                        onSuccess = { uri -> onSuccess(uri) },
                         onFailure = { error -> onError(Sign.Model.Error(error)) }
                     )
                 }
@@ -314,8 +314,8 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                         sessionNamespaces?.toMapOfEngineNamespacesOptional(),
                         properties,
                         scopedProperties,
-                        pairing.toPairing(),
-                        onSuccess = { onSuccess(pairing.uri) },
+                        pairing?.toPairing(),
+                        onSuccess = { uri -> onSuccess(uri) },
                         onFailure = { error -> onError(Sign.Model.Error(error)) }
                     )
                 }

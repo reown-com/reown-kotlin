@@ -17,18 +17,23 @@ import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toNamespacesVOOptional
 import com.reown.sign.engine.model.mapper.toNamespacesVORequired
+import com.reown.sign.engine.model.mapper.toProposalYttrium
 import com.reown.sign.engine.model.mapper.toSessionProposeParams
 import com.reown.sign.engine.model.mapper.toVO
+import com.reown.sign.engine.model.mapper.toYttrium
 import com.reown.sign.engine.use_case.utils.NamespaceMerger
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.ConnectParamsFfi
+import uniffi.yttrium.SignClient
 
 internal class ProposeSessionUseCase(
 //    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val crypto: KeyManagementRepository,
     private val proposalStorageRepository: ProposalStorageRepository,
     private val selfAppMetaData: AppMetaData,
-    private val logger: Logger
+    private val logger: Logger,
+    private val signClient: SignClient
 ) : ProposeSessionUseCaseInterface {
 
     override suspend fun proposeSession(
@@ -36,25 +41,42 @@ internal class ProposeSessionUseCase(
         optionalNamespaces: Map<String, EngineDO.Namespace.Proposal>?,
         properties: Map<String, String>?,
         scopedProperties: Map<String, String>?,
-        pairing: Pairing,
-        onSuccess: () -> Unit,
+        pairing: Pairing?,
+        onSuccess: (String) -> Unit,
         onFailure: (Throwable) -> Unit,
     ) = supervisorScope {
-        val relay = RelayProtocolOptions(pairing.relayProtocol, pairing.relayData)
+//        val relay = RelayProtocolOptions(pairing.relayProtocol, pairing.relayData)
         // Map requiredNamespaces to optionalNamespaces if not null, ensuring no duplications
         val mergedOptionalNamespaces = NamespaceMerger.merge(requiredNamespaces, optionalNamespaces)
         runCatching { validate(null, mergedOptionalNamespaces, properties) }.fold(
             onSuccess = {
-                val expiry = Expiry(PROPOSAL_EXPIRY)
-                val selfPublicKey: PublicKey = crypto.generateAndStoreX25519KeyPair()
-                val sessionProposal: SignParams.SessionProposeParams =
-                    toSessionProposeParams(
-                        listOf(relay), emptyMap(), mergedOptionalNamespaces ?: emptyMap(),
-                        properties, scopedProperties, selfPublicKey, selfAppMetaData, expiry
+//                val expiry = Expiry(PROPOSAL_EXPIRY)
+//                val selfPublicKey: PublicKey = crypto.generateAndStoreX25519KeyPair()
+//                val sessionProposal: SignParams.SessionProposeParams =
+//                    toSessionProposeParams(
+//                        listOf(RelayProtocolOptions(pairing.relayProtocol, pairing.relayData)), emptyMap(), mergedOptionalNamespaces ?: emptyMap(),
+//                        properties, scopedProperties, selfPublicKey, selfAppMetaData, expiry
+//                    )
+//                val request = SignRpc.SessionPropose(params = sessionProposal)
+//                proposalStorageRepository.insertProposal(sessionProposal.toVO(pairing.topic, request.id))
+//                logger.log("Sending proposal on topic: ${pairing?.topic?.value}")
+
+                try {
+                    val connectResult = signClient.connect(
+                        params = ConnectParamsFfi(
+                            optionalNamespaces = mergedOptionalNamespaces?.toNamespacesVOOptional()?.toProposalYttrium() ?: emptyMap(),
+                            sessionProperties = properties,
+                            scopedProperties = scopedProperties,
+                            metadata = selfAppMetaData.toYttrium()
+                        ),
+                        selfMetadata = selfAppMetaData.toYttrium()
                     )
-                val request = SignRpc.SessionPropose(params = sessionProposal)
-                proposalStorageRepository.insertProposal(sessionProposal.toVO(pairing.topic, request.id))
-                logger.log("Sending proposal on topic: ${pairing.topic.value}")
+                    logger.log("Session proposal sent successfully, topic: ${connectResult.topic}, connectResult: $connectResult")
+                    onSuccess(connectResult.uri)
+                } catch (e: Exception) {
+                    logger.error("Failed to send a session proposal: $e")
+                    onFailure(e)
+                }
 
 //                jsonRpcInteractor.proposeSession(
 //                    topic = pairing.topic, payload = request,
@@ -109,8 +131,8 @@ internal interface ProposeSessionUseCaseInterface {
         optionalNamespaces: Map<String, EngineDO.Namespace.Proposal>?,
         properties: Map<String, String>?,
         scopedProperties: Map<String, String>?,
-        pairing: Pairing,
-        onSuccess: () -> Unit,
+        pairing: Pairing?,
+        onSuccess: (String) -> Unit,
         onFailure: (Throwable) -> Unit,
     )
 }

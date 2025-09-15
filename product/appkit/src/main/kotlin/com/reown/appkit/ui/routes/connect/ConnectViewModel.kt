@@ -2,6 +2,7 @@ package com.reown.appkit.ui.routes.connect
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.modal.data.model.Wallet
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pulse.domain.SendEventInterface
@@ -36,9 +37,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.koin.core.qualifier.named
 
 internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), ParingController by PairingControllerImpl() {
-    private val logger: Logger = wcKoinApp.koin.get()
+    private val logger: Logger = wcKoinApp.koin.get(named(AndroidCommonDITags.LOGGER))
     private val walletsDataStore = WalletDataSource { showError(it) }
     private val saveRecentWalletUseCase: SaveRecentWalletUseCase = wcKoinApp.koin.get()
     private val saveChainSelectionUseCase: SaveChainSelectionUseCase = wcKoinApp.koin.get()

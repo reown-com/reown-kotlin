@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlin.text.get
 
 @Composable
 fun rememberAppKitState(
@@ -45,13 +46,13 @@ class AppKitState(
     coroutineScope: CoroutineScope,
     private val navController: NavController
 ) {
-    private val logger: Logger = wcKoinApp.koin.get()
-    private val observeSelectedChainUseCase: ObserveSelectedChainUseCase = wcKoinApp.koin.get()
-    private val observeSessionTopicUseCase: ObserveSessionUseCase = wcKoinApp.koin.get()
-    private val getSessionUseCase: GetSessionUseCase = wcKoinApp.koin.get()
-    private val getEthBalanceUseCase: GetEthBalanceUseCase = wcKoinApp.koin.get()
-    private val appKitEngine: AppKitEngine = wcKoinApp.koin.get()
-    private val sendEventUseCase: SendEventInterface = wcKoinApp.koin.get()
+    private val logger: Logger by lazy { wcKoinApp.koin.get() }
+    private val observeSelectedChainUseCase: ObserveSelectedChainUseCase by lazy { wcKoinApp.koin.get() }
+    private val observeSessionTopicUseCase: ObserveSessionUseCase by lazy { wcKoinApp.koin.get() }
+    private val getSessionUseCase: GetSessionUseCase by lazy { wcKoinApp.koin.get() }
+    private val getEthBalanceUseCase: GetEthBalanceUseCase by lazy { wcKoinApp.koin.get() }
+    private val appKitEngine: AppKitEngine by lazy { wcKoinApp.koin.get() }
+    private val sendEventUseCase: SendEventInterface by lazy { wcKoinApp.koin.get() }
     private val sessionTopicFlow = observeSessionTopicUseCase()
 
     val isOpen = ComponentDelegate.modalComponentEvent
@@ -83,10 +84,37 @@ class AppKitState(
 
     private fun sendModalCloseOrOpenEvents(event: ComponentEvent) {
         when {
-            event.isOpen && isConnected.value -> sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.MODAL_OPEN, Properties(connected = true)))
-            event.isOpen && !isConnected.value -> sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.MODAL_OPEN, Properties(connected = false)))
-            !event.isOpen && isConnected.value -> sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.MODAL_CLOSE, Properties(connected = true)))
-            !event.isOpen && !isConnected.value -> sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.MODAL_CLOSE, Properties(connected = false)))
+            event.isOpen && isConnected.value -> sendEventUseCase.send(
+                Props(
+                    EventType.TRACK,
+                    EventType.Track.MODAL_OPEN,
+                    Properties(connected = true)
+                )
+            )
+
+            event.isOpen && !isConnected.value -> sendEventUseCase.send(
+                Props(
+                    EventType.TRACK,
+                    EventType.Track.MODAL_OPEN,
+                    Properties(connected = false)
+                )
+            )
+
+            !event.isOpen && isConnected.value -> sendEventUseCase.send(
+                Props(
+                    EventType.TRACK,
+                    EventType.Track.MODAL_CLOSE,
+                    Properties(connected = true)
+                )
+            )
+
+            !event.isOpen && !isConnected.value -> sendEventUseCase.send(
+                Props(
+                    EventType.TRACK,
+                    EventType.Track.MODAL_CLOSE,
+                    Properties(connected = false)
+                )
+            )
         }
     }
 

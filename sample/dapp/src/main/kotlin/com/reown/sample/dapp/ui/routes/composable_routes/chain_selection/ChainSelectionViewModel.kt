@@ -92,56 +92,56 @@ class ChainSelectionViewModel : ViewModel() {
             })
     }
 
-    fun connectToWallet(pairingTopicPosition: Int = -1, onSuccess: (String) -> Unit = {}, onError: (String) -> Unit = {}) {
-        viewModelScope.launch {
-            _awaitingProposalSharedFlow.emit(true)
-        }
-        try {
-            val pairing: Core.Model.Pairing? = if (pairingTopicPosition > -1) {
-                CoreClient.Pairing.getPairings()[pairingTopicPosition]
-            } else {
-                CoreClient.Pairing.create { error ->
-                    viewModelScope.launch {
-                        _awaitingProposalSharedFlow.emit(false)
-                    }
-                    onError("Creating Pairing failed: ${error.throwable.stackTraceToString()}")
-                }
-            }
-
-            if (pairing != null) {
-                val connectParams =
-                    Modal.Params.ConnectParams(
-                        sessionNamespaces = getOptionalNamespaces(),
-                        properties = getProperties(),
-                        pairing = pairing
-                    )
-
-                AppKit.connect(connectParams,
-                    onSuccess = { url ->
-                        if (pairingTopicPosition == -1) {
-                            viewModelScope.launch {
-                                _awaitingProposalSharedFlow.emit(false)
-                            }
-                        }
-                        onSuccess(url)
-                    },
-                    onError = { error ->
-                        viewModelScope.launch {
-                            _awaitingProposalSharedFlow.emit(false)
-                        }
-                        Timber.tag(tag(this)).e(error.throwable.stackTraceToString())
-                        Firebase.crashlytics.recordException(error.throwable)
-                        onError(error.throwable.message ?: "Unknown error, please contact support")
-                    }
-                )
-            }
-
-        } catch (e: Exception) {
-            Firebase.crashlytics.recordException(e)
-            Timber.tag(tag(this)).e(e)
-            onError(e.message ?: "Unknown error, please contact support")
-        }
-    }
+//    fun connectToWallet(pairingTopicPosition: Int = -1, onSuccess: (String) -> Unit = {}, onError: (String) -> Unit = {}) {
+//        viewModelScope.launch {
+//            _awaitingProposalSharedFlow.emit(true)
+//        }
+//        try {
+//            val pairing: Core.Model.Pairing? = if (pairingTopicPosition > -1) {
+//                CoreClient.Pairing.getPairings()[pairingTopicPosition]
+//            } else {
+//                CoreClient.Pairing.create { error ->
+//                    viewModelScope.launch {
+//                        _awaitingProposalSharedFlow.emit(false)
+//                    }
+//                    onError("Creating Pairing failed: ${error.throwable.stackTraceToString()}")
+//                }
+//            }
+//
+//            if (pairing != null) {
+//                val connectParams =
+//                    Modal.Params.ConnectParams(
+//                        sessionNamespaces = getOptionalNamespaces(),
+//                        properties = getProperties(),
+//                        pairing = pairing
+//                    )
+//
+//                AppKit.connect(connectParams,
+//                    onSuccess = { url ->
+//                        if (pairingTopicPosition == -1) {
+//                            viewModelScope.launch {
+//                                _awaitingProposalSharedFlow.emit(false)
+//                            }
+//                        }
+//                        onSuccess(url)
+//                    },
+//                    onError = { error ->
+//                        viewModelScope.launch {
+//                            _awaitingProposalSharedFlow.emit(false)
+//                        }
+//                        Timber.tag(tag(this)).e(error.throwable.stackTraceToString())
+//                        Firebase.crashlytics.recordException(error.throwable)
+//                        onError(error.throwable.message ?: "Unknown error, please contact support")
+//                    }
+//                )
+//            }
+//
+//        } catch (e: Exception) {
+//            Firebase.crashlytics.recordException(e)
+//            Timber.tag(tag(this)).e(e)
+//            onError(e.message ?: "Unknown error, please contact support")
+//        }
+//    }
 
     private fun getNamespaces(): Map<String, Modal.Model.Namespace.Proposal> {
         val namespaces: Map<String, Modal.Model.Namespace.Proposal> =

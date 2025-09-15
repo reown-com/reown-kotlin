@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-object DappDelegate : AppKit.ModalDelegate, CoreClient.CoreDelegate {
+object DappDelegate : AppKit.ModalDelegate { //}, CoreClient.CoreDelegate {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _wcEventModels: MutableSharedFlow<Modal.Model?> = MutableSharedFlow()
     val wcEventModels: SharedFlow<Modal.Model?> = _wcEventModels.asSharedFlow()
@@ -28,7 +28,7 @@ object DappDelegate : AppKit.ModalDelegate, CoreClient.CoreDelegate {
 
     init {
         AppKit.setDelegate(this)
-        CoreClient.setDelegate(this)
+//        CoreClient.setDelegate(this)
     }
 
     override fun onConnectionStateChange(state: Modal.Model.ConnectionState) {
@@ -122,15 +122,15 @@ object DappDelegate : AppKit.ModalDelegate, CoreClient.CoreDelegate {
         }
     }
 
-    override fun onPairingDelete(deletedPairing: Core.Model.DeletedPairing) {
-        //Deprecated - pairings are automatically deleted
-    }
-
-    override fun onPairingExpired(expiredPairing: Core.Model.ExpiredPairing) {
-        //Deprecated - pairings are automatically expired
-    }
-
-    override fun onPairingState(pairingState: Core.Model.PairingState) {
-        Timber.d(tag(this), "Dapp pairing state: ${pairingState.isPairingState}")
-    }
+//    override fun onPairingDelete(deletedPairing: Core.Model.DeletedPairing) {
+//        //Deprecated - pairings are automatically deleted
+//    }
+//
+//    override fun onPairingExpired(expiredPairing: Core.Model.ExpiredPairing) {
+//        //Deprecated - pairings are automatically expired
+//    }
+//
+//    override fun onPairingState(pairingState: Core.Model.PairingState) {
+//        Timber.d(tag(this), "Dapp pairing state: ${pairingState.isPairingState}")
+//    }
 }

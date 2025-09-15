@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import com.reown.android.di.coreStorageModule
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.di.KEY_CLIENT_ID
-import com.reown.android.internal.common.di.appKitModule
+import com.reown.android.internal.common.di.coreAppKitModule
 import com.reown.android.internal.common.di.coreAndroidNetworkModule
 import com.reown.android.internal.common.di.coreCommonModule
 import com.reown.android.internal.common.di.coreCryptoModule
@@ -185,9 +185,9 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 coreJsonRpcModule(),
                 corePairingModule(Pairing, PairingController),
                 keyServerModule(keyServerUrl),
-                explorerModule(),
-                appKitModule(),
-                pulseModule(packageName)
+//                explorerModule(),
+//                coreAppKitModule(),
+//                pulseModule(packageName)
             )
         }
 

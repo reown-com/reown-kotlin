@@ -63,12 +63,13 @@ internal class AppKitEngine(
     internal var siweRequestIdWithMessage: Pair<Long, String>? = null
     private lateinit var coinbaseClient: CoinbaseClient
     internal var shouldDisconnect: Boolean = true
-    private val projectId by lazy { wcKoinApp.koin.get<ProjectId>() }
+    private lateinit var projectId: String
 
     fun setup(
         init: Modal.Params.Init,
         onError: (Modal.Model.Error) -> Unit
     ) {
+        this.projectId = init.projectId
         excludedWalletsIds.addAll(init.excludedWalletIds)
         includeWalletsIds.addAll(init.includeWalletIds)
         recommendedWalletsIds.addAll(init.recommendedWalletsIds)
@@ -327,7 +328,7 @@ internal class AppKitEngine(
                             )
                             siweRequestIdWithMessage = null
                             val account = getAccount() ?: throw IllegalStateException("Account is null")
-                            EIP6492Verifier.init(account.chain.id, projectId.value)
+                            EIP6492Verifier.init(account.chain.id, projectId)
                             val isValid = EIP6492Verifier.verify6492(
                                 originalMessage = siweResponse.message,
                                 signature = siweResponse.signature,
