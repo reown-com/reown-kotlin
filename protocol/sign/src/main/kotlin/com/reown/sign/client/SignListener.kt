@@ -7,9 +7,12 @@ import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.foundation.common.model.Topic
+import com.reown.sign.client.mapper.toMapOfEngineNamespacesSession
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toEngineDOSessionExtend
+import com.reown.sign.engine.model.mapper.toMapOfEngineNamespacesSession
 import com.reown.sign.engine.model.mapper.toSessionApproved
+import com.reown.sign.engine.model.mapper.toSessionVO
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -54,21 +57,6 @@ internal class SignListener(
 
         scope.launch {
             _events.emit(EngineDO.SessionDelete(topic, "User disconnected"))
-        }
-    }
-
-    override fun onSessionEvent(id: ULong, topic: String, params: Boolean) {
-        println("kobe: onSessionEvent: $id; $topic")
-    }
-
-    override fun onSessionExtend(id: ULong, topic: String) {
-        println("kobe: onSessionExtend: $id; $topic")
-
-        //Storage already update with new expiry, called from Rust
-        val session = sessionStorage.getSessionWithoutMetadataByTopic(Topic(topic))
-
-        scope.launch {
-            _events.emit(session.toEngineDOSessionExtend())
         }
     }
 
@@ -123,11 +111,30 @@ internal class SignListener(
         }
     }
 
+    override fun onSessionEvent(id: ULong, topic: String, params: Boolean) {
+        println("kobe: onSessionEvent: $id; $topic")
+    }
+
+    override fun onSessionExtend(id: ULong, topic: String) {
+        println("kobe: onSessionExtend: $id; $topic")
+
+        //Storage already update with new expiry, called from Rust
+        val session = sessionStorage.getSessionWithoutMetadataByTopic(Topic(topic))
+
+        scope.launch {
+            _events.emit(session.toEngineDOSessionExtend())
+        }
+    }
+
     override fun onSessionUpdate(
         id: ULong,
         topic: String,
         namespaces: Map<String, SettleNamespace>
     ) {
         println("kobe: onSessionUpdate: $id; $topic; $namespaces")
+
+        scope.launch {
+            _events.emit(EngineDO.SessionUpdateNamespaces(Topic(topic), namespaces.toSessionVO().toMapOfEngineNamespacesSession()))
+        }
     }
 }
