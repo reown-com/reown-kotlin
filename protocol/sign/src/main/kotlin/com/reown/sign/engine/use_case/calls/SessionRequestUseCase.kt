@@ -1,54 +1,35 @@
 package com.reown.sign.engine.use_case.calls
 
-import com.reown.android.internal.common.JsonRpcResponse
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
-import com.reown.android.internal.common.exception.InvalidExpiryException
-import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
 import com.reown.android.internal.common.model.AppMetaDataType
 import com.reown.android.internal.common.model.Expiry
-import com.reown.android.internal.common.model.IrnParams
 import com.reown.android.internal.common.model.Namespace
 import com.reown.android.internal.common.model.SDKError
-import com.reown.android.internal.common.model.Tags
-import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.type.EngineEvent
-import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
-import com.reown.android.internal.utils.CoreValidator
 import com.reown.android.internal.utils.currentTimeInSeconds
 import com.reown.android.internal.utils.fiveMinutesInSeconds
-import com.reown.android.pulse.domain.InsertEventUseCase
-import com.reown.android.pulse.model.Direction
-import com.reown.android.pulse.model.EventType
-import com.reown.android.pulse.model.properties.Properties
-import com.reown.android.pulse.model.properties.Props
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
-import com.reown.sign.common.exceptions.InvalidRequestException
+import com.reown.sign.client.Sign
 import com.reown.sign.common.exceptions.NO_SEQUENCE_FOR_TOPIC_MESSAGE
 import com.reown.sign.common.exceptions.UnauthorizedMethodException
 import com.reown.sign.common.model.vo.clientsync.session.SignRpc
-import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
-import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestVO
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
 import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
 import com.reown.sign.engine.model.EngineDO
-import com.reown.sign.engine.model.tvf.TVF
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withTimeout
-import java.util.concurrent.TimeUnit
+import uniffi.yttrium.SessionRequestFfi
+import uniffi.yttrium.SessionRequestJsonRpcFfi
+import uniffi.yttrium.SessionRequestRequestFfi
+import uniffi.yttrium.SignClient
 
 internal class SessionRequestUseCase(
     private val sessionStorageRepository: SessionStorageRepository,
@@ -60,7 +41,8 @@ internal class SessionRequestUseCase(
     private val logger: Logger,
 //    private val tvf: TVF,
     private val walletServiceFinder: WalletServiceFinder,
-    private val walletServiceRequester: WalletServiceRequester
+    private val walletServiceRequester: WalletServiceRequester,
+    private val signClient: SignClient
 ) : SessionRequestUseCaseInterface {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     override val requestEvents: SharedFlow<EngineEvent> = _events.asSharedFlow()
@@ -79,16 +61,16 @@ internal class SessionRequestUseCase(
                 this.copy(peerAppMetaData = peerAppMetaData)
             }
 
-        val nowInSeconds = currentTimeInSeconds
-        if (!CoreValidator.isExpiryWithinBounds(request.expiry)) {
-            logger.error("Sending session request error: expiry not within bounds")
-            return@supervisorScope onFailure(InvalidExpiryException())
-        }
-        val expiry = request.expiry ?: Expiry(currentTimeInSeconds + fiveMinutesInSeconds)
-        SignValidator.validateSessionRequest(request) { error ->
-            logger.error("Sending session request error: invalid session request, ${error.message}")
-            return@supervisorScope onFailure(InvalidRequestException(error.message))
-        }
+//        val nowInSeconds = currentTimeInSeconds
+//        if (!CoreValidator.isExpiryWithinBounds(request.expiry)) {
+//            logger.error("Sending session request error: expiry not within bounds")
+//            return@supervisorScope onFailure(InvalidExpiryException())
+//        }
+//        val expiry = request.expiry ?: Expiry(currentTimeInSeconds + fiveMinutesInSeconds)
+//        SignValidator.validateSessionRequest(request) { error ->
+//            logger.error("Sending session request error: invalid session request, ${error.message}")
+//            return@supervisorScope onFailure(InvalidRequestException(error.message))
+//        }
 
         val namespaces: Map<String, Namespace.Session> =
             sessionStorageRepository.getSessionWithoutMetadataByTopic(Topic(request.topic)).sessionNamespaces
@@ -97,34 +79,52 @@ internal class SessionRequestUseCase(
             return@supervisorScope onFailure(UnauthorizedMethodException(error.message))
         }
 
-        val params = SignParams.SessionRequestParams(SessionRequestVO(request.method, request.params, expiry.seconds), request.chainId)
-        val sessionPayload = SignRpc.SessionRequest(params = params)
-        val walletServiceUrl = try {
-            walletServiceFinder.findMatchingWalletService(request, session)
+        val sessionRequestFfi = SessionRequestFfi(
+            chainId = request.chainId,
+            request = SessionRequestRequestFfi(
+                method = request.method,
+                params = request.params,
+                expiry = request.expiry?.seconds?.toULong()
+            )
+        )
+
+        try {
+            val id = async { signClient.request(topic = request.topic, sessionRequest = sessionRequestFfi) }.await()
+            onSuccess(id.toLong())
         } catch (e: Exception) {
-            null
+            logger.error("Sending session request error: $e")
+            onFailure(e)
         }
 
 
-        if (walletServiceUrl != null) {
-            try {
-                val response = async { walletServiceRequester.request(sessionPayload, walletServiceUrl.toString()) }.await()
-                val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcResult(id = sessionPayload.id, result = response)
-                _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
-            } catch (e: Exception) {
-                logger.error("Sending session request error: $e")
-                val jsonRpcResult =
-                    EngineDO.JsonRpcResponse.JsonRpcError(id = sessionPayload.id, error = EngineDO.JsonRpcResponse.Error(0, e.message ?: ""))
-                _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
-            }
-        } else {
-            if (session.transportType == TransportType.LINK_MODE && session.peerLinkMode == true) {
-                if (session.peerAppLink.isNullOrEmpty()) return@supervisorScope onFailure(IllegalStateException("App link is missing"))
-                triggerLinkModeRequest(sessionPayload, request, session.peerAppLink, onFailure)
-            } else {
-                triggerRelayRequest(expiry, nowInSeconds, sessionPayload, request, onSuccess, onFailure)
-            }
-        }
+//        val params = SignParams.SessionRequestParams(SessionRequestVO(request.method, request.params, expiry.seconds), request.chainId)
+//        val sessionPayload = SignRpc.SessionRequest(params = params)
+//        val walletServiceUrl = try {
+//            walletServiceFinder.findMatchingWalletService(request, session)
+//        } catch (e: Exception) {
+//            null
+//        }
+
+
+//        if (walletServiceUrl != null) {
+//            try {
+//                val response = async { walletServiceRequester.request(sessionPayload, walletServiceUrl.toString()) }.await()
+//                val jsonRpcResult = EngineDO.JsonRpcResponse.JsonRpcResult(id = sessionPayload.id, result = response)
+//                _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
+//            } catch (e: Exception) {
+//                logger.error("Sending session request error: $e")
+//                val jsonRpcResult =
+//                    EngineDO.JsonRpcResponse.JsonRpcError(id = sessionPayload.id, error = EngineDO.JsonRpcResponse.Error(0, e.message ?: ""))
+//                _events.emit(EngineDO.SessionPayloadResponse(request.topic, params.chainId, request.method, jsonRpcResult))
+//            }
+//        } else {
+//            if (session.transportType == TransportType.LINK_MODE && session.peerLinkMode == true) {
+//                if (session.peerAppLink.isNullOrEmpty()) return@supervisorScope onFailure(IllegalStateException("App link is missing"))
+//                triggerLinkModeRequest(sessionPayload, request, session.peerAppLink, onFailure)
+//            } else {
+//                triggerRelayRequest(expiry, nowInSeconds, sessionPayload, request, onSuccess, onFailure)
+//            }
+//        }
     }
 
     private fun triggerRelayRequest(

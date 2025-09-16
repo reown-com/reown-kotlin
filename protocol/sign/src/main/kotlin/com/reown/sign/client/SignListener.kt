@@ -97,7 +97,30 @@ internal class SignListener(
     }
 
     override fun onSessionRequestResponse(id: ULong, topic: String, response: SessionRequestJsonRpcResponseFfi) {
-        println("kobe: onSessionRequestResponse: $id; $topic")
+        println("kobe: onSessionRequestResponse: $id; $topic; $response")
+
+        //todo: get json rpc history entry
+//        val jsonRpcHistoryEntry = getSessionRequestByIdUseCase(wcResponse.response.id)
+
+        val result = when (val jsonRpcResponse = response) {
+            is SessionRequestJsonRpcResponseFfi.Result -> {
+                EngineDO.JsonRpcResponse.JsonRpcResult(id = jsonRpcResponse.v1.id.toLong(), result = jsonRpcResponse.v1.result)
+            }
+
+            is SessionRequestJsonRpcResponseFfi.Error -> {
+
+                EngineDO.JsonRpcResponse.JsonRpcError(
+                    id = jsonRpcResponse.v1.id.toLong(),
+                    error = EngineDO.JsonRpcResponse.Error(1000, jsonRpcResponse.v1.error)
+                )
+            }
+
+        }
+
+        scope.launch {
+            //todo: get chainId and method from json rpc history entry
+            _events.emit(EngineDO.SessionPayloadResponse(topic, "eip155:1", "personal_sign", result))
+        }
     }
 
     override fun onSessionUpdate(

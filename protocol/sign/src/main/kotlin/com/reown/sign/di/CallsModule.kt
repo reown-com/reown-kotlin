@@ -163,7 +163,8 @@ internal fun callsModule() = module {
             logger = get(named(AndroidCommonDITags.LOGGER)),
 //            tvf = get(),
             walletServiceFinder = get(),
-            walletServiceRequester = get()
+            walletServiceRequester = get(),
+            signClient = get(named(AndroidCommonDITags.SIGN_RUST_CLIENT))
         )
     }
 

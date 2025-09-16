@@ -4,6 +4,7 @@ import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.AppMetaDataType
 import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.Pairing
+import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.android.internal.common.storage.pairing.PairingStorageRepository
 import com.reown.android.internal.common.storage.pairing.PairingStorageRepositoryInterface
@@ -15,6 +16,8 @@ import com.reown.sign.storage.sequence.SessionStorageRepository
 import com.reown.util.bytesToHex
 import com.reown.util.hexToBytes
 import com.reown.utils.isSequenceValid
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import uniffi.yttrium.PairingFfi
 import uniffi.yttrium.SessionFfi
 import uniffi.yttrium.StorageFfi
@@ -81,11 +84,15 @@ internal class SignStorage(
             }.toSessionFfi().also { println("kobe: sessionFfi: $it") }
     }
 
-    override fun getAllTopics(): List<uniffi.yttrium.Topic> {
+    override fun getAllTopics(): List<uniffi.yttrium.Topic> = runBlocking {
         println("kobe: SessionStore: getAllTopics")
 
-        return sessionStorage.getListOfSessionVOsWithoutMetadata().map { it.topic.value }.also { println("kobe: $it") }
+        val sessionTopics = sessionStorage.getListOfSessionVOsWithoutMetadata().map { it.topic.value }.also { println("kobe: session topics: $it") }
+        val pairingTopics = pairingStorage.getListOfPairings().map { it.topic.value }.also { println("kobe: pairing topics: $it") }
+
+        return@runBlocking (sessionTopics + pairingTopics).also { println("kobe: all topics: $it") }
     }
+
 
     override fun getDecryptionKeyForTopic(topic: String): ByteArray? {
         println("kobe: SessionStore: getDecryptionKeyForTopic: $topic")
