@@ -28,6 +28,7 @@ object Wallet {
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null,
             val relayProtocol: String? = null,
+            val sessionTopic: String = ""
         ) : Params()
 
         data class ApproveSessionAuthenticate(val id: Long, val auths: List<Model.Cacao>) : Params()

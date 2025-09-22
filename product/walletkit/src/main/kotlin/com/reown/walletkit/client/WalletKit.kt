@@ -114,7 +114,12 @@ object WalletKit {
     }
 
     @Throws(IllegalStateException::class)
-    fun registerDeviceToken(firebaseAccessToken: String, enableEncrypted: Boolean = false, onSuccess: () -> Unit, onError: (Wallet.Model.Error) -> Unit) {
+    fun registerDeviceToken(
+        firebaseAccessToken: String,
+        enableEncrypted: Boolean = false,
+        onSuccess: () -> Unit,
+        onError: (Wallet.Model.Error) -> Unit
+    ) {
         coreClient.Echo.register(firebaseAccessToken, enableEncrypted, onSuccess) { error -> onError(Wallet.Model.Error(error)) }
     }
 
@@ -157,12 +162,25 @@ object WalletKit {
         onSuccess: (Wallet.Params.SessionApprove) -> Unit = {},
         onError: (Wallet.Model.Error) -> Unit,
     ) {
-        val signParams = Sign.Params.Approve(params.proposerPublicKey, params.namespaces.toSign(), params.properties, params.scopedProperties, params.relayProtocol)
-        SignClient.approveSession(signParams, { onSuccess(params) }, { error -> onError(Wallet.Model.Error(error.throwable)) })
+        val signParams = Sign.Params.Approve(
+            params.proposerPublicKey,
+            params.namespaces.toSign(),
+            params.properties,
+            params.scopedProperties,
+            params.relayProtocol,
+
+        )
+        SignClient.approveSession(
+            signParams,
+            { approve -> onSuccess(params.copy(sessionTopic = approve.sessionTopic)) },
+            { error -> onError(Wallet.Model.Error(error.throwable)) })
     }
 
     @Throws(Exception::class)
-    fun generateApprovedNamespaces(sessionProposal: Wallet.Model.SessionProposal, supportedNamespaces: Map<String, Wallet.Model.Namespace.Session>): Map<String, Wallet.Model.Namespace.Session> {
+    fun generateApprovedNamespaces(
+        sessionProposal: Wallet.Model.SessionProposal,
+        supportedNamespaces: Map<String, Wallet.Model.Namespace.Session>
+    ): Map<String, Wallet.Model.Namespace.Session> {
         return com.reown.sign.client.utils.generateApprovedNamespaces(sessionProposal.toSign(), supportedNamespaces.toSign()).toWallet()
     }
 
@@ -197,12 +215,20 @@ object WalletKit {
     }
 
     @Throws(Exception::class)
-    fun generateAuthObject(payloadParams: Wallet.Model.PayloadAuthRequestParams, issuer: String, signature: Wallet.Model.Cacao.Signature): Wallet.Model.Cacao {
+    fun generateAuthObject(
+        payloadParams: Wallet.Model.PayloadAuthRequestParams,
+        issuer: String,
+        signature: Wallet.Model.Cacao.Signature
+    ): Wallet.Model.Cacao {
         return com.reown.sign.client.utils.generateAuthObject(payloadParams.toSign(), issuer, signature.toSign()).toWallet()
     }
 
     @Throws(Exception::class)
-    fun generateAuthPayloadParams(payloadParams: Wallet.Model.PayloadAuthRequestParams, supportedChains: List<String>, supportedMethods: List<String>): Wallet.Model.PayloadAuthRequestParams {
+    fun generateAuthPayloadParams(
+        payloadParams: Wallet.Model.PayloadAuthRequestParams,
+        supportedChains: List<String>,
+        supportedMethods: List<String>
+    ): Wallet.Model.PayloadAuthRequestParams {
         return com.reown.sign.client.utils.generateAuthPayloadParams(payloadParams.toSign(), supportedChains, supportedMethods).toWallet()
     }
 

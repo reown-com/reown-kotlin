@@ -51,7 +51,7 @@ internal class ApproveSessionUseCase(
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
         sessionProperties: Map<String, String>?,
         scopedProperties: Map<String, String>?,
-        onSuccess: () -> Unit,
+        onSuccess: (String) -> Unit,
         onFailure: (Throwable) -> Unit
     ) = supervisorScope {
         val trace: MutableList<String> = mutableListOf()
@@ -114,7 +114,7 @@ internal class ApproveSessionUseCase(
                 settleRequest = sessionSettle,
                 correlationId = proposal.requestId,
                 onSuccess = {
-                    onSuccess()
+                    onSuccess(sessionTopic.value)
                     scope.launch {
                         supervisorScope {
                             trace.add(Trace.Session.SESSION_APPROVE_SUCCESS)
@@ -155,7 +155,7 @@ internal interface ApproveSessionUseCaseInterface {
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
         sessionProperties: Map<String, String>? = null,
         scopedProperties: Map<String, String>? = null,
-        onSuccess: () -> Unit = {},
+        onSuccess: (String) -> Unit = {},
         onFailure: (Throwable) -> Unit = {},
     )
 }

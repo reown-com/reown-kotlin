@@ -355,6 +355,7 @@ object Sign {
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null,
             val relayProtocol: String? = null,
+            val sessionTopic: String = ""
         ) : Params()
 
         data class Reject(val proposerPublicKey: String, val reason: String) : Params()
