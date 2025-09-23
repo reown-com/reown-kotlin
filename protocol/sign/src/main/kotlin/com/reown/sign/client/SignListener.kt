@@ -111,8 +111,12 @@ internal class SignListener(
         }
     }
 
-    override fun onSessionEvent(id: ULong, topic: String, params: Boolean) {
-        println("kobe: onSessionEvent: $id; $topic")
+    override fun onSessionEvent(topic: String, name: String, data: String, chainId: String) {
+        println("kobe: onSessionEvent: $name; $topic; $data; $chainId")
+
+        scope.launch {
+            _events.emit(EngineDO.SessionEvent(topic, name, data, chainId))
+        }
     }
 
     override fun onSessionExtend(id: ULong, topic: String) {

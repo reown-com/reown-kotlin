@@ -1,51 +1,40 @@
 package com.reown.sign.engine.use_case.calls
 
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
-import com.reown.android.internal.common.model.IrnParams
-import com.reown.android.internal.common.model.Tags
-import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
-import com.reown.android.internal.utils.fiveMinutesInSeconds
 import com.reown.foundation.common.model.Topic
-import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.exceptions.InvalidEventException
 import com.reown.sign.common.exceptions.NO_SEQUENCE_FOR_TOPIC_MESSAGE
 import com.reown.sign.common.exceptions.UNAUTHORIZED_EMIT_MESSAGE
 import com.reown.sign.common.exceptions.UnauthorizedEventException
 import com.reown.sign.common.exceptions.UnauthorizedPeerException
-import com.reown.sign.common.model.vo.clientsync.session.SignRpc
-import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
-import com.reown.sign.common.model.vo.clientsync.session.payload.SessionEventVO
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.storage.sequence.SessionStorageRepository
-import com.reown.util.generateId
 import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.SignClient
+import kotlinx.coroutines.async
 
 internal class EmitEventUseCase(
-//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val sessionStorageRepository: SessionStorageRepository,
     private val logger: Logger,
+    private val signClient: SignClient
 ) : EmitEventUseCaseInterface {
 
     override suspend fun emit(topic: String, event: EngineDO.Event, id: Long?, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) = supervisorScope {
         runCatching { validate(topic, event) }.fold(
             onSuccess = {
-                val eventParams = SignParams.EventParams(SessionEventVO(event.name, event.data), event.chainId)
-                val sessionEvent = SignRpc.SessionEvent(id = id ?: generateId(), params = eventParams)
-                val irnParams = IrnParams(Tags.SESSION_EVENT, Ttl(fiveMinutesInSeconds), correlationId = sessionEvent.id, prompt = true)
+                logger.log("Emitting event on topic: $topic; event: $event")
 
-                logger.log("Emitting event on topic: $topic")
-//                jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, sessionEvent,
-//                    onSuccess = {
-//                        logger.log("Event sent successfully, on topic: $topic")
-//                        onSuccess()
-//                    },
-//                    onFailure = { error ->
-//                        logger.error("Sending event error: $error, on topic: $topic")
-//                        onFailure(error)
-//                    }
-//                )
+                try {
+                    async { signClient.emit(topic = topic, name = event.name, data = event.data, chainId = event.chainId) }.await()
+
+                    logger.log("Event sent successfully, on topic: $topic")
+                    onSuccess()
+                } catch (e: Exception) {
+                    logger.error("Sending event error: $e, on topic: $topic")
+                    onFailure(e)
+                }
             },
             onFailure = { error ->
                 logger.error("Sending event error: $error, on topic: $topic")
