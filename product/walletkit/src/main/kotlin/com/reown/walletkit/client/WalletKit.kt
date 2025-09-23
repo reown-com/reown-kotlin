@@ -168,7 +168,6 @@ object WalletKit {
             params.properties,
             params.scopedProperties,
             params.relayProtocol,
-
         )
         SignClient.approveSession(
             signParams,
