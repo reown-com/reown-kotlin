@@ -20,6 +20,22 @@ UPDATE JsonRpcHistoryDao
 SET response = ?
 WHERE request_id = ?;
 
+deleteJsonRpcHistory:
+DELETE FROM JsonRpcHistoryDao
+WHERE topic = ?;
+
+deleteJsonRpcHistoryByRequestId:
+DELETE FROM JsonRpcHistoryDao
+WHERE request_id = ?;
+
+doesJsonRpcNotExist:
+SELECT NOT EXISTS (
+    SELECT 1
+    FROM JsonRpcHistoryDao
+    WHERE request_id = ?
+    LIMIT 1
+);
+
 getJsonRpcHistoryRecord:
 SELECT request_id, topic, method, body, response, transport_type
 FROM JsonRpcHistoryDao
@@ -39,21 +55,5 @@ SELECT request_id, topic, method, body, response, transport_type
 FROM JsonRpcHistoryDao
 WHERE method = "wc_sessionRequest" AND response IS NULL;
 
-doesJsonRpcNotExist:
-SELECT NOT EXISTS (
-    SELECT 1
-    FROM JsonRpcHistoryDao
-    WHERE request_id = ?
-    LIMIT 1
-);
-
 selectLastInsertedRowId:
 SELECT last_insert_rowid();
-
-deleteJsonRpcHistory:
-DELETE FROM JsonRpcHistoryDao
-WHERE topic = ?;
-
-deleteJsonRpcHistoryByRequestId:
-DELETE FROM JsonRpcHistoryDao
-WHERE request_id = ?;

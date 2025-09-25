@@ -60,7 +60,9 @@ internal fun engineModule() = module {
             sessionStorage = get(),
             metadataStorage = get(),
             selfAppMetaData = get(),
-            pairingStorage = get()
+            pairingStorage = get(),
+            jsonRpcHistoryQueries = get(),
+            logger = get(named(AndroidCommonDITags.LOGGER))
         )
     }
 
