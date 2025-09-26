@@ -12,6 +12,7 @@ import com.reown.sign.engine.model.mapper.toEngineDOSessionExtend
 import com.reown.sign.engine.model.mapper.toMapOfEngineNamespacesSession
 import com.reown.sign.engine.model.mapper.toSessionApproved
 import com.reown.sign.engine.model.mapper.toSessionVO
+import com.reown.sign.json_rpc.domain.GetSessionRequestByIdUseCase
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -28,7 +29,8 @@ import uniffi.yttrium.SignListener
 
 internal class SignListener(
     private val sessionStorage: SessionStorageRepository,
-    private val metadataStorage: MetadataStorageRepositoryInterface
+    private val metadataStorage: MetadataStorageRepositoryInterface,
+    private val getSessionRequestByIdUseCase: GetSessionRequestByIdUseCase,
 ) : SignListener {
     private val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
         println("kobe: SignListener coroutine error: $throwable")
@@ -63,6 +65,8 @@ internal class SignListener(
     override fun onSessionDisconnect(id: ULong, topic: String) {
         ioScope.launch {
             println("kobe: onSessionDisconnect: $id; $topic")
+
+
             _events.emit(EngineDO.SessionDelete(topic, "User disconnected"))
         }
     }
@@ -93,10 +97,11 @@ internal class SignListener(
 
     override fun onSessionRequestResponse(id: ULong, topic: String, response: SessionRequestJsonRpcResponseFfi) {
         ioScope.launch {
-            println("kobe: onSessionRequestResponse: $id; $topic; $response")
+            println("bary: onSessionRequestResponse: $id; $topic; $response")
 
-            //todo: get json rpc history entry
-    //        val jsonRpcHistoryEntry = getSessionRequestByIdUseCase(wcResponse.response.id)
+            val jsonRpcHistoryEntry = getSessionRequestByIdUseCase(id.toLong())
+
+            println("bary: onSessionRequestResponse: history entry: $jsonRpcHistoryEntry")
 
             val result = when (val jsonRpcResponse = response) {
                 is SessionRequestJsonRpcResponseFfi.Result -> {
@@ -104,7 +109,6 @@ internal class SignListener(
                 }
 
                 is SessionRequestJsonRpcResponseFfi.Error -> {
-
                     EngineDO.JsonRpcResponse.JsonRpcError(
                         id = jsonRpcResponse.v1.id.toLong(),
                         error = EngineDO.JsonRpcResponse.Error(1000, jsonRpcResponse.v1.error)
@@ -114,7 +118,14 @@ internal class SignListener(
             }
 
             //todo: get chainId and method from json rpc history entry
-            _events.emit(EngineDO.SessionPayloadResponse(topic, "eip155:1", "personal_sign", result))
+            _events.emit(
+                EngineDO.SessionPayloadResponse(
+                    topic,
+                    jsonRpcHistoryEntry?.params?.chainId,
+                    jsonRpcHistoryEntry?.params?.request?.method ?: "",
+                    result
+                )
+            )
         }
     }
 

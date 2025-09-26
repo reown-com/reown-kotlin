@@ -1,5 +1,6 @@
 package com.reown.sign.client
 
+import com.reown.android.internal.common.json_rpc.model.JsonRpcHistoryRecord
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.AppMetaDataType
 import com.reown.android.internal.common.model.Expiry
@@ -45,9 +46,9 @@ internal class SignStorage(
 
     override fun doesJsonRpcExist(requestId: ULong): Boolean {
         return runBlocking {
-            println("kobe: SessionStore: doesJsonRpcExist: $requestId")
+            println("bary: SessionStore: doesJsonRpcExist: $requestId")
 
-            !jsonRpcHistoryQueries.doesJsonRpcNotExist(requestId.toLong()).executeAsOne().also { println("kobe: does exist: $it") }
+            !jsonRpcHistoryQueries.doesJsonRpcNotExist(requestId.toLong()).executeAsOne().also { println("bary: does exist: ${!it}") }
         }
     }
 
@@ -59,7 +60,7 @@ internal class SignStorage(
         transportType: TransportType?
     ) {
         ioScope.launch {
-            println("kobe: SessionStore: insertJsonRpcHistory: $requestId, $topic, $method, $body, $transportType")
+            println("bary: SessionStore: insertJsonRpcHistory: $requestId, $topic, $method, $body, $transportType")
 
             try {
                 jsonRpcHistoryQueries.insertOrAbortJsonRpcHistory(requestId.toLong(), topic, method, body, transportType.toInternal())
@@ -72,24 +73,28 @@ internal class SignStorage(
 
     override fun updateJsonRpcHistoryResponse(requestId: ULong, response: String) {
         ioScope.launch {
-            println("kobe: SessionStore: updateJsonRpcHistoryResponse: $requestId, $response")
+            println("bary: SessionStore: updateJsonRpcHistoryResponse: $requestId, $response")
 
-            //TODO: get record by ID and update if exists
-            jsonRpcHistoryQueries.updateJsonRpcHistory(response = response, request_id = requestId.toLong())
-        }
-    }
-
-    override fun deleteJsonRpcHistoryByRequestId(requestId: ULong) {
-        ioScope.launch {
-            println("kobe: SessionStore: deleteJsonRpcHistoryByRequestId: $requestId")
-
-            jsonRpcHistoryQueries.deleteJsonRpcHistoryByRequestId(requestId.toLong())
+            val record = jsonRpcHistoryQueries.getJsonRpcHistoryRecord(requestId.toLong(), mapper = ::toRecord).executeAsOneOrNull()
+            
+            when {
+                record == null -> {
+                    logger.log("bary: No JsonRpcRequest matching response")
+                }
+                record.response.isNullOrBlank() -> {
+                    logger.log("bary: INSERTING RESPONSE: ${requestId.toLong()}")
+                    jsonRpcHistoryQueries.updateJsonRpcHistory(response = response, request_id = requestId.toLong())
+                }
+                else -> {
+                    logger.log("bary: Duplicated JsonRpc RequestId: $requestId")
+                }
+            }
         }
     }
 
     override fun deleteJsonRpcHistoryByTopic(topic: String) {
         ioScope.launch {
-            println("kobe: SessionStore: deleteJsonRpcHistoryByTopic: $topic")
+            println("bary: SessionStore: deleteJsonRpcHistoryByTopic: $topic")
 
             jsonRpcHistoryQueries.deleteJsonRpcHistory(topic)
         }
@@ -202,6 +207,7 @@ internal class SignStorage(
         ioScope.launch {
             println("kobe: SessionStore: deleteSession: $topic")
 
+            jsonRpcHistoryQueries.deleteJsonRpcHistory(topic)
             metadataStorage.deleteMetaData(Topic(topic))
             sessionStorage.deleteSession(topic = Topic(topic))
         }
@@ -254,4 +260,7 @@ internal class SignStorage(
         TransportType.RELAY -> InternalTransportType.RELAY
         TransportType.LINK_MODE -> InternalTransportType.LINK_MODE
     }
+
+    private fun toRecord(requestId: Long, topic: String, method: String, body: String, response: String?, transportType: InternalTransportType?): JsonRpcHistoryRecord =
+        JsonRpcHistoryRecord(requestId, topic, method, body, response, transportType)
 }

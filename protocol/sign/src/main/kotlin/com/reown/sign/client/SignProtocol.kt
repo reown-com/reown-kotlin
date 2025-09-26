@@ -55,7 +55,10 @@ import com.reown.sign.di.signJsonRpcModule
 import com.reown.sign.di.storageModule
 import com.reown.sign.engine.domain.SignEngine
 import com.reown.sign.engine.model.EngineDO
+import com.reown.sign.json_rpc.domain.GetSessionRequestByIdUseCase
 import com.reown.util.hexToBytes
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
@@ -131,8 +134,18 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                 wcKoinApp.androidContext(init.application)
                 koinApp.modules(
                     coreCryptoModule(), //TODO: remove what's not needed
+                    module {
+                        single {
+                            KotlinJsonAdapterFactory()
+                        }
+
+                        single<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)) {
+                            Moshi.Builder()
+                                .addLast(get<KotlinJsonAdapterFactory>())
+                        }
+                    },
                     coreStorageModule(packageName = init.application.packageName), //TODO: remove what's not needed
-//                    coreJsonRpcModule(), //TODO: remove what's not needed
+                    coreJsonRpcModule(), //TODO: remove what's not needed
                     module {
                         single<com.reown.foundation.util.Logger>(named(AndroidCommonDITags.LOGGER)) {
                             object : com.reown.foundation.util.Logger {
@@ -183,12 +196,23 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                 koinApp.modules(
                     signJsonRpcModule(),
                     engineModule(),
-                    storageModule(koinApp.koin.get<DatabaseConfig>().SIGN_SDK_DB_NAME)
+                    storageModule(koinApp.koin.get<DatabaseConfig>().SIGN_SDK_DB_NAME),
+                )
+
+                koinApp.modules(
+                    module {
+                        single {
+                            GetSessionRequestByIdUseCase(
+                                jsonRpcHistoryQueries = get(),
+                                serializer = get()
+                            )
+                        }
+                    }
                 )
 
                 signEngine = koinApp.koin.get()
                 signEngine.setup()
-                
+
                 scope.launch {
                     println("kobe: start")
                     signClient.start()

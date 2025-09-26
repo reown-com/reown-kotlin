@@ -69,7 +69,8 @@ internal fun engineModule() = module {
     single {
         SignListener(
             sessionStorage = get(),
-            metadataStorage = get()
+            metadataStorage = get(),
+            getSessionRequestByIdUseCase = get()
         )
     }
 

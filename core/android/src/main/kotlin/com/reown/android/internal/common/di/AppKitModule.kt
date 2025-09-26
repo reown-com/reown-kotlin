@@ -63,15 +63,6 @@ import java.util.concurrent.TimeUnit
             .build()
     }
 
-    single {
-        KotlinJsonAdapterFactory()
-    }
-
-    single<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)) {
-        Moshi.Builder()
-            .addLast(get<KotlinJsonAdapterFactory>())
-    }
-
     single(named(AndroidCommonDITags.WEB3MODAL_URL)) { "https://api.web3modal.com/" }
 
     single(named(AndroidCommonDITags.APPKIT_INTERCEPTOR)) {

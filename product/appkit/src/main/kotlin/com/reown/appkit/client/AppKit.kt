@@ -160,9 +160,6 @@ object AppKit {
                 appKitEngine = wcKoinApp.koin.get()
                 appKitEngine.setup(init, onError)
                 appKitEngine.setInternalDelegate(AppKitDelegate)
-//                wcKoinApp.modules(
-//
-//                )
             }
                 .onFailure { error -> return@onInitializedClient onError(Modal.Model.Error(error)) }
                 .onSuccess {
