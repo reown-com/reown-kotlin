@@ -1,6 +1,7 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
 import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.account.TONAccountDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
@@ -110,6 +111,12 @@ val walletMetaData = WalletMetaData(
                 "cosmos:cosmoshub-4:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc",
                 "cosmos:cosmoshub-1:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc"
             )
+        ),
+        "ton" to Wallet.Model.Namespace.Session(
+            chains = listOf("ton:-239"),
+            methods = listOf("SignMessage", "SignData"), //todo: ton_sendMessage and ton_sendData
+            events = listOf(),
+            accounts = listOf(TONAccountDelegate.caip10MainnetAddress)
         ),
 //        "solana" to Wallet.Model.Namespace.Session(
 //            chains = listOf(Chain.SOLANA.id),

@@ -40,6 +40,9 @@ object TONAccountDelegate {
         )
     }
 
+    val caip10MainnetAddress: String
+        get() = "ton:-239:$addressFriendly"
+
     val addressRaw: String
         get() = if (isInitialized) sharedPreferences.getString(TON_ADDRESS_RAW_TAG, null)!! else storeAccount()["addressRaw"] ?: ""
 
