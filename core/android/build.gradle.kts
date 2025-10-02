@@ -107,7 +107,7 @@ dependencies {
     } else {
         "0.9.55" // Use stable version for local builds
     }
-    api("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
+    api("com.github.reown-com:yttrium:unspecified") //unspecified
     implementation("net.java.dev.jna:jna:5.17.0@aar")
 
     api(libs.coroutines)

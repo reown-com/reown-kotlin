@@ -15,14 +15,14 @@ import com.reown.android.CoreClient
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.relay.ConnectionType
-import com.reown.foundation.network.model.Relay
 import com.reown.foundation.util.Logger
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
-import com.reown.sample.wallet.domain.EthAccountDelegate
-import com.reown.sample.wallet.domain.NotificationHandler
-import com.reown.sample.wallet.domain.NotifyDelegate
-import com.reown.sample.wallet.domain.SmartAccountEnabler
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
+import com.reown.sample.wallet.domain.notify.NotificationHandler
+import com.reown.sample.wallet.domain.notify.NotifyDelegate
+import com.reown.sample.wallet.domain.account.SmartAccountEnabler
+import com.reown.sample.wallet.domain.client.TONClient
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.ui.state.ConnectionState
@@ -57,6 +57,7 @@ class WalletKitApplication : Application() {
 //            println("Solana Keys Error: $e")
 //        }
 
+        TONClient.init()
         SmartAccountEnabler.init(this)
 
         val projectId = BuildConfig.PROJECT_ID
