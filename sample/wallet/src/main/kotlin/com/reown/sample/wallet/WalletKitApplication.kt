@@ -22,6 +22,7 @@ import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.notify.NotificationHandler
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
+import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.client.TONClient
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
@@ -48,6 +49,7 @@ class WalletKitApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         EthAccountDelegate.application = this
+        TONAccountDelegate.application =  this
 //        SolanaAccountDelegate.application = this
 
 //        try {
@@ -58,6 +60,9 @@ class WalletKitApplication : Application() {
 //        }
 
         TONClient.init()
+        println("kobe: Wallet: ${TONAccountDelegate.wallet}")
+        println("kobe: KeyPair: ${TONAccountDelegate.keypair}")
+
         SmartAccountEnabler.init(this)
 
         val projectId = BuildConfig.PROJECT_ID
