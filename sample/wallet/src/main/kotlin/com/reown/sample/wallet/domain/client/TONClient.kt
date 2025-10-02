@@ -1,7 +1,9 @@
 package com.reown.sample.wallet.domain.client
 
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import org.web3j.abi.datatypes.Uint
 import org.web3j.protocol.Network
+import uniffi.yttrium.SendTxMessage
 import uniffi.yttrium.TonClient
 import uniffi.yttrium.TonClientConfig
 
@@ -12,7 +14,9 @@ object TONClient {
     private lateinit var client: TonClient
 
     fun init() {
-        val config = TonClientConfig("-239")
+        val config = TonClientConfig("-3")
+        //mainnet: -239
+        //testnet: -3
         client = TonClient(config)
     }
 
@@ -43,7 +47,7 @@ object TONClient {
         }
     }
 
-    fun signData(from: String, text: String): String {
+    fun signData(text: String): String {
         return try {
             if (!::client.isInitialized) {
                 throw IllegalStateException("TONClient not initialized. Call init() first.")
@@ -56,13 +60,13 @@ object TONClient {
         }
     }
 
-    fun sendMessage(network: String, from: String): String {
+    fun sendMessage(from: String, validUntil: UInt, messages: List<SendTxMessage>): String {
         return try {
             if (!::client.isInitialized) {
                 throw IllegalStateException("TONClient not initialized. Call init() first.")
             }
 
-            client.sendMessage(network, from, uniffi.yttrium.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey))
+            client.sendMessage("${TONAccountDelegate.testnet}", from, uniffi.yttrium.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey), validUntil, messages)
         } catch (e: Exception) {
             println("Error sending message: ${e.message}")
             throw e

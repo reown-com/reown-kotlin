@@ -113,10 +113,10 @@ val walletMetaData = WalletMetaData(
             )
         ),
         "ton" to Wallet.Model.Namespace.Session(
-            chains = listOf("ton:-239"),
-            methods = listOf("SignMessage", "SignData"), //todo: ton_sendMessage and ton_sendData
+            chains = listOf("ton:${TONAccountDelegate.testnet}"),
+            methods = listOf("SendMessage", "SignData"), //todo: ton_sendMessage and ton_sendData
             events = listOf(),
-            accounts = listOf(TONAccountDelegate.caip10MainnetAddress)
+            accounts = listOf(TONAccountDelegate.caip10TestnetAddress)
         ),
 //        "solana" to Wallet.Model.Namespace.Session(
 //            chains = listOf(Chain.SOLANA.id),

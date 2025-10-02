@@ -9,6 +9,7 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.S
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
 import org.json.JSONObject
+import uniffi.yttrium.SendTxMessage
 
 object Signer {
     suspend fun sign(sessionRequest: SessionRequestUI.Content): String = supervisorScope {
@@ -83,26 +84,62 @@ object Signer {
 //            !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
             sessionRequest.method == "SignData" -> {
                 println("kobe: SignData: $sessionRequest")
+
+                try {
+                    // Parse the params JSON array
+                    val paramsArray = JSONArray(sessionRequest.param)
+                    val firstParam = paramsArray.getJSONObject(0)
+                    val text = firstParam.getString("text")
+
+                    // Sign the data using TONClient
+                    val signature = TONClient.signData(text)
+
+                    println("kobe: Generated signature: $signature")
+                    signature
+                } catch (e: Exception) {
+                    println("kobe: Error signing TON data: ${e.message}")
+                    throw Exception("Failed to sign TON data: ${e.message}")
+                }
+            }
+
+            sessionRequest.method == "SendMessage" -> {
+                //params=[{"valid_until":1759397476,"from":"EQDV4YleDzbJ2W8wPMoIm0kG26uI4EU6wU7SofK1OUvS1VaG","messages":[{"address":"EQDV4YleDzbJ2W8wPMoIm0kG26uI4EU6wU7SofK1OUvS1VaG","amount":"1000"}]}]
+                println("kobe: SendMessage: $sessionRequest")
                 
                 try {
                     // Parse the params JSON array
                     val paramsArray = JSONArray(sessionRequest.param)
                     val firstParam = paramsArray.getJSONObject(0)
                     
-                    // Extract text and from parameters
-                    val text = firstParam.getString("text")
+                    // Extract parameters
+                    val validUntil = firstParam.getLong("valid_until").toUInt()
                     val from = firstParam.getString("from")
+                    val messagesArray = firstParam.getJSONArray("messages")
                     
-                    println("kobe: Extracted text: $text, from: $from")
+                    println("kobe: Extracted valid_until: $validUntil, from: $from, messages: $messagesArray")
                     
-                    // Sign the data using TONClient
-                    val signature = TONClient.signData(from, text)
+                    // Convert messages array to List<SendTxMessage>
+                    val sendTxMessages = mutableListOf<SendTxMessage>()
+                    for (i in 0 until messagesArray.length()) {
+                        val messageObj = messagesArray.getJSONObject(i)
+                        val address = messageObj.getString("address")
+                        val amount = messageObj.getString("amount")
+                        
+                        // Create SendTxMessage object
+                        val sendTxMessage = SendTxMessage(address, amount, null, null)
+                        sendTxMessages.add(sendTxMessage)
+                        
+                        println("kobe: Created SendTxMessage - address: $address, amount: $amount")
+                    }
                     
-                    println("kobe: Generated signature: $signature")
-                    signature
+                    // Send the message using TONClient
+                    val result = TONClient.sendMessage(from, validUntil, sendTxMessages)
+                    
+                    println("kobe: SendMessage result: $result")
+                    result
                 } catch (e: Exception) {
-                    println("kobe: Error signing TON data: ${e.message}")
-                    throw Exception("Failed to sign TON data: ${e.message}")
+                    println("kobe: Error sending TON message: ${e.message}")
+                    throw Exception("Failed to send TON message: ${e.message}")
                 }
             }
 
