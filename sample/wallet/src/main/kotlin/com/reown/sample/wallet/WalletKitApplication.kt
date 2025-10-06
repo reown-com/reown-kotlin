@@ -59,7 +59,7 @@ class WalletKitApplication : Application() {
 //            println("Solana Keys Error: $e")
 //        }
 
-        TONClient.init()
+        TONClient.init(this.packageName)
         println("kobe: Wallet: ${TONAccountDelegate.wallet}")
         println("kobe: KeyPair: ${TONAccountDelegate.keypair}")
 

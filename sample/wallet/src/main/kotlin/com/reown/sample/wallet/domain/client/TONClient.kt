@@ -1,8 +1,8 @@
 package com.reown.sample.wallet.domain.client
 
+import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
-import org.web3j.abi.datatypes.Uint
-import org.web3j.protocol.Network
+import uniffi.yttrium.PulseMetadata
 import uniffi.yttrium.SendTxMessage
 import uniffi.yttrium.TonClient
 import uniffi.yttrium.TonClientConfig
@@ -13,11 +13,18 @@ data class Wallet(val raw: String, val friendly: String)
 object TONClient {
     private lateinit var client: TonClient
 
-    fun init() {
-        val config = TonClientConfig("-3")
+    fun init(packageName: String) {
+        val config = TonClientConfig("-239")
         //mainnet: -239
         //testnet: -3
-        client = TonClient(config)
+        client = TonClient(
+            config, projectId = BuildConfig.PROJECT_ID, pulseMetadata = PulseMetadata(
+                sdkPlatform = "mobile",
+                sdkVersion = "reown-kotlin-${BuildConfig.BOM_VERSION}",
+                bundleId = packageName,
+                url = null
+            )
+        )
     }
 
     fun generateKeyPair(): Keypair {
@@ -60,13 +67,19 @@ object TONClient {
         }
     }
 
-    fun sendMessage(from: String, validUntil: UInt, messages: List<SendTxMessage>): String {
+    suspend fun sendMessage(from: String, validUntil: UInt, messages: List<SendTxMessage>): String {
         return try {
             if (!::client.isInitialized) {
                 throw IllegalStateException("TONClient not initialized. Call init() first.")
             }
 
-            client.sendMessage("${TONAccountDelegate.testnet}", from, uniffi.yttrium.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey), validUntil, messages)
+            client.sendMessage(
+                "${TONAccountDelegate.mainnet}",
+                from,
+                uniffi.yttrium.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey),
+                validUntil,
+                messages
+            )
         } catch (e: Exception) {
             println("Error sending message: ${e.message}")
             throw e

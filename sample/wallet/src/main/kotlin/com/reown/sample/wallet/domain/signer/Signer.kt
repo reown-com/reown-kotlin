@@ -82,7 +82,7 @@ object Signer {
 //            }
 
 //            !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
-            sessionRequest.method == "SignData" -> {
+            sessionRequest.method == "ton_signData" -> {
                 println("kobe: SignData: $sessionRequest")
 
                 try {
@@ -102,7 +102,7 @@ object Signer {
                 }
             }
 
-            sessionRequest.method == "SendMessage" -> {
+            sessionRequest.method == "ton_sendMessage" -> {
                 //params=[{"valid_until":1759397476,"from":"EQDV4YleDzbJ2W8wPMoIm0kG26uI4EU6wU7SofK1OUvS1VaG","messages":[{"address":"EQDV4YleDzbJ2W8wPMoIm0kG26uI4EU6wU7SofK1OUvS1VaG","amount":"1000"}]}]
                 println("kobe: SendMessage: $sessionRequest")
                 
