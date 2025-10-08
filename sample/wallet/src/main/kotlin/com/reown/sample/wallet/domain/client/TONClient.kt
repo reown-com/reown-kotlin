@@ -2,10 +2,12 @@ package com.reown.sample.wallet.domain.client
 
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import uniffi.yttrium.Logger
 import uniffi.yttrium.PulseMetadata
 import uniffi.yttrium.SendTxMessage
 import uniffi.yttrium.TonClient
 import uniffi.yttrium.TonClientConfig
+import uniffi.yttrium.registerLogger
 
 data class Keypair(val secretKey: String, val publicKey: String)
 data class Wallet(val raw: String, val friendly: String)
@@ -14,7 +16,15 @@ object TONClient {
     private lateinit var client: TonClient
 
     fun init(packageName: String) {
-        val config = TonClientConfig("-239")
+        val config = TonClientConfig("ton:mainnet")
+
+        registerLogger(object : Logger {
+            override fun log(message: String) {
+                println("kobe: From Yttrium: $message")
+            }
+
+        })
+
         //mainnet: -239
         //testnet: -3
         client = TonClient(
@@ -74,12 +84,15 @@ object TONClient {
             }
 
             client.sendMessage(
-                "${TONAccountDelegate.mainnet}",
+                //"${TONAccountDelegate.mainnet}",
+                "ton:mainnet",
                 from,
                 uniffi.yttrium.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey),
                 validUntil,
                 messages
-            )
+            ).also {
+                println("kobe: sent message RESULT: $it")
+            }
         } catch (e: Exception) {
             println("Error sending message: ${e.message}")
             throw e
