@@ -50,7 +50,6 @@ fun LabScreen(
                 is Modal.Model.SessionRequestResponse -> {
                     when (event.result) {
                         is Modal.Model.JsonRpcResponse.JsonRpcResult -> {
-                            println("kobe: SHOW sample result: $event")
                             val resultString = (event.result as Modal.Model.JsonRpcResponse.JsonRpcResult).result
                             val toastText = when {
                                 resultString.isNullOrBlank() -> "Success"
@@ -61,7 +60,6 @@ fun LabScreen(
                         }
 
                         is Modal.Model.JsonRpcResponse.JsonRpcError -> {
-                            println("kobe: SHOW sample error: $event")
                             val error = event.result as Modal.Model.JsonRpcResponse.JsonRpcError
                                 showToastOrDialog(context, "Error Message: ${error.message}\n Error Code: ${error.code}")
                         }
