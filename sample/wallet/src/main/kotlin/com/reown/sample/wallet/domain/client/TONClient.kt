@@ -16,7 +16,7 @@ object TONClient {
     private lateinit var client: TonClient
 
     fun init(packageName: String) {
-        val config = TonClientConfig("ton:mainnet")
+        val config = TonClientConfig("${TONAccountDelegate.mainnet}")
 
         registerLogger(object : Logger {
             override fun log(message: String) {
@@ -57,7 +57,7 @@ object TONClient {
             }
 
             val wallet = client.getAddressFromKeypair(uniffi.yttrium.Keypair(keyPair.secretKey, keyPair.publicKey))
-            Wallet(wallet.rawHex, wallet.friendlyEq)
+            Wallet(wallet.rawHex, wallet.friendly)
         } catch (e: Exception) {
             println("Error getting address from keypair: ${e.message}")
             throw e
@@ -84,8 +84,7 @@ object TONClient {
             }
 
             client.sendMessage(
-                //"${TONAccountDelegate.mainnet}",
-                "ton:mainnet",
+                "${TONAccountDelegate.mainnet}",
                 from,
                 uniffi.yttrium.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey),
                 validUntil,
