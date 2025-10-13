@@ -146,6 +146,9 @@ object POSClient {
     private fun validatePaymentIntents(intents: List<POS.Model.PaymentIntent>) {
         require(sessionNamespaces.isNotEmpty()) { "No chains set during the initialization" }
         require(intents.isNotEmpty()) { "No payment intents provided" }
+        require(intents.size == 1) {
+            "Multiple payment intents are not supported. Provide exactly one payment intent"
+        }
     }
 
     private fun validatePaymentIntent(paymentIntent: POS.Model.PaymentIntent) {
