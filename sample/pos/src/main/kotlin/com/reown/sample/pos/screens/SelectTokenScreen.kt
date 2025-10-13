@@ -22,7 +22,7 @@ fun SelectTokenScreen(
     modifier: Modifier = Modifier
 ) {
     val brandGreen = Color(0xFF0A8F5B)
-    var selected by rememberSaveable { mutableStateOf(false) }
+    var selectedTokenTitle by rememberSaveable { mutableStateOf<String?>(null) }
 
     Column(
         modifier = modifier
@@ -67,15 +67,26 @@ fun SelectTokenScreen(
             TokenCard(
                 title = "USDC",
                 subtitle = "USD Coin",
-                selected = selected,
-                onClick = { selected = !selected } // tap to select/deselect
+                selected = selectedTokenTitle == "USDC",
+                onClick = {
+                    selectedTokenTitle = if (selectedTokenTitle == "USDC") null else "USDC"
+                }
             )
 
+            // --- Single USDC card ---
+            TokenCard(
+                title = "USDT",
+                subtitle = "USDT Coin",
+                selected = selectedTokenTitle == "USDT",
+                onClick = {
+                    selectedTokenTitle = if (selectedTokenTitle == "USDT") null else "USDT"
+                }
+            )
             Spacer(Modifier.weight(1f))
 
             Button(
-                onClick = { viewModel.navigateToNetworkScreen("USDC") },
-                enabled = selected,
+                onClick = { selectedTokenTitle?.let { viewModel.navigateToNetworkScreen(it) } },
+                enabled = selectedTokenTitle != null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

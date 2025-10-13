@@ -110,11 +110,11 @@ class POSViewModel : ViewModel() {
 
     fun navigateToNetworkScreen(token: String) {
         this.token = token
+        println("kobe: selected token: $token")
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectNetwork) }
     }
 
-    fun createPaymentIntent(chainId: String, name: String, amount: String) {
-        this.amount = amount
+    fun createPaymentIntent(chainId: String, name: String) {
         this.network = chainId
         val paymentIntents =
             listOf(
@@ -128,7 +128,7 @@ class POSViewModel : ViewModel() {
                         symbol = "NRFSampleToken", //TODO: add dynamic values from UI
                         address = "0xFAaCe025BDd1f75869B84201Ce0b9248b0818e47" //TODO: add dynamic values from UI
                     ),
-                    amount = amount,
+                    amount = this.amount ?: "",
                     recipient = "${chainId}:0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD"
                 )
             )

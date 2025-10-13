@@ -58,6 +58,8 @@ object POSClient {
     ) {
         try {
             validateInitParams(initParams)
+
+            //TODO: get supported networks from wc_pos_supportedNetworks
             setupSessionNamespaces(initParams.chains)
             initializeClients(initParams, onSuccess, onError)
             setupDependencyInjection(initParams)

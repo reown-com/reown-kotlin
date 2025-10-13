@@ -136,7 +136,7 @@ fun AmountScreen(
 
             // CTA
             Button(
-                onClick = { viewModel.createPaymentIntent("eip155:137", "Polygon", amount.trim()) },
+                onClick = { viewModel.navigateToTokenScreen(amount.trim()) },
                 enabled = amount.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
