@@ -122,7 +122,7 @@ fun PaymentScreen(
                         qrUrl = qrUrl,
                         // show amount/token/network if you keep those on the VM
                         amount = viewModel.amount,
-                        token = viewModel.token,
+                        token = viewModel.tokenSymbol,
                         network = viewModel.network,
                         walletState = walletConnect,
                         sendState = sendTx,

@@ -130,6 +130,8 @@ object POSClient {
      */
     @Throws(IllegalStateException::class)
     fun createPaymentIntent(intents: List<POS.Model.PaymentIntent>) {
+        println("kobe: createPaymentIntent: $intents")
+
         checkPOSDelegateInitialization()
         validatePaymentIntents(intents)
 

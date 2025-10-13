@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.reown.sample.pos.Chain
 import com.reown.sample.pos.POSViewModel
 
 @Composable
@@ -26,10 +27,12 @@ fun SelectNetworkScreen(
     val brandGreen = Color(0xFF0A8F5B)
 
     val networks = listOf(
-        NetItem("Ethereum", "$2.50", Badge.Ethereum, "eip155:1"),
-        NetItem("Base", "$0.05", Badge.Base, "eip155:8453"),
-        NetItem("Polygon", "$0.01", Badge.Polygon, "eip155:137"),
-        NetItem("Sepolia", "$0.01", Badge.Sepolia, "eip155:11155111")
+        NetItem("Ethereum", "$2.50", Badge.Ethereum, Chain.ETHEREUM.id),
+        NetItem("Base", "$0.05", Badge.Base, Chain.BASE.id),
+        NetItem("Polygon", "$0.01", Badge.Polygon, Chain.POLYGON.id),
+        NetItem("Arbitrum", "$0.01", Badge.Arbitrum, Chain.ARBITRUM.id),
+        NetItem("Sepolia", "$0.01", Badge.Sepolia, Chain.SEPOLIA.id),
+        NetItem("Solana", "$0.01", Badge.Solana, Chain.SOLANA.id)
     )
 
     // ✅ store the selected CHAIN ID using custom saver
@@ -128,7 +131,7 @@ fun SelectNetworkScreen(
 /* ---------- UI Pieces ---------- */
 
 private data class NetItem(val name: String, val fee: String, val badge: Badge, val chainId: String)
-private enum class Badge { Ethereum, Base, Polygon, Sepolia }
+private enum class Badge { Ethereum, Base, Polygon, Sepolia, Solana, Arbitrum }
 
 // Custom Saver for NetItem to make it compatible with rememberSaveable
 private val NetItemSaver = Saver<MutableState<NetItem?>, List<Any>>(
@@ -151,7 +154,7 @@ private val NetItemSaver = Saver<MutableState<NetItem?>, List<Any>>(
             val fee = saved[1] as String
             val badgeName = saved[2] as String
             val chainId = saved[3] as String
-            
+
             val netItem = if (name.isEmpty() && fee.isEmpty() && badgeName.isEmpty() && chainId.isEmpty()) {
                 null
             } else {
