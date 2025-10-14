@@ -34,7 +34,6 @@ class POSApplication : Application() {
                     deviceId = "sample_pos_device_${System.currentTimeMillis()}",
                     metaData = metaData,
                     application = this@POSApplication,
-                    chains = listOf("eip155:137", "eip155:11155111")
                 )
 
                 // Initialize POSClient

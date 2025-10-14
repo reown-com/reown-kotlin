@@ -60,7 +60,6 @@ object POS {
             val projectId: String,
             val deviceId: String,
             val metaData: Model.MetaData,
-            val chains: List<String>,
             val application: Application
         ) : Params()
     }

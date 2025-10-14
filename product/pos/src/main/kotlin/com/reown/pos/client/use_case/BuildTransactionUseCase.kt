@@ -42,8 +42,8 @@ internal class BuildTransactionUseCase(
         when (buildResult) {
             is BuildTransactionResult.Success -> {
                 sendTransactionRequest(
-                    transactionRpc = buildResult.transactions[0], //TODO: Update to send all transactions one by one to the wallet
-                    transactionId = buildResult.transactions[0].id, //TODO: Update to send all transactions one by one to the wallet
+                    transactionRpc = buildResult.transactions.first(), //Note: only 1 payment intent is supported
+                    transactionId = buildResult.transactions.first().id, //Note: only 1 payment intent is supported
                     paymentIntent = paymentIntent,
                     approvedSession = approvedSession,
                     onSuccess = onSuccess,

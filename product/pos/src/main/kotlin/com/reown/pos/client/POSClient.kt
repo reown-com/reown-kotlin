@@ -9,6 +9,7 @@ import com.reown.android.relay.ConnectionType
 import com.reown.pos.client.service.createBlockchainApiModule
 import com.reown.pos.client.use_case.BuildTransactionUseCase
 import com.reown.pos.client.use_case.CheckTransactionStatusUseCase
+import com.reown.pos.client.use_case.GetSupportedNetworksUseCase
 import com.reown.pos.client.use_case.createPOSModule
 import com.reown.pos.client.utils.CaipUtil
 import com.reown.sign.client.Sign
@@ -39,6 +40,7 @@ object POSClient {
 
     private val checkTransactionStatusUseCase: CheckTransactionStatusUseCase by lazy { wcKoinApp.koin.get() }
     private val buildTransactionUseCase: BuildTransactionUseCase by lazy { wcKoinApp.koin.get() }
+    private val getSupportedNetworksUseCase: GetSupportedNetworksUseCase by lazy { wcKoinApp.koin.get() }
 
     interface POSDelegate {
         fun onEvent(event: POS.Model.PaymentEvent)
@@ -57,36 +59,35 @@ object POSClient {
         onError: (POS.Model.Error) -> Unit
     ) {
         try {
-            validateInitParams(initParams)
-
-            //TODO: get supported networks from wc_pos_supportedNetworks
-            setupSessionNamespaces(initParams.chains)
-            initializeClients(initParams, onSuccess, onError)
             setupDependencyInjection(initParams)
+
+            initializeClients(
+                initParams = initParams,
+                onSignInitialized = {
+                    scope.launch {
+                        when (val result = getSupportedNetworksUseCase.get()) {
+                            is GetSupportedNetworksUseCase.Result.Success -> {
+                                applySupportedNamespaces(result.namespaces)
+                                onSuccess()
+                            }
+                            is GetSupportedNetworksUseCase.Result.Error -> {
+                                Log.e(TAG, "Initialization failed", result.throwable)
+                                onError(POS.Model.Error(result.throwable))
+                            }
+                        }
+                    }
+                },
+                onError = onError
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Initialization failed", e)
             onError(POS.Model.Error(e))
         }
     }
 
-    private fun validateInitParams(initParams: POS.Params.Init) {
-        require(initParams.chains.isNotEmpty()) { "Chains list cannot be empty" }
-        require(initParams.chains.all { it.startsWith(EIP155_NAMESPACE) }) {
-            "Only EVM chains are supported, please provide eip155 chains"
-        }
-    }
-
-    private fun setupSessionNamespaces(chains: List<String>) {
-        sessionNamespaces[EIP155_NAMESPACE] = POS.Model.Namespace(
-            chains = chains,
-            methods = listOf(ETH_SEND_TRANSACTION_METHOD),
-            events = listOf(CHAIN_CHANGED_EVENT, ACCOUNTS_CHANGED_EVENT)
-        )
-    }
-
     private fun initializeClients(
         initParams: POS.Params.Init,
-        onSuccess: () -> Unit,
+        onSignInitialized: () -> Unit,
         onError: (POS.Model.Error) -> Unit
     ) {
         val coreMetaData = Core.Model.AppMetaData(
@@ -107,7 +108,7 @@ object POSClient {
 
         SignClient.initialize(
             Sign.Params.Init(core = CoreClient),
-            onSuccess = { onSuccess() },
+            onSuccess = { onSignInitialized() },
             onError = { error -> onError(POS.Model.Error(error.throwable)) }
         )
     }
@@ -131,13 +132,14 @@ object POSClient {
     @Throws(IllegalStateException::class)
     fun createPaymentIntent(intents: List<POS.Model.PaymentIntent>) {
         println("kobe: createPaymentIntent: $intents")
+        println("kobe: sessionNamespaces: $sessionNamespaces")
 
         checkPOSDelegateInitialization()
         validatePaymentIntents(intents)
 
         val paymentIntent = intents.first()
         validatePaymentIntent(paymentIntent)
-        validateChainCompatibility(intents)
+        ensureChainForPaymentIntent(paymentIntent)
 
         this.paymentIntent = paymentIntent
         initiateWalletConnection()
@@ -166,15 +168,20 @@ object POSClient {
         require(paymentIntent.token.network.name.isNotBlank()) { "Network name cannot be empty" }
     }
 
-    private fun validateChainCompatibility(intents: List<POS.Model.PaymentIntent>) {
-        val availableChains = sessionNamespaces[EIP155_NAMESPACE]?.chains ?: emptyList()
-        val intentChainIds = intents.map { it.token.network.chainId }
-        val missingChainIds = intentChainIds.filter { chainId -> !availableChains.contains(chainId) }
+    private fun ensureChainForPaymentIntent(paymentIntent: POS.Model.PaymentIntent) {
+        val chainId = paymentIntent.token.network.chainId
+        val delimiterIndex = chainId.indexOf(":")
+        require(delimiterIndex > 0 && delimiterIndex < chainId.length - 1) { "Invalid CAIP-2 chainId" }
+        val namespace = chainId.substring(0, delimiterIndex)
 
-        require(missingChainIds.isEmpty()) {
-            "Chains [${missingChainIds.joinToString(", ")}] are not available in session namespaces. " +
-                    "Available chains: [${availableChains.joinToString(", ")}]"
-        }
+        val namespaceEntry = sessionNamespaces[namespace]
+        require(namespaceEntry != null) { "Namespace '$namespace' not supported by session" }
+
+        val ensuredChains = if (namespaceEntry.chains.contains(chainId)) namespaceEntry.chains else namespaceEntry.chains + chainId
+        val updated = namespaceEntry.copy(chains = ensuredChains)
+
+        // Filter session namespaces to only include the namespace for this payment intent
+        sessionNamespaces = mutableMapOf(namespace to updated.copy(chains = listOf(chainId)))
     }
 
     private fun initiateWalletConnection() {
@@ -199,6 +206,8 @@ object POSClient {
                 events = namespace.events
             )
         }
+
+        println("kobe: Sign namespaces: $signNamespaces")
 
         val connectParams = Sign.Params.ConnectParams(
             sessionNamespaces = signNamespaces,
@@ -373,6 +382,18 @@ object POSClient {
         clear()
     }
 
+    private fun applySupportedNamespaces(namespaces: List<com.reown.pos.client.service.model.SupportedNamespace>) {
+        val newNamespaces = mutableMapOf<String, POS.Model.Namespace>()
+        namespaces.forEach { ns ->
+            newNamespaces[ns.name] = POS.Model.Namespace(
+                chains = emptyList(),
+                methods = ns.methods,
+                events = ns.events
+            )
+        }
+        sessionNamespaces = newNamespaces
+    }
+
     private fun clear() {
         Log.d(TAG, "Clearing client state")
         currentSessionTopic = null
@@ -387,8 +408,4 @@ object POSClient {
     }
 
     private const val TAG = "POSClient"
-    private const val EIP155_NAMESPACE = "eip155"
-    private const val ETH_SEND_TRANSACTION_METHOD = "eth_sendTransaction"
-    private const val CHAIN_CHANGED_EVENT = "chainChanged"
-    private const val ACCOUNTS_CHANGED_EVENT = "accountsChanged"
 }
