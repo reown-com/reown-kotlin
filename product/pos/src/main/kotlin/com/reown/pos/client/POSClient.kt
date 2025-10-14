@@ -19,15 +19,6 @@ import kotlinx.coroutines.supervisorScope
 import java.net.URI
 
 /**
- * TODO:
- * - integrate wc_pos_supportedNetworks to fetch namespaces dynamically
- * - send list of payment intents withing wc_pos_buildTransaction
- * - send all transactions from wc_pos_buildTransaction one by one to the wallet
- * - add tron protocol version support in wc_pos_buildTransaction capabilities
- * - add QR code timeout and regenerate a new one
- */
-
-/**
  * Main POS (Point of Sale) client for handling blockchain payment transactions.
  * Manages wallet connections, transaction building, and payment processing.
  */
