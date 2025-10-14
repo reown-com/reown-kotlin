@@ -227,6 +227,13 @@ class POSViewModel : ViewModel() {
                 ?: throw IllegalStateException("Token symbol not selected")
             val token = ContractAddresses.getToken(chain, stableCoin)
             this.token = token
+
+            val recipient = if (name == "Solana"){
+                "AfZQxts3J7B8SM5Dd6tBnVL7oFzjD5scbwZ4Tp9Memtx"
+            } else {
+                "0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD"
+            }
+
             val paymentIntents =
                 listOf(
                     POS.Model.PaymentIntent(
@@ -240,7 +247,7 @@ class POSViewModel : ViewModel() {
                             address = this.token?.address ?: ""
                         ),
                         amount = this.amount ?: "",
-                        recipient = "${chainId}:0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD" //Hardcoded
+                        recipient = "${chainId}:$recipient" //Hardcoded
                     )
                 )
 
