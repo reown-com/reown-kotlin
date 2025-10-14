@@ -176,12 +176,7 @@ object POSClient {
 
         val namespaceEntry = sessionNamespaces[namespace]
         require(namespaceEntry != null) { "Namespace '$namespace' not supported by session" }
-
-        val ensuredChains = if (namespaceEntry.chains.contains(chainId)) namespaceEntry.chains else namespaceEntry.chains + chainId
-        val updated = namespaceEntry.copy(chains = ensuredChains)
-
-        // Filter session namespaces to only include the namespace for this payment intent
-        sessionNamespaces = mutableMapOf(namespace to updated.copy(chains = listOf(chainId)))
+        // Validation only; do not mutate sessionNamespaces here.
     }
 
     private fun initiateWalletConnection() {
@@ -199,18 +194,35 @@ object POSClient {
     }
 
     private fun connectToWallet(pairing: Core.Model.Pairing) {
-        val signNamespaces = sessionNamespaces.mapValues { (_, namespace) ->
-            Sign.Model.Namespace.Proposal(
-                chains = namespace.chains,
-                methods = namespace.methods,
-                events = namespace.events
-            )
+        val currentPaymentIntent = paymentIntent
+        val filteredSignNamespaces = if (currentPaymentIntent != null) {
+            val chainId = currentPaymentIntent.token.network.chainId
+            val delimiterIndex = chainId.indexOf(":")
+            val namespaceKey = if (delimiterIndex in 1 until chainId.length) chainId.substring(0, delimiterIndex) else ""
+            val namespace = sessionNamespaces[namespaceKey]
+            if (namespace != null) {
+                mapOf(
+                    namespaceKey to Sign.Model.Namespace.Proposal(
+                        chains = listOf(chainId),
+                        methods = namespace.methods,
+                        events = namespace.events
+                    )
+                )
+            } else emptyMap()
+        } else {
+            sessionNamespaces.mapValues { (_, namespace) ->
+                Sign.Model.Namespace.Proposal(
+                    chains = namespace.chains,
+                    methods = namespace.methods,
+                    events = namespace.events
+                )
+            }
         }
 
-        println("kobe: Sign namespaces: $signNamespaces")
+        println("kobe: Sign namespaces: $filteredSignNamespaces")
 
         val connectParams = Sign.Params.ConnectParams(
-            sessionNamespaces = signNamespaces,
+            sessionNamespaces = filteredSignNamespaces,
             pairing = pairing
         )
 
