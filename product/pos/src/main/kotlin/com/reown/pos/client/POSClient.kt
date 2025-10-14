@@ -131,9 +131,6 @@ object POSClient {
      */
     @Throws(IllegalStateException::class)
     fun createPaymentIntent(intents: List<POS.Model.PaymentIntent>) {
-        println("kobe: createPaymentIntent: $intents")
-        println("kobe: sessionNamespaces: $sessionNamespaces")
-
         checkPOSDelegateInitialization()
         validatePaymentIntents(intents)
 
@@ -218,8 +215,6 @@ object POSClient {
                 )
             }
         }
-
-        println("kobe: Sign namespaces: $filteredSignNamespaces")
 
         val connectParams = Sign.Params.ConnectParams(
             sessionNamespaces = filteredSignNamespaces,
@@ -351,13 +346,12 @@ object POSClient {
         response: Sign.Model.JsonRpcResponse.JsonRpcResult,
         topic: String
     ) {
-        val transactionHash = response.result
-        if (transactionHash != null) {
-            Log.d(TAG, "Transaction broadcasted: $transactionHash")
+        val responseResult = response.result
+        if (responseResult != null) {
+            Log.d(TAG, "Transaction broadcasted: $responseResult")
             posDelegate.onEvent(POS.Model.PaymentEvent.PaymentBroadcasted)
-
             checkTransactionStatusUseCase.checkTransactionStatusWithPolling(
-                sendResult = transactionHash,
+                sendResult = responseResult,
                 transactionId = transactionId ?: run {
                     Log.e(TAG, "Transaction ID is null")
                     posDelegate.onEvent(

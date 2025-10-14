@@ -20,8 +20,6 @@ class POSApplication : Application() {
             withContext(Dispatchers.IO) {
                 val projectId = BuildConfig.PROJECT_ID
 
-                println("kobe: project id: $projectId")
-
                 val metaData = POS.Model.MetaData(
                     merchantName = "Sample POS App",
                     description = "Sample Point of Sale application for testing POSClient",
@@ -40,10 +38,10 @@ class POSApplication : Application() {
                 POSClient.initialize(
                     initParams = initParams,
                     onSuccess = {
-                        Timber.d("kobe: POSClient initialized successfully")
+                        Timber.d("POSClient initialized successfully")
                     },
                     onError = { error ->
-                        Timber.e("kobe: POSClient initialization failed: ${error.throwable}")
+                        Timber.e("POSClient initialization failed: ${error.throwable}")
                     }
                 )
 

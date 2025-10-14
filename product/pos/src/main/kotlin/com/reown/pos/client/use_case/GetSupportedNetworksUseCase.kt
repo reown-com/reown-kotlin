@@ -20,9 +20,6 @@ internal class GetSupportedNetworksUseCase(
 
     suspend fun get(): Result = try {
         val response = blockchainApi.getSupportedNetworks(JsonRpcSupportedNetworksRequest(params = SupportedNetworksParams()))
-
-        println("kobe: Response: $response")
-
         when {
             response.error != null -> {
                 val message = "Supported networks failed: ${response.error.message} (code: ${response.error.code})"

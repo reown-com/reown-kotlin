@@ -29,7 +29,7 @@ sealed interface PosEvent {
     data object PaymentRequested : PosEvent
     data object PaymentBroadcasted : PosEvent
     data class PaymentRejected(val error: String) : PosEvent
-    data class PaymentSuccessful(val txHash: String) : PosEvent
+    data class PaymentSuccessful(val txHash: Any) : PosEvent
 }
 
 enum class Chain(val id: String) {
@@ -177,7 +177,7 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.PaymentSuccessful -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentSuccessful(paymentEvent.txHash)) }
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentSuccessful(paymentEvent.result)) }
                     }
 
                     PaymentEvent.ConnectionRejected -> {
@@ -213,8 +213,6 @@ class POSViewModel : ViewModel() {
 
     fun navigateToNetworkScreen(tokenSymbol: String) {
         this.tokenSymbol = tokenSymbol
-        println("kobe: selected token: $tokenSymbol")
-
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectNetwork) }
     }
 
@@ -228,7 +226,7 @@ class POSViewModel : ViewModel() {
             val token = ContractAddresses.getToken(chain, stableCoin)
             this.token = token
 
-            val recipient = if (name == "Solana"){
+            val recipient = if (name == "Solana") {
                 "AfZQxts3J7B8SM5Dd6tBnVL7oFzjD5scbwZ4Tp9Memtx"
             } else {
                 "0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD"
@@ -253,7 +251,7 @@ class POSViewModel : ViewModel() {
 
             POSClient.createPaymentIntent(intents = paymentIntents)
         } catch (e: Exception) {
-            println("kobe: createPaymentIntent error: ${e.message}")
+            println("createPaymentIntent error: ${e.message}")
 
             viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = e.message ?: "Create intent error")) }
         }

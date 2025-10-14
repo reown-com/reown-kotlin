@@ -18,7 +18,6 @@ object PosSampleDelegate : POSClient.POSDelegate {
     val paymentEventFlow = _paymentEventFlow.asSharedFlow()
 
     override fun onEvent(event: PaymentEvent) {
-        println("kobe: Event: $event")
         posScope.launch {
             _paymentEventFlow.emit(event)
         }
