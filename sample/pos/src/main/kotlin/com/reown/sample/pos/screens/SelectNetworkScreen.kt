@@ -29,7 +29,6 @@ fun SelectNetworkScreen(
     val networks = listOf(
         NetItem("Ethereum", "$2.50", Badge.Ethereum, Chain.ETHEREUM.id),
         NetItem("Base", "$0.05", Badge.Base, Chain.BASE.id),
-        NetItem("Polygon", "$0.01", Badge.Polygon, Chain.POLYGON.id),
         NetItem("Arbitrum", "$0.01", Badge.Arbitrum, Chain.ARBITRUM.id),
         NetItem("Sepolia", "$0.01", Badge.Sepolia, Chain.SEPOLIA.id),
         NetItem("Solana", "$0.01", Badge.Solana, Chain.SOLANA.id)
@@ -38,8 +37,8 @@ fun SelectNetworkScreen(
     // ✅ store the selected CHAIN ID using custom saver
     var selectedId by rememberSaveable(saver = NetItemSaver) { mutableStateOf<NetItem?>(null) }
 
-    // Loading state for the payment button
-    var isLoading by rememberSaveable { mutableStateOf(false) }
+    // Loading state for the payment button, driven by ViewModel and reset elsewhere
+    val isLoading by viewModel.startPaymentLoading.collectAsState()
 
     Column(
         modifier = modifier
@@ -91,7 +90,7 @@ fun SelectNetworkScreen(
             Button(
                 onClick = {
                     selectedId?.let {
-                        isLoading = true
+                        viewModel.setStartPaymentLoading(true)
                         viewModel.createPaymentIntent(it.chainId, it.name)
                     }
                 },

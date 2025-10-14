@@ -59,6 +59,8 @@ fun PaymentScreen(
     var checking by remember { mutableStateOf(StepState.Inactive) }      // waits for Broadcasted
 
     LaunchedEffect(Unit) {
+        // Reset loading state when entering the payment screen
+        viewModel.resetStartPaymentLoading()
         viewModel.posEventsFlow.collectLatest { e ->
             when (e) {
                 PosEvent.Connected -> {
@@ -143,7 +145,17 @@ fun PaymentScreen(
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Powered by DTC Pay", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Button(
+                        onClick = { onReturnToStart() },
+                        modifier = Modifier
+                            .height(44.dp)
+                    ) {
+                        Text("Start again")
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text("Powered by DTC Pay", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }

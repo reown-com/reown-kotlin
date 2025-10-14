@@ -6,7 +6,9 @@ import com.reown.pos.client.POS
 import com.reown.pos.client.POS.Model.PaymentEvent
 import com.reown.pos.client.POSClient
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.net.URI
 
@@ -34,7 +36,6 @@ enum class Chain(val id: String) {
     ETHEREUM("eip155:1"),
     BASE("eip155:8453"),
     ARBITRUM("eip155:42161"),
-    POLYGON("eip155:137"),
     OPTIMISM("eip155:10"),
     SOLANA("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"),
     SEPOLIA("eip155:11155111")
@@ -131,6 +132,18 @@ class POSViewModel : ViewModel() {
     internal var tokenSymbol: String? = null
     internal var amount: String? = null
     internal var network: String? = null
+
+    // Loading state for "Start Payment" button on SelectNetworkScreen
+    private val _startPaymentLoading = MutableStateFlow(false)
+    val startPaymentLoading = _startPaymentLoading.asStateFlow()
+
+    fun setStartPaymentLoading(value: Boolean) {
+        _startPaymentLoading.value = value
+    }
+
+    fun resetStartPaymentLoading() {
+        _startPaymentLoading.value = false
+    }
 
 
     init {
