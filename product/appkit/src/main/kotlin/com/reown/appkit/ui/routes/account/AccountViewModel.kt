@@ -2,6 +2,7 @@ package com.reown.appkit.ui.routes.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pulse.domain.SendEventInterface
 import com.reown.android.pulse.model.EventType
@@ -38,18 +39,20 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.koin.core.qualifier.named
+import kotlin.text.get
 
 internal class AccountViewModel : ViewModel(), Navigator by NavigatorImpl() {
-    private val logger: Logger = wcKoinApp.koin.get()
+    private val logger: Logger by lazy { wcKoinApp.koin.get(named(AndroidCommonDITags.LOGGER)) }
 
-    private val saveChainSelectionUseCase: SaveChainSelectionUseCase = wcKoinApp.koin.get()
-    private val saveSessionUseCase: SaveSessionUseCase = wcKoinApp.koin.get()
-    private val observeSessionUseCase: ObserveSessionUseCase = wcKoinApp.koin.get()
-    private val observeSelectedChainUseCase: ObserveSelectedChainUseCase = wcKoinApp.koin.get()
-    private val getIdentityUseCase: GetIdentityUseCase = wcKoinApp.koin.get()
-    private val getEthBalanceUseCase: GetEthBalanceUseCase = wcKoinApp.koin.get()
-    private val appKitEngine: AppKitEngine = wcKoinApp.koin.get()
-    private val sendEventUseCase: SendEventInterface = wcKoinApp.koin.get()
+    private val saveChainSelectionUseCase: SaveChainSelectionUseCase by lazy { wcKoinApp.koin.get() }
+    private val saveSessionUseCase: SaveSessionUseCase by lazy { wcKoinApp.koin.get() }
+    private val observeSessionUseCase: ObserveSessionUseCase by lazy { wcKoinApp.koin.get() }
+    private val observeSelectedChainUseCase: ObserveSelectedChainUseCase by lazy { wcKoinApp.koin.get() }
+    private val getIdentityUseCase: GetIdentityUseCase by lazy { wcKoinApp.koin.get() }
+    private val getEthBalanceUseCase: GetEthBalanceUseCase by lazy { wcKoinApp.koin.get() }
+    private val appKitEngine: AppKitEngine by lazy { wcKoinApp.koin.get() }
+    private val sendEventUseCase: SendEventInterface by lazy { wcKoinApp.koin.get() }
     private val activeSessionFlow = observeSessionUseCase()
 
     private val accountDataFlow = activeSessionFlow

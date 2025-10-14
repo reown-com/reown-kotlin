@@ -52,7 +52,7 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
         .filterIsInstance<Notify.Event.SubscriptionsChanged>()
         .debounce(500L)
         .map { event -> event.subscriptions }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAccount)).values.toList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())//NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAccount)).values.toList())
 
     private var _activeSubscriptions = emptyList<ActiveSubscriptionsUI>()
     private val getActiveSubscriptionTrigger = MutableSharedFlow<Unit>()
@@ -131,7 +131,7 @@ class InboxViewModel(application: Application) : AndroidViewModel(application) {
             .onEach { _explorerAppsTrigger.emit(Unit) }
             .launchIn(viewModelScope)
 
-        viewModelScope.launch { fetchExplorerApps() }
+//        viewModelScope.launch { fetchExplorerApps() }
     }
 
     private suspend fun fetchExplorerApps() {

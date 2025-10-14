@@ -10,6 +10,7 @@ import com.reown.android.internal.common.model.Namespace
 import com.reown.android.internal.common.model.SDKError
 import com.reown.android.internal.common.model.Tags
 import com.reown.android.internal.common.model.TransportType
+import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.model.WCRequest
 import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
@@ -40,6 +41,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import uniffi.yttrium.SessionRequestJsonRpcFfi
+import uniffi.yttrium.SessionRequestJsonRpcResponseFfi
+import uniffi.yttrium.SettleNamespace
+import uniffi.yttrium.SignListener
 
 internal class OnSessionRequestUseCase(
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
@@ -106,7 +111,12 @@ internal class OnSessionRequestUseCase(
 
             val url = sessionPeerAppMetaData?.url ?: String.Empty
             logger.log("Resolving session request attestation: ${System.currentTimeMillis()}")
-            resolveAttestationIdUseCase(request, url, linkMode = request.transportType == TransportType.LINK_MODE, appLink = sessionPeerAppMetaData?.redirect?.universal) { verifyContext ->
+            resolveAttestationIdUseCase(
+                request,
+                url,
+                linkMode = request.transportType == TransportType.LINK_MODE,
+                appLink = sessionPeerAppMetaData?.redirect?.universal
+            ) { verifyContext ->
                 logger.log("Session request attestation resolved: ${System.currentTimeMillis()}")
                 emitSessionRequest(params, request, sessionPeerAppMetaData, verifyContext)
             }
@@ -122,6 +132,54 @@ internal class OnSessionRequestUseCase(
         }
     }
 
+//    override fun onSessionConnect(id: ULong) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionDisconnect(id: ULong, topic: String) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionEvent(id: ULong, topic: String, params: Boolean) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionExtend(id: ULong, topic: String) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionRequest(topic: String, sessionRequest: SessionRequestJsonRpcFfi) {
+//        println("kobe: Session Request: $topic ; $sessionRequest")
+//
+//        val sessionRequestEvent = EngineDO.SessionRequestEvent(
+//            request = EngineDO.SessionRequest(
+//                topic = topic,
+//                chainId = sessionRequest.params.chainId,
+//                peerAppMetaData = null,
+//                expiry = if (sessionRequest.params.request.expiry != null) Expiry(sessionRequest.params.request.expiry!!.toLong()) else null,
+//                request = EngineDO.SessionRequest.JSONRPCRequest(
+//                    id = sessionRequest.id.toLong(),
+//                    method = sessionRequest.params.request.method,
+//                    params = sessionRequest.params.request.params
+//                )
+//            ),
+//            context = EngineDO.VerifyContext(1, "", Validation.UNKNOWN, "", null)
+//        )
+//        scope.launch { _events.emit(sessionRequestEvent) }
+//    }
+//
+//    override fun onSessionRequestResponse(id: ULong, topic: String, response: SessionRequestJsonRpcResponseFfi) {
+//        TODO("Not yet implemented")
+//    }
+//
+//    override fun onSessionUpdate(
+//        id: ULong,
+//        topic: String,
+//        namespaces: Map<String, SettleNamespace>
+//    ) {
+//        TODO("Not yet implemented")
+//    }
+
     private fun emitSessionRequest(
         params: SignParams.SessionRequestParams,
         request: WCRequest,
@@ -132,7 +190,8 @@ internal class OnSessionRequestUseCase(
         val event = if (sessionRequestEventsQueue.isEmpty()) {
             sessionRequestEvent
         } else {
-            sessionRequestEventsQueue.find { event -> if (event.request.expiry != null) !event.request.expiry.isExpired() else true } ?: sessionRequestEvent
+            sessionRequestEventsQueue.find { event -> if (event.request.expiry != null) !event.request.expiry.isExpired() else true }
+                ?: sessionRequestEvent
         }
 
         sessionRequestEventsQueue.add(sessionRequestEvent)

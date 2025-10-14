@@ -51,7 +51,7 @@ internal class OnSessionExtendUseCase(
             sessionStorageRepository.extendSession(request.topic, newExpiry)
             jsonRpcInteractor.respondWithSuccess(request, irnParams)
             logger.log("Session extend received on topic: ${request.topic} - emitting")
-            _events.emit(session.toEngineDOSessionExtend(Expiry(newExpiry)))
+//            _events.emit(session.toEngineDOSessionExtend(Expiry(newExpiry)))
         } catch (e: Exception) {
             logger.error("Session extend received failure on topic: ${request.topic}: $e")
             jsonRpcInteractor.respondWithError(request, Uncategorized.GenericError("Cannot update a session: ${e.message}, topic: ${request.topic}"), irnParams)

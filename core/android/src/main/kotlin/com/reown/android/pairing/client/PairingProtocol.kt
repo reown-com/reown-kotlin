@@ -9,17 +9,12 @@ import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pairing.engine.domain.PairingEngine
 import com.reown.android.pairing.engine.model.EngineDO
 import com.reown.android.pairing.model.mapper.toCore
-import com.reown.android.pulse.domain.InsertTelemetryEventUseCase
-import com.reown.android.relay.RelayConnectionInterface
-import com.reown.foundation.util.Logger
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.koin.core.KoinApplication
 
 internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp) : PairingInterface {
     private lateinit var pairingEngine: PairingEngine
-    private val logger: Logger by lazy { koinApp.koin.get() }
-    private val relayClient: RelayConnectionInterface by lazy { koinApp.koin.get() }
-    private val insertEventUseCase: InsertTelemetryEventUseCase by lazy { koinApp.koin.get() }
 
     override fun initialize() {
         pairingEngine = koinApp.koin.get()
@@ -37,29 +32,29 @@ internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp)
         }.launchIn(scope)
     }
 
-    @Throws(IllegalStateException::class)
-    override fun create(onError: (Core.Model.Error) -> Unit): Core.Model.Pairing? {
-        checkEngineInitialization()
-
-        return try {
-            pairingEngine.create({ error -> onError(Core.Model.Error(error)) })
-        } catch (e: Exception) {
-            onError(Core.Model.Error(e))
-            null
-        }
-    }
-
-    @Throws(IllegalStateException::class)
-    override fun create(onError: (Core.Model.Error) -> Unit, methods: String): Core.Model.Pairing? {
-        checkEngineInitialization()
-
-        return try {
-            pairingEngine.create({ error -> onError(Core.Model.Error(error)) }, methods)
-        } catch (e: Exception) {
-            onError(Core.Model.Error(e))
-            null
-        }
-    }
+//    @Throws(IllegalStateException::class)
+//    override fun create(onError: (Core.Model.Error) -> Unit): Core.Model.Pairing? {
+//        checkEngineInitialization()
+//
+//        return try {
+//            pairingEngine.create({ error -> onError(Core.Model.Error(error)) })
+//        } catch (e: Exception) {
+//            onError(Core.Model.Error(e))
+//            null
+//        }
+//    }
+//
+//    @Throws(IllegalStateException::class)
+//    override fun create(onError: (Core.Model.Error) -> Unit, methods: String): Core.Model.Pairing? {
+//        checkEngineInitialization()
+//
+//        return try {
+//            pairingEngine.create({ error -> onError(Core.Model.Error(error)) }, methods)
+//        } catch (e: Exception) {
+//            onError(Core.Model.Error(e))
+//            null
+//        }
+//    }
 
     @Throws(IllegalStateException::class)
     override fun pair(
@@ -68,6 +63,7 @@ internal class PairingProtocol(private val koinApp: KoinApplication = wcKoinApp)
         onError: (Core.Model.Error) -> Unit,
     ) {
         checkEngineInitialization()
+
         try {
             pairingEngine.pair(
                 uri = pair.uri,

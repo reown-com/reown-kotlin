@@ -18,8 +18,8 @@ import org.json.JSONObject
 
 object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     internal val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val _coreEvents: MutableSharedFlow<Core.Model> = MutableSharedFlow()
-    val coreEvents: SharedFlow<Core.Model> = _coreEvents.asSharedFlow()
+//    private val _coreEvents: MutableSharedFlow<Core.Model> = MutableSharedFlow()
+//    val coreEvents: SharedFlow<Core.Model> = _coreEvents.asSharedFlow()
 
     internal val _walletEvents: MutableSharedFlow<Wallet.Model> = MutableSharedFlow()
     val walletEvents: SharedFlow<Wallet.Model> = _walletEvents.asSharedFlow()
@@ -36,8 +36,8 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
 
 
     init {
-        CoreClient.setDelegate(this)
-        WalletKit.setWalletDelegate(this)
+//        CoreClient.setDelegate(this)
+//        WalletKit.setWalletDelegate(this)
     }
 
     override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {
@@ -158,8 +158,8 @@ object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     }
 
     override fun onPairingState(pairingState: Core.Model.PairingState) {
-        scope.launch {
-            _coreEvents.emit(pairingState)
-        }
+//        scope.launch {
+//            _coreEvents.emit(pairingState)
+//        }
     }
 }

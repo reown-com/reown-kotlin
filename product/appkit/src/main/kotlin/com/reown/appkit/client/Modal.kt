@@ -1,11 +1,14 @@
 package com.reown.appkit.client
 
+import android.app.Application
 import androidx.annotation.DrawableRes
 import androidx.annotation.Keep
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
 import com.reown.android.internal.common.signing.cacao.Issuer
+import com.reown.sign.client.Sign
+import com.reown.sign.client.Sign.Model
 
 object Modal {
 
@@ -18,7 +21,10 @@ object Modal {
 
     sealed class Params {
         data class Init(
-            val core: CoreInterface,
+//            val core: CoreInterface,
+            val projectId: String,
+            val metaData: Modal.Model.MetaData,
+            val application: Application,
             val excludedWalletIds: List<String> = listOf(),
             val includeWalletIds: List<String> = listOf(),
             val recommendedWalletsIds: List<String> = listOf(),
@@ -38,7 +44,7 @@ object Modal {
             val sessionNamespaces: Map<String, Model.Namespace.Proposal>? = null,
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null,
-            val pairing: Core.Model.Pairing,
+            val pairing: Core.Model.Pairing? = null,
         ) : Params()
 
         data class Authenticate(
@@ -84,6 +90,17 @@ object Modal {
 
     sealed class Model {
         data class Error(val throwable: Throwable) : Model()
+
+        data class MetaData(
+            val name: String,
+            val description: String,
+            val url: String,
+            val icons: List<String>,
+            val redirect: String?,
+            val appLink: String? = null,
+            val linkMode: Boolean = false,
+            val verifyUrl: String? = null
+        ) : Model()
 
         sealed class Namespace : Model() {
             data class Proposal(

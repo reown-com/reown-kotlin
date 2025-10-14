@@ -93,11 +93,11 @@ dependencies {
     testImplementation(libs.coroutines.test)
     testImplementation(libs.turbine)
 
-    releaseImplementation("com.reown:android-core:$CORE_VERSION")
+    releaseImplementation("com.reown:android-core:$CORE_VERSION") //TODO: remove
     releaseImplementation("com.reown:sign:$SIGN_VERSION")
     releaseImplementation("com.reown:modal-core:$MODAL_CORE_VERSION")
 
-    debugImplementation(project(":core:android"))
+    debugImplementation(project(":core:android")) //TODO: remove
     debugImplementation(project(":protocol:sign"))
     debugImplementation(project(":core:modal"))
 

@@ -18,7 +18,7 @@ interface PairingStorageRepositoryInterface {
 
     fun setRequestReceived(topic: Topic)
 
-    fun updateExpiry(topic: Topic, expiry: Expiry)
-
     fun getPairingOrNullByTopic(topic: Topic): Pairing?
+
+    fun getPairingOrNullByTopicAndRpcId(topic: Topic, rpcId: Long): Pairing?
 }

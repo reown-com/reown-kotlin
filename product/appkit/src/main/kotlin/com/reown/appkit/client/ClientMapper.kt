@@ -166,3 +166,14 @@ internal fun Modal.Listeners.SessionPing.toSign() = object : Sign.Listeners.Sess
 internal fun Sign.Model.Session.toSession() = Session.WalletConnectSession(pairingTopic, topic, expiry, namespaces.toModal(), metaData)
 
 internal fun Account.toCoinbaseSession() = Session.CoinbaseSession(chain.id, address)
+
+internal fun Modal.Model.MetaData.toSign() = Sign.Model.MetaData(
+    name = name,
+    description = description,
+    url = url,
+    icons = icons,
+    redirect = redirect,
+    appLink = appLink,
+    linkMode = linkMode,
+    verifyUrl = verifyUrl
+)

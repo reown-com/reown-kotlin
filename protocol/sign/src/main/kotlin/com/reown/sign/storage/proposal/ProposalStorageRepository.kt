@@ -39,6 +39,7 @@ class ProposalStorageRepository(
             redirect,
             expiry?.seconds,
             scopedProperties,
+            pairingSymKey
         )
 
         insertRequiredNamespace(requiredNamespaces, requestId)
@@ -87,7 +88,8 @@ class ProposalStorageRepository(
         properties: Map<String, String>?,
         redirect: String,
         expiry: Long?,
-        scoped_properties: Map<String, String>?
+        scoped_properties: Map<String, String>?,
+        pairing_sym_key: String
     ): ProposalVO {
         val requiredNamespaces: Map<String, Namespace.Proposal> = getRequiredNamespaces(request_id)
         val optionalNamespaces: Map<String, Namespace.Proposal> = getOptionalNamespaces(request_id)
@@ -107,7 +109,8 @@ class ProposalStorageRepository(
             scopedProperties = scoped_properties,
             requiredNamespaces = requiredNamespaces,
             optionalNamespaces = optionalNamespaces,
-            expiry = if (expiry != null) Expiry(expiry) else null
+            expiry = if (expiry != null) Expiry(expiry) else null,
+            pairingSymKey = pairing_sym_key
         )
     }
 

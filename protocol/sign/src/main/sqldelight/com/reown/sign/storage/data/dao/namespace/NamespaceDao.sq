@@ -14,7 +14,7 @@ CREATE TABLE NamespaceDao(
 );
 
 insertOrAbortNamespace:
-INSERT OR ABORT INTO NamespaceDao(session_id, key, chains, accounts, methods, events, request_id)
+INSERT OR REPLACE INTO NamespaceDao(session_id, key, chains, accounts, methods, events, request_id)
 VALUES (?, ?, ?,?,?, ?, ?);
 
 deleteNamespacesByTopic:

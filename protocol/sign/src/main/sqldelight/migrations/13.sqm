@@ -1,0 +1,5 @@
+-- migrates 13db to 14db
+
+-- CREATE V14 SCHEMA
+
+ALTER TABLE ProposalDao ADD COLUMN pairing_sym_key TEXT NOT NULL;

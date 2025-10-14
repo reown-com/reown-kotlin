@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.reown.android.di.coreStorageModule
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.di.KEY_CLIENT_ID
+import com.reown.android.internal.common.di.coreAppKitModule
 import com.reown.android.internal.common.di.coreAndroidNetworkModule
 import com.reown.android.internal.common.di.coreCommonModule
 import com.reown.android.internal.common.di.coreCryptoModule
@@ -14,7 +15,6 @@ import com.reown.android.internal.common.di.explorerModule
 import com.reown.android.internal.common.di.keyServerModule
 import com.reown.android.internal.common.di.pulseModule
 import com.reown.android.internal.common.di.pushModule
-import com.reown.android.internal.common.di.appKitModule
 import com.reown.android.internal.common.explorer.ExplorerInterface
 import com.reown.android.internal.common.explorer.ExplorerProtocol
 import com.reown.android.internal.common.model.AppMetaData
@@ -78,6 +78,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
     ) {
         try {
             require(relayServerUrl.isValidRelayServerUrl()) { "Check the schema and projectId parameter of the Server Url" }
+            //TODO: Init Sign rust client
 
             setup(
                 application = application,
@@ -89,7 +90,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 relay = relay,
                 onError = onError,
                 metaData = metaData,
-                keyServerUrl = keyServerUrl
+                keyServerUrl = keyServerUrl,
             )
         } catch (e: Exception) {
             onError(Core.Model.Error(e))
@@ -119,7 +120,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 relay = relay,
                 onError = onError,
                 metaData = metaData,
-                keyServerUrl = keyServerUrl
+                keyServerUrl = keyServerUrl,
             )
         } catch (e: Exception) {
             onError(Core.Model.Error(e))
@@ -136,7 +137,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         relay: RelayConnectionInterface?,
         onError: (Core.Model.Error) -> Unit,
         metaData: Core.Model.AppMetaData,
-        keyServerUrl: String?
+        keyServerUrl: String?,
     ) {
         val packageName: String = application.packageName
         val relayServerUrl = if (serverUrl.isNullOrEmpty()) "wss://relay.walletconnect.org?projectId=$projectId" else serverUrl
@@ -144,6 +145,7 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         with(koinApp) {
             androidContext(application)
             modules(
+//                module { single(named(AndroidCommonDITags.SIGN_RUST_CLIENT)) { signClient } },
                 module { single(named(AndroidCommonDITags.PACKAGE_NAME)) { packageName } },
                 module { single { ProjectId(projectId) } },
                 module { single(named(AndroidCommonDITags.TELEMETRY_ENABLED)) { TelemetryEnabled(telemetryEnabled) } },
@@ -151,6 +153,9 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 coreCommonModule(),
                 coreCryptoModule(),
             )
+
+//            val (_, privateKey) = keyStore.getKeyPair()
+//            signClient = SignClient(projectId = projectId, key = privateKey.hexToBytes())
 
             if (relay == null) {
                 Relay.initialize(connectionType) { error -> onError(Core.Model.Error(error)) }
@@ -180,9 +185,9 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 coreJsonRpcModule(),
                 corePairingModule(Pairing, PairingController),
                 keyServerModule(keyServerUrl),
-                explorerModule(),
-                appKitModule(),
-                pulseModule(packageName)
+//                explorerModule(),
+//                coreAppKitModule(),
+//                pulseModule(packageName)
             )
         }
 

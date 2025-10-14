@@ -45,7 +45,7 @@ import kotlinx.coroutines.flow.filter
 internal fun ScanQRCodeRoute(connectViewModel: ConnectViewModel) {
     val snackBarHandler = LocalSnackBarHandler.current
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
-    var uri by remember { mutableStateOf(connectViewModel.uri) }
+    var uri by remember { mutableStateOf(connectViewModel.pairingUri) }
 
     LaunchedEffect(Unit) {
         AppKitDelegate
@@ -61,7 +61,7 @@ internal fun ScanQRCodeRoute(connectViewModel: ConnectViewModel) {
         uri = uri,
         onCopyLinkClick = {
             snackBarHandler.showSuccessSnack("Link copied")
-            clipboardManager.setText(AnnotatedString(connectViewModel.uri))
+            clipboardManager.setText(AnnotatedString(connectViewModel.pairingUri))
         }
     )
 }

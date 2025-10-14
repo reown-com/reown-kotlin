@@ -114,7 +114,7 @@ internal fun RedirectWalletRoute(
         wallet = wallet,
         onCopyLinkClick = {
             snackBar.showSuccessSnack("Link copied")
-            clipboardManager.setText(AnnotatedString(connectState.uri))
+            clipboardManager.setText(AnnotatedString(connectState.pairingUri))
         },
         onMobileRetry = {
             redirectState = RedirectState.Loading

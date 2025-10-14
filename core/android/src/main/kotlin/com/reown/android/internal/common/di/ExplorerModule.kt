@@ -6,13 +6,14 @@ import com.reown.android.internal.common.explorer.ExplorerRepository
 import com.reown.android.internal.common.explorer.data.network.ExplorerService
 import com.reown.android.internal.common.explorer.domain.usecase.GetNotifyConfigUseCase
 import com.reown.android.internal.common.explorer.domain.usecase.GetProjectsWithPaginationUseCase
+import com.reown.android.internal.common.model.ProjectId
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 @JvmSynthetic
-internal fun explorerModule() = module {
+fun explorerModule(projectId: String) = module {
 
     single(named(AndroidCommonDITags.EXPLORER_URL)) { "https://registry.walletconnect.org/" }
 
@@ -29,7 +30,7 @@ internal fun explorerModule() = module {
     single {
         ExplorerRepository(
             explorerService = get(),
-            projectId = get(),
+            projectId = ProjectId(projectId),
         )
     }
 

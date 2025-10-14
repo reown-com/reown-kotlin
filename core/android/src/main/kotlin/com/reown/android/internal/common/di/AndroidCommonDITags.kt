@@ -43,4 +43,5 @@ enum class AndroidCommonDITags {
     ENABLE_AUTHENTICATE,
     TELEMETRY_ENABLED,
     PACKAGE_NAME,
+    SIGN_RUST_CLIENT
 }

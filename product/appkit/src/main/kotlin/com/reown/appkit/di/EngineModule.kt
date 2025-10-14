@@ -16,18 +16,6 @@ internal fun engineModule() = module {
     }
 
     single {
-        AppKitEngine(
-            getSessionUseCase = get(),
-            getSelectedChainUseCase = get(),
-            deleteSessionDataUseCase = get(),
-            saveSessionUseCase = get(),
-            connectionEventRepository = get(),
-            enableAnalyticsUseCase = get(),
-            sendEventUseCase = get(),
-            logger = get(named(AndroidCommonDITags.LOGGER)),
-        )
-    }
-    single {
         CoinbaseClient(
             context = get(),
             appMetaData = get()

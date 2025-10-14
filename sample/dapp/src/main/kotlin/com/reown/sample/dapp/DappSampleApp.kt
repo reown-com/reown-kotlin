@@ -2,17 +2,10 @@ package com.reown.sample.dapp
 
 import android.app.Application
 import com.google.firebase.appdistribution.FirebaseAppDistribution
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
-import com.reown.android.Core
-import com.reown.android.CoreClient
 import com.reown.sample.common.tag
-import com.reown.util.bytesToHex
-import com.reown.util.randomBytes
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.client.Modal
 import com.reown.appkit.presets.AppKitChainsPresets
-import com.reown.appkit.utils.EthUtils
 import timber.log.Timber
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
@@ -21,7 +14,7 @@ class DappSampleApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        val appMetaData = Core.Model.AppMetaData(
+        val metaData = Modal.Model.MetaData(
             name = "Kotlin Dapp",
             description = "Kotlin Dapp Implementation",
             url = "https://appkit-lab.reown.com",
@@ -31,17 +24,28 @@ class DappSampleApp : Application() {
             linkMode = true
         )
 
-        CoreClient.initialize(
-            application = this,
-            projectId = CommonBuildConfig.PROJECT_ID,
-            metaData = appMetaData,
-        ) {
-            Firebase.crashlytics.recordException(it.throwable)
-        }
+//        CoreClient.initialize(
+//            application = this,
+//            projectId = CommonBuildConfig.PROJECT_ID,
+//            metaData = appMetaData,
+//        ) {
+//            Firebase.crashlytics.recordException(it.throwable)
+//        }
 
-        AppKit.initialize(Modal.Params.Init(core = CoreClient)) { error ->
-            Timber.e(tag(this), error.throwable.stackTraceToString())
-        }
+        AppKit.initialize(
+            Modal.Params.Init(
+                application = this,
+                projectId = CommonBuildConfig.PROJECT_ID,
+                metaData = metaData,
+            ),
+            onError = { error ->
+                println("kobe: Error: $error")
+                Timber.e(tag(this), error.throwable.stackTraceToString())
+            },
+            onSuccess = {
+                println("kobe: AppKit init success")
+            }
+        )
 
         AppKit.setChains(AppKitChainsPresets.ethChains.values.toList())
 

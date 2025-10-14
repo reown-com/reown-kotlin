@@ -49,17 +49,17 @@ import org.json.JSONObject
 import java.util.UUID
 
 internal class SessionAuthenticateUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val crypto: KeyManagementRepository,
     private val selfAppMetaData: AppMetaData,
     private val authenticateResponseTopicRepository: AuthenticateResponseTopicRepository,
     private val proposeSessionUseCase: ProposeSessionUseCaseInterface,
-    private val getPairingForSessionAuthenticate: GetPairingForSessionAuthenticateUseCase,
+//    private val getPairingForSessionAuthenticate: GetPairingForSessionAuthenticateUseCase,
     private val getNamespacesFromReCaps: GetNamespacesFromReCaps,
-    private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
+//    private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
     private val linkModeStorageRepository: LinkModeStorageRepository,
-    private val insertEventUseCase: InsertEventUseCase,
-    private val clientId: String,
+//    private val insertEventUseCase: InsertEventUseCase,
+//    private val clientId: String,
     private val logger: Logger
 ) : SessionAuthenticateUseCaseInterface {
     override suspend fun authenticate(
@@ -106,51 +106,51 @@ internal class SessionAuthenticateUseCase(
         crypto.setKey(requesterPublicKey, responseTopic.getParticipantTag())
 
         if (isLinkModeEnabled(walletAppLink)) {
-            try {
-                linkModeJsonRpcInteractor.triggerRequest(authRequest, appLink = walletAppLink!!, topic = Topic(generateUUID()), envelopeType = EnvelopeType.TWO)
-                insertEventUseCase(
-                    Props(
-                        EventType.SUCCESS,
-                        Tags.SESSION_AUTHENTICATE_LINK_MODE.id.toString(),
-                        Properties(correlationId = authRequest.id, clientId = clientId, direction = Direction.SENT.state)
-                    )
-                )
-                logger.log("Link Mode - Request triggered successfully")
-            } catch (e: Error) {
-                onFailure(e)
-            }
+//            try {
+//                linkModeJsonRpcInteractor.triggerRequest(authRequest, appLink = walletAppLink!!, topic = Topic(generateUUID()), envelopeType = EnvelopeType.TWO)
+//                insertEventUseCase(
+//                    Props(
+//                        EventType.SUCCESS,
+//                        Tags.SESSION_AUTHENTICATE_LINK_MODE.id.toString(),
+//                        Properties(correlationId = authRequest.id, clientId = clientId, direction = Direction.SENT.state)
+//                    )
+//                )
+//                logger.log("Link Mode - Request triggered successfully")
+//            } catch (e: Error) {
+//                onFailure(e)
+//            }
         } else {
-            val pairing = getPairingForSessionAuthenticate(pairingTopic)
+//            val pairing = getPairingForSessionAuthenticate(pairingTopic)
             logger.log("Session authenticate subscribing on topic: $responseTopic")
-            jsonRpcInteractor.subscribe(
-                responseTopic,
-                onSuccess = {
-                    logger.log("Session authenticate subscribed on topic: $responseTopic")
-                    scope.launch {
-                        authenticateResponseTopicRepository.insertOrAbort(pairing.topic, responseTopic.value)
-                    }
-                },
-                onFailure = { error ->
-                    logger.error("Session authenticate subscribing on topic error: $responseTopic, $error")
-                    onFailure(error)
-                })
+//            jsonRpcInteractor.subscribe(
+//                responseTopic,
+//                onSuccess = {
+//                    logger.log("Session authenticate subscribed on topic: $responseTopic")
+//                    scope.launch {
+//                        authenticateResponseTopicRepository.insertOrAbort(pairing.topic, responseTopic.value)
+//                    }
+//                },
+//                onFailure = { error ->
+//                    logger.error("Session authenticate subscribing on topic error: $responseTopic, $error")
+//                    onFailure(error)
+//                })
 
-            scope.launch {
-                supervisorScope {
-                    val sessionAuthenticateDeferred = publishSessionAuthenticateDeferred(pairing, authRequest, responseTopic, requestExpiry)
-                    val sessionProposeDeferred = publishSessionProposeDeferred(pairing, optionalNamespaces, responseTopic)
-
-                    val sessionAuthenticateResult = async { sessionAuthenticateDeferred }.await()
-                    val sessionProposeResult = async { sessionProposeDeferred }.await()
-
-                    when {
-                        sessionAuthenticateResult.isSuccess && sessionProposeResult.isSuccess -> onSuccess(pairing.uri)
-                        sessionAuthenticateResult.isFailure -> onFailure(sessionAuthenticateResult.exceptionOrNull() ?: Throwable("Session authenticate failed"))
-                        sessionProposeResult.isFailure -> onFailure(sessionProposeResult.exceptionOrNull() ?: Throwable("Session proposal as a fallback failed"))
-                        else -> onFailure(Throwable("Session authenticate failed, please try again"))
-                    }
-                }
-            }
+//            scope.launch {
+//                supervisorScope {
+//                    val sessionAuthenticateDeferred = publishSessionAuthenticateDeferred(pairing, authRequest, responseTopic, requestExpiry)
+//                    val sessionProposeDeferred = publishSessionProposeDeferred(pairing, optionalNamespaces, responseTopic)
+//
+//                    val sessionAuthenticateResult = async { sessionAuthenticateDeferred }.await()
+//                    val sessionProposeResult = async { sessionProposeDeferred }.await()
+//
+//                    when {
+//                        sessionAuthenticateResult.isSuccess && sessionProposeResult.isSuccess -> onSuccess(pairing.uri)
+//                        sessionAuthenticateResult.isFailure -> onFailure(sessionAuthenticateResult.exceptionOrNull() ?: Throwable("Session authenticate failed"))
+//                        sessionProposeResult.isFailure -> onFailure(sessionProposeResult.exceptionOrNull() ?: Throwable("Session proposal as a fallback failed"))
+//                        else -> onFailure(Throwable("Session authenticate failed, please try again"))
+//                    }
+//                }
+//            }
         }
     }
 
@@ -188,17 +188,17 @@ internal class SessionAuthenticateUseCase(
         val irnParamsTtl = getIrnParamsTtl(requestExpiry, currentTimeInSeconds)
         val irnParams = IrnParams(Tags.SESSION_AUTHENTICATE, irnParamsTtl, correlationId = authRequest.id, prompt = true)
         val sessionAuthenticateDeferred = CompletableDeferred<Result<Unit>>()
-        jsonRpcInteractor.publishJsonRpcRequest(Topic(pairing.topic), irnParams, authRequest,
-            onSuccess = {
-                logger.log("Session authenticate sent successfully on topic: ${pairing.topic}")
-                sessionAuthenticateDeferred.complete(Result.success(Unit))
-            },
-            onFailure = { error ->
-                jsonRpcInteractor.unsubscribe(responseTopic)
-                logger.error("Failed to send a auth request: $error")
-                sessionAuthenticateDeferred.complete(Result.failure(error))
-            }
-        )
+//        jsonRpcInteractor.publishJsonRpcRequest(Topic(pairing.topic), irnParams, authRequest,
+//            onSuccess = {
+//                logger.log("Session authenticate sent successfully on topic: ${pairing.topic}")
+//                sessionAuthenticateDeferred.complete(Result.success(Unit))
+//            },
+//            onFailure = { error ->
+//                jsonRpcInteractor.unsubscribe(responseTopic)
+//                logger.error("Failed to send a auth request: $error")
+//                sessionAuthenticateDeferred.complete(Result.failure(error))
+//            }
+//        )
         return sessionAuthenticateDeferred.await()
     }
 
@@ -220,7 +220,7 @@ internal class SessionAuthenticateUseCase(
                 sessionProposeDeferred.complete(Result.success(Unit))
             },
             onFailure = { error ->
-                jsonRpcInteractor.unsubscribe(responseTopic)
+//                jsonRpcInteractor.unsubscribe(responseTopic)
                 logger.error("Failed to send a session proposal as a fallback: $error")
                 sessionProposeDeferred.complete(Result.failure(error))
             }

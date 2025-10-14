@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel : ViewModel() {
     val caip10 = EthAccountDelegate.ethAccount
     val privateKey = EthAccountDelegate.privateKey
-    val clientId = CoreClient.Echo.clientId
+//    val clientId = CoreClient.Echo.clientId
 
 //    val solanaKeys get() = SolanaAccountDelegate.keys
 

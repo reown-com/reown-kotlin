@@ -12,7 +12,7 @@ CREATE TABLE ProposalNamespaceDao (
 );
 
 insertOrAbortProposalNamespace:
-INSERT OR ABORT INTO ProposalNamespaceDao(session_id, key, chains, methods, events)
+INSERT OR REPLACE INTO ProposalNamespaceDao(session_id, key, chains, methods, events)
 VALUES (?, ?, ?, ?, ?);
 
 deleteProposalNamespacesByTopic:

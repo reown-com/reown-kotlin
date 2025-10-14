@@ -9,29 +9,37 @@ CREATE TABLE Pairing (
     uri TEXT NOT NULL,
     methods TEXT NOT NULL,
     is_active INTEGER AS Boolean NOT NULL,
-    is_proposal_received INTEGER AS Boolean DEFAULT 1
+    is_proposal_received INTEGER AS Boolean DEFAULT 1,
+    rpc_id INTEGER,
+    self_public_key TEXT,
+    sym_key TEXT
 );
 
 insertOrAbortPairing:
-INSERT OR ABORT INTO Pairing(topic, expiry, relay_protocol,  relay_data, uri, methods, is_active, is_proposal_received)
-VALUES (?,?,?,?,?,?, ?, ?);
+INSERT OR ABORT INTO Pairing(topic, expiry, relay_protocol,  relay_data, uri, methods, is_active, is_proposal_received, rpc_id, self_public_key, sym_key)
+VALUES (?,?,?,?,?,?, ?, ?, ?, ?, ?);
 
 getListOfPairing:
-SELECT pd.topic, pd.expiry, pd.relay_protocol, pd.relay_data, pd.uri, pd.methods, pd.is_proposal_received, mdd_peer.name, mdd_peer.description, mdd_peer.url, mdd_peer.icons, mdd_peer.native
+SELECT pd.topic, pd.expiry, pd.relay_protocol, pd.relay_data, pd.uri, pd.methods, pd.is_proposal_received, pd.rpc_id, pd.self_public_key, pd.sym_key, mdd_peer.name, mdd_peer.description, mdd_peer.url, mdd_peer.icons, mdd_peer.native
 FROM Pairing pd
     LEFT JOIN MetaData mdd_peer ON pd.topic = mdd_peer.sequence_topic AND mdd_peer.type = "PEER";
 
 getListOfPairingsWithoutRequestReceived:
-SELECT pd.topic, pd.expiry, pd.relay_protocol, pd.relay_data, pd.uri, pd.methods, pd.is_proposal_received, mdd_peer.name, mdd_peer.description, mdd_peer.url, mdd_peer.icons, mdd_peer.native
+SELECT pd.topic, pd.expiry, pd.relay_protocol, pd.relay_data, pd.uri, pd.methods, pd.is_proposal_received, pd.rpc_id, pd.self_public_key, pd.sym_key, mdd_peer.name, mdd_peer.description, mdd_peer.url, mdd_peer.icons, mdd_peer.native
 FROM Pairing pd
     LEFT JOIN MetaData mdd_peer ON pd.topic = mdd_peer.sequence_topic AND mdd_peer.type = "PEER"
 WHERE pd.is_proposal_received = 0;
 
 getPairingByTopic:
-SELECT pd.topic, pd.expiry, pd.relay_protocol, pd.relay_data, pd.uri, pd.methods, pd.is_proposal_received, mdd_peer.name, mdd_peer.description, mdd_peer.url, mdd_peer.icons, mdd_peer.native
+SELECT pd.topic, pd.expiry, pd.relay_protocol, pd.relay_data, pd.uri, pd.methods, pd.is_proposal_received, pd.rpc_id, pd.self_public_key, pd.sym_key, mdd_peer.name, mdd_peer.description, mdd_peer.url, mdd_peer.icons, mdd_peer.native
 FROM Pairing pd
     LEFT JOIN MetaData mdd_peer ON pd.topic = mdd_peer.sequence_topic AND mdd_peer.type = "PEER"
 WHERE ? = topic;
+
+getPairingByTopicAndRpcId:
+SELECT pd.rpc_id, pd.self_public_key, pd.sym_key
+FROM Pairing pd
+WHERE ? = topic AND ? = rpc_id;
 
 deletePairing:
 DELETE FROM Pairing

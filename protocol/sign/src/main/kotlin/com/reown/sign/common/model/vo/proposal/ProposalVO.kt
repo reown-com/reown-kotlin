@@ -21,7 +21,8 @@ internal data class ProposalVO(
     val proposerPublicKey: String,
     val relayProtocol: String,
     val relayData: String?,
-    val expiry: Expiry?
+    val expiry: Expiry?,
+    val pairingSymKey: String
 ) {
     val appMetaData: AppMetaData
         get() = AppMetaData(name = name, description = description, url = url, icons = icons, redirect = Redirect(native = redirect))

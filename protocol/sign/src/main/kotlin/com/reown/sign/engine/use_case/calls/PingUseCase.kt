@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.seconds
 private val THIRTY_SECONDS_TIMEOUT: Duration = 30.seconds
 
 internal class PingUseCase(
-    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
+//    private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val sessionStorageRepository: SessionStorageRepository,
     private val logger: Logger
 ) : PingUseCaseInterface {
@@ -35,15 +35,15 @@ internal class PingUseCase(
             val irnParams = IrnParams(Tags.SESSION_PING, Ttl(thirtySeconds), correlationId = pingPayload.id)
 
             logger.log("Sending ping... topic: $topic")
-            jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, pingPayload,
-                onSuccess = {
-                    logger.log("Ping sent successfully, topic: $topic")
-                    onPingSuccess(timeout, pingPayload, onSuccess, topic, onFailure)
-                },
-                onFailure = { error ->
-                    logger.error("Ping sent error: $error, topic: $topic")
-                    onFailure(error)
-                })
+//            jsonRpcInteractor.publishJsonRpcRequest(Topic(topic), irnParams, pingPayload,
+//                onSuccess = {
+//                    logger.log("Ping sent successfully, topic: $topic")
+//                    onPingSuccess(timeout, pingPayload, onSuccess, topic, onFailure)
+//                },
+//                onFailure = { error ->
+//                    logger.error("Ping sent error: $error, topic: $topic")
+//                    onFailure(error)
+//                })
         } else {
             onFailure(Throwable("Session topic is not valid"))
         }
@@ -79,14 +79,14 @@ internal class PingUseCase(
     }
 
     private suspend fun collectResponse(id: Long, onResponse: (Result<JsonRpcResponse.JsonRpcResult>) -> Unit = {}) {
-        jsonRpcInteractor.peerResponse
-            .filter { response -> response.response.id == id }
-            .collect { response ->
-                when (val result = response.response) {
-                    is JsonRpcResponse.JsonRpcResult -> onResponse(Result.success(result))
-                    is JsonRpcResponse.JsonRpcError -> onResponse(Result.failure(Throwable(result.errorMessage)))
-                }
-            }
+//        jsonRpcInteractor.peerResponse
+//            .filter { response -> response.response.id == id }
+//            .collect { response ->
+//                when (val result = response.response) {
+//                    is JsonRpcResponse.JsonRpcResult -> onResponse(Result.success(result))
+//                    is JsonRpcResponse.JsonRpcError -> onResponse(Result.failure(Throwable(result.errorMessage)))
+//                }
+//            }
     }
 }
 

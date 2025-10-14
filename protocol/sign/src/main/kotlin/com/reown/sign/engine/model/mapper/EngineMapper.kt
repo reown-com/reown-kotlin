@@ -28,8 +28,18 @@ import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.ValidationError
+import com.reown.sign.engine.model.mapper.toSettleYttrium
 import com.reown.sign.json_rpc.model.JsonRpcMethod
 import com.reown.util.Empty
+import com.reown.util.bytesToHex
+import com.reown.util.hexToBytes
+import uniffi.yttrium.Metadata
+import uniffi.yttrium.ProposalNamespace
+import uniffi.yttrium.Redirect
+import uniffi.yttrium.Relay
+import uniffi.yttrium.SessionFfi
+import uniffi.yttrium.SessionProposalFfi
+import uniffi.yttrium.SettleNamespace
 import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -81,7 +91,8 @@ internal fun SignParams.SessionProposeParams.toVO(topic: Topic, requestId: Long)
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
         expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp) else null,
-        scopedProperties = scopedProperties
+        scopedProperties = scopedProperties,
+        pairingSymKey = ""
     )
 
 @JvmSynthetic
@@ -93,7 +104,11 @@ internal fun ProposalVO.toSessionProposeRequest(): WCRequest =
         params = SignParams.SessionProposeParams(
             relays = listOf(RelayProtocolOptions(protocol = relayProtocol, data = relayData)),
             proposer = SessionProposer(proposerPublicKey, AppMetaData(name = name, description = description, url = url, icons = icons)),
-            requiredNamespaces = requiredNamespaces, optionalNamespaces = optionalNamespaces, properties = properties, expiryTimestamp = expiry?.seconds, scopedProperties = scopedProperties
+            requiredNamespaces = requiredNamespaces,
+            optionalNamespaces = optionalNamespaces,
+            properties = properties,
+            expiryTimestamp = expiry?.seconds,
+            scopedProperties = scopedProperties
         ),
         transportType = TransportType.RELAY
     )
@@ -136,10 +151,14 @@ internal fun SessionVO.toEngineDO(): EngineDO.Session =
     )
 
 @JvmSynthetic
-internal fun SessionVO.toEngineDOSessionExtend(expiryVO: Expiry): EngineDO.SessionExtend =
+internal fun SessionFfi.toEngineDO(): EngineDO.Session =
+    this.toVO().toEngineDO()
+
+@JvmSynthetic
+internal fun SessionVO.toEngineDOSessionExtend(): EngineDO.SessionExtend =
     EngineDO.SessionExtend(
         topic,
-        expiryVO,
+        expiry,
         pairingTopic,
         requiredNamespaces.toMapOfEngineNamespacesRequired(),
         optionalNamespaces?.toMapOfEngineNamespacesOptional(),
@@ -365,3 +384,177 @@ internal fun EngineDO.PayloadParams.toCacaoPayload(iss: Issuer): Cacao.Payload =
 @JvmSynthetic
 internal fun EngineDO.PayloadParams.toCAIP222Message(iss: Issuer, chainName: String): String =
     this.toCacaoPayload(iss).toCAIP222Message(chainName)
+
+
+internal fun Map<String, ProposalNamespace>.toEngine(): Map<String, EngineDO.Namespace.Proposal> =
+    this.mapValues { (_, namespace) ->
+        EngineDO.Namespace.Proposal(namespace.chains, namespace.methods, namespace.events)
+    }
+
+internal fun Map<String, Namespace.Proposal>.toProposalYttrium(): Map<String, ProposalNamespace> =
+    this.mapValues { (_, namespace) ->
+        ProposalNamespace(namespace.chains!!, namespace.methods, namespace.events)
+    }
+
+internal fun Map<String, EngineDO.Namespace.Session>.toSettleYttrium(): Map<String, SettleNamespace> =
+    this.mapValues { (_, namespace) ->
+        SettleNamespace(accounts = namespace.accounts, chains = namespace.chains!!, methods = namespace.methods, events = namespace.events)
+    }
+
+internal fun AppMetaData.toYttrium(): Metadata =
+    Metadata(
+        name = name,
+        verifyUrl = null,
+        description = description,
+        icons = icons,
+        url = url,
+        redirect = Redirect(
+            native = redirect?.native,
+            universal = redirect?.universal ?: "",
+            linkMode = redirect?.linkMode ?: false
+        )
+    )
+
+internal fun SessionProposalFfi.toVO(): ProposalVO =
+    ProposalVO(
+        pairingTopic = Topic(topic),
+        name = metadata.name,
+        description = metadata.description,
+        url = metadata.url,
+        icons = metadata.icons,
+        requiredNamespaces = requiredNamespaces.toEngine().toNamespacesVOOptional(),
+        optionalNamespaces = optionalNamespaces?.toEngine()?.toNamespacesVOOptional() ?: emptyMap(),
+        proposerPublicKey = proposerPublicKey.bytesToHex(),
+        relayData = "",
+        relayProtocol = relays[0].protocol,
+        redirect = metadata.redirect?.native ?: "",
+        properties = scopedProperties,
+        scopedProperties = scopedProperties,
+        expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp!!.toLong()) else null,
+        requestId = id.toLong(),
+        pairingSymKey = pairingSymKey.bytesToHex()
+    )
+
+internal fun ProposalVO.toProposalFfi(): SessionProposalFfi =
+    SessionProposalFfi(
+        id = requestId.toString(),
+        topic = pairingTopic.value,
+        pairingSymKey = pairingSymKey.hexToBytes(),
+        proposerPublicKey = proposerPublicKey.hexToBytes(),
+        requiredNamespaces = requiredNamespaces.toProposalYttrium(),
+        optionalNamespaces = optionalNamespaces.toProposalYttrium(),
+        sessionProperties = properties,
+        scopedProperties = scopedProperties,
+        expiryTimestamp = expiry?.seconds?.toULong(),
+        relays = listOf(Relay(relayProtocol)),
+        metadata = Metadata(
+            name = name,
+            verifyUrl = null,
+            description = description,
+            icons = icons,
+            url = url,
+            redirect = Redirect(
+                native = appMetaData.redirect?.native,
+                universal = appMetaData.redirect?.universal ?: "",
+                linkMode = appMetaData.redirect?.linkMode ?: false
+            )
+        )
+    )
+
+internal fun Map<String, ProposalNamespace>.toProposalNamespaceVO(): Map<String, Namespace.Proposal> =
+    this.mapValues { (_, namespace) ->
+        Namespace.Proposal(namespace.chains, namespace.methods, namespace.events)
+    }
+
+internal fun Map<String, SettleNamespace>.toSessionVO(): Map<String, Namespace.Session> =
+    this.mapValues { (_, namespace) ->
+        Namespace.Session(chains = namespace.chains, methods = namespace.methods, events = namespace.events, accounts = namespace.accounts)
+    }
+
+internal fun Map<String, Namespace.Session>.toYttriumSettle(): Map<String, SettleNamespace> =
+    this.mapValues { (_, namespace) ->
+        SettleNamespace(
+            chains = namespace.chains ?: emptyList(),
+            methods = namespace.methods,
+            events = namespace.events,
+            accounts = namespace.accounts
+        )
+    }
+
+internal fun SessionFfi.toVO(): SessionVO {
+    return SessionVO(
+        topic = Topic(this.topic),
+        expiry = Expiry(this.expiry.toLong()),
+        relayProtocol = "irn",
+        relayData = null,
+        controllerKey = PublicKey(this.controllerKey?.bytesToHex() ?: ""),
+        selfPublicKey = PublicKey(this.selfPublicKey.bytesToHex()),
+        selfAppMetaData = AppMetaData(
+            name = this.selfMetaData.name,
+            description = this.selfMetaData.description,
+            url = this.selfMetaData.url,
+            icons = this.selfMetaData.icons,
+            redirect = com.reown.android.internal.common.model.Redirect(
+                native = this.selfMetaData.redirect?.native,
+                linkMode = this.selfMetaData.redirect?.linkMode ?: false,
+                universal = this.selfMetaData.redirect?.universal
+            )
+        ),
+        peerPublicKey = PublicKey(this.peerPublicKey?.bytesToHex() ?: ""),
+        peerAppMetaData = AppMetaData(
+            name = this.peerMetaData?.name ?: "",
+            description = this.peerMetaData?.description ?: "",
+            url = this.peerMetaData?.url ?: "",
+            icons = this.peerMetaData?.icons ?: emptyList(),
+            redirect = com.reown.android.internal.common.model.Redirect(
+                native = this.peerMetaData?.redirect?.native,
+                linkMode = this.peerMetaData?.redirect?.linkMode ?: false,
+                universal = this.peerMetaData?.redirect?.universal
+            )
+        ),
+        sessionNamespaces = this.sessionNamespaces.toSessionVO(),
+        requiredNamespaces = this.requiredNamespaces.toProposalNamespaceVO(),
+        optionalNamespaces = this.optionalNamespaces?.toProposalNamespaceVO(),
+        properties = this.properties,
+        scopedProperties = this.scopedProperties,
+        isAcknowledged = true,
+        pairingTopic = this.pairingTopic,
+        transportType = TransportType.RELAY, //TODO change for LinkMode
+        symKey = this.sessionSymKey.bytesToHex()
+    )
+}
+
+internal fun SessionVO.toSessionFfi(): SessionFfi {
+    return SessionFfi(
+        topic = this.topic.value,
+        expiry = this.expiry.seconds.toULong(),
+        controllerKey = this.controllerKey?.keyAsHex?.hexToBytes(),
+        selfPublicKey = this.selfPublicKey.keyAsHex.hexToBytes(),
+        selfMetaData = this.selfAppMetaData?.toYttrium() ?: Metadata(
+            name = this.selfAppMetaData?.name ?: "",
+            verifyUrl = null,
+            description = this.selfAppMetaData?.description ?: "",
+            icons = this.selfAppMetaData?.icons ?: emptyList(),
+            url = this.selfAppMetaData?.url ?: "",
+            redirect = Redirect(
+                native = this.selfAppMetaData?.redirect?.native ?: "",
+                universal = this.selfAppMetaData?.redirect?.universal ?: "",
+                linkMode = this.selfAppMetaData?.redirect?.linkMode ?: false,
+            )
+        ),
+        peerPublicKey = this.peerPublicKey?.keyAsHex?.hexToBytes(),
+        peerMetaData = this.peerAppMetaData?.toYttrium(),
+        sessionNamespaces = this.sessionNamespaces.toYttriumSettle(),
+        requiredNamespaces = this.requiredNamespaces.toProposalYttrium(),
+        optionalNamespaces = this.optionalNamespaces?.toProposalYttrium(),
+        properties = this.properties,
+        scopedProperties = this.scopedProperties,
+        pairingTopic = this.pairingTopic,
+        sessionSymKey = this.symKey?.hexToBytes() ?: ByteArray(0),
+        relayProtocol = this.relayProtocol,
+        relayData = this.relayData,
+        isAcknowledged = this.isAcknowledged,
+        transportType = uniffi.yttrium.TransportType.RELAY, //TODO: change for link mode
+        requestId = 0.toULong()
+    )
+}

@@ -28,6 +28,7 @@ import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import com.reown.android.internal.common.scope as wcScope
 
+//TODO: move to Sign module
 fun baseStorageModule(storagePrefix: String = String.Empty, packageName: String) = module {
     single<ColumnAdapter<List<String>, String>>(named(AndroidCommonDITags.COLUMN_ADAPTER_LIST)) {
         object : ColumnAdapter<List<String>, String> {

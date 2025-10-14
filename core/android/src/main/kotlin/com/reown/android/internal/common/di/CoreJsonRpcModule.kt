@@ -19,22 +19,22 @@ import kotlin.reflect.KClass
 @JvmSynthetic
 fun coreJsonRpcModule() = module {
 
-    single<RelayJsonRpcInteractorInterface> {
-        RelayJsonRpcInteractor(
-            relay = get(),
-            chaChaPolyCodec = get(),
-            jsonRpcHistory = get(),
-            pushMessageStorage = get(),
-            logger = get(named(AndroidCommonDITags.LOGGER)),
-            backoffStrategy = get()
-        )
-    }
+//    single<RelayJsonRpcInteractorInterface> {
+//        RelayJsonRpcInteractor(
+//            relay = get(),
+//            chaChaPolyCodec = get(),
+//            jsonRpcHistory = get(),
+//            pushMessageStorage = get(),
+//            logger = get(named(AndroidCommonDITags.LOGGER)),
+//            backoffStrategy = get()
+//        )
+//    }
 
-    addSerializerEntry(PairingRpc.PairingPing::class)
-    addSerializerEntry(PairingRpc.PairingDelete::class)
-
-    addDeserializerEntry(PairingJsonRpcMethod.WC_PAIRING_PING, PairingRpc.PairingPing::class)
-    addDeserializerEntry(PairingJsonRpcMethod.WC_PAIRING_DELETE, PairingRpc.PairingDelete::class)
+//    addSerializerEntry(PairingRpc.PairingPing::class)
+//    addSerializerEntry(PairingRpc.PairingDelete::class)
+//
+//    addDeserializerEntry(PairingJsonRpcMethod.WC_PAIRING_PING, PairingRpc.PairingPing::class)
+//    addDeserializerEntry(PairingJsonRpcMethod.WC_PAIRING_DELETE, PairingRpc.PairingDelete::class)
 
     single {
         JsonRpcSerializer(

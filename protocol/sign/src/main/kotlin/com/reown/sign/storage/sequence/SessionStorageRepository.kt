@@ -56,6 +56,38 @@ internal class SessionStorageRepository(
     }
 
     @JvmSynthetic
+    fun getSymKeyByTopic(topic: Topic): String? {
+        return sessionDaoQueries.getSymKey(topic.value).executeAsOneOrNull()?.sym_key
+    }
+
+    @Synchronized
+    @JvmSynthetic
+    @Throws(SQLiteException::class)
+    fun insertPartialSession(topic: String, symKey: String) {
+        val hasTopic = sessionDaoQueries.hasTopic(topic).executeAsOneOrNull() != null
+        if (!hasTopic) {
+            println("kobe: inserting partial")
+            sessionDaoQueries.insertOrAbortSession(
+                topic = topic,
+                pairingTopic = "", // Default empty pairing topic
+                expiry = 0L, // Default expiry - will be updated later
+                self_participant = "", // Default empty - will be updated later
+                relay_protocol = "irn", // Default relay protocol
+                controller_key = null,
+                peer_participant = null,
+                relay_data = null,
+                is_acknowledged = false, // Default not acknowledged
+                properties = null,
+                scoped_properties = null,
+                transport_type = TransportType.RELAY, // Default transport type
+                sym_key = symKey
+            )
+        } else {
+            println("kobe: NOT inserting partial")
+        }
+    }
+
+    @JvmSynthetic
     fun getSessionWithoutMetadataByTopic(topic: Topic): SessionVO =
         sessionDaoQueries.getSessionByTopic(topic.value, mapper = this@SessionStorageRepository::mapSessionDaoToSessionVO).executeAsOne()
 
@@ -68,6 +100,7 @@ internal class SessionStorageRepository(
     @Throws(SQLiteException::class)
     fun insertSession(session: SessionVO, requestId: Long) {
         with(session) {
+            println("kobe: inserting session: $session")
             sessionDaoQueries.insertOrAbortSession(
                 topic = topic.value,
                 pairingTopic = pairingTopic,
@@ -80,7 +113,8 @@ internal class SessionStorageRepository(
                 is_acknowledged = isAcknowledged,
                 properties = properties,
                 scoped_properties = scopedProperties,
-                transport_type = transportType
+                transport_type = transportType,
+                sym_key = symKey
             )
         }
 
@@ -225,6 +259,7 @@ internal class SessionStorageRepository(
         properties: Map<String, String>?,
         transportType: TransportType?,
         scoped_properties: Map<String, String>?,
+        sym_key: String?
     ): SessionVO {
         val sessionNamespaces: Map<String, Namespace.Session> = getSessionNamespaces(id)
         val requiredNamespaces: Map<String, Namespace.Proposal> = getRequiredNamespaces(id)
@@ -247,7 +282,8 @@ internal class SessionStorageRepository(
             properties = properties,
             scopedProperties = scoped_properties,
             pairingTopic = pairingTopic,
-            transportType = transportType
+            transportType = transportType,
+            symKey = sym_key
         )
     }
 

@@ -23,7 +23,10 @@ class PairingStorageRepository(private val pairingQueries: PairingQueries) : Pai
                 uri = uri,
                 methods = methods ?: String.Empty,
                 is_active = true,
-                is_proposal_received = isProposalReceived
+                is_proposal_received = isProposalReceived,
+                rpc_id = rpcId,
+                self_public_key = selfPublicKey,
+                sym_key = symKey
             )
         }
     }
@@ -39,7 +42,8 @@ class PairingStorageRepository(private val pairingQueries: PairingQueries) : Pai
     override suspend fun getListOfPairings(): List<Pairing> = pairingQueries.getListOfPairing(mapper = this::toPairing).awaitAsList()
 
     @Throws(SQLiteException::class)
-    override suspend fun getListOfPairingsWithoutRequestReceived(): List<Pairing> = pairingQueries.getListOfPairingsWithoutRequestReceived(mapper = this::toPairing).awaitAsList()
+    override suspend fun getListOfPairingsWithoutRequestReceived(): List<Pairing> =
+        pairingQueries.getListOfPairingsWithoutRequestReceived(mapper = this::toPairing).awaitAsList()
 
     @Throws(SQLiteException::class)
     override fun setRequestReceived(topic: Topic) {
@@ -47,10 +51,30 @@ class PairingStorageRepository(private val pairingQueries: PairingQueries) : Pai
     }
 
     @Throws(SQLiteException::class)
-    override fun updateExpiry(topic: Topic, expiry: Expiry): Unit = pairingQueries.updateOrAbortExpiry(expiry = expiry.seconds, topic = topic.value)
+    override fun getPairingOrNullByTopic(topic: Topic): Pairing? =
+        pairingQueries.getPairingByTopic(topic = topic.value, mapper = this::toPairing).executeAsOneOrNull()
 
     @Throws(SQLiteException::class)
-    override fun getPairingOrNullByTopic(topic: Topic): Pairing? = pairingQueries.getPairingByTopic(topic = topic.value, mapper = this::toPairing).executeAsOneOrNull()
+    override fun getPairingOrNullByTopicAndRpcId(topic: Topic, rpcId: Long): Pairing? =
+        pairingQueries.getPairingByTopicAndRpcId(topic = topic.value, rpc_id = rpcId, mapper = this::toPairingWithoutMetadata).executeAsOneOrNull()
+
+    private fun toPairingWithoutMetadata(
+        rpc_id: Long?,
+        self_public_key: String?,
+        sym_key: String?,
+    ): Pairing {
+        return Pairing(
+            topic = Topic(""),
+            expiry = Expiry(0),
+            peerAppMetaData = null,
+            relayProtocol = "irn",
+            relayData = null,
+            uri = "",
+            selfPublicKey = self_public_key,
+            rpcId = rpc_id,
+            symKey = sym_key
+        )
+    }
 
     private fun toPairing(
         topic: String,
@@ -60,6 +84,9 @@ class PairingStorageRepository(private val pairingQueries: PairingQueries) : Pai
         uri: String,
         methods: String,
         is_proposal_received: Boolean?,
+        rpc_id: Long?,
+        self_public_key: String?,
+        sym_key: String?,
         peerName: String?,
         peerDesc: String?,
         peerUrl: String?,
@@ -80,7 +107,10 @@ class PairingStorageRepository(private val pairingQueries: PairingQueries) : Pai
             relayData = relay_data,
             uri = uri,
             isProposalReceived = is_proposal_received ?: true,
-            methods = methods
+            methods = methods,
+            selfPublicKey = self_public_key,
+            rpcId = rpc_id,
+            symKey = sym_key
         )
     }
 }

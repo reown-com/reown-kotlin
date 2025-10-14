@@ -83,9 +83,9 @@ class WalletKitActivity : AppCompatActivity() {
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
         askNotificationPermission()
-        handleErrors()
+//        handleErrors()
         handleAppLink(intent)
-        registerAccount()
+//        registerAccount()
         setBeagle()
     }
 
@@ -128,12 +128,12 @@ class WalletKitActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleErrors() {
-        NotifyDelegate.notifyErrors
-            .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
-            .onEach { error -> Timber.e(error.throwable) }
-            .launchIn(lifecycleScope)
-    }
+//    private fun handleErrors() {
+//        NotifyDelegate.notifyErrors
+//            .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+//            .onEach { error -> Timber.e(error.throwable) }
+//            .launchIn(lifecycleScope)
+//    }
 
     private fun handleWeb3WalletEvents(
         web3walletViewModel: Web3WalletViewModel,
@@ -297,10 +297,10 @@ class WalletKitActivity : AppCompatActivity() {
 //                )
 //            },
             PaddingModule(size = PaddingModule.Size.LARGE),
-            TextModule(text = "Client ID"),
-            TextModule(text = CoreClient.Push.clientId, id = CoreClient.Push.clientId) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("ClientId", CoreClient.Push.clientId))
-            },
+//            TextModule(text = "Client ID"),
+//            TextModule(text = CoreClient.Push.clientId, id = CoreClient.Push.clientId) {
+//                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("ClientId", CoreClient.Push.clientId))
+//            },
             DividerModule(),
             TextInputModule(
                 text = "Import EVM Private Key",
@@ -316,7 +316,7 @@ class WalletKitActivity : AppCompatActivity() {
                         onSuccess = {
                             println("Unregister Success")
                             EthAccountDelegate.privateKey = text
-                            registerAccount()
+//                            registerAccount()
                         },
                         onError = { println(it.throwable.stackTraceToString()) }
                     )
