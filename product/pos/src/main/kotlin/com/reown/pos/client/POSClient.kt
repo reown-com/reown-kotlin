@@ -16,6 +16,7 @@ import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import java.math.BigDecimal
 import java.net.URI
 
 /**
@@ -150,6 +151,10 @@ object POSClient {
             "Recipient address is not CAIP-10 compliant"
         }
         require(paymentIntent.amount.isNotBlank()) { "Amount cannot be empty" }
+        require(paymentIntent.amount.toBigDecimalOrNull() != null &&
+                paymentIntent.amount.toBigDecimal() > BigDecimal.ZERO) {
+            "Amount must be a valid positive number"
+        }
         require(paymentIntent.recipient.isNotBlank()) { "Recipient cannot be empty" }
         require(paymentIntent.token.standard.isNotBlank()) { "Token standard cannot be empty" }
         require(paymentIntent.token.symbol.isNotBlank()) { "Token symbol cannot be empty" }

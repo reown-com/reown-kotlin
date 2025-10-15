@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit
 internal fun createBlockchainApiModule(projectId: String, deviceId: String) = module {
     single(named(AndroidCommonDITags.POC_OK_HTTP)) {
         OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) })
             .writeTimeout(timeout = 15_000, unit = TimeUnit.MILLISECONDS)
             .readTimeout(timeout = 15_000, unit = TimeUnit.MILLISECONDS)
             .callTimeout(timeout = 15_000, unit = TimeUnit.MILLISECONDS)
