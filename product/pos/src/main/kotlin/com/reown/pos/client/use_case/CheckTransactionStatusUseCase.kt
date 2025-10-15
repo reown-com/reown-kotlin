@@ -74,7 +74,6 @@ internal class CheckTransactionStatusUseCase(
             }
         }
 
-        // Timeout reached
         Log.w(TAG, "Transaction still pending after $MAX_POLLING_ATTEMPTS attempts: $sendResult")
         onResult(
             POS.Model.PaymentEvent.Error(
@@ -84,7 +83,6 @@ internal class CheckTransactionStatusUseCase(
     }
 
     private fun stringifySendResult(result: Any): String {
-        // If it's already a JSON-looking string, return as-is; if it's a Java Map-like string, convert to JSON
         if (result is String) {
             val trimmed = result.trim()
             val looksLikeJson = trimmed.startsWith("{") && trimmed.contains(":")
@@ -108,7 +106,6 @@ internal class CheckTransactionStatusUseCase(
             return trimmed
         }
 
-        // If it's a Map<*, *>, serialize to JSON
         if (result is Map<*, *>) {
             val stringMap = result.entries.associate { (k, v) -> k.toString() to (v?.toString() ?: "") }
             val mapType = Types.newParameterizedType(Map::class.java, String::class.java, String::class.java)
@@ -116,7 +113,6 @@ internal class CheckTransactionStatusUseCase(
             return adapter.toJson(stringMap)
         }
 
-        // Fallback: just use toString()
         return result.toString()
     }
 

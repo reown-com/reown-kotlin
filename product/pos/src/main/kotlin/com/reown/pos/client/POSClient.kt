@@ -169,7 +169,6 @@ object POSClient {
 
         val namespaceEntry = sessionNamespaces[namespace]
         require(namespaceEntry != null) { "Namespace '$namespace' not supported by session" }
-        // Validation only; do not mutate sessionNamespaces here.
     }
 
     private fun initiateWalletConnection() {
