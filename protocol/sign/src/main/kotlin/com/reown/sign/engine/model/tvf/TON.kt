@@ -27,6 +27,7 @@ data class TonBoc(
 )
 
 fun buildTonBocBase64(moshi: Moshi, rpcParams: String, boc: String): List<String>? {
+    println("kobe: Params: $rpcParams")
     val adapter = moshi.newBuilder().addLast(KotlinJsonAdapterFactory()).build().adapter(TonSendMessageParams::class.java)
     val params = adapter.fromJson(rpcParams)
     val sender = params?.from ?: return null

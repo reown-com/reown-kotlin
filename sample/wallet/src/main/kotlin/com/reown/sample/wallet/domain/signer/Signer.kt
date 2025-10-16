@@ -108,13 +108,12 @@ object Signer {
                 
                 try {
                     // Parse the params JSON array
-                    val paramsArray = JSONArray(sessionRequest.param)
-                    val firstParam = paramsArray.getJSONObject(0)
+                    val jsonObject = JSONObject(sessionRequest.param)
                     
                     // Extract parameters
-                    val validUntil = firstParam.getLong("valid_until").toUInt()
-                    val from = firstParam.getString("from")
-                    val messagesArray = firstParam.getJSONArray("messages")
+                    val validUntil = jsonObject.getLong("valid_until").toUInt()
+                    val from = jsonObject.getString("from")
+                    val messagesArray = jsonObject.getJSONArray("messages")
                     
                     println("kobe: Extracted valid_until: $validUntil, from: $from, messages: $messagesArray")
                     
