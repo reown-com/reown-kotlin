@@ -1,5 +1,6 @@
 package com.reown.sample.modal.ui
 
+import android.app.AlertDialog
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +13,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationManagerCompat
 import androidx.navigation.NavController
 import com.reown.sample.common.getEthSendTransaction
 import com.reown.sample.common.getEthSignTypedData
@@ -46,16 +49,24 @@ fun LabScreen(
             when (event) {
                 is Modal.Model.SessionRequestResponse -> {
                     when (event.result) {
-                        is Modal.Model.JsonRpcResponse.JsonRpcError -> {
-                            val error = event.result as Modal.Model.JsonRpcResponse.JsonRpcError
-                            Toast.makeText(context, "Error Message: ${error.message}\n Error Code: ${error.code}", Toast.LENGTH_SHORT).show()
+                        is Modal.Model.JsonRpcResponse.JsonRpcResult -> {
+                            val resultString = (event.result as Modal.Model.JsonRpcResponse.JsonRpcResult).result
+                            val toastText = when {
+                                resultString.isNullOrBlank() -> "Success"
+                                resultString.length > 200 -> resultString.take(200) + "…"
+                                else -> resultString
+                            }
+                                showToastOrDialog(context, toastText)
                         }
 
-                        is Modal.Model.JsonRpcResponse.JsonRpcResult -> Toast.makeText(context, (event.result as Modal.Model.JsonRpcResponse.JsonRpcResult).result, Toast.LENGTH_SHORT).show()
+                        is Modal.Model.JsonRpcResponse.JsonRpcError -> {
+                            val error = event.result as Modal.Model.JsonRpcResponse.JsonRpcError
+                                showToastOrDialog(context, "Error Message: ${error.message}\n Error Code: ${error.code}")
+                        }
                     }
                 }
 
-                is Modal.Model.Error -> Toast.makeText(context, event.throwable.localizedMessage ?: "Something went wrong", Toast.LENGTH_SHORT).show()
+                is Modal.Model.Error -> showToastOrDialog(context, event.throwable.localizedMessage ?: "Something went wrong")
 
                 else -> Unit
             }
@@ -86,6 +97,18 @@ fun LabScreen(
                 }
             }
         }
+    }
+}
+
+private fun showToastOrDialog(context: android.content.Context, message: String) {
+    val notificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+    if (notificationsEnabled) {
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    } else {
+        AlertDialog.Builder(context)
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
     }
 }
 

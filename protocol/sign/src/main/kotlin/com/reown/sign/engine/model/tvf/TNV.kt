@@ -2,9 +2,11 @@ package com.reown.sign.engine.model.tvf
 
 import com.reown.sign.engine.model.tvf.SignTransaction.calculateTransactionDigest
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.Types
+import org.bouncycastle.util.encoders.Base64
 
-internal class TVF(private val moshi: Moshi) {
+internal class TNV(private val moshi: Moshi) {
     private val evm: List<String>
         get() = listOf(ETH_SEND_TRANSACTION, ETH_SEND_RAW_TRANSACTION)
     private val wallet
@@ -33,7 +35,7 @@ internal class TVF(private val moshi: Moshi) {
                     if (rpcMethod == WALLET_SEND_CALLS) {
                         val result = moshi.adapter(Wallet::class.java)
                             .fromJson(rpcResult)
-                            ?.let { 
+                            ?.let {
                                 val caip345 = it.capabilities?.caip345
                                 val transactionHashes = caip345?.transactionHashes
                                 val transactionHashesList = transactionHashes ?: emptyList()
@@ -169,6 +171,8 @@ internal class TVF(private val moshi: Moshi) {
                         }
                 }
 
+                TON_SEND_MESSAGE -> buildTonBocBase64(moshi, rpcParams, rpcResult)
+
                 else -> null
             }
         } catch (e: Exception) {
@@ -198,6 +202,7 @@ internal class TVF(private val moshi: Moshi) {
         private const val HEDERA_EXECUTE_TRANSACTION = "hedera_executeTransaction"
         private const val STX_TRANSFER = "stx_transferStx"
         private const val SEND_TRANSFER = "sendTransfer"
+        private const val TON_SEND_MESSAGE = "ton_sendMessage"
 
         fun toBase58(bytes: ByteArray): String {
             val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
