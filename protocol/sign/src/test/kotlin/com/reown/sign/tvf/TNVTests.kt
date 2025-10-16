@@ -1,6 +1,6 @@
 package com.reown.sign.tvf
 
-import com.reown.sign.engine.model.tvf.TVF
+import com.reown.sign.engine.model.tvf.TNV
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import junit.framework.TestCase.assertEquals
@@ -8,11 +8,11 @@ import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import org.junit.Test
 
-class TVFTests {
+class TNVTests {
     private val moshi: Moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
         .build()
-    private val tvf = TVF(moshi)
+    private val TNV = TNV(moshi)
 
     @Test
     fun `collect should return null when rpcMethod is not in the allowed list`() {
@@ -22,7 +22,7 @@ class TVFTests {
         val chainId = "1"
 
         // Act
-        val result = tvf.collect(rpcMethod, rpcParams, chainId)
+        val result = TNV.collect(rpcMethod, rpcParams, chainId)
 
         // Assert
         assertEquals("1", result.third)
@@ -38,7 +38,7 @@ class TVFTests {
         val chainId = "1"
 
         // Act
-        val result = tvf.collect(rpcMethod, rpcParams, chainId)
+        val result = TNV.collect(rpcMethod, rpcParams, chainId)
 
         // Assert
         assertNotNull(result)
@@ -55,7 +55,7 @@ class TVFTests {
         val chainId = "1"
 
         // Act
-        val result = tvf.collect(rpcMethod, rpcParams, chainId)
+        val result = TNV.collect(rpcMethod, rpcParams, chainId)
 
         // Assert
         assertNotNull(result)
@@ -71,7 +71,7 @@ class TVFTests {
         val rpcResult = "0x123abc"
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -85,7 +85,7 @@ class TVFTests {
         val rpcResult = "{\"signature\": \"0xsignature123\"}"
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -99,7 +99,7 @@ class TVFTests {
         val rpcResult = "{malformed_json}"
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNull(result)
@@ -112,7 +112,7 @@ class TVFTests {
         val rpcResult = "{\"signature\": \"0xsendAndSignSignature\"}"
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -127,7 +127,7 @@ class TVFTests {
             "{\"transactions\": [\"AYxQUCwuEoBMHp45bxp9yyegtoVUcyyc0idYrBan1PW/mWWA4MrXsbytuJt9FP1tXH5ZxYYyKc3YmBM+hcueqA4BAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAAanHwLXEo8xArFhOhqld18H+7VdHJSIY4f27y1qCK4AoDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMgTgAAAAAAAA==\", \"AWHu1QYry2PqYQAxDBXUtxBjRorQecJEVzje2rVY2rKJ6usAMAC/f0GGSqxpWlaS93wIfg3FqPPMzAKDdxgTwQwBAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAA58ONgFXrro2UqR0pvpUDFIqAYRJMYUnemdWXhfWu8VcDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMgTgAAAAAAAA==\", \"AeJw688VKMWEeOHsYhe03By/2rqJHTQeq6W4L1ZLdbT2l/Nim8ctL3erMyH9IWPsQP73uaarRmiVfanEJHx7uQ4BAAIDb3ObYkq6BFd46JrMFy1h0Q+dGmyRGtpelqTKkIg82isAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMGRm/lIRcy/+ytunLDm+e8jOW7xfcSayxDmzpAAAAAtIy17v5fs39LuoitzpBhVrg8ZIQF/3ih1N9dQ+X3shEDAgAFAlgCAAABAgAADAIAAACghgEAAAAAAAIACQMjTgAAAAAAAA==\"]}"
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         //Assert
         assert(result != null)
@@ -142,7 +142,7 @@ class TVFTests {
             "{\"transactions\": [\"asdasdsfasdfsd\"]}"
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         //Assert
         assert(result == null)
@@ -155,7 +155,7 @@ class TVFTests {
         val rpcResult = "{\"transactions\": }"
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         //Assert
         assert(result == null)
@@ -168,7 +168,7 @@ class TVFTests {
         val rpcResult = ""
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         //Assert
         assert(result == null)
@@ -197,7 +197,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -243,7 +243,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -264,7 +264,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -285,7 +285,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -322,7 +322,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -377,7 +377,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -396,7 +396,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -416,7 +416,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -447,7 +447,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -467,7 +467,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -488,7 +488,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -509,7 +509,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -665,7 +665,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -692,7 +692,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -987,7 +987,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -1004,7 +1004,7 @@ class TVFTests {
         val rpcResult = "some_result"
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNull(result)
@@ -1043,7 +1043,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult, rpcParams)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult, rpcParams)
 
         // Assert
         assertNotNull(result)
@@ -1070,7 +1070,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -1092,7 +1092,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -1113,7 +1113,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -1138,7 +1138,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -1165,7 +1165,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -1191,7 +1191,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -1217,7 +1217,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -1234,7 +1234,7 @@ class TVFTests {
         val rpcResult = "{malformed_json}"
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNull(result)
@@ -1247,7 +1247,7 @@ class TVFTests {
         val rpcResult = ""
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNull(result)
@@ -1270,7 +1270,7 @@ class TVFTests {
         """.trimIndent()
 
         // Act
-        val result = tvf.collectTxHashes(rpcMethod, rpcResult)
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
         assertNotNull(result)
@@ -1280,5 +1280,44 @@ class TVFTests {
         assertEquals("0xdef456", result[2])
         assertEquals("0x789ghi", result[3])
         println("Wallet sendCalls result with BSC chain: ${result}")
+    }
+
+    @Test
+    fun `collectTxHashes should handle ton_sendMessage and return base64 of JSON with sender and boc`() {
+        // Arrange
+        val rpcMethod = "ton_sendMessage"
+        val rpcParams = """
+            {
+              "valid_until": 1658253458,
+              "from": "UQCSWCnzFNoWSZAaHId3aNKs-QWWtEhii6zv-Mj322u3MHH2",
+              "messages": [
+                {
+                  "address": "EQBBJBB3HagsujBqVfqeDUPJ0kXjgTPLWPFFffuNXNiJL0aA",
+                  "amount": "20000000",
+                  "stateInit": "base64bocblahblahblah=="
+                },
+                {
+                  "address": "EQDmnxDMhId6v1Ofg_h5KR5coWlFG6e86Ro3pc7Tq4CA0-Jn",
+                  "amount": "60000000",
+                  "payload": "base64bocblahblahblah=="
+                }
+              ]
+            }
+        """.trimIndent()
+
+        val boc = "te6ccgEBAwEAqwABRYgBJLBT5im0LJMgNDkO7tGlWfILLWiQxRdZ3/GR77bXbmAMAQGcCmfXcBjIG3kzYjkIhIt4y+75b92NB0Uth+HnMWmrYKWCQTJOCsry/pnXacKGjCx0GFjDv2cLYMqCede56w4RDCmpoxdo74yoAAAAEQADAgBkAgBJLBT5im0LJMgNDkO7tGlWfILLWiQxRdZ3/GR77bXbmBAfQAAAAAAAAAAAAAAAAAA="
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, boc, rpcParams)
+
+        // Assert
+        assertNotNull(result)
+        val actualBase64 = result!!.first()
+
+        val expectedBase64Raw = """
+            eyJzZW5kZXIiOiJVUUNTV0NuekZOb1dTWkFhSElkM2FOS3MtUVdXdEVoaWk2enYtTWozMjJ1M01ISDIiLCJib2MiOiJ0ZTZjY2dFQkF3RUFxd0FCUllnQkpMQlQ1aW0wTEpNZ05Ea083dEdsV2ZJTExXaVF4UmRaMy9HUjc3YlhibUFNQVFHY0NtZlhjQmpJRzNrellqa0loSXQ0eSs3NWI5Mk5CMFV0aCtIbk1XbXJZS1dDUVRKT0NzcnkvcG5YYWNLR2pDeDBHRmpEdjJjTFlNcUNlZGU1Nnc0UkRDbXBveGRvNzR5b0FBQUFFUUFEQWdCa0FnQkpMQlQ1aW0wTEpNZ05Ea083dEdsV2ZJTExXaVF4UmRaMy9HUjc3YlhibUJBZlFBQUFBQUFBQUFBQUFBQUFBQUE9In0=
+        """.trimIndent()
+
+        assertEquals(expectedBase64Raw, actualBase64)
     }
 }

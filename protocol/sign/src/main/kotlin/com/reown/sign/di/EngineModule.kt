@@ -7,7 +7,7 @@ import com.reown.android.internal.common.signing.cacao.CacaoVerifier
 import com.reown.sign.engine.domain.SignEngine
 import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
 import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
-import com.reown.sign.engine.model.tvf.TVF
+import com.reown.sign.engine.model.tvf.TNV
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCase
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCaseInterface
 import com.reown.sign.json_rpc.domain.DeleteRequestByIdUseCase
@@ -26,7 +26,7 @@ internal fun engineModule() = module {
 
     includes(callsModule(), requestsModule(), responsesModule())
 
-    single { TVF(moshi = get(named(AndroidCommonDITags.MOSHI))) }
+    single { TNV(moshi = get(named(AndroidCommonDITags.MOSHI))) }
 
     single { GetPendingSessionRequests(jsonRpcHistory = get(), serializer = get()) }
 
