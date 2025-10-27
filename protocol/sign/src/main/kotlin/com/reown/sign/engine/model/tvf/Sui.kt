@@ -3,7 +3,7 @@ package com.reown.sign.engine.model.tvf
 import com.squareup.moshi.JsonClass
 import org.bouncycastle.crypto.digests.Blake2bDigest
 import org.bouncycastle.util.encoders.Base64
-import com.reown.sign.engine.model.tvf.TVF.Companion.toBase58
+import com.reown.sign.engine.model.tvf.TNV.Companion.toBase58
 
 object SignAndExecute {
     @JsonClass(generateAdapter = true)
