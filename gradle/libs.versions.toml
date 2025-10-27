@@ -94,7 +94,7 @@ androidx-compose-ui-test-junit = { module = "androidx.compose.ui:ui-test-junit4"
 androidx-compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "androidxNavigation" }
 androidx-compose-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "androidxNavigation" }
 androidx-compose-lifecycle = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "composeViewModel" }
-androidx-compose-material = { module = "androidx.compose.material:material", version = "1.7.1" }
+androidx-compose-material = { module = "androidx.compose.material:material", version = "1.9.4" }
 
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
