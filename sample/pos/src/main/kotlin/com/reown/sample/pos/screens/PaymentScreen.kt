@@ -35,7 +35,7 @@ private enum class StepState { Inactive, InProgress, Done }
 
 private sealed interface PaymentUiState {
     data object ScanToPay : PaymentUiState
-    data object Success : PaymentUiState
+    data class Success(val txHash: Any, val recipient: String) : PaymentUiState
 }
 
 @Composable
@@ -86,7 +86,10 @@ fun PaymentScreen(
                 // Final success → mark both in-progress steps as done and show Success UI
                 is PosEvent.PaymentSuccessful -> {
                     checking = StepState.Done
-                    uiState = PaymentUiState.Success
+                    uiState = PaymentUiState.Success(
+                        txHash = e.txHash,
+                        recipient = e.recipient
+                    )
                 }
 
                 is PosEvent.PaymentRejected -> navigateToErrorScreen("Payment rejected: ${e.error}")
@@ -132,7 +135,11 @@ fun PaymentScreen(
                         checkState = checking
                     )
 
-                PaymentUiState.Success -> SuccessContent { onReturnToStart() }
+                is PaymentUiState.Success -> SuccessContent(
+                    txHash = (uiState as PaymentUiState.Success).txHash,
+                    recipient = (uiState as PaymentUiState.Success).recipient,
+                    onReturnToStart = onReturnToStart
+                )
             }
         }
 
@@ -298,9 +305,9 @@ private fun StatusRow(
     }
 }
 
-// 4) Success (no extra details)
+// 4) Success (show transaction details)
 @Composable
-private fun SuccessContent(onReturnToStart: () -> Unit) {
+private fun SuccessContent(txHash: Any, recipient: String, onReturnToStart: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -325,6 +332,30 @@ private fun SuccessContent(onReturnToStart: () -> Unit) {
             color = Color(0xFF0A8F5B)
         )
         Spacer(Modifier.height(16.dp))
+        Text(
+            "Recipient",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            recipient,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            "Transaction Result",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            txHash.toString(),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(Modifier.height(24.dp))
         Button(
             onClick = { onReturnToStart() },
             modifier = Modifier

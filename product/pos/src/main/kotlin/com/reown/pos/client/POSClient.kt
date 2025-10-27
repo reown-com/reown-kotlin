@@ -345,6 +345,16 @@ object POSClient {
         if (responseResult != null) {
             Log.d(TAG, "Transaction broadcasted: $responseResult")
             posDelegate.onEvent(POS.Model.PaymentEvent.PaymentBroadcasted)
+            val recipient = paymentIntent?.recipient ?: run {
+                Log.e(TAG, "Payment recipient is null")
+                posDelegate.onEvent(
+                    POS.Model.PaymentEvent.Error(
+                        error = Exception("Payment recipient is null")
+                    )
+                )
+                disconnectSession(topic)
+                return
+            }
             checkTransactionStatusUseCase.checkTransactionStatusWithPolling(
                 sendResult = responseResult,
                 transactionId = transactionId ?: run {
@@ -356,7 +366,8 @@ object POSClient {
                     )
                     disconnectSession(topic)
                     return
-                }
+                },
+                recipient = recipient
             ) { paymentEvent ->
                 Log.d(TAG, "Transaction status check result: $paymentEvent")
                 posDelegate.onEvent(paymentEvent)

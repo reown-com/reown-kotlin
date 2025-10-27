@@ -29,7 +29,7 @@ sealed interface PosEvent {
     data object PaymentRequested : PosEvent
     data object PaymentBroadcasted : PosEvent
     data class PaymentRejected(val error: String) : PosEvent
-    data class PaymentSuccessful(val txHash: Any) : PosEvent
+    data class PaymentSuccessful(val txHash: Any, val recipient: String) : PosEvent
 }
 
 enum class Chain(val id: String) {
@@ -177,7 +177,14 @@ class POSViewModel : ViewModel() {
                     }
 
                     is PaymentEvent.PaymentSuccessful -> {
-                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PaymentSuccessful(paymentEvent.result)) }
+                        viewModelScope.launch {
+                            _posEventsFlow.emit(
+                                PosEvent.PaymentSuccessful(
+                                    paymentEvent.result,
+                                    paymentEvent.recipient
+                                )
+                            )
+                        }
                     }
 
                     PaymentEvent.ConnectionRejected -> {

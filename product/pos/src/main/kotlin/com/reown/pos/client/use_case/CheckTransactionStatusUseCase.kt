@@ -27,9 +27,11 @@ internal class CheckTransactionStatusUseCase(
     suspend fun checkTransactionStatusWithPolling(
         sendResult: Any,
         transactionId: String,
+        recipient: String,
         onResult: (POS.Model.PaymentEvent) -> Unit
     ) {
         require(transactionId.isNotBlank()) { "Transaction ID cannot be blank" }
+        require(recipient.isNotBlank()) { "Recipient cannot be blank" }
         val sendResultJson = stringifySendResult(sendResult)
         repeat(MAX_POLLING_ATTEMPTS) { attempt ->
             when (val statusResult = checkTransactionStatus(transactionId, sendResultJson)) {
@@ -37,7 +39,7 @@ internal class CheckTransactionStatusUseCase(
                     when (statusResult.result.status.uppercase()) {
                         "CONFIRMED" -> {
                             Log.d(TAG, "Transaction confirmed: $sendResult")
-                            onResult(POS.Model.PaymentEvent.PaymentSuccessful(result = sendResult))
+                            onResult(POS.Model.PaymentEvent.PaymentSuccessful(result = sendResult, recipient = recipient))
                             return
                         }
 

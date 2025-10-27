@@ -29,7 +29,7 @@ object POS {
             data object PaymentRequested : PaymentEvent
             data object PaymentBroadcasted : PaymentEvent
             data class PaymentRejected(val message: String) : PaymentEvent
-            data class PaymentSuccessful(val result: Any) : PaymentEvent
+            data class PaymentSuccessful(val result: Any, val recipient: String) : PaymentEvent
             data class Error(val error: Throwable) : PaymentEvent
         }
 
