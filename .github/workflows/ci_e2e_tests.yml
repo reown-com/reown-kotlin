@@ -93,7 +93,7 @@ jobs:
           java-version: '17'
 
       - name: Download all APKs
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           pattern: "*-apk"
           path: apks
