@@ -6,11 +6,11 @@
 //import com.google.firebase.ktx.Firebase
 //import com.reown.android.Core
 //import com.reown.sample.wallet.BuildConfig
-//import com.reown.sample.wallet.domain.EthAccountDelegate
+//import com.reown.sample.wallet.domain.account.EthAccountDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 //import com.reown.sample.wallet.domain.WCDelegate
-//import com.reown.sample.wallet.domain.emitChainAbstractionRequest
-//import com.reown.sample.wallet.domain.getErrorMessage
+//import com.reown.sample.wallet.domain.chain_abstraction.emitChainAbstractionRequest
+//import com.reown.sample.wallet.domain.chain_abstraction.getErrorMessage
 //import com.reown.sample.wallet.domain.mixPanel
 //import com.reown.sample.wallet.domain.model.Transaction
 //import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.TokenAddresses.getAddressOn

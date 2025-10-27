@@ -1,4 +1,4 @@
-package com.reown.sample.wallet.domain
+package com.reown.sample.wallet.domain.account
 
 import android.app.Application
 import android.content.Context

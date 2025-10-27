@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
-import com.reown.sample.wallet.domain.Signer
-import com.reown.sample.wallet.domain.Signer.PERSONAL_SIGN
+import com.reown.sample.wallet.domain.signer.Signer
+import com.reown.sample.wallet.domain.signer.Signer.PERSONAL_SIGN
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI

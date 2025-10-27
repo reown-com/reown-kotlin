@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 
-package com.reown.sample.wallet.domain
+package com.reown.sample.wallet.domain.notify
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -20,6 +20,7 @@ import com.reown.android.Core
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.ui.WalletKitActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +40,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.net.URI
+import kotlin.collections.iterator
 
 object NotificationHandler {
 

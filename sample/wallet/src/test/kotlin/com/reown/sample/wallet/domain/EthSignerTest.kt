@@ -1,5 +1,6 @@
 package com.reown.sample.wallet.domain
 
+import com.reown.sample.wallet.domain.signer.EthSigner
 import org.junit.Test
 
 class EthSignerTest {

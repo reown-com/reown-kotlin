@@ -42,7 +42,7 @@
 //import androidx.compose.ui.window.PopupProperties
 //import androidx.lifecycle.viewmodel.compose.viewModel
 //import androidx.navigation.NavHostController
-//import com.reown.sample.wallet.domain.EthAccountDelegate
+//import com.reown.sample.wallet.domain.account.EthAccountDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 //import com.reown.sample.wallet.ui.common.SemiTransparentDialog
 //

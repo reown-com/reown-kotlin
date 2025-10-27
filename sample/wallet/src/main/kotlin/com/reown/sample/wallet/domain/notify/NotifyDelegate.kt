@@ -1,4 +1,4 @@
-package com.reown.sample.wallet.domain
+package com.reown.sample.wallet.domain.notify
 
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient

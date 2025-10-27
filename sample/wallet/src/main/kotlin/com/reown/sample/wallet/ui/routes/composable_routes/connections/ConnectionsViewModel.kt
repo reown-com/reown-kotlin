@@ -5,8 +5,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
-import com.reown.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.account.ACCOUNTS_2_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.channels.BufferOverflow

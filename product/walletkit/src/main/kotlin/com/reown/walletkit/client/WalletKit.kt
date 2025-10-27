@@ -8,6 +8,7 @@ import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
 import kotlinx.coroutines.*
+import uniffi.yttrium.TonClient
 import java.util.*
 
 object WalletKit {
