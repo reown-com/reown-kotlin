@@ -1308,16 +1308,12 @@ class TNVTests {
         val boc = "te6ccgEBAwEAqwABRYgBJLBT5im0LJMgNDkO7tGlWfILLWiQxRdZ3/GR77bXbmAMAQGcCmfXcBjIG3kzYjkIhIt4y+75b92NB0Uth+HnMWmrYKWCQTJOCsry/pnXacKGjCx0GFjDv2cLYMqCede56w4RDCmpoxdo74yoAAAAEQADAgBkAgBJLBT5im0LJMgNDkO7tGlWfILLWiQxRdZ3/GR77bXbmBAfQAAAAAAAAAAAAAAAAAA="
 
         // Act
-        val result = TNV.collectTxHashes(rpcMethod, boc, rpcParams)
+        val result = TNV.collectTxHashes(rpcMethod, boc)
 
         // Assert
         assertNotNull(result)
-        val actualBase64 = result!!.first()
+        val actual = result!!.first()
 
-        val expectedBase64Raw = """
-            eyJzZW5kZXIiOiJVUUNTV0NuekZOb1dTWkFhSElkM2FOS3MtUVdXdEVoaWk2enYtTWozMjJ1M01ISDIiLCJib2MiOiJ0ZTZjY2dFQkF3RUFxd0FCUllnQkpMQlQ1aW0wTEpNZ05Ea083dEdsV2ZJTExXaVF4UmRaMy9HUjc3YlhibUFNQVFHY0NtZlhjQmpJRzNrellqa0loSXQ0eSs3NWI5Mk5CMFV0aCtIbk1XbXJZS1dDUVRKT0NzcnkvcG5YYWNLR2pDeDBHRmpEdjJjTFlNcUNlZGU1Nnc0UkRDbXBveGRvNzR5b0FBQUFFUUFEQWdCa0FnQkpMQlQ1aW0wTEpNZ05Ea083dEdsV2ZJTExXaVF4UmRaMy9HUjc3YlhibUJBZlFBQUFBQUFBQUFBQUFBQUFBQUE9In0=
-        """.trimIndent()
-
-        assertEquals(expectedBase64Raw, actualBase64)
+        assertEquals(boc, actual)
     }
 }
