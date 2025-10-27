@@ -52,6 +52,11 @@ object Relay {
                         val sessionTopic: String,
                         val sessionProposalResponse: String,
                         val sessionSettlementRequest: String,
+                        val approvedChains: List<String>? = null,
+                        val approvedMethods: List<String>? = null,
+                        val approvedEvents: List<String>? = null,
+                        val sessionProperties: Map<String, String>? = null,
+                        val scopedProperties: Map<String, String>? = null,
                         val correlationId: Long
                     )
                 }

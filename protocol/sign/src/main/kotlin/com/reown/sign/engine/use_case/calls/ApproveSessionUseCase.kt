@@ -107,11 +107,27 @@ internal class ApproveSessionUseCase(
             val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces, sessionProperties, scopedProperties)
             val sessionSettle = SignRpc.SessionSettle(params = params)
             trace.add(Trace.Session.PUBLISHING_SESSION_APPROVE)
+            val approvedChains = sessionNamespaces.values.flatMap { namespace ->
+                when {
+                    !namespace.chains.isNullOrEmpty() -> namespace.chains ?: emptyList()
+                    else -> namespace.accounts.mapNotNull { account ->
+                        val delimiterIndex = account.lastIndexOf(":")
+                        if (delimiterIndex > 0) account.substring(0, delimiterIndex) else null
+                    }
+                }
+            }.distinct()
+            val approvedMethods = sessionNamespaces.values.flatMap { it.methods }.distinct()
+            val approvedEvents = sessionNamespaces.values.flatMap { it.events }.distinct()
             jsonRpcInteractor.approveSession(
                 pairingTopic = proposal.pairingTopic,
                 sessionTopic = sessionTopic,
                 sessionProposalResponse = approvalParams,
                 settleRequest = sessionSettle,
+                approvedChains = approvedChains.takeIf { it.isNotEmpty() },
+                approvedMethods = approvedMethods.takeIf { it.isNotEmpty() },
+                approvedEvents = approvedEvents.takeIf { it.isNotEmpty() },
+                sessionProperties = sessionProperties,
+                scopedProperties = scopedProperties,
                 correlationId = proposal.requestId,
                 onSuccess = {
                     onSuccess()

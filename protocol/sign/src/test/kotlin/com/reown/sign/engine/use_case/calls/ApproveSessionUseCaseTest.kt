@@ -99,9 +99,14 @@ class ApproveSessionUseCaseTest {
                 eq(sessionTopic),
                 any(),
                 any(),
+                eq(listOf("eip155:1", "eip155:42161")),
+                eq(listOf("eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_signTypedData")),
+                eq(listOf("chainChanged", "accountsChanged")),
                 any(),
                 any(),
                 any(),
+                any(),
+                any()
             )
         }
     }
