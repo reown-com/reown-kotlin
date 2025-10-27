@@ -65,7 +65,7 @@ jobs:
           ./gradlew ${{ matrix.conf.command }}
 
       - name: Upload APKs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.conf.name }}-apk
           path: sample/${{ matrix.conf.name }}/build/outputs/apk/internal/*.apk
@@ -253,7 +253,7 @@ jobs:
 
       - name: Upload debug artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: debug-artifacts
           path: debug-artifacts/
@@ -261,7 +261,7 @@ jobs:
 
       - name: Upload Maestro artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: maestro-artifacts
           path: |
