@@ -171,7 +171,7 @@ internal class TNV(private val moshi: Moshi) {
                         }
                 }
 
-                TON_SEND_MESSAGE -> buildTonBocBase64(moshi, rpcParams, rpcResult)
+                TON_SEND_MESSAGE -> listOf(rpcResult)
 
                 else -> null
             }
