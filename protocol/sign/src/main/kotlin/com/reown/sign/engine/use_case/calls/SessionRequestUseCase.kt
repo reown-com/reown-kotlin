@@ -36,7 +36,7 @@ import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
 import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
 import com.reown.sign.engine.model.EngineDO
-import com.reown.sign.engine.model.tvf.TVF
+import com.reown.sign.engine.model.tvf.TNV
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
@@ -58,7 +58,7 @@ internal class SessionRequestUseCase(
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
     private val logger: Logger,
-    private val tvf: TVF,
+    private val TNV: TNV,
     private val walletServiceFinder: WalletServiceFinder,
     private val walletServiceRequester: WalletServiceRequester
 ) : SessionRequestUseCaseInterface {
@@ -143,7 +143,7 @@ internal class SessionRequestUseCase(
             Ttl(newTtl)
         }
 
-        val tvfData = tvf.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
+        val tvfData = TNV.collect(sessionPayload.rpcMethod, sessionPayload.rpcParams, sessionPayload.params.chainId)
         val irnParams = IrnParams(
             Tags.SESSION_REQUEST,
             irnParamsTtl,
