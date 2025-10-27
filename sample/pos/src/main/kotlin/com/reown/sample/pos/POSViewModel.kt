@@ -132,6 +132,7 @@ class POSViewModel : ViewModel() {
     internal var tokenSymbol: String? = null
     internal var amount: String? = null
     internal var network: String? = null
+    internal var recipientAddress: String? = null
 
     // Loading state for "Start Payment" button on SelectNetworkScreen
     private val _startPaymentLoading = MutableStateFlow(false)
@@ -218,6 +219,10 @@ class POSViewModel : ViewModel() {
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectToken) }
     }
 
+    fun updateRecipient(address: String) {
+        recipientAddress = address.trim()
+    }
+
     fun navigateToNetworkScreen(tokenSymbol: String) {
         this.tokenSymbol = tokenSymbol
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSelectNetwork) }
@@ -233,10 +238,14 @@ class POSViewModel : ViewModel() {
             val token = ContractAddresses.getToken(chain, stableCoin)
             this.token = token
 
-            val recipient = if (name == "Solana") {
-                "AfZQxts3J7B8SM5Dd6tBnVL7oFzjD5scbwZ4Tp9Memtx"
+            val rawRecipient = recipientAddress?.trim().orEmpty()
+            require(rawRecipient.isNotBlank()) { "Recipient address not provided" }
+
+            val caipRecipient = if (rawRecipient.contains(":")) {
+                require(rawRecipient.startsWith("$chainId:")) { "Recipient address does not match selected network" }
+                rawRecipient
             } else {
-                "0x228311b83dAF3FC9a0D0a46c0B329942fc8Cb2eD"
+                "$chainId:$rawRecipient"
             }
 
             val paymentIntents =
@@ -252,7 +261,7 @@ class POSViewModel : ViewModel() {
                             address = this.token?.address ?: ""
                         ),
                         amount = this.amount ?: "",
-                        recipient = "${chainId}:$recipient" //Hardcoded
+                        recipient = caipRecipient
                     )
                 )
 

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +21,8 @@ fun StartPaymentScreen(
     modifier: Modifier = Modifier
 ) {
     val brandGreen = Color(0xFF0A8F5B)
+    var recipient by rememberSaveable { mutableStateOf(viewModel.recipientAddress.orEmpty()) }
+    val isRecipientValid = recipient.isNotBlank()
 
     Column(
         modifier = modifier
@@ -85,13 +88,42 @@ fun StartPaymentScreen(
 
             Spacer(Modifier.weight(1f)) // <-- pushes CTA to the bottom of content
 
+            OutlinedTextField(
+                value = recipient,
+                onValueChange = {
+                    recipient = it
+                    viewModel.updateRecipient(it)
+                },
+                label = { Text("Recipient address") },
+                placeholder = { Text("Paste wallet address") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (!isRecipientValid) {
+                Text(
+                    "Recipient address required",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp)
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
             Button(
-                onClick = { viewModel.navigateToAmountScreen() },
+                onClick = {
+                    val trimmed = recipient.trim()
+                    viewModel.updateRecipient(trimmed)
+                    viewModel.navigateToAmountScreen()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
+                colors = ButtonDefaults.buttonColors(containerColor = brandGreen),
+                enabled = isRecipientValid
             ) {
                 Text("Start", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold)
             }
