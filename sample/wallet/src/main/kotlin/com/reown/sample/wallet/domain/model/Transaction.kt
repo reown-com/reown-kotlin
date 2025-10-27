@@ -35,6 +35,17 @@ object Transaction {
         val from = requestParams.getString("from")
         val to = requestParams.getString("to")
         val data = requestParams.getString("data")
+        val maxFeePerGas = try {
+            requestParams.getString("maxFeePerGas")
+        } catch (e: Exception) {
+            "0"
+        }
+        val maxPriorityFeePerGas = try {
+            requestParams.getString("maxPriorityFeePerGas")
+        } catch (e: Exception) {
+            "0"
+        }
+
         val value = try {
             requestParams.getString("value")
         } catch (e: Exception) {
@@ -60,8 +71,8 @@ object Transaction {
             gasLimit = gas,
             chainId = sessionRequest.chainId!!,
             //TODO: add getting fees
-            maxFeePerGas = "0",//fees.maxFeePerGas,
-            maxPriorityFeePerGas = "0"//fees.maxPriorityFeePerGas
+            maxFeePerGas = maxFeePerGas,
+            maxPriorityFeePerGas = maxPriorityFeePerGas
         )
     }
 

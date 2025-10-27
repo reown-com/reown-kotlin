@@ -50,9 +50,9 @@ fun LabScreen(
                 is Modal.Model.SessionRequestResponse -> {
                     when (event.result) {
                         is Modal.Model.JsonRpcResponse.JsonRpcResult -> {
-                            val resultString = (event.result as Modal.Model.JsonRpcResponse.JsonRpcResult).result
+                            val resultString = (event.result as Modal.Model.JsonRpcResponse.JsonRpcResult).result as String
                             val toastText = when {
-                                resultString.isNullOrBlank() -> "Success"
+                                resultString.isBlank() -> "Success"
                                 resultString.length > 200 -> resultString.take(200) + "…"
                                 else -> resultString
                             }

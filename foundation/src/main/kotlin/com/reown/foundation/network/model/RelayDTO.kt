@@ -1,15 +1,14 @@
 package com.reown.foundation.network.model
 
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
 import com.reown.foundation.common.adapters.SubscriptionIdAdapter
 import com.reown.foundation.common.adapters.TopicAdapter
 import com.reown.foundation.common.adapters.TtlAdapter
 import com.reown.foundation.common.model.SubscriptionId
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
-import com.reown.foundation.network.model.RelayDTO.Publish.Request.Params
 import com.reown.util.generateClientToServerId
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
 sealed class RelayDTO {
     abstract val id: Long
