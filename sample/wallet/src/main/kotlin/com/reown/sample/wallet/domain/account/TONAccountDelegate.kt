@@ -14,8 +14,8 @@ object TONAccountDelegate {
         application.getSharedPreferences("Wallet_Sample_Shared_Prefs", Context.MODE_PRIVATE)
     }
 
-    const val mainnet = -239
-    const val testnet = -3
+    const val mainnet = "ton:-239"
+    const val testnet = "ton:-3"
     private const val TON_PUBLIC_KEY_TAG = "ton_public_key"
     private const val TON_SECRET_KEY_TAG = "ton_secret_key"
     private const val TON_ADDRESS_RAW_TAG = "ton_address_raw"
@@ -44,10 +44,10 @@ object TONAccountDelegate {
     }
 
     val caip10MainnetAddress: String
-        get() = "ton:$mainnet:$addressFriendly"
+        get() = "$mainnet:$addressFriendly"
 
     val caip10TestnetAddress: String
-        get() = "ton:$testnet:$addressFriendly"
+        get() = "$testnet:$addressFriendly"
 
     val addressRaw: String
         get() = if (isInitialized) sharedPreferences.getString(TON_ADDRESS_RAW_TAG, null)!! else storeAccount()["addressRaw"] ?: ""

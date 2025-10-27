@@ -113,7 +113,7 @@ val walletMetaData = WalletMetaData(
             )
         ),
         "ton" to Wallet.Model.Namespace.Session(
-            chains = listOf("ton:${TONAccountDelegate.mainnet}"),
+            chains = listOf(TONAccountDelegate.mainnet),
             methods = listOf("ton_sendMessage", "ton_signData"),
             events = listOf(),
             accounts = listOf(TONAccountDelegate.caip10MainnetAddress)

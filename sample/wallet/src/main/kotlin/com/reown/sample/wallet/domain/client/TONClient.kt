@@ -16,7 +16,7 @@ object TONClient {
     private lateinit var client: TonClient
 
     fun init(packageName: String) {
-        val config = TonClientConfig("ton:mainnet")//"${TONAccountDelegate.mainnet}")
+        val config = TonClientConfig(TONAccountDelegate.mainnet)
 
         registerLogger(object : Logger {
             override fun log(message: String) {
@@ -84,8 +84,7 @@ object TONClient {
             }
 
             client.sendMessage(
-//                "${TONAccountDelegate.mainnet}",
-                "ton:mainnet",
+                "${TONAccountDelegate.mainnet}",
                 from,
                 uniffi.yttrium.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey),
                 validUntil,
