@@ -11,8 +11,8 @@ import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.EthSigner
 import com.reown.sample.wallet.domain.Signer
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
-import com.reown.sample.wallet.domain.WCDelegate
-import com.reown.sample.wallet.domain.WCDelegate.prepareAvailable
+import com.reown.sample.wallet.domain.WalletKitDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate.prepareAvailable
 import com.reown.sample.wallet.domain.clearSessionRequest
 import com.reown.sample.wallet.domain.execute
 import com.reown.sample.wallet.domain.model.Transaction
@@ -41,7 +41,7 @@ class ChainAbstractionViewModel : ViewModel() {
 
     @OptIn(ChainAbstractionExperimentalApi::class)
     fun getERC20Balance(): String {
-        val initialTransaction = WCDelegate.sessionRequestEvent?.first
+        val initialTransaction = WalletKitDelegate.sessionRequestEvent?.first
 
         val tokenAddress = prepareAvailable?.initialTransactionMetadata?.tokenContract ?: ""
 //        return try {
@@ -201,8 +201,8 @@ class ChainAbstractionViewModel : ViewModel() {
     }
 
     private fun generateSessionRequestUI(): SessionRequestUI {
-        return if (WCDelegate.sessionRequestEvent != null) {
-            val (sessionRequest, context) = WCDelegate.sessionRequestEvent!!
+        return if (WalletKitDelegate.sessionRequestEvent != null) {
+            val (sessionRequest, context) = WalletKitDelegate.sessionRequestEvent!!
             SessionRequestUI.Content(
                 peerUI = PeerUI(
                     peerName = sessionRequest.peerMetaData?.name ?: "",

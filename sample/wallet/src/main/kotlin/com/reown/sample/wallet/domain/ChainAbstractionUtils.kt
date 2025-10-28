@@ -4,13 +4,12 @@ package com.reown.sample.wallet.domain
 
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.reown.sample.wallet.domain.WCDelegate._walletEvents
-import com.reown.sample.wallet.domain.WCDelegate.scope
+import com.reown.sample.wallet.domain.WalletKitDelegate._walletEvents
+import com.reown.sample.wallet.domain.WalletKitDelegate.scope
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.launch
-import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 @OptIn(ChainAbstractionExperimentalApi::class)
@@ -66,8 +65,8 @@ fun respondWithError(errorMessage: String, sessionRequest: Wallet.Model.SessionR
 }
 
 fun emitSessionRequest(sessionRequest: Wallet.Model.SessionRequest, verifyContext: Wallet.Model.VerifyContext) {
-    if (WCDelegate.currentId != sessionRequest.request.id) {
-        WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
+    if (WalletKitDelegate.currentId != sessionRequest.request.id) {
+        WalletKitDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
 
         scope.launch {
             _walletEvents.emit(sessionRequest)
@@ -80,9 +79,9 @@ fun emitChainAbstractionRequest(
     fulfilment: Wallet.Model.PrepareSuccess.Available,
     verifyContext: Wallet.Model.VerifyContext
 ) {
-    if (WCDelegate.currentId != sessionRequest.request.id) {
-        WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
-        WCDelegate.prepareAvailable = fulfilment
+    if (WalletKitDelegate.currentId != sessionRequest.request.id) {
+        WalletKitDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
+        WalletKitDelegate.prepareAvailable = fulfilment
 
         scope.launch {
             _walletEvents.emit(fulfilment)
@@ -95,9 +94,9 @@ fun emitChainAbstractionError(
     prepareError: Wallet.Model.PrepareError,
     verifyContext: Wallet.Model.VerifyContext
 ) {
-    if (WCDelegate.currentId != sessionRequest.request.id) {
-        WCDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
-        WCDelegate.prepareError = prepareError
+    if (WalletKitDelegate.currentId != sessionRequest.request.id) {
+        WalletKitDelegate.sessionRequestEvent = Pair(sessionRequest, verifyContext)
+        WalletKitDelegate.prepareError = prepareError
         recordError(Throwable(getErrorMessage()))
 
         scope.launch {
@@ -107,7 +106,7 @@ fun emitChainAbstractionError(
 }
 
 fun getErrorMessage(): String {
-    return when (val error = WCDelegate.prepareError) {
+    return when (val error = WalletKitDelegate.prepareError) {
         is Wallet.Model.PrepareError.InsufficientFunds -> error.message
         is Wallet.Model.PrepareError.InsufficientGasFunds -> error.message
         is Wallet.Model.PrepareError.NoRoutesAvailable -> error.message
@@ -117,8 +116,8 @@ fun getErrorMessage(): String {
 }
 
 fun clearSessionRequest() {
-    WCDelegate.sessionRequestEvent = null
-    WCDelegate.currentId = null
+    WalletKitDelegate.sessionRequestEvent = null
+    WalletKitDelegate.currentId = null
 //        sessionRequestUI = SessionRequestUI.Initial
 }
 

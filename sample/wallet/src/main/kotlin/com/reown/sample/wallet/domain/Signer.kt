@@ -3,13 +3,7 @@ package com.reown.sample.wallet.domain
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
-import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.WalletKit
-import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
-import org.json.JSONArray
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 object Signer {
     suspend fun sign(sessionRequest: SessionRequestUI.Content): String = supervisorScope {
@@ -84,7 +78,7 @@ object Signer {
 //            !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
                 sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
                 sessionRequest.method == ETH_SEND_TRANSACTION -> {
-                    val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
+                    val txHash = Transaction.send(WalletKitDelegate.sessionRequestEvent!!.first)
                     txHash
                 }
                 //Note: Only for testing purposes - it will always fail on Dapp side

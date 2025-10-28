@@ -5,7 +5,7 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.sample.wallet.BuildConfig
 import com.reown.android.BuildConfig as AndroidBuildConfig
-import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.walletkit.client.Wallet
@@ -34,16 +34,16 @@ class SessionProposalViewModel : ViewModel() {
                 WalletKit.approveSession(approveProposal,
                     onError = { error ->
                         Firebase.crashlytics.recordException(error.throwable)
-                        WCDelegate.sessionProposalEvent = null
+                        WalletKitDelegate.sessionProposalEvent = null
                         onError(error.throwable)
                     },
                     onSuccess = {
-                        WCDelegate.sessionProposalEvent = null
+                        WalletKitDelegate.sessionProposalEvent = null
                         onSuccess(proposal.redirect)
                     })
             } catch (e: Exception) {
                 Firebase.crashlytics.recordException(e)
-                WCDelegate.sessionProposalEvent = null
+                WalletKitDelegate.sessionProposalEvent = null
                 onError(e)
             }
         } else {
@@ -84,17 +84,17 @@ class SessionProposalViewModel : ViewModel() {
 
                 WalletKit.rejectSession(reject,
                     onSuccess = {
-                        WCDelegate.sessionProposalEvent = null
+                        WalletKitDelegate.sessionProposalEvent = null
                         onSuccess(proposal.redirect)
                     },
                     onError = { error ->
                         Firebase.crashlytics.recordException(error.throwable)
-                        WCDelegate.sessionProposalEvent = null
+                        WalletKitDelegate.sessionProposalEvent = null
                         onError(error.throwable)
                     })
             } catch (e: Exception) {
                 Firebase.crashlytics.recordException(e)
-                WCDelegate.sessionProposalEvent = null
+                WalletKitDelegate.sessionProposalEvent = null
                 onError(e)
             }
         } else {
@@ -103,8 +103,8 @@ class SessionProposalViewModel : ViewModel() {
     }
 
     private fun generateSessionProposalUI(): SessionProposalUI? {
-        return if (WCDelegate.sessionProposalEvent != null) {
-            val (proposal, context) = WCDelegate.sessionProposalEvent!!
+        return if (WalletKitDelegate.sessionProposalEvent != null) {
+            val (proposal, context) = WalletKitDelegate.sessionProposalEvent!!
             SessionProposalUI(
                 peerUI = PeerUI(
                     peerIcon = proposal.icons.firstOrNull().toString(),
