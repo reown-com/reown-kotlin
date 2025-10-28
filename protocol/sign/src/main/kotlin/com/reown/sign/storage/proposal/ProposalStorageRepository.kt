@@ -8,10 +8,13 @@ import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.Namespace
 import com.reown.android.internal.common.scope
 import com.reown.foundation.common.model.Topic
+import com.reown.sign.common.model.vo.clientsync.common.PayloadParams
+import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
 import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.storage.data.dao.optionalnamespaces.OptionalNamespaceDaoQueries
 import com.reown.sign.storage.data.dao.proposal.ProposalDaoQueries
 import com.reown.sign.storage.data.dao.proposalnamespace.ProposalNamespaceDaoQueries
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,12 +22,19 @@ import kotlinx.coroutines.withContext
 class ProposalStorageRepository(
     private val proposalDaoQueries: ProposalDaoQueries,
     private val requiredNamespaceDaoQueries: ProposalNamespaceDaoQueries,
-    private val optionalNamespaceDaoQueries: OptionalNamespaceDaoQueries
+    private val optionalNamespaceDaoQueries: OptionalNamespaceDaoQueries,
+    private val moshi: Moshi
 ) {
 
     @JvmSynthetic
     @Throws(SQLiteException::class)
     internal fun insertProposal(proposal: ProposalVO) = with(proposal) {
+        val requestsJson: List<String> = proposal.requests.authentication.map { 
+            moshi.adapter(PayloadParams::class.java).toJson(it)
+        }
+
+        println("kobe: Proposal requests: $requestsJson")
+
         proposalDaoQueries.insertOrAbortSession(
             requestId,
             pairingTopic.value,
@@ -39,6 +49,7 @@ class ProposalStorageRepository(
             redirect,
             expiry?.seconds,
             scopedProperties,
+            requestsJson
         )
 
         insertRequiredNamespace(requiredNamespaces, requestId)
@@ -87,10 +98,15 @@ class ProposalStorageRepository(
         properties: Map<String, String>?,
         redirect: String,
         expiry: Long?,
-        scoped_properties: Map<String, String>?
+        scoped_properties: Map<String, String>?,
+        authentication: List<String>?
     ): ProposalVO {
         val requiredNamespaces: Map<String, Namespace.Proposal> = getRequiredNamespaces(request_id)
         val optionalNamespaces: Map<String, Namespace.Proposal> = getOptionalNamespaces(request_id)
+
+        val authenticationParams: List<PayloadParams> = authentication?.map { json ->
+            moshi.adapter(PayloadParams::class.java).fromJson(json)!!
+        } ?: emptyList()
 
         return ProposalVO(
             requestId = request_id,
@@ -107,7 +123,8 @@ class ProposalStorageRepository(
             scopedProperties = scoped_properties,
             requiredNamespaces = requiredNamespaces,
             optionalNamespaces = optionalNamespaces,
-            expiry = if (expiry != null) Expiry(expiry) else null
+            expiry = if (expiry != null) Expiry(expiry) else null,
+            requests = ProposalRequests(authentication = authenticationParams)
         )
     }
 

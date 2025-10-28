@@ -101,64 +101,70 @@ fun ChainSelectionRoute(navController: NavController, dispatcher: CoroutineDispa
         onDialogDismiss = { pairingUri = PairingUri(uri = "", isReCaps = false) },
         onChainClick = viewModel::updateChainSelectState,
         onConnectClick = { onConnectClick(viewModel, navController, context) },
-        onAuthenticateClick = { onAuthenticate(viewModel, composableScope, dispatcher, context) { uri -> pairingUri = uri } },
-        onAuthenticateLinkMode = { appLink -> onAuthenticateLinkMode(viewModel, appLink, context, composableScope, dispatcher) },
-        onAuthenticateSIWEClick = { onAuthenticateSIWE(viewModel, composableScope, dispatcher, context) { uri -> pairingUri = uri } }
+        onAuthenticateClick = {
+//            onAuthenticate(viewModel, composableScope, dispatcher, context) { uri -> pairingUri = uri }
+        },
+        onAuthenticateLinkMode = { appLink ->
+//            onAuthenticateLinkMode(viewModel, appLink, context, composableScope, dispatcher)
+        },
+        onAuthenticateSIWEClick = {
+//            onAuthenticateSIWE(viewModel, composableScope, dispatcher, context) { uri -> pairingUri = uri }
+        }
     )
 }
 
-private fun onAuthenticateSIWE(
-    viewModel: ChainSelectionViewModel,
-    composableScope: CoroutineScope,
-    dispatcher: CoroutineDispatcher,
-    context: Context,
-    onSuccess: (PairingUri) -> Unit,
-) {
-    if (viewModel.isAnyChainSelected) {
-        viewModel.authenticate(
-            viewModel.siweParams,
-            onAuthenticateSuccess = { uri -> onSuccess(PairingUri(uri ?: "", false)) },
-            onError = { error ->
-                composableScope.launch(dispatcher) {
-                    Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
-                }
-            })
-    } else {
-        composableScope.launch(dispatcher) {
-            Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
-        }
-    }
-}
+//private fun onAuthenticateSIWE(
+//    viewModel: ChainSelectionViewModel,
+//    composableScope: CoroutineScope,
+//    dispatcher: CoroutineDispatcher,
+//    context: Context,
+//    onSuccess: (PairingUri) -> Unit,
+//) {
+//    if (viewModel.isAnyChainSelected) {
+//        viewModel.authenticate(
+//            viewModel.siweParams,
+//            onAuthenticateSuccess = { uri -> onSuccess(PairingUri(uri ?: "", false)) },
+//            onError = { error ->
+//                composableScope.launch(dispatcher) {
+//                    Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
+//                }
+//            })
+//    } else {
+//        composableScope.launch(dispatcher) {
+//            Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+//}
 
-private fun onAuthenticateLinkMode(
-    viewModel: ChainSelectionViewModel,
-    appLink: String,
-    context: Context,
-    composableScope: CoroutineScope,
-    dispatcher: CoroutineDispatcher
-) {
-    if (appLink.isNotEmpty()) {
-        if (viewModel.isAnyChainSelected) {
-            viewModel.authenticate(
-                viewModel.authenticateParams,
-                appLink,
-                onAuthenticateSuccess = { uri -> onAuthenticateSuccess(uri, appLink, context, composableScope, dispatcher) },
-                onError = { error ->
-                    composableScope.launch(dispatcher) {
-                        Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
-                    }
-                })
-        } else {
-            composableScope.launch(dispatcher) {
-                Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
-            }
-        }
-    } else {
-        composableScope.launch(dispatcher) {
-            Toast.makeText(context, "Wallet not installed", Toast.LENGTH_SHORT).show()
-        }
-    }
-}
+//private fun onAuthenticateLinkMode(
+//    viewModel: ChainSelectionViewModel,
+//    appLink: String,
+//    context: Context,
+//    composableScope: CoroutineScope,
+//    dispatcher: CoroutineDispatcher
+//) {
+//    if (appLink.isNotEmpty()) {
+//        if (viewModel.isAnyChainSelected) {
+//            viewModel.authenticate(
+//                viewModel.authenticateParams,
+//                appLink,
+//                onAuthenticateSuccess = { uri -> onAuthenticateSuccess(uri, appLink, context, composableScope, dispatcher) },
+//                onError = { error ->
+//                    composableScope.launch(dispatcher) {
+//                        Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
+//                    }
+//                })
+//        } else {
+//            composableScope.launch(dispatcher) {
+//                Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//    } else {
+//        composableScope.launch(dispatcher) {
+//            Toast.makeText(context, "Wallet not installed", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+//}
 
 private fun onAuthenticateSuccess(
     uri: String?,
@@ -210,28 +216,28 @@ private fun redirectToRNWallet(uri: String?, context: Context, composableScope: 
     }
 }
 
-private fun onAuthenticate(
-    viewModel: ChainSelectionViewModel,
-    composableScope: CoroutineScope,
-    dispatcher: CoroutineDispatcher,
-    context: Context,
-    onSuccess: (PairingUri) -> Unit,
-) {
-    if (viewModel.isAnyChainSelected) {
-        viewModel.authenticate(
-            viewModel.authenticateParams,
-            onAuthenticateSuccess = { uri -> onSuccess(PairingUri(uri ?: "", true)) },
-            onError = { error ->
-                composableScope.launch(dispatcher) {
-                    Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
-                }
-            })
-    } else {
-        composableScope.launch(dispatcher) {
-            Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
-        }
-    }
-}
+//private fun onAuthenticate(
+//    viewModel: ChainSelectionViewModel,
+//    composableScope: CoroutineScope,
+//    dispatcher: CoroutineDispatcher,
+//    context: Context,
+//    onSuccess: (PairingUri) -> Unit,
+//) {
+//    if (viewModel.isAnyChainSelected) {
+//        viewModel.authenticate(
+//            viewModel.authenticateParams,
+//            onAuthenticateSuccess = { uri -> onSuccess(PairingUri(uri ?: "", true)) },
+//            onError = { error ->
+//                composableScope.launch(dispatcher) {
+//                    Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
+//                }
+//            })
+//    } else {
+//        composableScope.launch(dispatcher) {
+//            Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
+//        }
+//    }
+//}
 
 @Composable
 private fun ChainSelectionScreen(
@@ -324,7 +330,13 @@ private fun ChainSelectionScreen(
 }
 
 @Composable
-private fun QRDialog(composableScope: CoroutineScope, dispatcher: CoroutineDispatcher, pairingUri: PairingUri, onDismissRequest: () -> Unit, context: Context) {
+private fun QRDialog(
+    composableScope: CoroutineScope,
+    dispatcher: CoroutineDispatcher,
+    pairingUri: PairingUri,
+    onDismissRequest: () -> Unit,
+    context: Context
+) {
     val qrDrawable = generateQRCode(pairingUri.uri)
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
 

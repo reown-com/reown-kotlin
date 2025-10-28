@@ -54,7 +54,8 @@ internal sealed class EngineDO {
         val statement: String?,
         val requestId: String?,
         var resources: List<String>?,
-        val version: String
+        val version: String,
+        val signatureTypes: Map<String, List<String>>?
     ) : EngineDO()
 
     data class Authenticate(
@@ -95,7 +96,12 @@ internal sealed class EngineDO {
         val relayProtocol: String,
         val relayData: String?,
         val scopedProperties: Map<String, String>?,
+        val requests: ProposalRequests?
     ) : EngineDO(), EngineEvent
+
+    data class ProposalRequests(
+        val authentication: List<PayloadParams>
+    ): EngineDO()
 
     data class ExpiredProposal(val pairingTopic: String, val proposerPublicKey: String) : EngineDO(), EngineEvent
     data class ExpiredRequest(val topic: String, val id: Long) : EngineDO(), EngineEvent

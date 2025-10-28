@@ -36,14 +36,23 @@ internal fun EngineDO.SettledSessionResponse.toClientSettledSessionResponse(): S
 @JvmSynthetic
 internal fun EngineDO.SessionAuthenticateResponse.toClientSessionAuthenticateResponse(): Sign.Model.SessionAuthenticateResponse =
     when (this) {
-        is EngineDO.SessionAuthenticateResponse.Result -> Sign.Model.SessionAuthenticateResponse.Result(id, cacaos.toClient(), session?.toClientActiveSession())
+        is EngineDO.SessionAuthenticateResponse.Result -> Sign.Model.SessionAuthenticateResponse.Result(
+            id,
+            cacaos.toClient(),
+            session?.toClientActiveSession()
+        )
+
         is EngineDO.SessionAuthenticateResponse.Error -> Sign.Model.SessionAuthenticateResponse.Error(id, code, message)
     }
 
 @JvmSynthetic
 internal fun EngineDO.SessionUpdateNamespacesResponse.toClientUpdateSessionNamespacesResponse(): Sign.Model.SessionUpdateResponse =
     when (this) {
-        is EngineDO.SessionUpdateNamespacesResponse.Result -> Sign.Model.SessionUpdateResponse.Result(topic.value, namespaces.toMapOfClientNamespacesSession())
+        is EngineDO.SessionUpdateNamespacesResponse.Result -> Sign.Model.SessionUpdateResponse.Result(
+            topic.value,
+            namespaces.toMapOfClientNamespacesSession()
+        )
+
         is EngineDO.SessionUpdateNamespacesResponse.Error -> Sign.Model.SessionUpdateResponse.Error(errorMessage)
     }
 
@@ -69,7 +78,10 @@ internal fun EngineDO.SessionProposal.toClientSessionProposal(): Sign.Model.Sess
         proposerPublicKey,
         relayProtocol,
         relayData,
-        scopedProperties
+        scopedProperties,
+        Sign.Model.ProposalRequests(
+            authentication = requests?.authentication?.map { it.toClient() } ?: emptyList()
+        )
     )
 
 @JvmSynthetic
@@ -110,7 +122,8 @@ internal fun Sign.Model.PayloadParams.toEngine(): EngineDO.PayloadParams = with(
         requestId = requestId,
         resources = resources,
         iat = iat,
-        version = "1"
+        version = "1",
+        signatureTypes = signatureTypes
     )
 }
 
@@ -191,10 +204,12 @@ internal fun List<Cacao>.toClient(): List<Sign.Model.Cacao> = this.map {
 }
 
 @JvmSynthetic
-internal fun Sign.Model.JsonRpcResponse.JsonRpcResult.toRpcResult(): JsonRpcResponse.JsonRpcResult = JsonRpcResponse.JsonRpcResult(id, result = result)
+internal fun Sign.Model.JsonRpcResponse.JsonRpcResult.toRpcResult(): JsonRpcResponse.JsonRpcResult =
+    JsonRpcResponse.JsonRpcResult(id, result = result)
 
 @JvmSynthetic
-internal fun Sign.Model.JsonRpcResponse.JsonRpcError.toRpcError(): JsonRpcResponse.JsonRpcError = JsonRpcResponse.JsonRpcError(id, error = JsonRpcResponse.Error(code, message))
+internal fun Sign.Model.JsonRpcResponse.JsonRpcError.toRpcError(): JsonRpcResponse.JsonRpcError =
+    JsonRpcResponse.JsonRpcError(id, error = JsonRpcResponse.Error(code, message))
 
 @JvmSynthetic
 internal fun Sign.Model.SessionEvent.toEngineEvent(chainId: String): EngineDO.Event = EngineDO.Event(name, data, chainId)
@@ -219,7 +234,8 @@ internal fun EngineDO.SessionAuthenticateEvent.toClientSessionAuthenticate(): Si
 }
 
 @JvmSynthetic
-internal fun EngineDO.Participant.toClient(): Sign.Model.SessionAuthenticate.Participant = Sign.Model.SessionAuthenticate.Participant(publicKey, metadata.toClient())
+internal fun EngineDO.Participant.toClient(): Sign.Model.SessionAuthenticate.Participant =
+    Sign.Model.SessionAuthenticate.Participant(publicKey, metadata.toClient())
 
 @JvmSynthetic
 internal fun EngineDO.PayloadParams.toClient(): Sign.Model.PayloadParams = Sign.Model.PayloadParams(
@@ -233,7 +249,8 @@ internal fun EngineDO.PayloadParams.toClient(): Sign.Model.PayloadParams = Sign.
     statement = statement,
     requestId = requestId,
     resources = resources,
-    iat = iat
+    iat = iat,
+    signatureTypes = signatureTypes
 )
 
 @JvmSynthetic
@@ -340,7 +357,8 @@ internal fun SignParams.SessionAuthenticateParams.toClient(): Sign.Model.Payload
         statement = statement,
         requestId = requestId,
         resources = resources,
-        iat = iat
+        iat = iat,
+        signatureTypes = signatureTypes
     )
 }
 
@@ -450,6 +468,7 @@ private fun Core.Model.Message.SessionAuthenticate.PayloadParams.toClient(): Sig
             statement = requestId,
             resources = resources,
             requestId = requestId,
+            signatureTypes = null
         )
     }
 }

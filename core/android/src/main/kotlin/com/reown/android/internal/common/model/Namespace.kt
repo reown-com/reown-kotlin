@@ -14,23 +14,23 @@ sealed class Namespace {
     //    Proposal Namespaces -> Required or Optional Namespaces
     @JsonClass(generateAdapter = true)
     data class Proposal(
-        @Json(name = "methods")
+        @param:Json(name = "methods")
         override val methods: List<String>,
-        @Json(name = "chains")
+        @param:Json(name = "chains")
         override val chains: List<String>? = null,
-        @Json(name = "events")
+        @param:Json(name = "events")
         override val events: List<String>
     ) : Namespace()
 
     @JsonClass(generateAdapter = true)
     data class Session(
-        @Json(name = "chains")
+        @param:Json(name = "chains")
         override val chains: List<String>? = null,
-        @Json(name = "accounts")
+        @param:Json(name = "accounts")
         val accounts: List<String>,
-        @Json(name = "methods")
+        @param:Json(name = "methods")
         override val methods: List<String>,
-        @Json(name = "events")
+        @param:Json(name = "events")
         override val events: List<String>
     ) : Namespace()
 }

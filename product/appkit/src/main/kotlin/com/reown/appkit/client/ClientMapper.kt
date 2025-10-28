@@ -138,6 +138,7 @@ internal fun Modal.Model.AuthPayloadParams.toSign(issuer: String): Sign.Params.F
             statement = statement,
             requestId = requestId,
             resources = resources,
+            signatureTypes = null
         ),
         iss = issuer
     )

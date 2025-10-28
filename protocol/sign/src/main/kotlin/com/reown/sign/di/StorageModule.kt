@@ -59,7 +59,8 @@ internal fun storageModule(dbName: String): Module = module {
         ProposalDaoAdapter = ProposalDao.Adapter(
             propertiesAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_MAP)),
             scoped_propertiesAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_MAP)),
-            iconsAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_LIST))
+            iconsAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_LIST)),
+            authenticationAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_LIST))
         )
     )
 
@@ -127,7 +128,8 @@ internal fun storageModule(dbName: String): Module = module {
         ProposalStorageRepository(
             proposalDaoQueries = get(),
             requiredNamespaceDaoQueries = get(),
-            optionalNamespaceDaoQueries = get()
+            optionalNamespaceDaoQueries = get(),
+            moshi = get(named(AndroidCommonDITags.MOSHI))
         )
     }
 

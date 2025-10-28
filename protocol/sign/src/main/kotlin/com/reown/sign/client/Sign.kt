@@ -5,6 +5,7 @@ import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
 import com.reown.android.internal.common.signing.cacao.Issuer
+import com.reown.sign.engine.model.EngineDO
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -49,6 +50,11 @@ object Sign {
             val relayProtocol: String,
             val relayData: String?,
             val scopedProperties: Map<String, String>?,
+            val requests: ProposalRequests?
+        ) : Model()
+
+        data class ProposalRequests(
+            val authentication: List<PayloadParams>
         ) : Model()
 
         data class ExpiredProposal(val pairingTopic: String, val proposerPublicKey: String) : Model()
@@ -281,6 +287,7 @@ object Sign {
             val statement: String?,
             val requestId: String?,
             var resources: List<String>?,
+            val signatureTypes: Map<String, List<String>>?,
         ) : Model()
 
         data class Cacao(

@@ -243,6 +243,11 @@ object Wallet {
             val relayProtocol: String,
             val relayData: String?,
             val scopedProperties: Map<String, String>?,
+            val requests: ProposalRequests?
+        ) : Model()
+
+        data class ProposalRequests(
+            val authentication: List<PayloadAuthRequestParams>
         ) : Model()
 
         data class SessionAuthenticate(
@@ -344,6 +349,7 @@ object Wallet {
             val statement: String?,
             val requestId: String?,
             val resources: List<String>?,
+            val signatureTypes: Map<String, List<String>>?,
         ) : Model()
 
         data class PayloadAuthRequestParams(
@@ -357,7 +363,8 @@ object Wallet {
             val exp: String?,
             val statement: String?,
             val requestId: String?,
-            val resources: List<String>?
+            val resources: List<String>?,
+            val signatureTypes: Map<String, List<String>>?,
         ) : Model()
 
         data class SessionEvent(

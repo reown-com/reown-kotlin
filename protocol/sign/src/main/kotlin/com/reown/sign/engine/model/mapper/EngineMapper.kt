@@ -62,7 +62,10 @@ internal fun SignParams.SessionProposeParams.toEngineDO(topic: Topic): EngineDO.
         proposerPublicKey = proposer.publicKey,
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
-        scopedProperties = scopedProperties
+        scopedProperties = scopedProperties,
+        requests = if (requests != null) {
+            EngineDO.ProposalRequests(authentication = requests.authentication.map { it.toEngineDO() })
+        } else null
     )
 
 @JvmSynthetic
@@ -82,7 +85,8 @@ internal fun SignParams.SessionProposeParams.toVO(topic: Topic, requestId: Long)
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
         expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp) else null,
-        scopedProperties = scopedProperties
+        scopedProperties = scopedProperties,
+        requests = ProposalRequests(authentication = requests?.authentication ?: emptyList())
     )
 
 @JvmSynthetic
@@ -98,7 +102,9 @@ internal fun ProposalVO.toSessionProposeRequest(): WCRequest =
             optionalNamespaces = optionalNamespaces,
             properties = properties,
             expiryTimestamp = expiry?.seconds,
-            scopedProperties = scopedProperties
+            scopedProperties = scopedProperties,
+            requests = requests
+
         ),
         transportType = TransportType.RELAY
     )
@@ -193,7 +199,8 @@ internal fun ProposalVO.toEngineDO(): EngineDO.SessionProposal =
         optionalNamespaces = optionalNamespaces.toMapOfEngineNamespacesOptional(),
         proposerPublicKey = proposerPublicKey,
         properties = properties,
-        scopedProperties = scopedProperties
+        scopedProperties = scopedProperties,
+        requests = EngineDO.ProposalRequests(authentication = requests.authentication.map { it.toEngineDO() })
     )
 
 @JvmSynthetic
@@ -328,7 +335,8 @@ internal fun PayloadParams.toEngineDO(): EngineDO.PayloadParams =
         resources = resources,
         chains = chains,
         type = type,
-        iat = iat
+        iat = iat,
+        signatureTypes = signatureTypes
     )
 
 @JvmSynthetic
