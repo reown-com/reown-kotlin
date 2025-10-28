@@ -154,6 +154,7 @@ object Sign {
             val metaData: Core.Model.AppMetaData?,
             val namespaces: Map<String, Namespace.Session>,
             val accounts: List<String>,
+            val proposalRequestsResponses: ProposalRequestsResponses?
         ) : Model()
 
         data class Session(
@@ -316,7 +317,7 @@ object Sign {
         }
 
         data class ProposalRequestsResponses(
-            val authentication: List<Cacao>
+            val authentication: List<Cacao>?
         ): Model()
     }
 

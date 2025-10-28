@@ -36,7 +36,7 @@ internal sealed class EngineDO {
     ) : EngineDO(), EngineEvent
 
     data class ProposalRequestsResponses(
-        val authentication: List<Cacao>
+        val authentication: List<Cacao>?
     ): EngineDO()
 
     data class SessionAuthenticateEvent(
@@ -196,6 +196,7 @@ internal sealed class EngineDO {
         val peerAppMetaData: AppMetaData?,
         val accounts: List<String>,
         val namespaces: Map<String, Namespace.Session>,
+        val proposalRequestsResponses: ProposalRequestsResponses?,
     ) : EngineDO(), EngineEvent
 
     data class PairingSettle(val topic: Topic, val appMetaData: AppMetaData?) : EngineDO(), EngineEvent

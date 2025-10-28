@@ -22,8 +22,8 @@ import com.reown.sign.common.exceptions.PeerError
 import com.reown.sign.common.model.Request
 import com.reown.sign.common.model.vo.clientsync.common.PayloadParams
 import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
+import com.reown.sign.common.model.vo.clientsync.common.ProposalRequestsResponses
 import com.reown.sign.common.model.vo.clientsync.common.Requester
-import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.common.model.vo.sequence.SessionVO
@@ -159,12 +159,13 @@ internal fun SessionVO.toEngineDOSessionExtend(expiryVO: Expiry): EngineDO.Sessi
     )
 
 @JvmSynthetic
-internal fun SessionVO.toSessionApproved(): EngineDO.SessionApproved =
+internal fun SessionVO.toSessionApproved(proposalRequestsResponses: ProposalRequestsResponses?): EngineDO.SessionApproved =
     EngineDO.SessionApproved(
         topic = topic.value,
         peerAppMetaData = peerAppMetaData,
         accounts = sessionNamespaces.flatMap { (_, namespace) -> namespace.accounts },
-        namespaces = sessionNamespaces.toMapOfEngineNamespacesSession()
+        namespaces = sessionNamespaces.toMapOfEngineNamespacesSession(),
+        proposalRequestsResponses = EngineDO.ProposalRequestsResponses(authentication = proposalRequestsResponses?.authentication)
     )
 
 @JvmSynthetic

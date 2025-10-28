@@ -287,7 +287,13 @@ internal fun EngineDO.SessionRejected.toClientSessionRejected(): Sign.Model.Reje
 
 @JvmSynthetic
 internal fun EngineDO.SessionApproved.toClientSessionApproved(): Sign.Model.ApprovedSession =
-    Sign.Model.ApprovedSession(topic, peerAppMetaData?.toClient(), namespaces.toMapOfClientNamespacesSession(), accounts)
+    Sign.Model.ApprovedSession(
+        topic,
+        peerAppMetaData?.toClient(),
+        namespaces.toMapOfClientNamespacesSession(),
+        accounts,
+        Sign.Model.ProposalRequestsResponses(authentication = proposalRequestsResponses?.authentication?.toClient())
+    )
 
 @JvmSynthetic
 internal fun Map<String, EngineDO.Namespace.Session>.toMapOfClientNamespacesSession(): Map<String, Sign.Model.Namespace.Session> =
