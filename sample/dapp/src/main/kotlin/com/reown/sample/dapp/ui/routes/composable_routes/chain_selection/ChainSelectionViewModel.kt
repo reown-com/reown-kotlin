@@ -70,27 +70,27 @@ class ChainSelectionViewModel : ViewModel() {
         }
     }
 
-    fun authenticate(authenticateParams: Modal.Params.Authenticate, appLink: String = "", onAuthenticateSuccess: (String?) -> Unit, onError: (String) -> Unit = {}) {
-        viewModelScope.launch {
-            _awaitingProposalSharedFlow.emit(true)
-        }
-
-        AppKit.authenticate(authenticateParams, walletAppLink = appLink,
-            onSuccess = { url ->
-                viewModelScope.launch {
-                    _awaitingProposalSharedFlow.emit(false)
-                }
-                onAuthenticateSuccess(url)
-            },
-            onError = { error ->
-                viewModelScope.launch {
-                    _awaitingProposalSharedFlow.emit(false)
-                }
-                Timber.tag(tag(this)).e(error.throwable.stackTraceToString())
-                Firebase.crashlytics.recordException(error.throwable)
-                onError(error.throwable.message ?: "Unknown error, please contact support")
-            })
-    }
+//    fun authenticate(authenticateParams: Modal.Params.Authenticate, appLink: String = "", onAuthenticateSuccess: (String?) -> Unit, onError: (String) -> Unit = {}) {
+//        viewModelScope.launch {
+//            _awaitingProposalSharedFlow.emit(true)
+//        }
+//
+//        AppKit.authenticate(authenticateParams, walletAppLink = appLink,
+//            onSuccess = { url ->
+//                viewModelScope.launch {
+//                    _awaitingProposalSharedFlow.emit(false)
+//                }
+//                onAuthenticateSuccess(url)
+//            },
+//            onError = { error ->
+//                viewModelScope.launch {
+//                    _awaitingProposalSharedFlow.emit(false)
+//                }
+//                Timber.tag(tag(this)).e(error.throwable.stackTraceToString())
+//                Firebase.crashlytics.recordException(error.throwable)
+//                onError(error.throwable.message ?: "Unknown error, please contact support")
+//            })
+//    }
 
     fun connectToWallet(pairingTopicPosition: Int = -1, onSuccess: (String) -> Unit = {}, onError: (String) -> Unit = {}) {
         viewModelScope.launch {

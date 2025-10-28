@@ -328,9 +328,11 @@ object Sign {
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null,
             val pairing: Core.Model.Pairing,
+            val authentication: List<Authenticate>? = null
         ) : Params()
 
         data class Authenticate(
+            @Deprecated("This parameter is deprecated. Use Pairing in ConnectParams instead.")
             val pairingTopic: String? = null,
             val chains: List<String>,
             val domain: String,
@@ -341,8 +343,10 @@ object Sign {
             val statement: String? = null,
             val requestId: String? = null,
             val resources: List<String>? = null,
+            @Deprecated("This parameter is deprecated. Use SessionNamespaces in ConnectParams instead.")
             val methods: List<String>? = null,
-            val expiry: Long? = null
+            val expiry: Long? = null,
+            val signatureTypes: Map<String, List<String>>? = null
         ) : Params()
 
         data class FormatMessage(val payloadParams: Model.PayloadParams, val iss: String) : Params()

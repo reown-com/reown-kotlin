@@ -9,6 +9,7 @@ import com.reown.android.internal.common.model.RelayProtocolOptions
 import com.reown.android.internal.common.model.SessionProposer
 import com.reown.android.internal.common.model.params.CoreSignParams
 import com.reown.sign.common.model.vo.clientsync.common.PayloadParams
+import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
 import com.reown.sign.common.model.vo.clientsync.common.Requester
 import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionEventVO
@@ -19,29 +20,31 @@ internal sealed class SignParams : CoreSignParams() {
 
     @JsonClass(generateAdapter = true)
     internal data class SessionProposeParams(
-        @Json(name = "requiredNamespaces")
+        @param:Json(name = "requiredNamespaces")
         val requiredNamespaces: Map<String, Namespace.Proposal>,
-        @Json(name = "optionalNamespaces")
+        @param:Json(name = "optionalNamespaces")
         val optionalNamespaces: Map<String, Namespace.Proposal>?,
-        @Json(name = "relays")
+        @param:Json(name = "relays")
         val relays: List<RelayProtocolOptions>,
-        @Json(name = "proposer")
+        @param:Json(name = "proposer")
         val proposer: SessionProposer,
-        @Json(name = "sessionProperties")
+        @param:Json(name = "sessionProperties")
         val properties: Map<String, String>?,
-        @Json(name = "scopedProperties")
+        @param:Json(name = "scopedProperties")
         val scopedProperties: Map<String, String>?,
-        @Json(name = "expiryTimestamp")
+        @param:Json(name = "expiryTimestamp")
         val expiryTimestamp: Long?,
+        @param:Json(name = "requests")
+        val requests: ProposalRequests?,
     ) : SignParams()
 
     @JsonClass(generateAdapter = true)
     internal data class SessionAuthenticateParams(
-        @Json(name = "requester")
+        @param:Json(name = "requester")
         val requester: Requester,
-        @Json(name = "authPayload")
+        @param:Json(name = "authPayload")
         val authPayload: PayloadParams,
-        @Json(name = "expiryTimestamp")
+        @param:Json(name = "expiryTimestamp")
         val expiryTimestamp: Long
     ) : SignParams() {
         val metadataUrl = requester.metadata.url
@@ -51,25 +54,25 @@ internal sealed class SignParams : CoreSignParams() {
 
     @JsonClass(generateAdapter = true)
     internal data class SessionSettleParams(
-        @Json(name = "relay")
+        @param:Json(name = "relay")
         val relay: RelayProtocolOptions,
-        @Json(name = "controller")
+        @param:Json(name = "controller")
         val controller: SessionParticipant,
-        @Json(name = "namespaces")
+        @param:Json(name = "namespaces")
         val namespaces: Map<String, Namespace.Session>,
-        @Json(name = "expiry")
+        @param:Json(name = "expiry")
         val expiry: Long,
-        @Json(name = "sessionProperties")
+        @param:Json(name = "sessionProperties")
         val properties: Map<String, String>?,
-        @Json(name = "scopedProperties")
+        @param:Json(name = "scopedProperties")
         val scopedProperties: Map<String, String>?,
     ) : SignParams()
 
     @JsonClass(generateAdapter = true)
     internal data class SessionRequestParams(
-        @Json(name = "request")
+        @param:Json(name = "request")
         val request: SessionRequestVO,
-        @Json(name = "chainId")
+        @param:Json(name = "chainId")
         val chainId: String,
     ) : SignParams() {
         val expiry = request.expiryTimestamp
@@ -79,29 +82,29 @@ internal sealed class SignParams : CoreSignParams() {
 
     @JsonClass(generateAdapter = true)
     internal data class EventParams(
-        @Json(name = "event")
+        @param:Json(name = "event")
         val event: SessionEventVO,
-        @Json(name = "chainId")
+        @param:Json(name = "chainId")
         val chainId: String,
     ) : SignParams()
 
     @JsonClass(generateAdapter = true)
     internal class UpdateNamespacesParams(
-        @Json(name = "namespaces")
+        @param:Json(name = "namespaces")
         val namespaces: Map<String, Namespace.Session>,
     ) : SignParams()
 
     @JsonClass(generateAdapter = true)
     internal data class ExtendParams(
-        @Json(name = "expiry")
+        @param:Json(name = "expiry")
         val expiry: Long,
     ) : SignParams()
 
     @JsonClass(generateAdapter = true)
     internal class DeleteParams(
-        @Json(name = "code")
+        @param:Json(name = "code")
         val code: Int = Int.DefaultId,
-        @Json(name = "message")
+        @param:Json(name = "message")
         val message: String,
     ) : SignParams()
 

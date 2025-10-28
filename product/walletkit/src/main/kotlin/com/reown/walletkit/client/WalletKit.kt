@@ -206,6 +206,16 @@ object WalletKit {
         return com.reown.sign.client.utils.generateAuthPayloadParams(payloadParams.toSign(), supportedChains, supportedMethods).toWallet()
     }
 
+    /**
+     * Caution: This function is blocking and runs on the current thread.
+     * It is advised that this function be called from background operation
+     */
+    @Throws(IllegalStateException::class)
+    fun formatAuthMessage(params: Wallet.Params.FormatAuthMessage): String {
+        val signParams = Sign.Params.FormatMessage(params.payloadParams.toSign(), params.issuer)
+        return SignClient.formatAuthMessage(signParams)
+    }
+
     @Throws(IllegalStateException::class)
     fun updateSession(
         params: Wallet.Params.SessionUpdate,
@@ -274,16 +284,6 @@ object WalletKit {
         }
 
         SignClient.ping(signParams, signPingLister)
-    }
-
-    /**
-     * Caution: This function is blocking and runs on the current thread.
-     * It is advised that this function be called from background operation
-     */
-    @Throws(IllegalStateException::class)
-    fun formatAuthMessage(params: Wallet.Params.FormatAuthMessage): String {
-        val signParams = Sign.Params.FormatMessage(params.payloadParams.toSign(), params.issuer)
-        return SignClient.formatAuthMessage(signParams)
     }
 
     /**

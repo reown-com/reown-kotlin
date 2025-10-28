@@ -104,6 +104,9 @@ internal class RelayJsonRpcInteractor(
 
         try {
             val requestJson = serializer.serialize(payload) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
+
+            println("kobe: Propose session: $requestJson")
+
             if (jsonRpcHistory.setRequest(payload.id, topic, payload.method, requestJson, TransportType.RELAY)) {
                 val encryptedRequest = chaChaPolyCodec.encrypt(topic, requestJson, EnvelopeType.ZERO)
                 val encryptedRequestString = Base64.toBase64String(encryptedRequest)
@@ -144,6 +147,9 @@ internal class RelayJsonRpcInteractor(
                     ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
             val settlementRequestJson =
                 serializer.serialize(settleRequest) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
+
+            println("kobe: Proposal response: $proposalResponseJson")
+            println("kobe: Session settle: $settlementRequestJson")
 
             if (jsonRpcHistory.setRequest(settleRequest.id, sessionTopic, settleRequest.method, settlementRequestJson, TransportType.RELAY)) {
                 val encryptedProposalResponseJson = chaChaPolyCodec.encrypt(pairingTopic, proposalResponseJson, EnvelopeType.ZERO)

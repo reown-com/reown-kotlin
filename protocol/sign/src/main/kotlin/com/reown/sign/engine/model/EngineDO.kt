@@ -58,6 +58,7 @@ internal sealed class EngineDO {
     ) : EngineDO()
 
     data class Authenticate(
+        @Deprecated("This property is deprecated.")
         val pairingTopic: String? = null,
         val chains: List<String>,
         val domain: String,
@@ -69,8 +70,10 @@ internal sealed class EngineDO {
         val statement: String?,
         val requestId: String?,
         var resources: List<String>?,
+        @Deprecated("This property is deprecated.")
         val methods: List<String>?,
-        val expiry: Long?
+        val expiry: Long?,
+        val signatureTypes: Map<String, List<String>>? = null
     ) : EngineDO()
 
     data class Participant(

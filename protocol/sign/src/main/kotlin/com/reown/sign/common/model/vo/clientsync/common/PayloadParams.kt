@@ -5,28 +5,30 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 internal data class PayloadParams(
-    @Json(name = "type")
+    @param:Json(name = "type")
     val type: String,
-    @Json(name = "chains")
+    @param:Json(name = "chains")
     val chains: List<String>,
-    @Json(name = "domain")
+    @param:Json(name = "domain")
     val domain: String,
-    @Json(name = "aud")
+    @param:Json(name = "aud")
     val aud: String,
-    @Json(name = "nonce")
+    @param:Json(name = "nonce")
     val nonce: String,
-    @Json(name = "version")
+    @param:Json(name = "version")
     val version: String,
-    @Json(name = "iat")
+    @param:Json(name = "iat")
     val iat: String,
-    @Json(name = "nbf")
+    @param:Json(name = "nbf")
     val nbf: String?,
-    @Json(name = "exp")
+    @param:Json(name = "exp")
     val exp: String?,
-    @Json(name = "statement")
+    @param:Json(name = "statement")
     val statement: String?,
-    @Json(name = "requestId")
+    @param:Json(name = "requestId")
     val requestId: String?,
-    @Json(name = "resources")
+    @param:Json(name = "resources")
     val resources: List<String>?,
+    @param:Json(name = "signatureTypes")
+    val signatureTypes: Map<String, List<String>>? = null
 )
