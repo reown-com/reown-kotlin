@@ -65,6 +65,8 @@ object WalletKitDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     override fun onSessionProposal(sessionProposal: Wallet.Model.SessionProposal, verifyContext: Wallet.Model.VerifyContext) {
         sessionProposalEvent = Pair(sessionProposal, verifyContext)
 
+        println("kobe: Proposal: $sessionProposal")
+
         scope.launch {
             _walletEvents.emit(sessionProposal)
         }

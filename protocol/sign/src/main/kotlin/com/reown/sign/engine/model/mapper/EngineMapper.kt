@@ -310,7 +310,7 @@ internal fun PayloadParams.toEngineDO(): EngineDO.PayloadParams =
     EngineDO.PayloadParams(
         domain = domain,
         aud = aud,
-        version = "1",
+        version = version,
         nonce = nonce,
         nbf = nbf,
         exp = exp,

@@ -61,6 +61,9 @@ internal class ApproveSessionUseCase(
         trace.add(Trace.Session.SESSION_APPROVE_STARTED).also { logger.log(Trace.Session.SESSION_APPROVE_STARTED) }
 
         val proposal = proposalStorageRepository.getProposalByKey(proposerPublicKey)
+
+        println("kobe: Proposal approve: $proposal")
+
         val request = proposal.toSessionProposeRequest()
         val pairingTopic = proposal.pairingTopic.value
         try {
