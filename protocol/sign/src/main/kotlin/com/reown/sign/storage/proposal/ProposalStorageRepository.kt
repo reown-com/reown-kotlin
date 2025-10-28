@@ -29,9 +29,9 @@ class ProposalStorageRepository(
     @JvmSynthetic
     @Throws(SQLiteException::class)
     internal fun insertProposal(proposal: ProposalVO) = with(proposal) {
-        val requestsJson: List<String> = proposal.requests.authentication.map { 
+        val requestsJson: List<String> = proposal.requests.authentication?.map {
             moshi.adapter(PayloadParams::class.java).toJson(it)
-        }
+        } ?: emptyList()
 
         println("kobe: Proposal requests: $requestsJson")
 

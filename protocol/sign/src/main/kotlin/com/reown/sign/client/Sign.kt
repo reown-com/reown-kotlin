@@ -314,6 +314,10 @@ object Sign {
                 val address: String get() = Issuer(iss).address
             }
         }
+
+        data class ProposalRequestsResponses(
+            val authentication: List<Cacao>
+        ): Model()
     }
 
     sealed class Params {
@@ -366,6 +370,7 @@ object Sign {
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null,
             val relayProtocol: String? = null,
+            val proposalRequestsResponses: Model.ProposalRequestsResponses? = null
         ) : Params()
 
         data class Reject(val proposerPublicKey: String, val reason: String) : Params()

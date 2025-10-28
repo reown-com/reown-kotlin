@@ -223,6 +223,9 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                     sessionNamespaces = approve.namespaces.toMapOfEngineNamespacesSession(),
                     sessionProperties = approve.properties,
                     scopedProperties = approve.scopedProperties,
+                    proposalRequestsResponses = EngineDO.ProposalRequestsResponses(
+                        authentication = approve.proposalRequestsResponses?.authentication?.toCommon() ?: emptyList()
+                    ),
                     onSuccess = { onSuccess(approve) },
                     onFailure = { error -> onError(Sign.Model.Error(error)) }
                 )

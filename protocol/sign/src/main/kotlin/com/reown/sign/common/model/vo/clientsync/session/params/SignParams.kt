@@ -10,6 +10,7 @@ import com.reown.android.internal.common.model.SessionProposer
 import com.reown.android.internal.common.model.params.CoreSignParams
 import com.reown.sign.common.model.vo.clientsync.common.PayloadParams
 import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
+import com.reown.sign.common.model.vo.clientsync.common.ProposalRequestsResponses
 import com.reown.sign.common.model.vo.clientsync.common.Requester
 import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionEventVO
@@ -66,6 +67,8 @@ internal sealed class SignParams : CoreSignParams() {
         val properties: Map<String, String>?,
         @param:Json(name = "scopedProperties")
         val scopedProperties: Map<String, String>?,
+        @param:Json(name = "proposalRequestsResponses")
+        val proposalRequestsResponses: ProposalRequestsResponses?,
     ) : SignParams()
 
     @JsonClass(generateAdapter = true)

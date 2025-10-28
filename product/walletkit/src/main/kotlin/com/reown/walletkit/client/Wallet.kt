@@ -4,6 +4,8 @@ import androidx.annotation.Keep
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
+import com.reown.sign.client.Sign
+import com.reown.sign.client.Sign.Model
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -28,6 +30,7 @@ object Wallet {
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null,
             val relayProtocol: String? = null,
+            val proposalRequestsResponses: Wallet.Model.ProposalRequestsResponses? = null
         ) : Params()
 
         data class ApproveSessionAuthenticate(val id: Long, val auths: List<Model.Cacao>) : Params()
@@ -71,6 +74,10 @@ object Wallet {
     }
 
     sealed class Model {
+
+        data class ProposalRequestsResponses(
+            val authentication: List<Cacao>
+        ) : Model()
 
         sealed class Ping : Model() {
             data class Success(val topic: String) : Ping()

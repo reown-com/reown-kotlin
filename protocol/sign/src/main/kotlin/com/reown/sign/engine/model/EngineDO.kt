@@ -11,6 +11,8 @@ import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.model.type.Sequence
 import com.reown.android.internal.common.signing.cacao.Cacao
 import com.reown.foundation.common.model.Topic
+import com.reown.sign.client.Sign
+import com.reown.sign.client.Sign.Model
 import java.net.URI
 import com.reown.android.internal.common.model.RelayProtocolOptions as CoreRelayProtocolOptions
 
@@ -32,6 +34,10 @@ internal sealed class EngineDO {
         val request: SessionRequest,
         val context: VerifyContext
     ) : EngineDO(), EngineEvent
+
+    data class ProposalRequestsResponses(
+        val authentication: List<Cacao>
+    ): EngineDO()
 
     data class SessionAuthenticateEvent(
         val id: Long,
@@ -100,7 +106,7 @@ internal sealed class EngineDO {
     ) : EngineDO(), EngineEvent
 
     data class ProposalRequests(
-        val authentication: List<PayloadParams>
+        val authentication: List<PayloadParams>?
     ): EngineDO()
 
     data class ExpiredProposal(val pairingTopic: String, val proposerPublicKey: String) : EngineDO(), EngineEvent

@@ -64,7 +64,7 @@ internal fun SignParams.SessionProposeParams.toEngineDO(topic: Topic): EngineDO.
         relayData = relays.first().data,
         scopedProperties = scopedProperties,
         requests = if (requests != null) {
-            EngineDO.ProposalRequests(authentication = requests.authentication.map { it.toEngineDO() })
+            EngineDO.ProposalRequests(authentication = requests.authentication?.map { it.toEngineDO() })
         } else null
     )
 
@@ -168,23 +168,6 @@ internal fun SessionVO.toSessionApproved(): EngineDO.SessionApproved =
     )
 
 @JvmSynthetic
-internal fun ProposalVO.toSessionSettleParams(
-    selfParticipant: SessionParticipant,
-    sessionExpiry: Long,
-    namespaces: Map<String, EngineDO.Namespace.Session>,
-    sessionProperties: Map<String, String>?,
-    scopedProperties: Map<String, String>?
-): SignParams.SessionSettleParams =
-    SignParams.SessionSettleParams(
-        relay = RelayProtocolOptions(relayProtocol, relayData),
-        controller = selfParticipant,
-        namespaces = namespaces.toMapOfNamespacesVOSession(),
-        expiry = sessionExpiry,
-        properties = sessionProperties,
-        scopedProperties = scopedProperties
-    )
-
-@JvmSynthetic
 internal fun ProposalVO.toEngineDO(): EngineDO.SessionProposal =
     EngineDO.SessionProposal(
         pairingTopic = pairingTopic.value,
@@ -200,7 +183,7 @@ internal fun ProposalVO.toEngineDO(): EngineDO.SessionProposal =
         proposerPublicKey = proposerPublicKey,
         properties = properties,
         scopedProperties = scopedProperties,
-        requests = EngineDO.ProposalRequests(authentication = requests.authentication.map { it.toEngineDO() })
+        requests = EngineDO.ProposalRequests(authentication = requests.authentication?.map { it.toEngineDO() })
     )
 
 @JvmSynthetic
