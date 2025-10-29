@@ -109,7 +109,7 @@ internal class ApproveSessionUseCase(
             trace.add(Trace.Session.PUBLISHING_SESSION_APPROVE)
             val approvedChains = sessionNamespaces.values.flatMap { namespace ->
                 when {
-                    !namespace.chains.isNullOrEmpty() -> namespace.chains ?: emptyList()
+                    !namespace.chains.isNullOrEmpty() -> namespace.chains
                     else -> namespace.accounts.mapNotNull { account ->
                         val delimiterIndex = account.lastIndexOf(":")
                         if (delimiterIndex > 0) account.substring(0, delimiterIndex) else null

@@ -193,4 +193,133 @@ class ApproveSessionUseCaseTest {
 
         coVerify { onFailure.invoke(any<Exception>()) }
     }
+
+    @Test
+    fun `approve should extract chains from accounts when chains are absent`() = runTest {
+        val proposerPublicKey = "proposer"
+        val sessionNamespaces = mapOf(
+            "eip155" to EngineDO.Namespace.Session(
+                chains = null,
+                methods = listOf("eth_sign"),
+                events = listOf("accountsChanged"),
+                accounts = listOf(
+                    "eip155:1:0xabc"
+                )
+            )
+        )
+        val proposal = mockk<ProposalVO>(relaxed = true) { every { expiry } returns null }
+        val sessionTopic = Topic("sessionTopic")
+
+        coEvery { proposalStorageRepository.getProposalByKey(any()) } returns proposal
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns PublicKey("self")
+        coEvery { crypto.generateTopicFromKeyAgreement(any(), any()) } returns sessionTopic
+
+        val chainsSlot = io.mockk.slot<List<String>?>()
+
+        approveSessionUseCase.approve(proposerPublicKey, sessionNamespaces, onSuccess = {}, onFailure = {})
+
+        coVerify {
+            jsonRpcInteractor.approveSession(
+                any(),
+                eq(sessionTopic),
+                any(),
+                any(),
+                captureNullable(chainsSlot),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
+
+        kotlin.test.assertEquals(listOf("eip155:1"), chainsSlot.captured)
+    }
+
+    @Test
+    fun `approve should dedupe analytics arrays`() = runTest {
+        val proposerPublicKey = "proposer"
+        val sessionNamespaces = mapOf(
+            "eip155" to EngineDO.Namespace.Session(
+                chains = listOf("eip155:1", "eip155:1"),
+                methods = listOf("eth_sign", "eth_sign"),
+                events = listOf("accountsChanged", "accountsChanged"),
+                accounts = listOf("eip155:1:0xabc", "eip155:1:0xabc")
+            )
+        )
+        val proposal = mockk<ProposalVO>(relaxed = true) { every { expiry } returns null }
+        val sessionTopic = Topic("sessionTopic")
+
+        coEvery { proposalStorageRepository.getProposalByKey(any()) } returns proposal
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns PublicKey("self")
+        coEvery { crypto.generateTopicFromKeyAgreement(any(), any()) } returns sessionTopic
+
+        approveSessionUseCase.approve(proposerPublicKey, sessionNamespaces, onSuccess = {}, onFailure = {})
+
+        coVerify {
+            jsonRpcInteractor.approveSession(
+                any(),
+                eq(sessionTopic),
+                any(),
+                any(),
+                eq(listOf("eip155:1")),
+                eq(listOf("eth_sign")),
+                eq(listOf("accountsChanged")),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
+    }
+
+    @Test
+    fun `approve should forward session and scoped properties`() = runTest {
+        val proposerPublicKey = "proposer"
+        val sessionNamespaces = mapOf(
+            "eip155" to EngineDO.Namespace.Session(
+                chains = listOf("eip155:1"),
+                methods = listOf("eth_sign"),
+                events = listOf("accountsChanged"),
+                accounts = listOf("eip155:1:0xabc")
+            )
+        )
+        val sessionProperties = mapOf("foo" to "bar")
+        val scopedProperties = mapOf("scope" to "value")
+        val proposal = mockk<ProposalVO>(relaxed = true) { every { expiry } returns null }
+        val sessionTopic = Topic("sessionTopic")
+
+        coEvery { proposalStorageRepository.getProposalByKey(any()) } returns proposal
+        coEvery { crypto.generateAndStoreX25519KeyPair() } returns PublicKey("self")
+        coEvery { crypto.generateTopicFromKeyAgreement(any(), any()) } returns sessionTopic
+
+        approveSessionUseCase.approve(
+            proposerPublicKey,
+            sessionNamespaces,
+            sessionProperties = sessionProperties,
+            scopedProperties = scopedProperties,
+            onSuccess = {},
+            onFailure = {}
+        )
+
+        coVerify {
+            jsonRpcInteractor.approveSession(
+                any(),
+                eq(sessionTopic),
+                any(),
+                any(),
+                eq(listOf("eip155:1")),
+                eq(listOf("eth_sign")),
+                eq(listOf("accountsChanged")),
+                eq(sessionProperties),
+                eq(scopedProperties),
+                any(),
+                any(),
+                any()
+            )
+        }
+    }
 }
