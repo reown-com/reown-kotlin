@@ -93,6 +93,28 @@ class SessionProposalViewModel : ViewModel() {
 //        }
     }
 
+    private fun collectAuthMessages(proposal: Wallet.Model.SessionProposal): List<String> {
+        val authRequests = proposal.requests?.authentication ?: return emptyList()
+        val messages = mutableListOf<String>()
+
+        authRequests.forEach { authRequest ->
+            authRequest.chains.forEach { chainId ->
+                val issuer = "did:pkh:$chainId:$ACCOUNTS_1_EIP155_ADDRESS"
+                val message = runCatching {
+                    WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
+                }.onFailure { error ->
+                    Firebase.crashlytics.recordException(error)
+                }.getOrNull()
+
+                if (message != null) {
+                    messages.add(message)
+                }
+            }
+        }
+
+        return messages
+    }
+
     fun reject(proposalPublicKey: String, onSuccess: (String) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
         val proposal = WalletKit.getSessionProposals().find { it.proposerPublicKey == proposalPublicKey }
         if (proposal != null) {
@@ -137,6 +159,7 @@ class SessionProposalViewModel : ViewModel() {
                 optionalNamespaces = proposal.optionalNamespaces,
                 peerContext = context.toPeerUI(),
                 redirect = proposal.redirect,
+                messagesToSign = collectAuthMessages(proposal),
                 pubKey = proposal.proposerPublicKey
             )
         } else null

@@ -13,6 +13,7 @@ data class SessionProposalUI(
     val optionalNamespaces: Map<String, Wallet.Model.Namespace.Proposal> = mapOf(),
     val peerContext: PeerContextUI,
     val redirect: String,
+    val messagesToSign: List<String> = emptyList(),
     val pubKey: String,
 )
 
