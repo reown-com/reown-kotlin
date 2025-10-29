@@ -3,13 +3,19 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 import androidx.lifecycle.ViewModel
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.reown.android.cacao.signature.SignatureType
+import com.reown.android.utils.cacao.sign
 import com.reown.sample.wallet.BuildConfig
+import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.android.BuildConfig as AndroidBuildConfig
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
+import com.reown.util.hexToBytes
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.reown.walletkit.utils.CacaoSigner
 import timber.log.Timber
 
 class SessionProposalViewModel : ViewModel() {
@@ -24,11 +30,26 @@ class SessionProposalViewModel : ViewModel() {
                     "eip155" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=${BuildConfig.PROJECT_ID}&st=wkca&sv=reown-kotlin-${AndroidBuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
                 )
 
+                val authRequests = proposal.requests?.authentication ?: emptyList()
+                val auths = mutableListOf<Wallet.Model.Cacao>()
+
+                authRequests.forEach { authRequest ->
+                    authRequest.chains.forEach { chainId ->
+                        println("kobe: chainid: $chainId")
+                        val issuer = "did:pkh:$chainId:$ACCOUNTS_1_EIP155_ADDRESS"
+                        val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
+                        val signature = CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191)
+                        val auth = WalletKit.generateAuthObject(authRequest, issuer, signature)
+                        auths.add(auth)
+                    }
+                }
+
                 val approveProposal = Wallet.Params.SessionApprove(
                     proposerPublicKey = proposal.proposerPublicKey,
                     namespaces = sessionNamespaces,
                     properties = sessionProperties,
-                    scopedProperties = scopedProperties
+                    scopedProperties = scopedProperties,
+                    proposalRequestsResponses = Wallet.Model.ProposalRequestsResponses(authentication = auths)
                 )
 
                 WalletKit.approveSession(approveProposal,

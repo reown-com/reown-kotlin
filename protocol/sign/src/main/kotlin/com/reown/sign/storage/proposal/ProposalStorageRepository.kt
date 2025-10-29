@@ -30,7 +30,8 @@ class ProposalStorageRepository(
     @Throws(SQLiteException::class)
     internal fun insertProposal(proposal: ProposalVO) = with(proposal) {
         val requestsJson: List<String> = proposal.requests.authentication?.map {
-            moshi.adapter(PayloadParams::class.java).toJson(it)
+            val fixed = normalizePayload(it)
+            moshi.adapter(PayloadParams::class.java).toJson(fixed)
         } ?: emptyList()
 
         println("kobe: Proposal requests: $requestsJson")
@@ -107,7 +108,10 @@ class ProposalStorageRepository(
         println("kobe: Proposal authentication: $authentication")
 
 
-        val authenticationParams: List<PayloadParams> = authentication?.map { json -> moshi.adapter(PayloadParams::class.java).fromJson(json)!! } ?: emptyList()
+        val authenticationParams: List<PayloadParams> =
+            authentication?.map { json -> moshi.adapter(PayloadParams::class.java).fromJson(json)!! }
+                ?.map { normalizePayload(it) }
+                ?: emptyList()
 
         return ProposalVO(
             requestId = request_id,
@@ -126,6 +130,31 @@ class ProposalStorageRepository(
             optionalNamespaces = optionalNamespaces,
             expiry = if (expiry != null) Expiry(expiry) else null,
             requests = ProposalRequests(authentication = authenticationParams)
+        )
+    }
+
+    private fun normalizePayload(params: PayloadParams): PayloadParams {
+        val chains = params.chains
+        val normalizedChains = if (chains.size == 1 && chains.first().contains(",")) {
+            chains.first().split(',').map { it.trim() }.filter { it.isNotEmpty() }
+        } else chains
+
+        val resources = params.resources
+        val normalizedResources = if (resources != null && resources.size == 1 && resources.first().contains(",")) {
+            resources.first().split(',').map { it.trim() }.filter { it.isNotEmpty() }
+        } else resources
+
+        val sigTypes = params.signatureTypes
+        val normalizedSigTypes = sigTypes?.mapValues { (_, list) ->
+            if (list.size == 1 && list.first().contains(",")) {
+                list.first().split(',').map { it.trim() }.filter { it.isNotEmpty() }
+            } else list
+        }
+
+        return params.copy(
+            chains = normalizedChains,
+            resources = normalizedResources,
+            signatureTypes = normalizedSigTypes
         )
     }
 
