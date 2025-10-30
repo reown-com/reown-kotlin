@@ -298,7 +298,22 @@ internal class RelayerInteractorTest {
         }
         val correlationId = 1234L
         
-        every { relay.approveSession(any(), any(), any(), any(), any(), any(), any()) } answers {
+        every {
+            relay.approveSession(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
             lastArg<(Result<Relay.Model.Call.ApproveSession.Acknowledgement>) -> Unit>().invoke(
                 Result.success(mockk())
             )
@@ -327,7 +342,22 @@ internal class RelayerInteractorTest {
         }
         val correlationId = 1234L
         
-        every { relay.approveSession(any(), any(), any(), any(), any(), any(), any()) } answers {
+        every {
+            relay.approveSession(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
             lastArg<(Result<Relay.Model.Call.ApproveSession.Acknowledgement>) -> Unit>().invoke(
                 Result.failure(Throwable("Session approve error"))
             )
