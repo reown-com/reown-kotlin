@@ -170,6 +170,11 @@ abstract class BaseRelayClient : RelayInterface {
         sessionTopic: Topic,
         sessionProposalResponse: String,
         sessionSettlementRequest: String,
+        approvedChains: List<String>?,
+        approvedMethods: List<String>?,
+        approvedEvents: List<String>?,
+        sessionProperties: Map<String, String>?,
+        scopedProperties: Map<String, String>?,
         correlationId: Long,
         id: Long?,
         onResult: (Result<Relay.Model.Call.ApproveSession.Acknowledgement>) -> Unit,
@@ -181,6 +186,11 @@ abstract class BaseRelayClient : RelayInterface {
                     sessionTopic = sessionTopic,
                     sessionProposalResponse = sessionProposalResponse,
                     sessionSettlementRequest = sessionSettlementRequest,
+                    approvedChains = approvedChains,
+                    approvedMethods = approvedMethods,
+                    approvedEvents = approvedEvents,
+                    sessionProperties = sessionProperties,
+                    scopedProperties = scopedProperties,
                     correlationId = correlationId
                 )
                 val approveSessionRequest = RelayDTO.ApproveSession.Request(id = id ?: generateClientToServerId(), params = approveSessionParams)
