@@ -131,6 +131,11 @@ internal class RelayJsonRpcInteractor(
         sessionTopic: Topic,
         sessionProposalResponse: CoreSignParams.ApprovalParams,
         settleRequest: JsonRpcClientSync<*>,
+        approvedChains: List<String>?,
+        approvedMethods: List<String>?,
+        approvedEvents: List<String>?,
+        sessionProperties: Map<String, String>?,
+        scopedProperties: Map<String, String>?,
         correlationId: Long,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit,
@@ -160,6 +165,11 @@ internal class RelayJsonRpcInteractor(
                 relay.approveSession(
                     pairingTopic = pairingTopic,
                     sessionTopic = sessionTopic,
+                    approvedChains = approvedChains,
+                    approvedMethods = approvedMethods,
+                    approvedEvents = approvedEvents,
+                    sessionProperties = sessionProperties,
+                    scopedProperties = scopedProperties,
                     correlationId = correlationId,
                     sessionSettlementRequest = encryptedSettlementRequestString,
                     sessionProposalResponse = encryptedProposalResponseString
