@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.ACCOUNTS_2_EIP155_ADDRESS
-import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.stateIn
 class ConnectionsViewModel : ViewModel() {
     private var _refreshFlow: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 0, extraBufferCapacity = 1, BufferOverflow.DROP_OLDEST)
     private var refreshFlow: SharedFlow<Unit> = _refreshFlow.asSharedFlow()
-    private val signConnectionsFlow = merge(WCDelegate.walletEvents, refreshFlow).map {
+    private val signConnectionsFlow = merge(WalletKitDelegate.walletEvents, refreshFlow).map {
         Log.d("Web3Wallet", "signConnectionsFlow: $it")
         getLatestActiveSignSessions()
     }

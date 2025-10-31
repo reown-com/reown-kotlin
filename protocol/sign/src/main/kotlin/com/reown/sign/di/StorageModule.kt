@@ -5,6 +5,7 @@ package com.reown.sign.di
 import com.reown.android.di.sdkBaseStorageModule
 import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.di.deleteDatabase
+import app.cash.sqldelight.ColumnAdapter
 import com.reown.sign.SignDatabase
 import com.reown.sign.storage.authenticate.AuthenticateResponseTopicRepository
 import com.reown.sign.storage.data.dao.namespace.NamespaceDao
@@ -16,6 +17,8 @@ import com.reown.sign.storage.data.dao.temp.TempNamespaceDao
 import com.reown.sign.storage.link_mode.LinkModeStorageRepository
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import kotlinx.coroutines.launch
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
@@ -59,7 +62,17 @@ internal fun storageModule(dbName: String): Module = module {
         ProposalDaoAdapter = ProposalDao.Adapter(
             propertiesAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_MAP)),
             scoped_propertiesAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_MAP)),
-            iconsAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_LIST))
+            iconsAdapter = get(named(AndroidCommonDITags.COLUMN_ADAPTER_LIST)),
+            authenticationAdapter = object : ColumnAdapter<List<String>, String> {
+                private val moshi by lazy { get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)).build() }
+                private val listType by lazy { Types.newParameterizedType(List::class.java, String::class.java) }
+                private val adapter by lazy { moshi.adapter<List<String>>(listType) }
+
+                override fun decode(databaseValue: String): List<String> =
+                    if (databaseValue.isBlank()) emptyList() else runCatching { adapter.fromJson(databaseValue) ?: emptyList() }.getOrDefault(emptyList())
+
+                override fun encode(value: List<String>): String = adapter.toJson(value)
+            }
         )
     )
 
@@ -127,7 +140,8 @@ internal fun storageModule(dbName: String): Module = module {
         ProposalStorageRepository(
             proposalDaoQueries = get(),
             requiredNamespaceDaoQueries = get(),
-            optionalNamespaceDaoQueries = get()
+            optionalNamespaceDaoQueries = get(),
+            moshi = get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)).build()
         )
     }
 

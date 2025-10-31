@@ -151,7 +151,8 @@ fun generateAuthPayloadParams(
             iat = iat,
             statement = getStatement(),
             resources = resources,
-            requestId = requestId
+            requestId = requestId,
+            signatureTypes = signatureTypes
         )
     }
 }

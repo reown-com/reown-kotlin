@@ -14,10 +14,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
+import androidx.compose.material.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -148,6 +155,10 @@ private fun SessionProposalDialog(
         Peer(peerUI = sessionProposalUI.peerUI, "wants to connect", sessionProposalUI.peerContext)
         Spacer(modifier = Modifier.height(18.dp))
         Permissions(sessionProposalUI = sessionProposalUI)
+        if (sessionProposalUI.messagesToSign.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(18.dp))
+            MessagesToSign(messages = sessionProposalUI.messagesToSign)
+        }
         Spacer(modifier = Modifier.height(18.dp))
         AccountAndNetwork(sessionProposalUI) { error ->
             coroutineScope.launch(Dispatchers.Main) {
@@ -288,6 +299,68 @@ fun Permissions(sessionProposalUI: SessionProposalUI) {
         if (sessionProposalUI.peerContext.validation != Validation.VALID) {
             Spacer(modifier = Modifier.height(16.dp))
             ValidationDescription(sessionProposalUI.peerContext)
+        }
+    }
+}
+
+@Composable
+private fun MessagesToSign(messages: List<String>) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+    Column(
+        modifier = Modifier
+            .padding(start = 20.dp, end = 20.dp)
+            .border(
+                border = BorderStroke(1.dp, Color(0xFFC9C9C9)),
+                shape = RoundedCornerShape(24.dp)
+            )
+            .clip(RoundedCornerShape(24.dp))
+            .fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isExpanded = !isExpanded }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Messages to sign: ${messages.size}",
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = Color(0xFFFFFFFF)
+                )
+            )
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowDown,
+                contentDescription = null,
+                modifier = Modifier.rotate(if (isExpanded) 180f else 0f),
+                tint = Color(0xFFFFFFFF)
+            )
+        }
+        if (isExpanded) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                    .heightIn(max = 180.dp)
+                    .verticalScroll(scrollState)
+            ) {
+                messages.forEachIndexed { index, message ->
+                    Text(
+                        text = message,
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            color = Color(0xFFFFFFFF)
+                        )
+                    )
+                    if (index != messages.lastIndex) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+                }
+            }
         }
     }
 }

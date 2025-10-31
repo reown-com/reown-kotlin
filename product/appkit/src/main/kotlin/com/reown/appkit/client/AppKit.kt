@@ -205,6 +205,7 @@ object AppKit {
         )
     }
 
+    @Deprecated("This method is deprecated. Use connect with authenticate instead.")
     fun authenticate(
         authenticate: Modal.Params.Authenticate,
         walletAppLink: String? = null,

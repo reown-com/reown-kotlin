@@ -71,6 +71,7 @@ interface SignInterface {
         onError: (Sign.Model.Error) -> Unit,
     )
 
+    @Deprecated("This method is deprecated. Use connect with authenticate instead.")
     fun authenticate(
         authenticate: Sign.Params.Authenticate,
         walletAppLink: String? = null,

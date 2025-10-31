@@ -28,7 +28,7 @@ import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.google.accompanist.navigation.material.bottomSheet
-import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scan_uri.ScanUriRoute
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.update_subscription.UpdateSubscriptionRoute
@@ -67,7 +67,7 @@ fun Web3WalletNavGraph(
     navController.addOnDestinationChangedListener(
         listener = { _, destination, _ ->
             if (destination.route == Route.Connections.path) {
-                WCDelegate.currentId = null
+                WalletKitDelegate.currentId = null
             }
         })
 

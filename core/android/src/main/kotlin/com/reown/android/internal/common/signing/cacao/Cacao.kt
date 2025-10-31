@@ -9,53 +9,53 @@ import com.reown.android.internal.common.signing.signature.Signature
 
 @JsonClass(generateAdapter = true)
 data class Cacao(
-    @Json(name = "h")
+    @param:Json(name = "h")
     val header: Header,
-    @Json(name = "p")
+    @param:Json(name = "p")
     val payload: Payload,
-    @Json(name = "s")
+    @param:Json(name = "s")
     val signature: Signature,
 ) {
     @Keep
     @JsonClass(generateAdapter = true)
     data class Signature(
-        @Json(name = "t")
+        @param:Json(name = "t")
         override val t: String,
-        @Json(name = "s")
+        @param:Json(name = "s")
         override val s: String,
-        @Json(name = "m")
+        @param:Json(name = "m")
         override val m: String? = null,
     ) : SignatureInterface
 
     @JsonClass(generateAdapter = true)
     data class Header(
-        @Json(name = "t")
+        @param:Json(name = "t")
         val t: String,
     )
 
     @JsonClass(generateAdapter = true)
     data class Payload(
-        @Json(name = "iss")
+        @param:Json(name = "iss")
         val iss: String,
-        @Json(name = "domain")
+        @param:Json(name = "domain")
         val domain: String,
-        @Json(name = "aud")
+        @param:Json(name = "aud")
         val aud: String,
-        @Json(name = "version")
+        @param:Json(name = "version")
         val version: String,
-        @Json(name = "nonce")
+        @param:Json(name = "nonce")
         val nonce: String,
-        @Json(name = "iat")
+        @param:Json(name = "iat")
         val iat: String,
-        @Json(name = "nbf")
+        @param:Json(name = "nbf")
         val nbf: String?,
-        @Json(name = "exp")
+        @param:Json(name = "exp")
         val exp: String?,
-        @Json(name = "statement")
+        @param:Json(name = "statement")
         val statement: String?,
-        @Json(name = "requestId")
+        @param:Json(name = "requestId")
         val requestId: String?,
-        @Json(name = "resources")
+        @param:Json(name = "resources")
         val resources: List<String>?,
     ) {
         @get:Throws(Exception::class)

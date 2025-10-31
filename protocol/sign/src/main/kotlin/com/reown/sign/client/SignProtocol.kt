@@ -159,6 +159,7 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                         properties,
                         scopedProperties,
                         pairing.toPairing(),
+                        connectParams.authentication?.map { it.toAuthenticate() },
                         onSuccess = { onSuccess(pairing.uri) },
                         onFailure = { error -> onError(Sign.Model.Error(error)) }
                     )
@@ -169,6 +170,7 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
         }
     }
 
+    @Deprecated("This method is deprecated. Use connect with authenticate instead.")
     @Throws(IllegalStateException::class)
     override fun authenticate(
         authenticate: Sign.Params.Authenticate,
@@ -221,6 +223,9 @@ class SignProtocol(private val koinApp: KoinApplication = wcKoinApp) : SignInter
                     sessionNamespaces = approve.namespaces.toMapOfEngineNamespacesSession(),
                     sessionProperties = approve.properties,
                     scopedProperties = approve.scopedProperties,
+                    proposalRequestsResponses = EngineDO.ProposalRequestsResponses(
+                        authentication = approve.proposalRequestsResponses?.authentication?.toCommon() ?: emptyList()
+                    ),
                     onSuccess = { onSuccess(approve) },
                     onFailure = { error -> onError(Sign.Model.Error(error)) }
                 )

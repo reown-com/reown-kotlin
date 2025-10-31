@@ -97,6 +97,7 @@ internal class AppKitEngine(
         SignClient.connect(connect.toSign(), onSuccess) { onError(it.throwable) }
     }
 
+    @Deprecated("This method is deprecated. Use connect with authenticate instead.")
     fun authenticate(
         name: String, method: String,
         authenticate: Modal.Params.Authenticate,

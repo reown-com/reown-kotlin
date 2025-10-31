@@ -38,7 +38,7 @@ import com.reown.sample.common.sendResponseDeepLink
 import com.reown.sample.common.ui.theme.PreviewTheme
 import com.reown.sample.common.ui.theme.verified_color
 import com.reown.sample.common.ui.themedColor
-import com.reown.sample.wallet.domain.WCDelegate.currentId
+import com.reown.sample.wallet.domain.WalletKitDelegate.currentId
 import com.reown.sample.wallet.ui.common.Buttons
 import com.reown.sample.wallet.ui.common.Content
 import com.reown.sample.wallet.ui.common.InnerContent
