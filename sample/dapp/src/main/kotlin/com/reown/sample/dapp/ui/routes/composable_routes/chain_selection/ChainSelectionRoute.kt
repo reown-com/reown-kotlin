@@ -102,69 +102,33 @@ fun ChainSelectionRoute(navController: NavController, dispatcher: CoroutineDispa
         onChainClick = viewModel::updateChainSelectState,
         onConnectClick = { onConnectClick(viewModel, navController, context) },
         onAuthenticateClick = {
-//            onAuthenticate(viewModel, composableScope, dispatcher, context) { uri -> pairingUri = uri }
-        },
-        onAuthenticateLinkMode = { appLink ->
-//            onAuthenticateLinkMode(viewModel, appLink, context, composableScope, dispatcher)
-        },
-        onAuthenticateSIWEClick = {
-//            onAuthenticateSIWE(viewModel, composableScope, dispatcher, context) { uri -> pairingUri = uri }
+            onAuthenticate(viewModel, composableScope, dispatcher, context) { uri -> pairingUri = uri }
         }
     )
 }
 
-//private fun onAuthenticateSIWE(
-//    viewModel: ChainSelectionViewModel,
-//    composableScope: CoroutineScope,
-//    dispatcher: CoroutineDispatcher,
-//    context: Context,
-//    onSuccess: (PairingUri) -> Unit,
-//) {
-//    if (viewModel.isAnyChainSelected) {
-//        viewModel.authenticate(
-//            viewModel.siweParams,
-//            onAuthenticateSuccess = { uri -> onSuccess(PairingUri(uri ?: "", false)) },
-//            onError = { error ->
-//                composableScope.launch(dispatcher) {
-//                    Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
-//                }
-//            })
-//    } else {
-//        composableScope.launch(dispatcher) {
-//            Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-//}
-
-//private fun onAuthenticateLinkMode(
-//    viewModel: ChainSelectionViewModel,
-//    appLink: String,
-//    context: Context,
-//    composableScope: CoroutineScope,
-//    dispatcher: CoroutineDispatcher
-//) {
-//    if (appLink.isNotEmpty()) {
-//        if (viewModel.isAnyChainSelected) {
-//            viewModel.authenticate(
-//                viewModel.authenticateParams,
-//                appLink,
-//                onAuthenticateSuccess = { uri -> onAuthenticateSuccess(uri, appLink, context, composableScope, dispatcher) },
-//                onError = { error ->
-//                    composableScope.launch(dispatcher) {
-//                        Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
-//                    }
-//                })
-//        } else {
-//            composableScope.launch(dispatcher) {
-//                Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
-//            }
-//        }
-//    } else {
-//        composableScope.launch(dispatcher) {
-//            Toast.makeText(context, "Wallet not installed", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-//}
+private fun onAuthenticate(
+    viewModel: ChainSelectionViewModel,
+    composableScope: CoroutineScope,
+    dispatcher: CoroutineDispatcher,
+    context: Context,
+    onSuccess: (PairingUri) -> Unit,
+) {
+    if (viewModel.isAnyChainSelected) {
+        viewModel.authenticate(
+            viewModel.authenticateParams,
+            onAuthenticateSuccess = { uri -> onSuccess(PairingUri(uri ?: "", true)) },
+            onError = { error ->
+                composableScope.launch(dispatcher) {
+                    Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
+                }
+            })
+    } else {
+        composableScope.launch(dispatcher) {
+            Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
 
 private fun onAuthenticateSuccess(
     uri: String?,
@@ -216,29 +180,6 @@ private fun redirectToRNWallet(uri: String?, context: Context, composableScope: 
     }
 }
 
-//private fun onAuthenticate(
-//    viewModel: ChainSelectionViewModel,
-//    composableScope: CoroutineScope,
-//    dispatcher: CoroutineDispatcher,
-//    context: Context,
-//    onSuccess: (PairingUri) -> Unit,
-//) {
-//    if (viewModel.isAnyChainSelected) {
-//        viewModel.authenticate(
-//            viewModel.authenticateParams,
-//            onAuthenticateSuccess = { uri -> onSuccess(PairingUri(uri ?: "", true)) },
-//            onError = { error ->
-//                composableScope.launch(dispatcher) {
-//                    Toast.makeText(context, "Authenticate error: $error", Toast.LENGTH_SHORT).show()
-//                }
-//            })
-//    } else {
-//        composableScope.launch(dispatcher) {
-//            Toast.makeText(context, "Please select a chain", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-//}
-
 @Composable
 private fun ChainSelectionScreen(
     composableScope: CoroutineScope,
@@ -250,9 +191,7 @@ private fun ChainSelectionScreen(
     onDialogDismiss: () -> Unit,
     onChainClick: (Int, Boolean) -> Unit,
     onConnectClick: () -> Unit,
-    onAuthenticateLinkMode: (String) -> Unit,
     onAuthenticateClick: () -> Unit,
-    onAuthenticateSIWEClick: () -> Unit
 ) {
     Box {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -273,45 +212,10 @@ private fun ChainSelectionScreen(
                     .height(50.dp)
                     .padding(horizontal = 16.dp),
             )
-            BlueButton(
-                text = "1-CA Link Mode (Kotlin Sample Wallet)",
-                onClick = {
-                    val applink = when {
-                        context.packageManager.isPackageInstalled(SAMPLE_WALLET_DEBUG_PACKAGE) -> "https://appkit-lab.reown.com/wallet_debug"
-                        context.packageManager.isPackageInstalled(SAMPLE_WALLET_INTERNAL_PACKAGE) -> "https://appkit-lab.reown.com/wallet_internal"
-                        context.packageManager.isPackageInstalled(SAMPLE_WALLET_RELEASE_PACKAGE) -> "https://appkit-lab.reown.com/wallet_release"
-                        else -> ""
-                    }
-                    onAuthenticateLinkMode(applink)
-                },
-                modifier = Modifier
-                    .padding(vertical = 10.dp)
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .padding(horizontal = 16.dp)
-            )
-            BlueButton(
-                text = "1-CA Link Mode (RN Wallet)",
-                onClick = { onAuthenticateLinkMode(if (context.packageManager.isPackageInstalled(SAMPLE_WALLET_DEBUG_PACKAGE)) "https://lab.web3modal.com/rn_walletkit" else "") },
-                modifier = Modifier
-                    .padding(vertical = 10.dp)
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .padding(horizontal = 16.dp)
-            )
 
             BlueButton(
                 text = "1-CA",
                 onClick = onAuthenticateClick,
-                modifier = Modifier
-                    .padding(vertical = 10.dp)
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .padding(horizontal = 16.dp)
-            )
-            BlueButton(
-                text = "1-CA (SIWE)",
-                onClick = onAuthenticateSIWEClick,
                 modifier = Modifier
                     .padding(vertical = 10.dp)
                     .fillMaxWidth()
@@ -365,9 +269,6 @@ private fun QRDialog(
                 ) {
                     Text("Deep link to Kotlin Wallet")
                 }
-                if (pairingUri.isReCaps) {
-                    showReCapsButton(onDismissRequest, pairingUri, context, composableScope, dispatcher)
-                }
                 Button(
                     onClick = {
                         composableScope.launch(dispatcher) {
@@ -414,22 +315,6 @@ private fun onKotlinWalletDeepLink(
         composableScope.launch(dispatcher) {
             Toast.makeText(context, "Please install Kotlin Sample Wallet", Toast.LENGTH_SHORT).show()
         }
-    }
-}
-
-@Composable
-private fun showReCapsButton(
-    onDismissRequest: () -> Unit,
-    pairingUri: PairingUri,
-    context: Context,
-    composableScope: CoroutineScope,
-    dispatcher: CoroutineDispatcher
-) {
-    Button(
-        onClick = { onDynamicSwitcher(onDismissRequest, pairingUri, context, composableScope, dispatcher) },
-        modifier = Modifier.padding(top = 16.dp)
-    ) {
-        Text("Dynamic Switcher Deeplink (TrustWallet)", textAlign = TextAlign.Center)
     }
 }
 
@@ -627,9 +512,7 @@ private fun ChainSelectionScreenPreview(@PreviewParameter(ChainSelectionStatePro
             onDialogDismiss = {},
             onChainClick = { _, _ -> },
             onConnectClick = {},
-            onAuthenticateClick = {},
-            onAuthenticateSIWEClick = {},
-            onAuthenticateLinkMode = {}
+            onAuthenticateClick = {}
         )
     }
 }
