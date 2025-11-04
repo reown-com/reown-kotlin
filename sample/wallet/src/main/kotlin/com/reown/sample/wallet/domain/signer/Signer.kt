@@ -9,7 +9,7 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.S
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
 import org.json.JSONObject
-import uniffi.yttrium.SendTxMessage
+import uniffi.yttrium_utils.SendTxMessage
 
 object Signer {
     suspend fun sign(sessionRequest: SessionRequestUI.Content): String = supervisorScope {

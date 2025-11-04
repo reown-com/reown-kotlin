@@ -2,12 +2,12 @@ package com.reown.sample.wallet.domain.client
 
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
-import uniffi.yttrium.Logger
-import uniffi.yttrium.PulseMetadata
-import uniffi.yttrium.SendTxMessage
-import uniffi.yttrium.TonClient
-import uniffi.yttrium.TonClientConfig
-import uniffi.yttrium.registerLogger
+import uniffi.yttrium_utils.Logger
+import uniffi.yttrium_utils.PulseMetadata
+import uniffi.yttrium_utils.SendTxMessage
+import uniffi.yttrium_utils.TonClientConfig
+import uniffi.yttrium_utils.registerLogger
+import uniffi.yttrium_utils.TonClient
 
 data class Keypair(val secretKey: String, val publicKey: String)
 data class Wallet(val raw: String, val friendly: String)
@@ -56,7 +56,7 @@ object TONClient {
                 throw IllegalStateException("TONClient not initialized. Call init() first.")
             }
 
-            val wallet = client.getAddressFromKeypair(uniffi.yttrium.Keypair(keyPair.secretKey, keyPair.publicKey))
+            val wallet = client.getAddressFromKeypair(uniffi.yttrium_utils.Keypair(keyPair.secretKey, keyPair.publicKey))
             Wallet(wallet.rawHex, wallet.friendly)
         } catch (e: Exception) {
             println("Error getting address from keypair: ${e.message}")
@@ -70,7 +70,7 @@ object TONClient {
                 throw IllegalStateException("TONClient not initialized. Call init() first.")
             }
 
-            client.signData(text, uniffi.yttrium.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey))
+            client.signData(text, uniffi.yttrium_utils.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey))
         } catch (e: Exception) {
             println("Error signing data: ${e.message}")
             throw e
@@ -86,7 +86,7 @@ object TONClient {
             client.sendMessage(
                 "${TONAccountDelegate.mainnet}",
                 from,
-                uniffi.yttrium.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey),
+                uniffi.yttrium_utils.Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey),
                 validUntil,
                 messages
             ).also {
