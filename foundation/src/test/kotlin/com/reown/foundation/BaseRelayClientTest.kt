@@ -394,7 +394,14 @@ class BaseRelayClientTest {
 
         client.observeResults()
         client.connectionState.value = ConnectionState.Open
-        client.approveSession(pairingTopic, sessionTopic, sessionProposalResponse, sessionSettlementRequest, correlationId, expectedId) { result ->
+        client.approveSession(
+            pairingTopic = pairingTopic,
+            sessionTopic = sessionTopic,
+            sessionProposalResponse = sessionProposalResponse,
+            sessionSettlementRequest = sessionSettlementRequest,
+            correlationId = correlationId,
+            id = expectedId
+        ) { result ->
             result.fold(
                 onSuccess = {
                     assertEquals(expectedId, result.getOrNull()?.id)
@@ -418,7 +425,13 @@ class BaseRelayClientTest {
         coEvery { relayServiceMock.observeApproveSessionAcknowledgement() } returns flow { delay(10000L) }
 
         client.connectionState.value = ConnectionState.Open
-        client.approveSession(pairingTopic, sessionTopic, sessionProposalResponse, sessionSettlementRequest, correlationId) { result ->
+        client.approveSession(
+            pairingTopic = pairingTopic,
+            sessionTopic = sessionTopic,
+            sessionProposalResponse = sessionProposalResponse,
+            sessionSettlementRequest = sessionSettlementRequest,
+            correlationId = correlationId
+        ) { result ->
             result.fold(
                 onSuccess = {
                     fail("Should not be successful")
@@ -455,7 +468,14 @@ class BaseRelayClientTest {
 
         client.observeResults()
         client.connectionState.value = ConnectionState.Open
-        client.approveSession(pairingTopic, sessionTopic, sessionProposalResponse, sessionSettlementRequest, correlationId, expectedId) { result ->
+        client.approveSession(
+            pairingTopic = pairingTopic,
+            sessionTopic = sessionTopic,
+            sessionProposalResponse = sessionProposalResponse,
+            sessionSettlementRequest = sessionSettlementRequest,
+            correlationId = correlationId,
+            id = expectedId
+        ) { result ->
             result.fold(
                 onSuccess = {
                     fail("Should not be successful")

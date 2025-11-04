@@ -18,7 +18,7 @@ import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.engine.domain.wallet_service.WalletServiceFinder
 import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
 import com.reown.sign.engine.model.EngineDO
-import com.reown.sign.engine.model.tvf.TVF
+import com.reown.sign.engine.model.tvf.TNV
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -41,7 +41,7 @@ class SessionRequestUseCaseTest {
     private val jsonRpcInteractor = mockk<RelayJsonRpcInteractorInterface>()
     private val logger = mockk<Logger>()
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface = mockk()
-    private val tvf: TVF = mockk()
+    private val TNV: TNV = mockk()
     private val walletServiceFinder: WalletServiceFinder = mockk()
     private val walletServiceRequester: WalletServiceRequester = mockk()
     private val metadataStorageRepository = mockk<MetadataStorageRepositoryInterface>()
@@ -54,7 +54,7 @@ class SessionRequestUseCaseTest {
         insertEventUseCase,
         "clientId",
         logger,
-        tvf,
+        TNV,
         walletServiceFinder,
         walletServiceRequester
     )
@@ -201,7 +201,7 @@ class SessionRequestUseCaseTest {
         coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
         coEvery { insertEventUseCase.invoke(any()) } just Runs
         coEvery { linkModeJsonRpcInteractor.triggerRequest(any(), any(), any()) } just Runs
-        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { TNV.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
         every { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any(), captureLambda(), any()) } answers {
             lambda<() -> Unit>().invoke()
         }
@@ -255,7 +255,7 @@ class SessionRequestUseCaseTest {
         coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
         coEvery { insertEventUseCase.invoke(any()) } just Runs
         coEvery { linkModeJsonRpcInteractor.triggerRequest(any(), any(), any()) } just Runs
-        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { TNV.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
         every { jsonRpcInteractor.publishJsonRpcRequest(any(), any(), any(), any(), any(), any(), captureLambda()) } answers {
             lastArg<(Throwable) -> Unit>().invoke(Exception("Session request failure"))
         }
@@ -309,7 +309,7 @@ class SessionRequestUseCaseTest {
         coEvery { sessionStorageRepository.getSessionWithoutMetadataByTopic(any()) } returns session
         coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
         coEvery { insertEventUseCase.invoke(any()) } just Runs
-        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { TNV.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
         every { logger.log(any<String>()) } just Runs
         coEvery { walletServiceFinder.findMatchingWalletService(any(), any()) } returns URL("https://rpc.walletconnect.org/v1/wallet?projectId=12345678&st=wkca&sv=reown-kotlin-1.0.0")
         coEvery { walletServiceRequester.request(any(), any()) } returns "result"
@@ -364,7 +364,7 @@ class SessionRequestUseCaseTest {
         coEvery { sessionStorageRepository.getSessionWithoutMetadataByTopic(any()) } returns session
         coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "", redirect = Redirect(linkMode = true, universal = "link"))
         coEvery { insertEventUseCase.invoke(any()) } just Runs
-        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { TNV.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
         every { logger.error(any<String>()) } just Runs
         coEvery { walletServiceFinder.findMatchingWalletService(any(), any()) } returns URL("https://rpc.walletconnect.org/v1/wallet?projectId=12345678&st=wkca&sv=reown-kotlin-1.0.0")
         coEvery { walletServiceRequester.request(any(), any()) } throws Exception("Wallet service request failed")

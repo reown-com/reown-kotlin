@@ -1,6 +1,6 @@
 package com.reown.sign.engine.model.tvf
 
-import com.reown.sign.engine.model.tvf.TVF.Companion.toBase58
+import com.reown.sign.engine.model.tvf.TNV.Companion.toBase58
 import com.squareup.moshi.JsonClass
 import org.bouncycastle.crypto.digests.SHA256Digest
 
