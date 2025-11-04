@@ -9,18 +9,13 @@ import com.reown.android.internal.common.modal.domain.usecase.EnableAnalyticsUse
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.signing.eip6492.EIP6492Verifier
-import com.reown.android.internal.common.signing.signature.Signature
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pulse.domain.SendEventInterface
 import com.reown.android.pulse.model.EventType
 import com.reown.android.pulse.model.properties.Properties
 import com.reown.android.pulse.model.properties.Props
-import com.reown.foundation.util.Logger
-import com.reown.sign.client.Sign
-import com.reown.sign.client.SignClient
-import com.reown.util.Empty
-import com.reown.appkit.client.Modal
 import com.reown.appkit.client.AppKit
+import com.reown.appkit.client.Modal
 import com.reown.appkit.client.models.Account
 import com.reown.appkit.client.models.CoinbaseClientAlreadyInitializedException
 import com.reown.appkit.client.models.request.Request
@@ -45,8 +40,11 @@ import com.reown.appkit.utils.toAccount
 import com.reown.appkit.utils.toChain
 import com.reown.appkit.utils.toConnectorType
 import com.reown.appkit.utils.toSession
+import com.reown.foundation.util.Logger
+import com.reown.sign.client.Sign
+import com.reown.sign.client.SignClient
+import com.reown.util.Empty
 import kotlinx.coroutines.launch
-import uniffi.yttrium.Erc6492Client
 
 internal class AppKitEngine(
     private val getSessionUseCase: GetSessionUseCase,
@@ -325,7 +323,7 @@ internal class AppKitEngine(
                             val siweResponse = Modal.Model.SIWEAuthenticateResponse.Result(
                                 id = response.result.id,
                                 message = siweRequestIdWithMessage!!.second,
-                                signature = (response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result
+                                signature = (response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result ?: ""
                             )
                             siweRequestIdWithMessage = null
                             val account = getAccount() ?: throw IllegalStateException("Account is null")

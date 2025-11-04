@@ -52,8 +52,7 @@ import com.reown.sample.common.ui.theme.UiModePreview
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.SmartAccountEnabler
-import com.reown.sample.wallet.domain.SolanaAccountDelegate
-import com.reown.sample.wallet.domain.StacksAccountDelegate
+//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 
 @Composable
@@ -69,13 +68,13 @@ fun SettingsRoute(navController: NavHostController) {
                 Item.SettingCopyableItem("Private key", viewModel.privateKey),
             )
         ),
-        Section.SettingsSection(
-            "Solana Account", listOf(
-                Item.SettingCopyableItem("Public key", viewModel.solanaKeys.second),
-                Item.SettingCopyableItem("Private key", viewModel.solanaKeys.first),
-                Item.SettingCopyableItem("Key pair", SolanaAccountDelegate.keyPair),
-            )
-        ),
+//        Section.SettingsSection(
+//            "Solana Account", listOf(
+//                Item.SettingCopyableItem("Public key", viewModel.solanaKeys.second),
+//                Item.SettingCopyableItem("Private key", viewModel.solanaKeys.first),
+////                Item.SettingCopyableItem("Key pair", SolanaAccountDelegate.keyPair),
+//            )
+//        ),
         Section.SettingsSection(
             "Stacks Account", listOf(
                 Item.SettingCopyableItem("Wallet", StacksAccountDelegate.importedWallet),
@@ -118,14 +117,14 @@ private fun SettingsScreen(
         WCTopAppBar(titleText = "Settings")
         Divider()
         FeaturesSection()
-        Divider()
-        Text(
-            modifier = Modifier
-                .clip(RoundedCornerShape(5.dp))
-                .clickable { onTransactionClick() }
-                .padding(vertical = 5.dp),
-            text = "Send Transaction",
-            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
+//        Divider()
+//        Text(
+//            modifier = Modifier
+//                .clip(RoundedCornerShape(5.dp))
+//                .clickable { onTransactionClick() }
+//                .padding(vertical = 5.dp),
+//            text = "Send Transaction",
+//            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
         Divider()
         LazyColumn {
             itemsIndexed(sections) { index, section ->

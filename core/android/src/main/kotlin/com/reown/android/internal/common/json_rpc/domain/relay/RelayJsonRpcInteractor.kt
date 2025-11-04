@@ -18,6 +18,7 @@ import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.WCRequest
 import com.reown.android.internal.common.model.WCResponse
 import com.reown.android.internal.common.model.params.ChatNotifyResponseAuthParams
+import com.reown.android.internal.common.model.params.CoreSignParams
 import com.reown.android.internal.common.model.sync.ClientJsonRpc
 import com.reown.android.internal.common.model.type.ClientParams
 import com.reown.android.internal.common.model.type.Error
@@ -89,6 +90,102 @@ internal class RelayJsonRpcInteractor(
         }
     }
 
+    override fun proposeSession(
+        topic: Topic,
+        payload: JsonRpcClientSync<*>,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    ) {
+        try {
+            checkNetworkConnectivity()
+        } catch (e: NoConnectivityException) {
+            return onFailure(e)
+        }
+
+        try {
+            val requestJson = serializer.serialize(payload) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
+            if (jsonRpcHistory.setRequest(payload.id, topic, payload.method, requestJson, TransportType.RELAY)) {
+                val encryptedRequest = chaChaPolyCodec.encrypt(topic, requestJson, EnvelopeType.ZERO)
+                val encryptedRequestString = Base64.toBase64String(encryptedRequest)
+                relay.proposeSession(pairingTopic = topic, sessionProposal = encryptedRequestString, correlationId = payload.id) { result ->
+                    result.fold(
+                        onSuccess = { onSuccess() },
+                        onFailure = { error ->
+                            logger.error("JsonRpcInteractor: Cannot send the session proposal request, error: $error")
+                            onFailure(Throwable("Session proposal error: ${error.message}"))
+                        }
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("JsonRpcInteractor: Cannot send the request, exception: $e")
+            onFailure(Throwable("Publish Request Error: $e"))
+        }
+    }
+
+    override fun approveSession(
+        pairingTopic: Topic,
+        sessionTopic: Topic,
+        sessionProposalResponse: CoreSignParams.ApprovalParams,
+        settleRequest: JsonRpcClientSync<*>,
+        approvedChains: List<String>?,
+        approvedMethods: List<String>?,
+        approvedEvents: List<String>?,
+        sessionProperties: Map<String, String>?,
+        scopedProperties: Map<String, String>?,
+        correlationId: Long,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    ) {
+        try {
+            checkNetworkConnectivity()
+        } catch (e: NoConnectivityException) {
+            return onFailure(e)
+        }
+
+        try {
+            val proposalResponseJson =
+                serializer.serialize(JsonRpcResponse.JsonRpcResult(id = correlationId, result = sessionProposalResponse))
+                    ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
+            val settlementRequestJson =
+                serializer.serialize(settleRequest) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
+
+            if (jsonRpcHistory.setRequest(settleRequest.id, sessionTopic, settleRequest.method, settlementRequestJson, TransportType.RELAY)) {
+                val encryptedProposalResponseJson = chaChaPolyCodec.encrypt(pairingTopic, proposalResponseJson, EnvelopeType.ZERO)
+                val encryptedSettlementRequestJson = chaChaPolyCodec.encrypt(sessionTopic, settlementRequestJson, EnvelopeType.ZERO)
+                val encryptedProposalResponseString = Base64.toBase64String(encryptedProposalResponseJson)
+                val encryptedSettlementRequestString = Base64.toBase64String(encryptedSettlementRequestJson)
+
+                relay.approveSession(
+                    pairingTopic = pairingTopic,
+                    sessionTopic = sessionTopic,
+                    approvedChains = approvedChains,
+                    approvedMethods = approvedMethods,
+                    approvedEvents = approvedEvents,
+                    sessionProperties = sessionProperties,
+                    scopedProperties = scopedProperties,
+                    correlationId = correlationId,
+                    sessionSettlementRequest = encryptedSettlementRequestString,
+                    sessionProposalResponse = encryptedProposalResponseString
+                ) { result ->
+                    result.fold(
+                        onSuccess = {
+                            jsonRpcHistory.updateRequestWithResponse(correlationId, proposalResponseJson)
+                            onSuccess()
+                        },
+                        onFailure = { error ->
+                            logger.error("JsonRpcInteractor: Cannot send the session approve request, error: $error")
+                            onFailure(Throwable("Session approve error: ${error.message}"))
+                        }
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("JsonRpcInteractor: Cannot send the request, exception: $e")
+            onFailure(Throwable("Publish Request Error: $e"))
+        }
+    }
+
     override fun publishJsonRpcRequest(
         topic: Topic,
         params: IrnParams,
@@ -109,7 +206,6 @@ internal class RelayJsonRpcInteractor(
             if (jsonRpcHistory.setRequest(payload.id, topic, payload.method, requestJson, TransportType.RELAY)) {
                 val encryptedRequest = chaChaPolyCodec.encrypt(topic, requestJson, envelopeType, participants)
                 val encryptedRequestString = Base64.toBase64String(encryptedRequest)
-
                 relay.publish(topic.value, encryptedRequestString, params.toRelay()) { result ->
                     result.fold(
                         onSuccess = { onSuccess() },

@@ -9,6 +9,7 @@ import com.reown.android.internal.common.json_rpc.domain.relay.RelayJsonRpcInter
 import com.reown.android.internal.common.model.IrnParams
 import com.reown.android.internal.common.model.Tags
 import com.reown.android.internal.common.model.WCRequest
+import com.reown.android.internal.common.model.params.CoreSignParams
 import com.reown.android.internal.common.model.type.ClientParams
 import com.reown.android.internal.common.model.type.Error
 import com.reown.android.internal.common.model.type.JsonRpcClientSync
@@ -235,5 +236,168 @@ internal class RelayerInteractorTest {
         }
         sut.subscribe(topicVO, onFailure = onFailure)
         verify { onFailure(any()) }
+    }
+
+    @Test
+    fun `OnSuccess callback called when proposeSession gets acknowledged`() {
+        val payload: JsonRpcClientSync<*> = mockk {
+            every { id } returns DEFAULT_ID
+            every { method } returns String.Empty
+        }
+        
+        every { relay.proposeSession(any(), any(), any(), any(), any()) } answers {
+            lastArg<(Result<Relay.Model.Call.ProposeSession.Acknowledgement>) -> Unit>().invoke(
+                Result.success(mockk())
+            )
+        }
+        
+        sut.proposeSession(topicVO, payload, onSuccess = onSuccess, onFailure = onFailure)
+        verify { onSuccess() }
+        verify { onFailure wasNot Called }
+    }
+
+    @Test
+    fun `OnFailure callback called when proposeSession encounters error`() {
+        val payload: JsonRpcClientSync<*> = mockk {
+            every { id } returns DEFAULT_ID
+            every { method } returns String.Empty
+        }
+        
+        every { relay.proposeSession(any(), any(), any(), any(), any()) } answers {
+            lastArg<(Result<Relay.Model.Call.ProposeSession.Acknowledgement>) -> Unit>().invoke(
+                Result.failure(Throwable("Session proposal error"))
+            )
+        }
+        
+        sut.proposeSession(topicVO, payload, onSuccess = onSuccess, onFailure = onFailure)
+        verify { onFailure(any()) }
+        verify { onSuccess wasNot Called }
+    }
+
+    @Test
+    fun `ProposeSession does not call callbacks when setRequest returns false`() {
+        val payload: JsonRpcClientSync<*> = mockk {
+            every { id } returns DEFAULT_ID
+            every { method } returns String.Empty
+        }
+        
+        every { jsonRpcHistory.setRequest(any(), any(), any(), any(), any()) } returns false
+        
+        sut.proposeSession(topicVO, payload, onSuccess = onSuccess, onFailure = onFailure)
+        verify { onFailure wasNot Called }
+        verify { onSuccess wasNot Called }
+    }
+
+    @Test
+    fun `OnSuccess callback called when approveSession gets acknowledged`() {
+        val sessionTopic = Topic("sessionTopic")
+        val sessionProposalResponse: CoreSignParams.ApprovalParams = mockk()
+        val settleRequest: JsonRpcClientSync<*> = mockk {
+            every { id } returns DEFAULT_ID
+            every { method } returns String.Empty
+        }
+        val correlationId = 1234L
+        
+        every {
+            relay.approveSession(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            lastArg<(Result<Relay.Model.Call.ApproveSession.Acknowledgement>) -> Unit>().invoke(
+                Result.success(mockk())
+            )
+        }
+        
+        sut.approveSession(
+            pairingTopic = topicVO,
+            sessionTopic = sessionTopic,
+            sessionProposalResponse = sessionProposalResponse,
+            settleRequest = settleRequest,
+            correlationId = correlationId,
+            onSuccess = onSuccess,
+            onFailure = onFailure
+        )
+        verify { onSuccess() }
+        verify { onFailure wasNot Called }
+    }
+
+    @Test
+    fun `OnFailure callback called when approveSession encounters error`() {
+        val sessionTopic = Topic("sessionTopic")
+        val sessionProposalResponse: CoreSignParams.ApprovalParams = mockk()
+        val settleRequest: JsonRpcClientSync<*> = mockk {
+            every { id } returns DEFAULT_ID
+            every { method } returns String.Empty
+        }
+        val correlationId = 1234L
+        
+        every {
+            relay.approveSession(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } answers {
+            lastArg<(Result<Relay.Model.Call.ApproveSession.Acknowledgement>) -> Unit>().invoke(
+                Result.failure(Throwable("Session approve error"))
+            )
+        }
+        
+        sut.approveSession(
+            pairingTopic = topicVO,
+            sessionTopic = sessionTopic,
+            sessionProposalResponse = sessionProposalResponse,
+            settleRequest = settleRequest,
+            correlationId = correlationId,
+            onSuccess = onSuccess,
+            onFailure = onFailure
+        )
+        verify { onFailure(any()) }
+        verify { onSuccess wasNot Called }
+    }
+
+    @Test
+    fun `ApproveSession does not call callbacks when setRequest returns false`() {
+        val sessionTopic = Topic("sessionTopic")
+        val sessionProposalResponse: CoreSignParams.ApprovalParams = mockk()
+        val settleRequest: JsonRpcClientSync<*> = mockk {
+            every { id } returns DEFAULT_ID
+            every { method } returns String.Empty
+        }
+        val correlationId = 1234L
+        
+        every { jsonRpcHistory.setRequest(any(), any(), any(), any(), any()) } returns false
+        
+        sut.approveSession(
+            pairingTopic = topicVO,
+            sessionTopic = sessionTopic,
+            sessionProposalResponse = sessionProposalResponse,
+            settleRequest = settleRequest,
+            correlationId = correlationId,
+            onSuccess = onSuccess,
+            onFailure = onFailure
+        )
+        verify { onFailure wasNot Called }
+        verify { onSuccess wasNot Called }
     }
 }

@@ -8,6 +8,72 @@ object Relay {
             abstract val id: Long
             abstract val jsonrpc: String
 
+            sealed class ProposeSession : Call() {
+
+                data class Request(
+                    override val id: Long,
+                    override val jsonrpc: String = "2.0",
+                    val method: String = WC_PROPOSE_SESSION,
+                    val params: Params,
+                ) : ProposeSession() {
+
+                    data class Params(
+                        val pairingTopic: String,
+                        val sessionProposal: String,
+                        val attestation: String,
+                        val correlationId: Long
+                    )
+                }
+
+                data class Acknowledgement(
+                    override val id: Long,
+                    override val jsonrpc: String = "2.0",
+                    val result: Boolean,
+                ) : ProposeSession()
+
+                data class JsonRpcError(
+                    override val jsonrpc: String = "2.0",
+                    val error: Error,
+                    override val id: Long,
+                ) : ProposeSession()
+            }
+
+            sealed class ApproveSession : Call() {
+
+                data class Request(
+                    override val id: Long,
+                    override val jsonrpc: String = "2.0",
+                    val method: String = WC_APPROVE_SESSION,
+                    val params: Params,
+                ) : ApproveSession() {
+
+                    data class Params(
+                        val pairingTopic: String,
+                        val sessionTopic: String,
+                        val sessionProposalResponse: String,
+                        val sessionSettlementRequest: String,
+                        val approvedChains: List<String>? = null,
+                        val approvedMethods: List<String>? = null,
+                        val approvedEvents: List<String>? = null,
+                        val sessionProperties: Map<String, String>? = null,
+                        val scopedProperties: Map<String, String>? = null,
+                        val correlationId: Long
+                    )
+                }
+
+                data class Acknowledgement(
+                    override val id: Long,
+                    override val jsonrpc: String = "2.0",
+                    val result: Boolean,
+                ) : ApproveSession()
+
+                data class JsonRpcError(
+                    override val jsonrpc: String = "2.0",
+                    val error: Error,
+                    override val id: Long,
+                ) : ApproveSession()
+            }
+
             sealed class Publish : Call() {
 
                 data class Request(

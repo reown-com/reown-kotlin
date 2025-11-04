@@ -5,29 +5,23 @@ import com.reown.android.internal.common.exception.NoInternetConnectionException
 import com.reown.android.internal.common.exception.NoRelayConnectionException
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.AppMetaDataType
-import com.reown.android.internal.common.model.IrnParams
-import com.reown.android.internal.common.model.Tags
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
 import com.reown.android.internal.common.storage.verify.VerifyContextStorageRepository
 import com.reown.android.internal.utils.ACTIVE_SESSION
 import com.reown.android.internal.utils.CoreValidator.isExpired
-import com.reown.android.internal.utils.fiveMinutesInSeconds
 import com.reown.android.pulse.domain.InsertTelemetryEventUseCase
 import com.reown.android.pulse.model.EventType
 import com.reown.android.pulse.model.Trace
 import com.reown.android.pulse.model.properties.Properties
 import com.reown.android.pulse.model.properties.Props
 import com.reown.foundation.common.model.PublicKey
-import com.reown.foundation.common.model.Topic
-import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.exceptions.InvalidNamespaceException
 import com.reown.sign.common.exceptions.SessionProposalExpiredException
 import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
 import com.reown.sign.common.model.vo.clientsync.session.SignRpc
-import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
@@ -62,62 +56,6 @@ internal class ApproveSessionUseCase(
     ) = supervisorScope {
         val trace: MutableList<String> = mutableListOf()
         trace.add(Trace.Session.SESSION_APPROVE_STARTED).also { logger.log(Trace.Session.SESSION_APPROVE_STARTED) }
-        fun sessionSettle(requestId: Long, proposal: ProposalVO, sessionTopic: Topic, pairingTopic: Topic) {
-            val selfPublicKey = crypto.getSelfPublicFromKeyAgreement(sessionTopic)
-            val selfParticipant = SessionParticipant(selfPublicKey.keyAsHex, selfAppMetaData)
-            val sessionExpiry = ACTIVE_SESSION
-            val unacknowledgedSession =
-                SessionVO.createUnacknowledgedSession(sessionTopic, proposal, selfParticipant, sessionExpiry, sessionNamespaces, scopedProperties, sessionProperties, pairingTopic.value)
-            try {
-                sessionStorageRepository.insertSession(unacknowledgedSession, requestId)
-                metadataStorageRepository.insertOrAbortMetadata(sessionTopic, selfAppMetaData, AppMetaDataType.SELF)
-                metadataStorageRepository.insertOrAbortMetadata(sessionTopic, proposal.appMetaData, AppMetaDataType.PEER)
-                trace.add(Trace.Session.STORE_SESSION)
-                val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces, sessionProperties, scopedProperties)
-                val sessionSettle = SignRpc.SessionSettle(params = params)
-                val irnParams = IrnParams(Tags.SESSION_SETTLE, Ttl(fiveMinutesInSeconds), correlationId = sessionSettle.id)
-                trace.add(Trace.Session.PUBLISHING_SESSION_SETTLE).also { logger.log("Publishing session settle on topic: $sessionTopic") }
-                jsonRpcInteractor.publishJsonRpcRequest(
-                    topic = sessionTopic,
-                    params = irnParams, sessionSettle,
-                    onSuccess = {
-                        onSuccess()
-                        scope.launch {
-                            supervisorScope {
-                                proposalStorageRepository.deleteProposal(proposerPublicKey)
-                                verifyContextStorageRepository.delete(proposal.requestId)
-                                trace.add(Trace.Session.SESSION_SETTLE_PUBLISH_SUCCESS).also { logger.log("Session settle sent successfully on topic: $sessionTopic") }
-                            }
-                        }
-                    },
-                    onFailure = { error ->
-                        scope.launch {
-                            supervisorScope {
-                                insertEventUseCase(Props(type = EventType.Error.SESSION_SETTLE_PUBLISH_FAILURE, properties = Properties(trace = trace, topic = pairingTopic.value)))
-                            }
-                        }.also { logger.error("Session settle failure on topic: $sessionTopic, error: $error") }
-                        onFailure(error)
-                    }
-                )
-            } catch (e: Exception) {
-                if (e is NoRelayConnectionException)
-                    scope.launch {
-                        supervisorScope {
-                            insertEventUseCase(Props(type = EventType.Error.NO_WSS_CONNECTION, properties = Properties(trace = trace, topic = pairingTopic.value)))
-                        }
-                    }
-                if (e is NoInternetConnectionException)
-                    scope.launch {
-                        supervisorScope {
-                            insertEventUseCase(Props(type = EventType.Error.NO_INTERNET_CONNECTION, properties = Properties(trace = trace, topic = pairingTopic.value)))
-                        }
-                    }
-                sessionStorageRepository.deleteSession(sessionTopic)
-                logger.error("Session settle failure, error: $e")
-                // todo: missing metadata deletion. Also check other try catches
-                onFailure(e)
-            }
-        }
 
         val proposal = proposalStorageRepository.getProposalByKey(proposerPublicKey)
         val request = proposal.toSessionProposeRequest()
@@ -132,7 +70,12 @@ internal class ApproveSessionUseCase(
             }
             trace.add(Trace.Session.PROPOSAL_NOT_EXPIRED)
             SignValidator.validateSessionNamespace(sessionNamespaces.toMapOfNamespacesVOSession(), proposal.requiredNamespaces) { error ->
-                insertEventUseCase(Props(type = EventType.Error.SESSION_APPROVE_NAMESPACE_VALIDATION_FAILURE, properties = Properties(trace = trace, topic = pairingTopic)))
+                insertEventUseCase(
+                    Props(
+                        type = EventType.Error.SESSION_APPROVE_NAMESPACE_VALIDATION_FAILURE,
+                        properties = Properties(trace = trace, topic = pairingTopic)
+                    )
+                )
                     .also { logger.log("Session approve failure - invalid namespaces, error: ${error.message}") }
                 throw InvalidNamespaceException(error.message)
             }
@@ -141,39 +84,82 @@ internal class ApproveSessionUseCase(
             val sessionTopic = crypto.generateTopicFromKeyAgreement(selfPublicKey, PublicKey(proposerPublicKey))
             trace.add(Trace.Session.CREATE_SESSION_TOPIC)
             val approvalParams = proposal.toSessionApproveParams(selfPublicKey)
-            val irnParams = IrnParams(Tags.SESSION_PROPOSE_RESPONSE_APPROVE, Ttl(fiveMinutesInSeconds), correlationId = proposal.requestId)
-            trace.add(Trace.Session.SUBSCRIBING_SESSION_TOPIC).also { logger.log("Subscribing to session topic: $sessionTopic") }
-            jsonRpcInteractor.subscribe(sessionTopic,
+
+            //settlement
+            val selfParticipant = SessionParticipant(selfPublicKey.keyAsHex, selfAppMetaData)
+            val sessionExpiry = ACTIVE_SESSION
+            val unacknowledgedSession =
+                SessionVO.createUnacknowledgedSession(
+                    sessionTopic,
+                    proposal,
+                    selfParticipant,
+                    sessionExpiry,
+                    sessionNamespaces,
+                    scopedProperties,
+                    sessionProperties,
+                    pairingTopic
+                )
+
+            sessionStorageRepository.insertSession(unacknowledgedSession, request.id)
+            metadataStorageRepository.insertOrAbortMetadata(sessionTopic, selfAppMetaData, AppMetaDataType.SELF)
+            metadataStorageRepository.insertOrAbortMetadata(sessionTopic, proposal.appMetaData, AppMetaDataType.PEER)
+            trace.add(Trace.Session.STORE_SESSION)
+            val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces, sessionProperties, scopedProperties)
+            val sessionSettle = SignRpc.SessionSettle(params = params)
+            trace.add(Trace.Session.PUBLISHING_SESSION_APPROVE)
+            val approvedChains = sessionNamespaces.values.flatMap { namespace ->
+                when {
+                    !namespace.chains.isNullOrEmpty() -> namespace.chains
+                    else -> namespace.accounts.mapNotNull { account ->
+                        val delimiterIndex = account.lastIndexOf(":")
+                        if (delimiterIndex > 0) account.substring(0, delimiterIndex) else null
+                    }
+                }
+            }.distinct()
+            val approvedMethods = sessionNamespaces.values.flatMap { it.methods }.distinct()
+            val approvedEvents = sessionNamespaces.values.flatMap { it.events }.distinct()
+            jsonRpcInteractor.approveSession(
+                pairingTopic = proposal.pairingTopic,
+                sessionTopic = sessionTopic,
+                sessionProposalResponse = approvalParams,
+                settleRequest = sessionSettle,
+                approvedChains = approvedChains.takeIf { it.isNotEmpty() },
+                approvedMethods = approvedMethods.takeIf { it.isNotEmpty() },
+                approvedEvents = approvedEvents.takeIf { it.isNotEmpty() },
+                sessionProperties = sessionProperties,
+                scopedProperties = scopedProperties,
+                correlationId = proposal.requestId,
                 onSuccess = {
-                    trace.add(Trace.Session.SUBSCRIBE_SESSION_TOPIC_SUCCESS).also { logger.log("Successfully subscribed to session topic: $sessionTopic") }
-                },
-                onFailure = { error ->
+                    onSuccess()
                     scope.launch {
                         supervisorScope {
-                            insertEventUseCase(Props(type = EventType.Error.SESSION_SUBSCRIPTION_FAILURE, properties = Properties(trace = trace, topic = pairingTopic)))
+                            trace.add(Trace.Session.SESSION_APPROVE_SUCCESS)
+                            proposalStorageRepository.deleteProposal(proposerPublicKey)
+                            verifyContextStorageRepository.delete(proposal.requestId)
                         }
-                    }.also { logger.error("Subscribe to session topic failure: $error") }
-                    onFailure(error)
-                })
-
-            sessionSettle(request.id, proposal, sessionTopic, request.topic)
-
-            trace.add(Trace.Session.PUBLISHING_SESSION_APPROVE).also { logger.log("Publishing session approve on topic: $sessionTopic") }
-            jsonRpcInteractor.respondWithParams(request, approvalParams, irnParams,
-                onSuccess = {
-                    trace.add(Trace.Session.SESSION_APPROVE_PUBLISH_SUCCESS).also { logger.log("Session approve sent successfully, topic: $sessionTopic") }
+                    }
                 },
                 onFailure = { error ->
+                    onFailure(error)
                     scope.launch {
                         supervisorScope {
-                            insertEventUseCase(Props(type = EventType.Error.SESSION_APPROVE_PUBLISH_FAILURE, properties = Properties(trace = trace, topic = pairingTopic)))
+                            insertEventUseCase(
+                                Props(
+                                    type = EventType.Error.SESSION_APPROVE_FAILURE,
+                                    properties = Properties(trace = trace, topic = sessionTopic.value)
+                                )
+                            ).also { logger.error("Session approve failure, topic: ${sessionTopic.value}") }
                         }
-                    }.also { logger.error("Session approve failure, topic: $sessionTopic: $error") }
-                    onFailure(error)
-                })
+                    }
+                }
+            )
         } catch (e: Exception) {
-            if (e is NoRelayConnectionException) insertEventUseCase(Props(type = EventType.Error.NO_WSS_CONNECTION, properties = Properties(trace = trace, topic = pairingTopic)))
-            if (e is NoInternetConnectionException) insertEventUseCase(Props(type = EventType.Error.NO_INTERNET_CONNECTION, properties = Properties(trace = trace, topic = pairingTopic)))
+            if (e is NoRelayConnectionException) {
+                insertEventUseCase(Props(type = EventType.Error.NO_WSS_CONNECTION, properties = Properties(trace = trace, topic = pairingTopic)))
+            }
+            if (e is NoInternetConnectionException) {
+                insertEventUseCase(Props(type = EventType.Error.NO_INTERNET_CONNECTION, properties = Properties(trace = trace, topic = pairingTopic)))
+            }
             onFailure(e)
         }
     }

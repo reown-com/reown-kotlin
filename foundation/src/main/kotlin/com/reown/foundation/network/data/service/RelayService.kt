@@ -12,6 +12,24 @@ interface RelayService {
     fun observeWebSocketEvent(): Flow<WebSocket.Event>
 
     @Send
+    fun proposeSessionRequest(publishRequest: RelayDTO.ProposeSession.Request)
+
+    @Receive
+    fun observeProposeSessionAcknowledgement(): Flow<RelayDTO.ProposeSession.Result.Acknowledgement>
+
+    @Receive
+    fun observeProposeSessionError(): Flow<RelayDTO.ProposeSession.Result.JsonRpcError>
+
+    @Send
+    fun approveSessionRequest(publishRequest: RelayDTO.ApproveSession.Request)
+
+    @Receive
+    fun observeApproveSessionAcknowledgement(): Flow<RelayDTO.ApproveSession.Result.Acknowledgement>
+
+    @Receive
+    fun observeApproveSessionError(): Flow<RelayDTO.ApproveSession.Result.JsonRpcError>
+
+    @Send
     fun publishRequest(publishRequest: RelayDTO.Publish.Request)
 
     @Receive

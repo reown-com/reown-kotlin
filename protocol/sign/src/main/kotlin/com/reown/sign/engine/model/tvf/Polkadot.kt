@@ -3,7 +3,7 @@ package com.reown.sign.engine.model.tvf
 import com.squareup.moshi.JsonClass
 import org.bouncycastle.crypto.digests.Blake2bDigest
 import java.math.BigInteger
-import com.reown.sign.engine.model.tvf.TVF.Companion.toBase58
+import com.reown.sign.engine.model.tvf.TNV.Companion.toBase58
 import com.reown.util.bytesToHex
 import com.reown.util.hexToBytes
 import io.ipfs.multibase.Base58

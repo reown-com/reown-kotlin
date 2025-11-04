@@ -2,7 +2,6 @@ package com.reown.android.internal.common.di
 
 import android.net.Uri
 import android.os.Build
-import com.pandulapeter.beagle.logOkHttp.BeagleOkHttpLogger
 import com.squareup.moshi.Moshi
 import com.tinder.scarlet.Lifecycle
 import com.tinder.scarlet.Scarlet
@@ -34,8 +33,14 @@ internal const val KEY_CLIENT_ID = "clientId"
 
 @Suppress("LocalVariableName")
 @JvmSynthetic
-fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, sdkVersion: String, timeout: NetworkClientTimeout? = null, packageName: String) = module {
-    val networkClientTimeout = timeout ?: NetworkClientTimeout.getDefaultTimeout()
+fun coreAndroidNetworkModule(
+    serverUrl: String,
+    connectionType: ConnectionType,
+    sdkVersion: String,
+    timeout: NetworkClientTimeout? = null,
+    packageName: String
+) = module {
+    val networkClientTimeout = timeout ?: NetworkClientTimeout.getDefaultNetworkTimeout()
     factory(named(AndroidCommonDITags.RELAY_URL)) {
         val jwt = get<GenerateJwtStoreClientIdUseCase>().invoke(serverUrl)
         Uri.parse(serverUrl)
@@ -93,10 +98,6 @@ fun coreAndroidNetworkModule(serverUrl: String, connectionType: ConnectionType, 
                 if (BuildConfig.DEBUG) {
                     val loggingInterceptor = get<Interceptor>(named(AndroidCommonDITags.LOGGING_INTERCEPTOR))
                     addInterceptor(loggingInterceptor)
-                }
-
-                (BeagleOkHttpLogger.logger as Interceptor?)?.let { beagleHttpLoggerInterceptor ->
-                    addInterceptor(beagleHttpLoggerInterceptor)
                 }
             }
             .retryOnConnectionFailure(true)

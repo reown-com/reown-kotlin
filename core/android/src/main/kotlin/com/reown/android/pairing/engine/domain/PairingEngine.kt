@@ -135,12 +135,6 @@ internal class PairingEngine(
             logger.log("Creating Pairing")
             pairingRepository.insertPairing(this)
             metadataRepository.upsertPeerMetadata(this.topic, selfMetaData, AppMetaDataType.SELF)
-            jsonRpcInteractor.subscribe(
-                topic = this.topic,
-                onSuccess = { logger.log("Pairing - subscribed on pairing topic: $pairingTopic") },
-                onFailure = { error -> logger.error("Pairing - subscribed failure on pairing topic: $pairingTopic, error: $error") }
-            )
-
             this.toCore()
         }.onFailure { throwable ->
             try {

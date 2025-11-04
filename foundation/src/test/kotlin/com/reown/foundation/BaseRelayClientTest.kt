@@ -200,7 +200,10 @@ class BaseRelayClientTest {
 
         coEvery { relayServiceMock.batchSubscribeRequest(any()) } returns Unit
         coEvery { relayServiceMock.observeBatchSubscribeAcknowledgement() } returns flowOf(relayDto)
+        coEvery { relayServiceMock.observeWebSocketEvent() } returns flowOf(WebSocket.Event.OnConnectionOpened("Open"))
 
+        // Ensure topics are not already in ackedTopics
+        client.ackedTopics.clear()
         client.observeResults()
         client.connectionState.value = ConnectionState.Open
         client.batchSubscribe(topics, expectedId) { result ->
@@ -221,6 +224,11 @@ class BaseRelayClientTest {
 
         coEvery { relayServiceMock.batchSubscribeRequest(any()) } returns Unit
         coEvery { relayServiceMock.observeBatchSubscribeAcknowledgement() } returns flow { delay(10000L) }
+        coEvery { relayServiceMock.observeWebSocketEvent() } returns flowOf(WebSocket.Event.OnConnectionOpened("Open"))
+
+        // Ensure topics are not already in ackedTopics
+        client.ackedTopics.clear()
+        client.connectionState.value = ConnectionState.Open
 
         client.batchSubscribe(topics) { result ->
             result.fold(
@@ -231,7 +239,6 @@ class BaseRelayClientTest {
                     assertTrue(result.exceptionOrNull() is TimeoutCancellationException)
                 }
             )
-
         }
 
         testScheduler.apply { advanceTimeBy(5000); runCurrent() }
@@ -284,5 +291,201 @@ class BaseRelayClientTest {
         testScheduler.apply { advanceTimeBy(5000); runCurrent() }
 
         coVerify { relayServiceMock.subscribeRequest(any()) }
+    }
+
+    @Test
+    fun `test proposeSession success`() = testScope.runTest {
+        val pairingTopic = com.reown.foundation.common.model.Topic("testPairingTopic")
+        val sessionProposal = "testSessionProposal"
+        val correlationId = 1234L
+        val expectedId = 123L
+        val relayDto = RelayDTO.ProposeSession.Result.Acknowledgement(id = expectedId, result = true)
+
+        coEvery { relayServiceMock.proposeSessionRequest(any()) } returns Unit
+        coEvery { relayServiceMock.observeProposeSessionAcknowledgement() } returns flowOf(relayDto)
+        coEvery { relayServiceMock.observeWebSocketEvent() } returns flowOf(WebSocket.Event.OnConnectionOpened("Open"))
+
+        client.observeResults()
+        client.connectionState.value = ConnectionState.Open
+        client.proposeSession(pairingTopic, sessionProposal, correlationId, expectedId) { result ->
+            result.fold(
+                onSuccess = {
+                    assertEquals(expectedId, result.getOrNull()?.id)
+                },
+                onFailure = { fail(it.message) }
+            )
+        }
+
+        coVerify { relayServiceMock.proposeSessionRequest(any()) }
+    }
+
+    @Test
+    fun `test proposeSession failure due to timeout`() = testScope.runTest {
+        val pairingTopic = com.reown.foundation.common.model.Topic("testPairingTopic")
+        val sessionProposal = "testSessionProposal"
+        val correlationId = 1234L
+
+        coEvery { relayServiceMock.proposeSessionRequest(any()) } returns Unit
+        coEvery { relayServiceMock.observeProposeSessionAcknowledgement() } returns flow { delay(10000L) }
+
+        client.connectionState.value = ConnectionState.Open
+        client.proposeSession(pairingTopic, sessionProposal, correlationId) { result ->
+            result.fold(
+                onSuccess = {
+                    fail("Should not be successful")
+                },
+                onFailure = {
+                    assertTrue(result.exceptionOrNull() is TimeoutCancellationException)
+                }
+            )
+        }
+
+        testScheduler.apply { advanceTimeBy(5000); runCurrent() }
+
+        coVerify { relayServiceMock.proposeSessionRequest(any()) }
+    }
+
+    @Test
+    fun `test proposeSession error response`() = testScope.runTest {
+        val pairingTopic = com.reown.foundation.common.model.Topic("testPairingTopic")
+        val sessionProposal = "testSessionProposal"
+        val correlationId = 1234L
+        val expectedId = 123L
+        val errorMessage = "Session proposal error"
+        val relayDto = RelayDTO.ProposeSession.Result.JsonRpcError(
+            jsonrpc = "2.0",
+            error = RelayDTO.Error(code = -1, message = errorMessage),
+            id = expectedId
+        )
+
+        coEvery { relayServiceMock.proposeSessionRequest(any()) } returns Unit
+        coEvery { relayServiceMock.observeProposeSessionError() } returns flowOf(relayDto)
+        coEvery { relayServiceMock.observeWebSocketEvent() } returns flowOf(WebSocket.Event.OnConnectionOpened("Open"))
+
+        client.observeResults()
+        client.connectionState.value = ConnectionState.Open
+        client.proposeSession(pairingTopic, sessionProposal, correlationId, expectedId) { result ->
+            result.fold(
+                onSuccess = {
+                    fail("Should not be successful")
+                },
+                onFailure = {
+                    assertTrue(it.message?.contains(errorMessage) == true)
+                }
+            )
+        }
+
+        coVerify { relayServiceMock.proposeSessionRequest(any()) }
+    }
+
+    @Test
+    fun `test approveSession success`() = testScope.runTest {
+        val pairingTopic = com.reown.foundation.common.model.Topic("testPairingTopic")
+        val sessionTopic = com.reown.foundation.common.model.Topic("testSessionTopic")
+        val sessionProposalResponse = "testSessionProposalResponse"
+        val sessionSettlementRequest = "testSessionSettlementRequest"
+        val correlationId = 1234L
+        val expectedId = 123L
+        val relayDto = RelayDTO.ApproveSession.Result.Acknowledgement(id = expectedId, result = true)
+
+        coEvery { relayServiceMock.approveSessionRequest(any()) } returns Unit
+        coEvery { relayServiceMock.observeApproveSessionAcknowledgement() } returns flowOf(relayDto)
+        coEvery { relayServiceMock.observeWebSocketEvent() } returns flowOf(WebSocket.Event.OnConnectionOpened("Open"))
+
+        client.observeResults()
+        client.connectionState.value = ConnectionState.Open
+        client.approveSession(
+            pairingTopic = pairingTopic,
+            sessionTopic = sessionTopic,
+            sessionProposalResponse = sessionProposalResponse,
+            sessionSettlementRequest = sessionSettlementRequest,
+            correlationId = correlationId,
+            id = expectedId
+        ) { result ->
+            result.fold(
+                onSuccess = {
+                    assertEquals(expectedId, result.getOrNull()?.id)
+                },
+                onFailure = { fail(it.message) }
+            )
+        }
+
+        coVerify { relayServiceMock.approveSessionRequest(any()) }
+    }
+
+    @Test
+    fun `test approveSession failure due to timeout`() = testScope.runTest {
+        val pairingTopic = com.reown.foundation.common.model.Topic("testPairingTopic")
+        val sessionTopic = com.reown.foundation.common.model.Topic("testSessionTopic")
+        val sessionProposalResponse = "testSessionProposalResponse"
+        val sessionSettlementRequest = "testSessionSettlementRequest"
+        val correlationId = 1234L
+
+        coEvery { relayServiceMock.approveSessionRequest(any()) } returns Unit
+        coEvery { relayServiceMock.observeApproveSessionAcknowledgement() } returns flow { delay(10000L) }
+
+        client.connectionState.value = ConnectionState.Open
+        client.approveSession(
+            pairingTopic = pairingTopic,
+            sessionTopic = sessionTopic,
+            sessionProposalResponse = sessionProposalResponse,
+            sessionSettlementRequest = sessionSettlementRequest,
+            correlationId = correlationId
+        ) { result ->
+            result.fold(
+                onSuccess = {
+                    fail("Should not be successful")
+                },
+                onFailure = {
+                    assertTrue(result.exceptionOrNull() is TimeoutCancellationException)
+                }
+            )
+        }
+
+        testScheduler.apply { advanceTimeBy(5000); runCurrent() }
+
+        coVerify { relayServiceMock.approveSessionRequest(any()) }
+    }
+
+    @Test
+    fun `test approveSession error response`() = testScope.runTest {
+        val pairingTopic = com.reown.foundation.common.model.Topic("testPairingTopic")
+        val sessionTopic = com.reown.foundation.common.model.Topic("testSessionTopic")
+        val sessionProposalResponse = "testSessionProposalResponse"
+        val sessionSettlementRequest = "testSessionSettlementRequest"
+        val correlationId = 1234L
+        val expectedId = 123L
+        val errorMessage = "Session approve error"
+        val relayDto = RelayDTO.ApproveSession.Result.JsonRpcError(
+            jsonrpc = "2.0",
+            error = RelayDTO.Error(code = -1, message = errorMessage),
+            id = expectedId
+        )
+
+        coEvery { relayServiceMock.approveSessionRequest(any()) } returns Unit
+        coEvery { relayServiceMock.observeApproveSessionError() } returns flowOf(relayDto)
+        coEvery { relayServiceMock.observeWebSocketEvent() } returns flowOf(WebSocket.Event.OnConnectionOpened("Open"))
+
+        client.observeResults()
+        client.connectionState.value = ConnectionState.Open
+        client.approveSession(
+            pairingTopic = pairingTopic,
+            sessionTopic = sessionTopic,
+            sessionProposalResponse = sessionProposalResponse,
+            sessionSettlementRequest = sessionSettlementRequest,
+            correlationId = correlationId,
+            id = expectedId
+        ) { result ->
+            result.fold(
+                onSuccess = {
+                    fail("Should not be successful")
+                },
+                onFailure = {
+                    assertTrue(it.message?.contains(errorMessage) == true)
+                }
+            )
+        }
+
+        coVerify { relayServiceMock.approveSessionRequest(any()) }
     }
 }

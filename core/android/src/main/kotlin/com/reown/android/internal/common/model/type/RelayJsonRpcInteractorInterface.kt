@@ -5,6 +5,7 @@ import com.reown.android.internal.common.model.EnvelopeType
 import com.reown.android.internal.common.model.IrnParams
 import com.reown.android.internal.common.model.Participants
 import com.reown.android.internal.common.model.WCRequest
+import com.reown.android.internal.common.model.params.CoreSignParams
 import com.reown.android.relay.WSSConnectionState
 import com.reown.foundation.common.model.Topic
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +21,28 @@ interface RelayJsonRpcInteractorInterface : JsonRpcInteractorInterface {
     fun batchSubscribe(topics: List<String>, onSuccess: (List<String>) -> Unit = {}, onFailure: (Throwable) -> Unit = {})
 
     fun unsubscribe(topic: Topic, onSuccess: () -> Unit = {}, onFailure: (Throwable) -> Unit = {})
+
+    fun proposeSession(
+        topic: Topic,
+        payload: JsonRpcClientSync<*>,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    )
+
+    fun approveSession(
+        pairingTopic: Topic,
+        sessionTopic: Topic,
+        sessionProposalResponse: CoreSignParams.ApprovalParams,
+        settleRequest: JsonRpcClientSync<*>,
+        approvedChains: List<String>? = null,
+        approvedMethods: List<String>? = null,
+        approvedEvents: List<String>? = null,
+        sessionProperties: Map<String, String>? = null,
+        scopedProperties: Map<String, String>? = null,
+        correlationId: Long,
+        onSuccess: () -> Unit,
+        onFailure: (Throwable) -> Unit,
+    )
 
     fun publishJsonRpcRequest(
         topic: Topic,

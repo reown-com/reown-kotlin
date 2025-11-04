@@ -8,11 +8,129 @@ import com.reown.foundation.common.adapters.TtlAdapter
 import com.reown.foundation.common.model.SubscriptionId
 import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
+import com.reown.foundation.network.model.RelayDTO.Publish.Request.Params
 import com.reown.util.generateClientToServerId
 
 sealed class RelayDTO {
     abstract val id: Long
     abstract val jsonrpc: String
+
+    sealed class ProposeSession : RelayDTO() {
+
+        @JsonClass(generateAdapter = true)
+        data class Request(
+            @Json(name = "id")
+            override val id: Long = generateClientToServerId(),
+            @Json(name = "jsonrpc")
+            override val jsonrpc: String = "2.0",
+            @Json(name = "method")
+            val method: String = WC_PROPOSE_SESSION,
+            @Json(name = "params")
+            val params: Params,
+        ) : ProposeSession() {
+
+            @JsonClass(generateAdapter = true)
+            data class Params(
+                @Json(name = "pairingTopic")
+                @field:TopicAdapter.Qualifier
+                val pairingTopic: Topic,
+                @Json(name = "sessionProposal")
+                val sessionProposal: String,
+                @Json(name = "attestation")
+                val attestation: String?,
+                @Json(name = "correlationId")
+                val correlationId: Long
+            )
+        }
+
+        sealed class Result : ProposeSession() {
+
+            @JsonClass(generateAdapter = true)
+            data class Acknowledgement(
+                @Json(name = "id")
+                override val id: Long,
+                @Json(name = "jsonrpc")
+                override val jsonrpc: String = "2.0",
+                @Json(name = "result")
+                val result: Boolean,
+            ) : Result()
+
+            @JsonClass(generateAdapter = true)
+            data class JsonRpcError(
+                @Json(name = "jsonrpc")
+                override val jsonrpc: String = "2.0",
+                @Json(name = "error")
+                val error: Error,
+                @Json(name = "id")
+                override val id: Long,
+            ) : Result()
+        }
+    }
+
+    sealed class ApproveSession : RelayDTO() {
+
+        @JsonClass(generateAdapter = true)
+        data class Request(
+            @Json(name = "id")
+            override val id: Long = generateClientToServerId(),
+            @Json(name = "jsonrpc")
+            override val jsonrpc: String = "2.0",
+            @Json(name = "method")
+            val method: String = WC_APPROVE_SESSION,
+            @Json(name = "params")
+            val params: Params,
+        ) : ApproveSession() {
+
+            @JsonClass(generateAdapter = true)
+            data class Params(
+                @Json(name = "pairingTopic")
+                @field:TopicAdapter.Qualifier
+                val pairingTopic: Topic,
+                @Json(name = "sessionTopic")
+                @field:TopicAdapter.Qualifier
+                val sessionTopic: Topic,
+                @Json(name = "sessionProposalResponse")
+                val sessionProposalResponse: String,
+                @Json(name = "sessionSettlementRequest")
+                val sessionSettlementRequest: String,
+                @Json(name = "approvedChains")
+                val approvedChains: List<String>?,
+                @Json(name = "approvedMethods")
+                val approvedMethods: List<String>?,
+                @Json(name = "approvedEvents")
+                val approvedEvents: List<String>?,
+                @Json(name = "sessionProperties")
+                val sessionProperties: Map<String, String>?,
+                @Json(name = "scopedProperties")
+                val scopedProperties: Map<String, String>?,
+                @Json(name = "correlationId")
+                val correlationId: Long
+            )
+        }
+
+        sealed class Result : ApproveSession() {
+
+            @JsonClass(generateAdapter = true)
+            data class Acknowledgement(
+                @Json(name = "id")
+                override val id: Long,
+                @Json(name = "jsonrpc")
+                override val jsonrpc: String = "2.0",
+                @Json(name = "result")
+                val result: Boolean,
+            ) : Result()
+
+            @JsonClass(generateAdapter = true)
+            data class JsonRpcError(
+                @Json(name = "jsonrpc")
+                override val jsonrpc: String = "2.0",
+                @Json(name = "error")
+                val error: Error,
+                @Json(name = "id")
+                override val id: Long,
+            ) : Result()
+        }
+    }
 
     sealed class Publish : RelayDTO() {
 

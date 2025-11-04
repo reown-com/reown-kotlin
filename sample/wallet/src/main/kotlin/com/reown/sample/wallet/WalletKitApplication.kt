@@ -23,8 +23,8 @@ import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.sample.wallet.domain.NotificationHandler
 import com.reown.sample.wallet.domain.NotifyDelegate
 import com.reown.sample.wallet.domain.SmartAccountEnabler
-import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.StacksAccountDelegate
+//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
@@ -51,20 +51,18 @@ class WalletKitApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         EthAccountDelegate.application = this
-        SolanaAccountDelegate.application = this
+//        SolanaAccountDelegate.application = this
         StacksAccountDelegate.application = this
 
         Stacks.init(BuildConfig.PROJECT_ID, applicationContext.packageName)
         println("kobe: wallet: ${StacksAccountDelegate.mainnetAddress} ; ${StacksAccountDelegate.testnetAddress}")
 
-        try {
-            SolanaAccountDelegate.getSolanaPubKeyForKeyPair()
-        } catch (e: Exception) {
-            Firebase.crashlytics.recordException(e)
-            println("Solana Keys Error: $e")
-        }
-
-
+//        try {
+//            SolanaAccountDelegate.getSolanaPubKeyForKeyPair()
+//        } catch (e: Exception) {
+//            Firebase.crashlytics.recordException(e)
+//            println("Solana Keys Error: $e")
+//        }
 
         SmartAccountEnabler.init(this)
 
