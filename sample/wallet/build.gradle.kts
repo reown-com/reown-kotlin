@@ -25,6 +25,8 @@ android {
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
         buildConfigField("String", "PIMLICO_API_KEY", "\"${System.getenv("PIMLICO_API_KEY") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
+
+        ndk.abiFilters += listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
     }
 
     buildTypes {
@@ -56,6 +58,12 @@ android {
         targetCompatibility = jvmVersion
     }
 
+    packaging {
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_utils.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_utils.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_utils.so")
+    }
+
     kotlinOptions {
         jvmTarget = jvmVersion.toString()
         freeCompilerArgs = listOf("-Xcontext-receivers")
@@ -83,6 +91,7 @@ dependencies {
     implementation("rustls:rustls-platform-verifier:0.1.1")
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 
+    implementation("com.github.reown-com:yttrium-utils:unspecified")
     implementation("org.web3j:core:4.9.4")
 
     // Retrofit

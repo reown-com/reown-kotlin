@@ -48,6 +48,10 @@ import com.reown.sample.common.ui.theme.PreviewTheme
 import com.reown.sample.common.ui.theme.UiModePreview
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.domain.StacksAccountDelegate
+import com.reown.sample.wallet.domain.account.SmartAccountEnabler
+import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
@@ -65,13 +69,26 @@ fun SettingsRoute(navController: NavHostController) {
                 Item.SettingCopyableItem("Private key", viewModel.privateKey),
             )
         ),
-//        Section.SettingsSection(
-//            "Solana Account", listOf(
-//                Item.SettingCopyableItem("Public key", viewModel.solanaKeys.second),
-//                Item.SettingCopyableItem("Private key", viewModel.solanaKeys.first),
-//                Item.SettingCopyableItem("Key pair", SolanaAccountDelegate.keyPair),
-//            )
-//        ),
+        Section.SettingsSection(
+            "TON Account", listOf(
+                Item.SettingCopyableItem("Friendly address", TONAccountDelegate.addressFriendly),
+                Item.SettingCopyableItem("Secret key", TONAccountDelegate.secretKey),
+                Item.SettingCopyableItem("Public key", TONAccountDelegate.publicKey),
+            )
+        ),
+        Section.SettingsSection(
+            "Solana Account", listOf(
+                Item.SettingCopyableItem("Keypair", SolanaAccountDelegate.keyPair),
+                Item.SettingCopyableItem("public key", SolanaAccountDelegate.keys.second),
+            )
+        ),
+        Section.SettingsSection(
+            "Stacks Account", listOf(
+                Item.SettingCopyableItem("Wallet", StacksAccountDelegate.importedWallet),
+                Item.SettingCopyableItem("Address Mainnet", StacksAccountDelegate.mainnetAddress),
+                Item.SettingCopyableItem("Address Testnet", StacksAccountDelegate.testnetAddress),
+            )
+        ),
         Section.SettingsSection(
             "SUI Account", listOf(
                 Item.SettingCopyableItem("Address", SuiAccountDelegate.address),

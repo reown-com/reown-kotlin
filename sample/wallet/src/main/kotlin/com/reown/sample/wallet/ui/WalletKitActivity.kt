@@ -38,7 +38,6 @@ import com.pandulapeter.beagle.modules.PaddingModule
 import com.pandulapeter.beagle.modules.ScreenCaptureToolboxModule
 import com.pandulapeter.beagle.modules.TextInputModule
 import com.pandulapeter.beagle.modules.TextModule
-import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.utils.cacao.sign
@@ -49,8 +48,7 @@ import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
-import com.reown.sample.wallet.domain.NotifyDelegate
-import com.reown.sample.wallet.domain.account.SuiAccountDelegate
+import com.reown.sample.wallet.domain.notify.NotifyDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
@@ -297,16 +295,6 @@ class WalletKitActivity : AppCompatActivity() {
 //                )
 //            },
             PaddingModule(size = PaddingModule.Size.LARGE),
-            TextModule(text = "SUI Key Pair"),
-            TextModule(text = SuiAccountDelegate.keypair) {
-                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
-                    ClipData.newPlainText(
-                        "SUI Key Pair",
-                        SuiAccountDelegate.keypair
-                    )
-                )
-            },
-            PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "Client ID"),
             TextModule(text = CoreClient.Push.clientId, id = CoreClient.Push.clientId) {
                 (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("ClientId", CoreClient.Push.clientId))
@@ -339,15 +327,7 @@ class WalletKitActivity : AppCompatActivity() {
 //                onValueChanged = { text ->
 //                    SolanaAccountDelegate.keyPair = text
 //                }
-//            ),
-            DividerModule(),
-            TextInputModule(
-                text = "Import SUI Key Pair",
-                areRealTimeUpdatesEnabled = false,
-                onValueChanged = { text ->
-                    SuiAccountDelegate.keypair = text
-                }
-            )
+//            )
         )
     }
 

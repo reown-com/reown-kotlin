@@ -1,4 +1,4 @@
-package com.reown.sample.wallet.domain
+package com.reown.sample.wallet.domain.signer
 
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.utils.cacao.sign

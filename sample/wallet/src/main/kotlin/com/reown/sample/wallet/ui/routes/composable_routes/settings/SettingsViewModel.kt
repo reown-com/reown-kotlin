@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.messaging.FirebaseMessaging
 import com.reown.android.CoreClient
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
-//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.walletkit.client.SmartAccountExperimentalApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,8 +16,6 @@ class SettingsViewModel : ViewModel() {
     val caip10 = EthAccountDelegate.ethAccount
     val privateKey = EthAccountDelegate.privateKey
     val clientId = CoreClient.Echo.clientId
-
-//    val solanaKeys get() = SolanaAccountDelegate.keys
 
 //    fun getSmartAccount(): String {
 //        val params = Wallet.Params.GetSmartAccountAddress(Wallet.Params.Account(address = EthAccountDelegate.sepoliaAddress))
