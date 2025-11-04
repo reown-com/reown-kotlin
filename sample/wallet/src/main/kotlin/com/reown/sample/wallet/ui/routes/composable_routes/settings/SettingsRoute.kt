@@ -51,7 +51,7 @@ import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
-//import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 
 @Composable
@@ -72,6 +72,12 @@ fun SettingsRoute(navController: NavHostController) {
                 Item.SettingCopyableItem("Friendly address", TONAccountDelegate.addressFriendly),
                 Item.SettingCopyableItem("Secret key", TONAccountDelegate.secretKey),
                 Item.SettingCopyableItem("Public key", TONAccountDelegate.publicKey),
+            )
+        ),
+        Section.SettingsSection(
+            "Solana Account", listOf(
+                Item.SettingCopyableItem("Keypair", SolanaAccountDelegate.keyPair),
+                Item.SettingCopyableItem("public key", SolanaAccountDelegate.keys.second),
             )
         ),
         Section.SettingsSection(

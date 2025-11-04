@@ -2,8 +2,8 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
 import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
-//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
@@ -125,12 +125,12 @@ val walletMetaData = WalletMetaData(
             methods = listOf("stx_transferStx", "stx_signMessage"),
             events = listOf("stx_accountsChanged", "stx_chainChanged"),
             accounts = listOf(StacksAccountDelegate.mainnetAddress, StacksAccountDelegate.testnetAddress)
+        ),
+        "solana" to Wallet.Model.Namespace.Session(
+            chains = listOf(Chain.SOLANA.id),
+            methods = listOf("solana_signMessage", "solana_signTransaction", "solana_signAndSendTransaction", "solana_signAllTransactions"),
+            events = listOf("accountsChanged", "chainChanged"),
+            accounts = listOf(SolanaAccountDelegate.keys.third)
         )
-//        "solana" to Wallet.Model.Namespace.Session(
-//            chains = listOf(Chain.SOLANA.id),
-//            methods = listOf("solana_signMessage", "solana_signTransaction", "solana_signAndSendTransaction", "solana_signAllTransactions"),
-//            events = listOf("accountsChanged", "chainChanged"),
-//            accounts = listOf(SolanaAccountDelegate.keys.third)
-//        )
     )
 )

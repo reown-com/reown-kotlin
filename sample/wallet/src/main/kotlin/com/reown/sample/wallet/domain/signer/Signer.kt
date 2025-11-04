@@ -3,6 +3,7 @@ package com.reown.sample.wallet.domain.signer
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.domain.model.Transaction
@@ -13,6 +14,7 @@ import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
 import org.json.JSONObject
 import uniffi.yttrium_utils.SendTxMessage
+import uniffi.yttrium_utils.solanaSignPrehash
 
 object Signer {
     suspend fun sign(sessionRequest: SessionRequestUI.Content): String = supervisorScope {
@@ -192,6 +194,12 @@ object Signer {
 
             sessionRequest.method == "solana_signAllTransactions" -> {
                 """{"transactions":["2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"]}"""
+            }
+            sessionRequest.method == "solana_signMessage" -> {
+                val jsonObject = JSONObject(sessionRequest.param)
+                val message = jsonObject.getString("message")
+                val result = solanaSignPrehash(SolanaAccountDelegate.keyPair, message)
+                """{"signature":"$result"}"""
             }
             //Note: Only for testing purposes - it will always fail on Dapp side
             sessionRequest.chain?.contains(Chains.Info.Solana.chain, true) == true ->

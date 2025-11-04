@@ -1,6 +1,5 @@
 package com.reown.sample.wallet
 
-//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import android.app.Application
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
@@ -22,6 +21,7 @@ import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.TONClient
@@ -51,25 +51,11 @@ class WalletKitApplication : Application() {
         super.onCreate()
         EthAccountDelegate.application = this
         TONAccountDelegate.application =  this
-//        SolanaAccountDelegate.application = this
+        SolanaAccountDelegate.application = this
         StacksAccountDelegate.application = this
 
         Stacks.init(BuildConfig.PROJECT_ID, applicationContext.packageName)
-        println("kobe: wallet: ${StacksAccountDelegate.mainnetAddress} ; ${StacksAccountDelegate.testnetAddress}")
-
-//        try {
-//            SolanaAccountDelegate.getSolanaPubKeyForKeyPair()
-//        } catch (e: Exception) {
-//            Firebase.crashlytics.recordException(e)
-//            println("Solana Keys Error: $e")
-//        }
-
         TONClient.init(this.packageName)
-
-//        TONAccountDelegate.storeAccount(Keypair(TONAccountDelegate.secretKey, TONAccountDelegate.publicKey))
-
-        println("kobe: Wallet: ${TONAccountDelegate.wallet}")
-        println("kobe: KeyPair: ${TONAccountDelegate.keypair}")
 
         SmartAccountEnabler.init(this)
 
