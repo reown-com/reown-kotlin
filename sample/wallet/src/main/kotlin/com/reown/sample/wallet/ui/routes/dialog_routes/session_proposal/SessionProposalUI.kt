@@ -1,10 +1,12 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
+import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
+import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.walletkit.client.Wallet
 
 data class SessionProposalUI(

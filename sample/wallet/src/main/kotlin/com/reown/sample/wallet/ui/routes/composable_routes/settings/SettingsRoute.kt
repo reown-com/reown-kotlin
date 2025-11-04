@@ -48,6 +48,7 @@ import com.reown.sample.common.ui.theme.PreviewTheme
 import com.reown.sample.common.ui.theme.UiModePreview
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate

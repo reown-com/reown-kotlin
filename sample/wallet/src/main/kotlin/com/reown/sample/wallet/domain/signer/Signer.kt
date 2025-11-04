@@ -1,24 +1,18 @@
 package com.reown.sample.wallet.domain.signer
 
 import com.reown.sample.common.Chains
+import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
-import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
-import com.reown.walletkit.client.Wallet
-import com.reown.walletkit.client.WalletKit
-import com.reown.walletkit.utils.Stacks
-import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
 import org.json.JSONObject
 import uniffi.yttrium_utils.SendTxMessage
-import org.json.JSONObject
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 object Signer {
     suspend fun sign(sessionRequest: SessionRequestUI.Content): String = supervisorScope {
@@ -162,7 +156,6 @@ object Signer {
             //Note: Only for testing purposes - it will always fail on Dapp side
             sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
                 """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
-            sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
             sessionRequest.method == STACKS_SIGN_MESSAGE -> {
                 println("kobe: Params: ${sessionRequest.param}")
                 val message = JSONObject(sessionRequest.param).getString("message")
@@ -183,9 +176,7 @@ object Signer {
                     val result = Stacks.transferStx(StacksAccountDelegate.wallet, Chain.STACKS_TESTNET.id, recipient, amount, "", sender = sender)
                     """{"txid": "${result.first}", "transaction": "${result.second}"}"""
                 }
-
             }
-
 
             //Note: Only for testing purposes - it will always fail on Dapp side
             sessionRequest.chain?.contains(Chains.Info.Eth.chain, true) == true ->

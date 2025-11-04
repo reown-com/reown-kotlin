@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
-import com.reown.walletkit.utils.Stacks
+import com.reown.sample.wallet.domain.client.Stacks
 
 object StacksAccountDelegate {
     lateinit var application: Application

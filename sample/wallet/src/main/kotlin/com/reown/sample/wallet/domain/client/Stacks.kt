@@ -1,12 +1,12 @@
-package com.reown.walletkit.utils
+package com.reown.sample.wallet.domain.client
 
 import com.reown.walletkit.BuildConfig
-import uniffi.yttrium.PulseMetadata
-import uniffi.yttrium.StacksClient
-import uniffi.yttrium.TransferStxRequest
-import uniffi.yttrium.stacksGenerateWallet
-import uniffi.yttrium.stacksGetAddress
-import uniffi.yttrium.stacksSignMessage
+import uniffi.yttrium_utils.PulseMetadata
+import uniffi.yttrium_utils.StacksClient
+import uniffi.yttrium_utils.TransferStxRequest
+import uniffi.yttrium_utils.stacksGenerateWallet
+import uniffi.yttrium_utils.stacksGetAddress
+import uniffi.yttrium_utils.stacksSignMessage
 
 object Stacks {
     private lateinit var client: StacksClient
@@ -28,7 +28,9 @@ object Stacks {
 
     suspend fun transferStx(wallet: String, network: String, recipient: String, amount: String, memo: String, sender: String): Pair<String, String> {
         check(::client.isInitialized) { "Initialize SuiUtils before using it." }
-        val result = client.transferStx(wallet, network, TransferStxRequest(recipient = recipient, amount = amount.toULong(), memo = memo, sender = sender))
+        val result = client.transferStx(wallet, network,
+            TransferStxRequest(recipient = recipient, amount = amount.toULong(), memo = memo, sender = sender)
+        )
         return Pair(result.txid, result.transaction)
     }
 
