@@ -1,10 +1,10 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
-import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.account.TONAccountDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
-import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.walletkit.client.Wallet
 
 data class SessionProposalUI(
@@ -111,6 +111,12 @@ val walletMetaData = WalletMetaData(
                 "cosmos:cosmoshub-4:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc",
                 "cosmos:cosmoshub-1:cosmos1w605a5ejjlhp04eahjqxhjhmg8mj6nqhp8v6xc"
             )
+        ),
+        "ton" to Wallet.Model.Namespace.Session(
+            chains = listOf(TONAccountDelegate.mainnet),
+            methods = listOf("ton_sendMessage", "ton_signData"),
+            events = listOf(),
+            accounts = listOf(TONAccountDelegate.caip10MainnetAddress)
         ),
         "stacks" to Wallet.Model.Namespace.Session(
             chains = listOf(Chain.STACKS_MAINNET.id, Chain.STACKS_TESTNET.id),
