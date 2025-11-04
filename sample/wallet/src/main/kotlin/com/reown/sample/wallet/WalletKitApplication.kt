@@ -1,5 +1,6 @@
 package com.reown.sample.wallet
 
+//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import android.app.Application
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
@@ -18,15 +19,15 @@ import com.reown.android.relay.ConnectionType
 import com.reown.foundation.util.Logger
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
+import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
-import com.reown.sample.wallet.domain.notify.NotificationHandler
-import com.reown.sample.wallet.domain.notify.NotifyDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
-import com.reown.sample.wallet.domain.client.Keypair
+import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.TONClient
-//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
+import com.reown.sample.wallet.domain.notify.NotificationHandler
+import com.reown.sample.wallet.domain.notify.NotifyDelegate
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
@@ -41,7 +42,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named
 import timber.log.Timber
-//import uniffi.uniffi_yttrium.AccountClient
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
 class WalletKitApplication : Application() {
@@ -52,6 +52,10 @@ class WalletKitApplication : Application() {
         EthAccountDelegate.application = this
         TONAccountDelegate.application =  this
 //        SolanaAccountDelegate.application = this
+        StacksAccountDelegate.application = this
+
+        Stacks.init(BuildConfig.PROJECT_ID, applicationContext.packageName)
+        println("kobe: wallet: ${StacksAccountDelegate.mainnetAddress} ; ${StacksAccountDelegate.testnetAddress}")
 
 //        try {
 //            SolanaAccountDelegate.getSolanaPubKeyForKeyPair()
