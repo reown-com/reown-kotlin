@@ -25,6 +25,8 @@ import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.TONClient
+//import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.domain.notify.NotificationHandler
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
@@ -32,6 +34,7 @@ import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import com.reown.sample.wallet.domain.client.SuiUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -49,17 +52,20 @@ class WalletKitApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        val projectId = BuildConfig.PROJECT_ID
+
         EthAccountDelegate.application = this
         TONAccountDelegate.application =  this
         SolanaAccountDelegate.application = this
         StacksAccountDelegate.application = this
+        SuiAccountDelegate.application = this
+        SuiUtils.init(projectId, this.packageName, applicationContext)
 
         Stacks.init(BuildConfig.PROJECT_ID, applicationContext.packageName)
         TONClient.init(this.packageName)
 
         SmartAccountEnabler.init(this)
 
-        val projectId = BuildConfig.PROJECT_ID
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Wallet",
             description = "Kotlin Wallet Implementation",

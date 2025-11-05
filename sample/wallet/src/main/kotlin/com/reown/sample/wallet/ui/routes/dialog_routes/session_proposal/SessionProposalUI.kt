@@ -4,6 +4,9 @@ import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
+//import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
@@ -131,6 +134,12 @@ val walletMetaData = WalletMetaData(
             methods = listOf("solana_signMessage", "solana_signTransaction", "solana_signAndSendTransaction", "solana_signAllTransactions"),
             events = listOf("accountsChanged", "chainChanged"),
             accounts = listOf(SolanaAccountDelegate.keys.third)
+        ),
+        "sui" to Wallet.Model.Namespace.Session(
+            chains = listOf(Chain.SUI.id, Chain.SUI_TESTNET.id),
+            methods = listOf("sui_signAndExecuteTransaction", "sui_signTransaction", "sui_signPersonalMessage"),
+            events = listOf("accountsChanged", "chainChanged"),
+            accounts = listOf(SuiAccountDelegate.mainnetAddress, SuiAccountDelegate.testnetAddress)
         )
     )
 )

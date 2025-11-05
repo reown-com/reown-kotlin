@@ -4,7 +4,9 @@ import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
+import com.reown.sample.wallet.domain.client.SuiUtils
 import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
@@ -15,6 +17,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import uniffi.yttrium_utils.SendTxMessage
 import uniffi.yttrium_utils.solanaSignPrehash
+import kotlin.io.encoding.Base64
 
 object Signer {
     suspend fun sign(sessionRequest: SessionRequestUI.Content): String = supervisorScope {
@@ -178,6 +181,26 @@ object Signer {
                     val result = Stacks.transferStx(StacksAccountDelegate.wallet, Chain.STACKS_TESTNET.id, recipient, amount, "", sender = sender)
                     """{"txid": "${result.first}", "transaction": "${result.second}"}"""
                 }
+            }
+
+            sessionRequest.method == "sui_signPersonalMessage" -> {
+                val message = JSONObject(sessionRequest.param).getString("message")
+                val signature = SuiUtils.personalSign(SuiAccountDelegate.keypair, message.toByteArray())
+                """{"signature":"$signature"}"""
+            }
+
+            sessionRequest.method == "sui_signTransaction" -> {
+                val transaction = JSONObject(sessionRequest.param).getString("transaction")
+                val decoded = Base64.decode(transaction)
+                val signTxResult = SuiUtils.signTransaction(Chain.SUI_TESTNET.id, SuiAccountDelegate.keypair, decoded)
+                """{"signature":"${signTxResult.first}", "transactionBytes":"${signTxResult.second}"}"""
+            }
+
+            sessionRequest.method == "sui_signAndExecuteTransaction" -> {
+                val transaction = JSONObject(sessionRequest.param).getString("transaction")
+                val decoded = Base64.decode(transaction)
+                val digest = SuiUtils.signAndExecuteTransaction(Chain.SUI_TESTNET.id, SuiAccountDelegate.keypair, decoded)
+                """{"digest":"$digest"}"""
             }
 
             //Note: Only for testing purposes - it will always fail on Dapp side

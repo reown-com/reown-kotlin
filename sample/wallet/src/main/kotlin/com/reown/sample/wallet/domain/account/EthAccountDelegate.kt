@@ -18,7 +18,8 @@ object EthAccountDelegate {
     private const val PUBLIC_KEY_TAG = "self_public_key"
 
     private val isInitialized
-        get() = (sharedPreferences.getString(ACCOUNT_TAG, null) != null) && (sharedPreferences.getString(PRIVATE_KEY_TAG, null) != null) && (sharedPreferences.getString(PUBLIC_KEY_TAG, null) != null)
+        get() = (sharedPreferences.getString(ACCOUNT_TAG, null) != null) && (sharedPreferences.getString(PRIVATE_KEY_TAG, null) != null) && (sharedPreferences.getString(
+            PUBLIC_KEY_TAG, null) != null)
 
     private fun storeAccount(privateKey: String? = null): Triple<String, String, String> = generateKeys(privateKey).also { (publicKey, privateKey, address) ->
         sharedPreferences.edit { putString(ACCOUNT_TAG, address) }
