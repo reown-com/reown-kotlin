@@ -52,7 +52,6 @@ import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
-import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 

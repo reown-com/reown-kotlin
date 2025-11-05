@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
-import com.reown.walletkit.utils.sui.SuiUtils
+import com.reown.sample.wallet.domain.client.SuiUtils
 
 object SuiAccountDelegate {
     lateinit var application: Application

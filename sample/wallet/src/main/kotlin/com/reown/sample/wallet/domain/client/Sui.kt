@@ -1,24 +1,25 @@
-package com.reown.walletkit.utils.sui
+package com.reown.sample.wallet.domain.client
 
 import android.content.Context
-import com.yttrium.YttriumKt
-import uniffi.yttrium.PulseMetadata
-import uniffi.yttrium.SuiClient
-import uniffi.yttrium.suiGenerateKeypair
-import uniffi.yttrium.suiGetAddress
-import uniffi.yttrium.suiGetPublicKey
-import uniffi.yttrium.suiPersonalSign
+import com.reown.walletkit.BuildConfig
+import com.yttrium.utils.YttriumUtilsKt
+import uniffi.yttrium_utils.PulseMetadata
+import uniffi.yttrium_utils.suiGenerateKeypair
+import uniffi.yttrium_utils.suiGetAddress
+import uniffi.yttrium_utils.suiGetPublicKey
+import uniffi.yttrium_utils.suiPersonalSign
+import uniffi.yttrium_utils.SuiClient
 
 object SuiUtils {
     private lateinit var client: SuiClient
 
     fun init(projectId: String, packageName: String, applicationContext: Context) {
-        YttriumKt.initializeTls(applicationContext)
+        YttriumUtilsKt.initializeTls(applicationContext)
 
         client = SuiClient(
             projectId = projectId, pulseMetadata = PulseMetadata(
                 sdkPlatform = "mobile",
-                sdkVersion = "reown-kotlin-${com.reown.walletkit.BuildConfig.SDK_VERSION}",
+                sdkVersion = "reown-kotlin-${BuildConfig.SDK_VERSION}",
                 bundleId = packageName,
                 url = null
             )

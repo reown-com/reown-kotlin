@@ -25,11 +25,7 @@ import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.TONClient
-import com.reown.sample.wallet.domain.account.EthAccountDelegate
-import com.reown.sample.wallet.domain.NotificationHandler
-import com.reown.sample.wallet.domain.NotifyDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
-import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.domain.notify.NotificationHandler
@@ -38,7 +34,7 @@ import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import com.reown.walletkit.utils.sui.SuiUtils
+import com.reown.sample.wallet.domain.client.SuiUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
