@@ -18,9 +18,9 @@ object SmartAccountEnabler {
     val isSmartAccountEnabled by lazy { _isSmartAccountEnabled.asStateFlow() }
 
     fun init(context: Context) {
-        this.context = context
-        this.sharedPrefs = context.getSharedPreferences(SA_PREFS, Context.MODE_PRIVATE)
-        this._isSmartAccountEnabled = MutableStateFlow(sharedPrefs.getBoolean(SAFE_ENABLED_KEY, false))
+        SmartAccountEnabler.context = context
+        sharedPrefs = context.getSharedPreferences(SA_PREFS, Context.MODE_PRIVATE)
+        _isSmartAccountEnabled = MutableStateFlow(sharedPrefs.getBoolean(SAFE_ENABLED_KEY, false))
     }
 
     fun enableSmartAccount(isEnabled: Boolean) {
