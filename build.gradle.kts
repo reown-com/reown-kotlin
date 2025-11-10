@@ -26,12 +26,15 @@ allprojects {
     }
 
     configurations.configureEach {
-        resolutionStrategy.eachDependency {
-            if (requested.group == "androidx.navigation" && requested.name == "navigation-compose") {
-                useVersion(libs.versions.androidxNavigation.get())
-            }
-            if (requested.group == "org.bouncycastle" && requested.name == "bcprov-jdk15on") {
-                useTarget(libs.bouncyCastle)
+        resolutionStrategy {
+//            force("net.java.dev.jna:jna:5.17.0")
+            eachDependency {
+                if (requested.group == "androidx.navigation" && requested.name == "navigation-compose") {
+                    useVersion(libs.versions.androidxNavigation.get())
+                }
+                if (requested.group == "org.bouncycastle" && requested.name == "bcprov-jdk15on") {
+                    useTarget(libs.bouncyCastle)
+                }
             }
         }
     }
@@ -135,41 +138,41 @@ tasks.register("closeAndReleaseMultipleRepositories") {
 
     doLast {
         println("Starting closeAndReleaseMultipleRepositories task...")
-        
+
         println("Fetching staging repositories...")
         val repos = fetchStagingRepositories()
         if (repos.isEmpty()) {
             println("No staging repositories found")
             return@doLast
         }
-        
+
         println("Found ${repos.size} staging repositories")
         repos.forEach { repo ->
             println("Repository: ${repo.key}, State: ${repo.state}")
         }
-        
+
         // Upload each repository individually using their specific keys
         // This works better with the OSSRH Staging API than the defaultRepository endpoint
         val openRepos = repos.filter { it.state == "open" }
         val closedRepos = repos.filter { it.state == "closed" }
-        
+
         println("Processing ${openRepos.size} open repositories and ${closedRepos.size} closed repositories")
-        
+
         if (openRepos.isNotEmpty()) {
             println("Uploading ${openRepos.size} open repositories to Central Portal using individual repository keys")
             uploadRepositoriesToPortal(openRepos)
         }
-        
+
         if (closedRepos.isNotEmpty()) {
             println("Uploading ${closedRepos.size} closed repositories to Central Portal using individual repository keys")
             uploadRepositoriesToPortal(closedRepos)
         }
-        
+
         if (openRepos.isEmpty() && closedRepos.isEmpty()) {
             println("No repositories to upload to Portal")
             return@doLast
         }
-        
+
         println("Starting to wait for artifacts to be available on Maven Central...")
         // Wait for artifacts to be available on Maven Central since we're using automatic publishing
         waitForArtifactsToBeAvailable()
@@ -183,19 +186,19 @@ tasks.register("dropStagingRepositories") {
 
     doLast {
         println("Starting dropStagingRepositories task...")
-        
+
         println("Fetching staging repositories...")
         val repos = fetchStagingRepositories()
         if (repos.isEmpty()) {
             println("No staging repositories found to drop")
             return@doLast
         }
-        
+
         println("Found ${repos.size} staging repositories")
         repos.forEach { repo ->
             println("Repository: ${repo.key}, State: ${repo.state}")
         }
-        
+
         // Drop all repositories regardless of state
         println("Dropping all ${repos.size} staging repositories...")
         repos.forEachIndexed { index, repo ->
@@ -203,7 +206,7 @@ tasks.register("dropStagingRepositories") {
             dropStagingRepository(repo.key)
             println("Completed dropping repository ${index + 1}/${repos.size}: ${repo.key}")
         }
-        
+
         println("All staging repositories have been dropped successfully!")
         println("You can now run the closeAndReleaseMultipleRepositories task again to create fresh staging repositories.")
     }
@@ -236,17 +239,17 @@ fun fetchStagingRepositories(): List<StagingRepository> {
 fun parseRepositoriesResponse(jsonResponse: String): List<StagingRepository> {
     // Simple JSON parsing - in a real implementation you might want to use a proper JSON library
     val repositories = mutableListOf<StagingRepository>()
-    
+
     // Extract repositories array from JSON response
     val repositoriesStart = jsonResponse.indexOf("\"repositories\":")
     if (repositoriesStart == -1) return repositories
-    
+
     val arrayStart = jsonResponse.indexOf("[", repositoriesStart)
     val arrayEnd = jsonResponse.lastIndexOf("]")
     if (arrayStart == -1 || arrayEnd == -1) return repositories
-    
+
     val repositoriesArray = jsonResponse.substring(arrayStart + 1, arrayEnd)
-    
+
     // Parse each repository object (simple regex-based parsing)
     val repoPattern = """"key":\s*"([^"]+)".*?"state":\s*"([^"]+)".*?(?:"portal_deployment_id":\s*"([^"]*)")?""".toRegex()
     repoPattern.findAll(repositoriesArray).forEach { match ->
@@ -255,7 +258,7 @@ fun parseRepositoriesResponse(jsonResponse: String): List<StagingRepository> {
         val portalDeploymentId = match.groupValues.getOrNull(3)?.takeIf { it.isNotEmpty() }
         repositories.add(StagingRepository(key, state, portalDeploymentId))
     }
-    
+
     return repositories
 }
 
@@ -279,10 +282,10 @@ fun uploadRepositoryToPortal(repositoryKey: String) {
         )
         .build()
     val uploadUrl = "$manualApiUrl/upload/repository/$repositoryKey"
-    
+
     println("Starting upload for repository: $repositoryKey")
     println("Upload URL: $uploadUrl")
-    
+
     val httpPost = HttpPost(uploadUrl).apply {
         setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
         setHeader("Content-Type", "application/json")
@@ -294,10 +297,10 @@ fun uploadRepositoryToPortal(repositoryKey: String) {
         println("Executing HTTP POST request...")
         val response = client.execute(httpPost)
         println("Received response with status: ${response.statusLine.statusCode}")
-        
+
         val responseBody = EntityUtils.toString(response.entity)
         println("Response body length: ${responseBody.length}")
-        
+
         if (response.statusLine.statusCode == 200 || response.statusLine.statusCode == 201) {
             println("Successfully uploaded repository $repositoryKey to Central Portal")
             println("Response: $responseBody")
@@ -327,10 +330,10 @@ fun dropStagingRepository(repositoryKey: String) {
         )
         .build()
     val dropUrl = "$manualApiUrl/drop/repository/$repositoryKey"
-    
+
     println("Starting drop for repository: $repositoryKey")
     println("Drop URL: $dropUrl")
-    
+
     val httpDelete = HttpDelete(dropUrl).apply {
         setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
     }
@@ -339,14 +342,14 @@ fun dropStagingRepository(repositoryKey: String) {
         println("Executing HTTP DELETE request...")
         val response = client.execute(httpDelete)
         println("Received response with status: ${response.statusLine.statusCode}")
-        
+
         val responseBody = if (response.entity != null) {
             EntityUtils.toString(response.entity)
         } else {
             ""
         }
         println("Response body length: ${responseBody.length}")
-        
+
         if (response.statusLine.statusCode == 200 || response.statusLine.statusCode == 201 || response.statusLine.statusCode == 204) {
             println("Successfully dropped repository $repositoryKey")
             if (responseBody.isNotEmpty()) {

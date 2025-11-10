@@ -4,11 +4,11 @@ import android.content.Context
 import com.reown.walletkit.BuildConfig
 import com.yttrium.utils.YttriumUtilsKt
 import uniffi.yttrium_utils.PulseMetadata
+import uniffi.yttrium_utils.SuiClient
 import uniffi.yttrium_utils.suiGenerateKeypair
 import uniffi.yttrium_utils.suiGetAddress
 import uniffi.yttrium_utils.suiGetPublicKey
 import uniffi.yttrium_utils.suiPersonalSign
-import uniffi.yttrium_utils.SuiClient
 
 object SuiUtils {
     private lateinit var client: SuiClient

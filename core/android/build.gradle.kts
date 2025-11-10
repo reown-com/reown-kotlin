@@ -98,8 +98,9 @@ dependencies {
     debugApi(project(":foundation"))
     releaseApi("com.reown:foundation:$FOUNDATION_VERSION")
 
-    implementation("com.github.reown-com:yttrium:unspecified")///$yttriumVersion") //unspecified
-    implementation("net.java.dev.jna:jna:5.17.0@aar")
+    compileOnly("com.github.reown-com:yttrium:0.9.91") {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
 
     api(libs.coroutines)
     implementation(libs.scarlet.android)
