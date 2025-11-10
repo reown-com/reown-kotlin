@@ -98,7 +98,7 @@ dependencies {
     debugApi(project(":foundation"))
     releaseApi("com.reown:foundation:$FOUNDATION_VERSION")
 
-    compileOnly("com.github.reown-com:yttrium:0.9.91") {
+    compileOnly("com.github.reown-com:yttrium:0.9.91") { //unspecified
         exclude(group = "net.java.dev.jna", module = "jna")
     }
 

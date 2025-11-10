@@ -59,9 +59,9 @@ android {
     }
 
     packaging {
-        jniLibs {
-            pickFirsts += setOf("**/libjnidispatch.so")
-        }
+//        jniLibs {
+//            pickFirsts += setOf("**/libjnidispatch.so")
+//        }
 
         jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_utils.so")
         jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_utils.so")
@@ -91,25 +91,29 @@ android {
 
 }
 
+//configurations.all {
+//    resolutionStrategy {
+//        eachDependency {
+//            if (requested.group == "net.java.dev.jna" && requested.name == "jna") {
+//                useVersion("5.17.0")
+//            }
+//        }
+//    }
+//}
 
-
-configurations.all {
-    resolutionStrategy {
-        eachDependency {
-            if (requested.group == "net.java.dev.jna" && requested.name == "jna") {
-                useVersion("5.17.0")
-            }
-        }
-    }
-}
+//configurations.all { exclude(group = "net.java.dev.jna", module = "jna") }
 
 dependencies {
     implementation(project(":sample:common"))
     implementation("rustls:rustls-platform-verifier:0.1.1")
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 
-    implementation("com.github.reown-com:yttrium:kotlin-utils-0.9.99")
-//    implementation("net.java.dev.jna:jna:5.17.0@aar")
+    implementation("com.github.reown-com:yttrium:kotlin-utils-0.9.101")
+//    {
+//        exclude(group = "net.java.dev.jna", module = "jna")
+//    }
+//    implementation("net.java.dev.jna:jna:5.17.0")
+//    implementation("com.github.reown-com:yttrium-utils:unspecified")
 
     implementation("org.web3j:core:4.9.4")
 
