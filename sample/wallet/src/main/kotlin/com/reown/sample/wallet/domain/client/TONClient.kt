@@ -20,7 +20,7 @@ object TONClient {
 
         registerLogger(object : Logger {
             override fun log(message: String) {
-                println("kobe: From Yttrium: $message")
+                println("From Yttrium: $message")
             }
 
         })
@@ -90,7 +90,7 @@ object TONClient {
                 validUntil,
                 messages
             ).also {
-                println("kobe: sent message RESULT: $it")
+                println("Sent message RESULT: $it")
             }
         } catch (e: Exception) {
             println("Error sending message: ${e.message}")

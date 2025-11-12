@@ -27,7 +27,6 @@ allprojects {
 
     configurations.configureEach {
         resolutionStrategy {
-//            force("net.java.dev.jna:jna:5.17.0")
             eachDependency {
                 if (requested.group == "androidx.navigation" && requested.name == "navigation-compose") {
                     useVersion(libs.versions.androidxNavigation.get())

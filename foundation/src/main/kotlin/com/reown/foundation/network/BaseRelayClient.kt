@@ -250,7 +250,6 @@ abstract class BaseRelayClient : RelayInterface {
                         contractAddresses
                     )
                     val publishRequest = RelayDTO.Publish.Request(id = id ?: generateClientToServerId(), params = publishParams)
-                    println("kobe: $publishRequest")
                     observePublishResult(publishRequest.id, onResult)
                     relayService.publishRequest(publishRequest)
                 }

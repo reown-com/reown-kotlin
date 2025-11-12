@@ -91,8 +91,6 @@ object Signer {
 
 //            !SmartAccountEnabler.isSmartAccountEnabled.value -> when {
             sessionRequest.method == "ton_signData" -> {
-                println("kobe: SignData: $sessionRequest")
-
                 try {
                     // Parse the params JSON array
                     val paramsArray = JSONArray(sessionRequest.param)
@@ -102,17 +100,16 @@ object Signer {
                     // Sign the data using TONClient
                     val signature = TONClient.signData(text)
 
-                    println("kobe: Generated signature: $signature")
                     signature
                 } catch (e: Exception) {
-                    println("kobe: Error signing TON data: ${e.message}")
+                    println("Error signing TON data: ${e.message}")
                     throw Exception("Failed to sign TON data: ${e.message}")
                 }
             }
 
             sessionRequest.method == "ton_sendMessage" -> {
                 //params=[{"valid_until":1759397476,"from":"EQDV4YleDzbJ2W8wPMoIm0kG26uI4EU6wU7SofK1OUvS1VaG","messages":[{"address":"EQDV4YleDzbJ2W8wPMoIm0kG26uI4EU6wU7SofK1OUvS1VaG","amount":"1000"}]}]
-                println("kobe: SendMessage: $sessionRequest")
+                println("SendMessage: $sessionRequest")
 
                 try {
                     // Parse the params JSON array
@@ -123,7 +120,7 @@ object Signer {
                     val from = jsonObject.getString("from")
                     val messagesArray = jsonObject.getJSONArray("messages")
 
-                    println("kobe: Extracted valid_until: $validUntil, from: $from, messages: $messagesArray")
+                    println("Extracted valid_until: $validUntil, from: $from, messages: $messagesArray")
 
                     // Convert messages array to List<SendTxMessage>
                     val sendTxMessages = mutableListOf<SendTxMessage>()
@@ -136,16 +133,16 @@ object Signer {
                         val sendTxMessage = SendTxMessage(address, amount, null, null)
                         sendTxMessages.add(sendTxMessage)
 
-                        println("kobe: Created SendTxMessage - address: $address, amount: $amount")
+                        println("Created SendTxMessage - address: $address, amount: $amount")
                     }
 
                     // Send the message using TONClient
                     val result = TONClient.sendMessage(from, validUntil, sendTxMessages)
 
-                    println("kobe: SendMessage result: $result")
+                    println("SendMessage result: $result")
                     result
                 } catch (e: Exception) {
-                    println("kobe: Error sending TON message: ${e.message}")
+                    println("Error sending TON message: ${e.message}")
                     throw Exception("Failed to send TON message: ${e.message}")
                 }
             }
@@ -162,17 +159,12 @@ object Signer {
             sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
                 """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
             sessionRequest.method == STACKS_SIGN_MESSAGE -> {
-                println("kobe: Params: ${sessionRequest.param}")
                 val message = JSONObject(sessionRequest.param).getString("message")
-                println("kobe: Message: $message ; wallet: ${StacksAccountDelegate.wallet}")
                 val signature = Stacks.signMessage(StacksAccountDelegate.wallet, message)
-                println("kobe: Signature: $signature")
-
-                """{"signature":"$signature"}""".also { println("kobe: Result: $it") }
+                """{"signature":"$signature"}"""
             }
 
             sessionRequest.method == STACKS_TRANSFER -> {
-                println("kobe: Params: ${sessionRequest.param}")
                 val sender = JSONObject(sessionRequest.param).getString("sender")
                 val amount = JSONObject(sessionRequest.param).getString("amount")
                 val recipient = JSONObject(sessionRequest.param).getString("recipient")
