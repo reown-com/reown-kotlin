@@ -6,17 +6,27 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.utils.cacao.sign
 import com.reown.sample.wallet.BuildConfig
+import com.reown.sample.wallet.domain.StacksAccountDelegate
+import com.reown.sample.wallet.domain.StacksAccountDelegate.wallet
 import com.reown.android.BuildConfig as AndroidBuildConfig
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
+import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import com.reown.sample.wallet.domain.client.Stacks
+import com.reown.sample.wallet.domain.client.SuiUtils
+import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.util.hexToBytes
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.reown.walletkit.utils.CacaoSigner
+import org.json.JSONArray
 import timber.log.Timber
+import uniffi.yttrium_utils.solanaSignPrehash
 
 class SessionProposalViewModel : ViewModel() {
     val sessionProposal: SessionProposalUI? = generateSessionProposalUI()
@@ -36,10 +46,69 @@ class SessionProposalViewModel : ViewModel() {
                 authRequests.forEach { authRequest ->
                     authRequest.chains.forEach { chainId ->
                         println("kobe: chainid: $chainId")
-                        val issuer = "did:pkh:$chainId:$ACCOUNTS_1_EIP155_ADDRESS"
-                        val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
-                        val signature = CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191)
-                        val auth = WalletKit.generateAuthObject(authRequest, issuer, signature)
+
+                        val signatureAndIssuer: Pair<Wallet.Model.Cacao.Signature, String> = when {
+                            chainId.contains("eip155") -> {
+                                val issuer = "did:pkh:$chainId:$ACCOUNTS_1_EIP155_ADDRESS"
+                                val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
+                                Pair(CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191), issuer)
+                            }
+
+                            chainId.contains("ton") -> {
+                                val issuer = "did:pkh:$chainId:${TONAccountDelegate.addressFriendly}"
+                                val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
+                                Pair(
+                                    Wallet.Model.Cacao.Signature(
+                                        t = "ton",
+                                        s = TONClient.signData(message),
+                                        m = TONAccountDelegate.publicKey
+                                    ), issuer
+                                )
+                            }
+
+                            chainId.contains("stacks") -> {
+                                val issuer = "did:pkh:$chainId:${Stacks.getAddress(wallet, Stacks.Version.mainnetP2PKH)}"
+                                val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
+
+                                Pair(
+                                    Wallet.Model.Cacao.Signature(
+                                        t = "stacks",
+                                        s = Stacks.signMessage(StacksAccountDelegate.wallet, message).also { println("kobe: stacks signature: $it") }
+                                    ), issuer)
+                            }
+
+                            chainId.contains("sui") -> {
+                                val issuer = "did:pkh:$chainId:${SuiAccountDelegate.address}"
+                                val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
+                                Pair(
+                                    Wallet.Model.Cacao.Signature(
+                                        t = "sui",
+                                        s = SuiUtils.personalSign(SuiAccountDelegate.keypair, message.toByteArray())
+                                    ), issuer
+                                )
+                            }
+
+                            chainId.contains("solana") -> {
+                                val issuer = "did:pkh:$chainId:${SolanaAccountDelegate.keys.second}"
+                                val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
+                                Pair(
+                                    Wallet.Model.Cacao.Signature(
+                                        t = "solana",
+                                        s = solanaSignPrehash(SolanaAccountDelegate.keyPair, message)
+                                    ), issuer
+                                )
+                            }
+
+                            else -> Pair(
+                                Wallet.Model.Cacao.Signature(
+                                    t = "",
+                                    s = ""
+                                ), ""
+                            )
+                        }
+
+
+                        val auth = WalletKit.generateAuthObject(authRequest, signatureAndIssuer.second, signatureAndIssuer.first)
                         auths.add(auth)
                     }
                 }
@@ -52,7 +121,8 @@ class SessionProposalViewModel : ViewModel() {
                     proposalRequestsResponses = Wallet.Model.ProposalRequestsResponses(authentication = auths)
                 )
 
-                WalletKit.approveSession(approveProposal,
+                WalletKit.approveSession(
+                    approveProposal,
                     onError = { error ->
                         Firebase.crashlytics.recordException(error.throwable)
                         WalletKitDelegate.sessionProposalEvent = null
@@ -125,7 +195,8 @@ class SessionProposalViewModel : ViewModel() {
                     reason = rejectionReason
                 )
 
-                WalletKit.rejectSession(reject,
+                WalletKit.rejectSession(
+                    reject,
                     onSuccess = {
                         WalletKitDelegate.sessionProposalEvent = null
                         onSuccess(proposal.redirect)
