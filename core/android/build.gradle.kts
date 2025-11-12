@@ -101,6 +101,10 @@ dependencies {
     compileOnly("com.github.reown-com:yttrium:0.9.91") { //unspecified
         exclude(group = "net.java.dev.jna", module = "jna")
     }
+    androidTestImplementation("com.github.reown-com:yttrium:0.9.91") { //unspecified
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
+    androidTestImplementation("net.java.dev.jna:jna:5.17.0@aar")
 
     api(libs.coroutines)
     implementation(libs.scarlet.android)
