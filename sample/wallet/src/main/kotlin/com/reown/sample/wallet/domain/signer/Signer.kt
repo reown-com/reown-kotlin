@@ -2,7 +2,7 @@ package com.reown.sample.wallet.domain.signer
 
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.StacksAccountDelegate
-import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
@@ -149,7 +149,7 @@ object Signer {
 
             sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
             sessionRequest.method == ETH_SEND_TRANSACTION -> {
-                val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
+                val txHash = Transaction.send(WalletKitDelegate.sessionRequestEvent!!.first)
                 txHash
             }
             //Note: Only for testing purposes - it will always fail on Dapp side

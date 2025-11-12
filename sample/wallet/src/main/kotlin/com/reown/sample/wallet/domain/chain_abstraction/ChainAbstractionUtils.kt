@@ -4,6 +4,7 @@ package com.reown.sample.wallet.domain.chain_abstraction
 
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.domain.WalletKitDelegate._walletEvents
 import com.reown.sample.wallet.domain.WalletKitDelegate.scope

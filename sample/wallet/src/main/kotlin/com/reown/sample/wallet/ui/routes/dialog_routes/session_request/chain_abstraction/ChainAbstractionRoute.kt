@@ -47,7 +47,7 @@ import com.reown.sample.common.sendResponseDeepLink
 import com.reown.sample.common.ui.theme.verified_color
 import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
-import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.chain_abstraction.getErrorMessage
 import com.reown.sample.wallet.domain.model.NetworkUtils
 import com.reown.sample.wallet.domain.model.Transaction

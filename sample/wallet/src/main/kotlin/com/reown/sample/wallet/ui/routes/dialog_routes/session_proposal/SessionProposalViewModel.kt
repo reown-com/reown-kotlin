@@ -6,10 +6,10 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.utils.cacao.sign
 import com.reown.sample.wallet.BuildConfig
-import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
-import com.reown.sample.wallet.domain.EthAccountDelegate
 import com.reown.android.BuildConfig as AndroidBuildConfig
 import com.reown.sample.wallet.domain.WalletKitDelegate
+import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.util.hexToBytes

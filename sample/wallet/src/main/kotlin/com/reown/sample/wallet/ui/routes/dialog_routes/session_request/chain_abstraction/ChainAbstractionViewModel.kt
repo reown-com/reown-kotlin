@@ -10,11 +10,10 @@ import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.signer.EthSigner
 import com.reown.sample.wallet.domain.signer.Signer
-//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.WalletKitDelegate.prepareAvailable
-import com.reown.sample.wallet.domain.clearSessionRequest
-import com.reown.sample.wallet.domain.execute
+import com.reown.sample.wallet.domain.chain_abstraction.clearSessionRequest
+import com.reown.sample.wallet.domain.chain_abstraction.execute
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.domain.chain_abstraction.recordError
 import com.reown.sample.wallet.ui.common.peer.PeerUI
@@ -23,7 +22,6 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.S
 import com.reown.walletkit.client.ChainAbstractionExperimentalApi
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-//import com.reown.walletkit.utils.solanaSignPrehash
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import org.json.JSONArray
