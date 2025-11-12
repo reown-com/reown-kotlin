@@ -3,12 +3,10 @@ package com.reown.walletkit.client
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.internal.common.scope
-import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
 import kotlinx.coroutines.*
-import java.util.*
 
 object WalletKit {
     private lateinit var coreClient: CoreInterface

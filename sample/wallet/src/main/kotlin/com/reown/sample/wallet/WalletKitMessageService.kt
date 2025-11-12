@@ -7,7 +7,7 @@ import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.push.notifications.PushMessagingService
 import com.reown.foundation.util.Logger
-import com.reown.sample.wallet.domain.NotificationHandler
+import com.reown.sample.wallet.domain.notify.NotificationHandler
 import kotlinx.coroutines.runBlocking
 import org.koin.core.qualifier.named
 

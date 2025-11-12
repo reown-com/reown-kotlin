@@ -8,7 +8,7 @@ import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.android.utils.cacao.sign
 import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.EthAccountDelegate
-import com.reown.sample.wallet.domain.WalletKitDelegate
+import com.reown.sample.wallet.domain.WCDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.util.hexToBytes

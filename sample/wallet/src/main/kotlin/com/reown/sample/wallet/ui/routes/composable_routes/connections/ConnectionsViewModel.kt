@@ -55,7 +55,7 @@ class ConnectionsViewModel : ViewModel() {
             "[\"${"eip155:1:$ACCOUNTS_2_EIP155_ADDRESS"}\",\"${"eip155:137:$ACCOUNTS_2_EIP155_ADDRESS"}\",\"${"eip155:56:$ACCOUNTS_2_EIP155_ADDRESS"}\"]"
         } else {
             areNewAccounts = true
-            "[\"${"eip155:1:$ACCOUNTS_1_EIP155_ADDRESS"}\",\"${"eip155:137:${ACCOUNTS_1_EIP155_ADDRESS}"}\",\"${"eip155:56:$ACCOUNTS_1_EIP155_ADDRESS"}\"]"
+            "[\"${"eip155:1:$ACCOUNTS_1_EIP155_ADDRESS"}\",\"${"eip155:137:$ACCOUNTS_1_EIP155_ADDRESS"}\",\"${"eip155:56:$ACCOUNTS_1_EIP155_ADDRESS"}\"]"
         }
     }
 
