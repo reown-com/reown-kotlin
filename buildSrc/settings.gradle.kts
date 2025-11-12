@@ -21,7 +21,7 @@ dependencyResolutionManagement {
         mavenCentral()
         maven(url = "https://jitpack.io")
         maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
-        jcenter() // Warning: this repository is going to shut down soon
+//        jcenter() // Warning: this repository is going to shut down soon
     }
 }
 

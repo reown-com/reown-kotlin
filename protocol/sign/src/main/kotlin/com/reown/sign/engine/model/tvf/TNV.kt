@@ -2,9 +2,7 @@ package com.reown.sign.engine.model.tvf
 
 import com.reown.sign.engine.model.tvf.SignTransaction.calculateTransactionDigest
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.squareup.moshi.Types
-import org.bouncycastle.util.encoders.Base64
 
 internal class TNV(private val moshi: Moshi) {
     private val evm: List<String>

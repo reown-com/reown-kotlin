@@ -10,9 +10,7 @@ import com.reown.android.utils.cacao.CacaoSignerInterface
 import com.reown.android.utils.cacao.sign
 import com.reown.util.hexToBytes
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
-import org.web3j.utils.Numeric
 
 internal class CacaoTest {
     private val cacaoVerifier = CacaoVerifier(ProjectId(BuildConfig.PROJECT_ID))
