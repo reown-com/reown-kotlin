@@ -77,7 +77,7 @@ data class Cacao(
 internal fun Cacao.Signature.toSignature(): Signature = Signature.fromString(s)
 
 fun Cacao.Payload.toCAIP222Message(chainName: String = "Ethereum"): String {
-    var message = "$domain wants you to sign in with your $chainName account:\n${Issuer(iss).address}\n\n"
+    var message = "$domain wants you to sign in with your ${Issuer(iss).getChainName()} account:\n${Issuer(iss).address}\n\n"
     if (statement?.contains(RECAPS_STATEMENT) == true) {
         message += "$statement\n"
     } else {
