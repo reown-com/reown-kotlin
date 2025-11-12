@@ -73,7 +73,7 @@ class SessionProposalViewModel : ViewModel() {
                                 Pair(
                                     Wallet.Model.Cacao.Signature(
                                         t = "stacks",
-                                        s = Stacks.signMessage(StacksAccountDelegate.wallet, message).also { println("kobe: stacks signature: $it") }
+                                        s = Stacks.signMessage(wallet, message)
                                     ), issuer)
                             }
 
