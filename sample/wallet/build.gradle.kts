@@ -97,8 +97,6 @@ dependencies {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
     implementation("net.java.dev.jna:jna:5.17.0@aar")
-
-
     implementation("org.web3j:core:4.9.4")
 
     // Retrofit
