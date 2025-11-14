@@ -7,5 +7,5 @@ import kotlin.collections.Map;
 -- CREATE V14 SCHEMA
 -- Add authentication column to ProposalDao table
 
-ALTER TABLE ProposalDao ADD COLUMN authentication TEXT AS List<String>;
+ALTER TABLE ProposalDao ADD COLUMN authentication TEXT AS List<String> DEFAULT NULL;
 

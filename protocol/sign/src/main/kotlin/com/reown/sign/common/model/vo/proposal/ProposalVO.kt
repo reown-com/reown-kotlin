@@ -23,7 +23,7 @@ internal data class ProposalVO(
     val relayProtocol: String,
     val relayData: String?,
     val expiry: Expiry?,
-    val requests: ProposalRequests
+    val requests: ProposalRequests?
 ) {
     val appMetaData: AppMetaData
         get() = AppMetaData(name = name, description = description, url = url, icons = icons, redirect = Redirect(native = redirect))

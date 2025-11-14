@@ -29,7 +29,7 @@ class ProposalStorageRepository(
     @JvmSynthetic
     @Throws(SQLiteException::class)
     internal fun insertProposal(proposal: ProposalVO) = with(proposal) {
-        val requestsJson: List<String> = proposal.requests.authentication?.map {
+        val requestsJson: List<String> = proposal.requests?.authentication?.map {
             val fixed = normalizePayload(it)
             moshi.adapter(PayloadParams::class.java).toJson(fixed)
         } ?: emptyList()
@@ -102,8 +102,8 @@ class ProposalStorageRepository(
         val requiredNamespaces: Map<String, Namespace.Proposal> = getRequiredNamespaces(request_id)
         val optionalNamespaces: Map<String, Namespace.Proposal> = getOptionalNamespaces(request_id)
         val authenticationParams: List<PayloadParams> =
-            authentication?.map { json -> moshi.adapter(PayloadParams::class.java).fromJson(json)!! }
-                ?.map { normalizePayload(it) }
+            authentication?.map { json -> moshi.adapter(PayloadParams::class.java).fromJson(json) }
+                ?.map { params -> normalizePayload(params!!)  }
                 ?: emptyList()
 
         return ProposalVO(

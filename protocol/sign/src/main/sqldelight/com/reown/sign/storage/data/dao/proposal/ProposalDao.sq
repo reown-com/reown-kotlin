@@ -16,7 +16,7 @@ CREATE TABLE ProposalDao (
    redirect TEXT NOT NULL DEFAULT "",
    expiry INTEGER,
    scoped_properties TEXT AS Map<String, String>,
-   authentication TEXT AS List<String>
+   authentication TEXT AS List<String> DEFAULT NULL
 );
 
 insertOrAbortSession:

@@ -184,7 +184,7 @@ internal fun ProposalVO.toEngineDO(): EngineDO.SessionProposal =
         proposerPublicKey = proposerPublicKey,
         properties = properties,
         scopedProperties = scopedProperties,
-        requests = EngineDO.ProposalRequests(authentication = requests.authentication?.map { it.toEngineDO() })
+        requests = EngineDO.ProposalRequests(authentication = requests?.authentication?.map { it.toEngineDO() })
     )
 
 @JvmSynthetic
