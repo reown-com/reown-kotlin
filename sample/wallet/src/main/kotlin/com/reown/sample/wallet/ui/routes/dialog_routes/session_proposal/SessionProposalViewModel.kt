@@ -27,6 +27,7 @@ import com.reown.walletkit.utils.CacaoSigner
 import org.json.JSONArray
 import timber.log.Timber
 import uniffi.yttrium_utils.solanaSignPrehash
+import java.util.Base64
 
 class SessionProposalViewModel : ViewModel() {
     val sessionProposal: SessionProposalUI? = generateSessionProposalUI()
@@ -45,8 +46,6 @@ class SessionProposalViewModel : ViewModel() {
 
                 authRequests.forEach { authRequest ->
                     authRequest.chains.forEach { chainId ->
-                        println("kobe: chainid: $chainId")
-
                         val signatureAndIssuer: Pair<Wallet.Model.Cacao.Signature, String> = when {
                             chainId.contains("eip155") -> {
                                 val issuer = "did:pkh:$chainId:$ACCOUNTS_1_EIP155_ADDRESS"
@@ -61,7 +60,10 @@ class SessionProposalViewModel : ViewModel() {
                                     Wallet.Model.Cacao.Signature(
                                         t = "ton",
                                         s = TONClient.signData(message),
-                                        m = TONAccountDelegate.publicKey
+                                        m = android.util.Base64.encodeToString(
+                                            TONAccountDelegate.publicKey.hexToBytes(),
+                                            android.util.Base64.NO_WRAP or android.util.Base64.NO_PADDING
+                                        )
                                     ), issuer
                                 )
                             }
@@ -74,7 +76,8 @@ class SessionProposalViewModel : ViewModel() {
                                     Wallet.Model.Cacao.Signature(
                                         t = "stacks",
                                         s = Stacks.signMessage(wallet, message)
-                                    ), issuer)
+                                    ), issuer
+                                )
                             }
 
                             chainId.contains("sui") -> {

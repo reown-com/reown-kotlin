@@ -33,9 +33,6 @@ class ProposalStorageRepository(
             val fixed = normalizePayload(it)
             moshi.adapter(PayloadParams::class.java).toJson(fixed)
         } ?: emptyList()
-
-        println("kobe: Proposal requests: $requestsJson")
-
         proposalDaoQueries.insertOrAbortSession(
             requestId,
             pairingTopic.value,
@@ -104,10 +101,6 @@ class ProposalStorageRepository(
     ): ProposalVO {
         val requiredNamespaces: Map<String, Namespace.Proposal> = getRequiredNamespaces(request_id)
         val optionalNamespaces: Map<String, Namespace.Proposal> = getOptionalNamespaces(request_id)
-
-        println("kobe: Proposal authentication: $authentication")
-
-
         val authenticationParams: List<PayloadParams> =
             authentication?.map { json -> moshi.adapter(PayloadParams::class.java).fromJson(json)!! }
                 ?.map { normalizePayload(it) }
