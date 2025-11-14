@@ -88,7 +88,7 @@ internal class OnSessionSettleUseCase(
             metadataStorageRepository.insertOrAbortMetadata(sessionTopic, peerMetadata, AppMetaDataType.PEER)
             jsonRpcInteractor.respondWithSuccess(request, irnParams)
             logger.log("Session settle received on topic: ${request.topic} - emitting")
-            _events.emit(session.toSessionApproved())
+            _events.emit(session.toSessionApproved(settleParams.proposalRequestsResponses))
         } catch (e: Exception) {
             logger.error("Session settle received failure: ${request.topic}, error: $e")
             proposalStorageRepository.insertProposal(proposal)

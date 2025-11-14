@@ -112,7 +112,12 @@ object WalletKit {
     }
 
     @Throws(IllegalStateException::class)
-    fun registerDeviceToken(firebaseAccessToken: String, enableEncrypted: Boolean = false, onSuccess: () -> Unit, onError: (Wallet.Model.Error) -> Unit) {
+    fun registerDeviceToken(
+        firebaseAccessToken: String,
+        enableEncrypted: Boolean = false,
+        onSuccess: () -> Unit,
+        onError: (Wallet.Model.Error) -> Unit
+    ) {
         coreClient.Echo.register(firebaseAccessToken, enableEncrypted, onSuccess) { error -> onError(Wallet.Model.Error(error)) }
     }
 
@@ -155,12 +160,22 @@ object WalletKit {
         onSuccess: (Wallet.Params.SessionApprove) -> Unit = {},
         onError: (Wallet.Model.Error) -> Unit,
     ) {
-        val signParams = Sign.Params.Approve(params.proposerPublicKey, params.namespaces.toSign(), params.properties, params.scopedProperties, params.relayProtocol)
+        val signParams = Sign.Params.Approve(
+            params.proposerPublicKey,
+            params.namespaces.toSign(),
+            params.properties,
+            params.scopedProperties,
+            params.relayProtocol,
+            Sign.Model.ProposalRequestsResponses(params.proposalRequestsResponses?.authentication?.toSign() ?: emptyList())
+        )
         SignClient.approveSession(signParams, { onSuccess(params) }, { error -> onError(Wallet.Model.Error(error.throwable)) })
     }
 
     @Throws(Exception::class)
-    fun generateApprovedNamespaces(sessionProposal: Wallet.Model.SessionProposal, supportedNamespaces: Map<String, Wallet.Model.Namespace.Session>): Map<String, Wallet.Model.Namespace.Session> {
+    fun generateApprovedNamespaces(
+        sessionProposal: Wallet.Model.SessionProposal,
+        supportedNamespaces: Map<String, Wallet.Model.Namespace.Session>
+    ): Map<String, Wallet.Model.Namespace.Session> {
         return com.reown.sign.client.utils.generateApprovedNamespaces(sessionProposal.toSign(), supportedNamespaces.toSign()).toWallet()
     }
 
@@ -195,13 +210,31 @@ object WalletKit {
     }
 
     @Throws(Exception::class)
-    fun generateAuthObject(payloadParams: Wallet.Model.PayloadAuthRequestParams, issuer: String, signature: Wallet.Model.Cacao.Signature): Wallet.Model.Cacao {
+    fun generateAuthObject(
+        payloadParams: Wallet.Model.PayloadAuthRequestParams,
+        issuer: String,
+        signature: Wallet.Model.Cacao.Signature
+    ): Wallet.Model.Cacao {
         return com.reown.sign.client.utils.generateAuthObject(payloadParams.toSign(), issuer, signature.toSign()).toWallet()
     }
 
     @Throws(Exception::class)
-    fun generateAuthPayloadParams(payloadParams: Wallet.Model.PayloadAuthRequestParams, supportedChains: List<String>, supportedMethods: List<String>): Wallet.Model.PayloadAuthRequestParams {
+    fun generateAuthPayloadParams(
+        payloadParams: Wallet.Model.PayloadAuthRequestParams,
+        supportedChains: List<String>,
+        supportedMethods: List<String>
+    ): Wallet.Model.PayloadAuthRequestParams {
         return com.reown.sign.client.utils.generateAuthPayloadParams(payloadParams.toSign(), supportedChains, supportedMethods).toWallet()
+    }
+
+    /**
+     * Caution: This function is blocking and runs on the current thread.
+     * It is advised that this function be called from background operation
+     */
+    @Throws(IllegalStateException::class)
+    fun formatAuthMessage(params: Wallet.Params.FormatAuthMessage): String {
+        val signParams = Sign.Params.FormatMessage(params.payloadParams.toSign(), params.issuer)
+        return SignClient.formatAuthMessage(signParams)
     }
 
     @Throws(IllegalStateException::class)
@@ -272,16 +305,6 @@ object WalletKit {
         }
 
         SignClient.ping(signParams, signPingLister)
-    }
-
-    /**
-     * Caution: This function is blocking and runs on the current thread.
-     * It is advised that this function be called from background operation
-     */
-    @Throws(IllegalStateException::class)
-    fun formatAuthMessage(params: Wallet.Params.FormatAuthMessage): String {
-        val signParams = Sign.Params.FormatMessage(params.payloadParams.toSign(), params.issuer)
-        return SignClient.formatAuthMessage(signParams)
     }
 
     /**

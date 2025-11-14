@@ -70,26 +70,66 @@ class ChainSelectionViewModel : ViewModel() {
         }
     }
 
-    fun authenticate(authenticateParams: Modal.Params.Authenticate, appLink: String = "", onAuthenticateSuccess: (String?) -> Unit, onError: (String) -> Unit = {}) {
+    fun authenticate(authenticateParams: Modal.Params.Authenticate, onAuthenticateSuccess: (String?) -> Unit, onError: (String) -> Unit = {}) {
+        val selectedChains = uiState.value.filter { it.isSelected }.map { it.chainId }
+        val authentication = Modal.Params.Authenticate(
+            chains = selectedChains,
+            domain = authenticateParams.domain,
+            uri = authenticateParams.uri,
+            nonce = authenticateParams.nonce,
+            nbf = authenticateParams.nbf,
+            exp = authenticateParams.exp,
+            statement = authenticateParams.statement,
+            requestId = authenticateParams.requestId,
+            expiry = authenticateParams.expiry
+        )
+
         viewModelScope.launch {
             _awaitingProposalSharedFlow.emit(true)
         }
 
-        AppKit.authenticate(authenticateParams, walletAppLink = appLink,
-            onSuccess = { url ->
-                viewModelScope.launch {
-                    _awaitingProposalSharedFlow.emit(false)
-                }
-                onAuthenticateSuccess(url)
-            },
-            onError = { error ->
+        try {
+            val pairing = CoreClient.Pairing.create { error ->
                 viewModelScope.launch {
                     _awaitingProposalSharedFlow.emit(false)
                 }
                 Timber.tag(tag(this)).e(error.throwable.stackTraceToString())
                 Firebase.crashlytics.recordException(error.throwable)
                 onError(error.throwable.message ?: "Unknown error, please contact support")
-            })
+            } ?: return
+
+            val connectParams = Modal.Params.ConnectParams(
+                sessionNamespaces = getOptionalNamespaces(),
+                properties = getProperties(),
+                pairing = pairing,
+                authentication = listOf(authentication)
+            )
+
+            AppKit.connect(
+                connectParams,
+                onSuccess = { url ->
+                    viewModelScope.launch {
+                        _awaitingProposalSharedFlow.emit(false)
+                    }
+                    onAuthenticateSuccess(url)
+                },
+                onError = { error ->
+                    viewModelScope.launch {
+                        _awaitingProposalSharedFlow.emit(false)
+                    }
+                    Timber.tag(tag(this)).e(error.throwable.stackTraceToString())
+                    Firebase.crashlytics.recordException(error.throwable)
+                    onError(error.throwable.message ?: "Unknown error, please contact support")
+                }
+            )
+        } catch (e: Exception) {
+            viewModelScope.launch {
+                _awaitingProposalSharedFlow.emit(false)
+            }
+            Timber.tag(tag(this)).e(e)
+            Firebase.crashlytics.recordException(e)
+            onError(e.message ?: "Unknown error, please contact support")
+        }
     }
 
     fun connectToWallet(pairingTopicPosition: Int = -1, onSuccess: (String) -> Unit = {}, onError: (String) -> Unit = {}) {
@@ -116,7 +156,8 @@ class ChainSelectionViewModel : ViewModel() {
                         pairing = pairing
                     )
 
-                AppKit.connect(connectParams,
+                AppKit.connect(
+                    connectParams,
                     onSuccess = { url ->
                         if (pairingTopicPosition == -1) {
                             viewModelScope.launch {
@@ -170,7 +211,7 @@ class ChainSelectionViewModel : ViewModel() {
     }
 
     private fun getOptionalNamespaces() = uiState.value
-        .filter { it.isSelected && it.chainId == Chains.POLYGON_MATIC.chainId }
+        .filter { it.isSelected }
         .groupBy { it.chainId }
         .map { (key: String, selectedChains: List<ChainSelectionUi>) ->
             key to Modal.Model.Namespace.Proposal(
@@ -196,11 +237,6 @@ class ChainSelectionViewModel : ViewModel() {
             nbf = null,
             statement = "Sign in with wallet.",
             requestId = null,
-            resources = listOf(
-                "urn:recap:eyJhdHQiOnsiaHR0cHM6Ly9ub3RpZnkud2FsbGV0Y29ubmVjdC5jb20vYWxsLWFwcHMiOnsiY3J1ZC9zdWJzY3JpcHRpb25zIjpbe31dLCJjcnVkL25vdGlmaWNhdGlvbnMiOlt7fV19fX0=",
-                "ipfs://bafybeiemxf5abjwjbikoz4mc3a3dla6ual3jsgpdr4cjr3oz3evfyavhwq/"
-            ),
-            methods = listOf("personal_sign", "eth_signTypedData"),
             expiry = null
         )
 

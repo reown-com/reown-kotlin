@@ -2,15 +2,17 @@ package com.reown.sample.wallet.domain.signer
 
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.StacksAccountDelegate
-import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
+import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.SuiUtils
 import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
+import com.reown.util.hexToBytes
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
@@ -100,7 +102,12 @@ object Signer {
                     // Sign the data using TONClient
                     val signature = TONClient.signData(text)
 
-                    signature
+                    """{"signature": "${signature}", "address": "${TONAccountDelegate.addressFriendly}", "publicKey": "${
+                        android.util.Base64.encodeToString(
+                            TONAccountDelegate.publicKey.hexToBytes(),
+                            android.util.Base64.NO_WRAP or android.util.Base64.NO_PADDING
+                        )
+                    }"}"""
                 } catch (e: Exception) {
                     println("Error signing TON data: ${e.message}")
                     throw Exception("Failed to sign TON data: ${e.message}")
@@ -149,7 +156,7 @@ object Signer {
 
             sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
             sessionRequest.method == ETH_SEND_TRANSACTION -> {
-                val txHash = Transaction.send(WCDelegate.sessionRequestEvent!!.first)
+                val txHash = Transaction.send(WalletKitDelegate.sessionRequestEvent!!.first)
                 txHash
             }
             //Note: Only for testing purposes - it will always fail on Dapp side
@@ -158,6 +165,7 @@ object Signer {
             //Note: Only for testing purposes - it will always fail on Dapp side
             sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
                 """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
+
             sessionRequest.method == STACKS_SIGN_MESSAGE -> {
                 val message = JSONObject(sessionRequest.param).getString("message")
                 val signature = Stacks.signMessage(StacksAccountDelegate.wallet, message)
@@ -210,6 +218,7 @@ object Signer {
             sessionRequest.method == "solana_signAllTransactions" -> {
                 """{"transactions":["2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"]}"""
             }
+
             sessionRequest.method == "solana_signMessage" -> {
                 val jsonObject = JSONObject(sessionRequest.param)
                 val message = jsonObject.getString("message")

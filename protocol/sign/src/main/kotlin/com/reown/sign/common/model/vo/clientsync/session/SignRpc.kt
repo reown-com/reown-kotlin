@@ -13,49 +13,49 @@ internal sealed class SignRpc : JsonRpcClientSync<SignParams> {
 
     @JsonClass(generateAdapter = true)
     internal data class SessionPropose(
-        @Json(name = "id")
+        @param:Json(name = "id")
         override val id: Long = generateId(),
-        @Json(name = "jsonrpc")
+        @param:Json(name = "jsonrpc")
         override val jsonrpc: String = "2.0",
-        @Json(name = "method")
+        @param:Json(name = "method")
         override val method: String = JsonRpcMethod.WC_SESSION_PROPOSE,
-        @Json(name = "params")
+        @param:Json(name = "params")
         override val params: SignParams.SessionProposeParams,
     ) : SignRpc()
 
     @JsonClass(generateAdapter = true)
     internal data class SessionAuthenticate(
-        @Json(name = "id")
+        @param:Json(name = "id")
         override val id: Long = generateId(),
-        @Json(name = "jsonrpc")
+        @param:Json(name = "jsonrpc")
         override val jsonrpc: String = "2.0",
-        @Json(name = "method")
+        @param:Json(name = "method")
         override val method: String = JsonRpcMethod.WC_SESSION_AUTHENTICATE,
-        @Json(name = "params")
+        @param:Json(name = "params")
         override val params: SignParams.SessionAuthenticateParams,
     ) : SignRpc()
 
     @JsonClass(generateAdapter = true)
     internal data class SessionSettle(
-        @Json(name = "id")
+        @param:Json(name = "id")
         override val id: Long = generateId(),
-        @Json(name = "jsonrpc")
+        @param:Json(name = "jsonrpc")
         override val jsonrpc: String = "2.0",
-        @Json(name = "method")
+        @param:Json(name = "method")
         override val method: String = JsonRpcMethod.WC_SESSION_SETTLE,
-        @Json(name = "params")
+        @param:Json(name = "params")
         override val params: SignParams.SessionSettleParams
     ) : SignRpc()
 
     @JsonClass(generateAdapter = true)
     internal data class SessionRequest(
-        @Json(name = "id")
+        @param:Json(name = "id")
         override val id: Long = generateId(),
-        @Json(name = "jsonrpc")
+        @param:Json(name = "jsonrpc")
         override val jsonrpc: String = "2.0",
-        @Json(name = "method")
+        @param:Json(name = "method")
         override val method: String = JsonRpcMethod.WC_SESSION_REQUEST,
-        @Json(name = "params")
+        @param:Json(name = "params")
         override val params: SignParams.SessionRequestParams
     ) : SignRpc() {
         val rpcMethod = params.request.method
@@ -64,61 +64,61 @@ internal sealed class SignRpc : JsonRpcClientSync<SignParams> {
 
     @JsonClass(generateAdapter = true)
     internal data class SessionDelete(
-        @Json(name = "id")
+        @param:Json(name = "id")
         override val id: Long = generateId(),
-        @Json(name = "jsonrpc")
+        @param:Json(name = "jsonrpc")
         override val jsonrpc: String = "2.0",
-        @Json(name = "method")
+        @param:Json(name = "method")
         override val method: String = JsonRpcMethod.WC_SESSION_DELETE,
-        @Json(name = "params")
+        @param:Json(name = "params")
         override val params: SignParams.DeleteParams
     ) : SignRpc()
 
     @JsonClass(generateAdapter = true)
     internal data class SessionPing(
-        @Json(name = "id")
+        @param:Json(name = "id")
         override val id: Long = generateId(),
-        @Json(name = "jsonrpc")
+        @param:Json(name = "jsonrpc")
         override val jsonrpc: String = "2.0",
-        @Json(name = "method")
+        @param:Json(name = "method")
         override val method: String = JsonRpcMethod.WC_SESSION_PING,
-        @Json(name = "params")
+        @param:Json(name = "params")
         override val params: SignParams.PingParams,
     ) : SignRpc()
 
     @JsonClass(generateAdapter = true)
     internal data class SessionEvent(
-        @Json(name = "id")
+        @param:Json(name = "id")
         override val id: Long = generateId(),
-        @Json(name = "jsonrpc")
+        @param:Json(name = "jsonrpc")
         override val jsonrpc: String = "2.0",
-        @Json(name = "method")
+        @param:Json(name = "method")
         override val method: String = JsonRpcMethod.WC_SESSION_EVENT,
-        @Json(name = "params")
+        @param:Json(name = "params")
         override val params: SignParams.EventParams,
     ) : SignRpc()
 
     @JsonClass(generateAdapter = true)
     internal data class SessionUpdate(
-        @Json(name = "id")
+        @param:Json(name = "id")
         override val id: Long = generateId(),
-        @Json(name = "jsonrpc")
+        @param:Json(name = "jsonrpc")
         override val jsonrpc: String = "2.0",
-        @Json(name = "method")
+        @param:Json(name = "method")
         override val method: String = JsonRpcMethod.WC_SESSION_UPDATE,
-        @Json(name = "params")
+        @param:Json(name = "params")
         override val params: SignParams.UpdateNamespacesParams,
     ) : SignRpc()
 
     @JsonClass(generateAdapter = true)
     internal data class SessionExtend(
-        @Json(name = "id")
+        @param:Json(name = "id")
         override val id: Long = generateId(),
-        @Json(name = "jsonrpc")
+        @param:Json(name = "jsonrpc")
         override val jsonrpc: String = "2.0",
-        @Json(name = "method")
+        @param:Json(name = "method")
         override val method: String = JsonRpcMethod.WC_SESSION_EXTEND,
-        @Json(name = "params")
+        @param:Json(name = "params")
         override val params: SignParams.ExtendParams,
     ) : SignRpc()
 }

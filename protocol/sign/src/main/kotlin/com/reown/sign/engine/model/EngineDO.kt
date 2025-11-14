@@ -11,6 +11,8 @@ import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.model.type.Sequence
 import com.reown.android.internal.common.signing.cacao.Cacao
 import com.reown.foundation.common.model.Topic
+import com.reown.sign.client.Sign
+import com.reown.sign.client.Sign.Model
 import java.net.URI
 import com.reown.android.internal.common.model.RelayProtocolOptions as CoreRelayProtocolOptions
 
@@ -33,6 +35,10 @@ internal sealed class EngineDO {
         val context: VerifyContext
     ) : EngineDO(), EngineEvent
 
+    data class ProposalRequestsResponses(
+        val authentication: List<Cacao>?
+    ): EngineDO()
+
     data class SessionAuthenticateEvent(
         val id: Long,
         val pairingTopic: String,
@@ -54,10 +60,12 @@ internal sealed class EngineDO {
         val statement: String?,
         val requestId: String?,
         var resources: List<String>?,
-        val version: String
+        val version: String,
+        val signatureTypes: Map<String, List<String>>?
     ) : EngineDO()
 
     data class Authenticate(
+        @Deprecated("This property is deprecated.")
         val pairingTopic: String? = null,
         val chains: List<String>,
         val domain: String,
@@ -69,8 +77,10 @@ internal sealed class EngineDO {
         val statement: String?,
         val requestId: String?,
         var resources: List<String>?,
+        @Deprecated("This property is deprecated.")
         val methods: List<String>?,
-        val expiry: Long?
+        val expiry: Long?,
+        val signatureTypes: Map<String, List<String>>? = null
     ) : EngineDO()
 
     data class Participant(
@@ -92,7 +102,12 @@ internal sealed class EngineDO {
         val relayProtocol: String,
         val relayData: String?,
         val scopedProperties: Map<String, String>?,
+        val requests: ProposalRequests?
     ) : EngineDO(), EngineEvent
+
+    data class ProposalRequests(
+        val authentication: List<PayloadParams>?
+    ): EngineDO()
 
     data class ExpiredProposal(val pairingTopic: String, val proposerPublicKey: String) : EngineDO(), EngineEvent
     data class ExpiredRequest(val topic: String, val id: Long) : EngineDO(), EngineEvent
@@ -181,6 +196,7 @@ internal sealed class EngineDO {
         val peerAppMetaData: AppMetaData?,
         val accounts: List<String>,
         val namespaces: Map<String, Namespace.Session>,
+        val proposalRequestsResponses: ProposalRequestsResponses?,
     ) : EngineDO(), EngineEvent
 
     data class PairingSettle(val topic: Topic, val appMetaData: AppMetaData?) : EngineDO(), EngineEvent

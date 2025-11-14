@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-object WCDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
+object WalletKitDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     internal val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _coreEvents: MutableSharedFlow<Core.Model> = MutableSharedFlow()
     val coreEvents: SharedFlow<Core.Model> = _coreEvents.asSharedFlow()
