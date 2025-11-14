@@ -93,12 +93,10 @@ dependencies {
 
     // local .m2 build
     //    implementation("com.github.reown-com:yttrium-utils:unspecified")
-    implementation("com.github.reown-com:yttrium:kotlin-utils-0.9.107") {
+    implementation("com.github.reown-com:yttrium:kotlin-utils-0.9.113") {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
     implementation("net.java.dev.jna:jna:5.17.0@aar")
-
-
     implementation("org.web3j:core:4.9.4")
 
     // Retrofit
