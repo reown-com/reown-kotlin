@@ -7,9 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
-import com.reown.sample.wallet.domain.Signer
-import com.reown.sample.wallet.domain.Signer.PERSONAL_SIGN
-import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate
+import com.reown.sample.wallet.domain.signer.Signer
+import com.reown.sample.wallet.domain.signer.Signer.PERSONAL_SIGN
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.walletkit.client.Wallet
@@ -106,14 +106,14 @@ class SessionRequestViewModel : ViewModel() {
     }
 
     private fun clearSessionRequest() {
-        WCDelegate.sessionRequestEvent = null
-        WCDelegate.currentId = null
+        WalletKitDelegate.sessionRequestEvent = null
+        WalletKitDelegate.currentId = null
         sessionRequestUI = SessionRequestUI.Initial
     }
 
     private fun generateSessionRequestUI(): SessionRequestUI {
-        return if (WCDelegate.sessionRequestEvent != null) {
-            val (sessionRequest, context) = WCDelegate.sessionRequestEvent!!
+        return if (WalletKitDelegate.sessionRequestEvent != null) {
+            val (sessionRequest, context) = WalletKitDelegate.sessionRequestEvent!!
             SessionRequestUI.Content(
                 peerUI = PeerUI(
                     peerName = sessionRequest.peerMetaData?.name ?: "",

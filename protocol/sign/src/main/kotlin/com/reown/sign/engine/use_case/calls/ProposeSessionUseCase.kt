@@ -5,19 +5,21 @@ import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.Pairing
 import com.reown.android.internal.common.model.RelayProtocolOptions
+import com.reown.android.internal.common.model.SessionProposer
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.utils.PROPOSAL_EXPIRY
 import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.exceptions.InvalidNamespaceException
 import com.reown.sign.common.exceptions.InvalidPropertiesException
+import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
 import com.reown.sign.common.model.vo.clientsync.session.SignRpc
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
+import com.reown.sign.engine.model.mapper.toCommon
 import com.reown.sign.engine.model.mapper.toNamespacesVOOptional
 import com.reown.sign.engine.model.mapper.toNamespacesVORequired
-import com.reown.sign.engine.model.mapper.toSessionProposeParams
 import com.reown.sign.engine.model.mapper.toVO
 import com.reown.sign.engine.use_case.utils.NamespaceMerger
 import com.reown.sign.storage.proposal.ProposalStorageRepository
@@ -37,8 +39,9 @@ internal class ProposeSessionUseCase(
         properties: Map<String, String>?,
         scopedProperties: Map<String, String>?,
         pairing: Pairing,
+        authentication: List<EngineDO.Authenticate>?,
         onSuccess: () -> Unit,
-        onFailure: (Throwable) -> Unit,
+        onFailure: (Throwable) -> Unit
     ) = supervisorScope {
         val relay = RelayProtocolOptions(pairing.relayProtocol, pairing.relayData)
         // Map requiredNamespaces to optionalNamespaces if not null, ensuring no duplications
@@ -47,11 +50,19 @@ internal class ProposeSessionUseCase(
             onSuccess = {
                 val expiry = Expiry(PROPOSAL_EXPIRY)
                 val selfPublicKey: PublicKey = crypto.generateAndStoreX25519KeyPair()
-                val sessionProposal: SignParams.SessionProposeParams =
-                    toSessionProposeParams(
-                        listOf(relay), emptyMap(), mergedOptionalNamespaces ?: emptyMap(),
-                        properties, scopedProperties, selfPublicKey, selfAppMetaData, expiry
-                    )
+
+                val sessionProposal: SignParams.SessionProposeParams = SignParams.SessionProposeParams(
+                    relays = listOf(relay),
+                    proposer = SessionProposer(selfPublicKey.keyAsHex, selfAppMetaData),
+                    requiredNamespaces = emptyMap(),
+                    optionalNamespaces = mergedOptionalNamespaces?.toNamespacesVOOptional() ?: emptyMap(),
+                    properties = properties,
+                    scopedProperties = scopedProperties,
+                    expiryTimestamp = expiry.seconds,
+                    requests = if (!authentication.isNullOrEmpty()) {
+                        ProposalRequests(authentication = authentication.map { it.toCommon() })
+                    } else null
+                )
                 val request = SignRpc.SessionPropose(params = sessionProposal)
                 proposalStorageRepository.insertProposal(sessionProposal.toVO(pairing.topic, request.id))
                 logger.log("Sending proposal on topic: ${pairing.topic.value}")
@@ -110,6 +121,7 @@ internal interface ProposeSessionUseCaseInterface {
         properties: Map<String, String>?,
         scopedProperties: Map<String, String>?,
         pairing: Pairing,
+        authentication: List<EngineDO.Authenticate>? = null,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit,
     )

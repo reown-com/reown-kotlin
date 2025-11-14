@@ -25,6 +25,8 @@ android {
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
         buildConfigField("String", "PIMLICO_API_KEY", "\"${System.getenv("PIMLICO_API_KEY") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
+
+        ndk.abiFilters += listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
     }
 
     buildTypes {
@@ -56,6 +58,12 @@ android {
         targetCompatibility = jvmVersion
     }
 
+    packaging {
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_utils.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_utils.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_utils.so")
+    }
+
     kotlinOptions {
         jvmTarget = jvmVersion.toString()
         freeCompilerArgs = listOf("-Xcontext-receivers")
@@ -76,12 +84,19 @@ android {
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
     }
+
 }
 
 dependencies {
     implementation(project(":sample:common"))
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 
+    // local .m2 build
+    //    implementation("com.github.reown-com:yttrium-utils:unspecified")
+    implementation("com.github.reown-com:yttrium:kotlin-utils-0.9.113") {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
+    implementation("net.java.dev.jna:jna:5.17.0@aar")
     implementation("org.web3j:core:4.9.4")
 
     // Retrofit

@@ -8,7 +8,7 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.Core
 import com.reown.android.internal.common.exception.InvalidProjectIdException
 import com.reown.android.internal.common.exception.ProjectIdDoesNotExistException
-import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.PairingEvent
 import com.reown.walletkit.client.Wallet
@@ -49,7 +49,7 @@ class Web3WalletViewModel : ViewModel() {
     val sessionRequestStateFlow = _sessionRequestStateFlow.asSharedFlow()
 
     init {
-        WCDelegate.coreEvents.onEach { coreEvent ->
+        WalletKitDelegate.coreEvents.onEach { coreEvent ->
             _isLoadingFlow.value = (coreEvent as? Core.Model.PairingState)?.isPairingState ?: false
         }.launchIn(viewModelScope)
 
@@ -65,7 +65,7 @@ class Web3WalletViewModel : ViewModel() {
             _timerFlow.value = dateFormat.format(timestamp)
         }.launchIn(viewModelScope)
 
-        WCDelegate.connectionState.onEach {
+        WalletKitDelegate.connectionState.onEach {
             val connectionState = if (it.isAvailable) {
                 ConnectionState.Ok
             } else {
@@ -86,7 +86,7 @@ class Web3WalletViewModel : ViewModel() {
 
     }
 
-    val walletEvents = WCDelegate.walletEvents.map { wcEvent ->
+    val walletEvents = WalletKitDelegate.walletEvents.map { wcEvent ->
         Log.d("Web3Wallet", "VM: $wcEvent")
 
         when (wcEvent) {
@@ -106,7 +106,7 @@ class Web3WalletViewModel : ViewModel() {
                 val chain = wcEvent.chainId
                 val method = wcEvent.request.method
                 val arrayOfArgs: ArrayList<String?> = arrayListOf(topic, icon, peerName, requestId, params, chain, method)
-                if (WCDelegate.currentId != WCDelegate.sessionRequestEvent?.first?.request?.id) {
+                if (WalletKitDelegate.currentId != WalletKitDelegate.sessionRequestEvent?.first?.request?.id) {
                     _sessionRequestStateFlow.emit(SignEvent.SessionRequest(arrayOfArgs, arrayOfArgs.size))
                 } else {
                     println("wallet request already there: ${wcEvent.request.id}")
