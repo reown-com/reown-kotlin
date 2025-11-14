@@ -14,6 +14,13 @@ data class Issuer(val value: String) {
     val accountId
         get() = "$chainId:$address"
 
+    fun getChainName(): String = when (namespace) {
+        "eip155" -> "Ethereum"
+        "solana" -> "Solana"
+        "bip122" -> "Bitcoin"
+        else -> namespace
+    }
+
     private companion object {
         const val ISS_DELIMITER = ":"
         const val ISS_POSITION_OF_NAMESPACE = 2

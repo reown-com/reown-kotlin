@@ -16,6 +16,7 @@ internal interface ParingController {
         onError: (Throwable) -> Unit
     )
 
+    @Deprecated("This method is deprecated. Use connect with authenticate instead.")
     fun authenticate(
         name: String, method: String,
         authParams: Modal.Model.AuthPayloadParams,
@@ -61,6 +62,7 @@ internal class PairingControllerImpl : ParingController {
         }
     }
 
+    @Deprecated("This method is deprecated. Use connect with authenticate instead.")
     override fun authenticate(
         name: String,
         method: String,
