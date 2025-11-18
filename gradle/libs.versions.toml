@@ -50,7 +50,7 @@ androidxTest = "1.6.1"
 androidxTestOrchestration = "1.6.1"
 androidxSecurity = "1.1.0-alpha06"
 androidxDatastore = "1.1.1"
-androidxNavigation = "2.8.0"
+androidxNavigation = "2.9.6"
 
 jUnit = "4.13.2"
 robolectric = "4.12.2"
