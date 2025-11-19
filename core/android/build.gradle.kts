@@ -98,9 +98,10 @@ dependencies {
     debugApi(project(":foundation"))
     releaseApi("com.reown:foundation:$FOUNDATION_VERSION")
 
-    compileOnly("com.github.reown-com:yttrium:0.9.91") { //unspecified
+    implementation("com.github.reown-com:yttrium:0.9.91") { //unspecified
         exclude(group = "net.java.dev.jna", module = "jna")
     }
+    implementation("net.java.dev.jna:jna:5.17.0@aar")
     androidTestImplementation("com.github.reown-com:yttrium:0.9.91") { //unspecified
         exclude(group = "net.java.dev.jna", module = "jna")
     }
