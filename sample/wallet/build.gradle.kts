@@ -58,12 +58,6 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    packaging {
-        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_utils.so")
-        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_utils.so")
-        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_utils.so")
-    }
-
     kotlinOptions {
         jvmTarget = jvmVersion.toString()
         freeCompilerArgs = listOf("-Xcontext-receivers")
@@ -79,12 +73,27 @@ android {
     }
 
     packaging {
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_utils.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_utils.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_utils.so")
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
     }
 
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "com.github.reown-com" && requested.name == "yttrium") {
+            useVersion("kotlin-utils-0.9.113")
+            because("Sample wallet needs yttrium_utils from kotlin-utils branch")
+        }
+    }
 }
 
 dependencies {
@@ -156,11 +165,15 @@ dependencies {
     implementation("com.mixpanel.android:mixpanel-android:7.3.1")
 
     // WalletConnect
-    debugImplementation(project(":core:android"))
+    debugImplementation(project(":core:android")) {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
     debugImplementation(project(":product:walletkit"))
     debugImplementation(project(":protocol:notify"))
 
-    internalImplementation(project(":core:android"))
+    internalImplementation(project(":core:android")) {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
     internalImplementation(project(":product:walletkit"))
     internalImplementation(project(":protocol:notify"))
 
