@@ -19,7 +19,7 @@ jobs:
     name: Build Internal ${{ matrix.conf.name }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Java 17
         uses: actions/setup-java@v5
@@ -76,7 +76,7 @@ jobs:
     needs: build_internal_samples
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Enable KVM
         run: |
