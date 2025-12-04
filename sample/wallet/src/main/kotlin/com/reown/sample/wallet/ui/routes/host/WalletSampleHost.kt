@@ -114,7 +114,7 @@ fun WalletSampleHost(
             }
 
             if (isLoader) {
-                Loader(initMessage = "WalletConnect is pairing...", updateMessage = "Pairing is taking longer than usual, please try again...")
+                Loader(initMessage = "WalletConnect Pay...", updateMessage = "Pairing is taking longer than usual, please try again...")
             }
 
             if (isRequestLoader) {

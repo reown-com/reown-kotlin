@@ -200,6 +200,41 @@ private fun showError(navController: NavHostController, throwable: Throwable?, c
 fun Request(sessionRequestUI: SessionRequestUI.Content) {
     Column(modifier = Modifier.height(400.dp)) {
         Content(title = "Request") {
+            sessionRequestUI.paymentData?.let { paymentSession ->
+                val message = paymentSession.typedData?.message
+                val option = paymentSession.selectedOption
+                val amountFormatted = "${paymentSession.info.amount / 100.0} ${paymentSession.info.currency}"
+                InnerContent {
+                    Text(
+                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 13.dp),
+                        text = "Payment details",
+                        style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                    )
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 5.dp, top = 0.dp, end = 5.dp, bottom = 10.dp)
+                            .clip(RoundedCornerShape(13.dp))
+                            .background(
+                                themedColor(
+                                    darkColor = Color(0xFFE4E4E7).copy(alpha = .12f),
+                                    lightColor = Color(0xFF505059).copy(.1f)
+                                )
+                            )
+                            .padding(start = 8.dp, top = 5.dp, end = 8.dp, bottom = 5.dp),
+                        text = buildString {
+                            append("Pay $amountFormatted with ${option.symbol} on ${option.chain}")
+                            message?.let {
+                                append("\nTo: ${it.to}")
+                                append("\nFrom: ${it.from}")
+                                append("\nValid before: ${it.validBefore}")
+                            }
+                        },
+                        style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFF9ea9a9), lightColor = Color(0xFF788686)))
+                    )
+                }
+                Spacer(modifier = Modifier.height(5.dp))
+            }
             InnerContent {
                 Text(
                     modifier = Modifier.padding(vertical = 10.dp, horizontal = 13.dp),
@@ -242,4 +277,3 @@ fun Request(sessionRequestUI: SessionRequestUI.Content) {
         }
     }
 }
-

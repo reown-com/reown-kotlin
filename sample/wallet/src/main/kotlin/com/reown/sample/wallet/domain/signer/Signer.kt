@@ -10,6 +10,7 @@ import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.SuiUtils
 import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.domain.model.Transaction
+import com.reown.sample.wallet.domain.payment.PaymentSigner
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.util.hexToBytes
@@ -154,6 +155,7 @@ object Signer {
             }
 
             sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
+            sessionRequest.method == "eth_signTypedData_v4" -> PaymentSigner.signTypedDataV4(sessionRequest.param).signature
             sessionRequest.method == ETH_SEND_TRANSACTION -> {
                 val txHash = Transaction.send(WalletKitDelegate.sessionRequestEvent!!.first)
                 txHash
