@@ -13,17 +13,18 @@ project.apply {
 }
 
 android {
-    namespace = "com.reown.pos"
+    namespace = "com.walletconnect.pos"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
-        minSdk = MIN_SDK
+        minSdk = 29
 
         aarMetadata {
-            minCompileSdk = MIN_SDK
+            minCompileSdk = 29
         }
 
         buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
+        buildConfigField(type = "String", name = "CORE_API_BASE_URL", value = "\"https://pay.walletconnect.org\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -45,10 +46,11 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
-        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
-    }
+    //todo: remove?
+//    kotlinOptions {
+//        jvmTarget = "11"
+//        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+//    }
 
     buildFeatures {
         buildConfig = true
@@ -56,24 +58,20 @@ android {
 }
 
 dependencies {
-    debugImplementation(project(":core:android"))
-    debugImplementation(project(":protocol:sign"))
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.okhttp)
 
-    releaseImplementation("com.reown:android-core:$CORE_VERSION")
-    releaseImplementation("com.reown:sign:$SIGN_VERSION")
-
+    implementation(libs.moshi.kotlin)
     ksp(libs.moshi.ksp)
 
-    implementation(libs.androidx.core)
-    implementation(libs.androidx.appCompat)
-    implementation(libs.androidx.material)
+    implementation(libs.coroutines)
 
     testImplementation(libs.jUnit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
 
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.coroutines.test)
-    androidTestImplementation(libs.core)
-
     androidTestUtil(libs.androidx.testOrchestrator)
     androidTestImplementation(libs.bundles.androidxAndroidTest)
 }

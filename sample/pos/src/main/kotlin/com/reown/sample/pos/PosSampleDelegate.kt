@@ -1,9 +1,7 @@
 package com.reown.sample.pos
 
-import androidx.lifecycle.viewModelScope
-import com.reown.pos.client.POS
-import com.reown.pos.client.POS.Model.PaymentEvent
-import com.reown.pos.client.POSClient
+import com.walletconnect.pos.Pos
+import com.walletconnect.pos.POSDelegate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -11,16 +9,15 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-object PosSampleDelegate : POSClient.POSDelegate {
+object PosSampleDelegate : POSDelegate {
     private val posScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val _paymentEventFlow: MutableSharedFlow<PaymentEvent> = MutableSharedFlow()
+    private val _paymentEventFlow: MutableSharedFlow<Pos.Model.PaymentEvent> = MutableSharedFlow()
     val paymentEventFlow = _paymentEventFlow.asSharedFlow()
 
-    override fun onEvent(event: PaymentEvent) {
+    override fun onEvent(event: Pos.Model.PaymentEvent) {
         posScope.launch {
             _paymentEventFlow.emit(event)
         }
     }
 }
-

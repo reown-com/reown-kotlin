@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.reown.sample.pos"
-        minSdk = MIN_SDK
+        minSdk = 29
         targetSdk = TARGET_SDK
         versionName = SAMPLE_VERSION_NAME
 

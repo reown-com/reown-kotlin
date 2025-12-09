@@ -106,13 +106,13 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                     launchSingleTop = true
                 }
 
-                PosNavEvent.ToSelectToken -> navController.navigate(Screen.SelectTokenScreen.route) {
-                    launchSingleTop = true
-                }
-
-                PosNavEvent.ToSelectNetwork -> navController.navigate(Screen.SelectNetworkScreen.route) {
-                    launchSingleTop = true
-                }
+//                PosNavEvent.ToSelectToken -> navController.navigate(Screen.SelectTokenScreen.route) {
+//                    launchSingleTop = true
+//                }
+//
+//                PosNavEvent.ToSelectNetwork -> navController.navigate(Screen.SelectNetworkScreen.route) {
+//                    launchSingleTop = true
+//                }
 
                 is PosNavEvent.QrReady -> navController.navigate("payment?qrUrl=${Uri.encode(event.uri.toString())}") {
                     launchSingleTop = true
