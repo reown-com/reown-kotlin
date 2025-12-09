@@ -15,7 +15,7 @@ sealed interface PosNavEvent {
     data object ToStart : PosNavEvent
     data object ToAmount : PosNavEvent
     data object FlowFinished : PosNavEvent
-    data class QrReady(val uri: URI, val amount: String, val paymentId: String) : PosNavEvent
+    data class QrReady(val uri: URI, val amount: Pos.Model.Amount, val paymentId: String) : PosNavEvent
     data class ToErrorScreen(val error: String) : PosNavEvent
     data class PaymentSuccessScreen(val paymentId: String) : PosNavEvent
 }
@@ -35,26 +35,13 @@ class POSViewModel : ViewModel() {
     private val _posEventsFlow: MutableSharedFlow<PosEvent> = MutableSharedFlow()
     val posEventsFlow = _posEventsFlow.asSharedFlow()
 
-    // Amount entered by user (in minor units, e.g., cents)
-    internal var amount: String? = null
-
-    // Currency unit (e.g., "iso4217/USD")
-    internal var currencyUnit: String = "iso4217/USD"
-
-    // Reference ID for the payment
-    internal var referenceId: String? = null
+    // Current payment info
+    private var currentAmount: Pos.Model.Amount? = null
+    private var currentPaymentId: String? = null
 
     // Loading state for "Start Payment" button
-    private val _startPaymentLoading = MutableStateFlow(false)
-    val startPaymentLoading = _startPaymentLoading.asStateFlow()
-
-    fun setStartPaymentLoading(value: Boolean) {
-        _startPaymentLoading.value = value
-    }
-
-    fun resetStartPaymentLoading() {
-        _startPaymentLoading.value = false
-    }
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -67,7 +54,9 @@ class POSViewModel : ViewModel() {
     private suspend fun handlePaymentEvent(paymentEvent: Pos.Model.PaymentEvent) {
         when (paymentEvent) {
             is Pos.Model.PaymentEvent.PaymentCreated -> {
-                resetStartPaymentLoading()
+                _isLoading.value = false
+                currentAmount = paymentEvent.amount
+                currentPaymentId = paymentEvent.paymentId
                 _posNavEventsFlow.emit(
                     PosNavEvent.QrReady(
                         uri = paymentEvent.uri,
@@ -91,7 +80,7 @@ class POSViewModel : ViewModel() {
             }
 
             is Pos.Model.PaymentEvent.PaymentError -> {
-                resetStartPaymentLoading()
+                _isLoading.value = false
                 val errorMessage = when (val error = paymentEvent.error) {
                     is Pos.Model.PaymentError.CreatePaymentFailed -> "Failed to create payment: ${error.message}"
                     is Pos.Model.PaymentError.PaymentFailed -> "Payment failed: ${error.message}"
@@ -113,26 +102,23 @@ class POSViewModel : ViewModel() {
     /**
      * Creates a payment intent with the specified amount.
      *
-     * @param amountInCents Amount in minor units (cents for USD)
+     * @param amountValue Amount in minor units (cents for USD)
      * @param currency Currency code (e.g., "USD", "EUR")
      */
-    fun createPaymentIntent(amountInCents: String, currency: String = "USD") {
+    fun createPayment(amountValue: String, currency: String = "USD") {
         try {
-            this.amount = amountInCents
-            this.currencyUnit = "iso4217/$currency"
-            this.referenceId = "ORDER-${System.currentTimeMillis()}"
-
-            setStartPaymentLoading(true)
+            val referenceId = "ORDER-${System.currentTimeMillis()}"
+            _isLoading.value = true
 
             PosClient.createPaymentIntent(
                 amount = Pos.Model.Amount(
-                    unit = currencyUnit,
-                    value = amountInCents
+                    unit = "iso4217/$currency",
+                    value = amountValue
                 ),
-                referenceId = referenceId!!
+                referenceId = referenceId
             )
         } catch (e: Exception) {
-            resetStartPaymentLoading()
+            _isLoading.value = false
             viewModelScope.launch {
                 _posNavEventsFlow.emit(
                     PosNavEvent.ToErrorScreen(error = e.message ?: "Create payment error")
@@ -141,20 +127,22 @@ class POSViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Cancels the current payment flow.
-     */
     fun cancelPayment() {
         PosClient.cancelPayment()
-        resetStartPaymentLoading()
+        _isLoading.value = false
     }
 
-    /**
-     * Resets the view model state for a new payment.
-     */
     fun resetForNewPayment() {
-        amount = null
-        referenceId = null
-        resetStartPaymentLoading()
+        currentAmount = null
+        currentPaymentId = null
+        _isLoading.value = false
+    }
+
+    fun getDisplayAmount(): String {
+        val amount = currentAmount ?: return ""
+        val valueInCents = amount.value.toLongOrNull() ?: 0L
+        val dollars = valueInCents / 100.0
+        val currency = amount.unit.substringAfter("/", "USD")
+        return String.format("$%.2f %s", dollars, currency)
     }
 }

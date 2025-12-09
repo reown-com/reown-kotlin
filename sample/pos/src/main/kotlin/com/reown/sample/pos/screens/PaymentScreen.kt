@@ -2,7 +2,6 @@ package com.reown.sample.pos.screens
 
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,12 +28,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import com.reown.sample.pos.R
 
-
 private enum class StepState { Inactive, InProgress, Done }
 
 private sealed interface PaymentUiState {
-    data object ScanToPay : PaymentUiState
-    data class Success(val txHash: Any, val recipient: String) : PaymentUiState
+    data object WaitingForScan : PaymentUiState
+    data class Success(val paymentId: String) : PaymentUiState
 }
 
 @Composable
@@ -47,52 +44,35 @@ fun PaymentScreen(
     modifier: Modifier = Modifier
 ) {
     val brandGreen = Color(0xFF0A8F5B)
-    val context = LocalContext.current
 
-    // Main UI state: show QR timeline until success
-    var uiState by remember { mutableStateOf<PaymentUiState>(PaymentUiState.ScanToPay) }
+    var uiState by remember { mutableStateOf<PaymentUiState>(PaymentUiState.WaitingForScan) }
 
-    // --- Timeline step states ---
-    var walletConnect by remember { mutableStateOf(StepState.InProgress) }   // starts connecting
-    var sendTx by remember { mutableStateOf(StepState.Inactive) }      // waits for PaymentRequested
-    var confirming by remember { mutableStateOf(StepState.Inactive) }      // waits for Broadcasted
-    var checking by remember { mutableStateOf(StepState.Inactive) }      // waits for Broadcasted
+    // Timeline step states
+    var scanStep by remember { mutableStateOf(StepState.InProgress) }
+    var processingStep by remember { mutableStateOf(StepState.Inactive) }
+    var confirmingStep by remember { mutableStateOf(StepState.Inactive) }
 
     LaunchedEffect(Unit) {
-        // Reset loading state when entering the payment screen
-        viewModel.resetStartPaymentLoading()
-        viewModel.posEventsFlow.collectLatest { e ->
-            when (e) {
-                PosEvent.Connected -> {
-                    Log.d("POS", "Wallet connected")
-                    walletConnect = StepState.Done
-                    sendTx = StepState.InProgress
-                }
-
-                PosEvent.ConnectedRejected -> navigateToErrorScreen("Connection rejected by a user")
-
-                // User is being asked to approve → start "Sending transaction…"
+        viewModel.posEventsFlow.collectLatest { event ->
+            when (event) {
                 PosEvent.PaymentRequested -> {
-                    sendTx = StepState.Done
-                    confirming = StepState.InProgress
+                    scanStep = StepState.Done
+                    processingStep = StepState.InProgress
                 }
 
-                // Broadcasted → mark "Transaction sent", start confirming & checking
-                PosEvent.PaymentBroadcasted -> {
-                    confirming = StepState.Done
-                    checking = StepState.InProgress
+                PosEvent.PaymentProcessing -> {
+                    processingStep = StepState.Done
+                    confirmingStep = StepState.InProgress
                 }
 
-                // Final success → mark both in-progress steps as done and show Success UI
-                is PosEvent.PaymentSuccessful -> {
-                    checking = StepState.Done
-                    uiState = PaymentUiState.Success(
-                        txHash = e.txHash,
-                        recipient = e.recipient
-                    )
+                is PosEvent.PaymentSuccess -> {
+                    confirmingStep = StepState.Done
+                    uiState = PaymentUiState.Success(paymentId = event.paymentId)
                 }
 
-                is PosEvent.PaymentRejected -> navigateToErrorScreen("Payment rejected: ${e.error}")
+                is PosEvent.PaymentError -> {
+                    navigateToErrorScreen(event.error)
+                }
             }
         }
     }
@@ -100,7 +80,6 @@ fun PaymentScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .imePadding()
     ) {
         // Header
         Column(
@@ -111,8 +90,17 @@ fun PaymentScreen(
                 .padding(vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("DTC Pay", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.ExtraBold)
-            Text("Crypto Payment Terminal", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.95f))
+            Text(
+                "WalletConnect Pay",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                fontWeight = FontWeight.ExtraBold
+            )
+            Text(
+                "POS Sample App",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.95f)
+            )
         }
 
         // Content
@@ -121,67 +109,64 @@ fun PaymentScreen(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            when (uiState) {
-                PaymentUiState.ScanToPay ->
-                    ScanToPayContent(
-                        qrUrl = qrUrl,
-                        // show amount/token/network if you keep those on the VM
-                        amount = viewModel.amount,
-                        token = viewModel.tokenSymbol,
-                        network = viewModel.network,
-                        walletState = walletConnect,
-                        sendState = sendTx,
-                        confirmState = confirming,
-                        checkState = checking
-                    )
+            when (val state = uiState) {
+                PaymentUiState.WaitingForScan -> ScanToPayContent(
+                    qrUrl = qrUrl,
+                    displayAmount = viewModel.getDisplayAmount(),
+                    scanState = scanStep,
+                    processingState = processingStep,
+                    confirmingState = confirmingStep
+                )
 
                 is PaymentUiState.Success -> SuccessContent(
-                    txHash = (uiState as PaymentUiState.Success).txHash,
-                    recipient = (uiState as PaymentUiState.Success).recipient,
+                    paymentId = state.paymentId,
                     onReturnToStart = onReturnToStart
                 )
             }
         }
 
-        // Footer pinned bottom
+        // Footer
         Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(vertical = 14.dp),
-                contentAlignment = Alignment.Center
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                if (uiState is PaymentUiState.WaitingForScan) {
                     Button(
-                        onClick = { onReturnToStart() },
-                        modifier = Modifier
-                            .height(44.dp)
+                        onClick = {
+                            viewModel.cancelPayment()
+                            onReturnToStart()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        ),
+                        modifier = Modifier.height(44.dp)
                     ) {
-                        Text("Start again")
+                        Text("Cancel Payment")
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text("Powered by DTC Pay", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                Text(
+                    "Powered by WalletConnect",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
 }
 
-
-/* ---------- State UIs ---------- */
-
-// 1) QR visible + details; per your note: no “Start Payment” button here.
 @Composable
 private fun ScanToPayContent(
     qrUrl: String,
-    amount: String?,
-    token: String?,
-    network: String?,
-    walletState: StepState,
-    sendState: StepState,
-    confirmState: StepState,
-    checkState: StepState
+    displayAmount: String,
+    scanState: StepState,
+    processingState: StepState,
+    confirmingState: StepState
 ) {
     Column(
         modifier = Modifier
@@ -190,10 +175,16 @@ private fun ScanToPayContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(24.dp))
-        Text("Scan to Pay", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
+
+        Text(
+            "Scan to Pay",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center
+        )
         Spacer(Modifier.height(6.dp))
         Text(
-            "Step 5: Customer scans QR",
+            "Customer scans QR code with wallet",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -201,7 +192,7 @@ private fun ScanToPayContent(
 
         Spacer(Modifier.height(20.dp))
 
-        // QR box
+        // QR Code
         Surface(
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
@@ -212,59 +203,49 @@ private fun ScanToPayContent(
                     .sizeIn(minWidth = 220.dp, minHeight = 220.dp)
                     .padding(16.dp),
                 contentAlignment = Alignment.Center
-            ) { QrImage(data = qrUrl, size = 220.dp) }
+            ) {
+                QrImage(data = qrUrl, size = 220.dp)
+            }
         }
-
-        Spacer(Modifier.height(16.dp))
-
-        // --------- Timeline (always visible) ---------
-        StatusRow(
-            state = walletState,
-            inProgressText = "Scan QR, waiting for wallet connection…",
-            doneText = "Wallet connected"
-        )
-        Spacer(Modifier.height(8.dp))
-        StatusRow(
-            state = sendState,
-            inProgressText = "Sending transaction…",
-            doneText = "Transaction sent"
-        )
-        Spacer(Modifier.height(8.dp))
-        StatusRow(
-            state = confirmState,
-            inProgressText = "Confirming transaction…",
-            doneText = "Transaction confirmed"
-        )
-        Spacer(Modifier.height(8.dp))
-        StatusRow(
-            state = checkState,
-            inProgressText = "Checking the transaction status…",
-            doneText = "Transaction confirmed"
-        )
 
         Spacer(Modifier.height(20.dp))
 
-        // Details card
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-            tonalElevation = 1.dp,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(Modifier.padding(horizontal = 20.dp, vertical = 18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                if (!amount.isNullOrBlank()) {
-                    Text("$${amount}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-                    Spacer(Modifier.height(6.dp))
-                }
-                val line2 = buildString {
-                    append(token ?: "Token")
-                    if (!network.isNullOrBlank()) append(" on $network")
-                }
-                Text(line2, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                Spacer(Modifier.height(6.dp))
-                Text("Network fee: $0.05", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // Amount display
+        if (displayAmount.isNotBlank()) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    displayAmount,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(vertical = 12.dp)
+                )
             }
+            Spacer(Modifier.height(20.dp))
         }
+
+        // Timeline
+        StatusRow(
+            state = scanState,
+            inProgressText = "Waiting for wallet scan…",
+            doneText = "Payment initiated"
+        )
+        Spacer(Modifier.height(8.dp))
+        StatusRow(
+            state = processingState,
+            inProgressText = "Processing payment…",
+            doneText = "Payment processing"
+        )
+        Spacer(Modifier.height(8.dp))
+        StatusRow(
+            state = confirmingState,
+            inProgressText = "Confirming transaction…",
+            doneText = "Payment confirmed"
+        )
 
         Spacer(Modifier.height(24.dp))
     }
@@ -277,94 +258,118 @@ private fun StatusRow(
     doneText: String
 ) {
     val green = Color(0xFF0A8F5B)
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
         when (state) {
             StepState.Inactive -> {
-                // subtle dot for steps not started yet
                 Box(
                     modifier = Modifier
                         .size(18.dp)
                         .background(MaterialTheme.colorScheme.outlineVariant, shape = CircleShape)
                 )
                 Spacer(Modifier.width(8.dp))
-                Text(inProgressText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    inProgressText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
             }
 
             StepState.InProgress -> {
-                CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(18.dp), color = green)
+                CircularProgressIndicator(
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(18.dp),
+                    color = green
+                )
                 Spacer(Modifier.width(8.dp))
-                Text(inProgressText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    inProgressText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             StepState.Done -> {
-                Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = green, modifier = Modifier.size(20.dp))
+                Icon(
+                    Icons.Filled.CheckCircle,
+                    contentDescription = null,
+                    tint = green,
+                    modifier = Modifier.size(20.dp)
+                )
                 Spacer(Modifier.width(8.dp))
-                Text(doneText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                Text(
+                    doneText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }
 }
 
-// 4) Success (show transaction details)
 @Composable
-private fun SuccessContent(txHash: Any, recipient: String, onReturnToStart: () -> Unit) {
+private fun SuccessContent(
+    paymentId: String,
+    onReturnToStart: () -> Unit
+) {
+    val brandGreen = Color(0xFF0A8F5B)
+
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        val brandGreen = Color(0xFF0A8F5B)
-        // A simple success glyph; swap for an icon if you have one
         Icon(
             painter = painterResource(R.drawable.ic_check),
             contentDescription = null,
-            tint = Color(0xFF0A8F5B),
-            modifier = Modifier.size(72.dp)
+            tint = brandGreen,
+            modifier = Modifier.size(80.dp)
         )
+
+        Spacer(Modifier.height(16.dp))
 
         Text(
             "Payment Successful!",
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
-            color = Color(0xFF0A8F5B)
+            color = brandGreen
         )
+
         Spacer(Modifier.height(16.dp))
+
         Text(
-            "Recipient",
+            "Payment ID",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            recipient,
+            paymentId,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface
         )
-        Spacer(Modifier.height(12.dp))
-        Text(
-            "Transaction Result",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            txHash.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(Modifier.height(24.dp))
+
+        Spacer(Modifier.height(32.dp))
+
         Button(
-            onClick = { onReturnToStart() },
+            onClick = onReturnToStart,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
         ) {
-            Text("Start Again", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(
+                "New Payment",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }
@@ -374,14 +379,18 @@ fun QrImage(
     data: String,
     size: Dp = 220.dp
 ) {
-    // Generate once per 'data'
     val bmp by remember(data) {
-        mutableStateOf(generateQrBitmap(data, sizePx = (size.value * Resources.getSystem().displayMetrics.density).toInt()))
+        mutableStateOf(
+            generateQrBitmap(
+                data,
+                sizePx = (size.value * Resources.getSystem().displayMetrics.density).toInt()
+            )
+        )
     }
     if (bmp != null) {
         Image(
             bitmap = bmp!!.asImageBitmap(),
-            contentDescription = "QR",
+            contentDescription = "QR Code",
             modifier = Modifier.size(size)
         )
     }
@@ -389,9 +398,7 @@ fun QrImage(
 
 private fun generateQrBitmap(data: String, sizePx: Int): Bitmap? {
     return try {
-        val hints = mapOf(
-            EncodeHintType.MARGIN to 1  // small quiet zone
-        )
+        val hints = mapOf(EncodeHintType.MARGIN to 1)
         val bitMatrix = QRCodeWriter().encode(data, BarcodeFormat.QR_CODE, sizePx, sizePx, hints)
         val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         for (x in 0 until sizePx) {

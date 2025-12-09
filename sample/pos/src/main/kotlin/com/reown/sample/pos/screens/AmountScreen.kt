@@ -24,14 +24,21 @@ fun AmountScreen(
     modifier: Modifier = Modifier
 ) {
     val brandGreen = Color(0xFF0A8F5B)
-    var amount by rememberSaveable { mutableStateOf("") }
+    var amountDisplay by rememberSaveable { mutableStateOf("") }
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    // Convert display amount (dollars) to minor units (cents)
+    fun getAmountInCents(): String {
+        val dollars = amountDisplay.toDoubleOrNull() ?: 0.0
+        return (dollars * 100).toLong().toString()
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .imePadding()
     ) {
-        // --- Green header like screen #1 ---
+        // Header
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -41,19 +48,19 @@ fun AmountScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "DTC Pay",
+                "WalletConnect Pay",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.White,
                 fontWeight = FontWeight.ExtraBold
             )
             Text(
-                "Crypto Payment Terminal",
+                "POS Sample App",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White.copy(alpha = 0.95f)
             )
         }
 
-        // --- Main content ---
+        // Content
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -64,22 +71,22 @@ fun AmountScreen(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                "Enter Payment Amount",
+                "Enter Amount",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                "Step 2: Enter the amount to charge",
+                "Enter the payment amount in USD",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(24.dp))
 
-            // Amount "display" card with a big centered TextField
+            // Amount input card
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
@@ -87,14 +94,13 @@ fun AmountScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Big amount input. System keyboard opens automatically on tap.
                     TextField(
-                        value = amount,
+                        value = amountDisplay,
                         onValueChange = { new ->
-                            // Simple numeric filter (digits + at most one '.')
+                            // Filter to allow only numbers and one decimal point
                             val filtered = new
                                 .replace(Regex("[^0-9.]"), "")
                                 .let { s ->
@@ -102,60 +108,94 @@ fun AmountScreen(
                                     if (firstDot == -1) s else
                                         s.substring(0, firstDot + 1) + s.substring(firstDot + 1).replace(".", "")
                                 }
-                            amount = filtered
+                            // Limit decimal places to 2
+                            val parts = filtered.split(".")
+                            amountDisplay = if (parts.size == 2 && parts[1].length > 2) {
+                                "${parts[0]}.${parts[1].take(2)}"
+                            } else {
+                                filtered
+                            }
                         },
                         singleLine = true,
                         textStyle = TextStyle(
-                            fontSize = 36.sp,
+                            fontSize = 48.sp,
                             fontWeight = FontWeight.ExtraBold,
                             textAlign = TextAlign.Center
                         ),
                         leadingIcon = {
                             Text(
                                 "$",
-                                style = MaterialTheme.typography.headlineSmall,
+                                style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.ExtraBold
                             )
                         },
-                        placeholder = { Text("0", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold) },
+                        placeholder = {
+                            Text(
+                                "0.00",
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(Modifier.height(8.dp))
+
                     Text(
-                        "Manual token selection",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                        "USD",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             Spacer(Modifier.weight(1f))
 
-            // CTA
+            // Start Payment button
             Button(
-                onClick = { viewModel.navigateToTokenScreen(amount.trim()) },
-                enabled = amount.isNotBlank(),
+                onClick = {
+                    val amountInCents = getAmountInCents()
+                    if (amountInCents.toLongOrNull() ?: 0L > 0) {
+                        viewModel.createPayment(amountInCents, "USD")
+                    }
+                },
+                enabled = amountDisplay.isNotBlank() &&
+                        (amountDisplay.toDoubleOrNull() ?: 0.0) > 0 &&
+                        !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
             ) {
-                Text(
-                    "Start Payment",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        "Start Payment",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
         }
 
-        // --- Footer strip ---
+        // Footer
         Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
             Box(
                 modifier = Modifier
@@ -165,7 +205,7 @@ fun AmountScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Powered by DTC Pay",
+                    "Powered by WalletConnect",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
