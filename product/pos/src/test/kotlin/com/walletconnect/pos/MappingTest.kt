@@ -3,7 +3,6 @@ package com.walletconnect.pos
 import com.walletconnect.pos.api.ErrorCodes
 import com.walletconnect.pos.api.PaymentStatus
 import com.walletconnect.pos.api.buildPaymentUri
-import com.walletconnect.pos.api.formatAmount
 import com.walletconnect.pos.api.isTerminalError
 import com.walletconnect.pos.api.isTerminalStatus
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
@@ -18,72 +17,66 @@ class MappingTest {
     @Test
     fun `mapStatusToPaymentEvent - requires_action returns PaymentRequested`() {
         val result = mapStatusToPaymentEvent(PaymentStatus.REQUIRES_ACTION, "pay_123")
-        assertEquals(Pos.Model.PaymentEvent.PaymentRequested, result)
+        assertEquals(Pos.PaymentEvent.PaymentRequested, result)
     }
 
     @Test
     fun `mapStatusToPaymentEvent - processing returns PaymentProcessing`() {
         val result = mapStatusToPaymentEvent(PaymentStatus.PROCESSING, "pay_123")
-        assertEquals(Pos.Model.PaymentEvent.PaymentProcessing, result)
+        assertEquals(Pos.PaymentEvent.PaymentProcessing, result)
     }
 
     @Test
     fun `mapStatusToPaymentEvent - succeeded returns PaymentSuccess with paymentId`() {
         val result = mapStatusToPaymentEvent(PaymentStatus.SUCCEEDED, "pay_123")
-        assertTrue(result is Pos.Model.PaymentEvent.PaymentSuccess)
-        assertEquals("pay_123", (result as Pos.Model.PaymentEvent.PaymentSuccess).paymentId)
+        assertTrue(result is Pos.PaymentEvent.PaymentSuccess)
+        assertEquals("pay_123", (result as Pos.PaymentEvent.PaymentSuccess).paymentId)
     }
 
     @Test
-    fun `mapStatusToPaymentEvent - expired returns PaymentError with PaymentExpired`() {
+    fun `mapStatusToPaymentEvent - expired returns PaymentError PaymentExpired`() {
         val result = mapStatusToPaymentEvent(PaymentStatus.EXPIRED, "pay_123")
-        assertTrue(result is Pos.Model.PaymentEvent.PaymentError)
-        val error = (result as Pos.Model.PaymentEvent.PaymentError).error
-        assertTrue(error is Pos.Model.PaymentError.PaymentExpired)
+        assertTrue(result is Pos.PaymentEvent.PaymentError.PaymentExpired)
     }
 
     @Test
-    fun `mapStatusToPaymentEvent - failed returns PaymentError with PaymentFailed`() {
+    fun `mapStatusToPaymentEvent - failed returns PaymentError PaymentFailed`() {
         val result = mapStatusToPaymentEvent(PaymentStatus.FAILED, "pay_123")
-        assertTrue(result is Pos.Model.PaymentEvent.PaymentError)
-        val error = (result as Pos.Model.PaymentEvent.PaymentError).error
-        assertTrue(error is Pos.Model.PaymentError.PaymentFailed)
+        assertTrue(result is Pos.PaymentEvent.PaymentError.PaymentFailed)
     }
 
     @Test
-    fun `mapStatusToPaymentEvent - unknown status returns PaymentError with Generic`() {
+    fun `mapStatusToPaymentEvent - unknown status returns PaymentError Undefined`() {
         val result = mapStatusToPaymentEvent("unknown_status", "pay_123")
-        assertTrue(result is Pos.Model.PaymentEvent.PaymentError)
-        val error = (result as Pos.Model.PaymentEvent.PaymentError).error
-        assertTrue(error is Pos.Model.PaymentError.Generic)
+        assertTrue(result is Pos.PaymentEvent.PaymentError.Undefined)
     }
 
     @Test
     fun `mapErrorCodeToPaymentError - PAYMENT_NOT_FOUND returns PaymentNotFound`() {
         val result = mapErrorCodeToPaymentError(ErrorCodes.PAYMENT_NOT_FOUND, "Not found")
-        assertTrue(result is Pos.Model.PaymentError.PaymentNotFound)
-        assertEquals("Not found", (result as Pos.Model.PaymentError.PaymentNotFound).message)
+        assertTrue(result is Pos.PaymentEvent.PaymentError.PaymentNotFound)
+        assertEquals("Not found", (result as Pos.PaymentEvent.PaymentError.PaymentNotFound).message)
     }
 
     @Test
     fun `mapErrorCodeToPaymentError - PAYMENT_EXPIRED returns PaymentExpired`() {
         val result = mapErrorCodeToPaymentError(ErrorCodes.PAYMENT_EXPIRED, "Expired")
-        assertTrue(result is Pos.Model.PaymentError.PaymentExpired)
-        assertEquals("Expired", (result as Pos.Model.PaymentError.PaymentExpired).message)
+        assertTrue(result is Pos.PaymentEvent.PaymentError.PaymentExpired)
+        assertEquals("Expired", (result as Pos.PaymentEvent.PaymentError.PaymentExpired).message)
     }
 
     @Test
     fun `mapErrorCodeToPaymentError - INVALID_REQUEST returns InvalidPaymentRequest`() {
         val result = mapErrorCodeToPaymentError(ErrorCodes.INVALID_REQUEST, "Invalid")
-        assertTrue(result is Pos.Model.PaymentError.InvalidPaymentRequest)
-        assertEquals("Invalid", (result as Pos.Model.PaymentError.InvalidPaymentRequest).message)
+        assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
+        assertEquals("Invalid", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
     }
 
     @Test
-    fun `mapErrorCodeToPaymentError - unknown code returns Generic`() {
+    fun `mapErrorCodeToPaymentError - unknown code returns Undefined`() {
         val result = mapErrorCodeToPaymentError("UNKNOWN_CODE", "Unknown error")
-        assertTrue(result is Pos.Model.PaymentError.Generic)
-        assertEquals("Unknown error", (result as Pos.Model.PaymentError.Generic).message)
+        assertTrue(result is Pos.PaymentEvent.PaymentError.Undefined)
+        assertEquals("Unknown error", (result as Pos.PaymentEvent.PaymentError.Undefined).message)
     }
 
     @Test
@@ -122,37 +115,25 @@ class MappingTest {
     }
 
     @Test
-    fun `isTerminalError - INVALID_REQUEST is not terminal`() {
-        assertFalse(isTerminalError(ErrorCodes.INVALID_REQUEST))
-    }
-
-    @Test
-    fun `formatAmount - USD formats correctly`() {
-        val result = formatAmount("iso4217/USD", "1000")
-        assertEquals("$10.00 USD", result)
-    }
-
-    @Test
-    fun `formatAmount - EUR formats correctly`() {
-        val result = formatAmount("iso4217/EUR", "1500")
-        assertEquals("€15.00 EUR", result)
-    }
-
-    @Test
-    fun `formatAmount - GBP formats correctly`() {
-        val result = formatAmount("iso4217/GBP", "2500")
-        assertEquals("£25.00 GBP", result)
-    }
-
-    @Test
-    fun `formatAmount - unknown currency formats with code`() {
-        val result = formatAmount("iso4217/JPY", "10000")
-        assertEquals("100.00 JPY", result)
+    fun `isTerminalError - INVALID_REQUEST is terminal`() {
+        assertTrue(isTerminalError(ErrorCodes.INVALID_REQUEST))
     }
 
     @Test
     fun `buildPaymentUri - builds correct URI`() {
         val result = buildPaymentUri("pay_abc123")
         assertEquals("https://walletconnect.com/pay/pay_abc123", result)
+    }
+
+    @Test
+    fun `Amount format - USD formats correctly`() {
+        val amount = Pos.Amount("iso4217/USD", "1000")
+        assertEquals("10.00 USD", amount.format())
+    }
+
+    @Test
+    fun `Amount format - EUR formats correctly`() {
+        val amount = Pos.Amount("iso4217/EUR", "1500")
+        assertEquals("15.00 EUR", amount.format())
     }
 }

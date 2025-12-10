@@ -85,4 +85,5 @@ internal object ErrorCodes {
     const val PAYMENT_NOT_FOUND = "PAYMENT_NOT_FOUND"
     const val PAYMENT_EXPIRED = "PAYMENT_EXPIRED"
     const val INVALID_REQUEST = "INVALID_REQUEST"
+    const val COMPLIANCE_FAILED = "COMPLIANCE_FAILED"
 }

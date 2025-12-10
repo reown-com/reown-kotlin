@@ -20,7 +20,7 @@ class POSClientTest {
 
     @Test
     fun `init - throws on blank apiKey`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalStateException::class.java) {
             PosClient.init(apiKey = "", deviceId = "test-device")
         }
         assertTrue(exception.message?.contains("apiKey") == true)
@@ -28,7 +28,7 @@ class POSClientTest {
 
     @Test
     fun `init - throws on blank deviceId`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
+        val exception = assertThrows(IllegalStateException::class.java) {
             PosClient.init(apiKey = "test-api-key", deviceId = "")
         }
         assertTrue(exception.message?.contains("deviceId") == true)
@@ -38,7 +38,7 @@ class POSClientTest {
     fun `createPaymentIntent - throws when not initialized`() {
         val exception = assertThrows(IllegalStateException::class.java) {
             PosClient.createPaymentIntent(
-                amount = Pos.Model.Amount(unit = "iso4217/USD", value = "1000"),
+                amount = Pos.Amount(unit = "iso4217/USD", value = "1000"),
                 referenceId = "ORDER-123"
             )
         }
@@ -48,24 +48,24 @@ class POSClientTest {
     @Test
     fun `createPaymentIntent - succeeds when initialized`() {
         PosClient.init(apiKey = "test-api-key", deviceId = "test-device")
-        
+
         // This will attempt to make a real HTTP call which will fail,
         // but we're just testing that it doesn't throw IllegalStateException
         var eventReceived = false
         PosClient.setDelegate(object : POSDelegate {
-            override fun onEvent(event: Pos.Model.PaymentEvent) {
+            override fun onEvent(event: Pos.PaymentEvent) {
                 eventReceived = true
             }
         })
-        
+
         PosClient.createPaymentIntent(
-            amount = Pos.Model.Amount(unit = "iso4217/USD", value = "1000"),
+            amount = Pos.Amount(unit = "iso4217/USD", value = "1000"),
             referenceId = "ORDER-123"
         )
-        
+
         // Give it a moment for the coroutine to start
         Thread.sleep(100)
-        
+
         // Cancel the payment to prevent ongoing network calls
         PosClient.cancelPayment()
     }
@@ -81,18 +81,11 @@ class POSClientTest {
 
     @Test
     fun `setDelegate - can set delegate before init`() {
-        var eventReceived = false
         PosClient.setDelegate(object : POSDelegate {
-            override fun onEvent(event: Pos.Model.PaymentEvent) {
-                eventReceived = true
+            override fun onEvent(event: Pos.PaymentEvent) {
+                // no-op
             }
         })
-        // No exception means success
-    }
-
-    @Test
-    fun `setDelegate - can set delegate to null`() {
-        PosClient.setDelegate(null)
         // No exception means success
     }
 
@@ -115,10 +108,10 @@ class POSClientTest {
     fun `shutdown - requires reinit after`() {
         PosClient.init(apiKey = "test-api-key", deviceId = "test-device")
         PosClient.shutdown()
-        
+
         val exception = assertThrows(IllegalStateException::class.java) {
             PosClient.createPaymentIntent(
-                amount = Pos.Model.Amount(unit = "iso4217/USD", value = "1000"),
+                amount = Pos.Amount(unit = "iso4217/USD", value = "1000"),
                 referenceId = "ORDER-123"
             )
         }

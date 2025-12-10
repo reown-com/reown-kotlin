@@ -12,6 +12,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
+import java.net.URI
 import java.util.concurrent.TimeUnit
 
 internal class ApiClient(
@@ -38,12 +39,22 @@ internal class ApiClient(
 
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
+    /**
+     * Creates a payment and starts polling for status updates.
+     * All events are emitted through the callback.
+     */
     suspend fun createPayment(
         referenceId: String,
         unit: String,
-        value: String
-    ): ApiResult<CreatePaymentData> = withContext(Dispatchers.IO) {
-        val request = CreatePaymentRequest(params = CreatePaymentParams(referenceId = referenceId, amount = Amount(unit = unit, value = value)))
+        value: String,
+        onEvent: (Pos.PaymentEvent) -> Unit
+    ) = withContext(Dispatchers.IO) {
+        val request = CreatePaymentRequest(
+            params = CreatePaymentParams(
+                referenceId = referenceId,
+                amount = Amount(unit = unit, value = value)
+            )
+        )
         val jsonBody = createPaymentRequestAdapter.toJson(request)
         val httpResponse = executeHttpRequest(jsonBody)
 
@@ -52,35 +63,59 @@ internal class ApiClient(
                 val response = try {
                     createPaymentResponseAdapter.fromJson(httpResponse.body)
                 } catch (e: Exception) {
-                    return@withContext ApiResult.Error("PARSE_ERROR", "Failed to parse response: ${e.message}")
+                    onEvent(Pos.PaymentEvent.PaymentError.Undefined("Failed to parse response: ${e.message}"))
+                    return@withContext
                 }
 
                 if (response == null) {
-                    return@withContext ApiResult.Error("PARSE_ERROR", "Null response")
+                    onEvent(Pos.PaymentEvent.PaymentError.Undefined("Null response"))
+                    return@withContext
                 }
 
                 when (response.status) {
                     "success" -> {
                         val data = response.data
-                            ?: return@withContext ApiResult.Error("PARSE_ERROR", "Missing data in success response")
-                        ApiResult.Success(data)
+                        if (data == null) {
+                            onEvent(Pos.PaymentEvent.PaymentError.Undefined("Missing data in success response"))
+                            return@withContext
+                        }
+
+                        val uri = URI(buildPaymentUri(data.paymentId))
+                        onEvent(
+                            Pos.PaymentEvent.PaymentCreated(
+                                uri = uri,
+                                amount = Pos.Amount(data.amount.unit, data.amount.value),
+                                paymentId = data.paymentId
+                            )
+                        )
+
+                        startPolling(data.paymentId, data.pollInMs, onEvent)
                     }
 
                     "error" -> {
-                        ApiResult.Error(
-                            code = response.error?.code ?: "UNKNOWN_ERROR",
-                            message = response.error?.message ?: "Unknown error"
+                        onEvent(
+                            mapCreatePaymentError(
+                                response.error?.code ?: "UNKNOWN_ERROR",
+                                response.error?.message ?: "Unknown error"
+                            )
                         )
                     }
 
-                    else -> ApiResult.Error("UNKNOWN_STATUS", "Unknown status: ${response.status}")
+                    else -> {
+                        onEvent(Pos.PaymentEvent.PaymentError.Undefined("Unknown status: ${response.status}"))
+                    }
                 }
             }
 
-            is HttpResponse.Error -> ApiResult.Error(httpResponse.code, httpResponse.message)
+            is HttpResponse.Error -> {
+                onEvent(mapCreatePaymentError(httpResponse.code, httpResponse.message))
+            }
         }
     }
 
+    /**
+     * Gets the current status of a payment (one-off, no polling).
+     */
     suspend fun getPayment(paymentId: String): ApiResult<GetPaymentData> = withContext(Dispatchers.IO) {
         val request = GetPaymentRequest(params = GetPaymentParams(paymentId = paymentId))
         val jsonBody = getPaymentRequestAdapter.toJson(request)
@@ -120,7 +155,7 @@ internal class ApiClient(
         }
     }
 
-    suspend fun startPolling(
+    private suspend fun startPolling(
         paymentId: String,
         initialPollMs: Long,
         onEvent: (Pos.PaymentEvent) -> Unit
@@ -168,7 +203,9 @@ internal class ApiClient(
             .build()
 
         return try {
-            httpClient.newCall(httpRequest).execute().use { response -> HttpResponse.Success(response.body.string()) }
+            httpClient.newCall(httpRequest).execute().use { response ->
+                HttpResponse.Success(response.body.string())
+            }
         } catch (e: IOException) {
             HttpResponse.Error("NETWORK_ERROR", e.message ?: "Network error")
         } catch (e: Exception) {

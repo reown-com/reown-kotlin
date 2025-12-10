@@ -2,8 +2,6 @@ package com.walletconnect.pos
 
 import com.walletconnect.pos.api.ApiClient
 import com.walletconnect.pos.api.ApiResult
-import com.walletconnect.pos.api.buildPaymentUri
-import com.walletconnect.pos.api.mapCreatePaymentError
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import kotlinx.coroutines.CoroutineScope
@@ -12,8 +10,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import java.net.URI
-import kotlin.jvm.Throws
 
 /**
  * POS (Point of Sale) client for handling payment transactions.
@@ -50,6 +46,7 @@ object PosClient {
 
     /**
      * Creates a payment intent and starts the payment flow.
+     * All payment events are emitted through the delegate.
      *
      * @param amount The payment amount
      * @param referenceId Merchant's reference ID for this payment
@@ -60,32 +57,14 @@ object PosClient {
         checkInitialized()
         currentPollingJob?.cancel()
         currentPollingJob = scope?.launch {
-            when (val result = apiClient!!.createPayment(referenceId, amount.unit, amount.value)) {
-                is ApiResult.Success -> {
-                    val data = result.data
-                    //TODO: return gateway URL from API
-                    val uri = URI(buildPaymentUri(data.paymentId))
-//                    val formattedAmount = formatAmount(data.amount.unit, data.amount.value)
-
-                    emitEvent(
-                        Pos.PaymentEvent.PaymentCreated(
-                            uri = uri,
-                            amount = Pos.Amount(data.amount.unit, data.amount.value),
-                            paymentId = data.paymentId
-                        )
-                    )
-                    apiClient!!.startPolling(data.paymentId, data.pollInMs) { event -> emitEvent(event) }
-                }
-
-                is ApiResult.Error -> {
-                    emitEvent(mapCreatePaymentError(result.code, result.message))
-                }
+            apiClient!!.createPayment(referenceId, amount.unit, amount.value) { event ->
+                emitEvent(event)
             }
         }
     }
 
     /**
-     * Checks the current status of a payment.
+     * Checks the current status of a payment (one-off, no polling).
      *
      * @param paymentId The payment ID to check
      * @return The current payment status as a [Pos.PaymentEvent]

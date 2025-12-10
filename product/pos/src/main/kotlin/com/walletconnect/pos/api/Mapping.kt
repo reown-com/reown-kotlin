@@ -24,7 +24,7 @@ internal fun mapStatusToPaymentEvent(status: String, paymentId: String): Pos.Pay
         PaymentStatus.PROCESSING -> Pos.PaymentEvent.PaymentProcessing
         PaymentStatus.SUCCEEDED -> Pos.PaymentEvent.PaymentSuccess(paymentId)
         PaymentStatus.EXPIRED -> Pos.PaymentEvent.PaymentError.PaymentExpired("Payment has expired")
-        PaymentStatus.FAILED -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment failed") //TODO: add error message
+        PaymentStatus.FAILED -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment failed") //TODO: add error message?
         else -> Pos.PaymentEvent.PaymentError.Undefined("Unknown payment status: $status")
     }
 }
@@ -33,14 +33,16 @@ internal fun isTerminalStatus(status: String): Boolean {
     return status in listOf(
         PaymentStatus.SUCCEEDED,
         PaymentStatus.EXPIRED,
-        PaymentStatus.FAILED
+        PaymentStatus.FAILED,
     )
 }
 
 internal fun isTerminalError(code: String): Boolean {
     return code in listOf(
         ErrorCodes.PAYMENT_NOT_FOUND,
-        ErrorCodes.PAYMENT_EXPIRED
+        ErrorCodes.PAYMENT_EXPIRED,
+        ErrorCodes.INVALID_REQUEST,
+        ErrorCodes.COMPLIANCE_FAILED
     )
 }
 
