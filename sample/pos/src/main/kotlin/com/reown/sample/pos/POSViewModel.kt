@@ -15,7 +15,7 @@ sealed interface PosNavEvent {
     data object ToStart : PosNavEvent
     data object ToAmount : PosNavEvent
     data object FlowFinished : PosNavEvent
-    data class QrReady(val uri: URI, val amount: Pos.Model.Amount, val paymentId: String) : PosNavEvent
+    data class QrReady(val uri: URI, val amount: Pos.Amount, val paymentId: String) : PosNavEvent
     data class ToErrorScreen(val error: String) : PosNavEvent
     data class PaymentSuccessScreen(val paymentId: String) : PosNavEvent
 }
@@ -36,7 +36,7 @@ class POSViewModel : ViewModel() {
     val posEventsFlow = _posEventsFlow.asSharedFlow()
 
     // Current payment info
-    private var currentAmount: Pos.Model.Amount? = null
+    private var currentAmount: Pos.Amount? = null
     private var currentPaymentId: String? = null
 
     // Loading state for "Start Payment" button
@@ -51,9 +51,9 @@ class POSViewModel : ViewModel() {
         }
     }
 
-    private suspend fun handlePaymentEvent(paymentEvent: Pos.Model.PaymentEvent) {
+    private suspend fun handlePaymentEvent(paymentEvent: Pos.PaymentEvent) {
         when (paymentEvent) {
-            is Pos.Model.PaymentEvent.PaymentCreated -> {
+            is Pos.PaymentEvent.PaymentCreated -> {
                 _isLoading.value = false
                 currentAmount = paymentEvent.amount
                 currentPaymentId = paymentEvent.paymentId
@@ -66,28 +66,28 @@ class POSViewModel : ViewModel() {
                 )
             }
 
-            is Pos.Model.PaymentEvent.PaymentRequested -> {
+            is Pos.PaymentEvent.PaymentRequested -> {
                 _posEventsFlow.emit(PosEvent.PaymentRequested)
             }
 
-            is Pos.Model.PaymentEvent.PaymentProcessing -> {
+            is Pos.PaymentEvent.PaymentProcessing -> {
                 _posEventsFlow.emit(PosEvent.PaymentProcessing)
             }
 
-            is Pos.Model.PaymentEvent.PaymentSuccess -> {
+            is Pos.PaymentEvent.PaymentSuccess -> {
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId))
                 _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId))
             }
 
-            is Pos.Model.PaymentEvent.PaymentError -> {
+            is Pos.PaymentEvent.PaymentError -> {
                 _isLoading.value = false
-                val errorMessage = when (val error = paymentEvent.error) {
-                    is Pos.Model.PaymentError.CreatePaymentFailed -> "Failed to create payment: ${error.message}"
-                    is Pos.Model.PaymentError.PaymentFailed -> "Payment failed: ${error.message}"
-                    is Pos.Model.PaymentError.PaymentNotFound -> "Payment not found: ${error.message}"
-                    is Pos.Model.PaymentError.PaymentExpired -> "Payment expired: ${error.message}"
-                    is Pos.Model.PaymentError.InvalidPaymentRequest -> "Invalid request: ${error.message}"
-                    is Pos.Model.PaymentError.Generic -> "Error: ${error.message}"
+                val errorMessage = when (val error: Pos.PaymentEvent.PaymentError = paymentEvent) {
+                    is Pos.PaymentEvent.PaymentError.CreatePaymentFailed -> "Failed to create payment, try again: ${error.message}"
+                    is Pos.PaymentEvent.PaymentError.PaymentFailed -> "Payment failed, try again: ${error.message}"
+                    is Pos.PaymentEvent.PaymentError.PaymentNotFound -> "Payment not found, try again: ${error.message}"
+                    is Pos.PaymentEvent.PaymentError.PaymentExpired -> "Payment expired, try again: ${error.message}"
+                    is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest -> "Invalid request, try again: ${error.message}"
+                    is Pos.PaymentEvent.PaymentError.Undefined -> "Undefined Error, try again: ${error.message}"
                 }
                 _posEventsFlow.emit(PosEvent.PaymentError(errorMessage))
                 _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = errorMessage))
@@ -111,7 +111,7 @@ class POSViewModel : ViewModel() {
             _isLoading.value = true
 
             PosClient.createPaymentIntent(
-                amount = Pos.Model.Amount(
+                amount = Pos.Amount(
                     unit = "iso4217/$currency",
                     value = amountValue
                 ),

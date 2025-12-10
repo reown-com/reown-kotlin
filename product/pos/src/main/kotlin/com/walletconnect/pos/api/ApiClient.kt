@@ -65,15 +65,18 @@ internal class ApiClient(
                             ?: return@withContext ApiResult.Error("PARSE_ERROR", "Missing data in success response")
                         ApiResult.Success(data)
                     }
+
                     "error" -> {
                         ApiResult.Error(
                             code = response.error?.code ?: "UNKNOWN_ERROR",
                             message = response.error?.message ?: "Unknown error"
                         )
                     }
+
                     else -> ApiResult.Error("UNKNOWN_STATUS", "Unknown status: ${response.status}")
                 }
             }
+
             is HttpResponse.Error -> ApiResult.Error(httpResponse.code, httpResponse.message)
         }
     }
@@ -101,15 +104,18 @@ internal class ApiClient(
                             ?: return@withContext ApiResult.Error("PARSE_ERROR", "Missing data in success response")
                         ApiResult.Success(data)
                     }
+
                     "error" -> {
                         ApiResult.Error(
                             code = response.error?.code ?: "UNKNOWN_ERROR",
                             message = response.error?.message ?: "Unknown error"
                         )
                     }
+
                     else -> ApiResult.Error("UNKNOWN_STATUS", "Unknown status: ${response.status}")
                 }
             }
+
             is HttpResponse.Error -> ApiResult.Error(httpResponse.code, httpResponse.message)
         }
     }
@@ -117,7 +123,7 @@ internal class ApiClient(
     suspend fun startPolling(
         paymentId: String,
         initialPollMs: Long,
-        onEvent: (Pos.Model.PaymentEvent) -> Unit
+        onEvent: (Pos.PaymentEvent) -> Unit
     ) {
         var pollDelayMs = initialPollMs
         var lastEmittedStatus: String? = null
@@ -141,11 +147,7 @@ internal class ApiClient(
                 }
 
                 is ApiResult.Error -> {
-                    onEvent(
-                        Pos.Model.PaymentEvent.PaymentError(
-                            mapErrorCodeToPaymentError(result.code, result.message)
-                        )
-                    )
+                    onEvent(mapErrorCodeToPaymentError(result.code, result.message))
 
                     if (isTerminalError(result.code) || result.code == "NETWORK_ERROR") {
                         break
@@ -166,9 +168,7 @@ internal class ApiClient(
             .build()
 
         return try {
-            httpClient.newCall(httpRequest).execute().use { response ->
-                HttpResponse.Success(response.body.string())
-            }
+            httpClient.newCall(httpRequest).execute().use { response -> HttpResponse.Success(response.body.string()) }
         } catch (e: IOException) {
             HttpResponse.Error("NETWORK_ERROR", e.message ?: "Network error")
         } catch (e: Exception) {

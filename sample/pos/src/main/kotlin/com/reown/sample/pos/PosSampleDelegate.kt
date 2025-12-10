@@ -12,10 +12,10 @@ import kotlinx.coroutines.launch
 object PosSampleDelegate : POSDelegate {
     private val posScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val _paymentEventFlow: MutableSharedFlow<Pos.Model.PaymentEvent> = MutableSharedFlow()
+    private val _paymentEventFlow: MutableSharedFlow<Pos.PaymentEvent> = MutableSharedFlow()
     val paymentEventFlow = _paymentEventFlow.asSharedFlow()
 
-    override fun onEvent(event: Pos.Model.PaymentEvent) {
+    override fun onEvent(event: Pos.PaymentEvent) {
         posScope.launch {
             _paymentEventFlow.emit(event)
         }

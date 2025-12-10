@@ -56,7 +56,7 @@ object PosClient {
      * @throws IllegalStateException if SDK is not initialized
      */
     @Throws(IllegalStateException::class)
-    fun createPaymentIntent(amount: Pos.Model.Amount, referenceId: String) {
+    fun createPaymentIntent(amount: Pos.Amount, referenceId: String) {
         checkInitialized()
         currentPollingJob?.cancel()
         currentPollingJob = scope?.launch {
@@ -68,9 +68,9 @@ object PosClient {
 //                    val formattedAmount = formatAmount(data.amount.unit, data.amount.value)
 
                     emitEvent(
-                        Pos.Model.PaymentEvent.PaymentCreated(
+                        Pos.PaymentEvent.PaymentCreated(
                             uri = uri,
-                            amount = Pos.Model.Amount(data.amount.unit, data.amount.value),
+                            amount = Pos.Amount(data.amount.unit, data.amount.value),
                             paymentId = data.paymentId
                         )
                     )
@@ -78,11 +78,7 @@ object PosClient {
                 }
 
                 is ApiResult.Error -> {
-                    emitEvent(
-                        Pos.Model.PaymentEvent.PaymentError(
-                            mapCreatePaymentError(result.code, result.message)
-                        )
-                    )
+                    emitEvent(mapCreatePaymentError(result.code, result.message))
                 }
             }
         }
@@ -92,16 +88,16 @@ object PosClient {
      * Checks the current status of a payment.
      *
      * @param paymentId The payment ID to check
-     * @return The current payment status as a [Pos.Model.PaymentEvent]
+     * @return The current payment status as a [Pos.PaymentEvent]
      * @throws IllegalStateException if SDK is not initialized
      */
     @Throws(IllegalStateException::class)
-    suspend fun checkPaymentStatus(paymentId: String): Pos.Model.PaymentEvent {
+    suspend fun checkPaymentStatus(paymentId: String): Pos.PaymentEvent {
         checkInitialized()
 
         return when (val result = apiClient!!.getPayment(paymentId)) {
             is ApiResult.Success -> mapStatusToPaymentEvent(result.data.status, result.data.paymentId)
-            is ApiResult.Error -> Pos.Model.PaymentEvent.PaymentError(mapErrorCodeToPaymentError(result.code, result.message))
+            is ApiResult.Error -> mapErrorCodeToPaymentError(result.code, result.message)
         }
     }
 
@@ -126,7 +122,7 @@ object PosClient {
         delegate = null
     }
 
-    private fun emitEvent(event: Pos.Model.PaymentEvent) {
+    private fun emitEvent(event: Pos.PaymentEvent) {
         delegate?.onEvent(event)
     }
 
