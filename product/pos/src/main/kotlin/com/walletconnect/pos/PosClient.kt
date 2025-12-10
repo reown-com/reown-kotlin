@@ -1,20 +1,18 @@
 package com.walletconnect.pos
 
-import com.walletconnect.pos.internal.ApiClient
-import com.walletconnect.pos.internal.ApiResult
-import com.walletconnect.pos.internal.buildPaymentUri
-import com.walletconnect.pos.internal.mapCreatePaymentError
-import com.walletconnect.pos.internal.mapErrorCodeToPaymentError
-import com.walletconnect.pos.internal.mapStatusToPaymentEvent
+import com.walletconnect.pos.api.ApiClient
+import com.walletconnect.pos.api.ApiResult
+import com.walletconnect.pos.api.buildPaymentUri
+import com.walletconnect.pos.api.mapCreatePaymentError
+import com.walletconnect.pos.api.mapErrorCodeToPaymentError
+import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import java.lang.IllegalArgumentException
 import java.net.URI
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.jvm.Throws
 
 /**
@@ -23,7 +21,6 @@ import kotlin.jvm.Throws
 object PosClient {
     private var delegate: POSDelegate? = null
     private var apiClient: ApiClient? = null
-    private val initialized = AtomicBoolean(false)
     private var scope: CoroutineScope? = null
     private var currentPollingJob: Job? = null
 
@@ -33,14 +30,13 @@ object PosClient {
      * @param apiKey Your WalletConnect Pay API key
      * @param deviceId Unique identifier for this POS device
      */
-    @Throws(IllegalArgumentException::class)
+    @Throws(IllegalStateException::class)
     fun init(apiKey: String, deviceId: String) {
-        require(apiKey.isNotBlank()) { "apiKey cannot be blank" }
-        require(deviceId.isNotBlank()) { "deviceId cannot be blank" }
+        check(apiKey.isNotBlank()) { "apiKey cannot be blank" }
+        check(deviceId.isNotBlank()) { "deviceId cannot be blank" }
         cleanup()
-        this.apiClient = ApiClient(apiKey, deviceId)
         this.scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        this.initialized.set(true)
+        this.apiClient = ApiClient(apiKey, deviceId)
     }
 
     /**
@@ -48,7 +44,7 @@ object PosClient {
      *
      * @param delegate The delegate to receive events, or null to remove
      */
-    fun setDelegate(delegate: POSDelegate?) {
+    fun setDelegate(delegate: POSDelegate) {
         this.delegate = delegate
     }
 
@@ -59,14 +55,11 @@ object PosClient {
      * @param referenceId Merchant's reference ID for this payment
      * @throws IllegalStateException if SDK is not initialized
      */
-    @Throws(java.lang.IllegalStateException::class)
+    @Throws(IllegalStateException::class)
     fun createPaymentIntent(amount: Pos.Model.Amount, referenceId: String) {
         checkInitialized()
-        require(apiClient != null) { "ApiClient not initialized" }
         currentPollingJob?.cancel()
-
         currentPollingJob = scope?.launch {
-            //TODO: apiclient nullable
             when (val result = apiClient!!.createPayment(referenceId, amount.unit, amount.value)) {
                 is ApiResult.Success -> {
                     val data = result.data
@@ -105,18 +98,10 @@ object PosClient {
     @Throws(IllegalStateException::class)
     suspend fun checkPaymentStatus(paymentId: String): Pos.Model.PaymentEvent {
         checkInitialized()
-        require(apiClient != null) { "ApiClient not initialized" }
 
         return when (val result = apiClient!!.getPayment(paymentId)) {
-            is ApiResult.Success -> {
-                mapStatusToPaymentEvent(result.data.status, result.data.paymentId)
-            }
-
-            is ApiResult.Error -> {
-                Pos.Model.PaymentEvent.PaymentError(
-                    mapErrorCodeToPaymentError(result.code, result.message)
-                )
-            }
+            is ApiResult.Success -> mapStatusToPaymentEvent(result.data.status, result.data.paymentId)
+            is ApiResult.Error -> Pos.Model.PaymentEvent.PaymentError(mapErrorCodeToPaymentError(result.code, result.message))
         }
     }
 
@@ -139,7 +124,6 @@ object PosClient {
     fun shutdown() {
         cleanup()
         delegate = null
-        initialized.set(false)
     }
 
     private fun emitEvent(event: Pos.Model.PaymentEvent) {
@@ -147,9 +131,8 @@ object PosClient {
     }
 
     private fun checkInitialized() {
-        check(initialized.get()) {
-            "POSClient is not initialized. Call POSClient.init(apiKey, deviceId) first."
-        }
+        check(apiClient != null) { "ApiClient not initialized, call init() first" }
+        check(scope != null) { "Scope not initialized, call init() first" }
     }
 
     private fun cleanup() {

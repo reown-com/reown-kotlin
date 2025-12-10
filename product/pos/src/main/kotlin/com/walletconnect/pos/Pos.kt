@@ -5,10 +5,18 @@ import java.net.URI
 object Pos {
 
     sealed class Model {
+
         data class Amount(
             val unit: String,
             val value: String
-        ) : Model()
+        ) : Model() {
+
+            fun format(): String {
+                val currency = unit.substringAfter("/", "")
+                val majorUnits = (value.toLongOrNull() ?: 0L) / 100.0
+                return String.format("%.2f %s", majorUnits, currency)
+            }
+        }
 
         sealed interface PaymentEvent {
             data class PaymentCreated(

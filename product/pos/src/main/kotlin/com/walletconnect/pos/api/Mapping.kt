@@ -1,4 +1,4 @@
-package com.walletconnect.pos.internal
+package com.walletconnect.pos.api
 
 import com.walletconnect.pos.Pos
 
@@ -49,23 +49,6 @@ internal fun isTerminalError(code: String): Boolean {
         ErrorCodes.PAYMENT_EXPIRED
     )
 }
-
-//todo: remove?
-//internal fun formatAmount(unit: String, value: String): POS.Model.Amount {
-//    val currency = unit.substringAfter("/", "")
-//    val valueNum = value.toLongOrNull() ?: 0L
-//
-//    // For ISO 4217 currencies, convert from minor units (cents) to major units
-//    val majorUnits = valueNum / 100.0
-//    return POS.Model.Amount()
-//
-//    //TODO: just return as an Amount object
-//    return when (currency.uppercase()) {
-//        "USD" -> String.format("$%.2f USD", majorUnits)
-//        "EUR" -> String.format("€%.2f EUR", majorUnits)
-//        else -> String.format("%.2f %s", majorUnits, currency)
-//    }
-//}
 
 internal fun buildPaymentUri(paymentId: String): String {
     return "https://walletconnect.com/pay/$paymentId"

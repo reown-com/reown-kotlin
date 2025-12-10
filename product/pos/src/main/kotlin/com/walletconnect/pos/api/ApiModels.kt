@@ -1,4 +1,4 @@
-package com.walletconnect.pos.internal
+package com.walletconnect.pos.api
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

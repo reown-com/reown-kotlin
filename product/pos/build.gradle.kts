@@ -46,11 +46,9 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    //todo: remove?
-//    kotlinOptions {
-//        jvmTarget = "11"
-//        freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
-//    }
+    kotlinOptions {
+        jvmTarget = jvmVersion.toString()
+    }
 
     buildFeatures {
         buildConfig = true

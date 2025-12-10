@@ -1,13 +1,13 @@
 package com.walletconnect.pos
 
-import com.walletconnect.pos.internal.ErrorCodes
-import com.walletconnect.pos.internal.PaymentStatus
-import com.walletconnect.pos.internal.buildPaymentUri
-import com.walletconnect.pos.internal.formatAmount
-import com.walletconnect.pos.internal.isTerminalError
-import com.walletconnect.pos.internal.isTerminalStatus
-import com.walletconnect.pos.internal.mapErrorCodeToPaymentError
-import com.walletconnect.pos.internal.mapStatusToPaymentEvent
+import com.walletconnect.pos.api.ErrorCodes
+import com.walletconnect.pos.api.PaymentStatus
+import com.walletconnect.pos.api.buildPaymentUri
+import com.walletconnect.pos.api.formatAmount
+import com.walletconnect.pos.api.isTerminalError
+import com.walletconnect.pos.api.isTerminalStatus
+import com.walletconnect.pos.api.mapErrorCodeToPaymentError
+import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

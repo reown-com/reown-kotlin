@@ -1,4 +1,4 @@
-package com.walletconnect.pos.internal
+package com.walletconnect.pos.api
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -19,7 +19,7 @@ internal class ApiClient(
     private val deviceId: String,
     baseUrl: String = BuildConfig.CORE_API_BASE_URL
 ) {
-    private val gatewayUrl = "$baseUrl/v1/gateway"
+    private val coreUrl = "$baseUrl/v1/gateway"
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -157,7 +157,7 @@ internal class ApiClient(
 
     private fun executeHttpRequest(jsonBody: String): HttpResponse {
         val httpRequest = Request.Builder()
-            .url(gatewayUrl)
+            .url(coreUrl)
             .addHeader("X-Api-Key", apiKey)
             .addHeader("X-Device-Id", deviceId)
             .addHeader("X-Sdk-Version", "pos-kotlin-${BuildConfig.SDK_VERSION}")
