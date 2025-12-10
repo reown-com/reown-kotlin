@@ -1,7 +1,8 @@
-package com.reown.sample.wallet.domain
+package com.reown.sample.wallet.domain.signer
 
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.utils.cacao.sign
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.util.bytesToHex
 import com.reown.util.hexToBytes
 import com.reown.walletkit.utils.CacaoSigner

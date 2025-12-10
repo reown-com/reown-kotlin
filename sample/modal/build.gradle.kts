@@ -67,6 +67,9 @@ android {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
     packaging {
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium.so")
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"

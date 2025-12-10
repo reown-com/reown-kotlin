@@ -25,7 +25,7 @@ import com.reown.foundation.common.model.Topic
 import com.reown.foundation.common.model.Ttl
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.exceptions.NO_SEQUENCE_FOR_TOPIC_MESSAGE
-import com.reown.sign.engine.model.tvf.TVF
+import com.reown.sign.engine.model.tvf.TNV
 import com.reown.sign.engine.sessionRequestEventsQueue
 import com.reown.sign.json_rpc.domain.GetPendingJsonRpcHistoryEntryByIdUseCase
 import com.reown.sign.storage.sequence.SessionStorageRepository
@@ -45,7 +45,7 @@ internal class RespondSessionRequestUseCase(
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
     private val insertEventUseCase: InsertEventUseCase,
     private val clientId: String,
-    private val tvf: TVF
+    private val TNV: TNV
 ) : RespondSessionRequestUseCaseInterface {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
     override val events: SharedFlow<EngineEvent> = _events.asSharedFlow()
@@ -94,9 +94,9 @@ internal class RespondSessionRequestUseCase(
                 onFailure(e)
             }
         } else {
-            val tvfData = tvf.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
+            val tvfData = TNV.collect(pendingRequest.params.rpcMethod, pendingRequest.params.rpcParams, pendingRequest.params.chainId)
             val txHashes = (jsonRpcResponse as? JsonRpcResponse.JsonRpcResult)?.let {
-                tvf.collectTxHashes(
+                TNV.collectTxHashes(
                     pendingRequest.params.rpcMethod,
                     it.result.toString(),
                     pendingRequest.params.rpcParams

@@ -25,6 +25,8 @@ android {
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
         buildConfigField("String", "PIMLICO_API_KEY", "\"${System.getenv("PIMLICO_API_KEY") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
+
+        ndk.abiFilters += listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
     }
 
     buildTypes {
@@ -71,9 +73,25 @@ android {
     }
 
     packaging {
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium.so")
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_utils.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_utils.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_utils.so")
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+        }
+    }
+
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "com.github.reown-com" && requested.name == "yttrium") {
+            useVersion("kotlin-utils-0.9.113")
+            because("Sample wallet needs yttrium_utils from kotlin-utils branch")
         }
     }
 }
@@ -82,6 +100,12 @@ dependencies {
     implementation(project(":sample:common"))
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 
+    // local .m2 build
+    //    implementation("com.github.reown-com:yttrium-utils:unspecified")
+    implementation("com.github.reown-com:yttrium:kotlin-utils-0.9.113") {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
+    implementation("net.java.dev.jna:jna:5.17.0@aar")
     implementation("org.web3j:core:4.9.4")
 
     // Retrofit
@@ -141,11 +165,15 @@ dependencies {
     implementation("com.mixpanel.android:mixpanel-android:7.3.1")
 
     // WalletConnect
-    debugImplementation(project(":core:android"))
+    debugImplementation(project(":core:android")) {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
     debugImplementation(project(":product:walletkit"))
     debugImplementation(project(":protocol:notify"))
 
-    internalImplementation(project(":core:android"))
+    internalImplementation(project(":core:android")) {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
     internalImplementation(project(":product:walletkit"))
     internalImplementation(project(":protocol:notify"))
 

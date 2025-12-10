@@ -21,8 +21,9 @@ import com.reown.foundation.common.model.Topic
 import com.reown.sign.common.exceptions.PeerError
 import com.reown.sign.common.model.Request
 import com.reown.sign.common.model.vo.clientsync.common.PayloadParams
+import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
+import com.reown.sign.common.model.vo.clientsync.common.ProposalRequestsResponses
 import com.reown.sign.common.model.vo.clientsync.common.Requester
-import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.common.model.vo.sequence.SessionVO
@@ -61,7 +62,10 @@ internal fun SignParams.SessionProposeParams.toEngineDO(topic: Topic): EngineDO.
         proposerPublicKey = proposer.publicKey,
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
-        scopedProperties = scopedProperties
+        scopedProperties = scopedProperties,
+        requests = if (requests != null) {
+            EngineDO.ProposalRequests(authentication = requests.authentication?.map { it.toEngineDO() })
+        } else null
     )
 
 @JvmSynthetic
@@ -81,7 +85,8 @@ internal fun SignParams.SessionProposeParams.toVO(topic: Topic, requestId: Long)
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
         expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp) else null,
-        scopedProperties = scopedProperties
+        scopedProperties = scopedProperties,
+        requests = ProposalRequests(authentication = requests?.authentication ?: emptyList())
     )
 
 @JvmSynthetic
@@ -93,7 +98,13 @@ internal fun ProposalVO.toSessionProposeRequest(): WCRequest =
         params = SignParams.SessionProposeParams(
             relays = listOf(RelayProtocolOptions(protocol = relayProtocol, data = relayData)),
             proposer = SessionProposer(proposerPublicKey, AppMetaData(name = name, description = description, url = url, icons = icons)),
-            requiredNamespaces = requiredNamespaces, optionalNamespaces = optionalNamespaces, properties = properties, expiryTimestamp = expiry?.seconds, scopedProperties = scopedProperties
+            requiredNamespaces = requiredNamespaces,
+            optionalNamespaces = optionalNamespaces,
+            properties = properties,
+            expiryTimestamp = expiry?.seconds,
+            scopedProperties = scopedProperties,
+            requests = requests
+
         ),
         transportType = TransportType.RELAY
     )
@@ -148,50 +159,14 @@ internal fun SessionVO.toEngineDOSessionExtend(expiryVO: Expiry): EngineDO.Sessi
     )
 
 @JvmSynthetic
-internal fun SessionVO.toSessionApproved(): EngineDO.SessionApproved =
+internal fun SessionVO.toSessionApproved(proposalRequestsResponses: ProposalRequestsResponses?): EngineDO.SessionApproved =
     EngineDO.SessionApproved(
         topic = topic.value,
         peerAppMetaData = peerAppMetaData,
         accounts = sessionNamespaces.flatMap { (_, namespace) -> namespace.accounts },
-        namespaces = sessionNamespaces.toMapOfEngineNamespacesSession()
+        namespaces = sessionNamespaces.toMapOfEngineNamespacesSession(),
+        proposalRequestsResponses = EngineDO.ProposalRequestsResponses(authentication = proposalRequestsResponses?.authentication)
     )
-
-@JvmSynthetic
-internal fun ProposalVO.toSessionSettleParams(
-    selfParticipant: SessionParticipant,
-    sessionExpiry: Long,
-    namespaces: Map<String, EngineDO.Namespace.Session>,
-    sessionProperties: Map<String, String>?,
-    scopedProperties: Map<String, String>?
-): SignParams.SessionSettleParams =
-    SignParams.SessionSettleParams(
-        relay = RelayProtocolOptions(relayProtocol, relayData),
-        controller = selfParticipant,
-        namespaces = namespaces.toMapOfNamespacesVOSession(),
-        expiry = sessionExpiry,
-        properties = sessionProperties,
-        scopedProperties = scopedProperties
-    )
-
-@JvmSynthetic
-internal fun toSessionProposeParams(
-    relays: List<RelayProtocolOptions>?,
-    requiredNamespaces: Map<String, EngineDO.Namespace.Proposal>,
-    optionalNamespaces: Map<String, EngineDO.Namespace.Proposal>,
-    properties: Map<String, String>?,
-    scopedProperties: Map<String, String>?,
-    selfPublicKey: PublicKey,
-    appMetaData: AppMetaData,
-    expiry: Expiry
-) = SignParams.SessionProposeParams(
-    relays = relays ?: listOf(RelayProtocolOptions()),
-    proposer = SessionProposer(selfPublicKey.keyAsHex, appMetaData),
-    requiredNamespaces = requiredNamespaces.toNamespacesVORequired(),
-    optionalNamespaces = optionalNamespaces.toNamespacesVOOptional(),
-    properties = properties,
-    scopedProperties = scopedProperties,
-    expiryTimestamp = expiry.seconds
-)
 
 @JvmSynthetic
 internal fun ProposalVO.toEngineDO(): EngineDO.SessionProposal =
@@ -208,7 +183,8 @@ internal fun ProposalVO.toEngineDO(): EngineDO.SessionProposal =
         optionalNamespaces = optionalNamespaces.toMapOfEngineNamespacesOptional(),
         proposerPublicKey = proposerPublicKey,
         properties = properties,
-        scopedProperties = scopedProperties
+        scopedProperties = scopedProperties,
+        requests = EngineDO.ProposalRequests(authentication = requests?.authentication?.map { it.toEngineDO() })
     )
 
 @JvmSynthetic
@@ -324,7 +300,7 @@ internal fun EngineDO.Authenticate.toCommon(): PayloadParams =
         requestId = requestId,
         resources = resources,
         chains = chains,
-        type = type ?: CacaoType.EIP4361.header,
+        type = type ?: CacaoType.CAIP222.header,
         version = "1",
         iat = SimpleDateFormat(Cacao.Payload.ISO_8601_PATTERN).format(Calendar.getInstance().time)
     )
@@ -334,7 +310,7 @@ internal fun PayloadParams.toEngineDO(): EngineDO.PayloadParams =
     EngineDO.PayloadParams(
         domain = domain,
         aud = aud,
-        version = "1",
+        version = version,
         nonce = nonce,
         nbf = nbf,
         exp = exp,
@@ -343,7 +319,8 @@ internal fun PayloadParams.toEngineDO(): EngineDO.PayloadParams =
         resources = resources,
         chains = chains,
         type = type,
-        iat = iat
+        iat = iat,
+        signatureTypes = signatureTypes
     )
 
 @JvmSynthetic

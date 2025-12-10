@@ -92,6 +92,16 @@ sealed class RelayDTO {
                 val sessionProposalResponse: String,
                 @Json(name = "sessionSettlementRequest")
                 val sessionSettlementRequest: String,
+                @Json(name = "approvedChains")
+                val approvedChains: List<String>?,
+                @Json(name = "approvedMethods")
+                val approvedMethods: List<String>?,
+                @Json(name = "approvedEvents")
+                val approvedEvents: List<String>?,
+                @Json(name = "sessionProperties")
+                val sessionProperties: Map<String, String>?,
+                @Json(name = "scopedProperties")
+                val scopedProperties: Map<String, String>?,
                 @Json(name = "correlationId")
                 val correlationId: Long
             )

@@ -5,6 +5,7 @@ import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.Namespace
 import com.reown.android.internal.common.model.Redirect
 import com.reown.foundation.common.model.Topic
+import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
 
 internal data class ProposalVO(
     val requestId: Long,
@@ -21,7 +22,8 @@ internal data class ProposalVO(
     val proposerPublicKey: String,
     val relayProtocol: String,
     val relayData: String?,
-    val expiry: Expiry?
+    val expiry: Expiry?,
+    val requests: ProposalRequests?
 ) {
     val appMetaData: AppMetaData
         get() = AppMetaData(name = name, description = description, url = url, icons = icons, redirect = Redirect(native = redirect))

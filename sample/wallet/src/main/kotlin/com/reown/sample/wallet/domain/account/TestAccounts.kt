@@ -1,4 +1,4 @@
-package com.reown.sample.wallet.domain
+package com.reown.sample.wallet.domain.account
 
 import com.reown.sample.common.Chains
 import com.reown.util.hexToBytes

@@ -27,7 +27,8 @@ class GenerateAuthPayloadParamsTest {
             statement = null,
             requestId = null,
             resources = listOf("test_resource", encodedSignRecaps),
-            iat = "iat"
+            iat = "iat",
+            signatureTypes = mapOf()
         )
         val result = generateAuthPayloadParams(requestedPayload, listOf("eip155:1"), listOf("eth_signTypedData_v4", "personal_sign"))
         val sessionChains = result.resources.getChains().ifEmpty { requestedPayload.chains }
@@ -52,7 +53,8 @@ class GenerateAuthPayloadParamsTest {
             statement = null,
             requestId = null,
             resources = listOf("test_resource", encodedSignRecaps),
-            iat = "iat"
+            iat = "iat",
+            signatureTypes = mapOf()
         )
         val result =
             generateAuthPayloadParams(requestedPayload, supportedChains = listOf("eip155:1", "eip155:137", "eip155:56"), supportedMethods = listOf("eth_signTypedData_v4", "personal_sign", "eth_sign"))
@@ -78,7 +80,8 @@ class GenerateAuthPayloadParamsTest {
             statement = null,
             requestId = null,
             resources = listOf("test_resource", encodedSignRecaps),
-            iat = "iat"
+            iat = "iat",
+            signatureTypes = mapOf()
         )
         val result =
             generateAuthPayloadParams(requestedPayload, supportedChains = listOf("eip155:137", "eip155:56"), supportedMethods = listOf("personal_sign"))
@@ -104,7 +107,8 @@ class GenerateAuthPayloadParamsTest {
             statement = null,
             requestId = null,
             resources = listOf("test_resource", encodedNotifyAndSignRecaps),
-            iat = "iat"
+            iat = "iat",
+            signatureTypes = mapOf()
         )
         val result =
             generateAuthPayloadParams(requestedPayload, supportedChains = listOf("eip155:137", "eip155:56"), supportedMethods = listOf("personal_sign", "eth_signTypedData_v4"))
@@ -135,7 +139,8 @@ class GenerateAuthPayloadParamsTest {
             statement = null,
             requestId = null,
             resources = listOf("test_resource", encodedNotifyAndSignRecaps, encodedSignRecaps),
-            iat = "iat"
+            iat = "iat",
+            signatureTypes = mapOf()
         )
 
         val result = generateAuthPayloadParams(requestedPayload, supportedChains = listOf("eip155:137"), supportedMethods = listOf("personal_sign"))
@@ -167,7 +172,8 @@ class GenerateAuthPayloadParamsTest {
             statement = null,
             requestId = null,
             resources = listOf("test_resource", encodedNotifyRecaps, encodedSignRecaps),
-            iat = "iat"
+            iat = "iat",
+            signatureTypes = mapOf()
         )
         val result =
             generateAuthPayloadParams(requestedPayload, supportedChains = listOf("eip155:137"), supportedMethods = listOf("personal_sign"))

@@ -3,6 +3,7 @@ package com.reown.walletkit.client
 import com.reown.android.internal.common.signing.cacao.CacaoType
 import com.reown.sign.client.Sign
 import com.squareup.moshi.Moshi
+
 //import uniffi.uniffi_yttrium.Eip1559Estimation
 //import uniffi.yttrium.Amount
 //import uniffi.yttrium.Call
@@ -86,7 +87,8 @@ internal fun Wallet.Model.PayloadAuthRequestParams.toSign(): Sign.Model.PayloadP
         statement = statement,
         requestId = requestId,
         resources = resources,
-        iat = iat
+        iat = iat,
+        signatureTypes = signatureTypes
     )
 
 @JvmSynthetic
@@ -136,7 +138,31 @@ internal fun Sign.Model.SessionProposal.toWallet(): Wallet.Model.SessionProposal
         proposerPublicKey,
         relayProtocol,
         relayData,
-        scopedProperties
+        scopedProperties,
+        requests?.toWallet()
+    )
+
+@JvmSynthetic
+internal fun Sign.Model.ProposalRequests.toWallet(): Wallet.Model.ProposalRequests =
+    Wallet.Model.ProposalRequests(
+        authentication = authentication.map { it.toWalletPayloadParams() }
+    )
+
+@JvmSynthetic
+internal fun Sign.Model.PayloadParams.toWalletPayloadParams(): Wallet.Model.PayloadAuthRequestParams =
+    Wallet.Model.PayloadAuthRequestParams(
+        type = type ?: "",
+        chains = chains,
+        domain = domain,
+        aud = aud,
+        nonce = nonce,
+        iat = iat,
+        nbf = nbf,
+        exp = exp,
+        statement = statement,
+        requestId = requestId,
+        resources = resources,
+        signatureTypes = signatureTypes
     )
 
 @JvmSynthetic
@@ -160,7 +186,8 @@ internal fun Sign.Model.PayloadParams.toWallet(): Wallet.Model.PayloadAuthReques
         statement = statement,
         requestId = requestId,
         resources = resources,
-        iat = iat
+        iat = iat,
+        signatureTypes = signatureTypes
     )
 
 internal fun Sign.Model.VerifyContext.toWallet(): Wallet.Model.VerifyContext =
@@ -228,7 +255,8 @@ internal fun Wallet.Model.SessionProposal.toSign(): Sign.Model.SessionProposal =
         proposerPublicKey,
         relayProtocol,
         relayData,
-        scopedProperties
+        scopedProperties,
+        requests = null
     )
 
 @JvmSynthetic

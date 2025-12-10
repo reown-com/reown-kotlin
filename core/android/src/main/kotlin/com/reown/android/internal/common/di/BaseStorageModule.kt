@@ -3,6 +3,7 @@ package com.reown.android.internal.common.di
 import app.cash.sqldelight.ColumnAdapter
 import app.cash.sqldelight.EnumColumnAdapter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import com.reown.android.di.AndroidBuildVariantDITags
 import com.reown.android.internal.common.model.AppMetaDataType
 import com.reown.android.internal.common.model.TransportType
@@ -39,6 +40,30 @@ fun baseStorageModule(storagePrefix: String = String.Empty, packageName: String)
                 }
 
             override fun encode(value: List<String>): String = value.joinToString(separator = ",")
+        }
+    }
+
+    // JSON array string <-> List<String>
+    single<ColumnAdapter<List<String>, String>>(named(AndroidCommonDITags.COLUMN_ADAPTER_JSON_STRING_LIST)) {
+        object : ColumnAdapter<List<String>, String> {
+            override fun decode(databaseValue: String): List<String> {
+                if (databaseValue.isBlank()) return emptyList()
+                return try {
+                    val moshi = get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)).build()
+                    val type = Types.newParameterizedType(List::class.java, String::class.java)
+                    val adapter = moshi.adapter<List<String>>(type)
+                    adapter.fromJson(databaseValue) ?: emptyList()
+                } catch (_: Exception) {
+                    emptyList()
+                }
+            }
+
+            override fun encode(value: List<String>): String {
+                val moshi = get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)).build()
+                val type = Types.newParameterizedType(List::class.java, String::class.java)
+                val adapter = moshi.adapter<List<String>>(type)
+                return adapter.toJson(value)
+            }
         }
     }
 

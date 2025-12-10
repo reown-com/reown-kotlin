@@ -151,7 +151,7 @@ internal fun callsModule() = module {
             insertEventUseCase = get(),
             clientId = get(named(AndroidCommonDITags.CLIENT_ID)),
             logger = get(named(AndroidCommonDITags.LOGGER)),
-            tvf = get(),
+            TNV = get(),
             walletServiceFinder = get(),
             walletServiceRequester = get()
         )
@@ -168,7 +168,7 @@ internal fun callsModule() = module {
             metadataStorageRepository = get(),
             insertEventUseCase = get(),
             clientId = get(named(AndroidCommonDITags.CLIENT_ID)),
-            tvf = get()
+            TNV = get()
         )
     }
 

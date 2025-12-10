@@ -128,6 +128,11 @@ internal class RelayJsonRpcInteractor(
         sessionTopic: Topic,
         sessionProposalResponse: CoreSignParams.ApprovalParams,
         settleRequest: JsonRpcClientSync<*>,
+        approvedChains: List<String>?,
+        approvedMethods: List<String>?,
+        approvedEvents: List<String>?,
+        sessionProperties: Map<String, String>?,
+        scopedProperties: Map<String, String>?,
         correlationId: Long,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit,
@@ -144,7 +149,6 @@ internal class RelayJsonRpcInteractor(
                     ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
             val settlementRequestJson =
                 serializer.serialize(settleRequest) ?: throw IllegalStateException("RelayJsonRpcInteractor: Unknown Request Params")
-
             if (jsonRpcHistory.setRequest(settleRequest.id, sessionTopic, settleRequest.method, settlementRequestJson, TransportType.RELAY)) {
                 val encryptedProposalResponseJson = chaChaPolyCodec.encrypt(pairingTopic, proposalResponseJson, EnvelopeType.ZERO)
                 val encryptedSettlementRequestJson = chaChaPolyCodec.encrypt(sessionTopic, settlementRequestJson, EnvelopeType.ZERO)
@@ -154,6 +158,11 @@ internal class RelayJsonRpcInteractor(
                 relay.approveSession(
                     pairingTopic = pairingTopic,
                     sessionTopic = sessionTopic,
+                    approvedChains = approvedChains,
+                    approvedMethods = approvedMethods,
+                    approvedEvents = approvedEvents,
+                    sessionProperties = sessionProperties,
+                    scopedProperties = scopedProperties,
                     correlationId = correlationId,
                     sessionSettlementRequest = encryptedSettlementRequestString,
                     sessionProposalResponse = encryptedProposalResponseString

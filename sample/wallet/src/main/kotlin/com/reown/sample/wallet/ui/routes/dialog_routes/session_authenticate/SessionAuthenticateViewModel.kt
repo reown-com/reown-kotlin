@@ -6,9 +6,9 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.android.utils.cacao.sign
-import com.reown.sample.wallet.domain.ACCOUNTS_1_EIP155_ADDRESS
-import com.reown.sample.wallet.domain.EthAccountDelegate
-import com.reown.sample.wallet.domain.WCDelegate
+import com.reown.sample.wallet.domain.WalletKitDelegate
+import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.util.hexToBytes
@@ -20,9 +20,9 @@ class SessionAuthenticateViewModel : ViewModel() {
     val sessionAuthenticateUI: SessionAuthenticateUI? get() = generateAuthRequestUI()
 
     fun approve(onSuccess: (String) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
-        if (WCDelegate.sessionAuthenticateEvent != null) {
+        if (WalletKitDelegate.sessionAuthenticateEvent != null) {
             try {
-                val sessionAuthenticate = WCDelegate.sessionAuthenticateEvent!!.first
+                val sessionAuthenticate = WalletKitDelegate.sessionAuthenticateEvent!!.first
                 val auths = mutableListOf<Wallet.Model.Cacao>()
 
                 val authPayloadParams =
@@ -44,12 +44,12 @@ class SessionAuthenticateViewModel : ViewModel() {
                 val approveProposal = Wallet.Params.ApproveSessionAuthenticate(id = sessionAuthenticate.id, auths = auths)
                 WalletKit.approveSessionAuthenticate(approveProposal,
                     onSuccess = {
-                        WCDelegate.sessionAuthenticateEvent = null
+                        WalletKitDelegate.sessionAuthenticateEvent = null
                         onSuccess(sessionAuthenticate.participant.metadata?.redirect ?: "")
                     },
                     onError = { error ->
                         if (error.throwable !is NoConnectivityException) {
-                            WCDelegate.sessionAuthenticateEvent = null
+                            WalletKitDelegate.sessionAuthenticateEvent = null
                         }
                         Firebase.crashlytics.recordException(error.throwable)
                         onError(error.throwable)
@@ -57,7 +57,7 @@ class SessionAuthenticateViewModel : ViewModel() {
                 )
             } catch (e: Exception) {
                 Firebase.crashlytics.recordException(e)
-                WCDelegate.sessionAuthenticateEvent = null
+                WalletKitDelegate.sessionAuthenticateEvent = null
                 onError(e)
             }
         } else {
@@ -66,9 +66,9 @@ class SessionAuthenticateViewModel : ViewModel() {
     }
 
     fun reject(onSuccess: (String) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
-        if (WCDelegate.sessionAuthenticateEvent != null) {
+        if (WalletKitDelegate.sessionAuthenticateEvent != null) {
             try {
-                val sessionAuthenticate = WCDelegate.sessionAuthenticateEvent!!.first
+                val sessionAuthenticate = WalletKitDelegate.sessionAuthenticateEvent!!.first
                 val rejectionReason = "Reject Session Authenticate"
                 val reject = Wallet.Params.RejectSessionAuthenticate(
                     id = sessionAuthenticate.id,
@@ -77,19 +77,19 @@ class SessionAuthenticateViewModel : ViewModel() {
 
                 WalletKit.rejectSessionAuthenticate(reject,
                     onSuccess = {
-                        WCDelegate.sessionAuthenticateEvent = null
+                        WalletKitDelegate.sessionAuthenticateEvent = null
                         onSuccess(sessionAuthenticate.participant.metadata?.redirect ?: "")
                     },
                     onError = { error ->
                         if (error.throwable !is NoConnectivityException) {
-                            WCDelegate.sessionAuthenticateEvent = null
+                            WalletKitDelegate.sessionAuthenticateEvent = null
                         }
                         Firebase.crashlytics.recordException(error.throwable)
                         onError(error.throwable)
                     })
             } catch (e: Exception) {
                 Firebase.crashlytics.recordException(e)
-                WCDelegate.sessionAuthenticateEvent = null
+                WalletKitDelegate.sessionAuthenticateEvent = null
                 onError(e)
             }
         } else {
@@ -98,8 +98,8 @@ class SessionAuthenticateViewModel : ViewModel() {
     }
 
     private fun generateAuthRequestUI(): SessionAuthenticateUI? {
-        return if (WCDelegate.sessionAuthenticateEvent != null) {
-            val (sessionAuthenticate, authContext) = WCDelegate.sessionAuthenticateEvent!!
+        return if (WalletKitDelegate.sessionAuthenticateEvent != null) {
+            val (sessionAuthenticate, authContext) = WalletKitDelegate.sessionAuthenticateEvent!!
             val messages = mutableListOf<String>()
             sessionAuthenticate.payloadParams.chains
                 .forEach { chain ->

@@ -5,6 +5,7 @@ import com.reown.android.internal.common.exception.NoInternetConnectionException
 import com.reown.android.internal.common.exception.NoRelayConnectionException
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.AppMetaDataType
+import com.reown.android.internal.common.model.RelayProtocolOptions
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.storage.metadata.MetadataStorageRepositoryInterface
@@ -20,15 +21,16 @@ import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.exceptions.InvalidNamespaceException
 import com.reown.sign.common.exceptions.SessionProposalExpiredException
+import com.reown.sign.common.model.vo.clientsync.common.ProposalRequestsResponses
 import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
 import com.reown.sign.common.model.vo.clientsync.session.SignRpc
+import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.common.validator.SignValidator
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toMapOfNamespacesVOSession
 import com.reown.sign.engine.model.mapper.toSessionApproveParams
 import com.reown.sign.engine.model.mapper.toSessionProposeRequest
-import com.reown.sign.engine.model.mapper.toSessionSettleParams
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.launch
@@ -51,6 +53,7 @@ internal class ApproveSessionUseCase(
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
         sessionProperties: Map<String, String>?,
         scopedProperties: Map<String, String>?,
+        proposalRequestsResponses: EngineDO.ProposalRequestsResponses?,
         onSuccess: () -> Unit,
         onFailure: (Throwable) -> Unit
     ) = supervisorScope {
@@ -104,14 +107,38 @@ internal class ApproveSessionUseCase(
             metadataStorageRepository.insertOrAbortMetadata(sessionTopic, selfAppMetaData, AppMetaDataType.SELF)
             metadataStorageRepository.insertOrAbortMetadata(sessionTopic, proposal.appMetaData, AppMetaDataType.PEER)
             trace.add(Trace.Session.STORE_SESSION)
-            val params = proposal.toSessionSettleParams(selfParticipant, sessionExpiry, sessionNamespaces, sessionProperties, scopedProperties)
+            val params = SignParams.SessionSettleParams(
+                relay = RelayProtocolOptions(proposal.relayProtocol, proposal.relayData),
+                controller = selfParticipant,
+                namespaces = sessionNamespaces.toMapOfNamespacesVOSession(),
+                expiry = sessionExpiry,
+                properties = sessionProperties,
+                scopedProperties = scopedProperties,
+                proposalRequestsResponses = ProposalRequestsResponses(authentication = proposalRequestsResponses?.authentication)
+            )
             val sessionSettle = SignRpc.SessionSettle(params = params)
             trace.add(Trace.Session.PUBLISHING_SESSION_APPROVE)
+            val approvedChains = sessionNamespaces.values.flatMap { namespace ->
+                when {
+                    !namespace.chains.isNullOrEmpty() -> namespace.chains
+                    else -> namespace.accounts.mapNotNull { account ->
+                        val delimiterIndex = account.lastIndexOf(":")
+                        if (delimiterIndex > 0) account.substring(0, delimiterIndex) else null
+                    }
+                }
+            }.distinct()
+            val approvedMethods = sessionNamespaces.values.flatMap { it.methods }.distinct()
+            val approvedEvents = sessionNamespaces.values.flatMap { it.events }.distinct()
             jsonRpcInteractor.approveSession(
                 pairingTopic = proposal.pairingTopic,
                 sessionTopic = sessionTopic,
                 sessionProposalResponse = approvalParams,
                 settleRequest = sessionSettle,
+                approvedChains = approvedChains.takeIf { it.isNotEmpty() },
+                approvedMethods = approvedMethods.takeIf { it.isNotEmpty() },
+                approvedEvents = approvedEvents.takeIf { it.isNotEmpty() },
+                sessionProperties = sessionProperties,
+                scopedProperties = scopedProperties,
                 correlationId = proposal.requestId,
                 onSuccess = {
                     onSuccess()
@@ -155,6 +182,7 @@ internal interface ApproveSessionUseCaseInterface {
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
         sessionProperties: Map<String, String>? = null,
         scopedProperties: Map<String, String>? = null,
+        proposalRequestsResponses: EngineDO.ProposalRequestsResponses?,
         onSuccess: () -> Unit = {},
         onFailure: (Throwable) -> Unit = {},
     )

@@ -47,8 +47,8 @@ import com.reown.sample.common.sendResponseDeepLink
 import com.reown.sample.common.ui.theme.verified_color
 import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
-import com.reown.sample.wallet.domain.WCDelegate
-import com.reown.sample.wallet.domain.getErrorMessage
+import com.reown.sample.wallet.domain.WalletKitDelegate
+import com.reown.sample.wallet.domain.chain_abstraction.getErrorMessage
 import com.reown.sample.wallet.domain.model.NetworkUtils
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.common.Buttons
@@ -82,7 +82,7 @@ fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, ch
         else -> when (sessionRequestUI) {
             is SessionRequestUI.Content -> {
                 val allowButtonColor = getColor(sessionRequestUI.peerContextUI)
-                WCDelegate.currentId = sessionRequestUI.requestId
+                WalletKitDelegate.currentId = sessionRequestUI.requestId
 
                 SemiTransparentDialog {
                     Spacer(modifier = Modifier.height(24.dp))
@@ -240,7 +240,7 @@ fun ErrorDialog(
                         )
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
                             Text(
-                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")}",
+                                text = "on ${NetworkUtils.getNameByChainId(WalletKitDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")}",
                                 style = TextStyle(
                                     fontSize = 12.sp,
                                     lineHeight = 14.sp,
@@ -251,13 +251,13 @@ fun ErrorDialog(
                             Spacer(modifier = Modifier.width(6.dp))
                             Image(
                                 modifier = Modifier.size(12.dp).clip(CircleShape),
-                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")),
+                                painter = painterResource(id = NetworkUtils.getIconByChainId(WalletKitDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")),
                                 contentDescription = "image description"
                             )
                         }
                     }
                 }
-                WCDelegate.prepareAvailable?.funding?.forEach { funding ->
+                WalletKitDelegate.prepareAvailable?.funding?.forEach { funding ->
                     Row(
                         modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -353,7 +353,7 @@ fun SuccessDialog(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 modifier = Modifier.padding(8.dp),
-                text = "You successfully send ${WCDelegate.prepareAvailable?.initialTransactionMetadata?.symbol ?: ""}",
+                text = "You successfully send ${WalletKitDelegate.prepareAvailable?.initialTransactionMetadata?.symbol ?: ""}",
                 style = TextStyle(
                     fontSize = 16.sp,
                     lineHeight = 18.sp,
@@ -401,7 +401,7 @@ fun SuccessDialog(
                         )
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 3.dp)) {
                             Text(
-                                text = "on ${NetworkUtils.getNameByChainId(WCDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")}",
+                                text = "on ${NetworkUtils.getNameByChainId(WalletKitDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")}",
                                 style = TextStyle(
                                     fontSize = 12.sp,
                                     lineHeight = 14.sp,
@@ -412,13 +412,13 @@ fun SuccessDialog(
                             Spacer(modifier = Modifier.width(6.dp))
                             Image(
                                 modifier = Modifier.size(12.dp).clip(CircleShape),
-                                painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")),
+                                painter = painterResource(id = NetworkUtils.getIconByChainId(WalletKitDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")),
                                 contentDescription = "image description"
                             )
                         }
                     }
                 }
-                WCDelegate.prepareAvailable?.funding?.forEach { funding ->
+                WalletKitDelegate.prepareAvailable?.funding?.forEach { funding ->
                     Row(
                         modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 18.dp).fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -637,7 +637,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                     ) {
                         Image(
                             modifier = Modifier.size(24.dp).clip(CircleShape),
-                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")),
+                            painter = painterResource(id = NetworkUtils.getIconByChainId(WalletKitDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")),
                             contentDescription = "Network"
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -679,7 +679,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                 }
 
                 if (!isError) {
-                    WCDelegate.prepareAvailable?.funding?.forEach { funding ->
+                    WalletKitDelegate.prepareAvailable?.funding?.forEach { funding ->
                         Row(
                             modifier = Modifier.padding(start = 18.dp, top = 8.dp, end = 18.dp, bottom = 8.dp).fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -768,12 +768,12 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                     ) {
                         Image(
                             modifier = Modifier.size(18.dp).clip(CircleShape),
-                            painter = painterResource(id = NetworkUtils.getIconByChainId(WCDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")),
+                            painter = painterResource(id = NetworkUtils.getIconByChainId(WalletKitDelegate.prepareAvailable?.initialTransaction?.chainId ?: "")),
                             contentDescription = "Network",
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = NetworkUtils.getNameByChainId(WCDelegate.prepareAvailable?.initialTransaction?.chainId ?: ""),
+                            text = NetworkUtils.getNameByChainId(WalletKitDelegate.prepareAvailable?.initialTransaction?.chainId ?: ""),
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -800,7 +800,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "${WCDelegate.prepareAvailable?.transactionsDetails?.localTotal?.formattedAlt} ${WCDelegate.prepareAvailable?.transactionsDetails?.localTotal?.symbol}",
+                            text = "${WalletKitDelegate.prepareAvailable?.transactionsDetails?.localTotal?.formattedAlt} ${WalletKitDelegate.prepareAvailable?.transactionsDetails?.localTotal?.symbol}",
                             style = TextStyle(
                                 fontSize = 16.sp,
                                 lineHeight = 18.sp,
@@ -825,7 +825,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = WCDelegate.prepareAvailable?.transactionsDetails?.localBridgeTotal?.formattedAlt ?: "-.--",
+                            text = WalletKitDelegate.prepareAvailable?.transactionsDetails?.localBridgeTotal?.formattedAlt ?: "-.--",
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 lineHeight = 16.sp,
@@ -850,7 +850,7 @@ fun Request(viewModel: ChainAbstractionViewModel, isError: Boolean) {
                             )
                         )
                         Text(
-                            text = "${WCDelegate.prepareAvailable?.transactionsDetails?.initialDetails?.transactionFee?.localFee?.formattedAlt} ${WCDelegate.prepareAvailable?.transactionsDetails?.initialDetails?.transactionFee?.localFee?.symbol}",
+                            text = "${WalletKitDelegate.prepareAvailable?.transactionsDetails?.initialDetails?.transactionFee?.localFee?.formattedAlt} ${WalletKitDelegate.prepareAvailable?.transactionsDetails?.initialDetails?.transactionFee?.localFee?.symbol}",
                             style = TextStyle(
                                 fontSize = 14.sp,
                                 lineHeight = 16.sp,

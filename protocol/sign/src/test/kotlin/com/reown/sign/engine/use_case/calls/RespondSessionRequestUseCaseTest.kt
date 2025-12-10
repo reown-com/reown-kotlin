@@ -18,7 +18,7 @@ import com.reown.sign.common.model.Request
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestVO
 import com.reown.sign.common.model.vo.sequence.SessionVO
-import com.reown.sign.engine.model.tvf.TVF
+import com.reown.sign.engine.model.tvf.TNV
 import com.reown.sign.json_rpc.domain.GetPendingJsonRpcHistoryEntryByIdUseCase
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import io.mockk.Runs
@@ -42,7 +42,7 @@ class RespondSessionRequestUseCaseTest {
     private val verifyContextStorageRepository = mockk<VerifyContextStorageRepository>()
     private val metadataStorageRepository = mockk<MetadataStorageRepositoryInterface>()
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface = mockk()
-    private val tvf: TVF = mockk()
+    private val TNV: TNV = mockk()
     private val insertEventUseCase = mockk<InsertEventUseCase>()
     private val respondSessionRequestUseCase = RespondSessionRequestUseCase(
         jsonRpcInteractor,
@@ -54,7 +54,7 @@ class RespondSessionRequestUseCaseTest {
         metadataStorageRepository,
         insertEventUseCase,
         "clientId",
-        tvf
+        TNV
     )
 
     @Before
@@ -152,8 +152,8 @@ class RespondSessionRequestUseCaseTest {
         coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "")
         every { sessionStorageRepository.isSessionValid(Topic(topic)) } returns true
         every { getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id) } returns pendingRequest
-        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
-        every { tvf.collectTxHashes(any(), any()) } returns listOf("hash")
+        every { TNV.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { TNV.collectTxHashes(any(), any()) } returns listOf("hash")
         every { logger.log(any<String>()) } just Runs
         every { jsonRpcInteractor.publishJsonRpcResponse(any(), any(), any(), captureLambda(), any(), any(), any()) } answers {
             lambda<() -> Unit>().invoke()
@@ -209,8 +209,8 @@ class RespondSessionRequestUseCaseTest {
         coEvery { metadataStorageRepository.getByTopicAndType(any(), any()) } returns AppMetaData("", "", listOf(), "")
         every { sessionStorageRepository.isSessionValid(Topic(topic)) } returns true
         every { getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id) } returns pendingRequest
-        every { tvf.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
-        every { tvf.collectTxHashes(any(), any()) } returns listOf("hash")
+        every { TNV.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
+        every { TNV.collectTxHashes(any(), any()) } returns listOf("hash")
         every { logger.log(any<String>()) } just Runs
         every { jsonRpcInteractor.publishJsonRpcResponse(any(), any(), any(), any(), captureLambda(), any(), any()) } answers {
             lambda<(Throwable) -> Unit>().invoke(Throwable("Publish fails"))

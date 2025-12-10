@@ -98,17 +98,14 @@ dependencies {
     debugApi(project(":foundation"))
     releaseApi("com.reown:foundation:$FOUNDATION_VERSION")
 
-    // Use specific yttrium version for CI builds, default version for local builds
-    // Release builds use stable version, regular CI builds use CI version for e2e tests
-    val yttriumVersion = if (System.getenv("IS_RELEASE_BUILD") == "true") {
-        "0.9.55" // Use stable version for release builds
-    } else if (System.getenv("CI") == "true") {
-        System.getenv("YTTRIUM_CI_VERSION") ?: "0.0.20-ci" // Use CI version for e2e tests
-    } else {
-        "0.9.55" // Use stable version for local builds
+    implementation("com.github.reown-com:yttrium:0.9.91") { //unspecified
+        exclude(group = "net.java.dev.jna", module = "jna")
     }
-    api("com.github.reown-com:yttrium:$yttriumVersion") //unspecified
     implementation("net.java.dev.jna:jna:5.17.0@aar")
+    androidTestImplementation("com.github.reown-com:yttrium:0.9.91") { //unspecified
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
+    androidTestImplementation("net.java.dev.jna:jna:5.17.0@aar")
 
     api(libs.coroutines)
     implementation(libs.scarlet.android)

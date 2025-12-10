@@ -1,0 +1,11 @@
+import kotlin.String;
+import kotlin.collections.List;
+import kotlin.collections.Map;
+
+-- migrates 13db to 14db
+
+-- CREATE V14 SCHEMA
+-- Add authentication column to ProposalDao table
+
+ALTER TABLE ProposalDao ADD COLUMN authentication TEXT AS List<String> DEFAULT NULL;
+

@@ -4,6 +4,8 @@ import androidx.annotation.Keep
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
+import com.reown.sign.client.Sign
+import com.reown.sign.client.Sign.Model
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -28,6 +30,7 @@ object Wallet {
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null,
             val relayProtocol: String? = null,
+            val proposalRequestsResponses: Wallet.Model.ProposalRequestsResponses? = null
         ) : Params()
 
         data class ApproveSessionAuthenticate(val id: Long, val auths: List<Model.Cacao>) : Params()
@@ -71,6 +74,10 @@ object Wallet {
     }
 
     sealed class Model {
+
+        data class ProposalRequestsResponses(
+            val authentication: List<Cacao>
+        ) : Model()
 
         sealed class Ping : Model() {
             data class Success(val topic: String) : Ping()
@@ -211,6 +218,7 @@ object Wallet {
             data class InsufficientFunds(val message: String) : PrepareError()
             data class InsufficientGasFunds(val message: String) : PrepareError()
             data class AssetNotSupported(val message: String) : PrepareError()
+            data class TransactionSimulationFailed(val message: String) : PrepareError()
             data class Unknown(val message: String) : PrepareError()
         }
 
@@ -243,6 +251,11 @@ object Wallet {
             val relayProtocol: String,
             val relayData: String?,
             val scopedProperties: Map<String, String>?,
+            val requests: ProposalRequests?
+        ) : Model()
+
+        data class ProposalRequests(
+            val authentication: List<PayloadAuthRequestParams>
         ) : Model()
 
         data class SessionAuthenticate(
@@ -344,6 +357,7 @@ object Wallet {
             val statement: String?,
             val requestId: String?,
             val resources: List<String>?,
+            val signatureTypes: Map<String, List<String>>?,
         ) : Model()
 
         data class PayloadAuthRequestParams(
@@ -357,7 +371,8 @@ object Wallet {
             val exp: String?,
             val statement: String?,
             val requestId: String?,
-            val resources: List<String>?
+            val resources: List<String>?,
+            val signatureTypes: Map<String, List<String>>?,
         ) : Model()
 
         data class SessionEvent(

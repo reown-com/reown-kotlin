@@ -5,6 +5,7 @@ import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
 import com.reown.android.internal.common.signing.cacao.Issuer
+import com.reown.sign.engine.model.EngineDO
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -49,6 +50,11 @@ object Sign {
             val relayProtocol: String,
             val relayData: String?,
             val scopedProperties: Map<String, String>?,
+            val requests: ProposalRequests?
+        ) : Model()
+
+        data class ProposalRequests(
+            val authentication: List<PayloadParams>
         ) : Model()
 
         data class ExpiredProposal(val pairingTopic: String, val proposerPublicKey: String) : Model()
@@ -148,6 +154,7 @@ object Sign {
             val metaData: Core.Model.AppMetaData?,
             val namespaces: Map<String, Namespace.Session>,
             val accounts: List<String>,
+            val proposalRequestsResponses: ProposalRequestsResponses?
         ) : Model()
 
         data class Session(
@@ -281,6 +288,7 @@ object Sign {
             val statement: String?,
             val requestId: String?,
             var resources: List<String>?,
+            val signatureTypes: Map<String, List<String>>?,
         ) : Model()
 
         data class Cacao(
@@ -307,6 +315,10 @@ object Sign {
                 val address: String get() = Issuer(iss).address
             }
         }
+
+        data class ProposalRequestsResponses(
+            val authentication: List<Cacao>?
+        ): Model()
     }
 
     sealed class Params {
@@ -328,9 +340,11 @@ object Sign {
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null,
             val pairing: Core.Model.Pairing,
+            val authentication: List<Authenticate>? = null
         ) : Params()
 
         data class Authenticate(
+            @Deprecated("This parameter is deprecated. Use Pairing in ConnectParams instead.")
             val pairingTopic: String? = null,
             val chains: List<String>,
             val domain: String,
@@ -341,8 +355,10 @@ object Sign {
             val statement: String? = null,
             val requestId: String? = null,
             val resources: List<String>? = null,
+            @Deprecated("This parameter is deprecated. Use SessionNamespaces in ConnectParams instead.")
             val methods: List<String>? = null,
-            val expiry: Long? = null
+            val expiry: Long? = null,
+            val signatureTypes: Map<String, List<String>>? = null
         ) : Params()
 
         data class FormatMessage(val payloadParams: Model.PayloadParams, val iss: String) : Params()
@@ -355,6 +371,7 @@ object Sign {
             val properties: Map<String, String>? = null,
             val scopedProperties: Map<String, String>? = null,
             val relayProtocol: String? = null,
+            val proposalRequestsResponses: Model.ProposalRequestsResponses? = null
         ) : Params()
 
         data class Reject(val proposerPublicKey: String, val reason: String) : Params()
