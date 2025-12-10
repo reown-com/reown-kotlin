@@ -2,7 +2,10 @@ import org.gradle.api.JavaVersion
 
 const val KEY_PUBLISH_VERSION = "PUBLISH_VERSION"
 const val KEY_PUBLISH_ARTIFACT_ID = "PUBLISH_ARTIFACT_ID"
+const val KEY_PUBLISH_GROUP = "PUBLISH_GROUP"
 const val KEY_SDK_NAME = "SDK_NAME"
+
+const val DEFAULT_PUBLISH_GROUP = "com.reown"
 
 //Latest versions
 const val BOM_VERSION = "1.4.11"

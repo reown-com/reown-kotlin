@@ -9,6 +9,7 @@ plugins {
 project.apply {
     extra[KEY_PUBLISH_ARTIFACT_ID] = POS
     extra[KEY_PUBLISH_VERSION] = POS_VERSION
+    extra[KEY_PUBLISH_GROUP] = "com.walletconnect"
     extra[KEY_SDK_NAME] = "pos"
 }
 

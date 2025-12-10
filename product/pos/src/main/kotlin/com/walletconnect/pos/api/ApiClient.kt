@@ -36,13 +36,8 @@ internal class ApiClient(
     private val createPaymentResponseAdapter = moshi.adapter(CreatePaymentResponse::class.java)
     private val getPaymentRequestAdapter = moshi.adapter(GetPaymentRequest::class.java)
     private val getPaymentResponseAdapter = moshi.adapter(GetPaymentResponse::class.java)
-
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
-    /**
-     * Creates a payment and starts polling for status updates.
-     * All events are emitted through the callback.
-     */
     suspend fun createPayment(
         referenceId: String,
         unit: String,
@@ -113,9 +108,43 @@ internal class ApiClient(
         }
     }
 
-    /**
-     * Gets the current status of a payment (one-off, no polling).
-     */
+    private suspend fun startPolling(
+        paymentId: String,
+        initialPollMs: Long,
+        onEvent: (Pos.PaymentEvent) -> Unit
+    ) {
+        var pollDelayMs = initialPollMs
+        var lastEmittedStatus: String? = null
+
+        while (true) {
+            delay(pollDelayMs)
+
+            when (val result = getPayment(paymentId)) {
+                is ApiResult.Success -> {
+                    val data = result.data
+                    pollDelayMs = data.pollInMs
+
+                    if (data.status != lastEmittedStatus) {
+                        lastEmittedStatus = data.status
+                        onEvent(mapStatusToPaymentEvent(data.status, data.paymentId))
+                    }
+
+                    if (isTerminalStatus(data.status)) {
+                        break
+                    }
+                }
+
+                is ApiResult.Error -> {
+                    onEvent(mapErrorCodeToPaymentError(result.code, result.message))
+
+                    if (isTerminalError(result.code) || result.code == "NETWORK_ERROR") {
+                        break
+                    }
+                }
+            }
+        }
+    }
+
     suspend fun getPayment(paymentId: String): ApiResult<GetPaymentData> = withContext(Dispatchers.IO) {
         val request = GetPaymentRequest(params = GetPaymentParams(paymentId = paymentId))
         val jsonBody = getPaymentRequestAdapter.toJson(request)
@@ -152,43 +181,6 @@ internal class ApiClient(
             }
 
             is HttpResponse.Error -> ApiResult.Error(httpResponse.code, httpResponse.message)
-        }
-    }
-
-    private suspend fun startPolling(
-        paymentId: String,
-        initialPollMs: Long,
-        onEvent: (Pos.PaymentEvent) -> Unit
-    ) {
-        var pollDelayMs = initialPollMs
-        var lastEmittedStatus: String? = null
-
-        while (true) {
-            delay(pollDelayMs)
-
-            when (val result = getPayment(paymentId)) {
-                is ApiResult.Success -> {
-                    val data = result.data
-                    pollDelayMs = data.pollInMs
-
-                    if (data.status != lastEmittedStatus) {
-                        lastEmittedStatus = data.status
-                        onEvent(mapStatusToPaymentEvent(data.status, data.paymentId))
-                    }
-
-                    if (isTerminalStatus(data.status)) {
-                        break
-                    }
-                }
-
-                is ApiResult.Error -> {
-                    onEvent(mapErrorCodeToPaymentError(result.code, result.message))
-
-                    if (isTerminalError(result.code) || result.code == "NETWORK_ERROR") {
-                        break
-                    }
-                }
-            }
         }
     }
 
