@@ -18,6 +18,5 @@ dependencies {
         api(project(":protocol:notify"))
         api(project(":product:appkit"))
         api(project(":product:walletkit"))
-        api(project(":product:pos"))
     }
 }
