@@ -44,8 +44,8 @@ internal data class CreatePaymentData(
 )
 
 @JsonClass(generateAdapter = true)
-internal data class GetPaymentRequest(
-    @param:Json(name = "method") val method: String = "getPayment",
+internal data class GetPaymentStatus(
+    @param:Json(name = "method") val method: String = "getPaymentStatus",
     @param:Json(name = "params") val params: GetPaymentParams
 )
 

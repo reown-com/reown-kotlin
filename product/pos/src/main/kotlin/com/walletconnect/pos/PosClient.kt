@@ -74,7 +74,7 @@ object PosClient {
     suspend fun checkPaymentStatus(paymentId: String): Pos.PaymentEvent {
         checkInitialized()
 
-        return when (val result = apiClient!!.getPayment(paymentId)) {
+        return when (val result = apiClient!!.getPaymentStatus(paymentId)) {
             is ApiResult.Success -> mapStatusToPaymentEvent(result.data.status, result.data.paymentId)
             is ApiResult.Error -> mapErrorCodeToPaymentError(result.code, result.message)
         }

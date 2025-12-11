@@ -29,14 +29,6 @@ internal fun mapStatusToPaymentEvent(status: String, paymentId: String): Pos.Pay
     }
 }
 
-internal fun isTerminalStatus(status: String): Boolean {
-    return status in listOf(
-        PaymentStatus.SUCCEEDED,
-        PaymentStatus.EXPIRED,
-        PaymentStatus.FAILED,
-    )
-}
-
 internal fun isTerminalError(code: String): Boolean {
     return code in listOf(
         ErrorCodes.PAYMENT_NOT_FOUND,

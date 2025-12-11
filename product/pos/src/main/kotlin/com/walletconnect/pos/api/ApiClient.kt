@@ -21,20 +21,18 @@ internal class ApiClient(
     baseUrl: String = BuildConfig.CORE_API_BASE_URL
 ) {
     private val coreUrl = "$baseUrl/v1/gateway"
-
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
         .writeTimeout(15, TimeUnit.SECONDS)
         .build()
-
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
     private val createPaymentRequestAdapter = moshi.adapter(CreatePaymentRequest::class.java)
     private val createPaymentResponseAdapter = moshi.adapter(CreatePaymentResponse::class.java)
-    private val getPaymentRequestAdapter = moshi.adapter(GetPaymentRequest::class.java)
+    private val getPaymentStatusAdapter = moshi.adapter(GetPaymentStatus::class.java)
     private val getPaymentResponseAdapter = moshi.adapter(GetPaymentResponse::class.java)
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
@@ -44,12 +42,7 @@ internal class ApiClient(
         value: String,
         onEvent: (Pos.PaymentEvent) -> Unit
     ) = withContext(Dispatchers.IO) {
-        val request = CreatePaymentRequest(
-            params = CreatePaymentParams(
-                referenceId = referenceId,
-                amount = Amount(unit = unit, value = value)
-            )
-        )
+        val request = CreatePaymentRequest(params = CreatePaymentParams(referenceId = referenceId, amount = Amount(unit = unit, value = value)))
         val jsonBody = createPaymentRequestAdapter.toJson(request)
         val httpResponse = executeHttpRequest(jsonBody)
 
@@ -75,6 +68,7 @@ internal class ApiClient(
                             return@withContext
                         }
 
+                        //TODO: get from API
                         val uri = URI(buildPaymentUri(data.paymentId))
                         onEvent(
                             Pos.PaymentEvent.PaymentCreated(
@@ -84,7 +78,7 @@ internal class ApiClient(
                             )
                         )
 
-                        startPolling(data.paymentId, data.pollInMs, onEvent)
+                        startPolling(data.paymentId, onEvent)
                     }
 
                     "error" -> {
@@ -110,28 +104,27 @@ internal class ApiClient(
 
     private suspend fun startPolling(
         paymentId: String,
-        initialPollMs: Long,
         onEvent: (Pos.PaymentEvent) -> Unit
     ) {
-        var pollDelayMs = initialPollMs
         var lastEmittedStatus: String? = null
 
         while (true) {
-            delay(pollDelayMs)
-
-            when (val result = getPayment(paymentId)) {
+            when (val result = getPaymentStatus(paymentId)) {
                 is ApiResult.Success -> {
                     val data = result.data
-                    pollDelayMs = data.pollInMs
 
+                    // Emit event only when status changes
                     if (data.status != lastEmittedStatus) {
                         lastEmittedStatus = data.status
                         onEvent(mapStatusToPaymentEvent(data.status, data.paymentId))
                     }
 
-                    if (isTerminalStatus(data.status)) {
+                    // pollInMs == 0 indicates final state, stop polling
+                    if (data.pollInMs == 0L) {
                         break
                     }
+
+                    delay(data.pollInMs)
                 }
 
                 is ApiResult.Error -> {
@@ -145,9 +138,9 @@ internal class ApiClient(
         }
     }
 
-    suspend fun getPayment(paymentId: String): ApiResult<GetPaymentData> = withContext(Dispatchers.IO) {
-        val request = GetPaymentRequest(params = GetPaymentParams(paymentId = paymentId))
-        val jsonBody = getPaymentRequestAdapter.toJson(request)
+    suspend fun getPaymentStatus(paymentId: String): ApiResult<GetPaymentData> = withContext(Dispatchers.IO) {
+        val request = GetPaymentStatus(params = GetPaymentParams(paymentId = paymentId))
+        val jsonBody = getPaymentStatusAdapter.toJson(request)
         val httpResponse = executeHttpRequest(jsonBody)
 
         when (httpResponse) {
