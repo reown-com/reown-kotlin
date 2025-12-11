@@ -68,11 +68,9 @@ internal class ApiClient(
                             return@withContext
                         }
 
-                        //TODO: get from API
-                        val uri = URI(buildPaymentUri(data.paymentId))
                         onEvent(
                             Pos.PaymentEvent.PaymentCreated(
-                                uri = uri,
+                                uri = URI(data.gatewayUrl),
                                 amount = Pos.Amount(data.amount.unit, data.amount.value),
                                 paymentId = data.paymentId
                             )

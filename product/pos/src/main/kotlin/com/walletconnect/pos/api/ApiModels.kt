@@ -40,7 +40,8 @@ internal data class CreatePaymentData(
     @param:Json(name = "status") val status: String,
     @param:Json(name = "amount") val amount: Amount,
     @param:Json(name = "expiresAt") val expiresAt: Long,
-    @param:Json(name = "pollInMs") val pollInMs: Long
+    @param:Json(name = "pollInMs") val pollInMs: Long,
+    @param:Json(name = "gatewayUrl") val gatewayUrl: String
 )
 
 @JsonClass(generateAdapter = true)

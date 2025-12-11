@@ -2,7 +2,6 @@ package com.walletconnect.pos
 
 import com.walletconnect.pos.api.ErrorCodes
 import com.walletconnect.pos.api.PaymentStatus
-import com.walletconnect.pos.api.buildPaymentUri
 import com.walletconnect.pos.api.isTerminalError
 import com.walletconnect.pos.api.mapCreatePaymentError
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
@@ -174,27 +173,6 @@ class MappingTest {
     @Test
     fun `isTerminalError - empty string is not terminal`() {
         assertFalse(isTerminalError(""))
-    }
-
-    // ==================== buildPaymentUri Tests ====================
-
-    @Test
-    fun `buildPaymentUri - builds correct URI`() {
-        val result = buildPaymentUri("pay_abc123")
-        assertEquals("https://walletconnect.com/pay/pay_abc123", result)
-    }
-
-    @Test
-    fun `buildPaymentUri - handles long payment IDs`() {
-        val longId = "wcp_payment_7XJkF2nPqR9vL5mT3hYwZ6aB4cD8eG1j"
-        val result = buildPaymentUri(longId)
-        assertEquals("https://walletconnect.com/pay/$longId", result)
-    }
-
-    @Test
-    fun `buildPaymentUri - handles special characters`() {
-        val result = buildPaymentUri("pay_123-abc_XYZ")
-        assertEquals("https://walletconnect.com/pay/pay_123-abc_XYZ", result)
     }
 
     @Test

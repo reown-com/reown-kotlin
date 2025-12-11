@@ -37,7 +37,3 @@ internal fun isTerminalError(code: String): Boolean {
         ErrorCodes.COMPLIANCE_FAILED
     )
 }
-
-internal fun buildPaymentUri(paymentId: String): String {
-    return "https://walletconnect.com/pay/$paymentId"
-}
