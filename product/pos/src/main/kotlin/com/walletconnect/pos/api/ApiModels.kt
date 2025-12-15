@@ -10,32 +10,13 @@ internal data class Amount(
 )
 
 @JsonClass(generateAdapter = true)
-internal data class ApiError(
-    @param:Json(name = "code") val code: String,
-    @param:Json(name = "message") val message: String
-)
-
-@JsonClass(generateAdapter = true)
 internal data class CreatePaymentRequest(
-    @param:Json(name = "method") val method: String = "createPayment",
-    @param:Json(name = "params") val params: CreatePaymentParams
-)
-
-@JsonClass(generateAdapter = true)
-internal data class CreatePaymentParams(
-    @param:Json(name = "referenceId") val referenceId: String,
+    @param:Json(name = "referenceId") val referenceId: String? = null,
     @param:Json(name = "amount") val amount: Amount
 )
 
 @JsonClass(generateAdapter = true)
 internal data class CreatePaymentResponse(
-    @param:Json(name = "status") val status: String,
-    @param:Json(name = "data") val data: CreatePaymentData? = null,
-    @param:Json(name = "error") val error: ApiError? = null
-)
-
-@JsonClass(generateAdapter = true)
-internal data class CreatePaymentData(
     @param:Json(name = "paymentId") val paymentId: String,
     @param:Json(name = "status") val status: String,
     @param:Json(name = "amount") val amount: Amount,
@@ -45,28 +26,16 @@ internal data class CreatePaymentData(
 )
 
 @JsonClass(generateAdapter = true)
-internal data class GetPaymentStatus(
-    @param:Json(name = "method") val method: String = "getPaymentStatus",
-    @param:Json(name = "params") val params: GetPaymentParams
-)
-
-@JsonClass(generateAdapter = true)
-internal data class GetPaymentParams(
-    @param:Json(name = "paymentId") val paymentId: String
-)
-
-@JsonClass(generateAdapter = true)
-internal data class GetPaymentResponse(
-    @param:Json(name = "status") val status: String,
-    @param:Json(name = "data") val data: GetPaymentData? = null,
-    @param:Json(name = "error") val error: ApiError? = null
-)
-
-@JsonClass(generateAdapter = true)
-internal data class GetPaymentData(
+internal data class GetPaymentStatusResponse(
     @param:Json(name = "paymentId") val paymentId: String,
     @param:Json(name = "status") val status: String,
     @param:Json(name = "pollInMs") val pollInMs: Long
+)
+
+@JsonClass(generateAdapter = true)
+internal data class ApiErrorResponse(
+    @param:Json(name = "code") val code: String,
+    @param:Json(name = "message") val message: String
 )
 
 internal sealed class ApiResult<out T> {
@@ -87,4 +56,6 @@ internal object ErrorCodes {
     const val PAYMENT_EXPIRED = "PAYMENT_EXPIRED"
     const val INVALID_REQUEST = "INVALID_REQUEST"
     const val COMPLIANCE_FAILED = "COMPLIANCE_FAILED"
+    const val NETWORK_ERROR = "NETWORK_ERROR"
+    const val PARSE_ERROR = "PARSE_ERROR"
 }

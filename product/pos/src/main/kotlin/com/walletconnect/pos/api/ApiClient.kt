@@ -4,99 +4,81 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.walletconnect.pos.BuildConfig
 import com.walletconnect.pos.Pos
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
 internal class ApiClient(
     private val apiKey: String,
+    private val merchantId: String,
     private val deviceId: String,
     baseUrl: String = BuildConfig.CORE_API_BASE_URL
 ) {
-    private val coreUrl = "$baseUrl/v1/gateway"
-    private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS)
-        .build()
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
-    private val createPaymentRequestAdapter = moshi.adapter(CreatePaymentRequest::class.java)
-    private val createPaymentResponseAdapter = moshi.adapter(CreatePaymentResponse::class.java)
-    private val getPaymentStatusAdapter = moshi.adapter(GetPaymentStatus::class.java)
-    private val getPaymentResponseAdapter = moshi.adapter(GetPaymentResponse::class.java)
-    private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
+    private val errorAdapter = moshi.adapter(ApiErrorResponse::class.java)
+
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .writeTimeout(15, TimeUnit.SECONDS)
+        .addInterceptor(createHeadersInterceptor())
+        .build()
+
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(baseUrl.ensureTrailingSlash())
+        .client(httpClient)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .build()
+
+    private val payApi: PayApi = retrofit.create(PayApi::class.java)
 
     suspend fun createPayment(
         referenceId: String,
         unit: String,
         value: String,
         onEvent: (Pos.PaymentEvent) -> Unit
-    ) = withContext(Dispatchers.IO) {
-        val request = CreatePaymentRequest(params = CreatePaymentParams(referenceId = referenceId, amount = Amount(unit = unit, value = value)))
-        val jsonBody = createPaymentRequestAdapter.toJson(request)
-        val httpResponse = executeHttpRequest(jsonBody)
+    ) {
+        val request = CreatePaymentRequest(
+            referenceId = referenceId.ifBlank { null },
+            amount = Amount(unit = unit, value = value)
+        )
 
-        when (httpResponse) {
-            is HttpResponse.Success -> {
-                val response = try {
-                    createPaymentResponseAdapter.fromJson(httpResponse.body)
-                } catch (e: Exception) {
-                    onEvent(Pos.PaymentEvent.PaymentError.Undefined("Failed to parse response: ${e.message}"))
-                    return@withContext
+        try {
+            val response = payApi.createPayment(request)
+
+            if (response.isSuccessful) {
+                val data = response.body()
+                if (data == null) {
+                    onEvent(Pos.PaymentEvent.PaymentError.Undefined("Empty response body"))
+                    return
                 }
 
-                if (response == null) {
-                    onEvent(Pos.PaymentEvent.PaymentError.Undefined("Null response"))
-                    return@withContext
-                }
+                onEvent(
+                    Pos.PaymentEvent.PaymentCreated(
+                        uri = URI(data.gatewayUrl),
+                        amount = Pos.Amount(data.amount.unit, data.amount.value),
+                        paymentId = data.paymentId
+                    )
+                )
 
-                when (response.status) {
-                    "success" -> {
-                        val data = response.data
-                        if (data == null) {
-                            onEvent(Pos.PaymentEvent.PaymentError.Undefined("Missing data in success response"))
-                            return@withContext
-                        }
-
-                        onEvent(
-                            Pos.PaymentEvent.PaymentCreated(
-                                uri = URI(data.gatewayUrl),
-                                amount = Pos.Amount(data.amount.unit, data.amount.value),
-                                paymentId = data.paymentId
-                            )
-                        )
-
-                        startPolling(data.paymentId, onEvent)
-                    }
-
-                    "error" -> {
-                        onEvent(
-                            mapCreatePaymentError(
-                                response.error?.code ?: "UNKNOWN_ERROR",
-                                response.error?.message ?: "Unknown error"
-                            )
-                        )
-                    }
-
-                    else -> {
-                        onEvent(Pos.PaymentEvent.PaymentError.Undefined("Unknown status: ${response.status}"))
-                    }
-                }
+                startPolling(data.paymentId, onEvent)
+            } else {
+                val error = parseErrorResponse(response)
+                onEvent(mapCreatePaymentError(error.code, error.message))
             }
-
-            is HttpResponse.Error -> {
-                onEvent(mapCreatePaymentError(httpResponse.code, httpResponse.message))
-            }
+        } catch (e: IOException) {
+            onEvent(Pos.PaymentEvent.PaymentError.CreatePaymentFailed("Network error: ${e.message}"))
+        } catch (e: Exception) {
+            onEvent(Pos.PaymentEvent.PaymentError.Undefined("Unexpected error: ${e.message}"))
         }
     }
 
@@ -108,16 +90,15 @@ internal class ApiClient(
 
         while (true) {
             when (val result = getPaymentStatus(paymentId)) {
+                //TODO: use isFinal to stop polling
                 is ApiResult.Success -> {
                     val data = result.data
 
-                    // Emit event only when status changes
                     if (data.status != lastEmittedStatus) {
                         lastEmittedStatus = data.status
                         onEvent(mapStatusToPaymentEvent(data.status, data.paymentId))
                     }
 
-                    // pollInMs == 0 indicates final state, stop polling
                     if (data.pollInMs == 0L) {
                         break
                     }
@@ -128,7 +109,7 @@ internal class ApiClient(
                 is ApiResult.Error -> {
                     onEvent(mapErrorCodeToPaymentError(result.code, result.message))
 
-                    if (isTerminalError(result.code) || result.code == "NETWORK_ERROR") {
+                    if (isTerminalError(result.code) || result.code == ErrorCodes.NETWORK_ERROR) {
                         break
                     }
                 }
@@ -136,68 +117,64 @@ internal class ApiClient(
         }
     }
 
-    suspend fun getPaymentStatus(paymentId: String): ApiResult<GetPaymentData> = withContext(Dispatchers.IO) {
-        val request = GetPaymentStatus(params = GetPaymentParams(paymentId = paymentId))
-        val jsonBody = getPaymentStatusAdapter.toJson(request)
-        val httpResponse = executeHttpRequest(jsonBody)
-
-        when (httpResponse) {
-            is HttpResponse.Success -> {
-                val response = try {
-                    getPaymentResponseAdapter.fromJson(httpResponse.body)
-                } catch (e: Exception) {
-                    return@withContext ApiResult.Error("PARSE_ERROR", "Failed to parse response: ${e.message}")
-                }
-
-                if (response == null) {
-                    return@withContext ApiResult.Error("PARSE_ERROR", "Null response")
-                }
-
-                when (response.status) {
-                    "success" -> {
-                        val data = response.data
-                            ?: return@withContext ApiResult.Error("PARSE_ERROR", "Missing data in success response")
-                        ApiResult.Success(data)
-                    }
-
-                    "error" -> {
-                        ApiResult.Error(
-                            code = response.error?.code ?: "UNKNOWN_ERROR",
-                            message = response.error?.message ?: "Unknown error"
-                        )
-                    }
-
-                    else -> ApiResult.Error("UNKNOWN_STATUS", "Unknown status: ${response.status}")
-                }
-            }
-
-            is HttpResponse.Error -> ApiResult.Error(httpResponse.code, httpResponse.message)
-        }
-    }
-
-    private fun executeHttpRequest(jsonBody: String): HttpResponse {
-        val httpRequest = Request.Builder()
-            .url(coreUrl)
-            .addHeader("X-Api-Key", apiKey)
-            .addHeader("X-Device-Id", deviceId)
-            .addHeader("X-Sdk-Version", "pos-kotlin-${BuildConfig.SDK_VERSION}")
-            .addHeader("Content-Type", "application/json")
-            .post(jsonBody.toRequestBody(jsonMediaType))
-            .build()
-
+    suspend fun getPaymentStatus(paymentId: String): ApiResult<GetPaymentStatusResponse> {
         return try {
-            httpClient.newCall(httpRequest).execute().use { response ->
-                HttpResponse.Success(response.body.string())
+            val response = payApi.getPaymentStatus(paymentId)
+
+            if (response.isSuccessful) {
+                val data = response.body()
+                if (data == null) {
+                    ApiResult.Error(ErrorCodes.PARSE_ERROR, "Empty response body")
+                } else {
+                    ApiResult.Success(data)
+                }
+            } else {
+                val error = parseErrorResponse(response)
+                ApiResult.Error(error.code, error.message)
             }
         } catch (e: IOException) {
-            HttpResponse.Error("NETWORK_ERROR", e.message ?: "Network error")
+            ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
         } catch (e: Exception) {
-            HttpResponse.Error("UNKNOWN_ERROR", e.message ?: "Unknown error")
+            ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
         }
     }
 
-    private sealed class HttpResponse {
-        data class Success(val body: String) : HttpResponse()
-        data class Error(val code: String, val message: String) : HttpResponse()
+    private fun createHeadersInterceptor(): Interceptor {
+        return Interceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("X-Api-Key", apiKey)
+                .addHeader("X-Merchant-Id", merchantId)
+                .addHeader("X-Device-Id", deviceId)
+                .addHeader("X-Sdk-Version", "pos-kotlin-${BuildConfig.SDK_VERSION}")
+                .addHeader("Content-Type", "application/json")
+                .build()
+            chain.proceed(request)
+        }
+    }
+
+    private fun <T> parseErrorResponse(response: Response<T>): ApiErrorResponse {
+        val errorBody = response.errorBody()?.string()
+        return if (errorBody != null) {
+            try {
+                errorAdapter.fromJson(errorBody) ?: ApiErrorResponse(
+                    code = "HTTP_${response.code()}",
+                    message = response.message()
+                )
+            } catch (e: Exception) {
+                ApiErrorResponse(
+                    code = "HTTP_${response.code()}",
+                    message = response.message()
+                )
+            }
+        } else {
+            ApiErrorResponse(
+                code = "HTTP_${response.code()}",
+                message = response.message()
+            )
+        }
+    }
+
+    private fun String.ensureTrailingSlash(): String {
+        return if (endsWith("/")) this else "$this/"
     }
 }

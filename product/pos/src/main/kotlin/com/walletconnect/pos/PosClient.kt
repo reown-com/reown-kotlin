@@ -24,15 +24,17 @@ object PosClient {
      * Initializes the POS client with API credentials.
      *
      * @param apiKey Your WalletConnect Pay API key
+     * @param merchantId Your merchant identifier
      * @param deviceId Unique identifier for this POS device
      */
     @Throws(IllegalStateException::class)
-    fun init(apiKey: String, deviceId: String) {
+    fun init(apiKey: String, merchantId: String, deviceId: String) {
         check(apiKey.isNotBlank()) { "apiKey cannot be blank" }
+        check(merchantId.isNotBlank()) { "merchantId cannot be blank" }
         check(deviceId.isNotBlank()) { "deviceId cannot be blank" }
         cleanup()
         this.scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        this.apiClient = ApiClient(apiKey, deviceId)
+        this.apiClient = ApiClient(apiKey, merchantId, deviceId)
     }
 
     /**

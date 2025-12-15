@@ -60,6 +60,8 @@ dependencies {
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
 
+    implementation(libs.bundles.retrofit)
+
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.ksp)
 
