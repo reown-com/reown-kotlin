@@ -22,9 +22,9 @@ class ApiClientTest {
     fun `getPaymentStatus - returns success with requires_action status`() = runTest {
         val mockApi = mockk<PayApi>()
         val expectedResponse = GetPaymentStatusResponse(
-            paymentId = "pay_123",
             status = PaymentStatus.REQUIRES_ACTION,
-            pollInMs = 1000L
+            pollInMs = 1000L,
+            isFinal = false
         )
 
         coEvery { mockApi.getPaymentStatus("pay_123") } returns Response.success(expectedResponse)
@@ -33,18 +33,18 @@ class ApiClientTest {
 
         assertTrue(result is ApiResult.Success)
         val data = (result as ApiResult.Success).data
-        assertEquals("pay_123", data.paymentId)
         assertEquals(PaymentStatus.REQUIRES_ACTION, data.status)
         assertEquals(1000L, data.pollInMs)
+        assertEquals(false, data.isFinal)
     }
 
     @Test
-    fun `getPaymentStatus - returns success with succeeded status and pollInMs zero`() = runTest {
+    fun `getPaymentStatus - returns success with succeeded status and isFinal true`() = runTest {
         val mockApi = mockk<PayApi>()
         val expectedResponse = GetPaymentStatusResponse(
-            paymentId = "pay_123",
             status = PaymentStatus.SUCCEEDED,
-            pollInMs = 0L
+            pollInMs = null,
+            isFinal = true
         )
 
         coEvery { mockApi.getPaymentStatus("pay_123") } returns Response.success(expectedResponse)
@@ -54,16 +54,17 @@ class ApiClientTest {
         assertTrue(result is ApiResult.Success)
         val data = (result as ApiResult.Success).data
         assertEquals(PaymentStatus.SUCCEEDED, data.status)
-        assertEquals(0L, data.pollInMs)
+        assertEquals(null, data.pollInMs)
+        assertEquals(true, data.isFinal)
     }
 
     @Test
     fun `getPaymentStatus - returns success with processing status`() = runTest {
         val mockApi = mockk<PayApi>()
         val expectedResponse = GetPaymentStatusResponse(
-            paymentId = "pay_456",
             status = PaymentStatus.PROCESSING,
-            pollInMs = 1000L
+            pollInMs = 1000L,
+            isFinal = false
         )
 
         coEvery { mockApi.getPaymentStatus("pay_456") } returns Response.success(expectedResponse)
@@ -76,12 +77,12 @@ class ApiClientTest {
     }
 
     @Test
-    fun `getPaymentStatus - returns success with expired status and pollInMs zero`() = runTest {
+    fun `getPaymentStatus - returns success with expired status and isFinal true`() = runTest {
         val mockApi = mockk<PayApi>()
         val expectedResponse = GetPaymentStatusResponse(
-            paymentId = "pay_789",
             status = PaymentStatus.EXPIRED,
-            pollInMs = 0L
+            pollInMs = null,
+            isFinal = true
         )
 
         coEvery { mockApi.getPaymentStatus("pay_789") } returns Response.success(expectedResponse)
@@ -91,16 +92,17 @@ class ApiClientTest {
         assertTrue(result is ApiResult.Success)
         val data = (result as ApiResult.Success).data
         assertEquals(PaymentStatus.EXPIRED, data.status)
-        assertEquals(0L, data.pollInMs)
+        assertEquals(null, data.pollInMs)
+        assertEquals(true, data.isFinal)
     }
 
     @Test
-    fun `getPaymentStatus - returns success with failed status and pollInMs zero`() = runTest {
+    fun `getPaymentStatus - returns success with failed status and isFinal true`() = runTest {
         val mockApi = mockk<PayApi>()
         val expectedResponse = GetPaymentStatusResponse(
-            paymentId = "pay_failed",
             status = PaymentStatus.FAILED,
-            pollInMs = 0L
+            pollInMs = null,
+            isFinal = true
         )
 
         coEvery { mockApi.getPaymentStatus("pay_failed") } returns Response.success(expectedResponse)
@@ -110,13 +112,14 @@ class ApiClientTest {
         assertTrue(result is ApiResult.Success)
         val data = (result as ApiResult.Success).data
         assertEquals(PaymentStatus.FAILED, data.status)
-        assertEquals(0L, data.pollInMs)
+        assertEquals(null, data.pollInMs)
+        assertEquals(true, data.isFinal)
     }
 
     @Test
     fun `getPaymentStatus - returns error when payment not found`() = runTest {
         val mockApi = mockk<PayApi>()
-        val errorBody = """{"code":"PAYMENT_NOT_FOUND","message":"Payment not found"}"""
+        val errorBody = """{"status":"error","error":{"code":"PAYMENT_NOT_FOUND","message":"Payment not found"}}"""
             .toResponseBody("application/json".toMediaType())
 
         coEvery { mockApi.getPaymentStatus("invalid_id") } returns Response.error(404, errorBody)
@@ -170,30 +173,30 @@ class ApiClientTest {
     }
 
     @Test
-    fun `polling - terminates when pollInMs is zero`() = runTest {
+    fun `polling - terminates when isFinal is true`() = runTest {
         val mockApi = mockk<PayApi>()
         var callCount = 0
 
         coEvery { mockApi.getPaymentStatus("pay_123") } answers {
             callCount++
             when (callCount) {
-                1 -> Response.success(GetPaymentStatusResponse("pay_123", PaymentStatus.REQUIRES_ACTION, 100L))
-                2 -> Response.success(GetPaymentStatusResponse("pay_123", PaymentStatus.PROCESSING, 100L))
-                else -> Response.success(GetPaymentStatusResponse("pay_123", PaymentStatus.SUCCEEDED, 0L))
+                1 -> Response.success(GetPaymentStatusResponse(PaymentStatus.REQUIRES_ACTION, 100L, false))
+                2 -> Response.success(GetPaymentStatusResponse(PaymentStatus.PROCESSING, 100L, false))
+                else -> Response.success(GetPaymentStatusResponse(PaymentStatus.SUCCEEDED, null, true))
             }
         }
 
-        var lastPollInMs = 100L
-        while (lastPollInMs > 0) {
+        var isFinal = false
+        while (!isFinal) {
             val result = callGetPaymentStatus(mockApi, "pay_123")
             if (result is ApiResult.Success) {
-                lastPollInMs = result.data.pollInMs
+                isFinal = result.data.isFinal
             } else {
                 break
             }
         }
 
-        assertEquals(0L, lastPollInMs)
+        assertEquals(true, isFinal)
         assertEquals(3, callCount)
     }
 
@@ -231,9 +234,12 @@ class ApiClientTest {
                 }
             } else {
                 val errorBody = response.errorBody()?.string()
-                if (errorBody != null && errorBody.contains("code")) {
-                    val code = Regex(""""code"\s*:\s*"([^"]+)"""").find(errorBody)?.groupValues?.get(1) ?: "HTTP_${response.code()}"
-                    val message = Regex(""""message"\s*:\s*"([^"]+)"""").find(errorBody)?.groupValues?.get(1) ?: response.message()
+                if (errorBody != null && errorBody.contains("error")) {
+                    // Parse nested error structure: {"status":"error","error":{"code":"...","message":"..."}}
+                    val codeMatch = Regex(""""error"\s*:\s*\{[^}]*"code"\s*:\s*"([^"]+)"""").find(errorBody)
+                    val messageMatch = Regex(""""error"\s*:\s*\{[^}]*"message"\s*:\s*"([^"]+)"""").find(errorBody)
+                    val code = codeMatch?.groupValues?.get(1) ?: "HTTP_${response.code()}"
+                    val message = messageMatch?.groupValues?.get(1) ?: response.message()
                     ApiResult.Error(code, message)
                 } else {
                     ApiResult.Error("HTTP_${response.code()}", response.message())

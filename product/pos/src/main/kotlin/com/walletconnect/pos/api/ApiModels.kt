@@ -26,14 +26,19 @@ internal data class CreatePaymentResponse(
 
 @JsonClass(generateAdapter = true)
 internal data class GetPaymentStatusResponse(
-    @param:Json(name = "amount") val amount: Amount,
     @param:Json(name = "status") val status: String,
     @param:Json(name = "pollInMs") val pollInMs: Long?,
     @param:Json(name = "isFinal") val isFinal: Boolean
 )
 
 @JsonClass(generateAdapter = true)
-internal data class ApiErrorResponse(
+internal data class ApiErrorWrapper(
+    @param:Json(name = "status") val status: String,
+    @param:Json(name = "error") val error: ApiErrorDetails
+)
+
+@JsonClass(generateAdapter = true)
+internal data class ApiErrorDetails(
     @param:Json(name = "code") val code: String,
     @param:Json(name = "message") val message: String
 )

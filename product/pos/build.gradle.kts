@@ -25,7 +25,7 @@ android {
         }
 
         buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
-        buildConfigField(type = "String", name = "CORE_API_BASE_URL", value = "\"http://wc-eu-central-1-staging-pay-core-541528872.eu-central-1.elb.amazonaws.com\"") //TODO: change to prod
+        buildConfigField(type = "String", name = "CORE_API_BASE_URL", value = "\"https://api.pay.walletconnect.com\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

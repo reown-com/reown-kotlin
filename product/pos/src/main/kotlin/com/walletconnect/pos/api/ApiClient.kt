@@ -25,7 +25,7 @@ internal class ApiClient(
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
-    private val errorAdapter = moshi.adapter(ApiErrorResponse::class.java)
+    private val errorAdapter = moshi.adapter(ApiErrorWrapper::class.java)
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -72,7 +72,7 @@ internal class ApiClient(
 
                 onEvent(
                     Pos.PaymentEvent.PaymentCreated(
-                        uri = URI(data.gatewayUrl.toSandboxUrl()),
+                        uri = URI(data.gatewayUrl),
                         amount = Pos.Amount(unit, value),
                         paymentId = data.paymentId
                     )
@@ -166,22 +166,22 @@ internal class ApiClient(
         }
     }
 
-    private fun <T> parseErrorResponse(response: Response<T>): ApiErrorResponse {
+    private fun <T> parseErrorResponse(response: Response<T>): ApiErrorDetails {
         val errorBody = response.errorBody()?.string()
         return if (errorBody != null) {
             try {
-                errorAdapter.fromJson(errorBody) ?: ApiErrorResponse(
+                errorAdapter.fromJson(errorBody)?.error ?: ApiErrorDetails(
                     code = "HTTP_${response.code()}",
                     message = response.message()
                 )
             } catch (e: Exception) {
-                ApiErrorResponse(
+                ApiErrorDetails(
                     code = "HTTP_${response.code()}",
                     message = response.message()
                 )
             }
         } else {
-            ApiErrorResponse(
+            ApiErrorDetails(
                 code = "HTTP_${response.code()}",
                 message = response.message()
             )
@@ -190,10 +190,5 @@ internal class ApiClient(
 
     private fun String.ensureTrailingSlash(): String {
         return if (endsWith("/")) this else "$this/"
-    }
-
-    // TODO: Remove this when the API returns the correct sandbox URL
-    private fun String.toSandboxUrl(): String {
-        return replace("://pay.walletconnect.com", "://sandbox.pay.walletconnect.com")
     }
 }
