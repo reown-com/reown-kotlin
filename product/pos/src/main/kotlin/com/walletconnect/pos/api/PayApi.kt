@@ -8,9 +8,9 @@ import retrofit2.http.Path
 
 internal interface PayApi {
 
-    @POST("payments")
+    @POST("v1/merchant/payment")
     suspend fun createPayment(@Body request: CreatePaymentRequest): Response<CreatePaymentResponse>
 
-    @GET("payments/{paymentId}/status")
-    suspend fun getPaymentStatus(@Path("paymentId") paymentId: String): Response<GetPaymentStatusResponse>
+    @GET("v1/merchant/payment/{id}/status")
+    suspend fun getPaymentStatus(@Path("id") paymentId: String): Response<GetPaymentStatusResponse>
 }

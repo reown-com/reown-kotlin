@@ -23,6 +23,7 @@ android {
         }
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
+        buildConfigField("String", "MERCHANT_API_KEY", "\"${System.getenv("MERCHANT_API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -69,15 +70,9 @@ android {
 dependencies {
     implementation(project(":sample:common"))
 
-    debugImplementation(project(":core:android"))
     debugImplementation(project(":product:pos"))
-
-    internalImplementation(project(":core:android"))
     internalImplementation(project(":product:pos"))
-
-    releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
-    releaseImplementation("com.reown:android-core")
-    releaseImplementation("com.reown:pos")
+    releaseImplementation("com.walletconnect.pos:0.0.1")
 
     implementation(libs.bundles.accompanist)
 

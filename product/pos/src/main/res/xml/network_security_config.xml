@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext traffic for staging environment TODO: remove for prod infra-->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">wc-eu-central-1-staging-pay-core-541528872.eu-central-1.elb.amazonaws.com</domain>
+    </domain-config>
+</network-security-config>

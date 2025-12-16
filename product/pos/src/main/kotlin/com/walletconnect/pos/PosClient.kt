@@ -23,7 +23,7 @@ object PosClient {
     /**
      * Initializes the POS client with API credentials.
      *
-     * @param apiKey Your WalletConnect Pay API key
+     * @param apiKey Your WalletConnect Pay merchant API key
      * @param merchantId Your merchant identifier
      * @param deviceId Unique identifier for this POS device
      */
@@ -34,7 +34,7 @@ object PosClient {
         check(deviceId.isNotBlank()) { "deviceId cannot be blank" }
         cleanup()
         this.scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        this.apiClient = ApiClient(apiKey, merchantId, deviceId)
+        this.apiClient = ApiClient(apiKey, merchantId)
     }
 
     /**
@@ -77,7 +77,7 @@ object PosClient {
         checkInitialized()
 
         return when (val result = apiClient!!.getPaymentStatus(paymentId)) {
-            is ApiResult.Success -> mapStatusToPaymentEvent(result.data.status, result.data.paymentId)
+            is ApiResult.Success -> mapStatusToPaymentEvent(result.data.status, paymentId)
             is ApiResult.Error -> mapErrorCodeToPaymentError(result.code, result.message)
         }
     }

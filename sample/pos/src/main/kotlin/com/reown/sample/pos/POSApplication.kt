@@ -15,12 +15,12 @@ class POSApplication : Application() {
         }
 
         // Initialize the lightweight POS SDK
-        val apiKey = BuildConfig.PROJECT_ID
         val deviceId = "sample_pos_device_${android.os.Build.MODEL}_${android.os.Build.SERIAL}"
 
         PosClient.init(
-            apiKey = apiKey,
-            deviceId = deviceId
+            apiKey = BuildConfig.MERCHANT_API_KEY,
+            merchantId = "wc_merchant_id_test_1",
+            deviceId = deviceId,
         )
 
         // Set the delegate to receive payment events

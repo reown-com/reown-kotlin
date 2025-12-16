@@ -19,7 +19,6 @@ internal data class CreatePaymentRequest(
 internal data class CreatePaymentResponse(
     @param:Json(name = "paymentId") val paymentId: String,
     @param:Json(name = "status") val status: String,
-    @param:Json(name = "amount") val amount: Amount,
     @param:Json(name = "expiresAt") val expiresAt: Long,
     @param:Json(name = "pollInMs") val pollInMs: Long,
     @param:Json(name = "gatewayUrl") val gatewayUrl: String
@@ -27,9 +26,10 @@ internal data class CreatePaymentResponse(
 
 @JsonClass(generateAdapter = true)
 internal data class GetPaymentStatusResponse(
-    @param:Json(name = "paymentId") val paymentId: String,
+    @param:Json(name = "amount") val amount: Amount,
     @param:Json(name = "status") val status: String,
-    @param:Json(name = "pollInMs") val pollInMs: Long
+    @param:Json(name = "pollInMs") val pollInMs: Long?,
+    @param:Json(name = "isFinal") val isFinal: Boolean
 )
 
 @JsonClass(generateAdapter = true)

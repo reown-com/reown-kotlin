@@ -4,9 +4,11 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.walletconnect.pos.BuildConfig
 import com.walletconnect.pos.Pos
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -17,7 +19,6 @@ import java.util.concurrent.TimeUnit
 internal class ApiClient(
     private val apiKey: String,
     private val merchantId: String,
-    private val deviceId: String,
     baseUrl: String = BuildConfig.CORE_API_BASE_URL
 ) {
     private val moshi = Moshi.Builder()
@@ -27,10 +28,17 @@ internal class ApiClient(
     private val errorAdapter = moshi.adapter(ApiErrorResponse::class.java)
 
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(createHeadersInterceptor())
+        .apply {
+            if (BuildConfig.DEBUG) {
+                addInterceptor(HttpLoggingInterceptor().apply {
+                    level = HttpLoggingInterceptor.Level.BODY
+                })
+            }
+        }
         .build()
 
     private val retrofit = Retrofit.Builder()
@@ -64,8 +72,8 @@ internal class ApiClient(
 
                 onEvent(
                     Pos.PaymentEvent.PaymentCreated(
-                        uri = URI(data.gatewayUrl),
-                        amount = Pos.Amount(data.amount.unit, data.amount.value),
+                        uri = URI(data.gatewayUrl.toSandboxUrl()),
+                        amount = Pos.Amount(unit, value),
                         paymentId = data.paymentId
                     )
                 )
@@ -75,6 +83,9 @@ internal class ApiClient(
                 val error = parseErrorResponse(response)
                 onEvent(mapCreatePaymentError(error.code, error.message))
             }
+        } catch (e: CancellationException) {
+            // Rethrow cancellation to properly propagate coroutine cancellation
+            throw e
         } catch (e: IOException) {
             onEvent(Pos.PaymentEvent.PaymentError.CreatePaymentFailed("Network error: ${e.message}"))
         } catch (e: Exception) {
@@ -90,16 +101,15 @@ internal class ApiClient(
 
         while (true) {
             when (val result = getPaymentStatus(paymentId)) {
-                //TODO: use isFinal to stop polling
                 is ApiResult.Success -> {
                     val data = result.data
 
                     if (data.status != lastEmittedStatus) {
                         lastEmittedStatus = data.status
-                        onEvent(mapStatusToPaymentEvent(data.status, data.paymentId))
+                        onEvent(mapStatusToPaymentEvent(data.status, paymentId))
                     }
 
-                    if (data.pollInMs == 0L) {
+                    if (data.isFinal || data.pollInMs == null) {
                         break
                     }
 
@@ -132,6 +142,9 @@ internal class ApiClient(
                 val error = parseErrorResponse(response)
                 ApiResult.Error(error.code, error.message)
             }
+        } catch (e: CancellationException) {
+            // Rethrow cancellation to properly propagate coroutine cancellation
+            throw e
         } catch (e: IOException) {
             ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
         } catch (e: Exception) {
@@ -142,10 +155,11 @@ internal class ApiClient(
     private fun createHeadersInterceptor(): Interceptor {
         return Interceptor { chain ->
             val request = chain.request().newBuilder()
-                .addHeader("X-Api-Key", apiKey)
-                .addHeader("X-Merchant-Id", merchantId)
-                .addHeader("X-Device-Id", deviceId)
-                .addHeader("X-Sdk-Version", "pos-kotlin-${BuildConfig.SDK_VERSION}")
+                .addHeader("Api-Key", apiKey)
+                .addHeader("Merchant-Id", merchantId)
+                .addHeader("Sdk-Name", "pos-kotlin")
+                .addHeader("Sdk-Version", BuildConfig.SDK_VERSION)
+                .addHeader("Sdk-Platform", "android")
                 .addHeader("Content-Type", "application/json")
                 .build()
             chain.proceed(request)
@@ -176,5 +190,10 @@ internal class ApiClient(
 
     private fun String.ensureTrailingSlash(): String {
         return if (endsWith("/")) this else "$this/"
+    }
+
+    // TODO: Remove this when the API returns the correct sandbox URL
+    private fun String.toSandboxUrl(): String {
+        return replace("://pay.walletconnect.com", "://sandbox.pay.walletconnect.com")
     }
 }

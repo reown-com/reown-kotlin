@@ -70,6 +70,7 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                         }
                     },
                     navigateToErrorScreen = { error ->
+                        println("ERROR: $error")
                         navController.navigate("error?message=${error}") { launchSingleTop = true }
                     }
                 )
