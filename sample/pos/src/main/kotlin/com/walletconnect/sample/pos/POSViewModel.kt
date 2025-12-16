@@ -1,4 +1,4 @@
-package com.reown.sample.pos
+package com.walletconnect.sample.pos
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

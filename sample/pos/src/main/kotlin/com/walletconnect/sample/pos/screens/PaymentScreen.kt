@@ -1,4 +1,4 @@
-package com.reown.sample.pos.screens
+package com.walletconnect.sample.pos.screens
 
 import android.content.res.Resources
 import android.graphics.Bitmap
@@ -21,12 +21,12 @@ import androidx.compose.ui.unit.dp
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
-import com.reown.sample.pos.POSViewModel
-import com.reown.sample.pos.PosEvent
+import com.walletconnect.sample.pos.POSViewModel
+import com.walletconnect.sample.pos.PosEvent
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import com.reown.sample.pos.R
+import com.walletconnect.sample.pos.R
 
 private enum class StepState { Inactive, InProgress, Done }
 

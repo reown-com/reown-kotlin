@@ -1,4 +1,4 @@
-package com.reown.sample.pos.screens
+package com.walletconnect.sample.pos.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.input.KeyboardType
-import com.reown.sample.pos.POSViewModel
+import com.walletconnect.sample.pos.POSViewModel
 
 @Composable
 fun AmountScreen(

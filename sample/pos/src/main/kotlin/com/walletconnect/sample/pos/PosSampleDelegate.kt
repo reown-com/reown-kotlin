@@ -1,4 +1,4 @@
-package com.reown.sample.pos
+package com.walletconnect.sample.pos
 
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.POSDelegate

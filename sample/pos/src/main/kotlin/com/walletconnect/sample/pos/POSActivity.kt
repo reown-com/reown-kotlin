@@ -1,4 +1,4 @@
-package com.reown.sample.pos
+package com.walletconnect.sample.pos
 
 import android.os.Bundle
 import androidx.activity.compose.setContent

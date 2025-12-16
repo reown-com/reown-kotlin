@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "com.reown.sample.pos"
+    namespace = "com.walletconnect.sample.pos"
     compileSdk = COMPILE_SDK
 
     defaultConfig {
-        applicationId = "com.reown.sample.pos"
+        applicationId = "com.walletconnect.sample.pos"
         minSdk = 29
         targetSdk = TARGET_SDK
         versionName = SAMPLE_VERSION_NAME

@@ -1,4 +1,4 @@
-package com.reown.sample.pos.screens
+package com.walletconnect.sample.pos.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

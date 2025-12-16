@@ -1,4 +1,4 @@
-package com.reown.sample.pos
+package com.walletconnect.sample.pos
 
 import android.net.Uri
 import androidx.compose.foundation.layout.padding
@@ -14,10 +14,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.reown.sample.pos.screens.AmountScreen
-import com.reown.sample.pos.screens.ErrorScreen
-import com.reown.sample.pos.screens.PaymentScreen
-import com.reown.sample.pos.screens.StartPaymentScreen
+import com.walletconnect.sample.pos.screens.AmountScreen
+import com.walletconnect.sample.pos.screens.ErrorScreen
+import com.walletconnect.sample.pos.screens.PaymentScreen
+import com.walletconnect.sample.pos.screens.StartPaymentScreen
 
 sealed class Screen(val route: String, val label: String) {
     object StartPaymentScreen : Screen("start", "Home")
