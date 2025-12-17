@@ -118,10 +118,7 @@ internal class ApiClient(
 
                 is ApiResult.Error -> {
                     onEvent(mapErrorCodeToPaymentError(result.code, result.message))
-
-                    if (isTerminalError(result.code) || result.code == ErrorCodes.NETWORK_ERROR) {
-                        break
-                    }
+                    break
                 }
             }
         }

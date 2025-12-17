@@ -2,12 +2,10 @@ package com.walletconnect.pos
 
 import com.walletconnect.pos.api.ErrorCodes
 import com.walletconnect.pos.api.PaymentStatus
-import com.walletconnect.pos.api.isTerminalError
 import com.walletconnect.pos.api.mapCreatePaymentError
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -141,41 +139,6 @@ class MappingTest {
     }
 
     @Test
-    fun `isTerminalError - PAYMENT_NOT_FOUND is terminal`() {
-        assertTrue(isTerminalError(ErrorCodes.PAYMENT_NOT_FOUND))
-    }
-
-    @Test
-    fun `isTerminalError - PAYMENT_EXPIRED is terminal`() {
-        assertTrue(isTerminalError(ErrorCodes.PAYMENT_EXPIRED))
-    }
-
-    @Test
-    fun `isTerminalError - INVALID_REQUEST is terminal`() {
-        assertTrue(isTerminalError(ErrorCodes.INVALID_REQUEST))
-    }
-
-    @Test
-    fun `isTerminalError - COMPLIANCE_FAILED is terminal`() {
-        assertTrue(isTerminalError(ErrorCodes.COMPLIANCE_FAILED))
-    }
-
-    @Test
-    fun `isTerminalError - unknown error is not terminal`() {
-        assertFalse(isTerminalError("UNKNOWN_ERROR"))
-    }
-
-    @Test
-    fun `isTerminalError - NETWORK_ERROR is not terminal`() {
-        assertFalse(isTerminalError("NETWORK_ERROR"))
-    }
-
-    @Test
-    fun `isTerminalError - empty string is not terminal`() {
-        assertFalse(isTerminalError(""))
-    }
-
-    @Test
     fun `Amount format - USD formats correctly`() {
         val amount = Pos.Amount("iso4217/USD", "1000")
         assertEquals("10.00 USD", amount.format())
@@ -205,10 +168,10 @@ class MappingTest {
         assertEquals("10000.00 USD", amount.format())
     }
 
-    @Test
-    fun `Amount format - handles invalid value gracefully`() {
+    @Test(expected = IllegalStateException::class)
+    fun `Amount format - throws exception for invalid value`() {
         val amount = Pos.Amount("iso4217/USD", "invalid")
-        assertEquals("0.00 USD", amount.format())
+        amount.format()
     }
 
     @Test

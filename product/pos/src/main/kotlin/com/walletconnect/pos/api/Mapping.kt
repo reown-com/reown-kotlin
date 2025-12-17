@@ -28,12 +28,3 @@ internal fun mapStatusToPaymentEvent(status: String, paymentId: String): Pos.Pay
         else -> Pos.PaymentEvent.PaymentError.Undefined("Unknown payment status: $status")
     }
 }
-
-internal fun isTerminalError(code: String): Boolean {
-    return code in listOf(
-        ErrorCodes.PAYMENT_NOT_FOUND,
-        ErrorCodes.PAYMENT_EXPIRED,
-        ErrorCodes.INVALID_REQUEST,
-        ErrorCodes.COMPLIANCE_FAILED
-    )
-}

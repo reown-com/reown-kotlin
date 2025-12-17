@@ -11,7 +11,8 @@ object Pos {
 
         fun format(): String {
             val currency = unit.substringAfter("/", "")
-            val majorUnits = (value.toLongOrNull() ?: 0L) / 100.0
+            val amount = value.toLongOrNull() ?: throw IllegalStateException("Invalid amount value: $value")
+            val majorUnits = amount / 100.0
             return String.format("%.2f %s", majorUnits, currency)
         }
     }
