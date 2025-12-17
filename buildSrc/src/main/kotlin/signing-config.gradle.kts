@@ -1,5 +1,5 @@
-import com.android.build.gradle.BaseExtension
 import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
+import com.android.build.gradle.BaseExtension
 import java.util.Properties
 
 plugins {
