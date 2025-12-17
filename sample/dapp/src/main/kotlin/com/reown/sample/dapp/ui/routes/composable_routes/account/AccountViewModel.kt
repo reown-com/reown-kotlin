@@ -55,7 +55,7 @@ class AccountViewModel(
                             is Modal.Model.JsonRpcResponse.JsonRpcResult -> {
                                 _awaitResponse.value = false
                                 val successResult = (walletEvent.result as Modal.Model.JsonRpcResponse.JsonRpcResult)
-                                DappSampleEvents.RequestSuccess(successResult.result ?: "No result")
+                                DappSampleEvents.RequestSuccess((successResult.result ?: "No result") as String)
                             }
 
                             is Modal.Model.JsonRpcResponse.JsonRpcError -> {
