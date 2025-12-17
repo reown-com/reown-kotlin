@@ -2,17 +2,21 @@ import org.gradle.api.JavaVersion
 
 const val KEY_PUBLISH_VERSION = "PUBLISH_VERSION"
 const val KEY_PUBLISH_ARTIFACT_ID = "PUBLISH_ARTIFACT_ID"
+const val KEY_PUBLISH_GROUP = "PUBLISH_GROUP"
 const val KEY_SDK_NAME = "SDK_NAME"
 
+const val DEFAULT_PUBLISH_GROUP = "com.reown"
+
 //Latest versions
-const val BOM_VERSION = "1.5.1"
-const val FOUNDATION_VERSION = "1.5.1"
-const val CORE_VERSION = "1.5.1"
-const val SIGN_VERSION = "1.5.1"
-const val NOTIFY_VERSION = "1.5.1"
-const val WALLETKIT_VERSION = "1.5.1"
-const val APPKIT_VERSION = "1.5.1"
-const val MODAL_CORE_VERSION = "1.5.1"
+const val BOM_VERSION = "1.5.2"
+const val FOUNDATION_VERSION = "1.5.2"
+const val CORE_VERSION = "1.5.2"
+const val SIGN_VERSION = "1.5.2"
+const val NOTIFY_VERSION = "1.5.2"
+const val WALLETKIT_VERSION = "1.5.2"
+const val APPKIT_VERSION = "1.5.2"
+const val MODAL_CORE_VERSION = "1.5.2"
+const val POS_VERSION = "0.0.1"
 
 //Artifact ids
 const val ANDROID_BOM = "android-bom"
@@ -23,6 +27,7 @@ const val NOTIFY = "notify"
 const val WALLETKIT = "walletkit"
 const val APPKIT = "appkit"
 const val MODAL_CORE = "modal-core"
+const val POS = "pos"
 
 val jvmVersion = JavaVersion.VERSION_11
 const val MIN_SDK: Int = 23

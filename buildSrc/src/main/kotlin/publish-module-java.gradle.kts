@@ -32,7 +32,7 @@ afterEvaluate {
                     from(components["javaPlatform"])
                 }
 
-                groupId = "com.reown"
+                groupId = extra.properties[KEY_PUBLISH_GROUP]?.toString() ?: DEFAULT_PUBLISH_GROUP
                 artifactId = requireNotNull(extra.get(KEY_PUBLISH_ARTIFACT_ID)).toString()
                 version = requireNotNull(extra.get(KEY_PUBLISH_VERSION)).toString()
 
