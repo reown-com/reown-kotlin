@@ -38,6 +38,8 @@ android {
 }
 
 dependencies {
+    implementation("com.github.reown-com:yttrium-wcpay:unspecified")
+
     implementation(libs.androidx.core)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.material)
