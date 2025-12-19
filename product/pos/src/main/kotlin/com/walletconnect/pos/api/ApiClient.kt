@@ -20,6 +20,7 @@ internal class ApiClient(
     private val apiKey: String,
     private val merchantId: String,
     private val eventTracker: EventTracker,
+    private val errorTracker: ErrorTracker,
     baseUrl: String = BuildConfig.CORE_API_BASE_URL
 ) {
     private val moshi = Moshi.Builder()
@@ -97,12 +98,14 @@ internal class ApiClient(
             // Rethrow cancellation to properly propagate coroutine cancellation
             throw e
         } catch (e: IOException) {
+            // SDK error - track via Pulse, not Ingest
+            errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "createPayment")
             val paymentError = Pos.PaymentEvent.PaymentError.CreatePaymentFailed("Network error: ${e.message}")
-            eventTracker.trackPaymentFailed(referenceId, null, paymentError)
             onEvent(paymentError)
         } catch (e: Exception) {
+            // SDK error - track via Pulse, not Ingest
+            errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "createPayment")
             val paymentError = Pos.PaymentEvent.PaymentError.Undefined("Unexpected error: ${e.message}")
-            eventTracker.trackPaymentFailed(referenceId, null, paymentError)
             onEvent(paymentError)
         }
     }
@@ -135,7 +138,10 @@ internal class ApiClient(
 
                 is ApiResult.Error -> {
                     val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
-                    eventTracker.trackPaymentFailed(paymentId, context, paymentError)
+                    // Only track API-reported failures via Ingest, not SDK errors (already tracked via Pulse)
+                    if (!isSdkError(result.code)) {
+                        eventTracker.trackPaymentFailed(paymentId, context, paymentError)
+                    }
                     onEvent(paymentError)
                     break
                 }
@@ -180,8 +186,12 @@ internal class ApiClient(
             // Rethrow cancellation to properly propagate coroutine cancellation
             throw e
         } catch (e: IOException) {
+            // SDK error - track via Pulse
+            errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "getPaymentStatus")
             ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
         } catch (e: Exception) {
+            // SDK error - track via Pulse
+            errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "getPaymentStatus")
             ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
         }
     }
@@ -209,6 +219,7 @@ internal class ApiClient(
                     message = response.message()
                 )
             } catch (e: Exception) {
+                errorTracker.trackError(PulseErrorType.PARSE_ERROR, e.message ?: "Failed to parse error response", "parseErrorResponse")
                 ApiErrorDetails(
                     code = "HTTP_${response.code()}",
                     message = response.message()
@@ -220,6 +231,10 @@ internal class ApiClient(
                 message = response.message()
             )
         }
+    }
+
+    private fun isSdkError(code: String): Boolean {
+        return code == ErrorCodes.NETWORK_ERROR || code == ErrorCodes.PARSE_ERROR
     }
 
     private fun String.ensureTrailingSlash(): String {

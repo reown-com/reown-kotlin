@@ -2,6 +2,7 @@ package com.walletconnect.pos
 
 import com.walletconnect.pos.api.ApiClient
 import com.walletconnect.pos.api.ApiResult
+import com.walletconnect.pos.api.ErrorTracker
 import com.walletconnect.pos.api.EventTracker
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
@@ -19,6 +20,7 @@ object PosClient {
     private var delegate: POSDelegate? = null
     private var apiClient: ApiClient? = null
     private var eventTracker: EventTracker? = null
+    private var errorTracker: ErrorTracker? = null
     private var scope: CoroutineScope? = null
     private var currentPollingJob: Job? = null
 
@@ -38,7 +40,8 @@ object PosClient {
         val newScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         this.scope = newScope
         this.eventTracker = EventTracker(merchantId, newScope)
-        this.apiClient = ApiClient(apiKey, merchantId, eventTracker!!)
+        this.errorTracker = ErrorTracker(newScope)
+        this.apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!)
     }
 
     /**
@@ -125,5 +128,6 @@ object PosClient {
         scope = null
         apiClient = null
         eventTracker = null
+        errorTracker = null
     }
 }
