@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit
 internal class ApiClient(
     private val apiKey: String,
     private val merchantId: String,
+    private val eventTracker: EventTracker,
     baseUrl: String = BuildConfig.CORE_API_BASE_URL
 ) {
     private val moshi = Moshi.Builder()
@@ -70,31 +71,45 @@ internal class ApiClient(
                     return
                 }
 
-                onEvent(
-                    Pos.PaymentEvent.PaymentCreated(
-                        uri = URI(data.gatewayUrl),
-                        amount = Pos.Amount(unit, value),
-                        paymentId = data.paymentId
-                    )
+                val paymentCreatedEvent = Pos.PaymentEvent.PaymentCreated(
+                    uri = URI(data.gatewayUrl),
+                    amount = Pos.Amount(unit, value),
+                    paymentId = data.paymentId
                 )
+                val valueMinor = value.toLongOrNull() ?: 0L
+                val context = PaymentContext(
+                    paymentUrl = data.gatewayUrl,
+                    unit = unit,
+                    valueMinor = valueMinor,
+                    referenceId = referenceId.ifBlank { null }
+                )
+                eventTracker.trackPaymentCreated(data.paymentId, context)
+                onEvent(paymentCreatedEvent)
 
-                startPolling(data.paymentId, onEvent)
+                startPolling(data.paymentId, context, onEvent)
             } else {
                 val error = parseErrorResponse(response)
-                onEvent(mapCreatePaymentError(error.code, error.message))
+                val paymentError = mapCreatePaymentError(error.code, error.message)
+                eventTracker.trackPaymentFailed(referenceId, null, paymentError)
+                onEvent(paymentError)
             }
         } catch (e: CancellationException) {
             // Rethrow cancellation to properly propagate coroutine cancellation
             throw e
         } catch (e: IOException) {
-            onEvent(Pos.PaymentEvent.PaymentError.CreatePaymentFailed("Network error: ${e.message}"))
+            val paymentError = Pos.PaymentEvent.PaymentError.CreatePaymentFailed("Network error: ${e.message}")
+            eventTracker.trackPaymentFailed(referenceId, null, paymentError)
+            onEvent(paymentError)
         } catch (e: Exception) {
-            onEvent(Pos.PaymentEvent.PaymentError.Undefined("Unexpected error: ${e.message}"))
+            val paymentError = Pos.PaymentEvent.PaymentError.Undefined("Unexpected error: ${e.message}")
+            eventTracker.trackPaymentFailed(referenceId, null, paymentError)
+            onEvent(paymentError)
         }
     }
 
     private suspend fun startPolling(
         paymentId: String,
+        context: PaymentContext,
         onEvent: (Pos.PaymentEvent) -> Unit
     ) {
         var lastEmittedStatus: String? = null
@@ -106,7 +121,9 @@ internal class ApiClient(
 
                     if (data.status != lastEmittedStatus) {
                         lastEmittedStatus = data.status
-                        onEvent(mapStatusToPaymentEvent(data.status, paymentId))
+                        val event = mapStatusToPaymentEvent(data.status, paymentId)
+                        trackPaymentStatusEvent(paymentId, context, data.status, event)
+                        onEvent(event)
                     }
 
                     if (data.isFinal || data.pollInMs == null) {
@@ -117,8 +134,28 @@ internal class ApiClient(
                 }
 
                 is ApiResult.Error -> {
-                    onEvent(mapErrorCodeToPaymentError(result.code, result.message))
+                    val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
+                    eventTracker.trackPaymentFailed(paymentId, context, paymentError)
+                    onEvent(paymentError)
                     break
+                }
+            }
+        }
+    }
+
+    private fun trackPaymentStatusEvent(
+        paymentId: String,
+        context: PaymentContext,
+        status: String,
+        event: Pos.PaymentEvent
+    ) {
+        when (status) {
+            PaymentStatus.REQUIRES_ACTION -> eventTracker.trackPaymentRequested(paymentId, context)
+            PaymentStatus.PROCESSING -> eventTracker.trackPaymentProcessing(paymentId, context)
+            PaymentStatus.SUCCEEDED -> eventTracker.trackPaymentCompleted(paymentId, context)
+            PaymentStatus.EXPIRED, PaymentStatus.FAILED -> {
+                if (event is Pos.PaymentEvent.PaymentError) {
+                    eventTracker.trackPaymentFailed(paymentId, context, event)
                 }
             }
         }

@@ -30,7 +30,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField(type = "String", name = "INGEST_BASE_URL", value = "\"https://ingest-staging.walletconnect.org/\"")
+        }
         release {
+            buildConfigField(type = "String", name = "INGEST_BASE_URL", value = "\"https://ingest.walletconnect.org/\"")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
