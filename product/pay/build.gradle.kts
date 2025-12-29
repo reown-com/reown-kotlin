@@ -13,7 +13,7 @@ project.apply {
 
 android {
     namespace = "com.walletconnect.pay"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 23
@@ -39,6 +39,9 @@ android {
 
 dependencies {
     implementation("com.github.reown-com:yttrium-wcpay:unspecified")
+    
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.coroutines)
 
     implementation(libs.androidx.core)
     implementation(libs.androidx.appCompat)

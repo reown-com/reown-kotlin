@@ -170,12 +170,14 @@ dependencies {
     }
     debugImplementation(project(":product:walletkit"))
     debugImplementation(project(":protocol:notify"))
+    debugImplementation(project(":product:pay"))
 
     internalImplementation(project(":core:android")) {
         exclude(group = "com.github.reown-com", module = "yttrium")
     }
     internalImplementation(project(":product:walletkit"))
     internalImplementation(project(":protocol:notify"))
+    internalImplementation(project(":product:pay"))
 
     releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
     releaseImplementation("com.reown:android-core")

@@ -181,6 +181,15 @@ class WalletKitActivity : AppCompatActivity() {
                 }
             }
             .launchIn(lifecycleScope)
+        
+        // Handle payment events from QR code scanning
+        web3walletViewModel.paymentEventFlow
+            .onEach { paymentId ->
+                navigateWhenReady {
+                    navController.navigate("${Route.Payment.path}/$paymentId")
+                }
+            }
+            .launchIn(lifecycleScope)
     }
 
     private suspend fun navigateWhenReady(navigate: () -> Unit) {
@@ -193,26 +202,43 @@ class WalletKitActivity : AppCompatActivity() {
     }
 
     private fun handleAppLink(intent: Intent?) {
-        if (intent?.dataString?.contains("wc_ev") == true) {
-            WalletKit.dispatchEnvelope(intent.dataString ?: "") {
+        val dataString = intent?.dataString
+
+        println("kobe: deeplink: $dataString")
+        
+        // Check for WalletConnect Pay URL: https://pay.walletconnect.com/pay_<paymentId>
+        if (dataString != null && isPaymentUrl(dataString)) {
+            val paymentId = extractPaymentId(dataString)
+            if (paymentId != null) {
+                lifecycleScope.launch {
+                    navigateWhenReady {
+                        navController.navigate("${Route.Payment.path}/$paymentId")
+                    }
+                }
+                return
+            }
+        }
+        
+        if (dataString?.contains("wc_ev") == true) {
+            WalletKit.dispatchEnvelope(dataString) {
                 lifecycleScope.launch(Dispatchers.Main) {
                     Toast.makeText(this@WalletKitActivity, "Error dispatching envelope: ${it.throwable.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
             when {
-                intent?.dataString?.startsWith("kotlin-web3wallet:/wc") == true -> {
-                    val uri = intent.dataString?.replace("kotlin-web3wallet:/wc", "kotlin-web3wallet://wc")
-                    intent.setData(uri?.toUri())
+                dataString?.startsWith("kotlin-web3wallet:/wc") == true -> {
+                    val uri = dataString.replace("kotlin-web3wallet:/wc", "kotlin-web3wallet://wc")
+                    intent.data = uri.toUri()
                 }
 
-                intent?.dataString?.startsWith("wc:") == true && intent.dataString?.contains("requestId") == false -> {
-                    val uri = "kotlin-web3wallet://wc?uri=" + URLEncoder.encode(intent.dataString, "UTF-8")
-                    intent.setData(uri.toUri())
+                dataString?.startsWith("wc:") == true && !dataString.contains("requestId") -> {
+                    val uri = "kotlin-web3wallet://wc?uri=" + URLEncoder.encode(dataString, "UTF-8")
+                    intent.data = uri.toUri()
                 }
             }
 
-            if (intent?.dataString?.startsWith("kotlin-web3wallet://request") == true || intent?.dataString?.contains("requestId") == true) {
+            if (dataString?.startsWith("kotlin-web3wallet://request") == true || dataString?.contains("requestId") == true) {
                 lifecycleScope.launch {
                     navigateWhenReady {
                         if (navController.currentDestination?.route != Route.SessionRequest.path) {
@@ -222,15 +248,44 @@ class WalletKitActivity : AppCompatActivity() {
                 }
             }
 
-            if (intent?.dataString?.startsWith("kotlin-web3wallet://request") == false && intent.dataString?.contains("requestId") == false
+            if (dataString?.startsWith("kotlin-web3wallet://request") == false && !dataString.contains("requestId")
             ) {
                 lifecycleScope.launch {
                     navigateWhenReady {
-                        web3walletViewModel.pair(intent.dataString.toString())
+                        web3walletViewModel.pair(dataString)
                     }
                 }
             }
         }
+    }
+    
+    /**
+     * Check if URL is a WalletConnect Pay URL.
+     * Supported formats:
+     * - https://pay.walletconnect.com/pay_<paymentId>
+     * - https://gateway-wc.vercel.app/v1/<uuid>
+     */
+    private fun isPaymentUrl(url: String): Boolean {
+        return url.contains("pay.walletconnect.com/pay_") ||
+               url.contains("gateway-wc.vercel.app/v1/")
+    }
+    
+    /**
+     * Extract payment ID from WalletConnect Pay URL.
+     * Supported formats:
+     * - https://pay.walletconnect.com/pay_<paymentId>
+     * - https://gateway-wc.vercel.app/v1/<uuid>
+     */
+    private fun extractPaymentId(url: String): String? {
+        // Try pay.walletconnect.com format: pay_<id>
+        val payRegex = Regex("pay\\.walletconnect\\.com/(pay_[a-zA-Z0-9]+)")
+        payRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
+        
+        // Try gateway-wc.vercel.app format: /v1/<uuid>
+        val gatewayRegex = Regex("gateway-wc\\.vercel\\.app/v1/([a-fA-F0-9\\-]+)")
+        gatewayRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
+        
+        return null
     }
 
     private fun setBeagle() {
@@ -383,3 +438,4 @@ class WalletKitActivity : AppCompatActivity() {
         }
     }
 }
+

@@ -35,6 +35,8 @@ import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.reown.sample.wallet.domain.client.SuiUtils
+import com.walletconnect.pay.Pay
+import com.walletconnect.pay.WalletConnectPay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -65,6 +67,17 @@ class WalletKitApplication : Application() {
         TONClient.init(this.packageName)
 
         SmartAccountEnabler.init(this)
+
+        // Initialize WalletConnectPay
+        WalletConnectPay.initialize(
+            Pay.SdkConfig(
+                baseUrl = "https://api.pay.walletconnect.com",
+                apiKey = "",
+                sdkName = "kotlin-walletconnect-pay",
+                sdkVersion = BuildConfig.BOM_VERSION,
+                sdkPlatform = "android"
+            )
+        )
 
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Wallet",

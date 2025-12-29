@@ -35,6 +35,9 @@ class Web3WalletViewModel : ViewModel() {
 
     private val _eventsSharedFlow: MutableSharedFlow<PairingEvent> = MutableSharedFlow()
     val eventsSharedFlow = _eventsSharedFlow.asSharedFlow()
+    
+    private val _paymentEventFlow: MutableSharedFlow<String> = MutableSharedFlow()
+    val paymentEventFlow = _paymentEventFlow.asSharedFlow()
 
     private val _isLoadingFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isLoadingFlow = _isLoadingFlow.asSharedFlow()
@@ -152,6 +155,17 @@ class Web3WalletViewModel : ViewModel() {
     }
 
     fun pair(pairingUri: String) {
+        println("kobe: pairingUri: $pairingUri")
+        
+        // Check if this is a payment URL
+        val paymentId = extractPaymentId(pairingUri)
+        if (paymentId != null) {
+            viewModelScope.launch {
+                _paymentEventFlow.emit(paymentId)
+            }
+            return
+        }
+
         _isLoadingFlow.value = true
 
         try {
@@ -170,5 +184,23 @@ class Web3WalletViewModel : ViewModel() {
                 _eventsSharedFlow.emit(PairingEvent.Error(e.message ?: "Unexpected error happened, please contact support"))
             }
         }
+    }
+    
+    /**
+     * Check if URL is a WalletConnect Pay URL and extract payment ID.
+     * Supported formats:
+     * - https://pay.walletconnect.com/pay_<paymentId>
+     * - https://gateway-wc.vercel.app/v1/<uuid>
+     */
+    private fun extractPaymentId(url: String): String? {
+        // Try pay.walletconnect.com format: pay_<id>
+        val payRegex = Regex("pay\\.walletconnect\\.com/(pay_[a-zA-Z0-9]+)")
+        payRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
+        
+        // Try gateway-wc.vercel.app format: /v1/<uuid>
+        val gatewayRegex = Regex("gateway-wc\\.vercel\\.app/v1/([a-fA-F0-9\\-]+)")
+        gatewayRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
+        
+        return null
     }
 }
