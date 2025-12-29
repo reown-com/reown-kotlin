@@ -40,10 +40,6 @@ internal data class PaymentAmountPayload(
     @param:Json(name = "value_minor") val valueMinor: Long
 )
 
-/**
- * Holds payment context for event tracking.
- * Stored when payment is created and reused for subsequent events.
- */
 internal data class PaymentContext(
     val paymentUrl: String,
     val unit: String,
@@ -51,7 +47,12 @@ internal data class PaymentContext(
     val referenceId: String?
 ) {
     fun toEventPayload(): EventPayload {
-        val currency = unit.substringAfter("/", "")
+        val currency =  if (unit.contains("/")) {
+            unit.substringAfter("/")
+        } else {
+            unit
+        }
+
         val displayAmount = valueMinor / 100.0
         return EventPayload(
             paymentUrl = paymentUrl,

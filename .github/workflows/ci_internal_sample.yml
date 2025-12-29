@@ -19,7 +19,7 @@ jobs:
         conf: [
           { name: wallet, command: ":sample:wallet:assembleInternal :sample:wallet:appDistributionUploadInternal" },
           { name: dapp, command: ":sample:dapp:assembleInternal :sample:dapp:appDistributionUploadInternal" },
-          { name: modal, command: ":sample:modal:assembleInternal :sample:modal:appDistributionUploadInternal" }
+          { name: modal, command: ":sample:modal:assembleInternal :sample:modal:appDistributionUploadInternal" },
           { name: pos, command: ":sample:pos:assembleInternal" }
         ]
     name: ${{ matrix.conf.name }}

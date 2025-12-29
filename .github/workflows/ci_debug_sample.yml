@@ -10,7 +10,7 @@ jobs:
         conf: [
           { name: wallet, command: ":sample:wallet:assembleDebug :sample:wallet:appDistributionUploadDebug" },
           { name: dapp, command: ":sample:dapp:assembleDebug :sample:dapp:appDistributionUploadDebug" },
-          { name: modal, command: ":sample:modal:assembleDebug :sample:modal:appDistributionUploadDebug" }
+          { name: modal, command: ":sample:modal:assembleDebug :sample:modal:appDistributionUploadDebug" },
           { name: pos, command: ":sample:pos:assembleDebug" }
         ]
     name: ${{ matrix.conf.name }}

@@ -14,6 +14,8 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.text.SimpleDateFormat
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -50,8 +52,10 @@ internal class EventTracker(
 
     private val ingestApi: IngestApi = retrofit.create(IngestApi::class.java)
 
-    private val isoDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
-        timeZone = TimeZone.getTimeZone("UTC")
+    private fun isoDateFormat(): String {
+        return SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }.format(Date())
     }
 
     private val silentExceptionHandler = CoroutineExceptionHandler { _, t -> println(t) }
@@ -61,11 +65,6 @@ internal class EventTracker(
         private val RETRY_DELAYS_MS = listOf(1000L, 3000L, 5000L)
     }
 
-    /**
-     * Track wc_pay_selected event.
-     * Called at the start of createPaymentIntent, before payment is created.
-     * Has amount and referenceId but no payment_url yet.
-     */
     fun trackWcPaySelected(referenceId: String, unit: String, valueMinor: Long) {
         val currency = unit.substringAfter("/", "")
         val displayAmount = valueMinor / 100.0
@@ -78,51 +77,27 @@ internal class EventTracker(
         sendEvent(referenceId, EventType.WC_PAY_SELECTED, payload)
     }
 
-    /**
-     * Track payment_created event.
-     * Called after successful payment creation.
-     */
     fun trackPaymentCreated(paymentId: String, context: PaymentContext) {
         sendEvent(paymentId, EventType.PAYMENT_CREATED, context.toEventPayload())
     }
 
-    /**
-     * Track payment_requested event.
-     * Called when payment status changes to requires_action.
-     */
     fun trackPaymentRequested(paymentId: String, context: PaymentContext) {
         sendEvent(paymentId, EventType.PAYMENT_REQUESTED, context.toEventPayload())
     }
 
-    /**
-     * Track payment_processing event.
-     * Called when payment status changes to processing.
-     */
     fun trackPaymentProcessing(paymentId: String, context: PaymentContext) {
         sendEvent(paymentId, EventType.PAYMENT_PROCESSING, context.toEventPayload())
     }
 
-    /**
-     * Track payment_completed event.
-     * Called when payment succeeds.
-     */
     fun trackPaymentCompleted(paymentId: String, context: PaymentContext) {
         sendEvent(paymentId, EventType.PAYMENT_COMPLETED, context.toEventPayload())
     }
 
-    /**
-     * Track payment_failed event with error details.
-     * Called when payment fails.
-     */
     fun trackPaymentFailed(paymentId: String, context: PaymentContext?, error: Pos.PaymentEvent.PaymentError) {
         val payload = context?.toErrorEventPayload(error) ?: error.toErrorPayload()
         sendEvent(paymentId, EventType.PAYMENT_FAILED, payload)
     }
 
-    /**
-     * Sends an event asynchronously without blocking the caller.
-     * Any failures are silently ignored to ensure the payment flow is never affected.
-     */
     private fun sendEvent(
         paymentId: String,
         eventType: String,
@@ -134,7 +109,7 @@ internal class EventTracker(
                 eventId = eventId,
                 paymentId = paymentId,
                 eventType = eventType,
-                timestamp = isoDateFormat.format(Date()),
+                timestamp = isoDateFormat(),
                 sdkName = "pos-kotlin",
                 sdkVersion = BuildConfig.SDK_VERSION,
                 merchantId = merchantId,
@@ -156,19 +131,16 @@ internal class EventTracker(
             try {
                 val response = ingestApi.sendEvent(request)
                 if (response.isSuccessful) {
-                    return // Success, exit
+                    return
                 }
-                // Non-success HTTP response, retry
             } catch (_: Exception) {
                 // Network or other error, retry silently
             }
 
-            // Delay before next retry (except after last attempt)
             if (attempt < MAX_RETRIES - 1) {
                 delay(RETRY_DELAYS_MS[attempt])
             }
         }
-        // After 3 retries, event is lost - silent failure as per requirements
     }
 
     private fun String.ensureTrailingSlash(): String {
