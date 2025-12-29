@@ -19,7 +19,8 @@ jobs:
         conf: [
           { name: wallet, command: ":sample:wallet:assembleInternal :sample:wallet:appDistributionUploadInternal" },
           { name: dapp, command: ":sample:dapp:assembleInternal :sample:dapp:appDistributionUploadInternal" },
-          { name: modal, command: ":sample:modal:assembleInternal :sample:modal:appDistributionUploadInternal" }
+          { name: modal, command: ":sample:modal:assembleInternal :sample:modal:appDistributionUploadInternal" },
+          { name: pos, command: ":sample:pos:assembleInternal" }
         ]
     name: ${{ matrix.conf.name }}
     runs-on: ubuntu-latest
@@ -60,6 +61,7 @@ jobs:
       - name: Release sample - Internal
         env:
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
+          POS_PROJECT_ID: ${{ secrets.POS_PROJECT_ID }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
