@@ -11,6 +11,7 @@ jobs:
           { name: wallet, command: ":sample:wallet:assembleDebug :sample:wallet:appDistributionUploadDebug" },
           { name: dapp, command: ":sample:dapp:assembleDebug :sample:dapp:appDistributionUploadDebug" },
           { name: modal, command: ":sample:modal:assembleDebug :sample:modal:appDistributionUploadDebug" }
+          { name: pos, command: ":sample:pos:assembleDebug" }
         ]
     name: ${{ matrix.conf.name }}
     runs-on: ubuntu-latest
@@ -51,6 +52,7 @@ jobs:
       - name: Release sample - Debug
         env:
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
+          POS_PROJECT_ID: ${{ secrets.POS_PROJECT_ID }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}

@@ -98,12 +98,10 @@ internal class ApiClient(
             // Rethrow cancellation to properly propagate coroutine cancellation
             throw e
         } catch (e: IOException) {
-            // SDK error - track via Pulse, not Ingest
             errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "createPayment")
             val paymentError = Pos.PaymentEvent.PaymentError.CreatePaymentFailed("Network error: ${e.message}")
             onEvent(paymentError)
         } catch (e: Exception) {
-            // SDK error - track via Pulse, not Ingest
             errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "createPayment")
             val paymentError = Pos.PaymentEvent.PaymentError.Undefined("Unexpected error: ${e.message}")
             onEvent(paymentError)
@@ -138,7 +136,6 @@ internal class ApiClient(
 
                 is ApiResult.Error -> {
                     val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
-                    // Only track API-reported failures via Ingest, not SDK errors (already tracked via Pulse)
                     if (!isSdkError(result.code)) {
                         eventTracker.trackPaymentFailed(paymentId, context, paymentError)
                     }
@@ -186,11 +183,9 @@ internal class ApiClient(
             // Rethrow cancellation to properly propagate coroutine cancellation
             throw e
         } catch (e: IOException) {
-            // SDK error - track via Pulse
             errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "getPaymentStatus")
             ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
         } catch (e: Exception) {
-            // SDK error - track via Pulse
             errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "getPaymentStatus")
             ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
         }

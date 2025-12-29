@@ -52,13 +52,6 @@ internal class ErrorTracker(
         private const val SDK_TYPE = "pos"
     }
 
-    /**
-     * Track an SDK error for debugging purposes.
-     *
-     * @param type The error type (e.g., NETWORK_ERROR, PARSE_ERROR, SDK_ERROR)
-     * @param message The error message (no stack traces)
-     * @param method The method where the error occurred (e.g., "createPayment", "getPaymentStatus")
-     */
     fun trackError(type: String, message: String, method: String) {
         try {
             val event = PulseEvent(
@@ -73,7 +66,6 @@ internal class ErrorTracker(
                 )
             )
 
-            // Fire-and-forget: launch on IO dispatcher with silent exception handling
             scope.launch(Dispatchers.IO + silentExceptionHandler) {
                 sendWithRetry(event)
             }
@@ -93,19 +85,16 @@ internal class ErrorTracker(
                     body = event
                 )
                 if (response.isSuccessful) {
-                    return // Success, exit
+                    return
                 }
-                // Non-success HTTP response, retry
             } catch (_: Exception) {
                 // Network or other error, retry silently
             }
 
-            // Delay before next retry (except after last attempt)
             if (attempt < MAX_RETRIES - 1) {
                 delay(RETRY_DELAYS_MS[attempt])
             }
         }
-        // After 3 retries, error is lost - silent failure
     }
 
     private fun String.ensureTrailingSlash(): String {
