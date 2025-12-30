@@ -18,12 +18,12 @@ object TONClient {
     fun init(packageName: String) {
         val config = TonClientConfig(TONAccountDelegate.mainnet)
 
-        registerLogger(object : Logger {
-            override fun log(message: String) {
-                println("From Yttrium: $message")
-            }
-
-        })
+//        registerLogger(object : Logger {
+//            override fun log(message: String) {
+//                println("From Yttrium: $message")
+//            }
+//
+//        })
 
         //mainnet: -239
         //testnet: -3

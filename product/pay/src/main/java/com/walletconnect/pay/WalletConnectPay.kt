@@ -2,6 +2,8 @@ package com.walletconnect.pay
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import uniffi.yttrium_wcpay.Logger
+import uniffi.yttrium_wcpay.registerLogger
 import uniffi.yttrium_wcpay.WalletConnectPay as YttriumWalletConnectPay
 import uniffi.yttrium_wcpay.SdkConfig as YttriumSdkConfig
 
@@ -9,6 +11,12 @@ import uniffi.yttrium_wcpay.SdkConfig as YttriumSdkConfig
  * WalletConnectPay SDK client for handling payments.
  */
 object WalletConnectPay {
+
+    class AndroidLogger : Logger {
+        override fun log(message: String) {
+            println("dupa: $message")
+        }
+    }
 
     private var client: YttriumWalletConnectPay? = null
 
@@ -21,6 +29,8 @@ object WalletConnectPay {
     @Throws(IllegalStateException::class)
     fun initialize(config: Pay.SdkConfig) {
         check(client == null) { "WalletConnectPay is already initialized" }
+
+        registerLogger(AndroidLogger())
 
         val yttriumConfig = YttriumSdkConfig(
             baseUrl = config.baseUrl,
