@@ -20,14 +20,15 @@ class PaymentViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<PaymentUiState>(PaymentUiState.Loading)
     val uiState: StateFlow<PaymentUiState> = _uiState.asStateFlow()
 
-    private var currentPaymentId: String? = null
+    private var currentPaymentLink: String? = null
     private var selectedOptionId: String? = null
 
     /**
-     * Load payment options for the given payment ID.
+     * Load payment options for the given payment link.
+     * The payment ID is extracted internally from the link.
      */
-    fun loadPaymentOptions(paymentId: String) {
-        currentPaymentId = paymentId
+    fun loadPaymentOptions(paymentLink: String) {
+        currentPaymentLink = paymentLink
         _uiState.value = PaymentUiState.Loading
 
         viewModelScope.launch {
@@ -38,7 +39,10 @@ class PaymentViewModel : ViewModel() {
                 "eip155:8453:${EthAccountDelegate.address}"
             )
 
-            val result = WalletConnectPay.getPaymentOptions(paymentId, accounts)
+            val result = WalletConnectPay.getPaymentOptions(
+                paymentLink = paymentLink,
+                accounts = accounts,
+            )
 
             println("kobe: Options Result: $result")
             
@@ -48,7 +52,8 @@ class PaymentViewModel : ViewModel() {
                         _uiState.value = PaymentUiState.Error("No payment options available")
                     } else {
                         _uiState.value = PaymentUiState.Options(
-                            paymentId = paymentId,
+                            paymentLink = paymentLink,
+                            paymentInfo = response.info,
                             options = response.options
                         )
                     }
@@ -64,13 +69,16 @@ class PaymentViewModel : ViewModel() {
      * Process payment with the selected option.
      */
     fun processPayment(optionId: String) {
-        val paymentId = currentPaymentId ?: return
+        val paymentLink = currentPaymentLink ?: return
+        val paymentId = extractPaymentId(paymentLink) ?: return
         selectedOptionId = optionId
         _uiState.value = PaymentUiState.Processing("Getting required actions...")
 
         viewModelScope.launch {
             // Get required payment actions
             val actionsResult = WalletConnectPay.getRequiredPaymentActions(paymentId, optionId)
+
+            println("kobe: Actions Result: $actionsResult")
             
             actionsResult.fold(
                 onSuccess = { actions ->
@@ -115,6 +123,8 @@ class PaymentViewModel : ViewModel() {
                 signatures = signatures,
                 timeoutMs = 60000 // 60 second timeout
             )
+
+            println("kobe: Confirm Result: $confirmResult")
             
             confirmResult.fold(
                 onSuccess = { response ->
@@ -201,9 +211,25 @@ class PaymentViewModel : ViewModel() {
      * Cancel and reset the payment flow.
      */
     fun cancel() {
-        currentPaymentId = null
+        currentPaymentLink = null
         selectedOptionId = null
         _uiState.value = PaymentUiState.Loading
+    }
+    
+    /**
+     * Extract payment ID from a payment link.
+     * Supports:
+     * - https://pay.walletconnect.com/pay_<id>
+     * - https://gateway-wc.vercel.app/v1/<uuid>
+     */
+    private fun extractPaymentId(paymentLink: String): String? {
+        val payRegex = Regex("pay\\.walletconnect\\.com/(pay_[a-zA-Z0-9]+)")
+        payRegex.find(paymentLink)?.groupValues?.getOrNull(1)?.let { return it }
+        
+        val gatewayRegex = Regex("gateway-wc\\.vercel\\.app/v1/([a-fA-F0-9\\-]+)")
+        gatewayRegex.find(paymentLink)?.groupValues?.getOrNull(1)?.let { return it }
+        
+        return null
     }
 }
 
@@ -214,7 +240,8 @@ sealed class PaymentUiState {
     data object Loading : PaymentUiState()
     
     data class Options(
-        val paymentId: String,
+        val paymentLink: String,
+        val paymentInfo: Pay.PaymentInfo?,
         val options: List<Pay.PaymentOption>
     ) : PaymentUiState()
     

@@ -184,9 +184,10 @@ class WalletKitActivity : AppCompatActivity() {
         
         // Handle payment events from QR code scanning
         web3walletViewModel.paymentEventFlow
-            .onEach { paymentId ->
+            .onEach { paymentLink ->
                 navigateWhenReady {
-                    navController.navigate("${Route.Payment.path}/$paymentId")
+                    val encodedLink = URLEncoder.encode(paymentLink, "UTF-8")
+                    navController.navigate("${Route.Payment.path}/$encodedLink")
                 }
             }
             .launchIn(lifecycleScope)
@@ -206,17 +207,15 @@ class WalletKitActivity : AppCompatActivity() {
 
         println("kobe: deeplink: $dataString")
         
-        // Check for WalletConnect Pay URL: https://pay.walletconnect.com/pay_<paymentId>
+        // Check for WalletConnect Pay URL - pass the full link (URL encoded)
         if (dataString != null && isPaymentUrl(dataString)) {
-            val paymentId = extractPaymentId(dataString)
-            if (paymentId != null) {
-                lifecycleScope.launch {
-                    navigateWhenReady {
-                        navController.navigate("${Route.Payment.path}/$paymentId")
-                    }
+            lifecycleScope.launch {
+                navigateWhenReady {
+                    val encodedLink = URLEncoder.encode(dataString, "UTF-8")
+                    navController.navigate("${Route.Payment.path}/$encodedLink")
                 }
-                return
             }
+            return
         }
         
         if (dataString?.contains("wc_ev") == true) {
@@ -268,24 +267,6 @@ class WalletKitActivity : AppCompatActivity() {
     private fun isPaymentUrl(url: String): Boolean {
         return url.contains("pay.walletconnect.com/pay_") ||
                url.contains("gateway-wc.vercel.app/v1/")
-    }
-    
-    /**
-     * Extract payment ID from WalletConnect Pay URL.
-     * Supported formats:
-     * - https://pay.walletconnect.com/pay_<paymentId>
-     * - https://gateway-wc.vercel.app/v1/<uuid>
-     */
-    private fun extractPaymentId(url: String): String? {
-        // Try pay.walletconnect.com format: pay_<id>
-        val payRegex = Regex("pay\\.walletconnect\\.com/(pay_[a-zA-Z0-9]+)")
-        payRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
-        
-        // Try gateway-wc.vercel.app format: /v1/<uuid>
-        val gatewayRegex = Regex("gateway-wc\\.vercel\\.app/v1/([a-fA-F0-9\\-]+)")
-        gatewayRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
-        
-        return null
     }
 
     private fun setBeagle() {

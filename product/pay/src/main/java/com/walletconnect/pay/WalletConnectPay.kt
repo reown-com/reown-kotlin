@@ -42,28 +42,50 @@ object WalletConnectPay {
     /**
      * Gets available payment options for a payment.
      *
-     * @param paymentId The payment ID
+     * @param paymentLink The payment link URL (e.g., "https://pay.walletconnect.com/pay_xxx")
      * @param accounts List of account addresses (e.g., "eip155:1:0x...")
      * @return Result containing payment options or an error
      */
     suspend fun getPaymentOptions(
-        paymentId: String,
-        accounts: List<String>
+        paymentLink: String,
+        accounts: List<String>,
     ): Result<Pay.PaymentOptionsResponse> = withContext(Dispatchers.IO) {
         val yttriumClient = client ?: return@withContext Result.failure(
             IllegalStateException("WalletConnectPay not initialized. Call initialize() first.")
         )
 
-        println("kobe: accounts: $accounts")
+        val paymentId = extractPaymentId(paymentLink)
+            ?: return@withContext Result.failure(
+                Pay.GetPaymentOptionsError.InvalidPaymentLink("Could not extract payment ID from link: $paymentLink")
+            )
 
         try {
-            val response = yttriumClient.getPaymentOptions(paymentId, accounts)
+            println("kobe: Yttrium Payment Options: paymentId: $paymentId, accounts: $accounts")
+            val response = yttriumClient.getPaymentOptions(paymentId, accounts, true)
+
+            println("kobe: Yttrium Payment Options: $response")
+
             Result.success(Mappers.mapPaymentOptionsResponse(response))
         } catch (e: uniffi.yttrium_wcpay.GetPaymentOptionsException) {
             Result.failure(Mappers.mapGetPaymentOptionsError(e))
         } catch (e: Exception) {
             Result.failure(Pay.GetPaymentOptionsError.InternalError(e.message ?: "Unknown error"))
         }
+    }
+
+    /**
+     * Extract payment ID from a payment link.
+     */
+    private fun extractPaymentId(paymentLink: String): String? {
+        // Try pay.walletconnect.com format: pay_<id>
+        val payRegex = Regex("pay\\.walletconnect\\.com/(pay_[a-zA-Z0-9]+)")
+        payRegex.find(paymentLink)?.groupValues?.getOrNull(1)?.let { return it }
+
+        // Try gateway-wc.vercel.app format: /v1/<uuid>
+//        val gatewayRegex = Regex("gateway-wc\\.vercel\\.app/v1/([a-fA-F0-9\\-]+)")
+//        gatewayRegex.find(paymentLink)?.groupValues?.getOrNull(1)?.let { return it }
+
+        return null
     }
 
     /**
@@ -82,7 +104,12 @@ object WalletConnectPay {
         )
 
         try {
+            println("kobe: Yttrium Actions paymentId: $paymentId, optionId: $optionId")
+
             val actions = yttriumClient.getRequiredPaymentActions(paymentId, optionId)
+
+            println("kobe: Yttrium Actions: $actions")
+
             Result.success(actions.map { Mappers.mapRequiredAction(it) })
         } catch (e: uniffi.yttrium_wcpay.GetPaymentRequestException) {
             Result.failure(Mappers.mapGetPaymentRequestError(e))
@@ -110,9 +137,14 @@ object WalletConnectPay {
             IllegalStateException("WalletConnectPay not initialized. Call initialize() first.")
         )
 
+        println("kobe: Confirm Payment: paymentId: $paymentId, optionId: $optionId, signatures: $signatures")
+
         try {
             val yttriumSignatures = signatures.map { Mappers.mapSignatureResultToYttrium(it) }
             val response = yttriumClient.confirmPayment(paymentId, optionId, yttriumSignatures, timeoutMs)
+
+            println("kobe: Yttrium Confirm Response: $response")
+
             Result.success(Mappers.mapConfirmPaymentResponse(response))
         } catch (e: uniffi.yttrium_wcpay.ConfirmPaymentException) {
             Result.failure(Mappers.mapConfirmPaymentError(e))

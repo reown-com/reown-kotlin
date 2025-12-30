@@ -57,7 +57,7 @@ class WalletKitApplication : Application() {
         val projectId = BuildConfig.PROJECT_ID
 
         EthAccountDelegate.application = this
-        TONAccountDelegate.application =  this
+        TONAccountDelegate.application = this
         SolanaAccountDelegate.application = this
         StacksAccountDelegate.application = this
         SuiAccountDelegate.application = this
@@ -74,7 +74,7 @@ class WalletKitApplication : Application() {
                 baseUrl = "https://api.pay.walletconnect.com",
                 apiKey = "",
                 sdkName = "kotlin-walletconnect-pay",
-                sdkVersion = BuildConfig.BOM_VERSION,
+                sdkVersion = "1.0.0",
                 sdkPlatform = "android"
             )
         )

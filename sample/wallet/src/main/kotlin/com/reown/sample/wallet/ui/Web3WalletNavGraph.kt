@@ -191,18 +191,20 @@ fun Web3WalletNavGraph(
                 SnackbarMessageRoute(navController, it.arguments?.getString("message"))
             }
             dialog(
-                "${Route.Payment.path}/{paymentId}",
+                "${Route.Payment.path}/{paymentLink}",
                 arguments = listOf(
-                    navArgument("paymentId") {
+                    navArgument("paymentLink") {
                         type = NavType.StringType
                         nullable = false
                     }
                 ),
                 dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
             ) {
+                val encodedLink = it.arguments?.getString("paymentLink") ?: ""
+                val paymentLink = java.net.URLDecoder.decode(encodedLink, "UTF-8")
                 PaymentRoute(
                     navController = navController,
-                    paymentId = it.arguments?.getString("paymentId") ?: ""
+                    paymentLink = paymentLink
                 )
             }
         }

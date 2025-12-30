@@ -31,18 +31,26 @@ object Pay {
         val display: AmountDisplay?
     )
 
-    data class Fee(
-        val amount: Amount,
-        val type: String
-    )
-
     data class PaymentOption(
         val id: String,
         val amount: Amount,
         val estimatedTxs: Int?
     )
 
+    data class MerchantInfo(
+        val name: String,
+        val iconUrl: String?
+    )
+
+    data class PaymentInfo(
+        val status: PaymentStatus,
+        val amount: Amount,
+        val expiresAt: Long,
+        val merchant: MerchantInfo
+    )
+
     data class PaymentOptionsResponse(
+        val info: PaymentInfo?,
         val options: List<PaymentOption>
     )
 
@@ -80,6 +88,7 @@ object Pay {
     }
 
     sealed class GetPaymentOptionsError : Exception() {
+        data class InvalidPaymentLink(override val message: String) : GetPaymentOptionsError()
         data class PaymentExpired(override val message: String) : GetPaymentOptionsError()
         data class PaymentNotFound(override val message: String) : GetPaymentOptionsError()
         data class InvalidRequest(override val message: String) : GetPaymentOptionsError()

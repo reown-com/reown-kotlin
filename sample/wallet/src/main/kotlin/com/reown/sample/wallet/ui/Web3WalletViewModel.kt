@@ -157,11 +157,10 @@ class Web3WalletViewModel : ViewModel() {
     fun pair(pairingUri: String) {
         println("kobe: pairingUri: $pairingUri")
         
-        // Check if this is a payment URL
-        val paymentId = extractPaymentId(pairingUri)
-        if (paymentId != null) {
+        // Check if this is a payment URL - emit the full link, not just the ID
+        if (isPaymentUrl(pairingUri)) {
             viewModelScope.launch {
-                _paymentEventFlow.emit(paymentId)
+                _paymentEventFlow.emit(pairingUri)
             }
             return
         }
@@ -187,20 +186,13 @@ class Web3WalletViewModel : ViewModel() {
     }
     
     /**
-     * Check if URL is a WalletConnect Pay URL and extract payment ID.
+     * Check if URL is a WalletConnect Pay URL.
      * Supported formats:
      * - https://pay.walletconnect.com/pay_<paymentId>
      * - https://gateway-wc.vercel.app/v1/<uuid>
      */
-    private fun extractPaymentId(url: String): String? {
-        // Try pay.walletconnect.com format: pay_<id>
-        val payRegex = Regex("pay\\.walletconnect\\.com/(pay_[a-zA-Z0-9]+)")
-        payRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
-        
-        // Try gateway-wc.vercel.app format: /v1/<uuid>
-        val gatewayRegex = Regex("gateway-wc\\.vercel\\.app/v1/([a-fA-F0-9\\-]+)")
-        gatewayRegex.find(url)?.groupValues?.getOrNull(1)?.let { return it }
-        
-        return null
+    private fun isPaymentUrl(url: String): Boolean {
+        return url.contains("pay.walletconnect.com/pay_") || 
+               url.contains("gateway-wc.vercel.app/v1/")
     }
 }

@@ -6,6 +6,8 @@ import uniffi.yttrium_wcpay.AmountDisplay as YttriumAmountDisplay
 import uniffi.yttrium_wcpay.PaymentOption as YttriumPaymentOption
 import uniffi.yttrium_wcpay.PaymentOptionsResponse as YttriumPaymentOptionsResponse
 import uniffi.yttrium_wcpay.PaymentStatus as YttriumPaymentStatus
+import uniffi.yttrium_wcpay.PaymentInfo as YttriumPaymentInfo
+import uniffi.yttrium_wcpay.MerchantInfo as YttriumMerchantInfo
 import uniffi.yttrium_wcpay.RequiredAction as YttriumRequiredAction
 import uniffi.yttrium_wcpay.WalletRpcAction as YttriumWalletRpcAction
 import uniffi.yttrium_wcpay.SignatureResult as YttriumSignatureResult
@@ -19,7 +21,24 @@ import uniffi.yttrium_wcpay.PayException as YttriumPayError
 internal object Mappers {
     fun mapPaymentOptionsResponse(response: YttriumPaymentOptionsResponse): Pay.PaymentOptionsResponse {
         return Pay.PaymentOptionsResponse(
+            info = response.info?.let { mapPaymentInfo(it) },
             options = response.options.map { mapPaymentOption(it) }
+        )
+    }
+
+    private fun mapPaymentInfo(info: YttriumPaymentInfo): Pay.PaymentInfo {
+        return Pay.PaymentInfo(
+            status = mapPaymentStatus(info.status),
+            amount = mapAmount(info.amount),
+            expiresAt = info.expiresAt,
+            merchant = mapMerchantInfo(info.merchant)
+        )
+    }
+
+    private fun mapMerchantInfo(merchant: YttriumMerchantInfo): Pay.MerchantInfo {
+        return Pay.MerchantInfo(
+            name = merchant.name,
+            iconUrl = merchant.iconUrl
         )
     }
 
@@ -54,10 +73,6 @@ internal object Mappers {
             is YttriumRequiredAction.WalletRpc -> WalletRpc(
                 mapWalletRpcAction(action.v1)
             )
-
-            is YttriumRequiredAction.Build -> {
-                throw IllegalStateException("Build action is not supported")
-            }
         }
     }
 
@@ -101,22 +116,30 @@ internal object Mappers {
 
     fun mapGetPaymentOptionsError(error: YttriumGetPaymentOptionsError): Pay.GetPaymentOptionsError {
         return when (error) {
-            is YttriumGetPaymentOptionsError.PaymentExpired -> 
+            is YttriumGetPaymentOptionsError.PaymentExpired ->
                 Pay.GetPaymentOptionsError.PaymentExpired(error.message)
-            is YttriumGetPaymentOptionsError.PaymentNotFound -> 
+
+            is YttriumGetPaymentOptionsError.PaymentNotFound ->
                 Pay.GetPaymentOptionsError.PaymentNotFound(error.message)
-            is YttriumGetPaymentOptionsError.InvalidRequest -> 
+
+            is YttriumGetPaymentOptionsError.InvalidRequest ->
                 Pay.GetPaymentOptionsError.InvalidRequest(error.message)
-            is YttriumGetPaymentOptionsError.OptionNotFound -> 
+
+            is YttriumGetPaymentOptionsError.OptionNotFound ->
                 Pay.GetPaymentOptionsError.OptionNotFound(error.message)
-            is YttriumGetPaymentOptionsError.PaymentNotReady -> 
+
+            is YttriumGetPaymentOptionsError.PaymentNotReady ->
                 Pay.GetPaymentOptionsError.PaymentNotReady(error.message)
-            is YttriumGetPaymentOptionsError.InvalidAccount -> 
+
+            is YttriumGetPaymentOptionsError.InvalidAccount ->
                 Pay.GetPaymentOptionsError.InvalidAccount(error.message)
-            is YttriumGetPaymentOptionsError.ComplianceFailed -> 
+
+            is YttriumGetPaymentOptionsError.ComplianceFailed ->
                 Pay.GetPaymentOptionsError.ComplianceFailed(error.message)
-            is YttriumGetPaymentOptionsError.Http -> 
+
+            is YttriumGetPaymentOptionsError.Http ->
                 Pay.GetPaymentOptionsError.Http(error.message)
+
             is YttriumGetPaymentOptionsError.InternalException ->
                 Pay.GetPaymentOptionsError.InternalError(error.message)
         }
@@ -124,16 +147,21 @@ internal object Mappers {
 
     fun mapGetPaymentRequestError(error: YttriumGetPaymentRequestError): Pay.GetPaymentRequestError {
         return when (error) {
-            is YttriumGetPaymentRequestError.OptionNotFound -> 
+            is YttriumGetPaymentRequestError.OptionNotFound ->
                 Pay.GetPaymentRequestError.OptionNotFound(error.message)
-            is YttriumGetPaymentRequestError.PaymentNotFound -> 
+
+            is YttriumGetPaymentRequestError.PaymentNotFound ->
                 Pay.GetPaymentRequestError.PaymentNotFound(error.message)
-            is YttriumGetPaymentRequestError.InvalidAccount -> 
+
+            is YttriumGetPaymentRequestError.InvalidAccount ->
                 Pay.GetPaymentRequestError.InvalidAccount(error.message)
-            is YttriumGetPaymentRequestError.Http -> 
+
+            is YttriumGetPaymentRequestError.Http ->
                 Pay.GetPaymentRequestError.Http(error.message)
+
             is YttriumGetPaymentRequestError.FetchException ->
                 Pay.GetPaymentRequestError.FetchError(error.message)
+
             is YttriumGetPaymentRequestError.InternalException ->
                 Pay.GetPaymentRequestError.InternalError(error.message)
         }
@@ -141,18 +169,24 @@ internal object Mappers {
 
     fun mapConfirmPaymentError(error: YttriumConfirmPaymentError): Pay.ConfirmPaymentError {
         return when (error) {
-            is YttriumConfirmPaymentError.PaymentNotFound -> 
+            is YttriumConfirmPaymentError.PaymentNotFound ->
                 Pay.ConfirmPaymentError.PaymentNotFound(error.message)
-            is YttriumConfirmPaymentError.PaymentExpired -> 
+
+            is YttriumConfirmPaymentError.PaymentExpired ->
                 Pay.ConfirmPaymentError.PaymentExpired(error.message)
-            is YttriumConfirmPaymentError.InvalidOption -> 
+
+            is YttriumConfirmPaymentError.InvalidOption ->
                 Pay.ConfirmPaymentError.InvalidOption(error.message)
-            is YttriumConfirmPaymentError.InvalidSignature -> 
+
+            is YttriumConfirmPaymentError.InvalidSignature ->
                 Pay.ConfirmPaymentError.InvalidSignature(error.message)
-            is YttriumConfirmPaymentError.RouteExpired -> 
+
+            is YttriumConfirmPaymentError.RouteExpired ->
                 Pay.ConfirmPaymentError.RouteExpired(error.message)
-            is YttriumConfirmPaymentError.Http -> 
+
+            is YttriumConfirmPaymentError.Http ->
                 Pay.ConfirmPaymentError.Http(error.message)
+
             is YttriumConfirmPaymentError.InternalException ->
                 Pay.ConfirmPaymentError.InternalError(error.message)
         }
