@@ -77,14 +77,8 @@ object WalletConnectPay {
      * Extract payment ID from a payment link.
      */
     private fun extractPaymentId(paymentLink: String): String? {
-        // Try pay.walletconnect.com format: pay_<id>
         val payRegex = Regex("pay\\.walletconnect\\.com/(pay_[a-zA-Z0-9]+)")
         payRegex.find(paymentLink)?.groupValues?.getOrNull(1)?.let { return it }
-
-        // Try gateway-wc.vercel.app format: /v1/<uuid>
-//        val gatewayRegex = Regex("gateway-wc\\.vercel\\.app/v1/([a-fA-F0-9\\-]+)")
-//        gatewayRegex.find(paymentLink)?.groupValues?.getOrNull(1)?.let { return it }
-
         return null
     }
 
