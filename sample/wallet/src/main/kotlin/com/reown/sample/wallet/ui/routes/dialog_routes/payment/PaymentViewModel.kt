@@ -48,9 +48,6 @@ class PaymentViewModel : ViewModel() {
                 paymentLink = paymentLink,
                 accounts = accounts,
             )
-
-            println("kobe: Options Result: $result")
-            
             result.fold(
                 onSuccess = { response ->
                     if (response.options.isEmpty()) {
@@ -82,9 +79,6 @@ class PaymentViewModel : ViewModel() {
         viewModelScope.launch {
             // Get required payment actions
             val actionsResult = WalletConnectPay.getRequiredPaymentActions(paymentId, optionId)
-
-            println("kobe: Actions Result: $actionsResult")
-            
             actionsResult.fold(
                 onSuccess = { actions ->
                     processActions(paymentId, optionId, actions)
@@ -124,9 +118,6 @@ class PaymentViewModel : ViewModel() {
                 signatures = signatures,
                 timeoutMs = 60000 // 60 second timeout
             )
-
-            println("kobe: Confirm Result: $confirmResult")
-            
             confirmResult.fold(
                 onSuccess = { response ->
                     when (response.status) {

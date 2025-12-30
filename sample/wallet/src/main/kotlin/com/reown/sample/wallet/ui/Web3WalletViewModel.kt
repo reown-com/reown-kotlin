@@ -155,8 +155,6 @@ class Web3WalletViewModel : ViewModel() {
     }
 
     fun pair(pairingUri: String) {
-        println("kobe: pairingUri: $pairingUri")
-        
         // Check if this is a payment URL - emit the full link, not just the ID
         if (isPaymentUrl(pairingUri)) {
             viewModelScope.launch {

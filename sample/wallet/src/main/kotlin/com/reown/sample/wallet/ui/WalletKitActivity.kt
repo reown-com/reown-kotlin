@@ -204,9 +204,6 @@ class WalletKitActivity : AppCompatActivity() {
 
     private fun handleAppLink(intent: Intent?) {
         val dataString = intent?.dataString
-
-        println("kobe: deeplink: $dataString")
-        
         // Check for WalletConnect Pay URL - pass the full link (URL encoded)
         if (dataString != null && isPaymentUrl(dataString)) {
             lifecycleScope.launch {

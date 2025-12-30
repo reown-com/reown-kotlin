@@ -14,7 +14,7 @@ object WalletConnectPay {
 
     class AndroidLogger : Logger {
         override fun log(message: String) {
-            println("dupa: $message")
+            println("WalletConnectPay: $message")
         }
     }
 
@@ -70,11 +70,7 @@ object WalletConnectPay {
             )
 
         try {
-            println("kobe: Yttrium Payment Options: paymentId: $paymentId, accounts: $accounts")
             val response = yttriumClient.getPaymentOptions(paymentId, accounts, true)
-
-            println("kobe: Yttrium Payment Options: $response")
-
             Result.success(Mappers.mapPaymentOptionsResponse(response))
         } catch (e: uniffi.yttrium_wcpay.GetPaymentOptionsException) {
             Result.failure(Mappers.mapGetPaymentOptionsError(e))
@@ -108,12 +104,7 @@ object WalletConnectPay {
         )
 
         try {
-            println("kobe: Yttrium Actions paymentId: $paymentId, optionId: $optionId")
-
             val actions = yttriumClient.getRequiredPaymentActions(paymentId, optionId)
-
-            println("kobe: Yttrium Actions: $actions")
-
             Result.success(actions.map { Mappers.mapRequiredAction(it) })
         } catch (e: uniffi.yttrium_wcpay.GetPaymentRequestException) {
             Result.failure(Mappers.mapGetPaymentRequestError(e))
@@ -140,15 +131,9 @@ object WalletConnectPay {
         val yttriumClient = client ?: return@withContext Result.failure(
             IllegalStateException("WalletConnectPay not initialized. Call initialize() first.")
         )
-
-        println("kobe: Confirm Payment: paymentId: $paymentId, optionId: $optionId, signatures: $signatures")
-
         try {
             val yttriumSignatures = signatures.map { Mappers.mapSignatureResultToYttrium(it) }
             val response = yttriumClient.confirmPayment(paymentId, optionId, yttriumSignatures, timeoutMs)
-
-            println("kobe: Yttrium Confirm Response: $response")
-
             Result.success(Mappers.mapConfirmPaymentResponse(response))
         } catch (e: uniffi.yttrium_wcpay.ConfirmPaymentException) {
             Result.failure(Mappers.mapConfirmPaymentError(e))
