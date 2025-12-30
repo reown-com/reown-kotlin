@@ -107,10 +107,6 @@ class PaymentViewModel : ViewModel() {
                         val signature = signWalletRpcAction(action.action)
                         signatures.add(signature)
                     }
-//                    is Pay.RequiredAction.Build -> {
-//                        // Build actions typically don't require signatures from the wallet
-//                        // They are pre-built transactions that will be executed by the service
-//                    }
                 }
             }
             
