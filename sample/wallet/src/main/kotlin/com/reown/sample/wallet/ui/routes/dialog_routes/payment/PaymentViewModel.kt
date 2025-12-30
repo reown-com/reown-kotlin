@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.signer.EthSigner
+import com.reown.util.bytesToHex
+import com.reown.util.hexToBytes
 import com.walletconnect.pay.Pay
 import com.walletconnect.pay.WalletConnectPay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,6 +13,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONArray
+import org.web3j.crypto.ECKeyPair
+import org.web3j.crypto.Sign
+import org.web3j.crypto.StructuredDataEncoder
 
 /**
  * ViewModel for handling the payment flow.
@@ -171,36 +176,32 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Sign EIP-712 typed data.
+     * Sign EIP-712 typed data using proper StructuredDataEncoder.
      */
     private fun signTypedDataV4(params: String): String {
         // params is a JSON array: [address, typedData]
-        // We need to extract the typed data and sign it
         val paramsArray = JSONArray(params)
+        val requestedAddress = paramsArray.getString(0)
         val typedData = paramsArray.getString(1)
         
-        // Use EthSigner to sign the typed data hash
-        // For EIP-712, we need to compute the hash and sign it
-        return signTypedData(typedData, EthAccountDelegate.privateKey)
-    }
-
-    /**
-     * Sign typed data using EIP-712.
-     */
-    private fun signTypedData(typedData: String, privateKey: String): String {
-        // Parse the typed data and compute the EIP-712 hash
-        // Then sign the hash with the private key
-        return EthSigner.signHash(computeTypedDataHash(typedData), privateKey)
-    }
-
-    /**
-     * Compute the EIP-712 hash for typed data.
-     */
-    private fun computeTypedDataHash(typedData: String): String {
-        // For simplicity, we'll use the structured data directly
-        // In a production app, you'd want to properly implement EIP-712 hashing
-        // This is a simplified version that works for basic typed data
-        return org.web3j.crypto.Hash.sha3String(typedData)
+        // Verify the requested address matches our wallet address
+        if (!requestedAddress.equals(EthAccountDelegate.address, ignoreCase = true)) {
+            throw IllegalArgumentException("Requested address does not match wallet address")
+        }
+        
+        // Use StructuredDataEncoder for proper EIP-712 hashing
+        val encoder = StructuredDataEncoder(typedData)
+        val hash = encoder.hashStructuredData()
+        
+        val keyPair = ECKeyPair.create(EthAccountDelegate.privateKey.hexToBytes())
+        val signatureData = Sign.signMessage(hash, keyPair, false)
+        
+        val rHex = signatureData.r.bytesToHex()
+        val sHex = signatureData.s.bytesToHex()
+        val v = signatureData.v[0].toInt() and 0xff
+        val vHex = v.toString(16).padStart(2, '0')
+        
+        return "0x$rHex$sHex$vHex".lowercase()
     }
 
     /**

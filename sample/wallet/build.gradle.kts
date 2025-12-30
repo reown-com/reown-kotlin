@@ -24,6 +24,7 @@ android {
         }
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
         buildConfigField("String", "PIMLICO_API_KEY", "\"${System.getenv("PIMLICO_API_KEY") ?: ""}\"")
+        buildConfigField("String", "MERCHANT_API_KEY", "\"${System.getenv("MERCHANT_API_KEY") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
 
         ndk.abiFilters += listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")

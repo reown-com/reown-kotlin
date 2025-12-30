@@ -1,6 +1,7 @@
 package com.reown.sample.wallet
 
 import android.app.Application
+import android.os.Build
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
@@ -72,7 +73,7 @@ class WalletKitApplication : Application() {
         WalletConnectPay.initialize(
             Pay.SdkConfig(
                 baseUrl = "https://api.pay.walletconnect.com",
-                apiKey = "",
+                apiKey = BuildConfig.MERCHANT_API_KEY,
                 sdkName = "kotlin-walletconnect-pay",
                 sdkVersion = "1.0.0",
                 sdkPlatform = "android"
