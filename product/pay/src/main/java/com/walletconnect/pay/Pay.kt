@@ -2,7 +2,6 @@ package com.walletconnect.pay
 
 object Pay {
     data class SdkConfig(
-        val baseUrl: String,
         val apiKey: String,
         val sdkName: String,
         val sdkVersion: String,

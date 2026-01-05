@@ -72,7 +72,6 @@ class WalletKitApplication : Application() {
         // Initialize WalletConnectPay
         WalletConnectPay.initialize(
             Pay.SdkConfig(
-                baseUrl = "https://api.pay.walletconnect.com",
                 apiKey = BuildConfig.MERCHANT_API_KEY,
                 sdkName = "kotlin-walletconnect-pay",
                 sdkVersion = "1.0.0",

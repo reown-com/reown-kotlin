@@ -12,6 +12,7 @@ import uniffi.yttrium_wcpay.SdkConfig as YttriumSdkConfig
  */
 object WalletConnectPay {
 
+    //TODO: only for DEBUG
     class AndroidLogger : Logger {
         override fun log(message: String) {
             println("WalletConnectPay: $message")
@@ -33,7 +34,7 @@ object WalletConnectPay {
         registerLogger(AndroidLogger())
 
         val yttriumConfig = YttriumSdkConfig(
-            baseUrl = config.baseUrl,
+            baseUrl = "https://api.pay.walletconnect.com",
             apiKey = config.apiKey,
             sdkName = config.sdkName,
             sdkVersion = config.sdkVersion,
