@@ -26,7 +26,14 @@ class PaymentViewModel : ViewModel() {
     val uiState: StateFlow<PaymentUiState> = _uiState.asStateFlow()
 
     private var currentPaymentLink: String? = null
+    private var currentPaymentId: String? = null
     private var selectedOptionId: String? = null
+    
+    // Information Capture state
+    private var pendingWalletRpcActions: List<Pay.RequiredAction.WalletRpc> = emptyList()
+    private var collectDataFields: List<Pay.CollectDataField> = emptyList()
+    private val collectedValues: MutableMap<String, String> = mutableMapOf()
+    private var currentFieldIndex: Int = 0
 
     /**
      * Load payment options for the given payment link.
@@ -50,6 +57,7 @@ class PaymentViewModel : ViewModel() {
             )
             result.fold(
                 onSuccess = { response ->
+                    currentPaymentId = response.paymentId
                     if (response.options.isEmpty()) {
                         _uiState.value = PaymentUiState.Error("No payment options available")
                     } else {
@@ -71,8 +79,7 @@ class PaymentViewModel : ViewModel() {
      * Process payment with the selected option.
      */
     fun processPayment(optionId: String) {
-        val paymentLink = currentPaymentLink ?: return
-        val paymentId = extractPaymentId(paymentLink) ?: return
+        val paymentId = currentPaymentId ?: return
         selectedOptionId = optionId
         _uiState.value = PaymentUiState.Processing("Getting required actions...")
 
@@ -95,29 +102,118 @@ class PaymentViewModel : ViewModel() {
         optionId: String,
         actions: List<Pay.RequiredAction>
     ) {
+        // Separate WalletRpc and CollectData actions
+        pendingWalletRpcActions = actions.filterIsInstance<Pay.RequiredAction.WalletRpc>()
+        val collectDataActions = actions.filterIsInstance<Pay.RequiredAction.CollectData>()
+        
+        // Collect all fields from CollectData actions
+        collectDataFields = collectDataActions.flatMap { it.action.fields }
+        collectedValues.clear()
+        currentFieldIndex = 0
+        
+        // If there are fields to collect, show the first field
+        if (collectDataFields.isNotEmpty()) {
+            showCurrentField()
+        } else {
+            // No data to collect, proceed directly to payment
+            executePayment()
+        }
+    }
+    
+    /**
+     * Show the current field for data collection.
+     */
+    private fun showCurrentField() {
+        if (currentFieldIndex < collectDataFields.size) {
+            val field = collectDataFields[currentFieldIndex]
+            _uiState.value = PaymentUiState.CollectingData(
+                currentStepIndex = currentFieldIndex,
+                totalSteps = collectDataFields.size,
+                currentField = field,
+                currentValue = collectedValues[field.id] ?: "",
+                allFields = collectDataFields
+            )
+        }
+    }
+    
+    /**
+     * Submit the value for the current field and move to the next step.
+     */
+    fun submitFieldValue(fieldId: String, value: String) {
+        collectedValues[fieldId] = value
+        currentFieldIndex++
+        
+        if (currentFieldIndex < collectDataFields.size) {
+            // Show next field
+            showCurrentField()
+        } else {
+            // All fields collected, execute payment
+            viewModelScope.launch {
+                executePayment()
+            }
+        }
+    }
+    
+    /**
+     * Go back to the previous field.
+     */
+    fun goBackToPreviousField() {
+        if (currentFieldIndex > 0) {
+            currentFieldIndex--
+            showCurrentField()
+        } else {
+            // Go back to options
+            currentPaymentLink?.let { loadPaymentOptions(it) }
+        }
+    }
+    
+    /**
+     * Execute the payment with collected data and signatures.
+     */
+    private suspend fun executePayment() {
+        val paymentId = currentPaymentId ?: return
+        val optionId = selectedOptionId ?: return
+        
         _uiState.value = PaymentUiState.Processing("Signing transactions...")
         
         try {
-            val signatures = mutableListOf<Pay.SignatureResult>()
-            
-            for (action in actions) {
-                when (action) {
-                    is Pay.RequiredAction.WalletRpc -> {
-                        val signature = signWalletRpcAction(action.action)
-                        signatures.add(signature)
-                    }
-                }
+            val results = mutableListOf<Pay.ConfirmPaymentResult>()
+
+            // Add collected data if any
+            if (collectedValues.isNotEmpty()) {
+                results.add(
+                    Pay.ConfirmPaymentResult.CollectData(
+                        Pay.CollectDataResult(
+                            fields = collectedValues.map { (id, value) ->
+                                Pay.CollectDataFieldResult(id = id, value = value)
+                            }
+                        )
+                    )
+                )
             }
-            
+
+            // Add WalletRpc signatures
+            for (action in pendingWalletRpcActions) {
+                val signature = signWalletRpcAction(action.action)
+                results.add(
+                    Pay.ConfirmPaymentResult.WalletRpc(
+                        Pay.WalletRpcResult(
+                            method = action.action.method,
+                            data = listOf(signature.signature.value)
+                        )
+                    )
+                )
+            }
+
             _uiState.value = PaymentUiState.Processing("Confirming payment...")
             
-            // Confirm payment with signatures
+            // Confirm payment with results
             val confirmResult = WalletConnectPay.confirmPayment(
                 paymentId = paymentId,
                 optionId = optionId,
-                signatures = signatures,
-                timeoutMs = 60000 // 60 second timeout
+                results = results
             )
+
             confirmResult.fold(
                 onSuccess = { response ->
                     when (response.status) {
@@ -200,24 +296,13 @@ class PaymentViewModel : ViewModel() {
      */
     fun cancel() {
         currentPaymentLink = null
+        currentPaymentId = null
         selectedOptionId = null
+        pendingWalletRpcActions = emptyList()
+        collectDataFields = emptyList()
+        collectedValues.clear()
+        currentFieldIndex = 0
         _uiState.value = PaymentUiState.Loading
-    }
-    
-    /**
-     * Extract payment ID from a payment link.
-     * Supports:
-     * - https://pay.walletconnect.com/pay_<id>
-     * - https://gateway-wc.vercel.app/v1/<uuid>
-     */
-    private fun extractPaymentId(paymentLink: String): String? {
-        val payRegex = Regex("pay\\.walletconnect\\.com/(pay_[a-zA-Z0-9]+)")
-        payRegex.find(paymentLink)?.groupValues?.getOrNull(1)?.let { return it }
-        
-        val gatewayRegex = Regex("gateway-wc\\.vercel\\.app/v1/([a-fA-F0-9\\-]+)")
-        gatewayRegex.find(paymentLink)?.groupValues?.getOrNull(1)?.let { return it }
-        
-        return null
     }
 }
 
@@ -231,6 +316,17 @@ sealed class PaymentUiState {
         val paymentLink: String,
         val paymentInfo: Pay.PaymentInfo?,
         val options: List<Pay.PaymentOption>
+    ) : PaymentUiState()
+    
+    /**
+     * State for collecting user data (Information Capture).
+     */
+    data class CollectingData(
+        val currentStepIndex: Int,
+        val totalSteps: Int,
+        val currentField: Pay.CollectDataField,
+        val currentValue: String,
+        val allFields: List<Pay.CollectDataField>
     ) : PaymentUiState()
     
     data class Processing(val message: String) : PaymentUiState()

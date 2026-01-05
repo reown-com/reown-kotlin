@@ -65,28 +65,14 @@ object WalletConnectPay {
             IllegalStateException("WalletConnectPay not initialized. Call initialize() first.")
         )
 
-        val paymentId = extractPaymentId(paymentLink)
-            ?: return@withContext Result.failure(
-                Pay.GetPaymentOptionsError.InvalidPaymentLink("Could not extract payment ID from link: $paymentLink")
-            )
-
         try {
-            val response = yttriumClient.getPaymentOptions(paymentId, accounts, true)
+            val response = yttriumClient.getPaymentOptions(paymentLink = paymentLink, accounts = accounts, includePaymentInfo = true)
             Result.success(Mappers.mapPaymentOptionsResponse(response))
         } catch (e: uniffi.yttrium_wcpay.GetPaymentOptionsException) {
             Result.failure(Mappers.mapGetPaymentOptionsError(e))
         } catch (e: Exception) {
             Result.failure(Pay.GetPaymentOptionsError.InternalError(e.message ?: "Unknown error"))
         }
-    }
-
-    /**
-     * Extract payment ID from a payment link.
-     */
-    private fun extractPaymentId(paymentLink: String): String? {
-        val payRegex = Regex("pay\\.walletconnect\\.com/(pay_[a-zA-Z0-9]+)")
-        payRegex.find(paymentLink)?.groupValues?.getOrNull(1)?.let { return it }
-        return null
     }
 
     /**
@@ -105,7 +91,7 @@ object WalletConnectPay {
         )
 
         try {
-            val actions = yttriumClient.getRequiredPaymentActions(paymentId, optionId)
+            val actions = yttriumClient.getRequiredPaymentActions(paymentId = paymentId, optionId = optionId)
             Result.success(actions.map { Mappers.mapRequiredAction(it) })
         } catch (e: uniffi.yttrium_wcpay.GetPaymentRequestException) {
             Result.failure(Mappers.mapGetPaymentRequestError(e))
@@ -115,26 +101,24 @@ object WalletConnectPay {
     }
 
     /**
-     * Confirms a payment with signatures.
+     * Confirms a payment with action results.
      *
      * @param paymentId The payment ID
      * @param optionId The selected payment option ID
-     * @param signatures List of signature results from signing the required actions
-     * @param timeoutMs Optional timeout in milliseconds for polling (default: 30000)
+     * @param results List of results from completing the required actions (wallet RPC or collect data)
      * @return Result containing confirm payment response or an error
      */
     suspend fun confirmPayment(
         paymentId: String,
         optionId: String,
-        signatures: List<Pay.SignatureResult>,
-        timeoutMs: Long? = null
+        results: List<Pay.ConfirmPaymentResult>
     ): Result<Pay.ConfirmPaymentResponse> = withContext(Dispatchers.IO) {
         val yttriumClient = client ?: return@withContext Result.failure(
             IllegalStateException("WalletConnectPay not initialized. Call initialize() first.")
         )
         try {
-            val yttriumSignatures = signatures.map { Mappers.mapSignatureResultToYttrium(it) }
-            val response = yttriumClient.confirmPayment(paymentId, optionId, yttriumSignatures, timeoutMs)
+            val yttriumResults = results.map { Mappers.mapConfirmPaymentResultToYttrium(it) }
+            val response = yttriumClient.confirmPayment(paymentId = paymentId, optionId = optionId, results = yttriumResults, maxPollMs = 60000)
             Result.success(Mappers.mapConfirmPaymentResponse(response))
         } catch (e: uniffi.yttrium_wcpay.ConfirmPaymentException) {
             Result.failure(Mappers.mapConfirmPaymentError(e))

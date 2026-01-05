@@ -50,7 +50,8 @@ object Pay {
 
     data class PaymentOptionsResponse(
         val info: PaymentInfo?,
-        val options: List<PaymentOption>
+        val options: List<PaymentOption>,
+        val paymentId: String
     )
 
     data class WalletRpcAction(
@@ -59,8 +60,25 @@ object Pay {
         val params: String
     )
 
+    enum class CollectDataFieldType {
+        TEXT,
+        DATE
+    }
+
+    data class CollectDataField(
+        val id: String,
+        val name: String,
+        val fieldType: CollectDataFieldType,
+        val required: Boolean
+    )
+
+    data class CollectDataAction(
+        val fields: List<CollectDataField>
+    )
+
     sealed class RequiredAction {
         data class WalletRpc(val action: WalletRpcAction) : RequiredAction()
+        data class CollectData(val action: CollectDataAction) : RequiredAction()
     }
 
     data class SignatureValue(
@@ -71,10 +89,29 @@ object Pay {
         val signature: SignatureValue
     )
 
+    data class CollectDataFieldResult(
+        val id: String,
+        val value: String
+    )
+
+    data class CollectDataResult(
+        val fields: List<CollectDataFieldResult>
+    )
+
+    data class WalletRpcResult(
+        val method: String,
+        val data: List<String>
+    )
+
+    sealed class ConfirmPaymentResult {
+        data class CollectData(val result: CollectDataResult) : ConfirmPaymentResult()
+        data class WalletRpc(val result: WalletRpcResult) : ConfirmPaymentResult()
+    }
+
     data class ConfirmPaymentResponse(
         val status: PaymentStatus,
         val isFinal: Boolean,
-        val pollInMs: Long?
+        val pollInMs: Long?,
     )
 
     sealed class PayError : Exception() {
@@ -116,6 +153,7 @@ object Pay {
         data class RouteExpired(override val message: String) : ConfirmPaymentError()
         data class Http(override val message: String) : ConfirmPaymentError()
         data class InternalError(override val message: String) : ConfirmPaymentError()
+        data class UnsupportedMethod(override val message: String) : ConfirmPaymentError()
     }
 }
 

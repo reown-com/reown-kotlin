@@ -1,5 +1,6 @@
 package com.walletconnect.pay
 
+import com.walletconnect.pay.Pay.ConfirmPaymentError.*
 import com.walletconnect.pay.Pay.RequiredAction.*
 import uniffi.yttrium_wcpay.PayAmount
 import uniffi.yttrium_wcpay.AmountDisplay as YttriumAmountDisplay
@@ -8,11 +9,16 @@ import uniffi.yttrium_wcpay.PaymentOptionsResponse as YttriumPaymentOptionsRespo
 import uniffi.yttrium_wcpay.PaymentStatus as YttriumPaymentStatus
 import uniffi.yttrium_wcpay.PaymentInfo as YttriumPaymentInfo
 import uniffi.yttrium_wcpay.MerchantInfo as YttriumMerchantInfo
-import uniffi.yttrium_wcpay.RequiredAction as YttriumRequiredAction
+import uniffi.yttrium_wcpay.Action as YttriumRequiredAction
 import uniffi.yttrium_wcpay.WalletRpcAction as YttriumWalletRpcAction
-import uniffi.yttrium_wcpay.SignatureResult as YttriumSignatureResult
-import uniffi.yttrium_wcpay.SignatureValue as YttriumSignatureValue
+import uniffi.yttrium_wcpay.CollectDataAction as YttriumCollectDataAction
+import uniffi.yttrium_wcpay.CollectDataField as YttriumCollectDataField
+import uniffi.yttrium_wcpay.CollectDataFieldType as YttriumCollectDataFieldType
 import uniffi.yttrium_wcpay.ConfirmPaymentResultResponse as YttriumConfirmPaymentResponse
+import uniffi.yttrium_wcpay.ConfirmPaymentResultItem as YttriumConfirmPaymentResultItem
+import uniffi.yttrium_wcpay.CollectDataFieldResult as YttriumCollectDataFieldResult
+import uniffi.yttrium_wcpay.CollectDataResultData as YttriumCollectDataResultData
+import uniffi.yttrium_wcpay.WalletRpcResultData as YttriumWalletRpcResultData
 import uniffi.yttrium_wcpay.GetPaymentOptionsException as YttriumGetPaymentOptionsError
 import uniffi.yttrium_wcpay.GetPaymentRequestException as YttriumGetPaymentRequestError
 import uniffi.yttrium_wcpay.ConfirmPaymentException as YttriumConfirmPaymentError
@@ -22,7 +28,8 @@ internal object Mappers {
     fun mapPaymentOptionsResponse(response: YttriumPaymentOptionsResponse): Pay.PaymentOptionsResponse {
         return Pay.PaymentOptionsResponse(
             info = response.info?.let { mapPaymentInfo(it) },
-            options = response.options.map { mapPaymentOption(it) }
+            options = response.options.map { mapPaymentOption(it) },
+            paymentId = response.paymentId
         )
     }
 
@@ -46,7 +53,7 @@ internal object Mappers {
         return Pay.PaymentOption(
             id = option.id,
             amount = mapAmount(option.amount),
-            estimatedTxs = option.etaSeconds.toInt()
+            estimatedTxs = option.etaS.toInt()
         )
     }
 
@@ -73,6 +80,10 @@ internal object Mappers {
             is YttriumRequiredAction.WalletRpc -> WalletRpc(
                 mapWalletRpcAction(action.v1)
             )
+
+            is YttriumRequiredAction.CollectData -> CollectData(
+                mapCollectDataAction(action.v1)
+            )
         }
     }
 
@@ -84,13 +95,33 @@ internal object Mappers {
         )
     }
 
-    // ==================== Confirm Payment Mapping ====================
+    private fun mapCollectDataAction(action: YttriumCollectDataAction): Pay.CollectDataAction {
+        return Pay.CollectDataAction(
+            fields = action.fields.map { mapCollectDataField(it) }
+        )
+    }
+
+    private fun mapCollectDataField(field: YttriumCollectDataField): Pay.CollectDataField {
+        return Pay.CollectDataField(
+            id = field.id,
+            name = field.name,
+            fieldType = mapCollectDataFieldType(field.fieldType),
+            required = field.required
+        )
+    }
+
+    private fun mapCollectDataFieldType(type: YttriumCollectDataFieldType): Pay.CollectDataFieldType {
+        return when (type) {
+            YttriumCollectDataFieldType.TEXT -> Pay.CollectDataFieldType.TEXT
+            YttriumCollectDataFieldType.DATE -> Pay.CollectDataFieldType.DATE
+        }
+    }
 
     fun mapConfirmPaymentResponse(response: YttriumConfirmPaymentResponse): Pay.ConfirmPaymentResponse {
         return Pay.ConfirmPaymentResponse(
             status = mapPaymentStatus(response.status),
             isFinal = response.isFinal,
-            pollInMs = response.pollInMs
+            pollInMs = response.pollInMs,
         )
     }
 
@@ -104,15 +135,24 @@ internal object Mappers {
         }
     }
 
-    // ==================== Signature Mapping ====================
+    fun mapConfirmPaymentResultToYttrium(result: Pay.ConfirmPaymentResult): YttriumConfirmPaymentResultItem {
+        return when (result) {
+            is Pay.ConfirmPaymentResult.CollectData -> YttriumConfirmPaymentResultItem.CollectData(
+                YttriumCollectDataResultData(
+                    fields = result.result.fields.map {
+                        YttriumCollectDataFieldResult(id = it.id, value = it.value)
+                    }
+                )
+            )
 
-    fun mapSignatureResultToYttrium(result: Pay.SignatureResult): YttriumSignatureResult {
-        return YttriumSignatureResult(
-            signature = YttriumSignatureValue(value = result.signature.value)
-        )
+            is Pay.ConfirmPaymentResult.WalletRpc -> YttriumConfirmPaymentResultItem.WalletRpc(
+                YttriumWalletRpcResultData(
+                    method = result.result.method,
+                    data = result.result.data
+                )
+            )
+        }
     }
-
-    // ==================== Error Mapping ====================
 
     fun mapGetPaymentOptionsError(error: YttriumGetPaymentOptionsError): Pay.GetPaymentOptionsError {
         return when (error) {
@@ -170,25 +210,27 @@ internal object Mappers {
     fun mapConfirmPaymentError(error: YttriumConfirmPaymentError): Pay.ConfirmPaymentError {
         return when (error) {
             is YttriumConfirmPaymentError.PaymentNotFound ->
-                Pay.ConfirmPaymentError.PaymentNotFound(error.message)
+                PaymentNotFound(error.message)
 
             is YttriumConfirmPaymentError.PaymentExpired ->
-                Pay.ConfirmPaymentError.PaymentExpired(error.message)
+                PaymentExpired(error.message)
 
             is YttriumConfirmPaymentError.InvalidOption ->
-                Pay.ConfirmPaymentError.InvalidOption(error.message)
+                InvalidOption(error.message)
 
             is YttriumConfirmPaymentError.InvalidSignature ->
-                Pay.ConfirmPaymentError.InvalidSignature(error.message)
+                InvalidSignature(error.message)
 
             is YttriumConfirmPaymentError.RouteExpired ->
-                Pay.ConfirmPaymentError.RouteExpired(error.message)
+                RouteExpired(error.message)
 
             is YttriumConfirmPaymentError.Http ->
-                Pay.ConfirmPaymentError.Http(error.message)
+                Http(error.message)
 
             is YttriumConfirmPaymentError.InternalException ->
-                Pay.ConfirmPaymentError.InternalError(error.message)
+                InternalError(error.message)
+
+            is YttriumConfirmPaymentError.UnsupportedMethod -> UnsupportedMethod(error.message)
         }
     }
 

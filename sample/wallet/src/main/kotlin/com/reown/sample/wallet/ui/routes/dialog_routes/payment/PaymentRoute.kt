@@ -23,8 +23,12 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -82,6 +86,24 @@ fun PaymentRoute(
                     options = state.options,
                     onOptionSelected = { optionId ->
                         viewModel.processPayment(optionId)
+                    }
+                )
+            }
+            is PaymentUiState.CollectingData -> {
+                CollectDataContent(
+                    currentStepIndex = state.currentStepIndex,
+                    totalSteps = state.totalSteps,
+                    currentField = state.currentField,
+                    currentValue = state.currentValue,
+                    onValueSubmit = { fieldId, value ->
+                        viewModel.submitFieldValue(fieldId, value)
+                    },
+                    onBack = {
+                        viewModel.goBackToPreviousField()
+                    },
+                    onClose = {
+                        viewModel.cancel()
+                        navController.popBackStack(Route.Connections.path, inclusive = false)
                     }
                 )
             }
@@ -585,6 +607,289 @@ private fun ErrorContent(
             ) {
                 Text("Retry", color = Color.White)
             }
+        }
+    }
+}
+
+// ==================== Information Capture Components ====================
+
+@Composable
+private fun CollectDataContent(
+    currentStepIndex: Int,
+    totalSteps: Int,
+    currentField: Pay.CollectDataField,
+    currentValue: String,
+    onValueSubmit: (String, String) -> Unit,
+    onBack: () -> Unit,
+    onClose: () -> Unit
+) {
+    var inputValue by remember(currentField.id) { mutableStateOf(currentValue) }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp)
+    ) {
+        // Header with back, progress, and close
+        CollectDataHeader(
+            currentStep = currentStepIndex,
+            totalSteps = totalSteps,
+            onBack = onBack,
+            onClose = onClose
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Question text
+        Text(
+            text = currentField.name,
+            style = TextStyle(
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                textAlign = TextAlign.Center
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Input field based on type
+        when (currentField.fieldType) {
+            Pay.CollectDataFieldType.TEXT -> {
+                TextFieldInput(
+                    value = inputValue,
+                    onValueChange = { inputValue = it },
+                    placeholder = currentField.name
+                )
+            }
+            Pay.CollectDataFieldType.DATE -> {
+                DatePickerInput(
+                    value = inputValue,
+                    onValueChange = { inputValue = it }
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Continue button
+        Button(
+            onClick = { onValueSubmit(currentField.id, inputValue) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            enabled = inputValue.isNotBlank(),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color(0xFF3396FF),
+                disabledBackgroundColor = Color(0xFFB3D9FF)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text(
+                text = "Continue",
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun CollectDataHeader(
+    currentStep: Int,
+    totalSteps: Int,
+    onBack: () -> Unit,
+    onClose: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Back button
+        IconButton(onClick = onBack) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.Black
+            )
+        }
+        
+        // Progress indicator
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            for (i in 0 until totalSteps) {
+                Box(
+                    modifier = Modifier
+                        .width(40.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(
+                            if (i <= currentStep) Color(0xFF3396FF) else Color(0xFFE0E0E0)
+                        )
+                )
+            }
+        }
+        
+        // Close button
+        IconButton(onClick = onClose) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = Color.Black
+            )
+        }
+    }
+}
+
+@Composable
+private fun TextFieldInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier.fillMaxWidth(),
+        placeholder = {
+            Text(
+                text = placeholder,
+                color = Color.Gray
+            )
+        },
+        colors = TextFieldDefaults.outlinedTextFieldColors(
+            textColor = Color.Black,
+            backgroundColor = Color(0xFFF5F5F5),
+            focusedBorderColor = Color(0xFF3396FF),
+            unfocusedBorderColor = Color.Transparent,
+            cursorColor = Color(0xFF3396FF)
+        ),
+        shape = RoundedCornerShape(12.dp),
+        singleLine = true
+    )
+}
+
+@Composable
+private fun DatePickerInput(
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    // Default values
+    val defaultYear = "1990"
+    val defaultMonth = "01"
+    val defaultDay = "01"
+    
+    // Parse existing value (YYYY-MM-DD format) or use defaults
+    val initialYear: String
+    val initialMonth: String
+    val initialDay: String
+    
+    if (value.isNotBlank() && value.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) {
+        val parts = value.split("-")
+        initialYear = parts[0]
+        initialMonth = parts[1]
+        initialDay = parts[2]
+    } else {
+        initialYear = defaultYear
+        initialMonth = defaultMonth
+        initialDay = defaultDay
+    }
+    
+    var selectedYear by remember(value) { mutableStateOf(initialYear) }
+    var selectedMonth by remember(value) { mutableStateOf(initialMonth) }
+    var selectedDay by remember(value) { mutableStateOf(initialDay) }
+    
+    val months = listOf(
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    )
+    val days = (1..31).map { it.toString().padStart(2, '0') }
+    val years = (1920..2025).map { it.toString() }.reversed()
+    
+    // Update combined value when any selection changes (ISO 8601 format: YYYY-MM-DD)
+    LaunchedEffect(selectedYear, selectedMonth, selectedDay) {
+        val formattedDate = "${selectedYear}-${selectedMonth}-${selectedDay}"
+        onValueChange(formattedDate)
+    }
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFF5F5F5)),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Month picker
+        DateWheelPicker(
+            items = months,
+            selectedItem = months.getOrNull((selectedMonth.toIntOrNull() ?: 1) - 1) ?: "January",
+            onItemSelected = { month ->
+                selectedMonth = (months.indexOf(month) + 1).toString().padStart(2, '0')
+            },
+            modifier = Modifier.weight(1.5f)
+        )
+        
+        // Day picker
+        DateWheelPicker(
+            items = days,
+            selectedItem = selectedDay.takeIf { it in days } ?: "01",
+            onItemSelected = { selectedDay = it },
+            modifier = Modifier.weight(0.8f)
+        )
+        
+        // Year picker
+        DateWheelPicker(
+            items = years,
+            selectedItem = selectedYear.takeIf { it in years } ?: "2000",
+            onItemSelected = { selectedYear = it },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun DateWheelPicker(
+    items: List<String>,
+    selectedItem: String,
+    onItemSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val selectedIndex = items.indexOf(selectedItem).coerceAtLeast(0)
+    
+    Column(
+        modifier = modifier.padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Show a few items around the selected one
+        val visibleRange = 2
+        val startIndex = (selectedIndex - visibleRange).coerceAtLeast(0)
+        val endIndex = (selectedIndex + visibleRange).coerceAtMost(items.size - 1)
+        
+        for (i in startIndex..endIndex) {
+            val item = items[i]
+            val isSelected = i == selectedIndex
+            Text(
+                text = item,
+                style = TextStyle(
+                    fontSize = if (isSelected) 20.sp else 16.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSelected) Color.Black else Color.Gray
+                ),
+                modifier = Modifier
+                    .clickable { onItemSelected(item) }
+                    .padding(vertical = 8.dp)
+            )
         }
     }
 }

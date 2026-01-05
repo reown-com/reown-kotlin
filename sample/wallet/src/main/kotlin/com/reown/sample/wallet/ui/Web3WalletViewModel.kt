@@ -191,6 +191,7 @@ class Web3WalletViewModel : ViewModel() {
      */
     private fun isPaymentUrl(url: String): Boolean {
         return url.contains("pay.walletconnect.com/pay_") || 
-               url.contains("gateway-wc.vercel.app/v1/")
+               url.contains("gateway-wc.vercel.app/v1/") ||
+                url.contains("https://wc-pay-buyer-experience-dev.walletconnect-v1-bridge.workers.dev")
     }
 }
