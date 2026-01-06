@@ -95,6 +95,118 @@ Migrations are strictly validated. Schema files are in `src/main/sqldelight/`.
 - `SignClient.initialize()` - Initialize Sign protocol
 - `WalletKit.initialize()` - Initialize wallet SDK (wraps Sign)
 - `AppKit.initialize()` - Initialize dApp SDK (wraps Sign)
+- `WalletConnectPay.initialize()` - Initialize payment SDK (standalone)
+
+## WalletConnectPay Module
+
+### Overview
+
+`WalletConnectPay` is a standalone payment SDK in `product/pay/` that enables crypto payments via payment links. It uses a Rust backend via UniFFI bindings (`yttrium-wcpay`). Unlike other SDKs, it has no dependencies on Core, Sign, or WalletKit.
+
+**Key files:**
+- `product/pay/src/main/java/com/walletconnect/pay/WalletConnectPay.kt` - Main SDK singleton
+- `product/pay/src/main/java/com/walletconnect/pay/Pay.kt` - Data models
+- `product/pay/src/main/java/com/walletconnect/pay/Mappers.kt` - UniFFI type mappings
+
+### Initialization
+
+```kotlin
+WalletConnectPay.initialize(
+    Pay.SdkConfig(
+        apiKey = "your-api-key",
+        sdkName = "kotlin-walletconnect-pay",
+        sdkVersion = PayBuildConfig.SDK_VERSION,
+        sdkPlatform = "android"
+    )
+)
+```
+
+### Payment Flow
+
+```
+1. getPaymentOptions(paymentLink, accounts)
+   → Returns: merchant info, payment options, optional data collection fields
+
+2. [If collectDataAction exists] Collect user data (TEXT/DATE fields)
+
+3. getRequiredPaymentActions(paymentId, optionId)
+   → Returns: list of WalletRpcAction to sign (eth_signTypedData_v4, personal_sign)
+
+4. Sign each action with wallet's private key
+
+5. confirmPayment(paymentId, optionId, signatures, collectedData)
+   → Returns: PaymentStatus (SUCCEEDED, PROCESSING, FAILED, EXPIRED)
+```
+
+### Public API
+
+```kotlin
+object WalletConnectPay {
+    fun initialize(config: Pay.SdkConfig)
+    val isInitialized: Boolean
+
+    suspend fun getPaymentOptions(
+        paymentLink: String,
+        accounts: List<String>  // CAIP-10 format: "eip155:1:0x..."
+    ): Result<Pay.PaymentOptionsResponse>
+
+    suspend fun getRequiredPaymentActions(
+        paymentId: String,
+        optionId: String
+    ): Result<List<Pay.RequiredAction>>
+
+    suspend fun confirmPayment(
+        paymentId: String,
+        optionId: String,
+        signatures: List<String>,
+        collectedData: List<Pay.CollectDataFieldResult>? = null
+    ): Result<Pay.ConfirmPaymentResponse>
+
+    fun shutdown()
+}
+```
+
+### Key Data Models
+
+```kotlin
+// Payment status
+enum class Pay.PaymentStatus {
+    REQUIRES_ACTION, PROCESSING, SUCCEEDED, FAILED, EXPIRED
+}
+
+// Required signing action
+sealed class Pay.RequiredAction {
+    data class WalletRpc(val action: WalletRpcAction) : RequiredAction()
+}
+
+data class Pay.WalletRpcAction(
+    val chainId: String,
+    val method: String,    // "eth_signTypedData_v4" or "personal_sign"
+    val params: String     // JSON parameters
+)
+
+// Data collection for information capture
+data class Pay.CollectDataField(
+    val id: String,
+    val name: String,
+    val fieldType: CollectDataFieldType,  // TEXT or DATE
+    val required: Boolean
+)
+```
+
+### Error Handling
+
+All methods return `Result<T>`. Error types are sealed classes:
+- `GetPaymentOptionsError` - InvalidPaymentLink, PaymentExpired, PaymentNotFound, etc.
+- `GetPaymentRequestError` - OptionNotFound, PaymentNotFound, etc.
+- `ConfirmPaymentError` - InvalidSignature, RouteExpired, etc.
+- `PayError` - Http, Api, Timeout
+
+### Sample Implementation
+
+See `sample/wallet/src/main/kotlin/com/reown/sample/wallet/`:
+- `PaymentViewModel.kt` - Complete payment flow with StateFlow
+- `PaymentRoute.kt` - Jetpack Compose UI
 
 ## Testing
 
