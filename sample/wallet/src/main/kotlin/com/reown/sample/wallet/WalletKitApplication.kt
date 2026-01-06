@@ -1,7 +1,6 @@
 package com.reown.sample.wallet
 
 import android.app.Application
-import android.os.Build
 import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
@@ -26,7 +25,6 @@ import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.TONClient
-//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.domain.notify.NotificationHandler
@@ -49,6 +47,7 @@ import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named
 import timber.log.Timber
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
+import com.walletconnect.pay.BuildConfig as PayBuildConfig
 
 class WalletKitApplication : Application() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -74,7 +73,7 @@ class WalletKitApplication : Application() {
             Pay.SdkConfig(
                 apiKey = BuildConfig.MERCHANT_API_KEY,
                 sdkName = "kotlin-walletconnect-pay",
-                sdkVersion = "1.0.0",
+                sdkVersion = PayBuildConfig.SDK_VERSION,
                 sdkPlatform = "android"
             )
         )

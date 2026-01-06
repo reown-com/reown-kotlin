@@ -8,18 +8,24 @@ plugins {
 project.apply {
     extra[KEY_PUBLISH_ARTIFACT_ID] = PAY
     extra[KEY_PUBLISH_VERSION] = PAY_VERSION
-    extra[KEY_SDK_NAME] = "WalletConnect Pay"
+    extra[KEY_SDK_NAME] = "WalletConnectPay"
 }
 
 android {
     namespace = "com.walletconnect.pay"
     compileSdk = 36
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         minSdk = 23
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
     }
 
     buildTypes {
@@ -28,9 +34,14 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+    lint {
+        abortOnError = true
+        ignoreWarnings = true
+        warningsAsErrors = false
+    }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = jvmVersion
+        targetCompatibility = jvmVersion
     }
     kotlinOptions {
         jvmTarget = "11"

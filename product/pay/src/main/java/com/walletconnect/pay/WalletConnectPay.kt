@@ -7,15 +7,15 @@ import uniffi.yttrium_wcpay.registerLogger
 import uniffi.yttrium_wcpay.WalletConnectPay as YttriumWalletConnectPay
 import uniffi.yttrium_wcpay.SdkConfig as YttriumSdkConfig
 
+
 /**
  * WalletConnectPay SDK client for handling payments.
  */
 object WalletConnectPay {
 
-    //TODO: only for DEBUG
     class AndroidLogger : Logger {
         override fun log(message: String) {
-            println("WalletConnectPay: $message")
+            if (BuildConfig.DEBUG) println("WalletConnectPay: $message")
         }
     }
 
