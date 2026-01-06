@@ -29,6 +29,10 @@ class PaymentViewModel : ViewModel() {
     private var currentPaymentId: String? = null
     private var selectedOptionId: String? = null
     
+    // Stored payment options for after information capture
+    private var storedPaymentInfo: Pay.PaymentInfo? = null
+    private var storedPaymentOptions: List<Pay.PaymentOption> = emptyList()
+    
     // Information Capture state
     private var pendingWalletRpcActions: List<Pay.RequiredAction.WalletRpc> = emptyList()
     private var collectDataFields: List<Pay.CollectDataField> = emptyList()
@@ -58,9 +62,22 @@ class PaymentViewModel : ViewModel() {
             result.fold(
                 onSuccess = { response ->
                     currentPaymentId = response.paymentId
+                    // Store collect data fields from response (if any)
+                    collectDataFields = response.collectDataAction?.fields ?: emptyList()
+                    collectedValues.clear()
+                    currentFieldIndex = 0
+                    
+                    // Store payment options for later use
+                    storedPaymentInfo = response.info
+                    storedPaymentOptions = response.options
+                    
                     if (response.options.isEmpty()) {
                         _uiState.value = PaymentUiState.Error("No payment options available")
+                    } else if (collectDataFields.isNotEmpty()) {
+                        // Show information capture first
+                        showCurrentField()
                     } else {
+                        // No fields to collect, show options directly
                         _uiState.value = PaymentUiState.Options(
                             paymentLink = paymentLink,
                             paymentInfo = response.info,
@@ -102,22 +119,11 @@ class PaymentViewModel : ViewModel() {
         optionId: String,
         actions: List<Pay.RequiredAction>
     ) {
-        // Separate WalletRpc and CollectData actions
+        // Store WalletRpc actions for signing
         pendingWalletRpcActions = actions.filterIsInstance<Pay.RequiredAction.WalletRpc>()
-        val collectDataActions = actions.filterIsInstance<Pay.RequiredAction.CollectData>()
         
-        // Collect all fields from CollectData actions
-        collectDataFields = collectDataActions.flatMap { it.action.fields }
-        collectedValues.clear()
-        currentFieldIndex = 0
-        
-        // If there are fields to collect, show the first field
-        if (collectDataFields.isNotEmpty()) {
-            showCurrentField()
-        } else {
-            // No data to collect, proceed directly to payment
-            executePayment()
-        }
+        // Information capture already done before options, proceed directly to payment
+        executePayment()
     }
     
     /**
@@ -137,6 +143,18 @@ class PaymentViewModel : ViewModel() {
     }
     
     /**
+     * Proceed to payment options after information capture is complete.
+     */
+    private fun proceedToOptions() {
+        val paymentLink = currentPaymentLink ?: return
+        _uiState.value = PaymentUiState.Options(
+            paymentLink = paymentLink,
+            paymentInfo = storedPaymentInfo,
+            options = storedPaymentOptions
+        )
+    }
+    
+    /**
      * Submit the value for the current field and move to the next step.
      */
     fun submitFieldValue(fieldId: String, value: String) {
@@ -147,10 +165,8 @@ class PaymentViewModel : ViewModel() {
             // Show next field
             showCurrentField()
         } else {
-            // All fields collected, execute payment
-            viewModelScope.launch {
-                executePayment()
-            }
+            // All fields collected, proceed to payment options
+            proceedToOptions()
         }
     }
     
@@ -162,8 +178,8 @@ class PaymentViewModel : ViewModel() {
             currentFieldIndex--
             showCurrentField()
         } else {
-            // Go back to options
-            currentPaymentLink?.let { loadPaymentOptions(it) }
+            // On first field, cancel the flow
+            cancel()
         }
     }
     
@@ -177,41 +193,28 @@ class PaymentViewModel : ViewModel() {
         _uiState.value = PaymentUiState.Processing("Signing transactions...")
         
         try {
-            val results = mutableListOf<Pay.ConfirmPaymentResult>()
-
-            // Add collected data if any
-            if (collectedValues.isNotEmpty()) {
-                results.add(
-                    Pay.ConfirmPaymentResult.CollectData(
-                        Pay.CollectDataResult(
-                            fields = collectedValues.map { (id, value) ->
-                                Pay.CollectDataFieldResult(id = id, value = value)
-                            }
-                        )
-                    )
-                )
+            // Sign all WalletRpc actions and collect signatures
+            val signatures = pendingWalletRpcActions.map { action ->
+                signWalletRpcAction(action.action)
             }
 
-            // Add WalletRpc signatures
-            for (action in pendingWalletRpcActions) {
-                val signature = signWalletRpcAction(action.action)
-                results.add(
-                    Pay.ConfirmPaymentResult.WalletRpc(
-                        Pay.WalletRpcResult(
-                            method = action.action.method,
-                            data = listOf(signature.signature.value)
-                        )
-                    )
-                )
+            // Convert collected data to field results
+            val collectedData = if (collectedValues.isNotEmpty()) {
+                collectedValues.map { (id, value) ->
+                    Pay.CollectDataFieldResult(id = id, value = value)
+                }
+            } else {
+                null
             }
 
             _uiState.value = PaymentUiState.Processing("Confirming payment...")
             
-            // Confirm payment with results
+            // Confirm payment with signatures and collected data
             val confirmResult = WalletConnectPay.confirmPayment(
                 paymentId = paymentId,
                 optionId = optionId,
-                results = results
+                signatures = signatures,
+                collectedData = collectedData
             )
 
             confirmResult.fold(
@@ -244,21 +247,13 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Sign a wallet RPC action.
+     * Sign a wallet RPC action and return the signature string.
      */
-    private fun signWalletRpcAction(action: Pay.WalletRpcAction): Pay.SignatureResult {
+    private fun signWalletRpcAction(action: Pay.WalletRpcAction): String {
         return when (action.method) {
-            "eth_signTypedData_v4" -> {
-                val signature = signTypedDataV4(action.params)
-                Pay.SignatureResult(Pay.SignatureValue(signature))
-            }
-            "personal_sign" -> {
-                val signature = EthSigner.personalSign(action.params)
-                Pay.SignatureResult(Pay.SignatureValue(signature))
-            }
-            else -> {
-                throw UnsupportedOperationException("Unsupported signing method: ${action.method}")
-            }
+            "eth_signTypedData_v4" -> signTypedDataV4(action.params)
+            "personal_sign" -> EthSigner.personalSign(action.params)
+            else -> throw UnsupportedOperationException("Unsupported signing method: ${action.method}")
         }
     }
 
@@ -298,6 +293,8 @@ class PaymentViewModel : ViewModel() {
         currentPaymentLink = null
         currentPaymentId = null
         selectedOptionId = null
+        storedPaymentInfo = null
+        storedPaymentOptions = emptyList()
         pendingWalletRpcActions = emptyList()
         collectDataFields = emptyList()
         collectedValues.clear()

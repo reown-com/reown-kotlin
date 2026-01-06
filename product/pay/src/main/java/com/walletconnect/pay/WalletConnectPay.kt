@@ -101,24 +101,32 @@ object WalletConnectPay {
     }
 
     /**
-     * Confirms a payment with action results.
+     * Confirms a payment with signatures and optional collected data.
      *
      * @param paymentId The payment ID
      * @param optionId The selected payment option ID
-     * @param results List of results from completing the required actions (wallet RPC or collect data)
+     * @param signatures List of signature strings from wallet RPC actions
+     * @param collectedData Optional list of collected data field results
      * @return Result containing confirm payment response or an error
      */
     suspend fun confirmPayment(
         paymentId: String,
         optionId: String,
-        results: List<Pay.ConfirmPaymentResult>
+        signatures: List<String>,
+        collectedData: List<Pay.CollectDataFieldResult>? = null
     ): Result<Pay.ConfirmPaymentResponse> = withContext(Dispatchers.IO) {
         val yttriumClient = client ?: return@withContext Result.failure(
             IllegalStateException("WalletConnectPay not initialized. Call initialize() first.")
         )
         try {
-            val yttriumResults = results.map { Mappers.mapConfirmPaymentResultToYttrium(it) }
-            val response = yttriumClient.confirmPayment(paymentId = paymentId, optionId = optionId, results = yttriumResults, maxPollMs = 60000)
+            val yttriumCollectedData = collectedData?.map { Mappers.mapCollectDataFieldResultToYttrium(it) }
+            val response = yttriumClient.confirmPayment(
+                paymentId = paymentId,
+                optionId = optionId,
+                signatures = signatures,
+                collectedData = yttriumCollectedData,
+                maxPollMs = 60000
+            )
             Result.success(Mappers.mapConfirmPaymentResponse(response))
         } catch (e: uniffi.yttrium_wcpay.ConfirmPaymentException) {
             Result.failure(Mappers.mapConfirmPaymentError(e))

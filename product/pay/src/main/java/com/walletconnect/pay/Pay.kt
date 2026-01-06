@@ -51,7 +51,8 @@ object Pay {
     data class PaymentOptionsResponse(
         val info: PaymentInfo?,
         val options: List<PaymentOption>,
-        val paymentId: String
+        val paymentId: String,
+        val collectDataAction: CollectDataAction?
     )
 
     data class WalletRpcAction(
@@ -78,35 +79,12 @@ object Pay {
 
     sealed class RequiredAction {
         data class WalletRpc(val action: WalletRpcAction) : RequiredAction()
-        data class CollectData(val action: CollectDataAction) : RequiredAction()
     }
-
-    data class SignatureValue(
-        val value: String
-    )
-
-    data class SignatureResult(
-        val signature: SignatureValue
-    )
 
     data class CollectDataFieldResult(
         val id: String,
         val value: String
     )
-
-    data class CollectDataResult(
-        val fields: List<CollectDataFieldResult>
-    )
-
-    data class WalletRpcResult(
-        val method: String,
-        val data: List<String>
-    )
-
-    sealed class ConfirmPaymentResult {
-        data class CollectData(val result: CollectDataResult) : ConfirmPaymentResult()
-        data class WalletRpc(val result: WalletRpcResult) : ConfirmPaymentResult()
-    }
 
     data class ConfirmPaymentResponse(
         val status: PaymentStatus,

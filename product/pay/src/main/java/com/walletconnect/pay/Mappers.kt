@@ -15,10 +15,7 @@ import uniffi.yttrium_wcpay.CollectDataAction as YttriumCollectDataAction
 import uniffi.yttrium_wcpay.CollectDataField as YttriumCollectDataField
 import uniffi.yttrium_wcpay.CollectDataFieldType as YttriumCollectDataFieldType
 import uniffi.yttrium_wcpay.ConfirmPaymentResultResponse as YttriumConfirmPaymentResponse
-import uniffi.yttrium_wcpay.ConfirmPaymentResultItem as YttriumConfirmPaymentResultItem
 import uniffi.yttrium_wcpay.CollectDataFieldResult as YttriumCollectDataFieldResult
-import uniffi.yttrium_wcpay.CollectDataResultData as YttriumCollectDataResultData
-import uniffi.yttrium_wcpay.WalletRpcResultData as YttriumWalletRpcResultData
 import uniffi.yttrium_wcpay.GetPaymentOptionsException as YttriumGetPaymentOptionsError
 import uniffi.yttrium_wcpay.GetPaymentRequestException as YttriumGetPaymentRequestError
 import uniffi.yttrium_wcpay.ConfirmPaymentException as YttriumConfirmPaymentError
@@ -29,7 +26,8 @@ internal object Mappers {
         return Pay.PaymentOptionsResponse(
             info = response.info?.let { mapPaymentInfo(it) },
             options = response.options.map { mapPaymentOption(it) },
-            paymentId = response.paymentId
+            paymentId = response.paymentId,
+            collectDataAction = response.collectData?.let { mapCollectDataAction(it) }
         )
     }
 
@@ -77,13 +75,7 @@ internal object Mappers {
 
     fun mapRequiredAction(action: YttriumRequiredAction): Pay.RequiredAction {
         return when (action) {
-            is YttriumRequiredAction.WalletRpc -> WalletRpc(
-                mapWalletRpcAction(action.v1)
-            )
-
-            is YttriumRequiredAction.CollectData -> CollectData(
-                mapCollectDataAction(action.v1)
-            )
+            else -> WalletRpc(mapWalletRpcAction(action.walletRpc))
         }
     }
 
@@ -135,23 +127,8 @@ internal object Mappers {
         }
     }
 
-    fun mapConfirmPaymentResultToYttrium(result: Pay.ConfirmPaymentResult): YttriumConfirmPaymentResultItem {
-        return when (result) {
-            is Pay.ConfirmPaymentResult.CollectData -> YttriumConfirmPaymentResultItem.CollectData(
-                YttriumCollectDataResultData(
-                    fields = result.result.fields.map {
-                        YttriumCollectDataFieldResult(id = it.id, value = it.value)
-                    }
-                )
-            )
-
-            is Pay.ConfirmPaymentResult.WalletRpc -> YttriumConfirmPaymentResultItem.WalletRpc(
-                YttriumWalletRpcResultData(
-                    method = result.result.method,
-                    data = result.result.data
-                )
-            )
-        }
+    fun mapCollectDataFieldResultToYttrium(result: Pay.CollectDataFieldResult): YttriumCollectDataFieldResult {
+        return YttriumCollectDataFieldResult(id = result.id, value = result.value)
     }
 
     fun mapGetPaymentOptionsError(error: YttriumGetPaymentOptionsError): Pay.GetPaymentOptionsError {
