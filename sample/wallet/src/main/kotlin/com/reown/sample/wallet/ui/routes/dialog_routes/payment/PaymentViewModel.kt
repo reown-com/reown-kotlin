@@ -52,7 +52,8 @@ class PaymentViewModel : ViewModel() {
             val accounts = listOf(
                 "eip155:1:${EthAccountDelegate.address}",
                 "eip155:137:${EthAccountDelegate.address}",
-                "eip155:8453:${EthAccountDelegate.address}"
+                "eip155:8453:${EthAccountDelegate.address}",
+                "eip155:10:${EthAccountDelegate.address}"
             )
 
             val result = WalletConnectPay.getPaymentOptions(
@@ -187,9 +188,19 @@ class PaymentViewModel : ViewModel() {
             currentFieldIndex--
             showCurrentField()
         } else {
-            // On first field, cancel the flow
-            cancel()
+            // On first field, go back to intro
+            goBackToIntro()
         }
+    }
+    
+    /**
+     * Go back to the intro screen.
+     */
+    fun goBackToIntro() {
+        _uiState.value = PaymentUiState.Intro(
+            paymentInfo = storedPaymentInfo,
+            hasInfoCapture = collectDataFields.isNotEmpty()
+        )
     }
     
     /**

@@ -2,6 +2,12 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.payment
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -28,7 +34,6 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -43,6 +48,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -98,6 +105,10 @@ fun PaymentRoute(
                     options = state.options,
                     onOptionSelected = { optionId ->
                         viewModel.processPayment(optionId)
+                    },
+                    onClose = {
+                        viewModel.cancel()
+                        navController.popBackStack(Route.Connections.path, inclusive = false)
                     }
                 )
             }
@@ -110,9 +121,6 @@ fun PaymentRoute(
                     onValueSubmit = { fieldId, value ->
                         viewModel.submitFieldValue(fieldId, value)
                     },
-                    onBack = {
-                        viewModel.goBackToPreviousField()
-                    },
                     onClose = {
                         viewModel.cancel()
                         navController.popBackStack(Route.Connections.path, inclusive = false)
@@ -120,15 +128,25 @@ fun PaymentRoute(
                 )
             }
             is PaymentUiState.Processing -> {
-                ProcessingContent(message = state.message)
+                ProcessingContent(
+                    message = state.message,
+                    onClose = {
+                        viewModel.cancel()
+                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    }
+                )
             }
             is PaymentUiState.Success -> {
                 SuccessContent(
-                    message = state.message,
+                    paymentInfo = state.paymentInfo,
                     onDone = {
                         viewModel.cancel()
                         navController.popBackStack(Route.Connections.path, inclusive = false)
                         Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
+                    },
+                    onClose = {
+                        viewModel.cancel()
+                        navController.popBackStack(Route.Connections.path, inclusive = false)
                     }
                 )
             }
@@ -138,7 +156,7 @@ fun PaymentRoute(
                     onRetry = {
                         viewModel.loadPaymentOptions(paymentLink)
                     },
-                    onCancel = {
+                    onClose = {
                         viewModel.cancel()
                         navController.popBackStack(Route.Connections.path, inclusive = false)
                     }
@@ -226,12 +244,12 @@ private fun IntroContent(
                         .background(Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
+            Text(
                         text = paymentInfo?.merchant?.name?.take(1)?.uppercase() ?: "P",
-                        style = TextStyle(
+                style = TextStyle(
                             fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                         )
                     )
                 }
@@ -474,35 +492,145 @@ private fun IntroStepItem(
 private fun PaymentOptionsContent(
     paymentInfo: Pay.PaymentInfo?,
     options: List<Pay.PaymentOption>,
-    onOptionSelected: (String) -> Unit
+    onOptionSelected: (String) -> Unit,
+    onClose: () -> Unit
 ) {
-    var selectedOptionId by remember { mutableStateOf<String?>(null) }
+    var selectedOptionId by remember { mutableStateOf<String?>(options.firstOrNull()?.id) }
     var isOptionsExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp)
     ) {
-        // Payment Info Header
-        if (paymentInfo != null) {
-            PaymentInfoHeader(paymentInfo = paymentInfo)
-            Spacer(modifier = Modifier.height(24.dp))
-        } else {
-            // Fallback header when no payment info
-            Text(
-                text = "WalletConnect Pay",
-                style = TextStyle(
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                ),
-                modifier = Modifier.padding(bottom = 16.dp)
+        // Header with progress and close
+        PaymentOptionsHeader(
+            onClose = onClose
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Merchant icon and payment title
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+            paymentInfo?.merchant?.iconUrl?.let { iconUrl ->
+            AsyncImage(
+                model = iconUrl,
+                contentDescription = "Merchant icon",
+                modifier = Modifier
+                    .size(64.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.Black)
+                )
+            } ?: run {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.Black),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = paymentInfo?.merchant?.name?.take(1)?.uppercase() ?: "P",
+                        style = TextStyle(
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Payment title with verified badge
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
+                val displayAmount = paymentInfo?.let {
+                    formatDisplayAmount(
+                        value = it.amount.value,
+                        decimals = it.amount.display?.decimals ?: 2,
+                        symbol = it.amount.display?.assetSymbol ?: it.amount.unit
+                    )
+                } ?: ""
+                
+                Text(
+                    text = "Pay $displayAmount to $merchantName",
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                )
+                
+                Spacer(modifier = Modifier.width(6.dp))
+                
+                // Verified badge
+                Box(
+                    modifier = Modifier
+                        .size(18.dp)
+                    .clip(CircleShape)
+                        .background(Color(0xFF3396FF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Verified",
+                        tint = Color.White,
+                        modifier = Modifier.size(10.dp)
+                    )
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Amount row
+        paymentInfo?.let { info ->
+            val displayAmount = formatDisplayAmount(
+                value = info.amount.value,
+                decimals = info.amount.display?.decimals ?: 2,
+                symbol = info.amount.display?.assetSymbol ?: info.amount.unit
             )
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFF5F5F5))
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+        Text(
+                    text = "Amount",
+            style = TextStyle(
+                        fontSize = 16.sp,
+                        color = Color(0xFF666666)
+                    )
+                )
+                Text(
+                    text = displayAmount,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+            )
+        )
+            }
         }
 
-        // Expandable Payment Options Section
-        ExpandablePaymentOptions(
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Pay with dropdown
+        PayWithDropdown(
             options = options,
             selectedOptionId = selectedOptionId,
             isExpanded = isOptionsExpanded,
@@ -512,87 +640,94 @@ private fun PaymentOptionsContent(
                 isOptionsExpanded = false
             }
         )
-
+        
         Spacer(modifier = Modifier.height(24.dp))
-
+        
         // Pay button
+        val buttonAmount = paymentInfo?.let {
+            formatDisplayAmount(
+                value = it.amount.value,
+                decimals = it.amount.display?.decimals ?: 2,
+                symbol = it.amount.display?.assetSymbol ?: it.amount.unit
+            )
+        } ?: "Pay"
+        
         Button(
             onClick = { selectedOptionId?.let { onOptionSelected(it) } },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
             enabled = selectedOptionId != null,
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = Color(0xFF3396FF),
-                disabledBackgroundColor = Color(0xFF1A4A7A)
+                disabledBackgroundColor = Color(0xFFB3D9FF)
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Text("Pay", color = Color.White)
+        Text(
+                text = "Pay $buttonAmount",
+            style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                color = Color.White
+            )
+        )
         }
     }
 }
 
 @Composable
-private fun PaymentInfoHeader(paymentInfo: Pay.PaymentInfo) {
-    Column(
+private fun PaymentOptionsHeader(
+    onClose: () -> Unit
+) {
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Merchant Icon
-        paymentInfo.merchant.iconUrl?.let { iconUrl ->
-            AsyncImage(
-                model = iconUrl,
-                contentDescription = "Merchant icon",
+        // Empty spacer for balance
+        Spacer(modifier = Modifier.size(32.dp))
+        
+        // Progress indicator (2 steps, both completed)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Step 1 - completed
+            Box(
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF3A3A3A))
+                    .width(48.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFF3396FF))
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            // Step 2 - current
+            Box(
+                modifier = Modifier
+                    .width(48.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(Color(0xFF3396FF))
+            )
         }
-
-        // Merchant Name
-        Text(
-            text = paymentInfo.merchant.name,
-            style = TextStyle(
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.White
+        
+        // Close button
+        IconButton(
+            onClick = onClose,
+            modifier = Modifier.size(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = Color(0xFF9E9E9E),
+                modifier = Modifier.size(24.dp)
             )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Amount
-        val formattedAmount = formatAmount(
-            value = paymentInfo.amount.value,
-            decimals = paymentInfo.amount.display?.decimals ?: 2,
-            symbol = paymentInfo.amount.display?.assetSymbol ?: paymentInfo.amount.unit
-        )
-        Text(
-            text = formattedAmount,
-            style = TextStyle(
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Expiration
-        val expiresText = formatExpiration(paymentInfo.expiresAt)
-        Text(
-            text = expiresText,
-            style = TextStyle(
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-        )
+        }
     }
 }
 
 @Composable
-private fun ExpandablePaymentOptions(
+private fun PayWithDropdown(
     options: List<Pay.PaymentOption>,
     selectedOptionId: String?,
     isExpanded: Boolean,
@@ -602,10 +737,10 @@ private fun ExpandablePaymentOptions(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF2A2A2A))
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFFF5F5F5))
     ) {
-        // Header row (always visible)
+        // Header row with "Pay with" label
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -614,42 +749,66 @@ private fun ExpandablePaymentOptions(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Text(
+                text = "Pay with",
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    color = Color(0xFF666666)
+                )
+            )
+            
             val selectedOption = options.find { it.id == selectedOptionId }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
             if (selectedOption != null) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    selectedOption.amount.display?.iconUrl?.let { iconUrl ->
+                    val display = selectedOption.amount.display
+                    val tokenAmount = formatTokenAmount(
+                        value = selectedOption.amount.value,
+                        decimals = display?.decimals ?: 18,
+                        symbol = display?.assetSymbol ?: "Token"
+                    )
+                    
+                    Text(
+                        text = tokenAmount,
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
+                        )
+                    )
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    display?.iconUrl?.let { iconUrl ->
                         AsyncImage(
                             model = iconUrl,
                             contentDescription = null,
                             modifier = Modifier
                                 .size(24.dp)
                                 .clip(CircleShape)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(
-                        text = "${selectedOption.amount.display?.assetName ?: "Token"} on ${selectedOption.amount.display?.networkName ?: "Network"}",
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
                     )
                 }
             } else {
                 Text(
-                    text = "Select payment method",
+                        text = "Select",
                     style = TextStyle(
                         fontSize = 16.sp,
                         color = Color.Gray
                     )
                 )
             }
+                
+                Spacer(modifier = Modifier.width(4.dp))
 
             Icon(
                 imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                 contentDescription = if (isExpanded) "Collapse" else "Expand",
-                tint = Color.Gray
+                    tint = Color(0xFF666666),
+                    modifier = Modifier.size(20.dp)
             )
+            }
         }
 
         // Expandable options list
@@ -665,13 +824,99 @@ private fun ExpandablePaymentOptions(
                     .padding(bottom = 8.dp)
             ) {
                 options.forEach { option ->
-                    PaymentOptionCard(
+                    PaymentOptionItem(
                         option = option,
                         isSelected = selectedOptionId == option.id,
                         onClick = { onOptionSelected(option.id) }
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaymentOptionItem(
+    option: Pay.PaymentOption,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val backgroundColor = if (isSelected) Color(0xFFE3F2FD) else Color.White
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Asset icon
+                option.amount.display?.iconUrl?.let { iconUrl ->
+                    AsyncImage(
+                        model = iconUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                        .size(36.dp)
+                            .clip(CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+
+            // Token amount and network
+            val display = option.amount.display
+            val tokenAmount = formatTokenAmount(
+                value = option.amount.value,
+                decimals = display?.decimals ?: 18,
+                symbol = display?.assetSymbol ?: "Token"
+            )
+            val networkName = display?.networkName ?: ""
+
+                Column {
+                        Text(
+                    text = tokenAmount,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                )
+                if (networkName.isNotEmpty()) {
+                    Text(
+                        text = "on $networkName",
+                            style = TextStyle(
+                                fontSize = 12.sp,
+                            color = Color(0xFF9E9E9E)
+                            )
+                        )
+                    }
+                }
+            }
+
+        // Radio button indicator
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                .border(
+                    width = if (isSelected) 0.dp else 2.dp,
+                    color = if (isSelected) Color.Transparent else Color(0xFFE0E0E0),
+                    shape = CircleShape
+                )
+                .background(if (isSelected) Color(0xFF3396FF) else Color.Transparent),
+                    contentAlignment = Alignment.Center
+                ) {
+            if (isSelected) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                )
             }
         }
     }
@@ -686,6 +931,42 @@ private fun formatAmount(value: String, decimals: Int, symbol: String): String {
         val divisor = BigDecimal.TEN.pow(decimals)
         val formattedValue = rawValue.divide(divisor, decimals.coerceAtMost(2), RoundingMode.HALF_UP)
         "$formattedValue $symbol"
+    } catch (e: Exception) {
+        "$value $symbol"
+    }
+}
+
+/**
+ * Format display amount with $ prefix (for USD amounts).
+ */
+private fun formatDisplayAmount(value: String, decimals: Int, symbol: String): String {
+    return try {
+        val rawValue = BigDecimal(value)
+        val divisor = BigDecimal.TEN.pow(decimals)
+        val formattedValue = rawValue.divide(divisor, 2, RoundingMode.HALF_UP)
+        val numberFormat = java.text.NumberFormat.getNumberInstance(Locale.US).apply {
+            minimumFractionDigits = 0
+            maximumFractionDigits = 2
+        }
+        val formatted = numberFormat.format(formattedValue)
+        "$$formatted"
+    } catch (e: Exception) {
+        "$$value"
+    }
+}
+
+/**
+ * Format token amount with symbol.
+ */
+private fun formatTokenAmount(value: String, decimals: Int, symbol: String): String {
+    return try {
+        val rawValue = BigDecimal(value)
+        val divisor = BigDecimal.TEN.pow(decimals)
+        val formattedValue = rawValue.divide(divisor, 4, RoundingMode.HALF_UP)
+            .stripTrailingZeros()
+            .toPlainString()
+        val formatted = java.text.NumberFormat.getNumberInstance(Locale.US).format(BigDecimal(formattedValue))
+        "$formatted $symbol"
     } catch (e: Exception) {
         "$value $symbol"
     }
@@ -711,110 +992,204 @@ private fun formatExpiration(expiresAt: Long): String {
     }
 }
 
-@Composable
-private fun PaymentOptionCard(
-    option: Pay.PaymentOption,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val borderColor = if (isSelected) Color(0xFF3396FF) else Color(0xFF3A3A3A)
-    val backgroundColor = if (isSelected) Color(0xFF1A2A3A) else Color(0xFF2A2A2A)
 
+@Composable
+private fun ProcessingContent(
+    message: String,
+    onClose: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
-            .background(backgroundColor)
-            .clickable { onClick() }
-            .padding(16.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
+        // Close button at top right
+        Box(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            contentAlignment = Alignment.TopEnd
+        ) {
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF9E9E9E),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Animated Reown logo
+        AnimatedReownLogo()
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Text(
+            text = "Confirming your payment...",
+            style = TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Black
+            ),
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun AnimatedReownLogo() {
+    val infiniteTransition = rememberInfiniteTransition(label = "logo_animation")
+    
+    // Create staggered pulse animations for each block
+    val scale1 by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale1"
+    )
+    
+    val scale2 by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, delayMillis = 150, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale2"
+    )
+    
+    val scale3 by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, delayMillis = 300, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale3"
+    )
+    
+    val scale4 by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, delayMillis = 450, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale4"
+    )
+    
+    // Logo colors
+    val grayColor = Color(0xFF9EA0A6)
+    val blueColor = Color(0xFF3396FF)
+    val lightGrayColor = Color(0xFFD4D5D9)
+    val darkColor = Color(0xFF2D3131)
+    
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Top row: gray rectangle + blue rounded square
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Asset icon
-                option.amount.display?.iconUrl?.let { iconUrl ->
-                    AsyncImage(
-                        model = iconUrl,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                }
-
-                Column {
-                    option.amount.display?.let { display ->
-                        Text(
-                            text = "${display.assetName} on ${display.networkName ?: "Unknown"}",
-                            style = TextStyle(
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
-                        )
-                    }
-                }
-            }
-
-            if (isSelected) {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF3396FF)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Selected",
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
+            // Gray horizontal rectangle
+            Box(
+                modifier = Modifier
+                    .scale(scale1)
+                    .width(40.dp)
+                    .height(28.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(grayColor)
+            )
+            
+            // Blue rounded square
+            Box(
+                modifier = Modifier
+                    .scale(scale2)
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(blueColor)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        // Bottom row: light gray square + dark circle
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Light gray rounded square
+            Box(
+                modifier = Modifier
+                    .scale(scale3)
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(lightGrayColor)
+            )
+            
+            // Dark circle
+            Box(
+                modifier = Modifier
+                    .scale(scale4)
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(darkColor)
+            )
         }
     }
 }
 
 @Composable
-private fun ProcessingContent(message: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(48.dp),
-            color = Color(0xFF3396FF)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = message,
-            style = TextStyle(fontSize = 16.sp, color = Color.White),
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
 private fun SuccessContent(
-    message: String,
-    onDone: () -> Unit
+    paymentInfo: Pay.PaymentInfo?,
+    onDone: () -> Unit,
+    onClose: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp),
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Close button at top right
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF9E9E9E),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Green checkmark circle
         Box(
             modifier = Modifier
-                .size(64.dp)
+                .size(56.dp)
                 .clip(CircleShape)
                 .background(Color(0xFF4CAF50)),
             contentAlignment = Alignment.Center
@@ -823,34 +1198,53 @@ private fun SuccessContent(
                 imageVector = Icons.Default.Check,
                 contentDescription = "Success",
                 tint = Color.White,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(28.dp)
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Payment Successful",
-            style = TextStyle(
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Success message with payment details
+        val displayAmount = paymentInfo?.let {
+            formatDisplayAmount(
+                value = it.amount.value,
+                decimals = it.amount.display?.decimals ?: 2,
+                symbol = it.amount.display?.assetSymbol ?: it.amount.unit
             )
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        } ?: ""
+        val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
+        
         Text(
-            text = message,
-            style = TextStyle(fontSize = 14.sp, color = Color.Gray),
+            text = "You've paid $displayAmount to $merchantName",
+            style = TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black
+            ),
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Got it button
         Button(
             onClick = onDone,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = Color(0xFF3396FF)
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Text("Done", color = Color.White)
+            Text(
+                text = "Got it!",
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            )
         }
     }
 }
@@ -859,68 +1253,88 @@ private fun SuccessContent(
 private fun ErrorContent(
     message: String,
     onRetry: () -> Unit,
-    onCancel: () -> Unit
+    onClose: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp),
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Close button at top right
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF9E9E9E),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Red/orange circle with exclamation mark
         Box(
             modifier = Modifier
-                .size(64.dp)
+                .size(56.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE53935)),
+                .background(Color(0xFFD85140)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Error",
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
+            Text(
+                text = "!",
+                style = TextStyle(
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Payment Failed",
-            style = TextStyle(
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Error message
         Text(
             text = message,
-            style = TextStyle(fontSize = 14.sp, color = Color.Gray),
+            style = TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black
+            ),
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Try again button
+        Button(
+            onClick = onRetry,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color(0xFF3396FF)
+            ),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Button(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color(0xFF2A2A2A)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Cancel", color = Color.White)
-            }
-            Button(
-                onClick = onRetry,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color(0xFF3396FF)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Retry", color = Color.White)
-            }
+            Text(
+                text = "Try again",
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            )
         }
     }
 }
@@ -934,7 +1348,6 @@ private fun CollectDataContent(
     currentField: Pay.CollectDataField,
     currentValue: String,
     onValueSubmit: (String, String) -> Unit,
-    onBack: () -> Unit,
     onClose: () -> Unit
 ) {
     var inputValue by remember(currentField.id) { mutableStateOf(currentValue) }
@@ -950,7 +1363,6 @@ private fun CollectDataContent(
         CollectDataHeader(
             currentStep = currentStepIndex,
             totalSteps = totalSteps,
-            onBack = onBack,
             onClose = onClose
         )
         
@@ -1018,7 +1430,6 @@ private fun CollectDataContent(
 private fun CollectDataHeader(
     currentStep: Int,
     totalSteps: Int,
-    onBack: () -> Unit,
     onClose: () -> Unit
 ) {
     Row(
@@ -1026,14 +1437,8 @@ private fun CollectDataHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Back button
-        IconButton(onClick = onBack) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Back",
-                tint = Color.Black
-            )
-        }
+        // Empty spacer for balance
+        Spacer(modifier = Modifier.size(48.dp))
         
         // Progress indicator
         Row(
