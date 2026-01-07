@@ -26,7 +26,11 @@ import com.walletconnect.sample.pos.PosEvent
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import com.walletconnect.sample.pos.R
+
+// Brand color
+private val BrandColor = Color(0xFF0988F0)
 
 private enum class StepState { Inactive, InProgress, Done }
 
@@ -43,8 +47,6 @@ fun PaymentScreen(
     navigateToErrorScreen: (error: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val brandColor = Color(0xFF646D91)
-
     var uiState by remember { mutableStateOf<PaymentUiState>(PaymentUiState.WaitingForScan) }
 
     // Timeline step states
@@ -80,29 +82,10 @@ fun PaymentScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Color.White)
     ) {
         // Header
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(brandColor)
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(vertical = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                "WalletConnect Pay",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold
-            )
-            Text(
-                "NRF'26 NYC",
-                style = MaterialTheme.typography.headlineSmall,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        }
+        PosHeader()
 
         // Content
         Box(
@@ -116,7 +99,11 @@ fun PaymentScreen(
                     displayAmount = viewModel.getDisplayAmount(),
                     scanState = scanStep,
                     processingState = processingStep,
-                    confirmingState = confirmingStep
+                    confirmingState = confirmingStep,
+                    onCancel = {
+                        viewModel.cancelPayment()
+                        onReturnToStart()
+                    }
                 )
 
                 is PaymentUiState.Success -> SuccessContent(
@@ -126,38 +113,12 @@ fun PaymentScreen(
             }
         }
 
-        // Footer
-        Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(vertical = 14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (uiState is PaymentUiState.WaitingForScan) {
-                    Button(
-                        onClick = {
-                            viewModel.cancelPayment()
-                            onReturnToStart()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        ),
-                        modifier = Modifier.height(44.dp)
-                    ) {
-                        Text("Cancel Payment")
-                    }
-                    Spacer(Modifier.height(8.dp))
-                }
-                Text(
-                    "Powered by WalletConnect",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        // Bottom padding for navigation bars
+        Spacer(
+            Modifier
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .height(16.dp)
+        )
     }
 }
 
@@ -167,88 +128,103 @@ private fun ScanToPayContent(
     displayAmount: String,
     scanState: StepState,
     processingState: StepState,
-    confirmingState: StepState
+    confirmingState: StepState,
+    onCancel: () -> Unit
 ) {
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxSize()
+            .padding(horizontal = 24.dp)
     ) {
-        Spacer(Modifier.height(24.dp))
-
-        Text(
-            "Scan to Pay",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            "Customer scans QR code with wallet",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        // QR Code
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-            tonalElevation = 1.dp
+        // Close button in top right
+        IconButton(
+            onClick = onCancel,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .sizeIn(minWidth = 220.dp, minHeight = 220.dp)
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                QrImage(data = qrUrl, size = 220.dp)
-            }
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Cancel",
+                tint = Color.Black,
+                modifier = Modifier.size(28.dp)
+            )
         }
+        
+        // Main content
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(16.dp))
 
-        Spacer(Modifier.height(20.dp))
+            Text(
+                "Scan to Pay",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+                color = Color.Black
+            )
 
-        // Amount display
-        if (displayAmount.isNotBlank()) {
+            Spacer(Modifier.height(16.dp))
+
+            // QR Code (smaller)
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFFF5F5F5),
+                tonalElevation = 0.dp
             ) {
-                Text(
-                    displayAmount,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(vertical = 12.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    QrImage(data = qrUrl, size = 170.dp)
+                }
             }
-            Spacer(Modifier.height(20.dp))
+
+            Spacer(Modifier.height(12.dp))
+
+            // Amount display (matches QR code width)
+            if (displayAmount.isNotBlank()) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = BrandColor.copy(alpha = 0.1f),
+                    modifier = Modifier.width(194.dp) // 170dp QR + 24dp padding
+                ) {
+                    Text(
+                        displayAmount,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = BrandColor,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+
+            // Timeline
+            StatusRow(
+                state = scanState,
+                inProgressText = "Waiting for wallet scan…",
+                doneText = "Payment initiated"
+            )
+            Spacer(Modifier.height(8.dp))
+            StatusRow(
+                state = processingState,
+                inProgressText = "Processing payment…",
+                doneText = "Payment processing"
+            )
+            Spacer(Modifier.height(8.dp))
+            StatusRow(
+                state = confirmingState,
+                inProgressText = "Confirming transaction…",
+                doneText = "Payment confirmed"
+            )
+
+            Spacer(Modifier.weight(1f))
         }
-
-        // Timeline
-        StatusRow(
-            state = scanState,
-            inProgressText = "Waiting for wallet scan…",
-            doneText = "Payment initiated"
-        )
-        Spacer(Modifier.height(8.dp))
-        StatusRow(
-            state = processingState,
-            inProgressText = "Processing payment…",
-            doneText = "Payment processing"
-        )
-        Spacer(Modifier.height(8.dp))
-        StatusRow(
-            state = confirmingState,
-            inProgressText = "Confirming transaction…",
-            doneText = "Payment confirmed"
-        )
-
-        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -258,7 +234,6 @@ private fun StatusRow(
     inProgressText: String,
     doneText: String
 ) {
-    val brandColor = Color(0xFF646D91)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -268,13 +243,13 @@ private fun StatusRow(
                 Box(
                     modifier = Modifier
                         .size(18.dp)
-                        .background(MaterialTheme.colorScheme.outlineVariant, shape = CircleShape)
+                        .background(Color(0xFFE0E0E0), shape = CircleShape)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     inProgressText,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    color = Color(0xFFBBBBBB)
                 )
             }
 
@@ -282,13 +257,13 @@ private fun StatusRow(
                 CircularProgressIndicator(
                     strokeWidth = 2.dp,
                     modifier = Modifier.size(18.dp),
-                    color = brandColor
+                    color = BrandColor
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     inProgressText,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color(0xFF666666)
                 )
             }
 
@@ -296,14 +271,14 @@ private fun StatusRow(
                 Icon(
                     Icons.Filled.CheckCircle,
                     contentDescription = null,
-                    tint = brandColor,
+                    tint = BrandColor,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     doneText,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Color.Black
                 )
             }
         }
@@ -315,8 +290,6 @@ private fun SuccessContent(
     paymentId: String,
     onReturnToStart: () -> Unit
 ) {
-    val brandColor = Color(0xFF646D91)
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -327,7 +300,7 @@ private fun SuccessContent(
         Icon(
             painter = painterResource(R.drawable.ic_check),
             contentDescription = null,
-            tint = brandColor,
+            tint = BrandColor,
             modifier = Modifier.size(80.dp)
         )
 
@@ -338,7 +311,7 @@ private fun SuccessContent(
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
-            color = brandColor
+            color = BrandColor
         )
 
         Spacer(Modifier.height(16.dp))
@@ -346,13 +319,13 @@ private fun SuccessContent(
         Text(
             "Payment ID",
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = Color(0xFF666666)
         )
         Text(
             paymentId,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface
+            color = Color.Black
         )
 
         Spacer(Modifier.height(32.dp))
@@ -363,7 +336,7 @@ private fun SuccessContent(
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = brandColor)
+            colors = ButtonDefaults.buttonColors(containerColor = BrandColor)
         ) {
             Text(
                 "New Payment",
