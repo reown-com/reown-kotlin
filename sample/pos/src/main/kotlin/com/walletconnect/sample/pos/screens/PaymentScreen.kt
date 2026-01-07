@@ -43,7 +43,7 @@ fun PaymentScreen(
     navigateToErrorScreen: (error: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val brandGreen = Color(0xFF0A8F5B)
+    val brandColor = Color(0xFF646D91)
 
     var uiState by remember { mutableStateOf<PaymentUiState>(PaymentUiState.WaitingForScan) }
 
@@ -85,7 +85,7 @@ fun PaymentScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(brandGreen)
+                .background(brandColor)
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -97,9 +97,10 @@ fun PaymentScreen(
                 fontWeight = FontWeight.ExtraBold
             )
             Text(
-                "POS Sample App",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.95f)
+                "NRF'26 NYC",
+                style = MaterialTheme.typography.headlineSmall,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
             )
         }
 
@@ -257,7 +258,7 @@ private fun StatusRow(
     inProgressText: String,
     doneText: String
 ) {
-    val green = Color(0xFF0A8F5B)
+    val brandColor = Color(0xFF646D91)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -281,7 +282,7 @@ private fun StatusRow(
                 CircularProgressIndicator(
                     strokeWidth = 2.dp,
                     modifier = Modifier.size(18.dp),
-                    color = green
+                    color = brandColor
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
@@ -295,7 +296,7 @@ private fun StatusRow(
                 Icon(
                     Icons.Filled.CheckCircle,
                     contentDescription = null,
-                    tint = green,
+                    tint = brandColor,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(8.dp))
@@ -314,7 +315,7 @@ private fun SuccessContent(
     paymentId: String,
     onReturnToStart: () -> Unit
 ) {
-    val brandGreen = Color(0xFF0A8F5B)
+    val brandColor = Color(0xFF646D91)
 
     Column(
         modifier = Modifier
@@ -326,7 +327,7 @@ private fun SuccessContent(
         Icon(
             painter = painterResource(R.drawable.ic_check),
             contentDescription = null,
-            tint = brandGreen,
+            tint = brandColor,
             modifier = Modifier.size(80.dp)
         )
 
@@ -337,7 +338,7 @@ private fun SuccessContent(
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
-            color = brandGreen
+            color = brandColor
         )
 
         Spacer(Modifier.height(16.dp))
@@ -362,7 +363,7 @@ private fun SuccessContent(
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
+            colors = ButtonDefaults.buttonColors(containerColor = brandColor)
         ) {
             Text(
                 "New Payment",

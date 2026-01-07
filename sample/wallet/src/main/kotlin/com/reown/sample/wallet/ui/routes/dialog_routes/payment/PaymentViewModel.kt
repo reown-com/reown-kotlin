@@ -73,15 +73,11 @@ class PaymentViewModel : ViewModel() {
                     
                     if (response.options.isEmpty()) {
                         _uiState.value = PaymentUiState.Error("No payment options available")
-                    } else if (collectDataFields.isNotEmpty()) {
-                        // Show information capture first
-                        showCurrentField()
                     } else {
-                        // No fields to collect, show options directly
-                        _uiState.value = PaymentUiState.Options(
-                            paymentLink = paymentLink,
+                        // Show intro screen first
+                        _uiState.value = PaymentUiState.Intro(
                             paymentInfo = response.info,
-                            options = response.options
+                            hasInfoCapture = collectDataFields.isNotEmpty()
                         )
                     }
                 },
@@ -89,6 +85,19 @@ class PaymentViewModel : ViewModel() {
                     _uiState.value = PaymentUiState.Error(error.message ?: "Failed to load payment options")
                 }
             )
+        }
+    }
+
+    /**
+     * Proceed from the intro screen to either information capture or payment options.
+     */
+    fun proceedFromIntro() {
+        if (collectDataFields.isNotEmpty()) {
+            // Show information capture first
+            showCurrentField()
+        } else {
+            // No fields to collect, show options directly
+            proceedToOptions()
         }
     }
 
@@ -190,7 +199,10 @@ class PaymentViewModel : ViewModel() {
         val paymentId = currentPaymentId ?: return
         val optionId = selectedOptionId ?: return
         
-        _uiState.value = PaymentUiState.Processing("Signing transactions...")
+        _uiState.value = PaymentUiState.Processing(
+            message = "Confirming your payment...",
+            paymentInfo = storedPaymentInfo
+        )
         
         try {
             // Sign all WalletRpc actions and collect signatures
@@ -206,8 +218,6 @@ class PaymentViewModel : ViewModel() {
             } else {
                 null
             }
-
-            _uiState.value = PaymentUiState.Processing("Confirming payment...")
             
             // Confirm payment with signatures and collected data
             val confirmResult = WalletConnectPay.confirmPayment(
@@ -221,10 +231,16 @@ class PaymentViewModel : ViewModel() {
                 onSuccess = { response ->
                     when (response.status) {
                         Pay.PaymentStatus.SUCCEEDED -> {
-                            _uiState.value = PaymentUiState.Success("Payment completed successfully!")
+                            _uiState.value = PaymentUiState.Success(
+                                message = "Payment completed successfully!",
+                                paymentInfo = storedPaymentInfo
+                            )
                         }
                         Pay.PaymentStatus.PROCESSING -> {
-                            _uiState.value = PaymentUiState.Success("Payment is being processed...")
+                            _uiState.value = PaymentUiState.Success(
+                                message = "Payment is being processed...",
+                                paymentInfo = storedPaymentInfo
+                            )
                         }
                         Pay.PaymentStatus.FAILED -> {
                             _uiState.value = PaymentUiState.Error("Payment failed")
@@ -309,6 +325,15 @@ class PaymentViewModel : ViewModel() {
 sealed class PaymentUiState {
     data object Loading : PaymentUiState()
     
+    /**
+     * Intro screen shown before information capture.
+     */
+    data class Intro(
+        val paymentInfo: Pay.PaymentInfo?,
+        val hasInfoCapture: Boolean,
+        val estimatedTime: String = "~2min"
+    ) : PaymentUiState()
+    
     data class Options(
         val paymentLink: String,
         val paymentInfo: Pay.PaymentInfo?,
@@ -326,9 +351,15 @@ sealed class PaymentUiState {
         val allFields: List<Pay.CollectDataField>
     ) : PaymentUiState()
     
-    data class Processing(val message: String) : PaymentUiState()
+    data class Processing(
+        val message: String,
+        val paymentInfo: Pay.PaymentInfo? = null
+    ) : PaymentUiState()
     
-    data class Success(val message: String) : PaymentUiState()
+    data class Success(
+        val message: String,
+        val paymentInfo: Pay.PaymentInfo? = null
+    ) : PaymentUiState()
     
     data class Error(val message: String) : PaymentUiState()
 }

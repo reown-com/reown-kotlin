@@ -23,7 +23,7 @@ fun AmountScreen(
     viewModel: POSViewModel,
     modifier: Modifier = Modifier
 ) {
-    val brandGreen = Color(0xFF0A8F5B)
+    val brandColor = Color(0xFF646D91)
     var amountDisplay by rememberSaveable { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsState()
 
@@ -42,7 +42,7 @@ fun AmountScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(brandGreen)
+                .background(brandColor)
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -54,9 +54,10 @@ fun AmountScreen(
                 fontWeight = FontWeight.ExtraBold
             )
             Text(
-                "POS Sample App",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.95f)
+                "NRF'26 NYC",
+                style = MaterialTheme.typography.headlineSmall,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
             )
         }
 
@@ -174,7 +175,7 @@ fun AmountScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
+                colors = ButtonDefaults.buttonColors(containerColor = brandColor)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(

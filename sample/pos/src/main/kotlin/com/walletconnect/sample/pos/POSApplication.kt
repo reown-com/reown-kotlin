@@ -20,7 +20,7 @@ class POSApplication : Application() {
 
         PosClient.init(
             apiKey = BuildConfig.MERCHANT_API_KEY,
-            merchantId = "wc_merchant_id_test_pos_kotlin",
+            merchantId = "ingenico-demo",
             deviceId = deviceId,
         )
 

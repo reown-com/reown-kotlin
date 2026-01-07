@@ -80,6 +80,18 @@ fun PaymentRoute(
             is PaymentUiState.Loading -> {
                 LoadingContent()
             }
+            is PaymentUiState.Intro -> {
+                IntroContent(
+                    paymentInfo = state.paymentInfo,
+                    hasInfoCapture = state.hasInfoCapture,
+                    estimatedTime = state.estimatedTime,
+                    onStart = { viewModel.proceedFromIntro() },
+                    onClose = {
+                        viewModel.cancel()
+                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    }
+                )
+            }
             is PaymentUiState.Options -> {
                 PaymentOptionsContent(
                     paymentInfo = state.paymentInfo,
@@ -153,6 +165,308 @@ private fun LoadingContent() {
             text = "Loading payment options...",
             style = TextStyle(fontSize = 16.sp, color = Color.White)
         )
+    }
+}
+
+@Composable
+private fun IntroContent(
+    paymentInfo: Pay.PaymentInfo?,
+    hasInfoCapture: Boolean,
+    estimatedTime: String,
+    onStart: () -> Unit,
+    onClose: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp)
+    ) {
+        // Close button at top right
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF9E9E9E),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Merchant icon
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            paymentInfo?.merchant?.iconUrl?.let { iconUrl ->
+                AsyncImage(
+                    model = iconUrl,
+                    contentDescription = "Merchant icon",
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black)
+                )
+            } ?: run {
+                // Placeholder icon if no merchant icon
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.Black),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = paymentInfo?.merchant?.name?.take(1)?.uppercase() ?: "P",
+                        style = TextStyle(
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // Payment title with verified badge
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
+                val formattedAmount = if (paymentInfo != null) {
+                    formatAmount(
+                        value = paymentInfo.amount.value,
+                        decimals = paymentInfo.amount.display?.decimals ?: 2,
+                        symbol = paymentInfo.amount.display?.assetSymbol ?: paymentInfo.amount.unit
+                    )
+                } else {
+                    "Payment"
+                }
+                
+                Text(
+                    text = "Pay $formattedAmount to $merchantName",
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                )
+                
+                Spacer(modifier = Modifier.width(6.dp))
+                
+                // Verified badge
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF3396FF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Verified",
+                        tint = Color.White,
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Steps timeline
+        IntroStepsTimeline(
+            hasInfoCapture = hasInfoCapture,
+            estimatedTime = estimatedTime
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Let's start button
+        Button(
+            onClick = onStart,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color(0xFF3396FF)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text(
+                text = "Let's start",
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun IntroStepsTimeline(
+    hasInfoCapture: Boolean,
+    estimatedTime: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+    ) {
+        // Step 1: Provide information (only if info capture is required)
+        if (hasInfoCapture) {
+            IntroStepItem(
+                stepNumber = 1,
+                totalSteps = 2,
+                title = "Provide information",
+                description = "A quick one-time check required for regulated payments.",
+                estimatedTime = estimatedTime,
+                isFirst = true,
+                isLast = false
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Step 2: Confirm payment
+            IntroStepItem(
+                stepNumber = 2,
+                totalSteps = 2,
+                title = "Confirm payment",
+                description = "Review the details and approve the payment.",
+                estimatedTime = null,
+                isFirst = false,
+                isLast = true
+            )
+        } else {
+            // Only show payment confirmation step
+            IntroStepItem(
+                stepNumber = 1,
+                totalSteps = 1,
+                title = "Confirm payment",
+                description = "Review the details and approve the payment.",
+                estimatedTime = null,
+                isFirst = true,
+                isLast = true
+            )
+        }
+    }
+}
+
+@Composable
+private fun IntroStepItem(
+    stepNumber: Int,
+    totalSteps: Int,
+    title: String,
+    description: String,
+    estimatedTime: String?,
+    isFirst: Boolean,
+    isLast: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        // Timeline indicator column
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.width(24.dp)
+        ) {
+            // Connector line (top part)
+            if (!isFirst) {
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(8.dp)
+                        .background(Color(0xFFE0E0E0))
+                )
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            // Circle indicator
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFE0E0E0))
+            )
+            
+            // Connector line (bottom part)
+            if (!isLast) {
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(48.dp)
+                        .background(Color(0xFFE0E0E0))
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Step content
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                )
+                
+                // Estimated time badge
+                estimatedTime?.let { time ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFF0F0F0))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = time,
+                            style = TextStyle(
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF666666)
+                            )
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = description,
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    color = Color(0xFF9E9E9E),
+                    lineHeight = 20.sp
+                )
+            )
+        }
     }
 }
 

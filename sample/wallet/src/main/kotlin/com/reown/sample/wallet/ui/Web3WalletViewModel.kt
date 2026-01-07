@@ -156,6 +156,7 @@ class Web3WalletViewModel : ViewModel() {
 
     fun pair(pairingUri: String) {
         // Check if this is a payment URL - emit the full link, not just the ID
+        println("kobe: uri: $pairingUri")
         if (isPaymentUrl(pairingUri)) {
             viewModelScope.launch {
                 _paymentEventFlow.emit(pairingUri)
@@ -190,7 +191,7 @@ class Web3WalletViewModel : ViewModel() {
      * - https://gateway-wc.vercel.app/v1/<uuid>
      */
     private fun isPaymentUrl(url: String): Boolean {
-        return url.contains("pay.walletconnect.com/pay_") || 
+        return url.contains("pay.walletconnect.com") ||
                url.contains("gateway-wc.vercel.app/v1/") ||
                 url.contains("https://wc-pay-buyer-experience-dev.walletconnect-v1-bridge.workers.dev")
     }
