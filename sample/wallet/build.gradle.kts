@@ -80,6 +80,9 @@ android {
         jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_utils.so")
         jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_utils.so")
         jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_utils.so")
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_wcpay.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_wcpay.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_wcpay.so")
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
@@ -171,17 +174,28 @@ dependencies {
     }
     debugImplementation(project(":product:walletkit"))
     debugImplementation(project(":protocol:notify"))
-    debugImplementation(project(":product:pay"))
 
     internalImplementation(project(":core:android")) {
         exclude(group = "com.github.reown-com", module = "yttrium")
     }
     internalImplementation(project(":product:walletkit"))
     internalImplementation(project(":protocol:notify"))
-    internalImplementation(project(":product:pay"))
 
     releaseImplementation(platform("com.reown:android-bom:$BOM_VERSION"))
     releaseImplementation("com.reown:android-core")
     releaseImplementation("com.reown:walletkit")
     releaseImplementation("com.reown:notify")
+
+    debugImplementation(project(":product:pay")) {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
+    internalImplementation(project(":product:pay")) {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
+    releaseImplementation("com.walletconnect:pay:$PAY_VERSION") {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
+    // WCPay needs its own yttrium bindings - use local AAR to avoid Maven resolution conflicts
+    // kotlin-utils provides uniffi.yttrium_utils, kotlin-wcpay provides uniffi.yttrium_wcpay
+    implementation(files("libs/yttrium-wcpay-0.9.114.aar"))
 }

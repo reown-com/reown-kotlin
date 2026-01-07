@@ -43,14 +43,26 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
+    packaging {
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_wcpay.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_wcpay.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_wcpay.so")
+    }
     kotlinOptions {
         jvmTarget = "11"
     }
 }
 
 dependencies {
-    implementation("com.github.reown-com:yttrium-wcpay:unspecified")
-    
+    //local
+    //implementation("com.github.reown-com:yttrium-wcpay:unspecified")
+
+    //jitpack
+    implementation("com.github.reown-com:yttrium:kotlin-wcpay-0.9.114") {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
+    implementation("net.java.dev.jna:jna:5.17.0@aar")
+
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.coroutines)
 
