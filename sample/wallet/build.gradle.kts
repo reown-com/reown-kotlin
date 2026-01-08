@@ -197,5 +197,5 @@ dependencies {
     }
     // WCPay needs its own yttrium bindings - use local AAR to avoid Maven resolution conflicts
     // kotlin-utils provides uniffi.yttrium_utils, kotlin-wcpay provides uniffi.yttrium_wcpay
-    implementation(files("libs/yttrium-wcpay-0.9.114.aar"))
+//    implementation(files("libs/yttrium-wcpay-0.9.114.aar"))
 }
