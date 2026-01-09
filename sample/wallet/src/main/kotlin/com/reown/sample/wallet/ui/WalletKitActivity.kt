@@ -181,7 +181,7 @@ class WalletKitActivity : AppCompatActivity() {
                 }
             }
             .launchIn(lifecycleScope)
-        
+
         // Handle payment events from QR code scanning
         web3walletViewModel.paymentEventFlow
             .onEach { paymentLink ->
@@ -214,7 +214,7 @@ class WalletKitActivity : AppCompatActivity() {
             }
             return
         }
-        
+
         if (dataString?.contains("wc_ev") == true) {
             WalletKit.dispatchEnvelope(dataString) {
                 lifecycleScope.launch(Dispatchers.Main) {
@@ -254,7 +254,7 @@ class WalletKitActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     /**
      * Check if URL is a WalletConnect Pay URL.
      * Supported formats:
@@ -263,7 +263,7 @@ class WalletKitActivity : AppCompatActivity() {
      */
     private fun isPaymentUrl(url: String): Boolean {
         return url.contains("pay.walletconnect.com/pay_") ||
-               url.contains("gateway-wc.vercel.app/v1/")
+                url.contains("gateway-wc.vercel.app/v1/")
     }
 
     private fun setBeagle() {
@@ -340,17 +340,19 @@ class WalletKitActivity : AppCompatActivity() {
                     !text.startsWith("0x") && text.length == 64
                 },
                 onValueChanged = { text ->
-                    NotifyClient.unregister(
-                        params = Notify.Params.Unregister(
-                            EthAccountDelegate.ethAccount,
-                        ),
-                        onSuccess = {
-                            println("Unregister Success")
-                            EthAccountDelegate.privateKey = text
-                            registerAccount()
-                        },
-                        onError = { println(it.throwable.stackTraceToString()) }
-                    )
+
+                    EthAccountDelegate.privateKey = text
+//                    NotifyClient.unregister(
+//                        params = Notify.Params.Unregister(
+//                            EthAccountDelegate.ethAccount,
+//                        ),
+//                        onSuccess = {
+//                            println("Unregister Success")
+//                            EthAccountDelegate.privateKey = text
+//                            registerAccount()
+//                        },
+//                        onError = { println(it.throwable.stackTraceToString()) }
+//                    )
                 }
             ),
 //            DividerModule(),

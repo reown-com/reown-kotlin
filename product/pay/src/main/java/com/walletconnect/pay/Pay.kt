@@ -3,9 +3,8 @@ package com.walletconnect.pay
 object Pay {
     data class SdkConfig(
         val apiKey: String,
-        val sdkName: String,
-        val sdkVersion: String,
-        val sdkPlatform: String
+        val projectId: String,
+        val packageName: String
     )
 
     enum class PaymentStatus {
