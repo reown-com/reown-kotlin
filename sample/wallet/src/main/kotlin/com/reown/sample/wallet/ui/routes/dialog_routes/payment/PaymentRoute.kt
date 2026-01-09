@@ -73,6 +73,7 @@ import java.util.Locale
 fun PaymentRoute(
     navController: NavHostController,
     paymentLink: String,
+    onPaymentSuccess: () -> Unit = {},
     viewModel: PaymentViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -141,11 +142,13 @@ fun PaymentRoute(
                     paymentInfo = state.paymentInfo,
                     onDone = {
                         viewModel.cancel()
+                        onPaymentSuccess()
                         navController.popBackStack(Route.Connections.path, inclusive = false)
                         Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
                     },
                     onClose = {
                         viewModel.cancel()
+                        onPaymentSuccess()
                         navController.popBackStack(Route.Connections.path, inclusive = false)
                     }
                 )

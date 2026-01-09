@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +47,8 @@ import com.reown.sample.common.ui.WCTopAppBar
 import com.reown.sample.common.ui.findActivity
 import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.blockchain.TokenBalance
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.ui.Web3WalletViewModel
 import com.reown.sample.wallet.ui.routes.Route
 
@@ -52,10 +56,144 @@ import com.reown.sample.wallet.ui.routes.Route
 fun ConnectionsRoute(navController: NavController, connectionsViewModel: ConnectionsViewModel, web3WalletViewModel: Web3WalletViewModel) {
     connectionsViewModel.refreshConnections()
     val connections by connectionsViewModel.connections.collectAsState(initial = emptyList())
+    val usdcBalances by connectionsViewModel.usdcBalances.collectAsState()
+    val isLoadingBalances by connectionsViewModel.isLoadingBalances.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Title(navController)
+        UsdcBalanceSection(usdcBalances, isLoadingBalances)
         Connections(connections) { connectionUI -> navController.navigate("${Route.ConnectionDetails.path}/${connectionUI.id}") }
+    }
+}
+
+@Composable
+fun UsdcBalanceSection(balances: List<TokenBalance>, isLoading: Boolean) {
+    val shape = RoundedCornerShape(16.dp)
+    val address = EthAccountDelegate.address
+    val shortAddress = "${address.take(6)}...${address.takeLast(4)}"
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+            .clip(shape)
+            .background(
+                color = themedColor(
+                    darkColor = Color(0xFF1A1A1A),
+                    lightColor = Color(0xFFF5F5F5)
+                )
+            )
+            .border(
+                1.dp,
+                color = themedColor(
+                    darkColor = Color(0xFF2A2A2A),
+                    lightColor = Color(0xFFE0E0E0)
+                ),
+                shape = shape
+            )
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "USDC Balances",
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+                )
+            )
+            Text(
+                text = shortAddress,
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+                )
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (isLoading) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = Color(0xFF3396FF)
+                )
+            }
+        } else if (balances.isEmpty()) {
+            Text(
+                text = "No USDC balance found",
+                style = TextStyle(
+                    fontSize = 14.sp,
+                    color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+                )
+            )
+        } else {
+            balances.forEach { balance ->
+                UsdcBalanceItem(balance)
+                if (balance != balances.last()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun UsdcBalanceItem(balance: TokenBalance) {
+    val chainName = when (balance.chainId) {
+        "eip155:1" -> "Ethereum"
+        "eip155:137" -> "Polygon"
+        "eip155:8453" -> "Base"
+        else -> balance.chainId
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                color = themedColor(
+                    darkColor = Color(0xFF252525),
+                    lightColor = Color(0xFFFFFFFF)
+                )
+            )
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column {
+            Text(
+                text = chainName,
+                style = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp,
+                    color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+                )
+            )
+            Text(
+                text = "USDC",
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+                )
+            )
+        }
+        Text(
+            text = "${balance.quantity.numeric} USDC",
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = Color(0xFF3396FF)
+            )
+        )
     }
 }
 
