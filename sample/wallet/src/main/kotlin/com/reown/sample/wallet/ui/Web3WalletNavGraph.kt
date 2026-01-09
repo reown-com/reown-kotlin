@@ -204,7 +204,8 @@ fun Web3WalletNavGraph(
                 val paymentLink = java.net.URLDecoder.decode(encodedLink, "UTF-8")
                 PaymentRoute(
                     navController = navController,
-                    paymentLink = paymentLink
+                    paymentLink = paymentLink,
+                    onPaymentSuccess = { connectionsViewModel.fetchUsdcBalances() }
                 )
             }
         }

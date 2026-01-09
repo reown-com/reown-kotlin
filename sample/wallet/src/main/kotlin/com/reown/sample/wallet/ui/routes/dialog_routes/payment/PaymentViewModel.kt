@@ -74,11 +74,18 @@ class PaymentViewModel : ViewModel() {
                     
                     if (response.options.isEmpty()) {
                         _uiState.value = PaymentUiState.Error("No payment options available")
-                    } else {
-                        // Show intro screen first
+                    } else if (collectDataFields.isNotEmpty()) {
+                        // Show intro screen only when information capture is required
                         _uiState.value = PaymentUiState.Intro(
                             paymentInfo = response.info,
-                            hasInfoCapture = collectDataFields.isNotEmpty()
+                            hasInfoCapture = true
+                        )
+                    } else {
+                        // No information capture required, go directly to options
+                        _uiState.value = PaymentUiState.Options(
+                            paymentLink = paymentLink,
+                            paymentInfo = response.info,
+                            options = response.options
                         )
                     }
                 },
@@ -374,4 +381,5 @@ sealed class PaymentUiState {
     
     data class Error(val message: String) : PaymentUiState()
 }
+
 
