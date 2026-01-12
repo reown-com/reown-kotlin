@@ -35,12 +35,12 @@ class WcPayIntegrationTest {
      */
     @Test
     fun fullPaymentFlow_posCreatesPayment_walletPays_succeeds() = runBlocking {
-        // Step 1: POS creates payment ($1.00 USD)
+        // Step 1: POS creates payment ($0.01 USD)
         val referenceId = "test-${System.currentTimeMillis()}"
         val createResponse = TestClient.posApi.createPayment(
             CreatePaymentRequest(
                 referenceId = referenceId,
-                amount = AmountRequest(unit = "iso4217/USD", value = "100")
+                amount = AmountRequest(unit = "iso4217/USD", value = "1")
             )
         )
         assertTrue("Failed to create payment: ${createResponse.errorBody()?.string()}", createResponse.isSuccessful)
@@ -223,7 +223,7 @@ class WcPayIntegrationTest {
         val response = TestClient.posApi.createPayment(
             CreatePaymentRequest(
                 referenceId = referenceId,
-                amount = AmountRequest(unit = "iso4217/USD", value = "100")
+                amount = AmountRequest(unit = "iso4217/USD", value = "1")
             )
         )
         assertTrue("Failed to create test payment: ${response.errorBody()?.string()}", response.isSuccessful)
