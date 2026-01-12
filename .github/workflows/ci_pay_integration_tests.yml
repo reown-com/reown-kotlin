@@ -8,9 +8,11 @@ on:
         required: true
         default: 180
   pull_request:
+    types: [opened, synchronize, reopened]
     branches:
       - develop
       - master
+
     paths:
       - 'product/pay/**'
       - 'core/android/**'
