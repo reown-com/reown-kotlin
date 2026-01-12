@@ -25,7 +25,18 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
+        // Pass TEST_WALLET_PRIVATE_KEY from environment variable to instrumentation tests
+        // This allows CI to set the env var without leaking it in command line
+        System.getenv("TEST_WALLET_PRIVATE_KEY")?.let { privateKey ->
+            testInstrumentationRunnerArguments["TEST_WALLET_PRIVATE_KEY"] = privateKey
+        }
+
         buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
+        buildConfigField(
+            "String",
+            "PROJECT_ID",
+            "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\""
+        )
     }
 
     buildTypes {
@@ -38,6 +49,9 @@ android {
         abortOnError = true
         ignoreWarnings = true
         warningsAsErrors = false
+    }
+    testOptions {
+        registerManagedDevices()
     }
     compileOptions {
         sourceCompatibility = jvmVersion
@@ -76,4 +90,10 @@ dependencies {
     androidTestImplementation(libs.bundles.androidxAndroidTest)
     androidTestImplementation(libs.coroutines.test)
     androidTestImplementation("net.java.dev.jna:jna:5.17.0@aar")
+    androidTestImplementation(libs.web3jCrypto)
+    androidTestImplementation(libs.bundles.retrofit)
+    androidTestImplementation(libs.bundles.moshi)
+    androidTestImplementation(platform(libs.okhttp.bom))
+    androidTestImplementation(libs.bundles.okhttp)
+    androidTestImplementation(libs.androidx.testJunit)
 }
