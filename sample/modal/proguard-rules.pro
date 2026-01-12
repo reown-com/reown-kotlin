@@ -19,3 +19,7 @@
 
 -dontwarn uniffi.**
 -dontwarn com.sun.jna.**
+
+# msgpack-core uses sun.nio.ch.DirectBuffer for optimized buffer access on JVM,
+# which is not available on Android
+-dontwarn sun.nio.ch.**
