@@ -1,12 +1,6 @@
 name: Pay SDK Integration Tests
 
 on:
-  workflow_dispatch:
-    inputs:
-      testTimeoutSeconds:
-        description: 'Seconds for test timeout'
-        required: true
-        default: 180
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
