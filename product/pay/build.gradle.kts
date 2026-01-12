@@ -69,5 +69,11 @@ dependencies {
     implementation(libs.androidx.core)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.material)
+
     testImplementation(libs.jUnit)
+    testImplementation(libs.coroutines.test)
+
+    androidTestImplementation(libs.bundles.androidxAndroidTest)
+    androidTestImplementation(libs.coroutines.test)
+    androidTestImplementation("net.java.dev.jna:jna:5.17.0@aar")
 }
