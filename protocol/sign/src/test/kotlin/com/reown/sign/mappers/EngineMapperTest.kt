@@ -43,7 +43,7 @@ class EngineMapperTest {
             relays = listOf(RelayProtocolOptions()),
             properties = emptyMap(),
             scopedProperties = null,
-            proposer = SessionProposer("", AppMetaData("", "", listOf(svgIcon), "")), expiryTimestamp = 123456789
+            proposer = SessionProposer("", AppMetaData("", "", listOf(svgIcon), "")), expiryTimestamp = 123456789, requests = null
         )
 
         sessionProposeParams.toEngineDO(Topic("topic")).also {
