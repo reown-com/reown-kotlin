@@ -38,6 +38,10 @@ sequenceDiagram
     API-->>SDK: PaymentOptionsResponse
     SDK-->>App: Result<PaymentOptionsResponse>
 
+    opt If collectDataAction present
+        App->>App: Collect user data (name, date, etc.)
+    end
+
     App->>App: User selects payment option
 
     App->>SDK: getRequiredPaymentActions(paymentId, optionId)
@@ -48,10 +52,6 @@ sequenceDiagram
     loop For each RequiredAction
         App->>Wallet: Sign action (eth_signTypedData_v4 / personal_sign)
         Wallet-->>App: Signature
-    end
-
-    opt If collectDataAction present
-        App->>App: Collect user data (name, date, etc.)
     end
 
     App->>SDK: confirmPayment(paymentId, optionId, signatures, collectedData?)
@@ -75,10 +75,10 @@ sequenceDiagram
 
 1. **Initialize** - Configure the SDK with your API key and project ID
 2. **Get Payment Options** - Fetch available payment methods for a payment link
-3. **Select Option** - User chooses their preferred payment option
-4. **Get Required Actions** - Retrieve wallet RPC actions that need signing
-5. **Sign Actions** - Sign each action using `eth_signTypedData_v4` or `personal_sign`
-6. **Collect Data** (optional) - Gather additional user information if required
+3. **Collect Data** (optional) - Gather additional user information if `collectDataAction` is present
+4. **Select Option** - User chooses their preferred payment option
+5. **Get Required Actions** - Retrieve wallet RPC actions that need signing
+6. **Sign Actions** - Sign each action using `eth_signTypedData_v4` or `personal_sign`
 7. **Confirm Payment** - Submit signatures and finalize the payment
 8. **Handle Result** - Process the payment status (SUCCEEDED, FAILED, PROCESSING)
 
