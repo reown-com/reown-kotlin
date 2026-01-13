@@ -13,6 +13,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
@@ -1554,25 +1559,25 @@ private fun DatePickerInput(
     ) {
         // Month picker
         DateWheelPicker(
-            items = months,
+            pickerItems = months,
             selectedItem = months.getOrNull((selectedMonth.toIntOrNull() ?: 1) - 1) ?: "January",
             onItemSelected = { month ->
                 selectedMonth = (months.indexOf(month) + 1).toString().padStart(2, '0')
             },
             modifier = Modifier.weight(1.5f)
         )
-        
+
         // Day picker
         DateWheelPicker(
-            items = days,
+            pickerItems = days,
             selectedItem = selectedDay.takeIf { it in days } ?: "01",
             onItemSelected = { selectedDay = it },
             modifier = Modifier.weight(0.8f)
         )
-        
+
         // Year picker
         DateWheelPicker(
-            items = years,
+            pickerItems = years,
             selectedItem = selectedYear.takeIf { it in years } ?: "2000",
             onItemSelected = { selectedYear = it },
             modifier = Modifier.weight(1f)
@@ -1582,37 +1587,87 @@ private fun DatePickerInput(
 
 @Composable
 private fun DateWheelPicker(
-    items: List<String>,
+    pickerItems: List<String>,
     selectedItem: String,
     onItemSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val selectedIndex = items.indexOf(selectedItem).coerceAtLeast(0)
-    
-    Column(
-        modifier = modifier.padding(horizontal = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Show a few items around the selected one
-        val visibleRange = 2
-        val startIndex = (selectedIndex - visibleRange).coerceAtLeast(0)
-        val endIndex = (selectedIndex + visibleRange).coerceAtMost(items.size - 1)
-        
-        for (i in startIndex..endIndex) {
-            val item = items[i]
-            val isSelected = i == selectedIndex
-            Text(
-                text = item,
-                style = TextStyle(
-                    fontSize = if (isSelected) 20.sp else 16.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) Color.Black else Color.Gray
-                ),
-                modifier = Modifier
-                    .clickable { onItemSelected(item) }
-                    .padding(vertical = 8.dp)
-            )
+    val initialIndex = pickerItems.indexOf(selectedItem).coerceAtLeast(0)
+    val itemHeight = 40.dp
+    val visibleItems = 5
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+
+    // The center picker item index equals firstVisibleItemIndex because we have
+    // (visibleItems / 2) padding spacers at the top that offset the center
+    val centerPickerIndex = listState.firstVisibleItemIndex
+
+    // Update selection when scrolling stops
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            val clampedIndex = centerPickerIndex.coerceIn(0, pickerItems.size - 1)
+            if (pickerItems.getOrNull(clampedIndex) != selectedItem) {
+                onItemSelected(pickerItems[clampedIndex])
+            }
         }
+    }
+
+    // Scroll to selected item when it changes externally
+    LaunchedEffect(selectedItem) {
+        val targetIndex = pickerItems.indexOf(selectedItem).coerceAtLeast(0)
+        if (!listState.isScrollInProgress && listState.firstVisibleItemIndex != targetIndex) {
+            listState.animateScrollToItem(targetIndex)
+        }
+    }
+
+    Box(
+        modifier = modifier.height(itemHeight * visibleItems),
+        contentAlignment = Alignment.Center
+    ) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.height(itemHeight * visibleItems),
+            flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
+        ) {
+            // Padding items at top to allow first item to be centered
+            items(List(visibleItems / 2) { it }) {
+                Spacer(modifier = Modifier.height(itemHeight))
+            }
+
+            itemsIndexed(pickerItems) { index, item ->
+                // Item is visually centered if its index matches centerPickerIndex
+                val isVisuallySelected = index == centerPickerIndex
+                Box(
+                    modifier = Modifier
+                        .height(itemHeight)
+                        .fillMaxWidth()
+                        .clickable { onItemSelected(item) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = item,
+                        style = TextStyle(
+                            fontSize = if (isVisuallySelected) 20.sp else 16.sp,
+                            fontWeight = if (isVisuallySelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isVisuallySelected) Color.Black else Color(0xFFAAAAAA)
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            // Padding items at bottom to allow last item to be centered
+            items(List(visibleItems / 2) { it }) {
+                Spacer(modifier = Modifier.height(itemHeight))
+            }
+        }
+
+        // Selection highlight overlay
+        Box(
+            modifier = Modifier
+                .height(itemHeight)
+                .fillMaxWidth()
+                .background(Color(0x10000000), RoundedCornerShape(8.dp))
+        )
     }
 }
 
