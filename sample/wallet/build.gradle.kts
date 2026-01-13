@@ -91,7 +91,7 @@ dependencies {
 
     // local .m2 build
     //    implementation("com.github.reown-com:yttrium-utils:unspecified")
-    implementation("com.github.reown-com.yttrium:yttrium-utils:0.9.119") {
+    implementation("com.github.reown-com.yttrium:yttrium-utils:0.10.2") {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
     implementation("net.java.dev.jna:jna:5.17.0@aar")
