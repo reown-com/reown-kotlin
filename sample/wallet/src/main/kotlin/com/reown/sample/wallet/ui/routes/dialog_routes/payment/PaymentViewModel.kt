@@ -40,10 +40,22 @@ class PaymentViewModel : ViewModel() {
     private var currentFieldIndex: Int = 0
 
     /**
+     * Check if payment options are already loaded for this link.
+     */
+    fun isAlreadyLoaded(paymentLink: String): Boolean {
+        return currentPaymentLink == paymentLink && _uiState.value !is PaymentUiState.Loading
+    }
+
+    /**
      * Load payment options for the given payment link.
      * The payment ID is extracted internally from the link.
      */
     fun loadPaymentOptions(paymentLink: String) {
+        // Don't reload if we already have data for this payment link
+        if (isAlreadyLoaded(paymentLink)) {
+            return
+        }
+
         currentPaymentLink = paymentLink
         _uiState.value = PaymentUiState.Loading
 

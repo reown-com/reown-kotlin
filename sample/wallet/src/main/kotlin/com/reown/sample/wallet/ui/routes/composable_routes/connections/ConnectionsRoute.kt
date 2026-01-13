@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,11 +19,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,6 +59,7 @@ import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.ui.Web3WalletViewModel
 import com.reown.sample.wallet.ui.routes.Route
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ConnectionsRoute(navController: NavController, connectionsViewModel: ConnectionsViewModel, web3WalletViewModel: Web3WalletViewModel) {
     connectionsViewModel.refreshConnections()
@@ -59,10 +67,38 @@ fun ConnectionsRoute(navController: NavController, connectionsViewModel: Connect
     val usdcBalances by connectionsViewModel.usdcBalances.collectAsState()
     val isLoadingBalances by connectionsViewModel.isLoadingBalances.collectAsState()
 
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isLoadingBalances,
+        onRefresh = { connectionsViewModel.fetchUsdcBalances() }
+    )
+
     Column(modifier = Modifier.fillMaxSize()) {
         Title(navController)
-        UsdcBalanceSection(usdcBalances, isLoadingBalances)
-        Connections(connections) { connectionUI -> navController.navigate("${Route.ConnectionDetails.path}/${connectionUI.id}") }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pullRefresh(pullRefreshState)
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item {
+                    UsdcBalanceSection(usdcBalances, isLoadingBalances)
+                }
+                item {
+                    ConnectionsContent(connections) { connectionUI ->
+                        navController.navigate("${Route.ConnectionDetails.path}/${connectionUI.id}")
+                    }
+                }
+            }
+            PullRefreshIndicator(
+                refreshing = isLoadingBalances,
+                state = pullRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter),
+                backgroundColor = themedColor(darkColor = Color(0xFF2A2A2A), lightColor = Color.White),
+                contentColor = Color(0xFF3396FF)
+            )
+        }
     }
 }
 
@@ -216,6 +252,53 @@ fun Connections(
         NoConnections(modifier)
     } else {
         ConnectionsLazyColumn(connections, modifier, onClick)
+    }
+}
+
+@Composable
+fun ConnectionsContent(
+    connections: List<ConnectionUI>,
+    onClick: (ConnectionUI) -> Unit = {},
+) {
+    if (connections.isEmpty()) {
+        NoConnections(Modifier.fillMaxWidth().height(300.dp))
+    } else {
+        ConnectionsColumn(connections, onClick)
+    }
+}
+
+@Composable
+fun ConnectionsColumn(
+    connections: List<ConnectionUI>,
+    onClick: (ConnectionUI) -> Unit = {},
+) {
+    val shape = RoundedCornerShape(28.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 10.dp)
+            .clip(shape = shape)
+            .background(
+                color = themedColor(
+                    darkColor = Color(0xFFE4E4E7).copy(alpha = .06f),
+                    lightColor = Color(0xFF505059).copy(.03f)
+                )
+            )
+            .border(
+                1.dp,
+                color = themedColor(
+                    darkColor = Color(0xFFE4E4E7).copy(alpha = .06f),
+                    lightColor = Color(0xFF505059).copy(.03f)
+                ),
+                shape = shape
+            )
+            .padding(vertical = 1.dp, horizontal = 2.dp),
+    ) {
+        connections.forEach { connectionUI ->
+            Spacer(modifier = Modifier.height(10.dp))
+            Connection(connectionUI, onClick)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
     }
 }
 
