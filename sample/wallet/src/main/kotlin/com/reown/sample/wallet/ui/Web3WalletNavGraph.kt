@@ -198,7 +198,7 @@ fun Web3WalletNavGraph(
                         nullable = false
                     }
                 ),
-                dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+                dialogProperties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)
             ) {
                 val encodedLink = it.arguments?.getString("paymentLink") ?: ""
                 val paymentLink = java.net.URLDecoder.decode(encodedLink, "UTF-8")
