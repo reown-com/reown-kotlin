@@ -936,8 +936,9 @@ private fun PaymentOptionItem(
 private fun formatAmount(value: String, decimals: Int, symbol: String): String {
     return try {
         val rawValue = BigDecimal(value)
-        val divisor = BigDecimal.TEN.pow(decimals)
-        val formattedValue = rawValue.divide(divisor, decimals.coerceAtMost(2), RoundingMode.HALF_UP)
+        val safeDecimals = decimals.coerceIn(0, 18)
+        val divisor = BigDecimal.TEN.pow(safeDecimals)
+        val formattedValue = rawValue.divide(divisor, safeDecimals.coerceAtMost(2), RoundingMode.HALF_UP)
         "$formattedValue $symbol"
     } catch (e: Exception) {
         "$value $symbol"
@@ -950,7 +951,8 @@ private fun formatAmount(value: String, decimals: Int, symbol: String): String {
 private fun formatDisplayAmount(value: String, decimals: Int, symbol: String): String {
     return try {
         val rawValue = BigDecimal(value)
-        val divisor = BigDecimal.TEN.pow(decimals)
+        val safeDecimals = decimals.coerceIn(0, 18)
+        val divisor = BigDecimal.TEN.pow(safeDecimals)
         val formattedValue = rawValue.divide(divisor, 2, RoundingMode.HALF_UP)
         val numberFormat = java.text.NumberFormat.getNumberInstance(Locale.US).apply {
             minimumFractionDigits = 0
@@ -969,7 +971,8 @@ private fun formatDisplayAmount(value: String, decimals: Int, symbol: String): S
 private fun formatTokenAmount(value: String, decimals: Int, symbol: String): String {
     return try {
         val rawValue = BigDecimal(value)
-        val divisor = BigDecimal.TEN.pow(decimals)
+        val safeDecimals = decimals.coerceIn(0, 18)
+        val divisor = BigDecimal.TEN.pow(safeDecimals)
         val formattedValue = rawValue.divide(divisor, 4, RoundingMode.HALF_UP)
             .stripTrailingZeros()
             .toPlainString()

@@ -11,6 +11,9 @@ on:
       - 'product/pay/**'
       - 'core/android/**'
 
+permissions:
+  contents: read
+
 env:
   TEST_TIMEOUT_SECONDS: 180
 

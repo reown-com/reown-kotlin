@@ -19,6 +19,7 @@ object WalletConnectPay {
         }
     }
 
+    @Volatile
     private var client: YttriumWalletConnectPay? = null
 
     /**

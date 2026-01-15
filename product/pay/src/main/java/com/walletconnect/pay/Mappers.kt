@@ -51,7 +51,7 @@ internal object Mappers {
         return Pay.PaymentOption(
             id = option.id,
             amount = mapAmount(option.amount),
-            estimatedTxs = option.etaS.toInt()
+            estimatedTxs = option.etaS.coerceAtMost(Int.MAX_VALUE.toULong()).toInt()
         )
     }
 

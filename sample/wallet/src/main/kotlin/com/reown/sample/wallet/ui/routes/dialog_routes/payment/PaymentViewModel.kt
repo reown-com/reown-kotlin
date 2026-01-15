@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import android.util.Log
 import org.json.JSONArray
 import org.web3j.crypto.ECKeyPair
 import org.web3j.crypto.Sign
@@ -288,6 +289,7 @@ class PaymentViewModel : ViewModel() {
                 }
             )
         } catch (e: Exception) {
+            Log.e("PaymentViewModel", "Payment processing failed", e)
             _uiState.value = PaymentUiState.Error(e.message ?: "An error occurred during payment")
         }
     }
