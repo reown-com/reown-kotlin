@@ -71,7 +71,7 @@ class WalletKitApplication : Application() {
         // Initialize WalletConnectPay
         WalletConnectPay.initialize(
             Pay.SdkConfig(
-                apiKey = BuildConfig.MERCHANT_API_KEY,
+                apiKey = BuildConfig.WALLET_API_KEY,
                 projectId = projectId,
                 packageName = this.packageName
             )

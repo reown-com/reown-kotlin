@@ -25,10 +25,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-        // Pass TEST_WALLET_PRIVATE_KEY from environment variable to instrumentation tests
-        // This allows CI to set the env var without leaking it in command line
+        // Pass secrets from environment variables to instrumentation tests
+        // This allows CI to set the env vars without leaking them in command line
         System.getenv("TEST_WALLET_PRIVATE_KEY")?.let { privateKey ->
             testInstrumentationRunnerArguments["TEST_WALLET_PRIVATE_KEY"] = privateKey
+        }
+        System.getenv("MERCHANT_API_KEY")?.let { apiKey ->
+            testInstrumentationRunnerArguments["MERCHANT_API_KEY"] = apiKey
+        }
+        System.getenv("WALLET_API_KEY")?.let { apiKey ->
+            testInstrumentationRunnerArguments["WALLET_API_KEY"] = apiKey
         }
 
         buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
@@ -72,7 +78,7 @@ dependencies {
 //    implementation("com.github.reown-com:yttrium-wcpay:unspecified")
 
     //jitpack
-    implementation("com.github.reown-com.yttrium:yttrium-wcpay:0.10.3") {
+    implementation("com.github.reown-com.yttrium:yttrium-wcpay:0.10.5") {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
     implementation("net.java.dev.jna:jna:5.17.0@aar")

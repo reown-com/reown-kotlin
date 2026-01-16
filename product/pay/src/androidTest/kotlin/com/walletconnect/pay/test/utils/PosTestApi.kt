@@ -56,7 +56,7 @@ fun createPosApi(): PosTestApi {
         .addInterceptor { chain ->
             chain.proceed(
                 chain.request().newBuilder()
-                    .addHeader("Api-Key", Common.API_KEY)
+                    .addHeader("Api-Key", Common.MERCHANT_API_KEY)
                     .addHeader("Merchant-Id", Common.MERCHANT_ID)
                     .addHeader("Content-Type", "application/json")
                     .addHeader("Sdk-Name", "kotlin-pay-test")
