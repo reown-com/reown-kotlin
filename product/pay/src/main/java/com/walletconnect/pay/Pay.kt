@@ -2,9 +2,10 @@ package com.walletconnect.pay
 
 object Pay {
     data class SdkConfig(
-        val apiKey: String,
-        val projectId: String,
-        val packageName: String
+        val apiKey: String? = null,
+        val appId: String? = null,
+        val packageName: String,
+        val baseUrl: String = "https://api.pay.walletconnect.com"
     )
 
     enum class PaymentStatus {
@@ -20,7 +21,8 @@ object Pay {
         val assetName: String,
         val decimals: Int,
         val iconUrl: String?,
-        val networkName: String?
+        val networkName: String?,
+        var networkIconUrl: String?
     )
 
     data class Amount(
@@ -32,6 +34,7 @@ object Pay {
     data class PaymentOption(
         val id: String,
         val amount: Amount,
+        val account: String,
         val estimatedTxs: Int?
     )
 

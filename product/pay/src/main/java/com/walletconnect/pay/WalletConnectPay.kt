@@ -35,14 +35,15 @@ object WalletConnectPay {
         registerLogger(AndroidLogger())
 
         val yttriumConfig = YttriumSdkConfig(
-            baseUrl = "https://api.pay.walletconnect.com",
+            baseUrl = config.baseUrl,
             apiKey = config.apiKey,
-            projectId = config.projectId,
+            projectId = config.appId,
+            appId = config.appId,
             sdkName = "kotlin-walletconnect-pay",
             sdkVersion = BuildConfig.SDK_VERSION,
             sdkPlatform = "android",
             bundleId = config.packageName,
-            clientId = null
+            clientId = null,
         )
 
         client = YttriumWalletConnectPay(yttriumConfig)

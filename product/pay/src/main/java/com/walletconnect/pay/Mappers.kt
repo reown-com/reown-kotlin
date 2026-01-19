@@ -51,7 +51,8 @@ internal object Mappers {
         return Pay.PaymentOption(
             id = option.id,
             amount = mapAmount(option.amount),
-            estimatedTxs = option.etaS.coerceAtMost(Int.MAX_VALUE.toULong().toLong()).toInt()
+            estimatedTxs = option.etaS.coerceAtMost(Int.MAX_VALUE.toULong().toLong()).toInt(),
+            account = option.account
         )
     }
 
@@ -69,7 +70,8 @@ internal object Mappers {
             assetName = display.assetName,
             decimals = display.decimals.toInt(),
             iconUrl = display.iconUrl,
-            networkName = display.networkName
+            networkName = display.networkName,
+            networkIconUrl = display.networkIconUrl
         )
     }
 

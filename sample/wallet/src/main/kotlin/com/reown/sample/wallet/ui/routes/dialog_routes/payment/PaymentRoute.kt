@@ -60,6 +60,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -777,7 +778,7 @@ private fun PayWithDropdown(
                         decimals = display?.decimals ?: 18,
                         symbol = display?.assetSymbol ?: "Token"
                     )
-                    
+
                     Text(
                         text = tokenAmount,
                         style = TextStyle(
@@ -786,17 +787,16 @@ private fun PayWithDropdown(
                             color = Color.Black
                         )
                     )
-                    
+
                     Spacer(modifier = Modifier.width(8.dp))
-                    
+
                     display?.iconUrl?.let { iconUrl ->
-                        AsyncImage(
-                            model = iconUrl,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                    )
+                        TokenIconWithNetwork(
+                            tokenIconUrl = iconUrl,
+                            networkIconUrl = display.networkIconUrl,
+                            tokenIconSize = 24.dp,
+                            networkIconSize = 12.dp
+                        )
                 }
             } else {
                 Text(
@@ -863,14 +863,13 @@ private fun PaymentOptionItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Asset icon
+                // Asset icon with network badge
                 option.amount.display?.iconUrl?.let { iconUrl ->
-                    AsyncImage(
-                        model = iconUrl,
-                        contentDescription = null,
-                        modifier = Modifier
-                        .size(36.dp)
-                            .clip(CircleShape)
+                    TokenIconWithNetwork(
+                        tokenIconUrl = iconUrl,
+                        networkIconUrl = option.amount.display?.networkIconUrl,
+                        tokenIconSize = 36.dp,
+                        networkIconSize = 16.dp
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                 }
@@ -926,6 +925,38 @@ private fun PaymentOptionItem(
                         .background(Color.White)
                 )
             }
+        }
+    }
+}
+
+/**
+ * Displays a token icon with a network icon badge in the bottom-right corner.
+ */
+@Composable
+private fun TokenIconWithNetwork(
+    tokenIconUrl: String,
+    networkIconUrl: String?,
+    tokenIconSize: Dp,
+    networkIconSize: Dp
+) {
+    Box {
+        AsyncImage(
+            model = tokenIconUrl,
+            contentDescription = null,
+            modifier = Modifier
+                .size(tokenIconSize)
+                .clip(CircleShape)
+        )
+        networkIconUrl?.let { networkUrl ->
+            AsyncImage(
+                model = networkUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(networkIconSize)
+                    .clip(CircleShape)
+                    .border(1.dp, Color.White, CircleShape)
+                    .align(Alignment.BottomEnd)
+            )
         }
     }
 }
