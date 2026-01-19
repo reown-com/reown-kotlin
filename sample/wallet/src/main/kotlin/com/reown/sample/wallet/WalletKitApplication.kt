@@ -34,8 +34,6 @@ import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.reown.sample.wallet.domain.client.SuiUtils
-import com.walletconnect.pay.Pay
-import com.walletconnect.pay.WalletConnectPay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,7 +45,6 @@ import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named
 import timber.log.Timber
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
-import com.walletconnect.pay.BuildConfig as PayBuildConfig
 
 class WalletKitApplication : Application() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -68,13 +65,7 @@ class WalletKitApplication : Application() {
 
         SmartAccountEnabler.init(this)
 
-        // Initialize WalletConnectPay
-        WalletConnectPay.initialize(
-            Pay.SdkConfig(
-                appId = projectId,
-                packageName = this.packageName
-            )
-        )
+        // Note: WalletConnectPay is now initialized automatically by WalletKit
 
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Wallet",

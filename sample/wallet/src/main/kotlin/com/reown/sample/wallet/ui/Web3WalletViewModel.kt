@@ -9,6 +9,7 @@ import com.reown.android.Core
 import com.reown.android.internal.common.exception.InvalidProjectIdException
 import com.reown.android.internal.common.exception.ProjectIdDoesNotExistException
 import com.reown.sample.wallet.domain.WalletKitDelegate
+import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.PairingEvent
 import com.reown.walletkit.client.Wallet
@@ -87,6 +88,11 @@ class Web3WalletViewModel : ViewModel() {
             connectivityStateFlow.value = connectionState
         }.launchIn(viewModelScope)
 
+        // Observe payment options events and trigger navigation
+        WalletKitDelegate.paymentOptionsEvent.onEach { response ->
+            _isLoadingFlow.value = false
+            _paymentEventFlow.emit(response.paymentId)
+        }.launchIn(viewModelScope)
     }
 
     val walletEvents = WalletKitDelegate.walletEvents.map { wcEvent ->
@@ -157,17 +163,18 @@ class Web3WalletViewModel : ViewModel() {
     fun pair(pairingUri: String) {
         // Check if this is a payment URL - emit the full link, not just the ID
         println("kobe: uri: $pairingUri")
-        if (isPaymentUrl(pairingUri)) {
-            viewModelScope.launch {
-                _paymentEventFlow.emit(pairingUri)
-            }
-            return
-        }
 
         _isLoadingFlow.value = true
 
         try {
-            val pairingParams = Wallet.Params.Pair(pairingUri.removePrefix("kotlin-web3wallet://wc?uri="))
+            //TODO: add accounts
+            val accounts = listOf(
+                "eip155:1:${EthAccountDelegate.address}",
+                "eip155:137:${EthAccountDelegate.address}",
+                "eip155:8453:${EthAccountDelegate.address}",
+                "eip155:10:${EthAccountDelegate.address}"
+            )
+            val pairingParams = Wallet.Params.Pair(pairingUri.removePrefix("kotlin-web3wallet://wc?uri="), accounts = accounts)
             WalletKit.pair(pairingParams) { error ->
                 Firebase.crashlytics.recordException(error.throwable)
                 viewModelScope.launch {
@@ -182,17 +189,5 @@ class Web3WalletViewModel : ViewModel() {
                 _eventsSharedFlow.emit(PairingEvent.Error(e.message ?: "Unexpected error happened, please contact support"))
             }
         }
-    }
-    
-    /**
-     * Check if URL is a WalletConnect Pay URL.
-     * Supported formats:
-     * - https://pay.walletconnect.com/pay_<paymentId>
-     * - https://gateway-wc.vercel.app/v1/<uuid>
-     */
-    private fun isPaymentUrl(url: String): Boolean {
-        return url.contains("pay.walletconnect.com") ||
-               url.contains("gateway-wc.vercel.app/v1/") ||
-                url.contains("https://wc-pay-buyer-experience-dev.walletconnect-v1-bridge.workers.dev")
     }
 }

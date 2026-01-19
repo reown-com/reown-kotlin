@@ -25,6 +25,11 @@ object WalletKitDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     val walletEvents: SharedFlow<Wallet.Model> = _walletEvents.asSharedFlow()
     private val _connectionState: MutableSharedFlow<Wallet.Model.ConnectionState> = MutableSharedFlow(replay = 1)
     val connectionState: SharedFlow<Wallet.Model.ConnectionState> = _connectionState.asSharedFlow()
+
+    // Payment options flow with replay to ensure ViewModel receives the event
+    private val _paymentOptionsEvent: MutableSharedFlow<Wallet.Model.PaymentOptionsResponse> = MutableSharedFlow(replay = 1)
+    val paymentOptionsEvent: SharedFlow<Wallet.Model.PaymentOptionsResponse> = _paymentOptionsEvent.asSharedFlow()
+
     var sessionProposalEvent: Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>? = null
     var sessionAuthenticateEvent: Pair<Wallet.Model.SessionAuthenticate, Wallet.Model.VerifyContext>? = null
     var sessionRequestEvent: Pair<Wallet.Model.SessionRequest, Wallet.Model.VerifyContext>? = null
@@ -33,7 +38,6 @@ object WalletKitDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     //CA
     var prepareAvailable: Wallet.Model.PrepareSuccess.Available? = null
     var prepareError: Wallet.Model.PrepareError? = null
-
 
     init {
         CoreClient.setDelegate(this)
@@ -146,6 +150,21 @@ object WalletKitDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     override fun onRequestExpired(request: Wallet.Model.ExpiredRequest) {
         scope.launch {
             _walletEvents.emit(request)
+        }
+    }
+
+    override fun onPaymentRequest(paymentOptions: Wallet.Model.PaymentOptionsResponse) {
+        scope.launch {
+            _paymentOptionsEvent.emit(paymentOptions)
+        }
+    }
+
+    /**
+     * Clear payment options after processing to prevent stale data on next payment.
+     */
+    fun clearPaymentOptions() {
+        scope.launch {
+            _paymentOptionsEvent.resetReplayCache()
         }
     }
 

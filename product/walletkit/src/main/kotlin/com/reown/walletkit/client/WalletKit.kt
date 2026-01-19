@@ -1,15 +1,23 @@
 package com.reown.walletkit.client
 
+import android.content.Context
 import com.reown.android.Core
 import com.reown.android.CoreInterface
+import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.scope
+import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.client.Sign
 import com.reown.sign.client.SignClient
 import com.reown.sign.common.exceptions.SignClientAlreadyInitializedException
+import com.walletconnect.pay.Pay as PaySdk
+import com.walletconnect.pay.WalletConnectPay
 import kotlinx.coroutines.*
+import org.koin.core.qualifier.named
 
 object WalletKit {
     private lateinit var coreClient: CoreInterface
+    private var walletDelegate: WalletDelegate? = null
 //    private val prepareChainAbstractionUseCase: PrepareChainAbstractionUseCase by wcKoinApp.koin.inject()
 //    private val executeChainAbstractionUseCase: ExecuteChainAbstractionUseCase by wcKoinApp.koin.inject()
 //    private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
@@ -38,10 +46,16 @@ object WalletKit {
 
         fun onConnectionStateChange(state: Wallet.Model.ConnectionState)
         fun onError(error: Wallet.Model.Error)
+
+        // Payment callback - triggered when pair() receives a payment link
+        fun onPaymentRequest(paymentOptions: Wallet.Model.PaymentOptionsResponse) {
+            // Optional - default no-op
+        }
     }
 
     @Throws(IllegalStateException::class)
     fun setWalletDelegate(delegate: WalletDelegate) {
+        walletDelegate = delegate
         val isSessionAuthenticateImplemented = delegate.onSessionAuthenticate != null
 
         val signWalletDelegate = object : SignClient.WalletDelegate {
@@ -102,6 +116,26 @@ object WalletKit {
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
         coreClient = params.core
 
+        // Initialize WalletConnectPay (silently, errors don't block WalletKit init)
+        try {
+            if (!WalletConnectPay.isInitialized) {
+                val context: Context = wcKoinApp.koin.get()
+                val clientId: String = wcKoinApp.koin.get(named(AndroidCommonDITags.CLIENT_ID))
+                val packageName = context.packageName
+                val projectId: ProjectId = wcKoinApp.koin.get()
+                WalletConnectPay.initialize(
+                    PaySdk.SdkConfig(
+                        appId = projectId.value,
+                        packageName = packageName,
+                        clientId = clientId
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            println("WalletConnectPay.initialize error: $e")
+            // Log but don't fail - Pay is optional functionality
+        }
+
         SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
             if (error.throwable is SignClientAlreadyInitializedException) {
                 onSuccess()
@@ -151,7 +185,39 @@ object WalletKit {
 
     @Throws(IllegalStateException::class)
     fun pair(params: Wallet.Params.Pair, onSuccess: (Wallet.Params.Pair) -> Unit = {}, onError: (Wallet.Model.Error) -> Unit = {}) {
-        coreClient.Pairing.pair(Core.Params.Pair(params.uri), { onSuccess(params) }, { error -> onError(Wallet.Model.Error(error.throwable)) })
+        val accounts = params.accounts
+        // If accounts provided, try WalletConnectPay first
+        if (!accounts.isNullOrEmpty()) {
+            scope.launch {
+                val result = WalletConnectPay.getPaymentOptions(params.uri, accounts)
+                result.fold(
+                    onSuccess = { response ->
+                        // Payment link - notify delegate
+                        walletDelegate?.onPaymentRequest(response.toWallet())
+                        onSuccess(params)
+                    },
+                    onFailure = { e ->
+                        // Not a payment link or Pay error - fall back to WC pairing
+                        fallbackToWcPairing(params, onSuccess, onError)
+                    }
+                )
+            }
+        } else {
+            // No accounts provided - standard WC pairing
+            fallbackToWcPairing(params, onSuccess, onError)
+        }
+    }
+
+    private fun fallbackToWcPairing(
+        params: Wallet.Params.Pair,
+        onSuccess: (Wallet.Params.Pair) -> Unit,
+        onError: (Wallet.Model.Error) -> Unit
+    ) {
+        coreClient.Pairing.pair(
+            Core.Params.Pair(params.uri),
+            { onSuccess(params) },
+            { error -> onError(Wallet.Model.Error(error.throwable)) }
+        )
     }
 
     @Throws(IllegalStateException::class)
@@ -410,4 +476,41 @@ object WalletKit {
 //    fun prepareErc20TransferCall(contractAddress: String, to: String, amount: String): Wallet.Model.Call {
 //        return prepareCallERC20TransferCallUseCase(contractAddress, to, amount)
 //    }
+
+    /**
+     * WalletConnectPay wrapper object for payment operations.
+     */
+    object Pay {
+        /**
+         * Gets required payment actions for a selected payment option.
+         *
+         * @param params Contains paymentId and optionId
+         * @return Result containing list of required actions or an error
+         */
+        suspend fun getRequiredPaymentActions(
+            params: Wallet.Params.RequiredPaymentActions
+        ): Result<List<Wallet.Model.RequiredAction>> {
+            return WalletConnectPay.getRequiredPaymentActions(
+                paymentId = params.paymentId,
+                optionId = params.optionId
+            ).map { actions -> actions.map { it.toWallet() } }
+        }
+
+        /**
+         * Confirms a payment with signatures and optional collected data.
+         *
+         * @param params Contains paymentId, optionId, signatures, and optional collectedData
+         * @return Result containing confirm payment response or an error
+         */
+        suspend fun confirmPayment(
+            params: Wallet.Params.ConfirmPayment
+        ): Result<Wallet.Model.ConfirmPaymentResponse> {
+            return WalletConnectPay.confirmPayment(
+                paymentId = params.paymentId,
+                optionId = params.optionId,
+                signatures = params.signatures,
+                collectedData = params.collectedData?.map { it.toPay() }
+            ).map { it.toWallet() }
+        }
+    }
 }

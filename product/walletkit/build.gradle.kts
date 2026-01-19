@@ -53,17 +53,27 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    packaging {
+        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_wcpay.so")
+        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_wcpay.so")
+        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_wcpay.so")
+    }
 }
 
 dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+    implementation("net.java.dev.jna:jna:5.17.0@aar")
 
     debugImplementation(project(":core:android"))
     debugImplementation(project(":protocol:sign"))
 
     releaseImplementation("com.reown:android-core:$CORE_VERSION")
     releaseImplementation("com.reown:sign:$SIGN_VERSION")
+
+    debugImplementation(project(":product:pay"))
+    releaseImplementation("com.walletconnect.pay:$PAY_VERSION")
 
     testImplementation(libs.bundles.androidxTest)
     testImplementation(libs.robolectric)

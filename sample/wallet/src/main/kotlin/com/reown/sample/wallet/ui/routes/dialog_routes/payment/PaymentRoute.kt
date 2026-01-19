@@ -68,7 +68,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
 import com.reown.sample.wallet.ui.routes.Route
-import com.walletconnect.pay.Pay
+import com.reown.walletkit.client.Wallet
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
@@ -86,7 +86,7 @@ fun PaymentRoute(
     val context = LocalContext.current
 
     LaunchedEffect(paymentLink) {
-        viewModel.loadPaymentOptions(paymentLink)
+        viewModel.setPaymentLink(paymentLink)
     }
 
     SemiTransparentDialog {
@@ -163,7 +163,9 @@ fun PaymentRoute(
                 ErrorContent(
                     message = state.message,
                     onRetry = {
-                        viewModel.loadPaymentOptions(paymentLink)
+                        // Retry not available in event-based flow - close dialog
+                        viewModel.cancel()
+                        navController.popBackStack(Route.Connections.path, inclusive = false)
                     },
                     onClose = {
                         viewModel.cancel()
@@ -197,7 +199,7 @@ private fun LoadingContent() {
 
 @Composable
 private fun IntroContent(
-    paymentInfo: Pay.PaymentInfo?,
+    paymentInfo: Wallet.Model.PaymentInfo?,
     hasInfoCapture: Boolean,
     estimatedTime: String,
     onStart: () -> Unit,
@@ -499,8 +501,8 @@ private fun IntroStepItem(
 
 @Composable
 private fun PaymentOptionsContent(
-    paymentInfo: Pay.PaymentInfo?,
-    options: List<Pay.PaymentOption>,
+    paymentInfo: Wallet.Model.PaymentInfo?,
+    options: List<Wallet.Model.PaymentOption>,
     onOptionSelected: (String) -> Unit,
     onClose: () -> Unit
 ) {
@@ -737,7 +739,7 @@ private fun PaymentOptionsHeader(
 
 @Composable
 private fun PayWithDropdown(
-    options: List<Pay.PaymentOption>,
+    options: List<Wallet.Model.PaymentOption>,
     selectedOptionId: String?,
     isExpanded: Boolean,
     onExpandToggle: () -> Unit,
@@ -846,7 +848,7 @@ private fun PayWithDropdown(
 
 @Composable
 private fun PaymentOptionItem(
-    option: Pay.PaymentOption,
+    option: Wallet.Model.PaymentOption,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -1196,7 +1198,7 @@ private fun AnimatedReownLogo() {
 
 @Composable
 private fun SuccessContent(
-    paymentInfo: Pay.PaymentInfo?,
+    paymentInfo: Wallet.Model.PaymentInfo?,
     onDone: () -> Unit,
     onClose: () -> Unit
 ) {
@@ -1387,7 +1389,7 @@ private fun ErrorContent(
 private fun CollectDataContent(
     currentStepIndex: Int,
     totalSteps: Int,
-    currentField: Pay.CollectDataField,
+    currentField: Wallet.Model.CollectDataField,
     currentValue: String,
     onValueSubmit: (String, String) -> Unit,
     onClose: () -> Unit
@@ -1426,14 +1428,14 @@ private fun CollectDataContent(
         
         // Input field based on type
         when (currentField.fieldType) {
-            Pay.CollectDataFieldType.TEXT -> {
+            Wallet.Model.CollectDataFieldType.TEXT -> {
                 TextFieldInput(
                     value = inputValue,
                     onValueChange = { inputValue = it },
                     placeholder = currentField.name
                 )
             }
-            Pay.CollectDataFieldType.DATE -> {
+            Wallet.Model.CollectDataFieldType.DATE -> {
                 DatePickerInput(
                     value = inputValue,
                     onValueChange = { inputValue = it }

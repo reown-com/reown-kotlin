@@ -2,15 +2,18 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.payment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.signer.EthSigner
 import com.reown.util.bytesToHex
 import com.reown.util.hexToBytes
-import com.walletconnect.pay.Pay
-import com.walletconnect.pay.WalletConnectPay
+import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import android.util.Log
 import org.json.JSONArray
@@ -20,6 +23,7 @@ import org.web3j.crypto.StructuredDataEncoder
 
 /**
  * ViewModel for handling the payment flow.
+ * Collects wallet events and processes payment options when received via onPaymentRequest callback.
  */
 class PaymentViewModel : ViewModel() {
 
@@ -29,84 +33,61 @@ class PaymentViewModel : ViewModel() {
     private var currentPaymentLink: String? = null
     private var currentPaymentId: String? = null
     private var selectedOptionId: String? = null
-    
+
     // Stored payment options for after information capture
-    private var storedPaymentInfo: Pay.PaymentInfo? = null
-    private var storedPaymentOptions: List<Pay.PaymentOption> = emptyList()
-    
+    private var storedPaymentInfo: Wallet.Model.PaymentInfo? = null
+    private var storedPaymentOptions: List<Wallet.Model.PaymentOption> = emptyList()
+
     // Information Capture state
-    private var pendingWalletRpcActions: List<Pay.RequiredAction.WalletRpc> = emptyList()
-    private var collectDataFields: List<Pay.CollectDataField> = emptyList()
+    private var pendingWalletRpcActions: List<Wallet.Model.RequiredAction.WalletRpc> = emptyList()
+    private var collectDataFields: List<Wallet.Model.CollectDataField> = emptyList()
     private val collectedValues: MutableMap<String, String> = mutableMapOf()
     private var currentFieldIndex: Int = 0
 
-    /**
-     * Check if payment options are already loaded for this link.
-     */
-    fun isAlreadyLoaded(paymentLink: String): Boolean {
-        return currentPaymentLink == paymentLink && _uiState.value !is PaymentUiState.Loading
+    init {
+        // Collect payment options event (has replay=1 to ensure we receive it even if emitted before collecting)
+        WalletKitDelegate.paymentOptionsEvent
+            .onEach { response -> processPaymentOptionsResponse(response) }
+            .launchIn(viewModelScope)
     }
 
     /**
-     * Load payment options for the given payment link.
-     * The payment ID is extracted internally from the link.
+     * Process payment options response received from onPaymentRequest callback.
      */
-    fun loadPaymentOptions(paymentLink: String) {
-        // Don't reload if we already have data for this payment link
-        if (isAlreadyLoaded(paymentLink)) {
-            return
-        }
+    private fun processPaymentOptionsResponse(response: Wallet.Model.PaymentOptionsResponse) {
+        currentPaymentId = response.paymentId
+        // Store collect data fields from response (if any)
+        collectDataFields = response.collectDataAction?.fields ?: emptyList()
+        collectedValues.clear()
+        currentFieldIndex = 0
 
+        // Store payment options for later use
+        storedPaymentInfo = response.info
+        storedPaymentOptions = response.options
+
+        if (response.options.isEmpty()) {
+            _uiState.value = PaymentUiState.Error("No payment options available")
+        } else if (collectDataFields.isNotEmpty()) {
+            // Show intro screen only when information capture is required
+            _uiState.value = PaymentUiState.Intro(
+                paymentInfo = storedPaymentInfo,
+                hasInfoCapture = true
+            )
+        } else {
+            // No information capture required, go directly to options
+            _uiState.value = PaymentUiState.Options(
+                paymentLink = currentPaymentLink ?: "",
+                paymentInfo = storedPaymentInfo,
+                options = storedPaymentOptions
+            )
+        }
+    }
+
+    /**
+     * Set the current payment link for reference.
+     */
+    fun setPaymentLink(paymentLink: String) {
         currentPaymentLink = paymentLink
-        _uiState.value = PaymentUiState.Loading
-
-        viewModelScope.launch {
-            // Get user's accounts in CAIP-10 format
-            val accounts = listOf(
-                "eip155:1:${EthAccountDelegate.address}",
-                "eip155:137:${EthAccountDelegate.address}",
-                "eip155:8453:${EthAccountDelegate.address}",
-                "eip155:10:${EthAccountDelegate.address}"
-            )
-
-            val result = WalletConnectPay.getPaymentOptions(
-                paymentLink = paymentLink,
-                accounts = accounts,
-            )
-            result.fold(
-                onSuccess = { response ->
-                    currentPaymentId = response.paymentId
-                    // Store collect data fields from response (if any)
-                    collectDataFields = response.collectDataAction?.fields ?: emptyList()
-                    collectedValues.clear()
-                    currentFieldIndex = 0
-                    
-                    // Store payment options for later use
-                    storedPaymentInfo = response.info
-                    storedPaymentOptions = response.options
-                    
-                    if (response.options.isEmpty()) {
-                        _uiState.value = PaymentUiState.Error("No payment options available")
-                    } else if (collectDataFields.isNotEmpty()) {
-                        // Show intro screen only when information capture is required
-                        _uiState.value = PaymentUiState.Intro(
-                            paymentInfo = response.info,
-                            hasInfoCapture = true
-                        )
-                    } else {
-                        // No information capture required, go directly to options
-                        _uiState.value = PaymentUiState.Options(
-                            paymentLink = paymentLink,
-                            paymentInfo = response.info,
-                            options = response.options
-                        )
-                    }
-                },
-                onFailure = { error ->
-                    _uiState.value = PaymentUiState.Error(error.message ?: "Failed to load payment options")
-                }
-            )
-        }
     }
 
     /**
@@ -124,6 +105,7 @@ class PaymentViewModel : ViewModel() {
 
     /**
      * Process payment with the selected option.
+     * Uses WalletKit.Pay for getting required actions.
      */
     fun processPayment(optionId: String) {
         val paymentId = currentPaymentId ?: return
@@ -131,8 +113,13 @@ class PaymentViewModel : ViewModel() {
         _uiState.value = PaymentUiState.Processing("Getting required actions...")
 
         viewModelScope.launch {
-            // Get required payment actions
-            val actionsResult = WalletConnectPay.getRequiredPaymentActions(paymentId, optionId)
+            // Get required payment actions using WalletKit.Pay
+            val actionsResult = WalletKit.Pay.getRequiredPaymentActions(
+                Wallet.Params.RequiredPaymentActions(
+                    paymentId = paymentId,
+                    optionId = optionId
+                )
+            )
             actionsResult.fold(
                 onSuccess = { actions ->
                     processActions(paymentId, optionId, actions)
@@ -147,15 +134,15 @@ class PaymentViewModel : ViewModel() {
     private suspend fun processActions(
         paymentId: String,
         optionId: String,
-        actions: List<Pay.RequiredAction>
+        actions: List<Wallet.Model.RequiredAction>
     ) {
         // Store WalletRpc actions for signing
-        pendingWalletRpcActions = actions.filterIsInstance<Pay.RequiredAction.WalletRpc>()
-        
+        pendingWalletRpcActions = actions.filterIsInstance<Wallet.Model.RequiredAction.WalletRpc>()
+
         // Information capture already done before options, proceed directly to payment
         executePayment()
     }
-    
+
     /**
      * Show the current field for data collection.
      */
@@ -171,7 +158,7 @@ class PaymentViewModel : ViewModel() {
             )
         }
     }
-    
+
     /**
      * Proceed to payment options after information capture is complete.
      */
@@ -183,14 +170,14 @@ class PaymentViewModel : ViewModel() {
             options = storedPaymentOptions
         )
     }
-    
+
     /**
      * Submit the value for the current field and move to the next step.
      */
     fun submitFieldValue(fieldId: String, value: String) {
         collectedValues[fieldId] = value
         currentFieldIndex++
-        
+
         if (currentFieldIndex < collectDataFields.size) {
             // Show next field
             showCurrentField()
@@ -199,7 +186,7 @@ class PaymentViewModel : ViewModel() {
             proceedToOptions()
         }
     }
-    
+
     /**
      * Go back to the previous field.
      */
@@ -212,7 +199,7 @@ class PaymentViewModel : ViewModel() {
             goBackToIntro()
         }
     }
-    
+
     /**
      * Go back to the intro screen.
      */
@@ -222,19 +209,20 @@ class PaymentViewModel : ViewModel() {
             hasInfoCapture = collectDataFields.isNotEmpty()
         )
     }
-    
+
     /**
      * Execute the payment with collected data and signatures.
+     * Uses WalletKit.Pay for confirming payment.
      */
     private suspend fun executePayment() {
         val paymentId = currentPaymentId ?: return
         val optionId = selectedOptionId ?: return
-        
+
         _uiState.value = PaymentUiState.Processing(
             message = "Confirming your payment...",
             paymentInfo = storedPaymentInfo
         )
-        
+
         try {
             // Sign all WalletRpc actions and collect signatures
             val signatures = pendingWalletRpcActions.map { action ->
@@ -244,42 +232,44 @@ class PaymentViewModel : ViewModel() {
             // Convert collected data to field results
             val collectedData = if (collectedValues.isNotEmpty()) {
                 collectedValues.map { (id, value) ->
-                    Pay.CollectDataFieldResult(id = id, value = value)
+                    Wallet.Model.CollectDataFieldResult(id = id, value = value)
                 }
             } else {
                 null
             }
-            
-            // Confirm payment with signatures and collected data
-            val confirmResult = WalletConnectPay.confirmPayment(
-                paymentId = paymentId,
-                optionId = optionId,
-                signatures = signatures,
-                collectedData = collectedData
+
+            // Confirm payment with signatures and collected data using WalletKit.Pay
+            val confirmResult = WalletKit.Pay.confirmPayment(
+                Wallet.Params.ConfirmPayment(
+                    paymentId = paymentId,
+                    optionId = optionId,
+                    signatures = signatures,
+                    collectedData = collectedData
+                )
             )
 
             confirmResult.fold(
                 onSuccess = { response ->
                     when (response.status) {
-                        Pay.PaymentStatus.SUCCEEDED -> {
+                        Wallet.Model.PaymentStatus.SUCCEEDED -> {
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment completed successfully!",
                                 paymentInfo = storedPaymentInfo
                             )
                         }
-                        Pay.PaymentStatus.PROCESSING -> {
+                        Wallet.Model.PaymentStatus.PROCESSING -> {
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment is being processed...",
                                 paymentInfo = storedPaymentInfo
                             )
                         }
-                        Pay.PaymentStatus.FAILED -> {
+                        Wallet.Model.PaymentStatus.FAILED -> {
                             _uiState.value = PaymentUiState.Error("Payment failed")
                         }
-                        Pay.PaymentStatus.EXPIRED -> {
+                        Wallet.Model.PaymentStatus.EXPIRED -> {
                             _uiState.value = PaymentUiState.Error("Payment expired")
                         }
-                        Pay.PaymentStatus.REQUIRES_ACTION -> {
+                        Wallet.Model.PaymentStatus.REQUIRES_ACTION -> {
                             _uiState.value = PaymentUiState.Error("Additional action required")
                         }
                     }
@@ -297,7 +287,7 @@ class PaymentViewModel : ViewModel() {
     /**
      * Sign a wallet RPC action and return the signature string.
      */
-    private fun signWalletRpcAction(action: Pay.WalletRpcAction): String {
+    private fun signWalletRpcAction(action: Wallet.Model.WalletRpcAction): String {
         return when (action.method) {
             "eth_signTypedData_v4" -> signTypedDataV4(action.params)
             "personal_sign" -> EthSigner.personalSign(action.params)
@@ -313,24 +303,24 @@ class PaymentViewModel : ViewModel() {
         val paramsArray = JSONArray(params)
         val requestedAddress = paramsArray.getString(0)
         val typedData = paramsArray.getString(1)
-        
+
         // Verify the requested address matches our wallet address
         if (!requestedAddress.equals(EthAccountDelegate.address, ignoreCase = true)) {
             throw IllegalArgumentException("Requested address does not match wallet address")
         }
-        
+
         // Use StructuredDataEncoder for proper EIP-712 hashing
         val encoder = StructuredDataEncoder(typedData)
         val hash = encoder.hashStructuredData()
-        
+
         val keyPair = ECKeyPair.create(EthAccountDelegate.privateKey.hexToBytes())
         val signatureData = Sign.signMessage(hash, keyPair, false)
-        
+
         val rHex = signatureData.r.bytesToHex()
         val sHex = signatureData.s.bytesToHex()
         val v = signatureData.v[0].toInt() and 0xff
         val vHex = v.toString(16).padStart(2, '0')
-        
+
         return "0x$rHex$sHex$vHex".lowercase()
     }
 
@@ -348,52 +338,53 @@ class PaymentViewModel : ViewModel() {
         collectedValues.clear()
         currentFieldIndex = 0
         _uiState.value = PaymentUiState.Loading
+        // Clear replay cache to prevent stale data on next payment
+        WalletKitDelegate.clearPaymentOptions()
     }
 }
 
 /**
  * UI state for the payment flow.
+ * Uses Wallet.Model types from WalletKit.
  */
 sealed class PaymentUiState {
     data object Loading : PaymentUiState()
-    
+
     /**
      * Intro screen shown before information capture.
      */
     data class Intro(
-        val paymentInfo: Pay.PaymentInfo?,
+        val paymentInfo: Wallet.Model.PaymentInfo?,
         val hasInfoCapture: Boolean,
         val estimatedTime: String = "~2min"
     ) : PaymentUiState()
-    
+
     data class Options(
         val paymentLink: String,
-        val paymentInfo: Pay.PaymentInfo?,
-        val options: List<Pay.PaymentOption>
+        val paymentInfo: Wallet.Model.PaymentInfo?,
+        val options: List<Wallet.Model.PaymentOption>
     ) : PaymentUiState()
-    
+
     /**
      * State for collecting user data (Information Capture).
      */
     data class CollectingData(
         val currentStepIndex: Int,
         val totalSteps: Int,
-        val currentField: Pay.CollectDataField,
+        val currentField: Wallet.Model.CollectDataField,
         val currentValue: String,
-        val allFields: List<Pay.CollectDataField>
+        val allFields: List<Wallet.Model.CollectDataField>
     ) : PaymentUiState()
-    
+
     data class Processing(
         val message: String,
-        val paymentInfo: Pay.PaymentInfo? = null
+        val paymentInfo: Wallet.Model.PaymentInfo? = null
     ) : PaymentUiState()
-    
+
     data class Success(
         val message: String,
-        val paymentInfo: Pay.PaymentInfo? = null
+        val paymentInfo: Wallet.Model.PaymentInfo? = null
     ) : PaymentUiState()
-    
+
     data class Error(val message: String) : PaymentUiState()
 }
-
-

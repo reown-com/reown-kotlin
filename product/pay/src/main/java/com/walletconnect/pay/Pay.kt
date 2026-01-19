@@ -5,7 +5,8 @@ object Pay {
         val apiKey: String? = null,
         val appId: String? = null,
         val packageName: String,
-        val baseUrl: String = "https://api.pay.walletconnect.com"
+        val baseUrl: String = "https://api.pay.walletconnect.com",
+        val clientId: String? = null
     )
 
     enum class PaymentStatus {
