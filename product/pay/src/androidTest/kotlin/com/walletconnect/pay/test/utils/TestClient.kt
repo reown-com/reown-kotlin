@@ -85,11 +85,6 @@ internal object TestClient {
         try {
             if (!WalletConnectPay.isInitialized) {
                 val projectId = getProjectId()
-                println("=== WalletConnectPay SDK Initialization ===")
-                println("Project ID: ${projectId.take(8)}... (length: ${projectId.length})")
-                println("Package name: ${app.packageName}")
-                println("BuildConfig.PROJECT_ID: '${BuildConfig.PROJECT_ID}' (length: ${BuildConfig.PROJECT_ID.length})")
-                println("From instrumentation args: ${getInstrumentationArg("WC_CLOUD_PROJECT_ID")?.take(8) ?: "null"}")
                 WalletConnectPay.initialize(
                     Pay.SdkConfig(
                         appId = projectId,
