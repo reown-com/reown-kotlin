@@ -73,7 +73,7 @@ dependencies {
     releaseImplementation("com.reown:sign:$SIGN_VERSION")
 
     debugImplementation(project(":product:pay"))
-    releaseImplementation("com.walletconnect.pay:$PAY_VERSION")
+    releaseImplementation("com.walletconnect:pay:$PAY_VERSION")
 
     testImplementation(libs.bundles.androidxTest)
     testImplementation(libs.robolectric)

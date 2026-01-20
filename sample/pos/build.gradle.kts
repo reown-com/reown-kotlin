@@ -72,7 +72,7 @@ dependencies {
 
     debugImplementation(project(":product:pos"))
     internalImplementation(project(":product:pos"))
-    releaseImplementation("com.walletconnect.pos:0.0.1")
+    releaseImplementation("com.walletconnect:pos:$POS_VERSION")
 
     implementation(libs.bundles.accompanist)
 

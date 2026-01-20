@@ -8,7 +8,8 @@ plugins {
 project.apply {
     extra[KEY_PUBLISH_ARTIFACT_ID] = PAY
     extra[KEY_PUBLISH_VERSION] = PAY_VERSION
-    extra[KEY_SDK_NAME] = "WalletConnectPay"
+    extra[KEY_PUBLISH_GROUP] = "com.walletconnect"
+    extra[KEY_SDK_NAME] = "pay"
 }
 
 android {
@@ -78,7 +79,7 @@ dependencies {
 //    implementation("com.github.reown-com:yttrium-wcpay:unspecified")
 
     //jitpack
-    implementation("com.github.reown-com.yttrium:yttrium-wcpay:0.10.9") {
+    implementation("com.github.reown-com.yttrium:yttrium-wcpay:0.10.14") {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
     implementation("net.java.dev.jna:jna:5.17.0@aar")

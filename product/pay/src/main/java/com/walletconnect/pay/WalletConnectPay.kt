@@ -43,7 +43,7 @@ object WalletConnectPay {
             sdkVersion = BuildConfig.SDK_VERSION,
             sdkPlatform = "android",
             bundleId = config.packageName,
-            clientId = null,
+            clientId = config.appId,
         )
 
         client = YttriumWalletConnectPay(yttriumConfig)

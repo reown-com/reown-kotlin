@@ -109,24 +109,21 @@ object WalletKit {
     fun initialize(params: Wallet.Params.Init, onSuccess: () -> Unit = {}, onError: (Wallet.Model.Error) -> Unit) {
         coreClient = params.core
 
-        // Initialize WalletConnectPay (silently, errors don't block WalletKit init)
         try {
             if (!WalletConnectPay.isInitialized) {
                 val context: Context = wcKoinApp.koin.get()
                 val clientId: String = wcKoinApp.koin.get(named(AndroidCommonDITags.CLIENT_ID))
-                val packageName = context.packageName
                 val projectId: ProjectId = wcKoinApp.koin.get()
                 WalletConnectPay.initialize(
                     PaySdk.SdkConfig(
                         appId = projectId.value,
-                        packageName = packageName,
+                        packageName = context.packageName,
                         clientId = clientId
                     )
                 )
             }
         } catch (e: Exception) {
-            println("WalletConnectPay.initialize error: $e")
-            // Log but don't fail - Pay is optional functionality
+            onError(Wallet.Model.Error(e))
         }
 
         SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
