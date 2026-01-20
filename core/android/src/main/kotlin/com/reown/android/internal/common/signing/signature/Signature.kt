@@ -49,7 +49,7 @@ data class Signature(val v: ByteArray, val r: ByteArray, val s: ByteArray) {
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
         other == null || javaClass != other.javaClass -> false
-        other is Signature -> !v.contentEquals(other.v) || !r.contentEquals(other.r) || s.contentEquals(other.s)
+        other is Signature -> v.contentEquals(other.v) && r.contentEquals(other.r) && s.contentEquals(other.s)
         else -> false
     }
 
