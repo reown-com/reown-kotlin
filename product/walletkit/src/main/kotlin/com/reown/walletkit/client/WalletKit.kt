@@ -120,8 +120,7 @@ object WalletKit {
                     PaySdk.SdkConfig(
                         appId = projectId.value,
                         packageName = packageName,
-                        clientId = clientId,
-//                        apiKey = "wk_live_0bbb6efb03130bf7dbde1e409c7d79ab7f0d590f6872a1ad49d1a8394ac510f6"
+                        clientId = clientId
                     )
                 )
             }
