@@ -34,9 +34,6 @@ android {
         System.getenv("MERCHANT_API_KEY")?.let { apiKey ->
             testInstrumentationRunnerArguments["MERCHANT_API_KEY"] = apiKey
         }
-        System.getenv("WALLET_API_KEY")?.let { apiKey ->
-            testInstrumentationRunnerArguments["WALLET_API_KEY"] = apiKey
-        }
 
         buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
         buildConfigField(

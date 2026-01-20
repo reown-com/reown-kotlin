@@ -65,7 +65,6 @@ internal object TestClient {
             if (!WalletConnectPay.isInitialized) {
                 WalletConnectPay.initialize(
                     Pay.SdkConfig(
-                        apiKey = Common.WALLET_API_KEY,
                         appId = BuildConfig.PROJECT_ID,
                         packageName = app.packageName
                     )

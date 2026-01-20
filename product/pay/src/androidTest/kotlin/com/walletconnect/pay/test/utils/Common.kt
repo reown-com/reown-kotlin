@@ -9,10 +9,6 @@ internal object Common {
         InstrumentationRegistry.getArguments().getString("MERCHANT_API_KEY")
             ?: error("MERCHANT_API_KEY environment variable not set")
     }
-    val WALLET_API_KEY: String by lazy {
-        InstrumentationRegistry.getArguments().getString("WALLET_API_KEY")
-            ?: error("WALLET_API_KEY environment variable not set")
-    }
     const val TEST_ADDRESS = "0xEb52dc9cCE17f1F0Ab0606d846dce183B449033C"
     const val BASE_CHAIN = "eip155:8453"
     const val POLYGON_CHAIN = "eip155:137"
