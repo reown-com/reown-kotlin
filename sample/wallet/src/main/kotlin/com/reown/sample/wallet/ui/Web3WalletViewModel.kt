@@ -87,12 +87,6 @@ class Web3WalletViewModel : ViewModel() {
             }
             connectivityStateFlow.value = connectionState
         }.launchIn(viewModelScope)
-
-        // Observe payment options events and trigger navigation
-        WalletKitDelegate.paymentOptionsEvent.onEach { response ->
-            _isLoadingFlow.value = false
-            _paymentEventFlow.emit(response.paymentId)
-        }.launchIn(viewModelScope)
     }
 
     val walletEvents = WalletKitDelegate.walletEvents.map { wcEvent ->
@@ -161,21 +155,19 @@ class Web3WalletViewModel : ViewModel() {
     }
 
     fun pair(pairingUri: String) {
-        // Check if this is a payment URL - emit the full link, not just the ID
-        println("kobe: uri: $pairingUri")
+        val uri = pairingUri.removePrefix("kotlin-web3wallet://wc?uri=")
+        println("kobe: uri: $uri")
 
+        // Check if this is a payment link - use explicit API
+        if (WalletKit.Pay.isPaymentLink(uri)) {
+            handlePaymentLink(uri)
+            return
+        }
+
+        // Standard WC pairing
         _isLoadingFlow.value = true
-
         try {
-            //TODO: add accounts
-            val accounts = listOf(
-                "eip155:1:${EthAccountDelegate.address}",
-                "eip155:137:${EthAccountDelegate.address}",
-                "eip155:8453:${EthAccountDelegate.address}",
-                "eip155:10:${EthAccountDelegate.address}"
-            )
-            val pairingParams = Wallet.Params.Pair(pairingUri.removePrefix("kotlin-web3wallet://wc?uri="), accounts = accounts)
-            WalletKit.pair(pairingParams) { error ->
+            WalletKit.pair(Wallet.Params.Pair(uri)) { error ->
                 Firebase.crashlytics.recordException(error.throwable)
                 viewModelScope.launch {
                     _isLoadingFlow.value = false
@@ -188,6 +180,33 @@ class Web3WalletViewModel : ViewModel() {
                 _isLoadingFlow.value = false
                 _eventsSharedFlow.emit(PairingEvent.Error(e.message ?: "Unexpected error happened, please contact support"))
             }
+        }
+    }
+
+    private fun handlePaymentLink(paymentLink: String) {
+        viewModelScope.launch {
+            _isLoadingFlow.value = true
+            val accounts = listOf(
+                "eip155:1:${EthAccountDelegate.address}",
+                "eip155:137:${EthAccountDelegate.address}",
+                "eip155:8453:${EthAccountDelegate.address}",
+                "eip155:10:${EthAccountDelegate.address}"
+            )
+
+            val result = WalletKit.Pay.getPaymentOptions(paymentLink, accounts)
+            result.fold(
+                onSuccess = { response ->
+                    _isLoadingFlow.value = false
+                    // Emit full response for PaymentViewModel to collect via WalletKitDelegate
+                    WalletKitDelegate._paymentOptionsEvent.emit(response)
+                    // Emit paymentId for navigation trigger
+                    _paymentEventFlow.emit(response.paymentId)
+                },
+                onFailure = { error ->
+                    _isLoadingFlow.value = false
+                    _eventsSharedFlow.emit(PairingEvent.Error(error.message ?: "Payment error"))
+                }
+            )
         }
     }
 }

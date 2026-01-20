@@ -17,7 +17,6 @@ import org.koin.core.qualifier.named
 
 object WalletKit {
     private lateinit var coreClient: CoreInterface
-    private var walletDelegate: WalletDelegate? = null
 //    private val prepareChainAbstractionUseCase: PrepareChainAbstractionUseCase by wcKoinApp.koin.inject()
 //    private val executeChainAbstractionUseCase: ExecuteChainAbstractionUseCase by wcKoinApp.koin.inject()
 //    private val estimateGasUseCase: EstimateGasUseCase by wcKoinApp.koin.inject()
@@ -46,16 +45,10 @@ object WalletKit {
 
         fun onConnectionStateChange(state: Wallet.Model.ConnectionState)
         fun onError(error: Wallet.Model.Error)
-
-        // Payment callback - triggered when pair() receives a payment link
-        fun onPaymentRequest(paymentOptions: Wallet.Model.PaymentOptionsResponse) {
-            // Optional - default no-op
-        }
     }
 
     @Throws(IllegalStateException::class)
     fun setWalletDelegate(delegate: WalletDelegate) {
-        walletDelegate = delegate
         val isSessionAuthenticateImplemented = delegate.onSessionAuthenticate != null
 
         val signWalletDelegate = object : SignClient.WalletDelegate {
@@ -127,7 +120,8 @@ object WalletKit {
                     PaySdk.SdkConfig(
                         appId = projectId.value,
                         packageName = packageName,
-                        clientId = clientId
+                        clientId = clientId,
+//                        apiKey = "wk_live_0bbb6efb03130bf7dbde1e409c7d79ab7f0d590f6872a1ad49d1a8394ac510f6"
                     )
                 )
             }
@@ -185,34 +179,6 @@ object WalletKit {
 
     @Throws(IllegalStateException::class)
     fun pair(params: Wallet.Params.Pair, onSuccess: (Wallet.Params.Pair) -> Unit = {}, onError: (Wallet.Model.Error) -> Unit = {}) {
-        val accounts = params.accounts
-        // If accounts provided, try WalletConnectPay first
-        if (!accounts.isNullOrEmpty()) {
-            scope.launch {
-                val result = WalletConnectPay.getPaymentOptions(params.uri, accounts)
-                result.fold(
-                    onSuccess = { response ->
-                        // Payment link - notify delegate
-                        walletDelegate?.onPaymentRequest(response.toWallet())
-                        onSuccess(params)
-                    },
-                    onFailure = { e ->
-                        // Not a payment link or Pay error - fall back to WC pairing
-                        fallbackToWcPairing(params, onSuccess, onError)
-                    }
-                )
-            }
-        } else {
-            // No accounts provided - standard WC pairing
-            fallbackToWcPairing(params, onSuccess, onError)
-        }
-    }
-
-    private fun fallbackToWcPairing(
-        params: Wallet.Params.Pair,
-        onSuccess: (Wallet.Params.Pair) -> Unit,
-        onError: (Wallet.Model.Error) -> Unit
-    ) {
         coreClient.Pairing.pair(
             Core.Params.Pair(params.uri),
             { onSuccess(params) },
@@ -482,6 +448,24 @@ object WalletKit {
      */
     object Pay {
         /**
+         * Gets payment options for a payment link.
+         * Call this when [isPaymentLink] returns true for the URI.
+         *
+         * @param paymentLink The payment link URL
+         * @param accounts List of CAIP-10 account addresses (e.g., "eip155:1:0x...")
+         * @return Result containing payment options response or an error
+         */
+        suspend fun getPaymentOptions(
+            paymentLink: String,
+            accounts: List<String>
+        ): Result<Wallet.Model.PaymentOptionsResponse> {
+            return WalletConnectPay.getPaymentOptions(
+                paymentLink = paymentLink,
+                accounts = accounts
+            ).map { it.toWallet() }
+        }
+
+        /**
          * Gets required payment actions for a selected payment option.
          *
          * @param params Contains paymentId and optionId
@@ -511,6 +495,23 @@ object WalletKit {
                 signatures = params.signatures,
                 collectedData = params.collectedData?.map { it.toPay() }
             ).map { it.toWallet() }
+        }
+
+        /**
+         * Checks if the given URI is a WalletConnect Pay payment link.
+         * Use this to determine whether to call [Pay.getPaymentOptions] or [pair].
+         *
+         * @param uri The URI to check (can be a URL or QR code content)
+         * @return true if the URI is a payment link, false otherwise
+         */
+        fun isPaymentLink(uri: String): Boolean {
+            val lower = uri.lowercase()
+            return lower.contains("pay.") ||
+                    lower.contains("pay=") ||
+                    lower.contains("pay_") ||
+                    lower.contains("pay%2e") ||  // encoded "pay."
+                    lower.contains("pay%3d") ||  // encoded "pay="
+                    lower.contains("pay%5f")     // encoded "pay_"
         }
     }
 }

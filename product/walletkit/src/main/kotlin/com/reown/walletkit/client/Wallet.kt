@@ -4,8 +4,6 @@ import androidx.annotation.Keep
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
-import com.reown.sign.client.Sign
-import com.reown.sign.client.Sign.Model
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -22,10 +20,7 @@ object Wallet {
     sealed class Params {
         data class Init(val core: CoreInterface) : Params()
 
-        data class Pair(
-            val uri: String,
-            val accounts: List<String>? = null // CAIP-10 accounts for payment links
-        ) : Params()
+        data class Pair(val uri: String) : Params()
 
         data class SessionApprove(
             val proposerPublicKey: String,

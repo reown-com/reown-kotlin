@@ -27,7 +27,8 @@ object WalletKitDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     val connectionState: SharedFlow<Wallet.Model.ConnectionState> = _connectionState.asSharedFlow()
 
     // Payment options flow with replay to ensure ViewModel receives the event
-    private val _paymentOptionsEvent: MutableSharedFlow<Wallet.Model.PaymentOptionsResponse> = MutableSharedFlow(replay = 1)
+    // Internal mutable flow for Web3WalletViewModel to emit to
+    internal val _paymentOptionsEvent: MutableSharedFlow<Wallet.Model.PaymentOptionsResponse> = MutableSharedFlow(replay = 1)
     val paymentOptionsEvent: SharedFlow<Wallet.Model.PaymentOptionsResponse> = _paymentOptionsEvent.asSharedFlow()
 
     var sessionProposalEvent: Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>? = null
@@ -150,12 +151,6 @@ object WalletKitDelegate : WalletKit.WalletDelegate, CoreClient.CoreDelegate {
     override fun onRequestExpired(request: Wallet.Model.ExpiredRequest) {
         scope.launch {
             _walletEvents.emit(request)
-        }
-    }
-
-    override fun onPaymentRequest(paymentOptions: Wallet.Model.PaymentOptionsResponse) {
-        scope.launch {
-            _paymentOptionsEvent.emit(paymentOptions)
         }
     }
 
