@@ -11,12 +11,10 @@ class PayModelsTest {
     fun `SdkConfig should hold correct values`() {
         val config = Pay.SdkConfig(
             apiKey = "test-api-key",
-            projectId = "test-project-id",
             packageName = "com.test.app"
         )
 
         assertEquals("test-api-key", config.apiKey)
-        assertEquals("test-project-id", config.projectId)
         assertEquals("com.test.app", config.packageName)
     }
 
@@ -39,7 +37,8 @@ class PayModelsTest {
             assetName = "Ethereum",
             decimals = 18,
             iconUrl = "https://example.com/eth.png",
-            networkName = "Ethereum Mainnet"
+            networkName = "Ethereum Mainnet",
+            networkIconUrl = null
         )
 
         assertEquals("ETH", display.assetSymbol)
@@ -56,7 +55,8 @@ class PayModelsTest {
             assetName = "USD Coin",
             decimals = 6,
             iconUrl = null,
-            networkName = null
+            networkName = null,
+            networkIconUrl = null
         )
 
         assertEquals("USDC", display.assetSymbol)
@@ -71,7 +71,8 @@ class PayModelsTest {
             assetName = "USD Coin",
             decimals = 6,
             iconUrl = null,
-            networkName = null
+            networkName = null,
+            networkIconUrl = null
         )
 
         val amount = Pay.Amount(
@@ -97,7 +98,8 @@ class PayModelsTest {
         val option = Pay.PaymentOption(
             id = "option-123",
             amount = amount,
-            estimatedTxs = 2
+            estimatedTxs = 2,
+            account = ""
         )
 
         assertEquals("option-123", option.id)
@@ -259,8 +261,8 @@ class PayModelsTest {
         )
 
         val options = listOf(
-            Pay.PaymentOption(id = "opt-1", amount = amount, estimatedTxs = 1),
-            Pay.PaymentOption(id = "opt-2", amount = amount, estimatedTxs = 2)
+            Pay.PaymentOption(id = "opt-1", amount = amount, estimatedTxs = 1, account = ""),
+            Pay.PaymentOption(id = "opt-2", amount = amount, estimatedTxs = 2, account = "")
         )
 
         val collectDataAction = Pay.CollectDataAction(
@@ -293,7 +295,7 @@ class PayModelsTest {
     fun `PaymentOptionsResponse should handle null optional fields`() {
         val amount = Pay.Amount(value = "50", unit = "USDC", display = null)
         val options = listOf(
-            Pay.PaymentOption(id = "opt-1", amount = amount, estimatedTxs = null)
+            Pay.PaymentOption(id = "opt-1", amount = amount, estimatedTxs = null, account = "")
         )
 
         val response = Pay.PaymentOptionsResponse(
@@ -317,7 +319,8 @@ class PayModelsTest {
         val option = Pay.PaymentOption(
             id = "option-null-tx",
             amount = amount,
-            estimatedTxs = null
+            estimatedTxs = null,
+            account = ""
         )
 
         assertEquals("option-null-tx", option.id)
