@@ -39,12 +39,16 @@ internal object AppKitDelegate : AppKit.ModalDelegate {
     }
 
     override fun onSessionApproved(approvedSession: Modal.Model.ApprovedSession) {
-        scope.launch {
-            val chain = AppKit.chains.getSelectedChain(AppKit.selectedChain?.id)
+    scope.launch {
+        val chain = AppKit.chains.getSelectedChain(AppKit.selectedChain?.id)
+        if (chain != null) {
             saveSessionUseCase(approvedSession.toSession(chain))
             _wcEventModels.emit(approvedSession)
+        } else {
+            Log.e("AppKitDelegate", "Cannot process session - no chain available")
         }
     }
+}
 
     override fun onSessionAuthenticateResponse(sessionAuthenticateResponse: Modal.Model.SessionAuthenticateResponse) {
         scope.launch {
