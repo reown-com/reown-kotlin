@@ -79,4 +79,5 @@ jobs:
           command: ":product:pay:allDevicesCheck"
           projectId: ${{ secrets.WC_CLOUD_PROJECT_ID }}
           walletPrivateKey: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
+          merchantApiKey: ${{ secrets.MERCHANT_API_KEY }}
           testTimeoutSeconds: ${{ github.event.inputs.testTimeoutSeconds || env.TEST_TIMEOUT_SECONDS }}
