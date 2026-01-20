@@ -34,6 +34,9 @@ android {
         System.getenv("MERCHANT_API_KEY")?.let { apiKey ->
             testInstrumentationRunnerArguments["MERCHANT_API_KEY"] = apiKey
         }
+        System.getenv("WC_CLOUD_PROJECT_ID")?.let { projectId ->
+            testInstrumentationRunnerArguments["WC_CLOUD_PROJECT_ID"] = projectId
+        }
 
         buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
         buildConfigField(
