@@ -305,14 +305,15 @@ internal class RelayJsonRpcInteractor(
         val callbackDelivered = AtomicBoolean(false)
 
         chunks.forEach { chunk ->
+            if (callbackDelivered.get()) return@forEach
             try {
                 relay.batchSubscribe(chunk) { result ->
                     if (callbackDelivered.get()) return@batchSubscribe
                     result.fold(
                         onSuccess = { acknowledgement ->
-                            subscriptions.plusAssign(chunk.zip(acknowledgement.result).toMap())
-                            if (completedChunks.incrementAndGet() == chunks.size) {
-                                if (callbackDelivered.compareAndSet(false, true)) {
+                            if (!callbackDelivered.get()) {
+                                subscriptions.plusAssign(chunk.zip(acknowledgement.result).toMap())
+                                if (completedChunks.incrementAndGet() == chunks.size && callbackDelivered.compareAndSet(false, true)) {
                                     onSuccess(topics)
                                 }
                             }
