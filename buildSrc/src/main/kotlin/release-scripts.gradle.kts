@@ -29,37 +29,53 @@ tasks.register("releaseAllSDKs") {
 
 fun generateListOfModuleTasks(type: ReleaseType): List<Task> = compileListOfSDKs().extractListOfPublishingTasks(type)
 
-// Triple consists of the root module name, the child module name, and if it's a JVM or Android module
-fun compileListOfSDKs(): List<Triple<String, String?, String>> = mutableListOf(
-    Triple("foundation", null, "jvm"),
-    Triple("core", "android", "android"),
-    Triple("core", "modal", "android"),
-    Triple("protocol", "sign", "android"),
-    Triple("protocol", "notify", "android"),
-    Triple("product", "pay", "android"),
-    Triple("product", "walletkit", "android"),
-    Triple("product", "appkit", "android"),
-    Triple("product", "pos", "android"),
+/**
+ * SDK module configuration
+ * @property parentModule The root module name
+ * @property childModule The child module name (null for root-level modules like foundation)
+ * @property env The environment type: "jvm" or "android"
+ * @property repository The target repository: "sonatype" (com.reown) or "walletconnect" (com.walletconnect)
+ */
+data class SdkModule(
+    val parentModule: String,
+    val childModule: String?,
+    val env: String,
+    val repository: String = "reown"
+)
 
+fun compileListOfSDKs(): List<SdkModule> = mutableListOf(
+    SdkModule("foundation", null, "jvm"),
+    SdkModule("core", "android", "android"),
+    SdkModule("core", "modal", "android"),
+    SdkModule("protocol", "sign", "android"),
+    SdkModule("protocol", "notify", "android"),
+    SdkModule("product", "pay", "android", "walletconnect"), // Published under com.walletconnect
+    SdkModule("product", "walletkit", "android"),
+    SdkModule("product", "appkit", "android"),
+    SdkModule("product", "pos", "android"),
 ).apply {
     // The BOM has to be last artifact
-    add(Triple("core", "bom", "jvm"))
+    add(SdkModule("core", "bom", "jvm"))
 }
 
 // This extension function will determine which task to run based on the type passed
-fun List<Triple<String, String?, String>>.extractListOfPublishingTasks(type: ReleaseType): List<Task> = map { (parentModule, childModule, env) ->
-    val task = when {
-        env == "jvm" && type == ReleaseType.LOCAL -> "${publishJvmRoot}MavenLocal"
-        env == "jvm" && type == ReleaseType.SONATYPE -> "${publishJvmRoot}SonatypeRepository"
-        env == "android" && type == ReleaseType.LOCAL -> "${publishAndroidRoot}MavenLocal"
-        env == "android" && type == ReleaseType.SONATYPE -> "${publishAndroidRoot}SonatypeRepository"
-        else -> throw Exception("Unknown Type or Env")
+fun List<SdkModule>.extractListOfPublishingTasks(type: ReleaseType): List<Task> = map { sdkModule ->
+    val repositorySuffix = when {
+        type == ReleaseType.LOCAL -> "MavenLocal"
+        sdkModule.repository == "walletconnect" -> "WalletconnectRepository"
+        else -> "ReownRepository"
     }
 
-    val module = if (childModule != null) {
-        subprojects.first { it.name == parentModule }.subprojects.first { it.name == childModule }
+    val task = when (sdkModule.env) {
+        "jvm" -> "$publishJvmRoot$repositorySuffix"
+        "android" -> "$publishAndroidRoot$repositorySuffix"
+        else -> throw Exception("Unknown Env: ${sdkModule.env}")
+    }
+
+    val module = if (sdkModule.childModule != null) {
+        subprojects.first { it.name == sdkModule.parentModule }.subprojects.first { it.name == sdkModule.childModule }
     } else {
-        subprojects.first { it.name == parentModule }
+        subprojects.first { it.name == sdkModule.parentModule }
     }
 
     module.tasks.getByName(task)
