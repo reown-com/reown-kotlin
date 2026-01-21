@@ -23,7 +23,7 @@ object Pay {
         val decimals: Int,
         val iconUrl: String?,
         val networkName: String?,
-        var networkIconUrl: String?
+        val networkIconUrl: String?
     )
 
     data class Amount(

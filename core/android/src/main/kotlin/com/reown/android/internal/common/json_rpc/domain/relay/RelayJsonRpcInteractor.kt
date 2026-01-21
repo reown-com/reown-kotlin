@@ -313,7 +313,9 @@ internal class RelayJsonRpcInteractor(
                         onSuccess = { acknowledgement ->
                             val count = completedChunks.incrementAndGet()
                             if (!callbackDelivered.get()) {
-                                subscriptions.plusAssign(chunk.zip(acknowledgement.result).toMap())
+                                synchronized(subscriptions) {
+                                    subscriptions.plusAssign(chunk.zip(acknowledgement.result).toMap())
+                                }
                             }
                             if (count == chunks.size && callbackDelivered.compareAndSet(false, true)) {
                                 onSuccess(topics)

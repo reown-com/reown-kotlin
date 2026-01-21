@@ -141,11 +141,4 @@ object WalletConnectPay {
             Result.failure(Pay.ConfirmPaymentError.InternalError(e.message ?: "Unknown error"))
         }
     }
-
-    /**
-     * Shuts down the SDK and releases resources.
-     */
-    fun shutdown() {
-        client = null
-    }
 }

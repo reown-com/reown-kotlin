@@ -146,12 +146,4 @@ internal object TestClient {
             println("Initialization failed with errors:\n$initializationError")
         }
     }
-
-    fun shutdown() {
-        if (WalletConnectPay.isInitialized) {
-            WalletConnectPay.shutdown()
-        }
-        _isInitialized.tryEmit(false)
-        println("WalletConnectPay SDK shutdown")
-    }
 }

@@ -123,7 +123,7 @@ object WalletKit {
                 )
             }
         } catch (e: Exception) {
-            onError(Wallet.Model.Error(e))
+            onError(Wallet.Model.Error(Throwable("WalletConnect Pay SDK initialization failed: ${e.message}")))
         }
 
         SignClient.initialize(Sign.Params.Init(params.core), onSuccess = onSuccess) { error ->
@@ -443,6 +443,12 @@ object WalletKit {
      * WalletConnectPay wrapper object for payment operations.
      */
     object Pay {
+        /**
+         * Checks if the WalletConnect Pay SDK is initialized.
+         */
+        val isInitialized: Boolean
+            get() = WalletConnectPay.isInitialized
+
         /**
          * Gets payment options for a payment link.
          * Call this when [isPaymentLink] returns true for the URI.
