@@ -302,23 +302,23 @@ internal class RelayJsonRpcInteractor(
         backoffStrategy.shouldBackoff(true)
         val chunks = topics.chunked(BATCH_SUBSCRIBE_TOPIC_LIMIT)
         val completedChunks = AtomicInteger(0)
-        val hasError = AtomicBoolean(false)
+        val callbackDelivered = AtomicBoolean(false)
 
         chunks.forEach { chunk ->
             try {
                 relay.batchSubscribe(chunk) { result ->
-                    if (hasError.get()) return@batchSubscribe
+                    if (callbackDelivered.get()) return@batchSubscribe
                     result.fold(
                         onSuccess = { acknowledgement ->
-                            if (!hasError.get()) {
-                                subscriptions.plusAssign(chunk.zip(acknowledgement.result).toMap())
-                                if (completedChunks.incrementAndGet() == chunks.size && !hasError.get()) {
+                            subscriptions.plusAssign(chunk.zip(acknowledgement.result).toMap())
+                            if (completedChunks.incrementAndGet() == chunks.size) {
+                                if (callbackDelivered.compareAndSet(false, true)) {
                                     onSuccess(topics)
                                 }
                             }
                         },
                         onFailure = { error ->
-                            if (hasError.compareAndSet(false, true)) {
+                            if (callbackDelivered.compareAndSet(false, true)) {
                                 logger.error("Batch subscribe to topics error: $chunk error: $error")
                                 onFailure(Throwable("Batch subscribe error: ${error.message}"))
                             }
@@ -326,7 +326,7 @@ internal class RelayJsonRpcInteractor(
                     )
                 }
             } catch (e: Exception) {
-                if (hasError.compareAndSet(false, true)) {
+                if (callbackDelivered.compareAndSet(false, true)) {
                     logger.error("Batch subscribe to topics error: $chunk error: $e")
                     onFailure(Throwable("Batch subscribe error: ${e.message}"))
                 }
