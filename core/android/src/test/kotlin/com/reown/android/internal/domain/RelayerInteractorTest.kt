@@ -385,9 +385,9 @@ internal class RelayerInteractorTest {
             every { method } returns String.Empty
         }
         val correlationId = 1234L
-        
+
         every { jsonRpcHistory.setRequest(any(), any(), any(), any(), any()) } returns false
-        
+
         sut.approveSession(
             pairingTopic = topicVO,
             sessionTopic = sessionTopic,
@@ -399,5 +399,105 @@ internal class RelayerInteractorTest {
         )
         verify { onFailure wasNot Called }
         verify { onSuccess wasNot Called }
+    }
+
+    // BatchSubscribe chunking tests
+
+    private fun mockRelayBatchSubscribeSuccess() {
+        every { relay.batchSubscribe(any(), any(), any()) } answers {
+            val topics = firstArg<List<String>>()
+            thirdArg<(Result<Relay.Model.Call.BatchSubscribe.Acknowledgement>) -> Unit>().invoke(
+                Result.success(Relay.Model.Call.BatchSubscribe.Acknowledgement(
+                    id = 1L,
+                    result = topics.map { "sub_$it" }
+                ))
+            )
+        }
+    }
+
+    private fun mockRelayBatchSubscribeFailure() {
+        every { relay.batchSubscribe(any(), any(), any()) } answers {
+            thirdArg<(Result<Relay.Model.Call.BatchSubscribe.Acknowledgement>) -> Unit>().invoke(
+                Result.failure(Throwable("Batch subscribe error"))
+            )
+        }
+    }
+
+    @Test
+    fun `batchSubscribe with topics under limit calls relay once`() {
+        every { backoffStrategy.shouldBackoff(any()) } returns Unit
+        mockRelayBatchSubscribeSuccess()
+        val topics = (1..100).map { "topic_$it" }
+        val onSuccessTopics: (List<String>) -> Unit = mockk {
+            every { this@mockk.invoke(any()) } returns Unit
+        }
+
+        sut.batchSubscribe(topics, onSuccess = onSuccessTopics, onFailure = onFailure)
+
+        verify(exactly = 1) { relay.batchSubscribe(any(), any(), any()) }
+        verify { onSuccessTopics(topics) }
+        verify { onFailure wasNot Called }
+    }
+
+    @Test
+    fun `batchSubscribe with topics over limit chunks into batches`() {
+        every { backoffStrategy.shouldBackoff(any()) } returns Unit
+        mockRelayBatchSubscribeSuccess()
+        val topics = (1..750).map { "topic_$it" }
+        val onSuccessTopics: (List<String>) -> Unit = mockk {
+            every { this@mockk.invoke(any()) } returns Unit
+        }
+
+        sut.batchSubscribe(topics, onSuccess = onSuccessTopics, onFailure = onFailure)
+
+        verify(exactly = 2) { relay.batchSubscribe(any(), any(), any()) }
+        verify { onSuccessTopics(topics) }
+        verify { onFailure wasNot Called }
+    }
+
+    @Test
+    fun `batchSubscribe calls onFailure when one chunk fails`() {
+        every { backoffStrategy.shouldBackoff(any()) } returns Unit
+        var callCount = 0
+        every { relay.batchSubscribe(any(), any(), any()) } answers {
+            callCount++
+            val callback = thirdArg<(Result<Relay.Model.Call.BatchSubscribe.Acknowledgement>) -> Unit>()
+            if (callCount == 1) {
+                val topics = firstArg<List<String>>()
+                callback.invoke(
+                    Result.success(Relay.Model.Call.BatchSubscribe.Acknowledgement(
+                        id = 1L,
+                        result = topics.map { "sub_$it" }
+                    ))
+                )
+            } else {
+                callback.invoke(Result.failure(Throwable("Batch subscribe error")))
+            }
+        }
+        val topics = (1..750).map { "topic_$it" }
+        val onSuccessTopics: (List<String>) -> Unit = mockk {
+            every { this@mockk.invoke(any()) } returns Unit
+        }
+
+        sut.batchSubscribe(topics, onSuccess = onSuccessTopics, onFailure = onFailure)
+
+        verify(exactly = 1) { onFailure(any()) }
+        verify { onSuccessTopics wasNot Called }
+    }
+
+    @Test
+    fun `batchSubscribe with exactly 500 topics calls relay once`() {
+        every { backoffStrategy.shouldBackoff(any()) } returns Unit
+        mockRelayBatchSubscribeSuccess()
+        val topics = (1..500).map { "topic_$it" }
+        val onSuccessTopics: (List<String>) -> Unit = mockk {
+            every { this@mockk.invoke(any()) } returns Unit
+        }
+
+        sut.batchSubscribe(topics, onSuccess = onSuccessTopics, onFailure = onFailure)
+
+        verify(exactly = 1) { relay.batchSubscribe(any(), any(), any()) }
+        verify { onSuccessTopics(topics) }
+        verify { onFailure wasNot Called }
     }
 }
