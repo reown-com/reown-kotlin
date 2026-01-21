@@ -311,11 +311,12 @@ internal class RelayJsonRpcInteractor(
                     if (callbackDelivered.get()) return@batchSubscribe
                     result.fold(
                         onSuccess = { acknowledgement ->
+                            val count = completedChunks.incrementAndGet()
                             if (!callbackDelivered.get()) {
                                 subscriptions.plusAssign(chunk.zip(acknowledgement.result).toMap())
-                                if (completedChunks.incrementAndGet() == chunks.size && callbackDelivered.compareAndSet(false, true)) {
-                                    onSuccess(topics)
-                                }
+                            }
+                            if (count == chunks.size && callbackDelivered.compareAndSet(false, true)) {
+                                onSuccess(topics)
                             }
                         },
                         onFailure = { error ->
