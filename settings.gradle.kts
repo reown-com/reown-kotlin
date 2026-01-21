@@ -13,7 +13,8 @@ val excludedDirs = listOf(
     "docs",
     "licenses",
     "walletconnectv2",
-    ".kotlin"
+    ".kotlin",
+    ".claude"
 )
 // TODO: Add to rootModules when new module is added to the project root directory
 val rootModules = listOf("foundation")

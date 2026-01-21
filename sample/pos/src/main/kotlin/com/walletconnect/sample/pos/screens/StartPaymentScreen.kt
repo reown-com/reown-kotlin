@@ -1,5 +1,6 @@
 package com.walletconnect.sample.pos.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,10 +9,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.walletconnect.sample.pos.POSViewModel
+import com.walletconnect.sample.pos.R
+
+// Brand color
+private val BrandColor = Color(0xFF0988F0)
 
 @Composable
 fun StartPaymentScreen(
@@ -19,95 +27,82 @@ fun StartPaymentScreen(
     merchantName: String = "Sample POS Terminal",
     modifier: Modifier = Modifier
 ) {
-    val brandGreen = Color(0xFF0A8F5B)
-
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Color.White)
     ) {
-        // Header
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(brandGreen)
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(vertical = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                "WalletConnect Pay",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold
-            )
-            Text(
-                "POS Sample App",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.95f)
-            )
-        }
+        // Header - simplified with just NRF text
+        PosHeader()
 
-        // Content
+        // Content - centered logos and tagline
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(Modifier.height(48.dp))
-
-            Text(
-                "Welcome",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(10.dp))
-            Text(
-                "Accept crypto payments easily",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.height(32.dp))
-
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                tonalElevation = 1.dp,
+            // Logos row: WCPay logo + X + Ingenico logo
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        merchantName,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        "Ready to accept payments",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                // WCPay Logo (using vector drawable)
+                Image(
+                    painter = painterResource(R.drawable.ic_wcpay_logo),
+                    contentDescription = "WCPay",
+                    modifier = Modifier.height(28.dp),
+                    contentScale = ContentScale.FillHeight
+                )
+                
+                Spacer(Modifier.width(20.dp))
+                
+                // X separator
+                Text(
+                    "x",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.Black
+                )
+                
+                Spacer(Modifier.width(20.dp))
+                
+                // Ingenico Logo
+                IngenicoLogo()
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(40.dp))
 
+            // Tagline
+            Text(
+                "Enable crypto payments from any wallet, any asset, anywhere",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color(0xFF666666),
+                textAlign = TextAlign.Center,
+                lineHeight = 24.sp
+            )
+        }
+        
+        // Bottom section with button
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // New Payment button
             Button(
                 onClick = { viewModel.navigateToAmountScreen() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
+                colors = ButtonDefaults.buttonColors(containerColor = BrandColor)
             ) {
                 Text(
                     "New Payment",
@@ -116,25 +111,35 @@ fun StartPaymentScreen(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-
-            Spacer(Modifier.height(16.dp))
-        }
-
-        // Footer
-        Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(vertical = 14.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "Powered by WalletConnect",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
+}
+
+@Composable
+fun PosHeader() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(BrandColor)
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            "NRF'26 NYC",
+            style = MaterialTheme.typography.titleMedium,
+            color = Color.White,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun IngenicoLogo() {
+    Image(
+        painter = painterResource(R.drawable.ic_ingenico_logo),
+        contentDescription = "Ingenico",
+        modifier = Modifier.height(28.dp),
+        contentScale = ContentScale.FillHeight
+    )
 }

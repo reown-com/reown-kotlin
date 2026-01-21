@@ -18,12 +18,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.input.KeyboardType
 import com.walletconnect.sample.pos.POSViewModel
 
+// Brand color
+private val BrandColor = Color(0xFF0988F0)
+
 @Composable
 fun AmountScreen(
     viewModel: POSViewModel,
     modifier: Modifier = Modifier
 ) {
-    val brandGreen = Color(0xFF0A8F5B)
     var amountDisplay by rememberSaveable { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsState()
 
@@ -36,29 +38,11 @@ fun AmountScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Color.White)
             .imePadding()
     ) {
         // Header
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(brandGreen)
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(vertical = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                "WalletConnect Pay",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold
-            )
-            Text(
-                "POS Sample App",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.95f)
-            )
-        }
+        PosHeader()
 
         // Content
         Column(
@@ -74,13 +58,14 @@ fun AmountScreen(
                 "Enter Amount",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Color.Black
             )
             Spacer(Modifier.height(6.dp))
             Text(
                 "Enter the payment amount in USD",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Color(0xFF666666),
                 textAlign = TextAlign.Center
             )
 
@@ -89,8 +74,8 @@ fun AmountScreen(
             // Amount input card
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                tonalElevation = 1.dp,
+                color = Color(0xFFF5F5F5),
+                tonalElevation = 0.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -120,13 +105,15 @@ fun AmountScreen(
                         textStyle = TextStyle(
                             fontSize = 48.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = Color.Black
                         ),
                         leadingIcon = {
                             Text(
                                 "$",
                                 style = MaterialTheme.typography.headlineLarge,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Black
                             )
                         },
                         placeholder = {
@@ -134,7 +121,7 @@ fun AmountScreen(
                                 "0.00",
                                 fontSize = 48.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                color = Color(0xFFBBBBBB)
                             )
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -152,7 +139,7 @@ fun AmountScreen(
                     Text(
                         "USD",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Color(0xFF666666)
                     )
                 }
             }
@@ -174,7 +161,10 @@ fun AmountScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = brandGreen)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BrandColor,
+                    disabledContainerColor = BrandColor.copy(alpha = 0.5f)
+                )
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -195,21 +185,11 @@ fun AmountScreen(
             Spacer(Modifier.height(16.dp))
         }
 
-        // Footer
-        Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(vertical = 14.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "Powered by WalletConnect",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        // Bottom padding for navigation bars
+        Spacer(
+            Modifier
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .height(16.dp)
+        )
     }
 }

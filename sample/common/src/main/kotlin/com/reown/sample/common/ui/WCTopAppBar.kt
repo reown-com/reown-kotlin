@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
-import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,7 +34,7 @@ fun WCTopAppBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, top = 45.dp, end = 20.dp, bottom = 6.dp),
+            .padding(start = 20.dp, top = 45.dp, end = 8.dp, bottom = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -44,12 +43,16 @@ fun WCTopAppBar(
         actionImages.forEachIndexed() { index, actionImage ->
             Image(
                 modifier = Modifier
-                    .size(24.dp)
-                    .clickable(onClick = actionImage.onClick),
+                    .size(48.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = false, radius = 24.dp),
+                        onClick = actionImage.onClick
+                    )
+                    .padding(12.dp),
                 painter = painterResource(id = actionImage.resource),
                 contentDescription = null,
             )
-            if (index != actionImages.lastIndex) Spacer(modifier = Modifier.width(24.dp))
         }
     }
 }
