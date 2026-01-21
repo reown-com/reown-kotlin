@@ -500,4 +500,17 @@ internal class RelayerInteractorTest {
         verify { onSuccessTopics(topics) }
         verify { onFailure wasNot Called }
     }
+
+    @Test
+    fun `batchSubscribe with empty topics list calls onSuccess immediately`() {
+        val onSuccessTopics: (List<String>) -> Unit = mockk {
+            every { this@mockk.invoke(any()) } returns Unit
+        }
+
+        sut.batchSubscribe(emptyList(), onSuccess = onSuccessTopics, onFailure = onFailure)
+
+        verify(exactly = 0) { relay.batchSubscribe(any(), any(), any()) }
+        verify { onSuccessTopics(emptyList()) }
+        verify { onFailure wasNot Called }
+    }
 }
