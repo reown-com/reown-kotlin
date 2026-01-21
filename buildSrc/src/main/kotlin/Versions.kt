@@ -16,7 +16,7 @@ const val NOTIFY_VERSION = "1.6.0"
 const val WALLETKIT_VERSION = "1.6.0"
 const val APPKIT_VERSION = "1.6.0"
 const val MODAL_CORE_VERSION = "1.6.0"
-const val POS_VERSION = "0.0.1"
+const val POS_VERSION = "0.0.2"
 const val PAY_VERSION = "1.0.0"
 
 //Artifact ids
