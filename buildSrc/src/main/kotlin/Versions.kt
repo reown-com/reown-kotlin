@@ -17,6 +17,7 @@ const val WALLETKIT_VERSION = "1.5.2"
 const val APPKIT_VERSION = "1.5.2"
 const val MODAL_CORE_VERSION = "1.5.2"
 const val POS_VERSION = "0.0.1"
+const val PAY_VERSION = "1.0.0"
 
 //Artifact ids
 const val ANDROID_BOM = "android-bom"
@@ -28,6 +29,8 @@ const val WALLETKIT = "walletkit"
 const val APPKIT = "appkit"
 const val MODAL_CORE = "modal-core"
 const val POS = "pos"
+
+const val PAY = "pay"
 
 val jvmVersion = JavaVersion.VERSION_11
 const val MIN_SDK: Int = 23

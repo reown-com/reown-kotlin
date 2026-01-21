@@ -4,8 +4,6 @@ import androidx.annotation.Keep
 import com.reown.android.Core
 import com.reown.android.CoreInterface
 import com.reown.android.cacao.SignatureInterface
-import com.reown.sign.client.Sign
-import com.reown.sign.client.Sign.Model
 import java.net.URI
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -71,6 +69,19 @@ object Wallet {
         data class WaitForUserOperationReceipt(var owner: Account, var userOperationHash: String) : Params()
         data class OwnerSignature(val address: String, val signature: String) : Params()
         data class Account(val address: String) : Params()
+
+        // Payment params
+        data class RequiredPaymentActions(
+            val paymentId: String,
+            val optionId: String
+        ) : Params()
+
+        data class ConfirmPayment(
+            val paymentId: String,
+            val optionId: String,
+            val signatures: List<String>,
+            val collectedData: List<Model.CollectDataFieldResult>? = null
+        ) : Params()
     }
 
     sealed class Model {
@@ -474,5 +485,92 @@ object Wallet {
                 ) : Message()
             }
         }
+
+        // Payment models
+        enum class PaymentStatus {
+            REQUIRES_ACTION,
+            PROCESSING,
+            SUCCEEDED,
+            FAILED,
+            EXPIRED
+        }
+
+        data class PaymentAmountDisplay(
+            val assetSymbol: String,
+            val assetName: String,
+            val decimals: Int,
+            val iconUrl: String?,
+            val networkName: String?,
+            val networkIconUrl: String?
+        ) : Model()
+
+        data class PaymentAmount(
+            val value: String,
+            val unit: String,
+            val display: PaymentAmountDisplay?
+        ) : Model()
+
+        data class MerchantInfo(
+            val name: String,
+            val iconUrl: String?
+        ) : Model()
+
+        data class PaymentInfo(
+            val status: PaymentStatus,
+            val amount: PaymentAmount,
+            val expiresAt: Long,
+            val merchant: MerchantInfo
+        ) : Model()
+
+        data class PaymentOption(
+            val id: String,
+            val amount: PaymentAmount,
+            val account: String,
+            val estimatedTxs: Int?
+        ) : Model()
+
+        enum class CollectDataFieldType {
+            TEXT,
+            DATE
+        }
+
+        data class CollectDataField(
+            val id: String,
+            val name: String,
+            val fieldType: CollectDataFieldType,
+            val required: Boolean
+        ) : Model()
+
+        data class CollectDataAction(
+            val fields: List<CollectDataField>
+        ) : Model()
+
+        data class CollectDataFieldResult(
+            val id: String,
+            val value: String
+        ) : Model()
+
+        data class PaymentOptionsResponse(
+            val paymentId: String,
+            val info: PaymentInfo?,
+            val options: List<PaymentOption>,
+            val collectDataAction: CollectDataAction?
+        ) : Model()
+
+        data class WalletRpcAction(
+            val chainId: String,
+            val method: String,
+            val params: String
+        ) : Model()
+
+        sealed class RequiredAction : Model() {
+            data class WalletRpc(val action: WalletRpcAction) : RequiredAction()
+        }
+
+        data class ConfirmPaymentResponse(
+            val status: PaymentStatus,
+            val isFinal: Boolean,
+            val pollInMs: Long?
+        ) : Model()
     }
 }
