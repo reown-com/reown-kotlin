@@ -115,9 +115,19 @@ task<Delete>("clean") {
 nexusPublishing {
     repositories {
 //        project.version = "-SNAPSHOT"
-        sonatype {
+        // Repository for com.reown artifacts (most SDKs)
+        create("reown") {
             stagingProfileId.set(System.getenv("REOWN_SONATYPE_STAGING_PROFILE_ID"))
             packageGroup.set("com.reown")
+            username.set(System.getenv("CENTRAL_PORTAL_USERNAME"))
+            password.set(System.getenv("CENTRAL_PORTAL_PASSWORD"))
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+        }
+        // Repository for com.walletconnect artifacts (e.g., pay SDK)
+        create("walletconnect") {
+            stagingProfileId.set(System.getenv("WC_SONATYPE_STAGING_PROFILE_ID"))
+            packageGroup.set("com.walletconnect")
             username.set(System.getenv("CENTRAL_PORTAL_USERNAME"))
             password.set(System.getenv("CENTRAL_PORTAL_PASSWORD"))
             nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
