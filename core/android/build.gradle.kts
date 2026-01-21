@@ -52,12 +52,6 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    packaging {
-        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium.so")
-        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium.so")
-        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium.so")
-    }
-
     kotlinOptions {
         jvmTarget = jvmVersion.toString()
         freeCompilerArgs = listOf("-Xcontext-receivers")
@@ -97,15 +91,6 @@ sqldelight {
 dependencies {
     debugApi(project(":foundation"))
     releaseApi("com.reown:foundation:$FOUNDATION_VERSION")
-
-    implementation("com.github.reown-com:yttrium:0.9.91") { //unspecified
-        exclude(group = "net.java.dev.jna", module = "jna")
-    }
-    implementation("net.java.dev.jna:jna:5.17.0@aar")
-    androidTestImplementation("com.github.reown-com:yttrium:0.9.91") { //unspecified
-        exclude(group = "net.java.dev.jna", module = "jna")
-    }
-    androidTestImplementation("net.java.dev.jna:jna:5.17.0@aar")
 
     api(libs.coroutines)
     implementation(libs.scarlet.android)

@@ -24,7 +24,7 @@ internal class EthAccountDelegateTest {
             assertEquals(SignatureType.EIP191, signatureType) // Will fail with other types i.e SignatureType.EIP1271 requires projectId
 
             val signature = CacaoSigner.sign(message, privateKey.hexToBytes(), signatureType)
-            val isValid = MessageSignatureVerifier(ProjectId(BuildConfig.PROJECT_ID)).verify(signature.s, message, address, "eip155:1", signatureType)
+            val isValid = MessageSignatureVerifier(ProjectId(BuildConfig.PROJECT_ID)).verify(signature.s, message, address, signatureType)
 
             assertTrue(isValid)
         }
@@ -40,7 +40,7 @@ internal class EthAccountDelegateTest {
 
             val signature = CacaoSigner.sign(message, privateKey.hexToBytes(), signatureType)
             val address = generateKeys().third
-            val isValid = MessageSignatureVerifier(ProjectId("dummy projectid")).verify(signature.s, message, address, "eip155:1", signatureType)
+            val isValid = MessageSignatureVerifier(ProjectId("dummy projectid")).verify(signature.s, message, address, signatureType)
 
             assertFalse(isValid)
         }

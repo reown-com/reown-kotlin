@@ -1,11 +1,40 @@
 package com.reown.sample.wallet.blockchain
 
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
+import com.reown.sample.wallet.BuildConfig
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+
+fun createBalanceApiService(): BalanceApiService {
+    val httpClient = OkHttpClient.Builder()
+
+    val logging = HttpLoggingInterceptor()
+    logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+    httpClient.addInterceptor(logging)
+
+    val headersInterceptor = Interceptor { chain ->
+        val originalRequest = chain.request()
+        val newRequest = originalRequest.newBuilder()
+            .addHeader("x-sdk-type", "appkit")
+            .addHeader("x-sdk-version", "reown-kotlin-${BuildConfig.BOM_VERSION}")
+            .addHeader("Origin", "com.reown.sample.wallet")
+            .build()
+        chain.proceed(newRequest)
+    }
+    httpClient.addInterceptor(headersInterceptor)
+
+    val retrofit = Retrofit.Builder()
+        .baseUrl("https://rpc.walletconnect.org")
+        .client(httpClient.build())
+        .addConverterFactory(GsonConverterFactory.create())
+        .addCallAdapterFactory(CoroutineCallAdapterFactory())
+        .build()
+
+    return retrofit.create(BalanceApiService::class.java)
+}
 
 fun createBlockChainApiService(projectId: String, chainId: String, rpcUrl: String = "https://rpc.walletconnect.com"): BlockChainApiService {
     val httpClient = OkHttpClient.Builder()
