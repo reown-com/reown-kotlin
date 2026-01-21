@@ -71,7 +71,8 @@ class AttestationIdGenerationTest {
                 ),
                 properties = mapOf("expiry" to "2022-12-24T17:07:31+00:00", "caip154-mandatory" to "true"),
                 expiryTimestamp = 123456789,
-                scopedProperties = null
+                scopedProperties = null,
+                requests = null
             )
 
         val sessionPropose = SignRpc.SessionPropose(id = 1681757953038968, params = params)
@@ -104,7 +105,8 @@ class AttestationIdGenerationTest {
                 ),
                 properties = null,
                 scopedProperties = null,
-                expiryTimestamp = 123456789
+                expiryTimestamp = 123456789,
+                requests = null
             )
 
         val sessionPropose = SignRpc.SessionPropose(id = 1681824460577019, params = params)

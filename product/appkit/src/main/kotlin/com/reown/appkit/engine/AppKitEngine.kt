@@ -5,10 +5,11 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.modal.domain.usecase.EnableAnalyticsUseCaseInterface
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.scope
-import com.reown.android.internal.common.signing.eip6492.EIP6492Verifier
+import com.reown.android.internal.common.signing.message.MessageSignatureVerifier
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pulse.domain.SendEventInterface
 import com.reown.android.pulse.model.EventType
@@ -64,6 +65,7 @@ internal class AppKitEngine(
     private lateinit var coinbaseClient: CoinbaseClient
     internal var shouldDisconnect: Boolean = true
     private val projectId by lazy { wcKoinApp.koin.get<ProjectId>() }
+    private val signatureVerifier by lazy { MessageSignatureVerifier(projectId) }
 
     fun setup(
         init: Modal.Params.Init,
@@ -318,29 +320,26 @@ internal class AppKitEngine(
 
             override fun onSessionRequestResponse(response: Sign.Model.SessionRequestResponse) {
                 try {
-
                     if (response.result.id == siweRequestIdWithMessage?.first) {
                         if (response.result is Sign.Model.JsonRpcResponse.JsonRpcResult) {
                             val siweResponse = Modal.Model.SIWEAuthenticateResponse.Result(
                                 id = response.result.id,
                                 message = siweRequestIdWithMessage!!.second,
-                                signature = ((response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result ?: "") as? String ?: ""
+                                signature = (response.result as Sign.Model.JsonRpcResponse.JsonRpcResult).result as? String ?: ""
                             )
                             siweRequestIdWithMessage = null
                             val account = getAccount() ?: throw IllegalStateException("Account is null")
-                            EIP6492Verifier.init(account.chain.id, projectId.value)
-                            val isValid = EIP6492Verifier.verify6492(
-                                originalMessage = siweResponse.message,
+                            val isValid = signatureVerifier.verify(
                                 signature = siweResponse.signature,
-                                address = account.address
+                                originalMessage = siweResponse.message,
+                                address = account.address,
+                                type = SignatureType.EIP191
                             )
-
                             if (isValid) {
                                 delegate.onSIWEAuthenticationResponse(siweResponse)
                             } else {
                                 emitSIWEErrorResponse(response, delegate)
                             }
-
                         } else if (response.result is Sign.Model.JsonRpcResponse.JsonRpcError) {
                             emitSIWEErrorResponse(response, delegate)
                         }

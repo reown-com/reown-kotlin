@@ -182,7 +182,7 @@ internal interface ApproveSessionUseCaseInterface {
         sessionNamespaces: Map<String, EngineDO.Namespace.Session>,
         sessionProperties: Map<String, String>? = null,
         scopedProperties: Map<String, String>? = null,
-        proposalRequestsResponses: EngineDO.ProposalRequestsResponses?,
+        proposalRequestsResponses: EngineDO.ProposalRequestsResponses? = null,
         onSuccess: () -> Unit = {},
         onFailure: (Throwable) -> Unit = {},
     )

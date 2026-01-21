@@ -46,6 +46,7 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal.SessionP
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.chain_abstraction.ChainAbstractionRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.snackbar_message.SnackbarMessageRoute
+import com.reown.sample.wallet.ui.routes.dialog_routes.payment.PaymentRoute
 //import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.TransactionRoute
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -188,6 +189,24 @@ fun Web3WalletNavGraph(
             )) {
                 scrimColor = Color.Unspecified
                 SnackbarMessageRoute(navController, it.arguments?.getString("message"))
+            }
+            dialog(
+                "${Route.Payment.path}/{paymentLink}",
+                arguments = listOf(
+                    navArgument("paymentLink") {
+                        type = NavType.StringType
+                        nullable = false
+                    }
+                ),
+                dialogProperties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)
+            ) {
+                val encodedLink = it.arguments?.getString("paymentLink") ?: ""
+                val paymentLink = java.net.URLDecoder.decode(encodedLink, "UTF-8")
+                PaymentRoute(
+                    navController = navController,
+                    paymentLink = paymentLink,
+                    onPaymentSuccess = { connectionsViewModel.fetchUsdcBalances() }
+                )
             }
         }
     }

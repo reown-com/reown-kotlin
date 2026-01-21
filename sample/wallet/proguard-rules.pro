@@ -85,6 +85,10 @@
 
 # Gson specific classes
 -dontwarn sun.misc.**
+
+# msgpack-core uses sun.nio.ch.DirectBuffer for optimized buffer access on JVM,
+# which is not available on Android
+-dontwarn sun.nio.ch.**
 #-keep class com.google.gson.stream.** { *; }
 
 # Application classes that will be serialized/deserialized over Gson

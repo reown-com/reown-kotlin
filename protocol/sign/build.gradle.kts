@@ -102,7 +102,7 @@ dependencies {
     debugImplementation(project(":core:android"))
     releaseImplementation("com.reown:android-core:$CORE_VERSION")
 
-    implementation("org.msgpack:msgpack-core:0.9.1")
+    implementation("org.msgpack:msgpack-core:0.9.11")
 
     ksp(libs.moshi.ksp)
     implementation(libs.bundles.sqlDelight)

@@ -73,9 +73,6 @@ android {
     }
 
     packaging {
-        jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium.so")
-        jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium.so")
-        jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium.so")
         jniLibs.pickFirsts.add("lib/arm64-v8a/libuniffi_yttrium_utils.so")
         jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_utils.so")
         jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_utils.so")
@@ -87,22 +84,13 @@ android {
 
 }
 
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "com.github.reown-com" && requested.name == "yttrium") {
-            useVersion("kotlin-utils-0.9.113")
-            because("Sample wallet needs yttrium_utils from kotlin-utils branch")
-        }
-    }
-}
-
 dependencies {
     implementation(project(":sample:common"))
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 
     // local .m2 build
     //    implementation("com.github.reown-com:yttrium-utils:unspecified")
-    implementation("com.github.reown-com:yttrium:kotlin-utils-0.9.113") {
+    implementation("com.github.reown-com.yttrium:yttrium-utils:0.10.2") {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
     implementation("net.java.dev.jna:jna:5.17.0@aar")
@@ -181,4 +169,14 @@ dependencies {
     releaseImplementation("com.reown:android-core")
     releaseImplementation("com.reown:walletkit")
     releaseImplementation("com.reown:notify")
+
+    debugImplementation(project(":product:pay")) {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
+    internalImplementation(project(":product:pay")) {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
+    releaseImplementation("com.walletconnect:pay:$PAY_VERSION") {
+        exclude(group = "com.github.reown-com", module = "yttrium")
+    }
 }
