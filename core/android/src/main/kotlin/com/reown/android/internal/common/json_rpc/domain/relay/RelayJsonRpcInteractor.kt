@@ -48,6 +48,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.bouncycastle.util.encoders.Base64
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+
+private const val BATCH_SUBSCRIBE_TOPIC_LIMIT = 500
 
 internal data class Subscription(
     val decryptedMessage: String,
@@ -293,22 +297,35 @@ internal class RelayJsonRpcInteractor(
         }
         if (topics.isNotEmpty()) {
             backoffStrategy.shouldBackoff(true)
-            try {
-                relay.batchSubscribe(topics) { result ->
-                    result.fold(
-                        onSuccess = { acknowledgement ->
-                            subscriptions.plusAssign(topics.zip(acknowledgement.result).toMap())
-                            onSuccess(topics)
-                        },
-                        onFailure = { error ->
-                            logger.error("Batch subscribe to topics error: $topics error: $error")
-                            onFailure(Throwable("Batch subscribe error: ${error.message}"))
-                        }
-                    )
+            val chunks = topics.chunked(BATCH_SUBSCRIBE_TOPIC_LIMIT)
+            val completedChunks = AtomicInteger(0)
+            val hasError = AtomicBoolean(false)
+
+            chunks.forEach { chunk ->
+                try {
+                    relay.batchSubscribe(chunk) { result ->
+                        if (hasError.get()) return@batchSubscribe
+                        result.fold(
+                            onSuccess = { acknowledgement ->
+                                subscriptions.plusAssign(chunk.zip(acknowledgement.result).toMap())
+                                if (completedChunks.incrementAndGet() == chunks.size) {
+                                    onSuccess(topics)
+                                }
+                            },
+                            onFailure = { error ->
+                                if (hasError.compareAndSet(false, true)) {
+                                    logger.error("Batch subscribe to topics error: $chunk error: $error")
+                                    onFailure(Throwable("Batch subscribe error: ${error.message}"))
+                                }
+                            }
+                        )
+                    }
+                } catch (e: Exception) {
+                    if (hasError.compareAndSet(false, true)) {
+                        logger.error("Batch subscribe to topics error: $chunk error: $e")
+                        onFailure(Throwable("Batch subscribe error: ${e.message}"))
+                    }
                 }
-            } catch (e: Exception) {
-                logger.error("Batch subscribe to topics error: $topics error: $e")
-                onFailure(Throwable("Batch subscribe error: ${e.message}"))
             }
         }
     }
