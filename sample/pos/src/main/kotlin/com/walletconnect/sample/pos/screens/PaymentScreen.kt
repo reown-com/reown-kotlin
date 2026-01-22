@@ -213,20 +213,14 @@ private fun ScanToPayContent(
 
             // Timeline
             StatusRow(
-                state = scanState,
-                inProgressText = "Waiting for wallet scan…",
-                doneText = "Payment initiated"
-            )
-            Spacer(Modifier.height(8.dp))
-            StatusRow(
                 state = processingState,
-                inProgressText = "Processing payment…",
-                doneText = "Payment processing"
+                inProgressText = "Waiting for wallet scan…",
+                doneText = "Waiting for wallet scan"
             )
             Spacer(Modifier.height(8.dp))
             StatusRow(
                 state = confirmingState,
-                inProgressText = "Confirming transaction…",
+                inProgressText = "Processing payment…",
                 doneText = "Payment confirmed"
             )
 
