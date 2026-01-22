@@ -18,15 +18,33 @@ internal fun mapCreatePaymentError(code: String, message: String): Pos.PaymentEv
     }
 }
 
-internal fun mapStatusToPaymentEvent(status: String, paymentId: String): Pos.PaymentEvent {
+internal fun mapStatusToPaymentEvent(
+    status: String,
+    paymentId: String,
+    info: PaymentInfoDto? = null
+): Pos.PaymentEvent {
     return when (status) {
         PaymentStatus.REQUIRES_ACTION -> Pos.PaymentEvent.PaymentRequested
         PaymentStatus.PROCESSING -> Pos.PaymentEvent.PaymentProcessing
-        PaymentStatus.SUCCEEDED -> Pos.PaymentEvent.PaymentSuccess(paymentId)
+        PaymentStatus.SUCCEEDED -> Pos.PaymentEvent.PaymentSuccess(paymentId, info?.toPaymentInfo())
         PaymentStatus.EXPIRED -> Pos.PaymentEvent.PaymentError.PaymentExpired("Payment has expired")
         PaymentStatus.FAILED -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment failed") //TODO: add error message?
         else -> Pos.PaymentEvent.PaymentError.Undefined("Unknown payment status: $status")
     }
+}
+
+internal fun PaymentInfoDto.toPaymentInfo(): Pos.PaymentInfo {
+    val display = optionAmount.display
+    return Pos.PaymentInfo(
+        assetName = display.assetName,
+        assetSymbol = display.assetSymbol,
+        networkName = display.networkName,
+        amount = optionAmount.value,
+        decimals = display.decimals,
+        txHash = txId,
+        iconUrl = display.iconUrl,
+        networkIconUrl = display.networkIconUrl
+    )
 }
 
 // Transaction History Mapping Functions

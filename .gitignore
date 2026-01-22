@@ -96,4 +96,6 @@ lint/tmp/
 core/android/property 'buildDir'
 
 protocol/sign/property 'buildDir'
+
+product/pos/property 'buildDir'
 .idea/codeStyles

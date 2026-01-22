@@ -28,7 +28,31 @@ internal data class CreatePaymentResponse(
 internal data class GetPaymentStatusResponse(
     @param:Json(name = "status") val status: String,
     @param:Json(name = "pollInMs") val pollInMs: Long?,
-    @param:Json(name = "isFinal") val isFinal: Boolean
+    @param:Json(name = "isFinal") val isFinal: Boolean,
+    @param:Json(name = "info") val info: PaymentInfoDto?
+)
+
+@JsonClass(generateAdapter = true)
+internal data class PaymentInfoDto(
+    @param:Json(name = "optionAmount") val optionAmount: OptionAmountDto,
+    @param:Json(name = "txId") val txId: String
+)
+
+@JsonClass(generateAdapter = true)
+internal data class OptionAmountDto(
+    @param:Json(name = "unit") val unit: String?,
+    @param:Json(name = "value") val value: String?,
+    @param:Json(name = "display") val display: DisplayAmountDto
+)
+
+@JsonClass(generateAdapter = true)
+internal data class DisplayAmountDto(
+    @param:Json(name = "assetName") val assetName: String?,
+    @param:Json(name = "assetSymbol") val assetSymbol: String?,
+    @param:Json(name = "decimals") val decimals: Int?,
+    @param:Json(name = "iconUrl") val iconUrl: String?,
+    @param:Json(name = "networkIconUrl") val networkIconUrl: String?,
+    @param:Json(name = "networkName") val networkName: String?
 )
 
 @JsonClass(generateAdapter = true)

@@ -17,14 +17,14 @@ sealed interface PosNavEvent {
     data object FlowFinished : PosNavEvent
     data class QrReady(val uri: URI, val amount: Pos.Amount, val paymentId: String) : PosNavEvent
     data class ToErrorScreen(val error: String) : PosNavEvent
-    data class PaymentSuccessScreen(val paymentId: String) : PosNavEvent
+    data class PaymentSuccessScreen(val paymentId: String, val info: Pos.PaymentInfo?) : PosNavEvent
     data object ToTransactionHistory : PosNavEvent
 }
 
 sealed interface PosEvent {
     data object PaymentRequested : PosEvent
     data object PaymentProcessing : PosEvent
-    data class PaymentSuccess(val paymentId: String) : PosEvent
+    data class PaymentSuccess(val paymentId: String, val info: Pos.PaymentInfo?) : PosEvent
     data class PaymentError(val error: String) : PosEvent
 }
 
@@ -99,8 +99,8 @@ class POSViewModel : ViewModel() {
             }
 
             is Pos.PaymentEvent.PaymentSuccess -> {
-                _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId))
-                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId))
+                _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
+                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info))
             }
 
             is Pos.PaymentEvent.PaymentError -> {
