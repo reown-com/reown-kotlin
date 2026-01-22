@@ -232,6 +232,43 @@ internal class ApiClient(
         return code == ErrorCodes.NETWORK_ERROR || code == ErrorCodes.PARSE_ERROR
     }
 
+    suspend fun getTransactionHistory(
+        limit: Int = 20,
+        cursor: String? = null,
+        status: String? = null
+    ): ApiResult<TransactionHistoryResponse> {
+        return try {
+            val response = payApi.getTransactionHistory(
+                merchantId = merchantId,
+                limit = limit,
+                cursor = cursor,
+                status = status,
+                sortBy = "created_at",
+                sortDir = "desc"
+            )
+
+            if (response.isSuccessful) {
+                val data = response.body()
+                if (data == null) {
+                    ApiResult.Error(ErrorCodes.PARSE_ERROR, "Empty response body")
+                } else {
+                    ApiResult.Success(data)
+                }
+            } else {
+                val error = parseErrorResponse(response)
+                ApiResult.Error(error.code, error.message)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "getTransactionHistory")
+            ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
+        } catch (e: Exception) {
+            errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "getTransactionHistory")
+            ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
+        }
+    }
+
     private fun String.ensureTrailingSlash(): String {
         return if (endsWith("/")) this else "$this/"
     }
