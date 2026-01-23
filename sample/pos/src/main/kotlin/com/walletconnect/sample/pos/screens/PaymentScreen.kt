@@ -21,12 +21,19 @@ import androidx.compose.ui.unit.dp
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.PosEvent
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import coil3.compose.AsyncImage
 import com.walletconnect.sample.pos.R
 
 // Brand color
@@ -36,7 +43,7 @@ private enum class StepState { Inactive, InProgress, Done }
 
 private sealed interface PaymentUiState {
     data object WaitingForScan : PaymentUiState
-    data class Success(val paymentId: String) : PaymentUiState
+    data class Success(val paymentId: String, val info: Pos.PaymentInfo?) : PaymentUiState
 }
 
 @Composable
@@ -69,7 +76,7 @@ fun PaymentScreen(
 
                 is PosEvent.PaymentSuccess -> {
                     confirmingStep = StepState.Done
-                    uiState = PaymentUiState.Success(paymentId = event.paymentId)
+                    uiState = PaymentUiState.Success(paymentId = event.paymentId, info = event.info)
                 }
 
                 is PosEvent.PaymentError -> {
@@ -107,7 +114,7 @@ fun PaymentScreen(
                 )
 
                 is PaymentUiState.Success -> SuccessContent(
-                    paymentId = state.paymentId,
+                    info = state.info,
                     onReturnToStart = onReturnToStart
                 )
             }
@@ -206,20 +213,14 @@ private fun ScanToPayContent(
 
             // Timeline
             StatusRow(
-                state = scanState,
-                inProgressText = "Waiting for wallet scan…",
-                doneText = "Payment initiated"
-            )
-            Spacer(Modifier.height(8.dp))
-            StatusRow(
                 state = processingState,
-                inProgressText = "Processing payment…",
-                doneText = "Payment processing"
+                inProgressText = "Waiting for wallet scan…",
+                doneText = "Waiting for wallet scan"
             )
             Spacer(Modifier.height(8.dp))
             StatusRow(
                 state = confirmingState,
-                inProgressText = "Confirming transaction…",
+                inProgressText = "Processing payment…",
                 doneText = "Payment confirmed"
             )
 
@@ -287,7 +288,7 @@ private fun StatusRow(
 
 @Composable
 private fun SuccessContent(
-    paymentId: String,
+    info: Pos.PaymentInfo?,
     onReturnToStart: () -> Unit
 ) {
     Column(
@@ -297,38 +298,169 @@ private fun SuccessContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_check),
-            contentDescription = null,
-            tint = BrandColor,
-            modifier = Modifier.size(80.dp)
-        )
+        // Success Icon
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .background(BrandColor.copy(alpha = 0.1f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.CheckCircle,
+                contentDescription = null,
+                tint = BrandColor,
+                modifier = Modifier.size(60.dp)
+            )
+        }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(24.dp))
 
         Text(
-            "Payment Successful!",
+            "Payment Successful",
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center,
-            color = BrandColor
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(
-            "Payment ID",
-            style = MaterialTheme.typography.labelLarge,
-            color = Color(0xFF666666)
-        )
-        Text(
-            paymentId,
-            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             color = Color.Black
         )
 
         Spacer(Modifier.height(32.dp))
+
+        // Payment Info Card
+        if (info != null) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = Color(0xFFF8F9FA),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Token icon with network badge
+                    Box(contentAlignment = Alignment.BottomEnd) {
+                        val iconUrl = info.iconUrl
+                        if (iconUrl != null) {
+                            AsyncImage(
+                                model = iconUrl,
+                                contentDescription = info.assetSymbol,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(BrandColor.copy(alpha = 0.2f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    info.assetSymbol?.take(2) ?: "?",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandColor
+                                )
+                            }
+                        }
+
+                        // Network icon badge
+                        val networkIconUrl = info.networkIconUrl
+                        if (networkIconUrl != null) {
+                            AsyncImage(
+                                model = networkIconUrl,
+                                contentDescription = info.networkName,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White, CircleShape)
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Amount
+                    val formattedAmount = info.formatAmount()
+                    if (formattedAmount.isNotBlank()) {
+                        Text(
+                            formattedAmount,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
+
+                    // Token name & Network
+                    val assetName = info.assetName
+                    val networkName = info.networkName
+                    val subtitle = buildString {
+                        if (assetName != null) append(assetName)
+                        if (networkName != null) {
+                            if (assetName != null) append(" on ")
+                            append(networkName)
+                        }
+                    }
+                    if (subtitle.isNotEmpty()) {
+                        Text(
+                            subtitle,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color(0xFF6B7280)
+                        )
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    // Divider
+                    HorizontalDivider(
+                        color = Color(0xFFE5E7EB),
+                        thickness = 1.dp
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Transaction Hash - clickable to copy
+                    val clipboardManager = LocalClipboardManager.current
+                    var showCopied by remember { mutableStateOf(false) }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable {
+                                clipboardManager.setText(AnnotatedString(info.txHash))
+                                showCopied = true
+                            }
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Transaction",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFF9CA3AF)
+                        )
+                        Text(
+                            if (showCopied) "Copied!" else truncateTxHash(info.txHash),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = if (showCopied) BrandColor else Color(0xFF374151)
+                        )
+                    }
+
+                    // Reset copied state after delay
+                    LaunchedEffect(showCopied) {
+                        if (showCopied) {
+                            kotlinx.coroutines.delay(2000)
+                            showCopied = false
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.weight(1f))
 
         Button(
             onClick = onReturnToStart,
@@ -345,6 +477,16 @@ private fun SuccessContent(
                 fontWeight = FontWeight.SemiBold
             )
         }
+
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+private fun truncateTxHash(txHash: String): String {
+    return if (txHash.length > 16) {
+        "${txHash.take(8)}...${txHash.takeLast(6)}"
+    } else {
+        txHash
     }
 }
 

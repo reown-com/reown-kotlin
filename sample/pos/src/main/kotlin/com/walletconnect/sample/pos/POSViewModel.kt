@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -17,14 +19,30 @@ sealed interface PosNavEvent {
     data object FlowFinished : PosNavEvent
     data class QrReady(val uri: URI, val amount: Pos.Amount, val paymentId: String) : PosNavEvent
     data class ToErrorScreen(val error: String) : PosNavEvent
-    data class PaymentSuccessScreen(val paymentId: String) : PosNavEvent
+    data class PaymentSuccessScreen(val paymentId: String, val info: Pos.PaymentInfo?) : PosNavEvent
+    data object ToTransactionHistory : PosNavEvent
 }
 
 sealed interface PosEvent {
     data object PaymentRequested : PosEvent
     data object PaymentProcessing : PosEvent
-    data class PaymentSuccess(val paymentId: String) : PosEvent
+    data class PaymentSuccess(val paymentId: String, val info: Pos.PaymentInfo?) : PosEvent
     data class PaymentError(val error: String) : PosEvent
+}
+
+sealed interface TransactionHistoryUiState {
+    data object Idle : TransactionHistoryUiState
+    data object Loading : TransactionHistoryUiState
+    data class LoadingMore(
+        val transactions: List<Pos.Transaction>,
+        val stats: Pos.TransactionStats?
+    ) : TransactionHistoryUiState
+    data class Success(
+        val transactions: List<Pos.Transaction>,
+        val hasMore: Boolean,
+        val stats: Pos.TransactionStats?
+    ) : TransactionHistoryUiState
+    data class Error(val message: String) : TransactionHistoryUiState
 }
 
 class POSViewModel : ViewModel() {
@@ -42,6 +60,18 @@ class POSViewModel : ViewModel() {
     // Loading state for "Start Payment" button
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
+
+    // Transaction history state
+    private val _transactionHistoryState = MutableStateFlow<TransactionHistoryUiState>(TransactionHistoryUiState.Idle)
+    val transactionHistoryState = _transactionHistoryState.asStateFlow()
+
+    private val _selectedStatusFilter = MutableStateFlow<Pos.TransactionStatus?>(null)
+    val selectedStatusFilter = _selectedStatusFilter.asStateFlow()
+
+    private var currentCursor: String? = null
+    private val loadedTransactions = mutableListOf<Pos.Transaction>()
+    private var currentStats: Pos.TransactionStats? = null
+    private var transactionLoadingJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -75,8 +105,8 @@ class POSViewModel : ViewModel() {
             }
 
             is Pos.PaymentEvent.PaymentSuccess -> {
-                _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId))
-                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId))
+                _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
+                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info))
             }
 
             is Pos.PaymentEvent.PaymentError -> {
@@ -144,5 +174,83 @@ class POSViewModel : ViewModel() {
         val dollars = valueInCents / 100.0
         val currency = amount.unit.substringAfter("/", "USD")
         return String.format("$%.2f %s", dollars, currency)
+    }
+
+    // Transaction History Methods
+
+    fun navigateToTransactionHistory() {
+        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToTransactionHistory) }
+        loadTransactionHistory(refresh = true)
+    }
+
+    fun loadTransactionHistory(refresh: Boolean = false) {
+        // Cancel any in-flight request when starting a new one
+        transactionLoadingJob?.cancel()
+        transactionLoadingJob = viewModelScope.launch {
+            if (refresh) {
+                currentCursor = null
+                loadedTransactions.clear()
+                currentStats = null
+                _transactionHistoryState.value = TransactionHistoryUiState.Loading
+            } else {
+                _transactionHistoryState.value = TransactionHistoryUiState.LoadingMore(
+                    transactions = loadedTransactions.toList(),
+                    stats = currentStats
+                )
+            }
+
+            val result = PosClient.getTransactionHistory(
+                limit = 20,
+                cursor = currentCursor,
+                status = _selectedStatusFilter.value
+            )
+
+            result.fold(
+                onSuccess = { historyResult ->
+                    // Build updated list immutably to avoid race conditions
+                    val updatedList = if (refresh) {
+                        historyResult.transactions
+                    } else {
+                        loadedTransactions + historyResult.transactions
+                    }
+                    loadedTransactions.clear()
+                    loadedTransactions.addAll(updatedList)
+                    currentCursor = historyResult.nextCursor
+                    // Only update stats on first load (refresh)
+                    if (refresh) {
+                        currentStats = historyResult.stats
+                    }
+                    _transactionHistoryState.value = TransactionHistoryUiState.Success(
+                        transactions = updatedList,
+                        hasMore = historyResult.hasMore,
+                        stats = currentStats
+                    )
+                },
+                onFailure = { error ->
+                    // Propagate cancellation instead of showing error
+                    if (error is CancellationException) throw error
+                    _transactionHistoryState.value = TransactionHistoryUiState.Error(
+                        error.message ?: "Failed to load transactions"
+                    )
+                }
+            )
+        }
+    }
+
+    fun loadMoreTransactions() {
+        val state = _transactionHistoryState.value
+        // Guard against concurrent loading - only load more if in Success state with more items
+        if (state is TransactionHistoryUiState.Success && state.hasMore) {
+            loadTransactionHistory(refresh = false)
+        }
+    }
+
+    fun setStatusFilter(status: Pos.TransactionStatus?) {
+        _selectedStatusFilter.value = status
+        loadTransactionHistory(refresh = true)
+    }
+
+    fun refreshTransactionHistory() {
+        loadTransactionHistory(refresh = true)
     }
 }

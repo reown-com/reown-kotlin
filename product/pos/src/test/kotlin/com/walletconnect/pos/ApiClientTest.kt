@@ -24,7 +24,8 @@ class ApiClientTest {
         val expectedResponse = GetPaymentStatusResponse(
             status = PaymentStatus.REQUIRES_ACTION,
             pollInMs = 1000L,
-            isFinal = false
+            isFinal = false,
+            info = null
         )
 
         coEvery { mockApi.getPaymentStatus("pay_123") } returns Response.success(expectedResponse)
@@ -44,7 +45,8 @@ class ApiClientTest {
         val expectedResponse = GetPaymentStatusResponse(
             status = PaymentStatus.SUCCEEDED,
             pollInMs = null,
-            isFinal = true
+            isFinal = true,
+            info = null
         )
 
         coEvery { mockApi.getPaymentStatus("pay_123") } returns Response.success(expectedResponse)
@@ -64,7 +66,8 @@ class ApiClientTest {
         val expectedResponse = GetPaymentStatusResponse(
             status = PaymentStatus.PROCESSING,
             pollInMs = 1000L,
-            isFinal = false
+            isFinal = false,
+            info = null
         )
 
         coEvery { mockApi.getPaymentStatus("pay_456") } returns Response.success(expectedResponse)
@@ -82,7 +85,8 @@ class ApiClientTest {
         val expectedResponse = GetPaymentStatusResponse(
             status = PaymentStatus.EXPIRED,
             pollInMs = null,
-            isFinal = true
+            isFinal = true,
+            info = null
         )
 
         coEvery { mockApi.getPaymentStatus("pay_789") } returns Response.success(expectedResponse)
@@ -102,7 +106,8 @@ class ApiClientTest {
         val expectedResponse = GetPaymentStatusResponse(
             status = PaymentStatus.FAILED,
             pollInMs = null,
-            isFinal = true
+            isFinal = true,
+            info = null
         )
 
         coEvery { mockApi.getPaymentStatus("pay_failed") } returns Response.success(expectedResponse)
@@ -180,9 +185,9 @@ class ApiClientTest {
         coEvery { mockApi.getPaymentStatus("pay_123") } answers {
             callCount++
             when (callCount) {
-                1 -> Response.success(GetPaymentStatusResponse(PaymentStatus.REQUIRES_ACTION, 100L, false))
-                2 -> Response.success(GetPaymentStatusResponse(PaymentStatus.PROCESSING, 100L, false))
-                else -> Response.success(GetPaymentStatusResponse(PaymentStatus.SUCCEEDED, null, true))
+                1 -> Response.success(GetPaymentStatusResponse(PaymentStatus.REQUIRES_ACTION, 100L, false, null))
+                2 -> Response.success(GetPaymentStatusResponse(PaymentStatus.PROCESSING, 100L, false, null))
+                else -> Response.success(GetPaymentStatusResponse(PaymentStatus.SUCCEEDED, null, true, null))
             }
         }
 
