@@ -132,6 +132,6 @@ internal data class TransactionStatsDto(
 
 @JsonClass(generateAdapter = true)
 internal data class TotalRevenueDto(
-    @param:Json(name = "amount") val amount: Int,
+    @param:Json(name = "amount") val amount: Double,
     @param:Json(name = "currency") val currency: String
 )

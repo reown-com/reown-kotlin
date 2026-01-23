@@ -91,20 +91,15 @@ fun TransactionHistoryScreen(
                 }
             }
 
-            TransactionHistoryUiState.LoadingMore -> {
+            is TransactionHistoryUiState.LoadingMore -> {
                 // Show existing list with loading indicator at bottom
-                val currentState = viewModel.transactionHistoryState.value
-                if (currentState is TransactionHistoryUiState.Success) {
-                    TransactionList(
-                        transactions = currentState.transactions,
-                        hasMore = currentState.hasMore,
-                        isLoadingMore = true,
-                        listState = listState,
-                        stats = currentState.stats
-                    )
-                } else {
-                    LoadingContent()
-                }
+                TransactionList(
+                    transactions = state.transactions,
+                    hasMore = true,
+                    isLoadingMore = true,
+                    listState = listState,
+                    stats = state.stats
+                )
             }
 
             is TransactionHistoryUiState.Error -> {
@@ -316,22 +311,13 @@ private fun TransactionItem(transaction: Pos.Transaction) {
                 }
 
                 // Amount
-                Column(horizontalAlignment = Alignment.End) {
-                    transaction.formatFiatAmount()?.let { amount ->
-                        Text(
-                            text = amount,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
-                    if (transaction.tokenAmount != null && transaction.tokenSymbol != null) {
-                        Text(
-                            text = "${transaction.tokenAmount} ${transaction.tokenSymbol}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-                    }
+                transaction.formatFiatAmount()?.let { amount ->
+                    Text(
+                        text = amount,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
                 }
             }
 
@@ -340,10 +326,10 @@ private fun TransactionItem(transaction: Pos.Transaction) {
             Spacer(Modifier.height(12.dp))
 
             // Details
-            DetailRow("Payment ID", transaction.paymentId.take(20) + "...")
+            DetailRow("Payment ID", transaction.paymentId.truncateMiddle())
 
             transaction.txHash?.let { hash ->
-                DetailRow("TX Hash", hash.take(20) + "...")
+                DetailRow("TX Hash", hash.truncateMiddle())
             }
 
             transaction.network?.let { network ->
@@ -421,13 +407,21 @@ private fun Pos.TransactionStatus.color(): Color = when (this) {
 
 private fun formatTimestamp(timestamp: String): String {
     return try {
-        // Try ISO 8601 format first
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        // Use Locale.ROOT for parsing ISO 8601 dates to avoid locale-specific parsing issues
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT)
         val outputFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
         val date = inputFormat.parse(timestamp.substringBefore(".").substringBefore("Z"))
         date?.let { outputFormat.format(it) } ?: timestamp
     } catch (e: Exception) {
         timestamp
+    }
+}
+
+private fun String.truncateMiddle(startChars: Int = 10, endChars: Int = 6): String {
+    return if (length <= startChars + endChars + 3) {
+        this
+    } else {
+        "${take(startChars)}...${takeLast(endChars)}"
     }
 }
 

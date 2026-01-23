@@ -26,8 +26,10 @@ android {
 
         buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
         buildConfigField(type = "String", name = "CORE_API_BASE_URL", value = "\"https://api.pay.walletconnect.com\"")
+        buildConfigField(type = "String", name = "MERCHANT_API_BASE_URL", value = "\"https://api.merchant.pay.walletconnect.com\"")
         buildConfigField(type = "String", name = "PULSE_BASE_URL", value = "\"https://pulse.walletconnect.org\"")
         buildConfigField(type = "String", name = "POS_PROJECT_ID", value = "\"${System.getenv("POS_PROJECT_ID") ?: ""}\"")
+        buildConfigField(type = "String", name = "INTERNAL_MERCHANT_API", value = "\"${System.getenv("INTERNAL_MERCHANT_API") ?: ""}\"")
         buildConfigField(type = "String", name = "INGEST_BASE_URL", value = "\"https://ingest.walletconnect.org/\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

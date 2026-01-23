@@ -70,7 +70,6 @@ object Pos {
         val fiatAmount: Int?,
         val fiatCurrency: String?,
         val tokenAmount: String?,
-        val tokenSymbol: String?,
         val network: String?,
         val chainId: String?,
         val walletName: String,
@@ -122,15 +121,14 @@ object Pos {
      * Total revenue information.
      */
     data class TotalRevenue(
-        val amount: Int,
+        val amount: Double,
         val currency: String
     ) {
         /**
-         * Formats the revenue for display (e.g., "1000.00 USD").
+         * Formats the revenue for display (e.g., "19.49 USD").
          */
         fun format(): String {
-            val majorUnits = amount / 100.0
-            return String.format("%.2f %s", majorUnits, currency)
+            return String.format("%.2f %s", amount, currency)
         }
     }
 }

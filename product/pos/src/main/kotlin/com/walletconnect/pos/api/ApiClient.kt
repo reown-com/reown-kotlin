@@ -21,7 +21,9 @@ internal class ApiClient(
     private val merchantId: String,
     private val eventTracker: EventTracker,
     private val errorTracker: ErrorTracker,
-    baseUrl: String = BuildConfig.CORE_API_BASE_URL
+    baseUrl: String = BuildConfig.CORE_API_BASE_URL,
+    merchantBaseUrl: String = BuildConfig.MERCHANT_API_BASE_URL,
+    private val internalMerchantApiKey: String = BuildConfig.INTERNAL_MERCHANT_API
 ) {
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
@@ -38,9 +40,18 @@ internal class ApiClient(
             if (BuildConfig.DEBUG) {
                 addInterceptor(HttpLoggingInterceptor().apply {
                     level = HttpLoggingInterceptor.Level.BODY
+                    redactHeader("Api-Key")
+                    redactHeader("Merchant-Id")
                 })
             }
         }
+        .build()
+
+    private val merchantHttpClient = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(createMerchantHeadersInterceptor())
         .build()
 
     private val retrofit = Retrofit.Builder()
@@ -49,7 +60,14 @@ internal class ApiClient(
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
+    private val merchantRetrofit = Retrofit.Builder()
+        .baseUrl(merchantBaseUrl.ensureTrailingSlash())
+        .client(merchantHttpClient)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .build()
+
     private val payApi: PayApi = retrofit.create(PayApi::class.java)
+    private val merchantApi: MerchantApi = merchantRetrofit.create(MerchantApi::class.java)
 
     suspend fun createPayment(
         referenceId: String,
@@ -205,6 +223,16 @@ internal class ApiClient(
         }
     }
 
+    private fun createMerchantHeadersInterceptor(): Interceptor {
+        return Interceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("x-api-key", internalMerchantApiKey)
+                .addHeader("Content-Type", "application/json")
+                .build()
+            chain.proceed(request)
+        }
+    }
+
     private fun <T> parseErrorResponse(response: Response<T>): ApiErrorDetails {
         val errorBody = response.errorBody()?.string()
         return if (errorBody != null) {
@@ -238,12 +266,12 @@ internal class ApiClient(
         status: String? = null
     ): ApiResult<TransactionHistoryResponse> {
         return try {
-            val response = payApi.getTransactionHistory(
+            val response = merchantApi.getTransactionHistory(
                 merchantId = merchantId,
                 limit = limit,
                 cursor = cursor,
                 status = status,
-                sortBy = "created_at",
+                sortBy = "date",
                 sortDir = "desc"
             )
 

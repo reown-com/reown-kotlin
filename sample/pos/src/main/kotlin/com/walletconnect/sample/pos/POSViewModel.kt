@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -31,7 +32,10 @@ sealed interface PosEvent {
 sealed interface TransactionHistoryUiState {
     data object Idle : TransactionHistoryUiState
     data object Loading : TransactionHistoryUiState
-    data object LoadingMore : TransactionHistoryUiState
+    data class LoadingMore(
+        val transactions: List<Pos.Transaction>,
+        val stats: Pos.TransactionStats?
+    ) : TransactionHistoryUiState
     data class Success(
         val transactions: List<Pos.Transaction>,
         val hasMore: Boolean,
@@ -66,6 +70,7 @@ class POSViewModel : ViewModel() {
     private var currentCursor: String? = null
     private val loadedTransactions = mutableListOf<Pos.Transaction>()
     private var currentStats: Pos.TransactionStats? = null
+    private var transactionLoadingJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -178,14 +183,19 @@ class POSViewModel : ViewModel() {
     }
 
     fun loadTransactionHistory(refresh: Boolean = false) {
-        viewModelScope.launch {
+        // Cancel any in-flight request when starting a new one
+        transactionLoadingJob?.cancel()
+        transactionLoadingJob = viewModelScope.launch {
             if (refresh) {
                 currentCursor = null
                 loadedTransactions.clear()
                 currentStats = null
                 _transactionHistoryState.value = TransactionHistoryUiState.Loading
             } else {
-                _transactionHistoryState.value = TransactionHistoryUiState.LoadingMore
+                _transactionHistoryState.value = TransactionHistoryUiState.LoadingMore(
+                    transactions = loadedTransactions.toList(),
+                    stats = currentStats
+                )
             }
 
             val result = PosClient.getTransactionHistory(
@@ -219,6 +229,7 @@ class POSViewModel : ViewModel() {
 
     fun loadMoreTransactions() {
         val state = _transactionHistoryState.value
+        // Guard against concurrent loading - only load more if in Success state with more items
         if (state is TransactionHistoryUiState.Success && state.hasMore) {
             loadTransactionHistory(refresh = false)
         }

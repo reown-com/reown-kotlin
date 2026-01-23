@@ -56,9 +56,8 @@ internal fun PaymentRecord.toTransaction(): Pos.Transaction {
         status = mapToTransactionStatus(status),
         txHash = txHash,
         fiatAmount = fiatAmount,
-        fiatCurrency = fiatCurrency,
+        fiatCurrency = extractCurrencyCode(fiatCurrency),
         tokenAmount = tokenAmount,
-        tokenSymbol = extractTokenSymbol(tokenCaip19),
         network = mapChainIdToNetworkName(chainId),
         chainId = chainId,
         walletName = walletName,
@@ -78,18 +77,13 @@ internal fun mapToTransactionStatus(status: String): Pos.TransactionStatus {
     }
 }
 
-internal fun extractTokenSymbol(caip19: String?): String? {
-    if (caip19 == null) return null
-    // CAIP-19 format examples:
-    // eip155:1/erc20:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 (USDC)
-    // eip155:1/slip44:60 (ETH)
-    // Extract the type part (erc20, slip44, etc.)
-    val assetPart = caip19.substringAfter("/", "")
-    return when {
-        assetPart.startsWith("erc20:") -> "ERC20"
-        assetPart.startsWith("slip44:60") -> "ETH"
-        assetPart.startsWith("slip44:") -> "Native"
-        else -> assetPart.substringBefore(":").uppercase().ifEmpty { null }
+internal fun extractCurrencyCode(currency: String?): String? {
+    if (currency == null) return null
+    // Handle CAIP format like "iso4217/USD" or plain "USD"
+    return if (currency.contains("/")) {
+        currency.substringAfter("/")
+    } else {
+        currency
     }
 }
 
@@ -122,7 +116,7 @@ internal fun TransactionStatsDto?.toTransactionStats(): Pos.TransactionStats? {
         totalRevenue = totalRevenue?.let {
             Pos.TotalRevenue(
                 amount = it.amount,
-                currency = it.currency
+                currency = extractCurrencyCode(it.currency) ?: it.currency
             )
         }
     )
