@@ -407,7 +407,8 @@ private fun Pos.TransactionStatus.color(): Color = when (this) {
 
 private fun formatTimestamp(timestamp: String): String {
     return try {
-        // Use Locale.ROOT for parsing ISO 8601 dates to avoid locale-specific parsing issues
+        // Use Locale.ROOT for parsing ISO 8601 input (locale-independent)
+        // Use Locale.getDefault() for output to display in user's preferred format
         val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT)
         val outputFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
         val date = inputFormat.parse(timestamp.substringBefore(".").substringBefore("Z"))

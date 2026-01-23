@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -206,19 +207,28 @@ class POSViewModel : ViewModel() {
 
             result.fold(
                 onSuccess = { historyResult ->
-                    loadedTransactions.addAll(historyResult.transactions)
+                    // Build updated list immutably to avoid race conditions
+                    val updatedList = if (refresh) {
+                        historyResult.transactions
+                    } else {
+                        loadedTransactions + historyResult.transactions
+                    }
+                    loadedTransactions.clear()
+                    loadedTransactions.addAll(updatedList)
                     currentCursor = historyResult.nextCursor
                     // Only update stats on first load (refresh)
                     if (refresh) {
                         currentStats = historyResult.stats
                     }
                     _transactionHistoryState.value = TransactionHistoryUiState.Success(
-                        transactions = loadedTransactions.toList(),
+                        transactions = updatedList,
                         hasMore = historyResult.hasMore,
                         stats = currentStats
                     )
                 },
                 onFailure = { error ->
+                    // Propagate cancellation instead of showing error
+                    if (error is CancellationException) throw error
                     _transactionHistoryState.value = TransactionHistoryUiState.Error(
                         error.message ?: "Failed to load transactions"
                     )
