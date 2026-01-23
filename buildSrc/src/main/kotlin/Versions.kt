@@ -9,15 +9,15 @@ const val DEFAULT_PUBLISH_GROUP = "com.reown"
 
 //Latest versions
 const val BOM_VERSION = "1.6.1"
-const val FOUNDATION_VERSION = "1.6.0"
-const val CORE_VERSION = "1.6.0"
-const val SIGN_VERSION = "1.6.0"
-const val NOTIFY_VERSION = "1.6.0"
-const val WALLETKIT_VERSION = "1.6.0"
-const val APPKIT_VERSION = "1.6.0"
-const val MODAL_CORE_VERSION = "1.6.0"
+const val FOUNDATION_VERSION = "1.6.1"
+const val CORE_VERSION = "1.6.1"
+const val SIGN_VERSION = "1.6.1"
+const val NOTIFY_VERSION = "1.6.1"
+const val WALLETKIT_VERSION = "1.6.1"
+const val APPKIT_VERSION = "1.6.1"
+const val MODAL_CORE_VERSION = "1.6.1"
 const val POS_VERSION = "0.0.3"
-const val PAY_VERSION = "1.0.0"
+const val PAY_VERSION = "1.0.1"
 
 //Artifact ids
 const val ANDROID_BOM = "android-bom"
