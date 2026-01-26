@@ -51,6 +51,7 @@ import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
@@ -93,6 +94,13 @@ fun SettingsRoute(navController: NavHostController) {
                 Item.SettingCopyableItem("Address", SuiAccountDelegate.address),
                 Item.SettingCopyableItem("Key pair", SuiAccountDelegate.keypair),
                 Item.SettingCopyableItem("Public key", SuiAccountDelegate.publicKey)
+            )
+        ),
+        Section.SettingsSection(
+            "Tron Account", listOf(
+                Item.SettingCopyableItem("Address", TronAccountDelegate.address),
+                Item.SettingCopyableItem("Secret key", TronAccountDelegate.secretKey),
+                Item.SettingCopyableItem("Public key", TronAccountDelegate.publicKey)
             )
         ),
         Section.SettingsSection(
