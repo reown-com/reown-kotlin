@@ -153,11 +153,17 @@ object Pos {
 
     /**
      * Convenience factory for creating common date ranges.
-     * All times are calculated in UTC.
+     *
+     * **Important**: All date boundaries are calculated in UTC timezone, not the device's local timezone.
+     * This means "today" refers to the current UTC calendar day, which may differ from the merchant's
+     * local date depending on their timezone. For example, a merchant at 11 PM UTC-8 would see
+     * transactions from the next UTC day.
      */
     object DateRanges {
         /**
          * Returns a DateRange for today (from midnight UTC to now).
+         *
+         * Note: "Today" is defined as the current UTC calendar day, not the device's local date.
          */
         fun today(): DateRange {
             val now = Instant.now()
@@ -168,7 +174,7 @@ object Pos {
         }
 
         /**
-         * Returns a DateRange for the last N days including today.
+         * Returns a DateRange for the last N days including today (in UTC).
          *
          * @param days Number of days to include (must be positive)
          */
@@ -183,18 +189,23 @@ object Pos {
         }
 
         /**
-         * Returns a DateRange for this week (Monday to now, UTC).
+         * Returns a DateRange for this week (Monday 00:00 UTC to now).
+         *
+         * Week starts on Monday per ISO-8601. Uses the most recent Monday,
+         * which is the same day if today is Monday.
          */
         fun thisWeek(): DateRange {
             val now = Instant.now()
             val today = LocalDate.now(ZoneOffset.UTC)
-            val monday = today.with(DayOfWeek.MONDAY)
+            // Calculate days since Monday (Monday=1, Sunday=7) to get previous/same Monday
+            val daysFromMonday = (today.dayOfWeek.value - DayOfWeek.MONDAY.value).toLong()
+            val monday = today.minusDays(daysFromMonday)
             val startOfWeek = monday.atStartOfDay(ZoneOffset.UTC).toInstant()
             return DateRange(startOfWeek, now)
         }
 
         /**
-         * Returns a DateRange for this month (1st to now, UTC).
+         * Returns a DateRange for this month (1st of month 00:00 UTC to now).
          */
         fun thisMonth(): DateRange {
             val now = Instant.now()
