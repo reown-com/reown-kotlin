@@ -68,6 +68,9 @@ class POSViewModel : ViewModel() {
     private val _selectedStatusFilter = MutableStateFlow<Pos.TransactionStatus?>(null)
     val selectedStatusFilter = _selectedStatusFilter.asStateFlow()
 
+    private val _selectedDateRange = MutableStateFlow<Pos.DateRange?>(Pos.DateRanges.today())
+    val selectedDateRange = _selectedDateRange.asStateFlow()
+
     private var currentCursor: String? = null
     private val loadedTransactions = mutableListOf<Pos.Transaction>()
     private var currentStats: Pos.TransactionStats? = null
@@ -202,7 +205,8 @@ class POSViewModel : ViewModel() {
             val result = PosClient.getTransactionHistory(
                 limit = 20,
                 cursor = currentCursor,
-                status = _selectedStatusFilter.value
+                status = _selectedStatusFilter.value,
+                dateRange = _selectedDateRange.value
             )
 
             result.fold(
@@ -247,6 +251,11 @@ class POSViewModel : ViewModel() {
 
     fun setStatusFilter(status: Pos.TransactionStatus?) {
         _selectedStatusFilter.value = status
+        loadTransactionHistory(refresh = true)
+    }
+
+    fun setDateRange(dateRange: Pos.DateRange?) {
+        _selectedDateRange.value = dateRange
         loadTransactionHistory(refresh = true)
     }
 

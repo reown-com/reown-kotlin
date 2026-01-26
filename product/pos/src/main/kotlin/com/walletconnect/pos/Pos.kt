@@ -1,6 +1,10 @@
 package com.walletconnect.pos
 
 import java.net.URI
+import java.time.DayOfWeek
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 object Pos {
 
@@ -129,6 +133,76 @@ object Pos {
          */
         fun format(): String {
             return String.format("%.2f %s", amount, currency)
+        }
+    }
+
+    /**
+     * Represents a time range for filtering transactions.
+     *
+     * @property startTime The start of the time range (inclusive)
+     * @property endTime The end of the time range (inclusive)
+     */
+    data class DateRange(
+        val startTime: Instant,
+        val endTime: Instant
+    ) {
+        init {
+            require(!endTime.isBefore(startTime)) { "endTime must not be before startTime" }
+        }
+    }
+
+    /**
+     * Convenience factory for creating common date ranges.
+     * All times are calculated in UTC.
+     */
+    object DateRanges {
+        /**
+         * Returns a DateRange for today (from midnight UTC to now).
+         */
+        fun today(): DateRange {
+            val now = Instant.now()
+            val startOfDay = LocalDate.now(ZoneOffset.UTC)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+            return DateRange(startOfDay, now)
+        }
+
+        /**
+         * Returns a DateRange for the last N days including today.
+         *
+         * @param days Number of days to include (must be positive)
+         */
+        fun lastDays(days: Int): DateRange {
+            require(days > 0) { "days must be positive" }
+            val now = Instant.now()
+            val startOfPeriod = LocalDate.now(ZoneOffset.UTC)
+                .minusDays((days - 1).toLong())
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+            return DateRange(startOfPeriod, now)
+        }
+
+        /**
+         * Returns a DateRange for this week (Monday to now, UTC).
+         */
+        fun thisWeek(): DateRange {
+            val now = Instant.now()
+            val today = LocalDate.now(ZoneOffset.UTC)
+            val monday = today.with(DayOfWeek.MONDAY)
+            val startOfWeek = monday.atStartOfDay(ZoneOffset.UTC).toInstant()
+            return DateRange(startOfWeek, now)
+        }
+
+        /**
+         * Returns a DateRange for this month (1st to now, UTC).
+         */
+        fun thisMonth(): DateRange {
+            val now = Instant.now()
+            val firstOfMonth = LocalDate.now(ZoneOffset.UTC)
+                .withDayOfMonth(1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+            return DateRange(firstOfMonth, now)
         }
     }
 }

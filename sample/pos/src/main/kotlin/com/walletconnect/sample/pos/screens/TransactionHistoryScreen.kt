@@ -39,6 +39,7 @@ fun TransactionHistoryScreen(
 ) {
     val uiState by viewModel.transactionHistoryState.collectAsState()
     val selectedFilter by viewModel.selectedStatusFilter.collectAsState()
+    val selectedDateRange by viewModel.selectedDateRange.collectAsState()
     val listState = rememberLazyListState()
 
     // Load more when reaching end of list
@@ -63,6 +64,12 @@ fun TransactionHistoryScreen(
     ) {
         // Header with back button
         TransactionHistoryHeader(onBackClick = onBackClick)
+
+        // Date range filter chips
+        DateRangeSelector(
+            selectedDateRange = selectedDateRange,
+            onDateRangeSelected = { viewModel.setDateRange(it) }
+        )
 
         // Status filter chips
         StatusFilterChips(
@@ -141,6 +148,64 @@ private fun TransactionHistoryHeader(onBackClick: () -> Unit) {
     }
 }
 
+/**
+ * Date range filter options.
+ */
+private enum class DateRangeOption(val label: String) {
+    ALL("All Time"),
+    TODAY("Today"),
+    LAST_7_DAYS("7 Days"),
+    THIS_WEEK("This Week"),
+    THIS_MONTH("This Month");
+
+    fun toDateRange(): Pos.DateRange? = when (this) {
+        ALL -> null
+        TODAY -> Pos.DateRanges.today()
+        LAST_7_DAYS -> Pos.DateRanges.lastDays(7)
+        THIS_WEEK -> Pos.DateRanges.thisWeek()
+        THIS_MONTH -> Pos.DateRanges.thisMonth()
+    }
+}
+
+@Composable
+private fun DateRangeSelector(
+    selectedDateRange: Pos.DateRange?,
+    onDateRangeSelected: (Pos.DateRange?) -> Unit
+) {
+    // Track which option is selected by index (default to TODAY = 1)
+    var selectedIndex by remember { mutableIntStateOf(1) }
+
+    // Reset to "All Time" when selectedDateRange becomes null from external change
+    LaunchedEffect(selectedDateRange) {
+        if (selectedDateRange == null && selectedIndex != 0) {
+            selectedIndex = 0
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        DateRangeOption.entries.forEachIndexed { index, option ->
+            FilterChip(
+                selected = selectedIndex == index,
+                onClick = {
+                    selectedIndex = index
+                    onDateRangeSelected(option.toDateRange())
+                },
+                label = { Text(option.label) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = BrandColor.copy(alpha = 0.8f),
+                    selectedLabelColor = Color.White
+                )
+            )
+        }
+    }
+}
+
 @Composable
 private fun StatusFilterChips(
     selectedStatus: Pos.TransactionStatus?,
@@ -158,7 +223,7 @@ private fun StatusFilterChips(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         filters.forEach { (status, label) ->
