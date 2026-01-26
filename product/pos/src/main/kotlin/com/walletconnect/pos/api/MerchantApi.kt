@@ -14,6 +14,8 @@ internal interface MerchantApi {
         @Query("cursor") cursor: String? = null,
         @Query("status") status: String? = null,
         @Query("sort_by") sortBy: String? = null,
-        @Query("sort_dir") sortDir: String? = null
+        @Query("sort_dir") sortDir: String? = null,
+        @Query("start_ts") startTs: String? = null,
+        @Query("end_ts") endTs: String? = null
     ): Response<TransactionHistoryResponse>
 }

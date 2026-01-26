@@ -39,6 +39,7 @@ fun TransactionHistoryScreen(
 ) {
     val uiState by viewModel.transactionHistoryState.collectAsState()
     val selectedFilter by viewModel.selectedStatusFilter.collectAsState()
+    val selectedDateRangeOptionIndex by viewModel.selectedDateRangeOptionIndex.collectAsState()
     val listState = rememberLazyListState()
 
     // Load more when reaching end of list
@@ -63,6 +64,12 @@ fun TransactionHistoryScreen(
     ) {
         // Header with back button
         TransactionHistoryHeader(onBackClick = onBackClick)
+
+        // Date range filter chips
+        DateRangeSelector(
+            selectedOptionIndex = selectedDateRangeOptionIndex,
+            onOptionSelected = { viewModel.setDateRangeOption(it) }
+        )
 
         // Status filter chips
         StatusFilterChips(
@@ -141,6 +148,44 @@ private fun TransactionHistoryHeader(onBackClick: () -> Unit) {
     }
 }
 
+/**
+ * Date range filter options.
+ * Note: Index order must match ViewModel's getDateRangeForOptionIndex()
+ */
+private enum class DateRangeOption(val label: String) {
+    ALL("All Time"),
+    TODAY("Today"),
+    LAST_7_DAYS("7 Days"),
+    THIS_WEEK("This Week"),
+    THIS_MONTH("This Month")
+}
+
+@Composable
+private fun DateRangeSelector(
+    selectedOptionIndex: Int,
+    onOptionSelected: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        DateRangeOption.entries.forEachIndexed { index, option ->
+            FilterChip(
+                selected = selectedOptionIndex == index,
+                onClick = { onOptionSelected(index) },
+                label = { Text(option.label) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = BrandColor.copy(alpha = 0.8f),
+                    selectedLabelColor = Color.White
+                )
+            )
+        }
+    }
+}
+
 @Composable
 private fun StatusFilterChips(
     selectedStatus: Pos.TransactionStatus?,
@@ -158,7 +203,7 @@ private fun StatusFilterChips(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         filters.forEach { (status, label) ->
