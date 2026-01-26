@@ -39,7 +39,7 @@ fun TransactionHistoryScreen(
 ) {
     val uiState by viewModel.transactionHistoryState.collectAsState()
     val selectedFilter by viewModel.selectedStatusFilter.collectAsState()
-    val selectedDateRange by viewModel.selectedDateRange.collectAsState()
+    val selectedDateRangeOptionIndex by viewModel.selectedDateRangeOptionIndex.collectAsState()
     val listState = rememberLazyListState()
 
     // Load more when reaching end of list
@@ -67,8 +67,8 @@ fun TransactionHistoryScreen(
 
         // Date range filter chips
         DateRangeSelector(
-            selectedDateRange = selectedDateRange,
-            onDateRangeSelected = { viewModel.setDateRange(it) }
+            selectedOptionIndex = selectedDateRangeOptionIndex,
+            onOptionSelected = { viewModel.setDateRangeOption(it) }
         )
 
         // Status filter chips
@@ -150,38 +150,21 @@ private fun TransactionHistoryHeader(onBackClick: () -> Unit) {
 
 /**
  * Date range filter options.
+ * Note: Index order must match ViewModel's getDateRangeForOptionIndex()
  */
 private enum class DateRangeOption(val label: String) {
     ALL("All Time"),
     TODAY("Today"),
     LAST_7_DAYS("7 Days"),
     THIS_WEEK("This Week"),
-    THIS_MONTH("This Month");
-
-    fun toDateRange(): Pos.DateRange? = when (this) {
-        ALL -> null
-        TODAY -> Pos.DateRanges.today()
-        LAST_7_DAYS -> Pos.DateRanges.lastDays(7)
-        THIS_WEEK -> Pos.DateRanges.thisWeek()
-        THIS_MONTH -> Pos.DateRanges.thisMonth()
-    }
+    THIS_MONTH("This Month")
 }
 
 @Composable
 private fun DateRangeSelector(
-    selectedDateRange: Pos.DateRange?,
-    onDateRangeSelected: (Pos.DateRange?) -> Unit
+    selectedOptionIndex: Int,
+    onOptionSelected: (Int) -> Unit
 ) {
-    // Track which option is selected by index (default to TODAY = 1)
-    var selectedIndex by remember { mutableIntStateOf(1) }
-
-    // Reset to "All Time" when selectedDateRange becomes null from external change
-    LaunchedEffect(selectedDateRange) {
-        if (selectedDateRange == null && selectedIndex != 0) {
-            selectedIndex = 0
-        }
-    }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -191,11 +174,8 @@ private fun DateRangeSelector(
     ) {
         DateRangeOption.entries.forEachIndexed { index, option ->
             FilterChip(
-                selected = selectedIndex == index,
-                onClick = {
-                    selectedIndex = index
-                    onDateRangeSelected(option.toDateRange())
-                },
+                selected = selectedOptionIndex == index,
+                onClick = { onOptionSelected(index) },
                 label = { Text(option.label) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = BrandColor.copy(alpha = 0.8f),
