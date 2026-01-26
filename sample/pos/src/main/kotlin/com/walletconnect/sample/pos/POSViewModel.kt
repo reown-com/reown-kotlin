@@ -68,10 +68,30 @@ class POSViewModel : ViewModel() {
     private val _selectedStatusFilter = MutableStateFlow<Pos.TransactionStatus?>(null)
     val selectedStatusFilter = _selectedStatusFilter.asStateFlow()
 
+    // Store selected date range option index (not the computed DateRange) to avoid comparison issues
+    // Index mapping: 0=All Time, 1=Today, 2=Last 7 Days, 3=This Week, 4=This Month
+    private val _selectedDateRangeOptionIndex = MutableStateFlow(1) // Default to "Today" (index 1)
+    val selectedDateRangeOptionIndex = _selectedDateRangeOptionIndex.asStateFlow()
+
     private var currentCursor: String? = null
     private val loadedTransactions = mutableListOf<Pos.Transaction>()
     private var currentStats: Pos.TransactionStats? = null
     private var transactionLoadingJob: Job? = null
+
+    /**
+     * Computes the DateRange from the selected option index.
+     * Index mapping: 0=All Time, 1=Today, 2=Last 7 Days, 3=This Week, 4=This Month
+     */
+    private fun getDateRangeForOptionIndex(index: Int): Pos.DateRange? {
+        return when (index) {
+            0 -> null // All Time
+            1 -> Pos.DateRanges.today()
+            2 -> Pos.DateRanges.lastDays(7)
+            3 -> Pos.DateRanges.thisWeek()
+            4 -> Pos.DateRanges.thisMonth()
+            else -> null
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -202,7 +222,8 @@ class POSViewModel : ViewModel() {
             val result = PosClient.getTransactionHistory(
                 limit = 20,
                 cursor = currentCursor,
-                status = _selectedStatusFilter.value
+                status = _selectedStatusFilter.value,
+                dateRange = getDateRangeForOptionIndex(_selectedDateRangeOptionIndex.value)
             )
 
             result.fold(
@@ -247,6 +268,11 @@ class POSViewModel : ViewModel() {
 
     fun setStatusFilter(status: Pos.TransactionStatus?) {
         _selectedStatusFilter.value = status
+        loadTransactionHistory(refresh = true)
+    }
+
+    fun setDateRangeOption(optionIndex: Int) {
+        _selectedDateRangeOptionIndex.value = optionIndex
         loadTransactionHistory(refresh = true)
     }
 

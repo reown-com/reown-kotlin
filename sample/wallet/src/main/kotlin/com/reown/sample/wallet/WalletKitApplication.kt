@@ -23,6 +23,7 @@ import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
@@ -54,6 +55,7 @@ class WalletKitApplication : Application() {
         val projectId = BuildConfig.PROJECT_ID
 
         EthAccountDelegate.application = this
+        TronAccountDelegate.application = this
         TONAccountDelegate.application = this
         SolanaAccountDelegate.application = this
         StacksAccountDelegate.application = this

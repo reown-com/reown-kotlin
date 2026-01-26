@@ -15,6 +15,7 @@ import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.SuiUtils
 import com.reown.sample.wallet.domain.client.TONClient
@@ -27,6 +28,7 @@ import com.reown.walletkit.utils.CacaoSigner
 import org.json.JSONArray
 import timber.log.Timber
 import uniffi.yttrium_utils.solanaSignPrehash
+import uniffi.yttrium_utils.tronSignMessage
 import java.util.Base64
 
 class SessionProposalViewModel : ViewModel() {
@@ -102,6 +104,17 @@ class SessionProposalViewModel : ViewModel() {
                                 )
                             }
 
+                            chainId.contains("tron") -> {
+                                val issuer = "did:pkh:$chainId:${TronAccountDelegate.address}"
+                                val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
+                                Pair(
+                                    Wallet.Model.Cacao.Signature(
+                                        t = "tron",
+                                        s = tronSignMessage(message, TronAccountDelegate.keypair)
+                                    ), issuer
+                                )
+                            }
+
                             else -> Pair(
                                 Wallet.Model.Cacao.Signature(
                                     t = "",
@@ -162,7 +175,8 @@ class SessionProposalViewModel : ViewModel() {
 //            Pair(sessionNamespaces, sessionProperties)
 //        } else {
         val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
-        return Pair(sessionNamespaces, mapOf())
+        val sessionProperties = mapOf("tron_method_version" to "v1")
+        return Pair(sessionNamespaces, sessionProperties)
 //        }
     }
 

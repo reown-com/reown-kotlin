@@ -110,6 +110,9 @@ object PosClient {
      * @param limit Number of transactions to fetch per page (default 20, max 200)
      * @param cursor Pagination cursor from previous result for fetching next page
      * @param status Optional status filter (e.g., "succeeded", "failed", "processing")
+     * @param dateRange Optional date range filter. Use [Pos.DateRanges] factory methods
+     *                  for common ranges (e.g., `DateRanges.today()`, `DateRanges.thisWeek()`).
+     *                  Defaults to null (all time).
      * @return Result containing transaction history or error
      * @throws IllegalStateException if SDK is not initialized
      */
@@ -117,13 +120,20 @@ object PosClient {
     suspend fun getTransactionHistory(
         limit: Int = 20,
         cursor: String? = null,
-        status: Pos.TransactionStatus? = null
+        status: Pos.TransactionStatus? = null,
+        dateRange: Pos.DateRange? = null
     ): Result<Pos.TransactionHistoryResult> {
         checkInitialized()
 
         val statusFilter = status?.apiValue
 
-        return when (val result = apiClient!!.getTransactionHistory(limit, cursor, statusFilter)) {
+        return when (val result = apiClient!!.getTransactionHistory(
+            limit = limit,
+            cursor = cursor,
+            status = statusFilter,
+            startTs = dateRange?.startTime,
+            endTs = dateRange?.endTime
+        )) {
             is ApiResult.Success -> {
                 val data = result.data
                 Result.success(

@@ -9,7 +9,8 @@ enum class Chain(val id: String) {
     STACKS_MAINNET("stacks:1"),
     STACKS_TESTNET("stacks:2147483648"),
     SUI("sui:mainnet"),
-    SUI_TESTNET("sui:testnet")
+    SUI_TESTNET("sui:testnet"),
+    TRON("tron:0x2b6653dc")
 }
 
 interface Token

@@ -14,6 +14,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
 import java.net.URI
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 internal class ApiClient(
@@ -263,7 +265,9 @@ internal class ApiClient(
     suspend fun getTransactionHistory(
         limit: Int = 20,
         cursor: String? = null,
-        status: String? = null
+        status: String? = null,
+        startTs: Instant? = null,
+        endTs: Instant? = null
     ): ApiResult<TransactionHistoryResponse> {
         return try {
             val response = merchantApi.getTransactionHistory(
@@ -272,7 +276,9 @@ internal class ApiClient(
                 cursor = cursor,
                 status = status,
                 sortBy = "date",
-                sortDir = "desc"
+                sortDir = "desc",
+                startTs = startTs?.toIso8601(),
+                endTs = endTs?.toIso8601()
             )
 
             if (response.isSuccessful) {
@@ -295,6 +301,10 @@ internal class ApiClient(
             errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "getTransactionHistory")
             ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
         }
+    }
+
+    private fun Instant.toIso8601(): String {
+        return DateTimeFormatter.ISO_INSTANT.format(this)
     }
 
     private fun String.ensureTrailingSlash(): String {
