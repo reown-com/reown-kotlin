@@ -6,6 +6,7 @@ import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.SuiUtils
 import com.reown.sample.wallet.domain.client.TONClient
@@ -19,6 +20,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import uniffi.yttrium_utils.SendTxMessage
 import uniffi.yttrium_utils.solanaSignPrehash
+import uniffi.yttrium_utils.tronSignMessage
+import uniffi.yttrium_utils.tronSignTransaction
 import kotlin.io.encoding.Base64
 
 object Signer {
@@ -200,6 +203,21 @@ object Signer {
                 val decoded = Base64.decode(transaction)
                 val digest = SuiUtils.signAndExecuteTransaction(Chain.SUI_TESTNET.id, SuiAccountDelegate.keypair, decoded)
                 """{"digest":"$digest"}"""
+            }
+
+            sessionRequest.method == "tron_signMessage" -> {
+                val jsonObject = JSONObject(sessionRequest.param)
+                val message = jsonObject.getString("message")
+                val signature = tronSignMessage(message, TronAccountDelegate.keypair)
+                """{"signature":"$signature"}"""
+            }
+
+            sessionRequest.method == "tron_signTransaction" -> {
+                val jsonObject = JSONObject(sessionRequest.param)
+                val transaction = jsonObject.getJSONObject("transaction")
+                val rawDataHex = transaction.getString("raw_data_hex")
+                val signedTx = tronSignTransaction(rawDataHex, TronAccountDelegate.keypair)
+                """{"signature":["${signedTx.signature}"],"txID":"${signedTx.txId}","raw_data_hex":"$rawDataHex"}"""
             }
 
             //Note: Only for testing purposes - it will always fail on Dapp side
