@@ -89,10 +89,10 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.0.0-alpha08")
 
     // local .m2 build
-        implementation("com.github.reown-com:yttrium-utils:unspecified")
-//    implementation("com.github.reown-com.yttrium:yttrium-utils:0.10.2") {
-//        exclude(group = "net.java.dev.jna", module = "jna")
-//    }
+    //    implementation("com.github.reown-com:yttrium-utils:unspecified")
+    implementation("com.github.reown-com.yttrium:yttrium-utils:0.10.22") {
+        exclude(group = "net.java.dev.jna", module = "jna")
+    }
     implementation("net.java.dev.jna:jna:5.17.0@aar")
     implementation("org.web3j:core:4.9.4")
 
