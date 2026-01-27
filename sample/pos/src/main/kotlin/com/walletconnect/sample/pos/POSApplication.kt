@@ -20,7 +20,7 @@ class POSApplication : Application() {
 
         PosClient.init(
             apiKey = BuildConfig.MERCHANT_API_KEY,
-            merchantId = "ingenico-demo",
+            merchantId = "Ingenico_2",
             deviceId = deviceId,
         )
 
