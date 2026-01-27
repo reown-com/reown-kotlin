@@ -452,9 +452,10 @@ private fun Pos.TransactionStatus.color(): Color = when (this) {
 
 private fun formatTimestamp(timestamp: String): String {
     return try {
-        // Use Locale.ROOT for parsing ISO 8601 input (locale-independent)
-        // Use Locale.getDefault() for output to display in user's preferred format
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT)
+        // Parse UTC timestamp from server and display in user's local timezone
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
         val outputFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
         val date = inputFormat.parse(timestamp.substringBefore(".").substringBefore("Z"))
         date?.let { outputFormat.format(it) } ?: timestamp
