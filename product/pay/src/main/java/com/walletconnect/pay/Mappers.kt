@@ -1,6 +1,9 @@
 package com.walletconnect.pay
 
 import com.walletconnect.pay.Pay.ConfirmPaymentError.*
+import com.walletconnect.pay.Pay.GetPaymentOptionsError.*
+import com.walletconnect.pay.Pay.GetPaymentRequestError.*
+import com.walletconnect.pay.Pay.PayError.*
 import com.walletconnect.pay.Pay.RequiredAction.*
 import uniffi.yttrium_wcpay.PayAmount
 import uniffi.yttrium_wcpay.AmountDisplay as YttriumAmountDisplay
@@ -142,25 +145,28 @@ internal object Mappers {
                 Pay.GetPaymentOptionsError.PaymentNotFound(error.v1)
 
             is YttriumGetPaymentOptionsError.InvalidRequest ->
-                Pay.GetPaymentOptionsError.InvalidRequest(error.v1)
+                InvalidRequest(error.v1)
 
             is YttriumGetPaymentOptionsError.OptionNotFound ->
                 Pay.GetPaymentOptionsError.OptionNotFound(error.v1)
 
             is YttriumGetPaymentOptionsError.PaymentNotReady ->
-                Pay.GetPaymentOptionsError.PaymentNotReady(error.v1)
+                PaymentNotReady(error.v1)
 
             is YttriumGetPaymentOptionsError.InvalidAccount ->
                 Pay.GetPaymentOptionsError.InvalidAccount(error.v1)
 
             is YttriumGetPaymentOptionsError.ComplianceFailed ->
-                Pay.GetPaymentOptionsError.ComplianceFailed(error.v1)
+                ComplianceFailed(error.v1)
 
             is YttriumGetPaymentOptionsError.Http ->
                 Pay.GetPaymentOptionsError.Http(error.v1)
 
             is YttriumGetPaymentOptionsError.InternalException ->
                 Pay.GetPaymentOptionsError.InternalError(error.v1)
+            is YttriumGetPaymentOptionsError.ConnectionFailed -> Pay.GetPaymentOptionsError.Http(error.v1)
+            is YttriumGetPaymentOptionsError.NoConnection -> Pay.GetPaymentOptionsError.Http(error.v1)
+            is YttriumGetPaymentOptionsError.RequestTimeout -> Pay.GetPaymentOptionsError.Http(error.v1)
         }
     }
 
@@ -179,20 +185,24 @@ internal object Mappers {
                 Pay.GetPaymentRequestError.Http(error.v1)
 
             is YttriumGetPaymentRequestError.FetchException ->
-                Pay.GetPaymentRequestError.FetchError(error.v1)
+                FetchError(error.v1)
 
             is YttriumGetPaymentRequestError.InternalException ->
                 Pay.GetPaymentRequestError.InternalError(error.v1)
+
+            is YttriumGetPaymentRequestError.ConnectionFailed ->  Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.NoConnection ->  Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.RequestTimeout ->  Pay.GetPaymentRequestError.Http(error.v1)
         }
     }
 
     fun mapConfirmPaymentError(error: YttriumConfirmPaymentError): Pay.ConfirmPaymentError {
         return when (error) {
             is YttriumConfirmPaymentError.PaymentNotFound ->
-                PaymentNotFound(error.v1)
+                Pay.ConfirmPaymentError.PaymentNotFound(error.v1)
 
             is YttriumConfirmPaymentError.PaymentExpired ->
-                PaymentExpired(error.v1)
+                Pay.ConfirmPaymentError.PaymentExpired(error.v1)
 
             is YttriumConfirmPaymentError.InvalidOption ->
                 InvalidOption(error.v1)
@@ -204,20 +214,26 @@ internal object Mappers {
                 RouteExpired(error.v1)
 
             is YttriumConfirmPaymentError.Http ->
-                Http(error.v1)
+                Pay.ConfirmPaymentError.Http(error.v1)
 
             is YttriumConfirmPaymentError.InternalException ->
-                InternalError(error.v1)
+                Pay.ConfirmPaymentError.InternalError(error.v1)
 
             is YttriumConfirmPaymentError.UnsupportedMethod -> UnsupportedMethod(error.v1)
+            is YttriumConfirmPaymentError.ConnectionFailed -> Pay.ConfirmPaymentError.Http(error.v1)
+            is YttriumConfirmPaymentError.NoConnection -> Pay.ConfirmPaymentError.Http(error.v1)
+            is YttriumConfirmPaymentError.RequestTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
         }
     }
 
     fun mapPayError(error: YttriumPayError): Pay.PayError {
         return when (error) {
             is YttriumPayError.Http -> Pay.PayError.Http(error.v1)
-            is YttriumPayError.Api -> Pay.PayError.Api(error.v1)
+            is YttriumPayError.Api -> Api(error.v1)
             is YttriumPayError.Timeout -> Pay.PayError.Timeout
+            is YttriumPayError.ConnectionFailed ->  Pay.PayError.Http(error.v1)
+            is YttriumPayError.NoConnection ->  Pay.PayError.Http(error.v1)
+            is YttriumPayError.RequestTimeout ->  Pay.PayError.Http(error.v1)
         }
     }
 }
