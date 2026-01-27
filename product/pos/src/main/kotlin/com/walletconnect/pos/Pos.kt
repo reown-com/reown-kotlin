@@ -4,7 +4,7 @@ import java.net.URI
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
+import java.time.ZoneId
 
 object Pos {
 
@@ -154,64 +154,64 @@ object Pos {
     /**
      * Convenience factory for creating common date ranges.
      *
-     * **Important**: All date boundaries are calculated in UTC timezone, not the device's local timezone.
-     * This means "today" refers to the current UTC calendar day, which may differ from the merchant's
-     * local date depending on their timezone. For example, a merchant at 11 PM UTC-8 would see
-     * transactions from the next UTC day.
+     * All date boundaries are calculated in the device's local timezone.
+     * This means "today" refers to the current local calendar day as perceived by the merchant.
      */
     object DateRanges {
         /**
-         * Returns a DateRange for today (from midnight UTC to now).
-         *
-         * Note: "Today" is defined as the current UTC calendar day, not the device's local date.
+         * Returns a DateRange for today (from local midnight to now).
          */
         fun today(): DateRange {
             val now = Instant.now()
-            val startOfDay = LocalDate.now(ZoneOffset.UTC)
-                .atStartOfDay(ZoneOffset.UTC)
+            val zone = ZoneId.systemDefault()
+            val startOfDay = LocalDate.now(zone)
+                .atStartOfDay(zone)
                 .toInstant()
             return DateRange(startOfDay, now)
         }
 
         /**
-         * Returns a DateRange for the last N days including today (in UTC).
+         * Returns a DateRange for the last N days including today (in local timezone).
          *
          * @param days Number of days to include (must be positive)
          */
         fun lastDays(days: Int): DateRange {
             require(days > 0) { "days must be positive" }
             val now = Instant.now()
-            val startOfPeriod = LocalDate.now(ZoneOffset.UTC)
+            val zone = ZoneId.systemDefault()
+            val startOfPeriod = LocalDate.now(zone)
                 .minusDays((days - 1).toLong())
-                .atStartOfDay(ZoneOffset.UTC)
+                .atStartOfDay(zone)
                 .toInstant()
             return DateRange(startOfPeriod, now)
         }
 
         /**
-         * Returns a DateRange for this week (Monday 00:00 UTC to now).
+         * Returns a DateRange for this week (Monday 00:00 local time to now).
          *
          * Week starts on Monday per ISO-8601. Uses the most recent Monday,
          * which is the same day if today is Monday.
          */
         fun thisWeek(): DateRange {
             val now = Instant.now()
-            val today = LocalDate.now(ZoneOffset.UTC)
+            val zone = ZoneId.systemDefault()
+            val today = LocalDate.now(zone)
             // Calculate days since Monday (Monday=1, Sunday=7) to get previous/same Monday
             val daysFromMonday = (today.dayOfWeek.value - DayOfWeek.MONDAY.value).toLong()
             val monday = today.minusDays(daysFromMonday)
-            val startOfWeek = monday.atStartOfDay(ZoneOffset.UTC).toInstant()
+            val startOfWeek = monday.atStartOfDay(zone).toInstant()
             return DateRange(startOfWeek, now)
         }
 
         /**
-         * Returns a DateRange for this month (1st of month 00:00 UTC to now).
+         * Returns a DateRange for this month (1st of month 00:00 local time to now).
          */
         fun thisMonth(): DateRange {
             val now = Instant.now()
-            val firstOfMonth = LocalDate.now(ZoneOffset.UTC)
+            val zone = ZoneId.systemDefault()
+            val firstOfMonth = LocalDate.now(zone)
                 .withDayOfMonth(1)
-                .atStartOfDay(ZoneOffset.UTC)
+                .atStartOfDay(zone)
                 .toInstant()
             return DateRange(firstOfMonth, now)
         }
