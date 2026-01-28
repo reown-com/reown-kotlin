@@ -156,13 +156,19 @@ object Pos {
      *
      * All date boundaries are calculated in the device's local timezone.
      * This means "today" refers to the current local calendar day as perceived by the merchant.
+     *
+     * Note: End times include a 2-minute buffer to account for potential clock skew
+     * between the device and server, ensuring recently completed transactions are included.
      */
     object DateRanges {
+        // Buffer to account for clock skew between device and server
+        private const val CLOCK_SKEW_BUFFER_SECONDS = 120L
+
         /**
-         * Returns a DateRange for today (from local midnight to now).
+         * Returns a DateRange for today (from local midnight to now + buffer).
          */
         fun today(): DateRange {
-            val now = Instant.now()
+            val now = Instant.now().plusSeconds(CLOCK_SKEW_BUFFER_SECONDS)
             val zone = ZoneId.systemDefault()
             val startOfDay = LocalDate.now(zone)
                 .atStartOfDay(zone)
@@ -177,7 +183,7 @@ object Pos {
          */
         fun lastDays(days: Int): DateRange {
             require(days > 0) { "days must be positive" }
-            val now = Instant.now()
+            val now = Instant.now().plusSeconds(CLOCK_SKEW_BUFFER_SECONDS)
             val zone = ZoneId.systemDefault()
             val startOfPeriod = LocalDate.now(zone)
                 .minusDays((days - 1).toLong())
@@ -187,13 +193,13 @@ object Pos {
         }
 
         /**
-         * Returns a DateRange for this week (Monday 00:00 local time to now).
+         * Returns a DateRange for this week (Monday 00:00 local time to now + buffer).
          *
          * Week starts on Monday per ISO-8601. Uses the most recent Monday,
          * which is the same day if today is Monday.
          */
         fun thisWeek(): DateRange {
-            val now = Instant.now()
+            val now = Instant.now().plusSeconds(CLOCK_SKEW_BUFFER_SECONDS)
             val zone = ZoneId.systemDefault()
             val today = LocalDate.now(zone)
             // Calculate days since Monday (Monday=1, Sunday=7) to get previous/same Monday
@@ -204,10 +210,10 @@ object Pos {
         }
 
         /**
-         * Returns a DateRange for this month (1st of month 00:00 local time to now).
+         * Returns a DateRange for this month (1st of month 00:00 local time to now + buffer).
          */
         fun thisMonth(): DateRange {
-            val now = Instant.now()
+            val now = Instant.now().plusSeconds(CLOCK_SKEW_BUFFER_SECONDS)
             val zone = ZoneId.systemDefault()
             val firstOfMonth = LocalDate.now(zone)
                 .withDayOfMonth(1)
