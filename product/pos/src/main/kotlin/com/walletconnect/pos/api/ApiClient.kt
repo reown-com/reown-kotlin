@@ -14,6 +14,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
 import java.net.URI
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 internal class ApiClient(
@@ -21,7 +23,9 @@ internal class ApiClient(
     private val merchantId: String,
     private val eventTracker: EventTracker,
     private val errorTracker: ErrorTracker,
-    baseUrl: String = BuildConfig.CORE_API_BASE_URL
+    baseUrl: String = BuildConfig.CORE_API_BASE_URL,
+    merchantBaseUrl: String = BuildConfig.MERCHANT_API_BASE_URL,
+    private val internalMerchantApiKey: String = BuildConfig.INTERNAL_MERCHANT_API
 ) {
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
@@ -38,9 +42,18 @@ internal class ApiClient(
             if (BuildConfig.DEBUG) {
                 addInterceptor(HttpLoggingInterceptor().apply {
                     level = HttpLoggingInterceptor.Level.BODY
+                    redactHeader("Api-Key")
+                    redactHeader("Merchant-Id")
                 })
             }
         }
+        .build()
+
+    private val merchantHttpClient = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(createMerchantHeadersInterceptor())
         .build()
 
     private val retrofit = Retrofit.Builder()
@@ -49,7 +62,14 @@ internal class ApiClient(
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
+    private val merchantRetrofit = Retrofit.Builder()
+        .baseUrl(merchantBaseUrl.ensureTrailingSlash())
+        .client(merchantHttpClient)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .build()
+
     private val payApi: PayApi = retrofit.create(PayApi::class.java)
+    private val merchantApi: MerchantApi = merchantRetrofit.create(MerchantApi::class.java)
 
     suspend fun createPayment(
         referenceId: String,
@@ -122,7 +142,7 @@ internal class ApiClient(
 
                     if (data.status != lastEmittedStatus) {
                         lastEmittedStatus = data.status
-                        val event = mapStatusToPaymentEvent(data.status, paymentId)
+                        val event = mapStatusToPaymentEvent(data.status, paymentId, data.info)
                         trackPaymentStatusEvent(paymentId, context, data.status, event)
                         onEvent(event)
                     }
@@ -205,6 +225,16 @@ internal class ApiClient(
         }
     }
 
+    private fun createMerchantHeadersInterceptor(): Interceptor {
+        return Interceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("x-api-key", internalMerchantApiKey)
+                .addHeader("Content-Type", "application/json")
+                .build()
+            chain.proceed(request)
+        }
+    }
+
     private fun <T> parseErrorResponse(response: Response<T>): ApiErrorDetails {
         val errorBody = response.errorBody()?.string()
         return if (errorBody != null) {
@@ -230,6 +260,51 @@ internal class ApiClient(
 
     private fun isSdkError(code: String): Boolean {
         return code == ErrorCodes.NETWORK_ERROR || code == ErrorCodes.PARSE_ERROR
+    }
+
+    suspend fun getTransactionHistory(
+        limit: Int = 20,
+        cursor: String? = null,
+        status: String? = null,
+        startTs: Instant? = null,
+        endTs: Instant? = null
+    ): ApiResult<TransactionHistoryResponse> {
+        return try {
+            val response = merchantApi.getTransactionHistory(
+                merchantId = merchantId,
+                limit = limit,
+                cursor = cursor,
+                status = status,
+                sortBy = "date",
+                sortDir = "desc",
+                startTs = startTs?.toIso8601(),
+                endTs = endTs?.toIso8601()
+            )
+
+            if (response.isSuccessful) {
+                val data = response.body()
+                if (data == null) {
+                    ApiResult.Error(ErrorCodes.PARSE_ERROR, "Empty response body")
+                } else {
+                    ApiResult.Success(data)
+                }
+            } else {
+                val error = parseErrorResponse(response)
+                ApiResult.Error(error.code, error.message)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "getTransactionHistory")
+            ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
+        } catch (e: Exception) {
+            errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "getTransactionHistory")
+            ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
+        }
+    }
+
+    private fun Instant.toIso8601(): String {
+        return DateTimeFormatter.ISO_INSTANT.format(this)
     }
 
     private fun String.ensureTrailingSlash(): String {

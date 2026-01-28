@@ -18,6 +18,7 @@ import com.walletconnect.sample.pos.screens.AmountScreen
 import com.walletconnect.sample.pos.screens.ErrorScreen
 import com.walletconnect.sample.pos.screens.PaymentScreen
 import com.walletconnect.sample.pos.screens.StartPaymentScreen
+import com.walletconnect.sample.pos.screens.TransactionHistoryScreen
 
 sealed class Screen(val route: String, val label: String) {
     object StartPaymentScreen : Screen("start", "Home")
@@ -30,6 +31,7 @@ sealed class Screen(val route: String, val label: String) {
         fun routeWith(message: String) = "error?message=$message"
         const val arg = "message"
     }
+    object TransactionHistoryScreen : Screen("history", "History")
 }
 
 @Composable
@@ -93,6 +95,15 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                     }
                 }
             }
+
+            composable(Screen.TransactionHistoryScreen.route) {
+                TransactionHistoryScreen(
+                    viewModel = viewModel,
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
         }
     }
 
@@ -125,6 +136,10 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                 }
 
                 is PosNavEvent.ToErrorScreen -> navController.navigate("error?message=${event.error}") {
+                    launchSingleTop = true
+                }
+
+                PosNavEvent.ToTransactionHistory -> navController.navigate(Screen.TransactionHistoryScreen.route) {
                     launchSingleTop = true
                 }
             }

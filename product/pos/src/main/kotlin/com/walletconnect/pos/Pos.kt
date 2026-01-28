@@ -1,6 +1,10 @@
 package com.walletconnect.pos
 
 import java.net.URI
+import java.time.DayOfWeek
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 object Pos {
 
@@ -17,11 +21,38 @@ object Pos {
         }
     }
 
+    /**
+     * Payment info returned when a payment succeeds.
+     */
+    data class PaymentInfo(
+        val assetName: String?,
+        val assetSymbol: String?,
+        val networkName: String?,
+        val amount: String?,
+        val decimals: Int?,
+        val txHash: String,
+        val iconUrl: String?,
+        val networkIconUrl: String?
+    ) {
+        /**
+         * Formats the amount for display using the token decimals.
+         */
+        fun formatAmount(): String {
+            if (amount == null || decimals == null) return amount ?: ""
+            val value = amount.toBigDecimalOrNull() ?: return amount
+            val divisor = java.math.BigDecimal.TEN.pow(decimals)
+            val formatted = value.divide(divisor, decimals, java.math.RoundingMode.HALF_UP)
+                .stripTrailingZeros()
+                .toPlainString()
+            return "$formatted ${assetSymbol ?: ""}"
+        }
+    }
+
     sealed interface PaymentEvent {
         data class PaymentCreated(val uri: URI, val amount: Amount, val paymentId: String) : PaymentEvent
         data object PaymentRequested : PaymentEvent
         data object PaymentProcessing : PaymentEvent
-        data class PaymentSuccess(val paymentId: String) : PaymentEvent
+        data class PaymentSuccess(val paymentId: String, val info: PaymentInfo?) : PaymentEvent
         sealed interface PaymentError : PaymentEvent {
             data class CreatePaymentFailed(val message: String) : PaymentError
             data class PaymentFailed(val message: String) : PaymentError
@@ -29,6 +60,166 @@ object Pos {
             data class PaymentExpired(val message: String) : PaymentError
             data class InvalidPaymentRequest(val message: String) : PaymentError
             data class Undefined(val message: String) : PaymentError
+        }
+    }
+
+    /**
+     * Represents a single transaction/payment record from history.
+     */
+    data class Transaction(
+        val paymentId: String,
+        val referenceId: String?,
+        val status: TransactionStatus,
+        val txHash: String?,
+        val fiatAmount: Int?,
+        val fiatCurrency: String?,
+        val tokenAmount: String?,
+        val network: String?,
+        val chainId: String?,
+        val walletName: String,
+        val createdAt: String?,
+        val confirmedAt: String?
+    ) {
+        /**
+         * Formats the fiat amount for display (e.g., "$10.00 USD").
+         */
+        fun formatFiatAmount(): String? {
+            if (fiatAmount == null || fiatCurrency == null) return null
+            val majorUnits = fiatAmount / 100.0
+            return String.format("%.2f %s", majorUnits, fiatCurrency)
+        }
+    }
+
+    /**
+     * Status of a transaction.
+     */
+    enum class TransactionStatus(val apiValue: String) {
+        REQUIRES_ACTION("requires_action"),
+        PROCESSING("processing"),
+        SUCCEEDED("succeeded"),
+        EXPIRED("expired"),
+        FAILED("failed"),
+        UNKNOWN("unknown")
+    }
+
+    /**
+     * Result from transaction history query.
+     */
+    data class TransactionHistoryResult(
+        val transactions: List<Transaction>,
+        val hasMore: Boolean,
+        val nextCursor: String?,
+        val stats: TransactionStats?
+    )
+
+    /**
+     * Aggregated statistics for transaction history.
+     */
+    data class TransactionStats(
+        val totalTransactions: Int,
+        val totalCustomers: Int,
+        val totalRevenue: TotalRevenue?
+    )
+
+    /**
+     * Total revenue information.
+     */
+    data class TotalRevenue(
+        val amount: Double,
+        val currency: String
+    ) {
+        /**
+         * Formats the revenue for display (e.g., "19.49 USD").
+         */
+        fun format(): String {
+            return String.format("%.2f %s", amount, currency)
+        }
+    }
+
+    /**
+     * Represents a time range for filtering transactions.
+     *
+     * @property startTime The start of the time range (inclusive)
+     * @property endTime The end of the time range (inclusive)
+     */
+    data class DateRange(
+        val startTime: Instant,
+        val endTime: Instant
+    ) {
+        init {
+            require(!endTime.isBefore(startTime)) { "endTime must not be before startTime" }
+        }
+    }
+
+    /**
+     * Convenience factory for creating common date ranges.
+     *
+     * All date boundaries are calculated in the device's local timezone.
+     * This means "today" refers to the current local calendar day as perceived by the merchant.
+     *
+     * Note: End times include a 2-minute buffer to account for potential clock skew
+     * between the device and server, ensuring recently completed transactions are included.
+     */
+    object DateRanges {
+        // Buffer to account for clock skew between device and server
+        private const val CLOCK_SKEW_BUFFER_SECONDS = 120L
+
+        /**
+         * Returns a DateRange for today (from local midnight to now + buffer).
+         */
+        fun today(): DateRange {
+            val now = Instant.now().plusSeconds(CLOCK_SKEW_BUFFER_SECONDS)
+            val zone = ZoneId.systemDefault()
+            val startOfDay = LocalDate.now(zone)
+                .atStartOfDay(zone)
+                .toInstant()
+            return DateRange(startOfDay, now)
+        }
+
+        /**
+         * Returns a DateRange for the last N days including today (in local timezone).
+         *
+         * @param days Number of days to include (must be positive)
+         */
+        fun lastDays(days: Int): DateRange {
+            require(days > 0) { "days must be positive" }
+            val now = Instant.now().plusSeconds(CLOCK_SKEW_BUFFER_SECONDS)
+            val zone = ZoneId.systemDefault()
+            val startOfPeriod = LocalDate.now(zone)
+                .minusDays((days - 1).toLong())
+                .atStartOfDay(zone)
+                .toInstant()
+            return DateRange(startOfPeriod, now)
+        }
+
+        /**
+         * Returns a DateRange for this week (Monday 00:00 local time to now + buffer).
+         *
+         * Week starts on Monday per ISO-8601. Uses the most recent Monday,
+         * which is the same day if today is Monday.
+         */
+        fun thisWeek(): DateRange {
+            val now = Instant.now().plusSeconds(CLOCK_SKEW_BUFFER_SECONDS)
+            val zone = ZoneId.systemDefault()
+            val today = LocalDate.now(zone)
+            // Calculate days since Monday (Monday=1, Sunday=7) to get previous/same Monday
+            val daysFromMonday = (today.dayOfWeek.value - DayOfWeek.MONDAY.value).toLong()
+            val monday = today.minusDays(daysFromMonday)
+            val startOfWeek = monday.atStartOfDay(zone).toInstant()
+            return DateRange(startOfWeek, now)
+        }
+
+        /**
+         * Returns a DateRange for this month (1st of month 00:00 local time to now + buffer).
+         */
+        fun thisMonth(): DateRange {
+            val now = Instant.now().plusSeconds(CLOCK_SKEW_BUFFER_SECONDS)
+            val zone = ZoneId.systemDefault()
+            val firstOfMonth = LocalDate.now(zone)
+                .withDayOfMonth(1)
+                .atStartOfDay(zone)
+                .toInstant()
+            return DateRange(firstOfMonth, now)
         }
     }
 }
