@@ -61,6 +61,8 @@ jobs:
           WC_SONATYPE_STAGING_PROFILE_ID: ${{ secrets.WC_SONATYPE_STAGING_PROFILE_ID }}
           CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
           CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
+          INTERNAL_MERCHANT_API: ${{ secrets.INTERNAL_MERCHANT_API }}
+          POS_PROJECT_ID: ${{ secrets.POS_PROJECT_ID }}
         run: |
           ./gradlew releaseAllSDKs -Ptype=local
 
@@ -73,6 +75,8 @@ jobs:
           WC_SONATYPE_STAGING_PROFILE_ID: ${{ secrets.WC_SONATYPE_STAGING_PROFILE_ID }}
           CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
           CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
+          INTERNAL_MERCHANT_API: ${{ secrets.INTERNAL_MERCHANT_API }}
+          POS_PROJECT_ID: ${{ secrets.POS_PROJECT_ID }}
         run: |
           ./gradlew releaseAllSDKs -Ptype=sonatype
 
@@ -85,5 +89,7 @@ jobs:
           WC_SONATYPE_STAGING_PROFILE_ID: ${{ secrets.WC_SONATYPE_STAGING_PROFILE_ID }}
           CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
           CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
+          INTERNAL_MERCHANT_API: ${{ secrets.INTERNAL_MERCHANT_API }}
+          POS_PROJECT_ID: ${{ secrets.POS_PROJECT_ID }}
         run: |
           ./gradlew closeAndReleaseMultipleRepositories
