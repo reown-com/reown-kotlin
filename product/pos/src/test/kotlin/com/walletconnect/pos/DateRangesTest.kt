@@ -25,14 +25,19 @@ class DateRangesTest {
     }
 
     @Test
-    fun `today - endTime should be close to now`() {
+    fun `today - endTime should include clock skew buffer`() {
         val beforeCall = Instant.now()
         val range = Pos.DateRanges.today()
         val afterCall = Instant.now()
 
+        // endTime should be approximately 2 minutes (120 seconds) after now
+        val bufferSeconds = 120L
+        val expectedMin = beforeCall.plusSeconds(bufferSeconds)
+        val expectedMax = afterCall.plusSeconds(bufferSeconds)
+
         assertTrue(
-            "endTime should be between beforeCall and afterCall",
-            !range.endTime.isBefore(beforeCall) && !range.endTime.isAfter(afterCall)
+            "endTime should be ~2 minutes after now (between $expectedMin and $expectedMax, got ${range.endTime})",
+            !range.endTime.isBefore(expectedMin) && !range.endTime.isAfter(expectedMax)
         )
     }
 
