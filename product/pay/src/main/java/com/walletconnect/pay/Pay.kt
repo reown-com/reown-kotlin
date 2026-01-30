@@ -66,7 +66,8 @@ object Pay {
 
     enum class CollectDataFieldType {
         TEXT,
-        DATE
+        DATE,
+        CHECKBOX
     }
 
     data class CollectDataField(
@@ -77,7 +78,9 @@ object Pay {
     )
 
     data class CollectDataAction(
-        val fields: List<CollectDataField>
+        val fields: List<CollectDataField>,
+        val url: String?,
+        val schema: String?
     )
 
     sealed class RequiredAction {
@@ -89,10 +92,16 @@ object Pay {
         val value: String
     )
 
+    data class PaymentResultInfo(
+        val txId: String,
+        val optionAmount: Amount
+    )
+
     data class ConfirmPaymentResponse(
         val status: PaymentStatus,
         val isFinal: Boolean,
         val pollInMs: Long?,
+        val info: PaymentResultInfo?
     )
 
     sealed class PayError : Exception() {

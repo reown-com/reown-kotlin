@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import android.net.Uri
 import android.util.Log
 import org.json.JSONArray
 import org.web3j.crypto.ECKeyPair
@@ -44,6 +45,35 @@ class PaymentViewModel : ViewModel() {
     private val collectedValues: MutableMap<String, String> = mutableMapOf()
     private var currentFieldIndex: Int = 0
 
+    // Information Capture WebView URL (from collectDataAction.url)
+    private var icWebViewUrl: String? = null
+
+    companion object {
+        // Preview URL for WebView-fixed IC page (temporary for testing)
+        private const val IC_PREVIEW_BASE_URL = "https://tomiir-collect-webview-fix-wc-pay-buyer-experience-dev.walletconnect-v1-bridge.workers.dev/"
+
+        /**
+         * Transform the original IC URL to use the preview base URL while preserving query params.
+         */
+        private fun transformToPreviewUrl(originalUrl: String): String {
+            return try {
+                val uri = Uri.parse(originalUrl)
+                val queryParams = uri.query
+                val transformedUrl = if (queryParams != null) {
+                    "$IC_PREVIEW_BASE_URL?$queryParams"
+                } else {
+                    IC_PREVIEW_BASE_URL
+                }
+                Log.d("PaymentViewModel", "Original IC URL: $originalUrl")
+                Log.d("PaymentViewModel", "Transformed IC URL: $transformedUrl")
+                transformedUrl
+            } catch (e: Exception) {
+                Log.e("PaymentViewModel", "Failed to transform URL: $originalUrl", e)
+                originalUrl // Fallback to original if parsing fails
+            }
+        }
+    }
+
     init {
         // Collect payment options event (has replay=1 to ensure we receive it even if emitted before collecting)
         WalletKitDelegate.paymentOptionsEvent
@@ -56,8 +86,9 @@ class PaymentViewModel : ViewModel() {
      */
     private fun processPaymentOptionsResponse(response: Wallet.Model.PaymentOptionsResponse) {
         currentPaymentId = response.paymentId
-        // Store collect data fields from response (if any)
+        // Store collect data fields and WebView URL from response
         collectDataFields = response.collectDataAction?.fields ?: emptyList()
+        icWebViewUrl = response.collectDataAction?.url
         collectedValues.clear()
         currentFieldIndex = 0
 
@@ -67,8 +98,8 @@ class PaymentViewModel : ViewModel() {
 
         if (response.options.isEmpty()) {
             _uiState.value = PaymentUiState.Error("No payment options available")
-        } else if (collectDataFields.isNotEmpty()) {
-            // Show intro screen only when information capture is required
+        } else if (icWebViewUrl != null || collectDataFields.isNotEmpty()) {
+            // Show intro screen when information capture is required (WebView or fields)
             _uiState.value = PaymentUiState.Intro(
                 paymentInfo = storedPaymentInfo,
                 hasInfoCapture = true
@@ -91,14 +122,22 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Proceed from the intro screen to either information capture or payment options.
+     * Proceed from the intro screen to Information Capture (WebView) or Options.
      */
     fun proceedFromIntro() {
-        if (collectDataFields.isNotEmpty()) {
-            // Show information capture first
+        val url = icWebViewUrl
+
+        if (url != null) {
+            // Use WebView for Information Capture (URL from API)
+            _uiState.value = PaymentUiState.WebViewDataCollection(
+                url = url,
+                paymentInfo = storedPaymentInfo
+            )
+        } else if (collectDataFields.isNotEmpty()) {
+            // Fallback: Field-by-field collection (existing flow)
             showCurrentField()
         } else {
-            // No fields to collect, show options directly
+            // No IC required, show options directly
             proceedToOptions()
         }
     }
@@ -206,8 +245,23 @@ class PaymentViewModel : ViewModel() {
     fun goBackToIntro() {
         _uiState.value = PaymentUiState.Intro(
             paymentInfo = storedPaymentInfo,
-            hasInfoCapture = collectDataFields.isNotEmpty()
+            hasInfoCapture = icWebViewUrl != null || collectDataFields.isNotEmpty()
         )
+    }
+
+    /**
+     * Called when WebView signals IC_COMPLETE.
+     * Proceeds to payment options.
+     */
+    fun onICWebViewComplete() {
+        proceedToOptions()
+    }
+
+    /**
+     * Called when WebView signals IC_ERROR.
+     */
+    fun onICWebViewError(errorMessage: String) {
+        _uiState.value = PaymentUiState.Error("Information capture failed: $errorMessage")
     }
 
     /**
@@ -335,6 +389,7 @@ class PaymentViewModel : ViewModel() {
         storedPaymentOptions = emptyList()
         pendingWalletRpcActions = emptyList()
         collectDataFields = emptyList()
+        icWebViewUrl = null
         collectedValues.clear()
         currentFieldIndex = 0
         _uiState.value = PaymentUiState.Loading
@@ -359,6 +414,14 @@ sealed class PaymentUiState {
         val estimatedTime: String = "~2min"
     ) : PaymentUiState()
 
+    /**
+     * WebView-based Information Capture (replaces CollectingData when URL is available).
+     */
+    data class WebViewDataCollection(
+        val url: String,
+        val paymentInfo: Wallet.Model.PaymentInfo?
+    ) : PaymentUiState()
+
     data class Options(
         val paymentLink: String,
         val paymentInfo: Wallet.Model.PaymentInfo?,
@@ -366,7 +429,7 @@ sealed class PaymentUiState {
     ) : PaymentUiState()
 
     /**
-     * State for collecting user data (Information Capture).
+     * State for collecting user data (Information Capture) - fallback when no WebView URL.
      */
     data class CollectingData(
         val currentStepIndex: Int,

@@ -76,12 +76,12 @@ android {
 
 dependencies {
     //local
-//    implementation("com.github.reown-com:yttrium-wcpay:unspecified")
+    implementation("com.github.reown-com:yttrium-wcpay:unspecified")
 
     //jitpack
-    implementation("com.github.reown-com.yttrium:yttrium-wcpay:0.10.22") {
-        exclude(group = "net.java.dev.jna", module = "jna")
-    }
+//    implementation("com.github.reown-com.yttrium:yttrium-wcpay:0.10.22") {
+//        exclude(group = "net.java.dev.jna", module = "jna")
+//    }
     implementation("net.java.dev.jna:jna:5.17.0@aar")
 
     implementation(libs.kotlinx.coroutines.core)

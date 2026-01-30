@@ -1,5 +1,15 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.payment
 
+import android.app.Activity
+import android.graphics.Bitmap
+import android.util.Log
+import android.net.http.SslError
+import android.webkit.JavascriptInterface
+import android.webkit.SslErrorHandler
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -19,8 +29,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,6 +61,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,12 +76,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.walletkit.client.Wallet
+import org.json.JSONObject
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
@@ -100,6 +115,20 @@ fun PaymentRoute(
                     hasInfoCapture = state.hasInfoCapture,
                     estimatedTime = state.estimatedTime,
                     onStart = { viewModel.proceedFromIntro() },
+                    onClose = {
+                        viewModel.cancel()
+                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    }
+                )
+            }
+            is PaymentUiState.WebViewDataCollection -> {
+                WebViewDataCollectionContent(
+                    url = state.url,
+                    paymentInfo = state.paymentInfo,
+                    onComplete = { viewModel.onICWebViewComplete() },
+                    onError = { error ->
+                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                    },
                     onClose = {
                         viewModel.cancel()
                         navController.popBackStack(Route.Connections.path, inclusive = false)
@@ -1441,6 +1470,10 @@ private fun CollectDataContent(
                     onValueChange = { inputValue = it }
                 )
             }
+
+            Wallet.Model.CollectDataFieldType.CHECKBOX -> {
+
+            }
         }
         
         Spacer(modifier = Modifier.height(32.dp))
@@ -1707,3 +1740,201 @@ private fun DateWheelPicker(
     }
 }
 
+// ==================== WebView Information Capture Components ====================
+
+/**
+ * JavaScript interface for WebView → Wallet communication.
+ * WebView calls: window.AndroidWallet.onDataCollectionComplete(jsonString)
+ */
+class AndroidWalletJsInterface(
+    private val onComplete: () -> Unit,
+    private val onError: (String) -> Unit
+) {
+    @JavascriptInterface
+    fun onDataCollectionComplete(jsonData: String) {
+        Log.d("AndroidWalletJS", "onDataCollectionComplete called with: $jsonData")
+        try {
+            val json = JSONObject(jsonData)
+            val type = json.optString("type")
+            val success = json.optBoolean("success", false)
+            Log.d("AndroidWalletJS", "Parsed - type: $type, success: $success")
+
+            when {
+                type == "IC_COMPLETE" && success -> {
+                    Log.d("AndroidWalletJS", "Calling onComplete")
+                    onComplete()
+                }
+                type == "IC_ERROR" -> {
+                    val error = json.optString("error", "Unknown error")
+                    Log.d("AndroidWalletJS", "Calling onError: $error")
+                    onError(error)
+                }
+                else -> {
+                    Log.d("AndroidWalletJS", "Unknown message type: $type")
+                    onError("Unknown message type: $type")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("AndroidWalletJS", "Failed to parse message", e)
+            onError("Failed to parse message: ${e.message}")
+        }
+    }
+}
+
+@Composable
+private fun WebViewDataCollectionContent(
+    url: String,
+    paymentInfo: Wallet.Model.PaymentInfo?,
+    onComplete: () -> Unit,
+    onError: (String) -> Unit,
+    onClose: () -> Unit
+) {
+    var isLoading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+
+    val currentOnComplete by rememberUpdatedState(onComplete)
+    val currentOnError by rememberUpdatedState(onError)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+    ) {
+        // Header with close button
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .align(Alignment.CenterStart),
+                    strokeWidth = 2.dp,
+                    color = Color(0xFF3396FF)
+                )
+            }
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier
+                    .size(32.dp)
+                    .align(Alignment.TopEnd)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF9E9E9E)
+                )
+            }
+        }
+
+        // Error display
+        loadError?.let { error ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = error,
+                    color = Color(0xFFD85140),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { loadError = null },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3396FF)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Retry", color = Color.White)
+                }
+            }
+            return@Column
+        }
+
+        // WebView with JavaScript interface
+        val context = LocalContext.current
+        AndroidView(
+            factory = { ctx ->
+                WebView(ctx).apply {
+                    // Enable WebView debugging - inspect via chrome://inspect on desktop
+                    WebView.setWebContentsDebuggingEnabled(true)
+
+                    settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        allowFileAccess = false
+                        allowContentAccess = false
+                        useWideViewPort = true
+                        loadWithOverviewMode = true
+                        setSupportZoom(true)
+                        builtInZoomControls = true
+                        displayZoomControls = false
+                    }
+
+                    // Add JS interface for IC completion
+                    val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                    addJavascriptInterface(
+                        AndroidWalletJsInterface(
+                            onComplete = {
+                                Log.d("PaymentWebView", "onComplete callback triggered")
+                                mainHandler.post {
+                                    Log.d("PaymentWebView", "Running onComplete on UI thread")
+                                    currentOnComplete()
+                                }
+                            },
+                            onError = { error ->
+                                Log.d("PaymentWebView", "onError callback triggered: $error")
+                                mainHandler.post {
+                                    Log.d("PaymentWebView", "Running onError on UI thread, showing toast")
+                                    Toast.makeText(ctx, error, Toast.LENGTH_LONG).show()
+                                    currentOnError(error)
+                                }
+                            }
+                        ),
+                        "AndroidWallet"
+                    )
+
+                    webViewClient = object : WebViewClient() {
+                        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                            isLoading = true
+                        }
+
+                        override fun onPageFinished(view: WebView?, url: String?) {
+                            isLoading = false
+                        }
+
+                        override fun onReceivedError(
+                            view: WebView?,
+                            request: WebResourceRequest?,
+                            error: WebResourceError?
+                        ) {
+                            if (request?.isForMainFrame == true) {
+                                isLoading = false
+                                loadError = error?.description?.toString() ?: "Failed to load"
+                            }
+                        }
+
+                        override fun onReceivedSslError(
+                            view: WebView?,
+                            handler: SslErrorHandler?,
+                            error: SslError?
+                        ) {
+                            handler?.cancel()
+                            loadError = "SSL certificate error"
+                        }
+                    }
+
+                    Log.d("PaymentWebView", "Loading URL: $url")
+                    loadUrl(url)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(500.dp)
+        )
+    }
+}

@@ -72,7 +72,9 @@ internal fun Pay.PaymentOption.toWallet(): Wallet.Model.PaymentOption =
 @JvmSynthetic
 internal fun Pay.CollectDataAction.toWallet(): Wallet.Model.CollectDataAction =
     Wallet.Model.CollectDataAction(
-        fields = fields.map { it.toWallet() }
+        fields = fields.map { it.toWallet() },
+        url = url,
+        schema = schema
     )
 
 @JvmSynthetic
@@ -89,6 +91,7 @@ internal fun Pay.CollectDataFieldType.toWallet(): Wallet.Model.CollectDataFieldT
     when (this) {
         Pay.CollectDataFieldType.TEXT -> Wallet.Model.CollectDataFieldType.TEXT
         Pay.CollectDataFieldType.DATE -> Wallet.Model.CollectDataFieldType.DATE
+        Pay.CollectDataFieldType.CHECKBOX -> Wallet.Model.CollectDataFieldType.CHECKBOX
     }
 
 @JvmSynthetic
@@ -108,11 +111,19 @@ internal fun Pay.WalletRpcAction.toWallet(): Wallet.Model.WalletRpcAction =
     )
 
 @JvmSynthetic
+internal fun Pay.PaymentResultInfo.toWallet(): Wallet.Model.PaymentResultInfo =
+    Wallet.Model.PaymentResultInfo(
+        txId = txId,
+        optionAmount = optionAmount.toWallet()
+    )
+
+@JvmSynthetic
 internal fun Pay.ConfirmPaymentResponse.toWallet(): Wallet.Model.ConfirmPaymentResponse =
     Wallet.Model.ConfirmPaymentResponse(
         status = status.toWallet(),
         isFinal = isFinal,
-        pollInMs = pollInMs
+        pollInMs = pollInMs,
+        info = info?.toWallet()
     )
 
 // Wallet.Model -> Pay mappers (for request types)
