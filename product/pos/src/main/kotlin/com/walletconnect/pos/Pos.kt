@@ -74,6 +74,9 @@ object Pos {
         val fiatAmount: Int?,
         val fiatCurrency: String?,
         val tokenAmount: String?,
+        val tokenSymbol: String?,
+        val tokenDecimals: Int?,
+        val tokenLogo: String?,
         val network: String?,
         val chainId: String?,
         val walletName: String,
@@ -87,6 +90,18 @@ object Pos {
             if (fiatAmount == null || fiatCurrency == null) return null
             val majorUnits = fiatAmount / 100.0
             return String.format("%.2f %s", majorUnits, fiatCurrency)
+        }
+
+        /**
+         * Formats the token amount for display using decimals.
+         */
+        fun formatTokenAmount(): String? {
+            if (tokenAmount == null || tokenDecimals == null) return null
+            val value = tokenAmount.toBigDecimalOrNull() ?: return tokenAmount
+            val divisor = java.math.BigDecimal.TEN.pow(tokenDecimals)
+            return value.divide(divisor, maxOf(tokenDecimals, 18), java.math.RoundingMode.DOWN)
+                .stripTrailingZeros()
+                .toPlainString()
         }
     }
 
