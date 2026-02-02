@@ -1009,7 +1009,7 @@ private fun formatAmount(value: String, decimals: Int, symbol: String): String {
 }
 
 /**
- * Format display amount with $ prefix (for USD amounts).
+ * Format display amount with the appropriate currency symbol.
  */
 private fun formatDisplayAmount(value: String, decimals: Int, symbol: String): String {
     return try {
@@ -1022,9 +1022,32 @@ private fun formatDisplayAmount(value: String, decimals: Int, symbol: String): S
             maximumFractionDigits = 2
         }
         val formatted = numberFormat.format(formattedValue)
-        "$$formatted"
+        val currencySymbol = getCurrencySymbol(symbol)
+        "$currencySymbol$formatted"
     } catch (e: Exception) {
-        "$$value"
+        val currencySymbol = getCurrencySymbol(symbol)
+        "$currencySymbol$value"
+    }
+}
+
+/**
+ * Get currency symbol for a given currency code.
+ */
+private fun getCurrencySymbol(currencyCode: String): String {
+    return when (currencyCode.uppercase()) {
+        "USD" -> "$"
+        "EUR" -> "\u20AC"
+        "GBP" -> "\u00A3"
+        "JPY" -> "\u00A5"
+        "CNY" -> "\u00A5"
+        "KRW" -> "\u20A9"
+        "INR" -> "\u20B9"
+        "RUB" -> "\u20BD"
+        "BRL" -> "R$"
+        "CHF" -> "CHF "
+        "CAD" -> "CA$"
+        "AUD" -> "A$"
+        else -> "$currencyCode "
     }
 }
 

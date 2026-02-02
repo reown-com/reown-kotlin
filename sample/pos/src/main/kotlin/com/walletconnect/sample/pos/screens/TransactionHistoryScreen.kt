@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,12 +18,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil3.compose.SubcomposeAsyncImage
+import coil3.compose.SubcomposeAsyncImageContent
 import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.TransactionHistoryUiState
@@ -342,7 +347,7 @@ private fun TransactionItem(transaction: Pos.Transaction) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     StatusIcon(status = transaction.status)
@@ -355,14 +360,31 @@ private fun TransactionItem(transaction: Pos.Transaction) {
                     )
                 }
 
-                // Amount
-                transaction.formatFiatAmount()?.let { amount ->
-                    Text(
-                        text = amount,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                // Amount column (fiat + token)
+                Column(horizontalAlignment = Alignment.End) {
+                    transaction.formatFiatAmount()?.let { amount ->
+                        Text(
+                            text = amount,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    }
+                    transaction.formatTokenAmount()?.let { tokenAmount ->
+                        Spacer(Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TokenLogo(
+                                logoUrl = transaction.tokenLogo,
+                                tokenSymbol = transaction.tokenSymbol
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                text = "$tokenAmount ${transaction.tokenSymbol ?: ""}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
+                    }
                 }
             }
 
@@ -411,6 +433,39 @@ private fun DetailRow(label: String, value: String) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.widthIn(max = 200.dp)
         )
+    }
+}
+
+@Composable
+private fun TokenLogo(logoUrl: String?, tokenSymbol: String?) {
+    val fallback: @Composable () -> Unit = {
+        Box(
+            modifier = Modifier
+                .size(16.dp)
+                .background(Color.Gray.copy(alpha = 0.3f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = tokenSymbol?.take(1) ?: "?",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray
+            )
+        }
+    }
+
+    if (logoUrl != null) {
+        SubcomposeAsyncImage(
+            model = logoUrl,
+            contentDescription = "Token logo",
+            modifier = Modifier
+                .size(16.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop,
+            error = { fallback() },
+            success = { SubcomposeAsyncImageContent() }
+        )
+    } else {
+        fallback()
     }
 }
 
