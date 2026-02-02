@@ -127,7 +127,7 @@ fun PaymentRoute(
                     paymentInfo = state.paymentInfo,
                     onComplete = { viewModel.onICWebViewComplete() },
                     onError = { error ->
-                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                        viewModel.onICWebViewError(error)
                     },
                     onClose = {
                         viewModel.cancel()
@@ -1795,40 +1795,32 @@ private fun WebViewDataCollectionContent(
     val currentOnComplete by rememberUpdatedState(onComplete)
     val currentOnError by rememberUpdatedState(onError)
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(Color.White)
     ) {
-        // Header with close button
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .align(Alignment.CenterStart),
-                    strokeWidth = 2.dp,
-                    color = Color(0xFF3396FF)
-                )
-            }
-            IconButton(
-                onClick = onClose,
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Header with close button only
+            Box(
                 modifier = Modifier
-                    .size(32.dp)
-                    .align(Alignment.TopEnd)
+                    .fillMaxWidth()
+                    .padding(12.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = Color(0xFF9E9E9E)
-                )
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .align(Alignment.TopEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color(0xFF9E9E9E)
+                    )
+                }
             }
-        }
 
         // Error display
         loadError?.let { error ->
@@ -1863,6 +1855,9 @@ private fun WebViewDataCollectionContent(
                     // Enable WebView debugging - inspect via chrome://inspect on desktop
                     WebView.setWebContentsDebuggingEnabled(true)
 
+                    // Set white background to avoid black flash while loading
+                    setBackgroundColor(android.graphics.Color.WHITE)
+
                     settings.apply {
                         javaScriptEnabled = true
                         domStorageEnabled = true
@@ -1889,8 +1884,7 @@ private fun WebViewDataCollectionContent(
                             onError = { error ->
                                 Log.d("PaymentWebView", "onError callback triggered: $error")
                                 mainHandler.post {
-                                    Log.d("PaymentWebView", "Running onError on UI thread, showing toast")
-                                    Toast.makeText(ctx, error, Toast.LENGTH_LONG).show()
+                                    Log.d("PaymentWebView", "Running onError on UI thread")
                                     currentOnError(error)
                                 }
                             }
@@ -1934,7 +1928,25 @@ private fun WebViewDataCollectionContent(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp)
+                .height(550.dp)
         )
+        }
+
+        // Centered loading overlay
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(550.dp)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    strokeWidth = 4.dp,
+                    color = Color(0xFF3396FF)
+                )
+            }
+        }
     }
 }
