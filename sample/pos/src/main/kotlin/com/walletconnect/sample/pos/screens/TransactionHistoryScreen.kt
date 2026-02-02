@@ -26,7 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
+import coil3.compose.SubcomposeAsyncImage
+import coil3.compose.SubcomposeAsyncImageContent
 import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.TransactionHistoryUiState
@@ -437,16 +438,7 @@ private fun DetailRow(label: String, value: String) {
 
 @Composable
 private fun TokenLogo(logoUrl: String?, tokenSymbol: String?) {
-    if (logoUrl != null) {
-        AsyncImage(
-            model = logoUrl,
-            contentDescription = "Token logo",
-            modifier = Modifier
-                .size(16.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop
-        )
-    } else {
+    val fallback: @Composable () -> Unit = {
         Box(
             modifier = Modifier
                 .size(16.dp)
@@ -459,6 +451,21 @@ private fun TokenLogo(logoUrl: String?, tokenSymbol: String?) {
                 color = Color.Gray
             )
         }
+    }
+
+    if (logoUrl != null) {
+        SubcomposeAsyncImage(
+            model = logoUrl,
+            contentDescription = "Token logo",
+            modifier = Modifier
+                .size(16.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop,
+            error = { fallback() },
+            success = { SubcomposeAsyncImageContent() }
+        )
+    } else {
+        fallback()
     }
 }
 
