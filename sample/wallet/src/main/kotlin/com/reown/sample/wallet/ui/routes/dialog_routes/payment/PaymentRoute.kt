@@ -1804,32 +1804,34 @@ class AndroidWalletJsInterface(
 ) {
     @JavascriptInterface
     fun onDataCollectionComplete(jsonData: String) {
-        Log.d("AndroidWalletJS", "onDataCollectionComplete called with: $jsonData")
+        Log.d("AndroidWalletJS", "=== WebView -> Wallet Communication ===")
+        Log.d("AndroidWalletJS", "Raw message received: $jsonData")
         try {
             val json = JSONObject(jsonData)
             val type = json.optString("type")
             val success = json.optBoolean("success", false)
-            Log.d("AndroidWalletJS", "Parsed - type: $type, success: $success")
+            Log.d("AndroidWalletJS", "Parsed message - type: $type, success: $success")
 
             when {
                 type == "IC_COMPLETE" && success -> {
-                    Log.d("AndroidWalletJS", "Calling onComplete")
+                    Log.d("AndroidWalletJS", "SUCCESS: Information capture completed successfully")
                     onComplete()
                 }
                 type == "IC_ERROR" -> {
                     val error = json.optString("error", "Unknown error")
-                    Log.d("AndroidWalletJS", "Calling onError: $error")
+                    Log.e("AndroidWalletJS", "ERROR: Information capture failed - $error")
                     onError(error)
                 }
                 else -> {
-                    Log.d("AndroidWalletJS", "Unknown message type: $type")
+                    Log.w("AndroidWalletJS", "WARNING: Unknown message type received: $type")
                     onError("Unknown message type: $type")
                 }
             }
         } catch (e: Exception) {
-            Log.e("AndroidWalletJS", "Failed to parse message", e)
+            Log.e("AndroidWalletJS", "ERROR: Failed to parse WebView message", e)
             onError("Failed to parse message: ${e.message}")
         }
+        Log.d("AndroidWalletJS", "=== End WebView Communication ===")
     }
 }
 
@@ -1927,16 +1929,16 @@ private fun WebViewDataCollectionContent(
                     addJavascriptInterface(
                         AndroidWalletJsInterface(
                             onComplete = {
-                                Log.d("PaymentWebView", "onComplete callback triggered")
+                                Log.d("PaymentWebView", "IC_COMPLETE received - WebView data collection successful")
                                 mainHandler.post {
-                                    Log.d("PaymentWebView", "Running onComplete on UI thread")
+                                    Log.d("PaymentWebView", "Proceeding to payment options")
                                     currentOnComplete()
                                 }
                             },
                             onError = { error ->
-                                Log.d("PaymentWebView", "onError callback triggered: $error")
+                                Log.e("PaymentWebView", "IC_ERROR received - WebView error: $error")
                                 mainHandler.post {
-                                    Log.d("PaymentWebView", "Running onError on UI thread")
+                                    Log.e("PaymentWebView", "Showing error to user: $error")
                                     currentOnError(error)
                                 }
                             }
