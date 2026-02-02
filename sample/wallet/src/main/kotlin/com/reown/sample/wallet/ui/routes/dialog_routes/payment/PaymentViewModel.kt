@@ -308,13 +308,15 @@ class PaymentViewModel : ViewModel() {
                         Wallet.Model.PaymentStatus.SUCCEEDED -> {
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment completed successfully!",
-                                paymentInfo = storedPaymentInfo
+                                paymentInfo = storedPaymentInfo,
+                                resultInfo = response.info
                             )
                         }
                         Wallet.Model.PaymentStatus.PROCESSING -> {
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment is being processed...",
-                                paymentInfo = storedPaymentInfo
+                                paymentInfo = storedPaymentInfo,
+                                resultInfo = response.info
                             )
                         }
                         Wallet.Model.PaymentStatus.FAILED -> {
@@ -446,7 +448,8 @@ sealed class PaymentUiState {
 
     data class Success(
         val message: String,
-        val paymentInfo: Wallet.Model.PaymentInfo? = null
+        val paymentInfo: Wallet.Model.PaymentInfo? = null,
+        val resultInfo: Wallet.Model.PaymentResultInfo? = null
     ) : PaymentUiState()
 
     data class Error(val message: String) : PaymentUiState()

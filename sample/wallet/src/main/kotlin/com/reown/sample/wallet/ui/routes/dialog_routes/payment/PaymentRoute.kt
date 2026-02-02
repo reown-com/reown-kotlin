@@ -175,6 +175,7 @@ fun PaymentRoute(
             is PaymentUiState.Success -> {
                 SuccessContent(
                     paymentInfo = state.paymentInfo,
+                    resultInfo = state.resultInfo,
                     onDone = {
                         viewModel.cancel()
                         onPaymentSuccess()
@@ -1228,6 +1229,7 @@ private fun AnimatedReownLogo() {
 @Composable
 private fun SuccessContent(
     paymentInfo: Wallet.Model.PaymentInfo?,
+    resultInfo: Wallet.Model.PaymentResultInfo?,
     onDone: () -> Unit,
     onClose: () -> Unit
 ) {
@@ -1256,9 +1258,9 @@ private fun SuccessContent(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(32.dp))
-        
+
         // Green checkmark circle
         Box(
             modifier = Modifier
@@ -1274,9 +1276,9 @@ private fun SuccessContent(
                 modifier = Modifier.size(28.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         // Success message with payment details
         val displayAmount = paymentInfo?.let {
             formatDisplayAmount(
@@ -1286,7 +1288,7 @@ private fun SuccessContent(
             )
         } ?: ""
         val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
-        
+
         Text(
             text = "You've paid $displayAmount to $merchantName",
             style = TextStyle(
@@ -1296,7 +1298,57 @@ private fun SuccessContent(
             ),
             textAlign = TextAlign.Center
         )
-        
+
+        // Show result info (txId and token amount)
+        resultInfo?.let { info ->
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF5F5F5))
+                    .padding(16.dp)
+            ) {
+                // Token amount paid
+                val tokenAmount = formatTokenAmount(
+                    value = info.optionAmount.value,
+                    decimals = info.optionAmount.display?.decimals ?: 18,
+                    symbol = info.optionAmount.display?.assetSymbol ?: "Token"
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Paid",
+                        style = TextStyle(fontSize = 14.sp, color = Color(0xFF666666))
+                    )
+                    Text(
+                        text = tokenAmount,
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.Black)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Transaction ID
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Transaction",
+                        style = TextStyle(fontSize = 14.sp, color = Color(0xFF666666))
+                    )
+                    Text(
+                        text = "${info.txId.take(6)}...${info.txId.takeLast(4)}",
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF3396FF))
+                    )
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
         
         // Got it button
