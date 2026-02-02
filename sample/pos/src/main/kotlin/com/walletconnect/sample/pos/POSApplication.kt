@@ -2,10 +2,13 @@ package com.walletconnect.sample.pos
 
 import android.app.Application
 import android.os.Build
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.svg.SvgDecoder
 import com.walletconnect.pos.PosClient
 import timber.log.Timber
 
-class POSApplication : Application() {
+class POSApplication : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
@@ -28,5 +31,13 @@ class POSApplication : Application() {
         PosClient.setDelegate(PosSampleDelegate)
 
         Timber.d("POSClient initialized successfully")
+    }
+
+    override fun newImageLoader(context: coil3.PlatformContext): ImageLoader {
+        return ImageLoader.Builder(context)
+            .components {
+                add(SvgDecoder.Factory())
+            }
+            .build()
     }
 }
