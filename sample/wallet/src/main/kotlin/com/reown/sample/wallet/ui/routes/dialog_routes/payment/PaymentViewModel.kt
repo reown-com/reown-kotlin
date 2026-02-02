@@ -306,6 +306,9 @@ class PaymentViewModel : ViewModel() {
                 onSuccess = { response ->
                     when (response.status) {
                         Wallet.Model.PaymentStatus.SUCCEEDED -> {
+                            Log.d("PaymentViewModel", "Payment SUCCEEDED - resultInfo: ${response.info}")
+                            Log.d("PaymentViewModel", "resultInfo txId: ${response.info?.txId}")
+                            Log.d("PaymentViewModel", "resultInfo optionAmount: ${response.info?.optionAmount}")
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment completed successfully!",
                                 paymentInfo = storedPaymentInfo,
@@ -313,6 +316,7 @@ class PaymentViewModel : ViewModel() {
                             )
                         }
                         Wallet.Model.PaymentStatus.PROCESSING -> {
+                            Log.d("PaymentViewModel", "Payment PROCESSING - resultInfo: ${response.info}")
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment is being processed...",
                                 paymentInfo = storedPaymentInfo,

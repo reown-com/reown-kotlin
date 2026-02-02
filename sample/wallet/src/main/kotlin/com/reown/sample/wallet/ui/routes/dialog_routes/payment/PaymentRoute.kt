@@ -1901,83 +1901,106 @@ private fun WebViewDataCollectionContent(
             return@Column
         }
 
-        // WebView with JavaScript interface
+        // WebView wrapped in FrameLayout to fix Compose rendering issues
         val context = LocalContext.current
         AndroidView(
             factory = { ctx ->
-                WebView(ctx).apply {
-                    // Enable WebView debugging - inspect via chrome://inspect on desktop
-                    WebView.setWebContentsDebuggingEnabled(true)
-
-                    // Set white background to avoid black flash while loading
-                    setBackgroundColor(android.graphics.Color.WHITE)
-
-                    settings.apply {
-                        javaScriptEnabled = true
-                        domStorageEnabled = true
-                        allowFileAccess = false
-                        allowContentAccess = false
-                        useWideViewPort = true
-                        loadWithOverviewMode = true
-                        setSupportZoom(true)
-                        builtInZoomControls = true
-                        displayZoomControls = false
-                    }
-
-                    // Add JS interface for IC completion
-                    val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
-                    addJavascriptInterface(
-                        AndroidWalletJsInterface(
-                            onComplete = {
-                                Log.d("PaymentWebView", "IC_COMPLETE received - WebView data collection successful")
-                                mainHandler.post {
-                                    Log.d("PaymentWebView", "Proceeding to payment options")
-                                    currentOnComplete()
-                                }
-                            },
-                            onError = { error ->
-                                Log.e("PaymentWebView", "IC_ERROR received - WebView error: $error")
-                                mainHandler.post {
-                                    Log.e("PaymentWebView", "Showing error to user: $error")
-                                    currentOnError(error)
-                                }
-                            }
-                        ),
-                        "AndroidWallet"
+                // Wrap WebView in FrameLayout to isolate from Compose rendering
+                android.widget.FrameLayout(ctx).apply {
+                    layoutParams = android.widget.FrameLayout.LayoutParams(
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT
                     )
 
-                    webViewClient = object : WebViewClient() {
-                        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                            isLoading = true
+                    val webView = WebView(ctx).apply {
+                        layoutParams = android.widget.FrameLayout.LayoutParams(
+                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                        )
+
+                        // Enable WebView debugging - inspect via chrome://inspect on desktop
+                        WebView.setWebContentsDebuggingEnabled(true)
+
+                        // Set white background to avoid black flash while loading
+                        setBackgroundColor(android.graphics.Color.WHITE)
+
+                        // Fix for text input issues in Compose - disable nested scrolling
+                        isNestedScrollingEnabled = false
+                        overScrollMode = android.view.View.OVER_SCROLL_NEVER
+
+                        // Ensure proper focus handling
+                        isFocusable = true
+                        isFocusableInTouchMode = true
+
+                        settings.apply {
+                            javaScriptEnabled = true
+                            domStorageEnabled = true
+                            allowFileAccess = false
+                            allowContentAccess = false
+                            useWideViewPort = true
+                            loadWithOverviewMode = true
+                            setSupportZoom(true)
+                            builtInZoomControls = true
+                            displayZoomControls = false
                         }
 
-                        override fun onPageFinished(view: WebView?, url: String?) {
-                            isLoading = false
-                        }
+                        // Add JS interface for IC completion
+                        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                        addJavascriptInterface(
+                            AndroidWalletJsInterface(
+                                onComplete = {
+                                    Log.d("PaymentWebView", "IC_COMPLETE received - WebView data collection successful")
+                                    mainHandler.post {
+                                        Log.d("PaymentWebView", "Proceeding to payment options")
+                                        currentOnComplete()
+                                    }
+                                },
+                                onError = { error ->
+                                    Log.e("PaymentWebView", "IC_ERROR received - WebView error: $error")
+                                    mainHandler.post {
+                                        Log.e("PaymentWebView", "Showing error to user: $error")
+                                        currentOnError(error)
+                                    }
+                                }
+                            ),
+                            "AndroidWallet"
+                        )
 
-                        override fun onReceivedError(
-                            view: WebView?,
-                            request: WebResourceRequest?,
-                            error: WebResourceError?
-                        ) {
-                            if (request?.isForMainFrame == true) {
+                        webViewClient = object : WebViewClient() {
+                            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                isLoading = true
+                            }
+
+                            override fun onPageFinished(view: WebView?, finishedUrl: String?) {
                                 isLoading = false
-                                loadError = error?.description?.toString() ?: "Failed to load"
+                            }
+
+                            override fun onReceivedError(
+                                view: WebView?,
+                                request: WebResourceRequest?,
+                                error: WebResourceError?
+                            ) {
+                                if (request?.isForMainFrame == true) {
+                                    isLoading = false
+                                    loadError = error?.description?.toString() ?: "Failed to load"
+                                }
+                            }
+
+                            override fun onReceivedSslError(
+                                view: WebView?,
+                                handler: SslErrorHandler?,
+                                error: SslError?
+                            ) {
+                                handler?.cancel()
+                                loadError = "SSL certificate error"
                             }
                         }
 
-                        override fun onReceivedSslError(
-                            view: WebView?,
-                            handler: SslErrorHandler?,
-                            error: SslError?
-                        ) {
-                            handler?.cancel()
-                            loadError = "SSL certificate error"
-                        }
+                        Log.d("PaymentWebView", "Loading URL: $url")
+                        loadUrl(url)
                     }
 
-                    Log.d("PaymentWebView", "Loading URL: $url")
-                    loadUrl(url)
+                    addView(webView)
                 }
             },
             modifier = Modifier
