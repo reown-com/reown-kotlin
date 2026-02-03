@@ -2,11 +2,9 @@ package com.reown.sample.wallet.domain.client
 
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
-import uniffi.yttrium_utils.Logger
 import uniffi.yttrium_utils.PulseMetadata
 import uniffi.yttrium_utils.SendTxMessage
 import uniffi.yttrium_utils.TonClientConfig
-import uniffi.yttrium_utils.registerLogger
 import uniffi.yttrium_utils.TonClient
 
 data class Keypair(val secretKey: String, val publicKey: String)
