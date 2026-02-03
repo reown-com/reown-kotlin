@@ -16,8 +16,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import org.json.JSONArray
+import org.json.JSONObject
 import org.web3j.crypto.ECKeyPair
 import org.web3j.crypto.Sign
 import org.web3j.crypto.StructuredDataEncoder
@@ -48,31 +50,8 @@ class PaymentViewModel : ViewModel() {
     // Information Capture WebView URL (from collectDataAction.url)
     private var icWebViewUrl: String? = null
 
-    companion object {
-        // Preview URL for WebView-fixed IC page (temporary for testing)
-        private const val IC_PREVIEW_BASE_URL = "https://tomiir-collect-webview-fix-wc-pay-buyer-experience-dev.walletconnect-v1-bridge.workers.dev/"
-
-        /**
-         * Transform the original IC URL to use the preview base URL while preserving query params.
-         */
-        private fun transformToPreviewUrl(originalUrl: String): String {
-            return try {
-                val uri = Uri.parse(originalUrl)
-                val queryParams = uri.query
-                val transformedUrl = if (queryParams != null) {
-                    "$IC_PREVIEW_BASE_URL?$queryParams"
-                } else {
-                    IC_PREVIEW_BASE_URL
-                }
-                Log.d("PaymentViewModel", "Original IC URL: $originalUrl")
-                Log.d("PaymentViewModel", "Transformed IC URL: $transformedUrl")
-                transformedUrl
-            } catch (e: Exception) {
-                Log.e("PaymentViewModel", "Failed to transform URL: $originalUrl", e)
-                originalUrl // Fallback to original if parsing fails
-            }
-        }
-    }
+    // Information Capture schema (for determining prefill fields)
+    private var icSchema: String? = null
 
     init {
         // Collect payment options event (has replay=1 to ensure we receive it even if emitted before collecting)
@@ -86,9 +65,10 @@ class PaymentViewModel : ViewModel() {
      */
     private fun processPaymentOptionsResponse(response: Wallet.Model.PaymentOptionsResponse) {
         currentPaymentId = response.paymentId
-        // Store collect data fields and WebView URL from response
+        // Store collect data fields, WebView URL, and schema from response
         collectDataFields = response.collectDataAction?.fields ?: emptyList()
         icWebViewUrl = response.collectDataAction?.url
+        icSchema = response.collectDataAction?.schema
         collectedValues.clear()
         currentFieldIndex = 0
 
@@ -125,12 +105,15 @@ class PaymentViewModel : ViewModel() {
      * Proceed from the intro screen to Information Capture (WebView) or Options.
      */
     fun proceedFromIntro() {
-        val url = icWebViewUrl
+        val baseUrl = icWebViewUrl
 
-        if (url != null) {
+        if (baseUrl != null) {
+            // Build URL with prefill parameter
+            val urlWithPrefill = buildUrlWithPrefill(baseUrl, icSchema)
+
             // Use WebView for Information Capture (URL from API)
             _uiState.value = PaymentUiState.WebViewDataCollection(
-                url = url,
+                url = urlWithPrefill,
                 paymentInfo = storedPaymentInfo
             )
         } else if (collectDataFields.isNotEmpty()) {
@@ -139,6 +122,61 @@ class PaymentViewModel : ViewModel() {
         } else {
             // No IC required, show options directly
             proceedToOptions()
+        }
+    }
+
+    /**
+     * Append prefill query parameter to IC URL if user data is available.
+     */
+    private fun buildUrlWithPrefill(baseUrl: String, schema: String?): String {
+        val prefill = buildPrefillParam(schema) ?: return baseUrl
+
+        val uri = Uri.parse(baseUrl)
+        return uri.buildUpon()
+            .appendQueryParameter("prefill", prefill)
+            .build()
+            .toString()
+    }
+
+    /**
+     * Build the prefill query parameter for IC WebView URL.
+     * Creates Base64-encoded JSON with available user data.
+     * Only includes fields that are in the schema's required array.
+     */
+    private fun buildPrefillParam(schema: String?): String? {
+        if (schema == null) return null
+
+        return try {
+            // Parse schema to get required fields
+            val schemaJson = JSONObject(schema)
+            val requiredArray = schemaJson.optJSONArray("required") ?: return null
+            val requiredFields = (0 until requiredArray.length()).map { requiredArray.getString(it) }
+
+            // Build prefill JSON with available user data
+            val prefillData = JSONObject()
+
+            if ("fullName" in requiredFields) {
+                prefillData.put("fullName", EthAccountDelegate.PREFILL_FULL_NAME)
+            }
+
+            if ("dob" in requiredFields) {
+                prefillData.put("dob", EthAccountDelegate.PREFILL_DOB)
+            }
+
+            // Only return if we have data to prefill
+            if (prefillData.length() == 0) return null
+
+            // Base64 encode the JSON (NO_WRAP avoids newlines, URL_SAFE for URL compatibility)
+            val encoded = Base64.encodeToString(
+                prefillData.toString().toByteArray(Charsets.UTF_8),
+                Base64.NO_WRAP or Base64.URL_SAFE
+            )
+
+            Log.d("PaymentViewModel", "Built prefill param: $prefillData -> $encoded")
+            encoded
+        } catch (e: Exception) {
+            Log.e("PaymentViewModel", "Failed to build prefill param", e)
+            null
         }
     }
 
@@ -396,6 +434,7 @@ class PaymentViewModel : ViewModel() {
         pendingWalletRpcActions = emptyList()
         collectDataFields = emptyList()
         icWebViewUrl = null
+        icSchema = null
         collectedValues.clear()
         currentFieldIndex = 0
         _uiState.value = PaymentUiState.Loading
