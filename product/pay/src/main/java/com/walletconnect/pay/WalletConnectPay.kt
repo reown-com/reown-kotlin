@@ -72,7 +72,6 @@ object WalletConnectPay {
 
         try {
             val response = yttriumClient.getPaymentOptions(paymentLink = paymentLink, accounts = accounts, includePaymentInfo = true)
-            println("kobe: getPaymentOptions response: ${response.collectData}")
             Result.success(Mappers.mapPaymentOptionsResponse(response))
         } catch (e: uniffi.yttrium_wcpay.GetPaymentOptionsException) {
             Result.failure(Mappers.mapGetPaymentOptionsError(e))
@@ -134,7 +133,6 @@ object WalletConnectPay {
                 maxPollMs = 60000
             )
 
-            println("kobe: confirmPayment response: ${response}")
             Result.success(Mappers.mapConfirmPaymentResponse(response))
         } catch (e: uniffi.yttrium_wcpay.ConfirmPaymentException) {
             Result.failure(Mappers.mapConfirmPaymentError(e))
