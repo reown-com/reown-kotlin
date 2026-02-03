@@ -151,8 +151,9 @@ internal class AppKitEngine(
     fun request(request: Request, onSuccess: (SentRequestResult) -> Unit, onError: (Throwable) -> Unit) {
         val session = getActiveSession()
         val selectedChain = getSelectedChain()
+        val chainId = request.chainId ?: selectedChain?.id
 
-        if (session == null || selectedChain == null) {
+        if (session == null || chainId == null) {
             onError(InvalidSessionException)
             return
         }
@@ -162,14 +163,14 @@ internal class AppKitEngine(
                 checkEngineInitialization()
                 coinbaseClient.request(
                     request,
-                    { onSuccess(SentRequestResult.Coinbase(request.method, request.params, selectedChain.id, it)) },
+                    { onSuccess(SentRequestResult.Coinbase(request.method, request.params, chainId, it)) },
                     onError
                 )
             }
 
             is Session.WalletConnect ->
                 SignClient.request(
-                    request.toSign(session.topic, selectedChain.id),
+                    request.toSign(session.topic, chainId),
                     {
                         onSuccess(it.toSentRequest())
                         openWalletApp(session.topic, onError)
