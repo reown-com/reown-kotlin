@@ -90,4 +90,17 @@ object TONClient {
             throw e
         }
     }
+
+    fun getStateInitBoc(keyPair: Keypair): String {
+        return try {
+            if (!::client.isInitialized) {
+                throw IllegalStateException("TONClient not initialized. Call init() first.")
+            }
+
+            client.getStateInitBoc(uniffi.yttrium_utils.Keypair(keyPair.secretKey, keyPair.publicKey))
+        } catch (e: Exception) {
+            println("Error getting state init BoC: ${e.message}")
+            throw e
+        }
+    }
 }

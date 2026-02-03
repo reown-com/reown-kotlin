@@ -175,7 +175,11 @@ class SessionProposalViewModel : ViewModel() {
 //            Pair(sessionNamespaces, sessionProperties)
 //        } else {
         val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
-        val sessionProperties = mapOf("tron_method_version" to "v1")
+        val sessionProperties = mapOf(
+            "tron_method_version" to "v1",
+            "ton_getPublicKey" to TONAccountDelegate.publicKey,
+            "ton_getStateInit" to TONClient.getStateInitBoc(TONAccountDelegate.keypair)
+        )
         return Pair(sessionNamespaces, sessionProperties)
 //        }
     }
