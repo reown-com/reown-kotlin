@@ -2,11 +2,9 @@ package com.reown.sample.wallet.domain.client
 
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
-import uniffi.yttrium_utils.Logger
 import uniffi.yttrium_utils.PulseMetadata
 import uniffi.yttrium_utils.SendTxMessage
 import uniffi.yttrium_utils.TonClientConfig
-import uniffi.yttrium_utils.registerLogger
 import uniffi.yttrium_utils.TonClient
 
 data class Keypair(val secretKey: String, val publicKey: String)
@@ -87,6 +85,19 @@ object TONClient {
             }
         } catch (e: Exception) {
             println("Error sending message: ${e.message}")
+            throw e
+        }
+    }
+
+    fun getStateInitBoc(keyPair: Keypair): String {
+        return try {
+            if (!::client.isInitialized) {
+                throw IllegalStateException("TONClient not initialized. Call init() first.")
+            }
+
+            client.getStateInitBoc(uniffi.yttrium_utils.Keypair(keyPair.secretKey, keyPair.publicKey))
+        } catch (e: Exception) {
+            println("Error getting state init BoC: ${e.message}")
             throw e
         }
     }
