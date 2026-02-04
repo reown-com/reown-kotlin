@@ -19,7 +19,7 @@ fun createBalanceApiService(): BalanceApiService {
         val originalRequest = chain.request()
         val newRequest = originalRequest.newBuilder()
             .addHeader("x-sdk-type", "appkit")
-            .addHeader("x-sdk-version", "reown-kotlin-${BuildConfig.BOM_VERSION}")
+            .addHeader("x-sdk-version", "reown-kotlin-1.6.6")
             .addHeader("Origin", "com.reown.sample.wallet")
             .build()
         chain.proceed(newRequest)
