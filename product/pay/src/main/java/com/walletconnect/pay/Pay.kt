@@ -78,6 +78,7 @@ object Pay {
     )
 
     data class CollectDataAction(
+        @Deprecated("Use url for WebView-based data collection or schema to parse field requirements")
         val fields: List<CollectDataField>,
         val url: String?,
         val schema: String?
