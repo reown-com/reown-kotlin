@@ -28,6 +28,7 @@ import com.reown.appkit.client.toSession
 import com.reown.appkit.client.toSign
 import com.reown.appkit.domain.delegate.AppKitDelegate
 import com.reown.appkit.domain.model.InvalidSessionException
+import com.reown.appkit.domain.model.NoChainSelectedException
 import com.reown.appkit.domain.model.Session
 import com.reown.appkit.domain.usecase.ConnectionEventRepository
 import com.reown.appkit.domain.usecase.DeleteSessionDataUseCase
@@ -150,11 +151,14 @@ internal class AppKitEngine(
 
     fun request(request: Request, onSuccess: (SentRequestResult) -> Unit, onError: (Throwable) -> Unit) {
         val session = getActiveSession()
-        val selectedChain = getSelectedChain()
-        val chainId = request.chainId ?: selectedChain?.id
-
-        if (session == null || chainId == null) {
+        if (session == null) {
             onError(InvalidSessionException)
+            return
+        }
+
+        val chainId = request.chainId ?: getSelectedChain()?.id
+        if (chainId == null) {
+            onError(NoChainSelectedException)
             return
         }
 
