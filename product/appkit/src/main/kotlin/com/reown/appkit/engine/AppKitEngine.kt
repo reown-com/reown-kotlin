@@ -167,6 +167,7 @@ internal class AppKitEngine(
                 checkEngineInitialization()
                 coinbaseClient.request(
                     request,
+                    chainId,
                     { onSuccess(SentRequestResult.Coinbase(request.method, request.params, chainId, it)) },
                     onError
                 )

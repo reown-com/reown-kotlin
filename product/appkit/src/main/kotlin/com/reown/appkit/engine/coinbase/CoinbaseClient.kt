@@ -21,13 +21,10 @@ import com.coinbase.android.nativesdk.message.response.ActionResult
 import com.coinbase.android.nativesdk.message.response.ResponseResult
 import com.reown.android.internal.common.modal.data.model.Wallet
 import com.reown.android.internal.common.model.AppMetaData
-import com.reown.android.internal.common.wcKoinApp
-import com.reown.util.Empty
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.models.Account
 import com.reown.appkit.client.models.request.Request
 import com.reown.appkit.domain.model.Session
-import com.reown.appkit.domain.usecase.GetSelectedChainUseCase
 import com.reown.appkit.utils.toChain
 
 internal const val COINBASE_WALLET_ID = "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa"
@@ -39,7 +36,6 @@ internal class CoinbaseClient(
     appMetaData: AppMetaData,
 ) {
     private val activityLauncher = ActivityResultLauncherHolder<Intent>()
-    private val getSelectedChainUseCase: GetSelectedChainUseCase by lazy { wcKoinApp.koin.get() }
 
     private val coinbaseWalletSDK = CoinbaseWalletSDK(
         appContext = context,
@@ -83,12 +79,12 @@ internal class CoinbaseClient(
 
     fun request(
         request: Request,
+        chainId: String,
         onSuccess: (results: List<CoinbaseResult>) -> Unit,
         onError: (Throwable) -> Unit
     ) {
         try {
-            val chainId = getSelectedChainUseCase()
-            val web3jsonRPC = request.mapToJson3JRPCRequest(chainId ?: String.Empty).action()
+            val web3jsonRPC = request.mapToJson3JRPCRequest(chainId).action()
             coinbaseWalletSDK.makeRequest(
                 RequestContent.Request(listOf(web3jsonRPC))
             ) { result: ResponseResult ->
