@@ -94,6 +94,7 @@ fun LabScreen(
                     item { BlueButton(text = "Personal sign", onClick = { sendPersonalSignRequest(account, {}, onError) }) }
                     item { BlueButton(text = "Eth send transaction", onClick = { sendEthSendTransactionRequest(account, {}, onError) }) }
                     item { BlueButton(text = "Eth sign typed data", onClick = { sendEthSignTypedDataRequest(account, {}, onError) }) }
+                    item { BlueButton(text = "Personal sign (ETH chainId)", onClick = { sendPersonalSignWithChainId(account, "eip155:1", {}, onError) }) }
                 }
             }
         }
@@ -143,6 +144,23 @@ private fun sendEthSignTypedDataRequest(
 ) {
     AppKit.request(
         request = Request("eth_signTypedData", getEthSignTypedData(account)),
+        onSuccess = onSuccess,
+        onError = onError,
+    )
+}
+
+private fun sendPersonalSignWithChainId(
+    account: String,
+    chainId: String,
+    onSuccess: (SentRequestResult) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    AppKit.request(
+        request = Request(
+            method = "personal_sign",
+            params = getPersonalSignBody(account),
+            chainId = chainId
+        ),
         onSuccess = onSuccess,
         onError = onError,
     )
