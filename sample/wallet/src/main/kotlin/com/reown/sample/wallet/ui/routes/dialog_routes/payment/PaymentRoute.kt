@@ -1,5 +1,15 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.payment
 
+import android.app.Activity
+import android.graphics.Bitmap
+import android.util.Log
+import android.net.http.SslError
+import android.webkit.JavascriptInterface
+import android.webkit.SslErrorHandler
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -19,8 +29,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,6 +61,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,12 +76,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.walletkit.client.Wallet
+import org.json.JSONObject
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
@@ -100,6 +115,20 @@ fun PaymentRoute(
                     hasInfoCapture = state.hasInfoCapture,
                     estimatedTime = state.estimatedTime,
                     onStart = { viewModel.proceedFromIntro() },
+                    onClose = {
+                        viewModel.cancel()
+                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    }
+                )
+            }
+            is PaymentUiState.WebViewDataCollection -> {
+                WebViewDataCollectionContent(
+                    url = state.url,
+                    paymentInfo = state.paymentInfo,
+                    onComplete = { viewModel.onICWebViewComplete() },
+                    onError = { error ->
+                        viewModel.onICWebViewError(error)
+                    },
                     onClose = {
                         viewModel.cancel()
                         navController.popBackStack(Route.Connections.path, inclusive = false)
@@ -146,6 +175,7 @@ fun PaymentRoute(
             is PaymentUiState.Success -> {
                 SuccessContent(
                     paymentInfo = state.paymentInfo,
+                    resultInfo = state.resultInfo,
                     onDone = {
                         viewModel.cancel()
                         onPaymentSuccess()
@@ -1222,6 +1252,7 @@ private fun AnimatedReownLogo() {
 @Composable
 private fun SuccessContent(
     paymentInfo: Wallet.Model.PaymentInfo?,
+    resultInfo: Wallet.Model.PaymentResultInfo?,
     onDone: () -> Unit,
     onClose: () -> Unit
 ) {
@@ -1250,9 +1281,9 @@ private fun SuccessContent(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(32.dp))
-        
+
         // Green checkmark circle
         Box(
             modifier = Modifier
@@ -1268,9 +1299,9 @@ private fun SuccessContent(
                 modifier = Modifier.size(28.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         // Success message with payment details
         val displayAmount = paymentInfo?.let {
             formatDisplayAmount(
@@ -1280,7 +1311,7 @@ private fun SuccessContent(
             )
         } ?: ""
         val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
-        
+
         Text(
             text = "You've paid $displayAmount to $merchantName",
             style = TextStyle(
@@ -1290,7 +1321,57 @@ private fun SuccessContent(
             ),
             textAlign = TextAlign.Center
         )
-        
+
+        // Show result info (txId and token amount)
+        resultInfo?.let { info ->
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF5F5F5))
+                    .padding(16.dp)
+            ) {
+                // Token amount paid
+                val tokenAmount = formatTokenAmount(
+                    value = info.optionAmount.value,
+                    decimals = info.optionAmount.display?.decimals ?: 18,
+                    symbol = info.optionAmount.display?.assetSymbol ?: "Token"
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Paid",
+                        style = TextStyle(fontSize = 14.sp, color = Color(0xFF666666))
+                    )
+                    Text(
+                        text = tokenAmount,
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color.Black)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Transaction ID
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Transaction",
+                        style = TextStyle(fontSize = 14.sp, color = Color(0xFF666666))
+                    )
+                    Text(
+                        text = "${info.txId.take(6)}...${info.txId.takeLast(4)}",
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium, color = Color(0xFF3396FF))
+                    )
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
         
         // Got it button
@@ -1463,6 +1544,10 @@ private fun CollectDataContent(
                     value = inputValue,
                     onValueChange = { inputValue = it }
                 )
+            }
+
+            Wallet.Model.CollectDataFieldType.CHECKBOX -> {
+
             }
         }
         
@@ -1730,3 +1815,238 @@ private fun DateWheelPicker(
     }
 }
 
+// ==================== WebView Information Capture Components ====================
+
+/**
+ * JavaScript interface for WebView → Wallet communication.
+ * WebView calls: window.AndroidWallet.onDataCollectionComplete(jsonString)
+ */
+class AndroidWalletJsInterface(
+    private val onComplete: () -> Unit,
+    private val onError: (String) -> Unit
+) {
+    @JavascriptInterface
+    fun onDataCollectionComplete(jsonData: String) {
+        Log.d("AndroidWalletJS", "=== WebView -> Wallet Communication ===")
+        Log.d("AndroidWalletJS", "Raw message received: $jsonData")
+        try {
+            val json = JSONObject(jsonData)
+            val type = json.optString("type")
+            val success = json.optBoolean("success", false)
+            Log.d("AndroidWalletJS", "Parsed message - type: $type, success: $success")
+
+            when {
+                type == "IC_COMPLETE" && success -> {
+                    Log.d("AndroidWalletJS", "SUCCESS: Information capture completed successfully")
+                    onComplete()
+                }
+                type == "IC_ERROR" -> {
+                    val error = json.optString("error", "Unknown error")
+                    Log.e("AndroidWalletJS", "ERROR: Information capture failed - $error")
+                    onError(error)
+                }
+                else -> {
+                    Log.w("AndroidWalletJS", "WARNING: Unknown message type received: $type")
+                    onError("Unknown message type: $type")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("AndroidWalletJS", "ERROR: Failed to parse WebView message", e)
+            onError("Failed to parse message: ${e.message}")
+        }
+        Log.d("AndroidWalletJS", "=== End WebView Communication ===")
+    }
+}
+
+@Composable
+private fun WebViewDataCollectionContent(
+    url: String,
+    paymentInfo: Wallet.Model.PaymentInfo?,
+    onComplete: () -> Unit,
+    onError: (String) -> Unit,
+    onClose: () -> Unit
+) {
+    var isLoading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+
+    val currentOnComplete by rememberUpdatedState(onComplete)
+    val currentOnError by rememberUpdatedState(onError)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Header with close button only
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .align(Alignment.TopEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color(0xFF9E9E9E)
+                    )
+                }
+            }
+
+        // Error display
+        loadError?.let { error ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = error,
+                    color = Color(0xFFD85140),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { loadError = null },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3396FF)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Retry", color = Color.White)
+                }
+            }
+            return@Column
+        }
+
+        // WebView wrapped in FrameLayout to fix Compose rendering issues
+        val context = LocalContext.current
+        AndroidView(
+            factory = { ctx ->
+                // Wrap WebView in FrameLayout to isolate from Compose rendering
+                android.widget.FrameLayout(ctx).apply {
+                    layoutParams = android.widget.FrameLayout.LayoutParams(
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                    )
+
+                    val webView = WebView(ctx).apply {
+                        layoutParams = android.widget.FrameLayout.LayoutParams(
+                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                        )
+
+                        // Enable WebView debugging - inspect via chrome://inspect on desktop
+                        WebView.setWebContentsDebuggingEnabled(true)
+
+                        // Set white background to avoid black flash while loading
+                        setBackgroundColor(android.graphics.Color.WHITE)
+
+                        // Fix for text input issues in Compose - disable nested scrolling
+                        isNestedScrollingEnabled = false
+                        overScrollMode = android.view.View.OVER_SCROLL_NEVER
+
+                        // Ensure proper focus handling
+                        isFocusable = true
+                        isFocusableInTouchMode = true
+
+                        settings.apply {
+                            javaScriptEnabled = true
+                            domStorageEnabled = true
+                            allowFileAccess = false
+                            allowContentAccess = false
+                            useWideViewPort = true
+                            loadWithOverviewMode = true
+                            setSupportZoom(true)
+                            builtInZoomControls = true
+                            displayZoomControls = false
+                        }
+
+                        // Add JS interface for IC completion
+                        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                        addJavascriptInterface(
+                            AndroidWalletJsInterface(
+                                onComplete = {
+                                    Log.d("PaymentWebView", "IC_COMPLETE received - WebView data collection successful")
+                                    mainHandler.post {
+                                        Log.d("PaymentWebView", "Proceeding to payment options")
+                                        currentOnComplete()
+                                    }
+                                },
+                                onError = { error ->
+                                    Log.e("PaymentWebView", "IC_ERROR received - WebView error: $error")
+                                    mainHandler.post {
+                                        Log.e("PaymentWebView", "Showing error to user: $error")
+                                        currentOnError(error)
+                                    }
+                                }
+                            ),
+                            "AndroidWallet"
+                        )
+
+                        webViewClient = object : WebViewClient() {
+                            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                isLoading = true
+                            }
+
+                            override fun onPageFinished(view: WebView?, finishedUrl: String?) {
+                                isLoading = false
+                            }
+
+                            override fun onReceivedError(
+                                view: WebView?,
+                                request: WebResourceRequest?,
+                                error: WebResourceError?
+                            ) {
+                                if (request?.isForMainFrame == true) {
+                                    isLoading = false
+                                    loadError = error?.description?.toString() ?: "Failed to load"
+                                }
+                            }
+
+                            override fun onReceivedSslError(
+                                view: WebView?,
+                                handler: SslErrorHandler?,
+                                error: SslError?
+                            ) {
+                                handler?.cancel()
+                                loadError = "SSL certificate error"
+                            }
+                        }
+
+                        Log.d("PaymentWebView", "Loading URL: $url")
+                        loadUrl(url)
+                    }
+
+                    addView(webView)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(550.dp)
+        )
+        }
+
+        // Centered loading overlay
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(550.dp)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    strokeWidth = 4.dp,
+                    color = Color(0xFF3396FF)
+                )
+            }
+        }
+    }
+}

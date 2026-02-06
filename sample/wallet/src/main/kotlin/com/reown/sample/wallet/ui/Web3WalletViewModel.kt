@@ -156,8 +156,6 @@ class Web3WalletViewModel : ViewModel() {
 
     fun pair(pairingUri: String) {
         val uri = pairingUri.removePrefix("kotlin-web3wallet://wc?uri=")
-        println("kobe: uri: $uri")
-
         // Check if this is a payment link - use explicit API
         if (WalletKit.Pay.isPaymentLink(uri)) {
             handlePaymentLink(uri)
