@@ -1,7 +1,9 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.payment
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import android.net.http.SslError
 import android.webkit.JavascriptInterface
@@ -30,6 +32,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -104,104 +107,111 @@ fun PaymentRoute(
         viewModel.setPaymentLink(paymentLink)
     }
 
-    SemiTransparentDialog {
-        when (val state = uiState) {
-            is PaymentUiState.Loading -> {
-                LoadingContent()
-            }
-            is PaymentUiState.Intro -> {
-                IntroContent(
-                    paymentInfo = state.paymentInfo,
-                    hasInfoCapture = state.hasInfoCapture,
-                    estimatedTime = state.estimatedTime,
-                    onStart = { viewModel.proceedFromIntro() },
-                    onClose = {
-                        viewModel.cancel()
-                        navController.popBackStack(Route.Connections.path, inclusive = false)
+    // WebView needs fullscreen, so handle it outside SemiTransparentDialog
+    when (val state = uiState) {
+        is PaymentUiState.WebViewDataCollection -> {
+            WebViewDataCollectionContent(
+                url = state.url,
+                paymentInfo = state.paymentInfo,
+                onComplete = { viewModel.onICWebViewComplete() },
+                onError = { error ->
+                    viewModel.onICWebViewError(error)
+                },
+                onClose = {
+                    // Go back to Intro screen instead of canceling entirely
+                    viewModel.goBackToIntro()
+                }
+            )
+        }
+        else -> {
+            SemiTransparentDialog {
+                when (state) {
+                    is PaymentUiState.Loading -> {
+                        LoadingContent()
                     }
-                )
-            }
-            is PaymentUiState.WebViewDataCollection -> {
-                WebViewDataCollectionContent(
-                    url = state.url,
-                    paymentInfo = state.paymentInfo,
-                    onComplete = { viewModel.onICWebViewComplete() },
-                    onError = { error ->
-                        viewModel.onICWebViewError(error)
-                    },
-                    onClose = {
-                        viewModel.cancel()
-                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    is PaymentUiState.Intro -> {
+                        IntroContent(
+                            paymentInfo = state.paymentInfo,
+                            hasInfoCapture = state.hasInfoCapture,
+                            estimatedTime = state.estimatedTime,
+                            onStart = { viewModel.proceedFromIntro() },
+                            onClose = {
+                                viewModel.cancel()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                            }
+                        )
                     }
-                )
-            }
-            is PaymentUiState.Options -> {
-                PaymentOptionsContent(
-                    paymentInfo = state.paymentInfo,
-                    options = state.options,
-                    onOptionSelected = { optionId ->
-                        viewModel.processPayment(optionId)
-                    },
-                    onClose = {
-                        viewModel.cancel()
-                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    is PaymentUiState.Options -> {
+                        PaymentOptionsContent(
+                            paymentInfo = state.paymentInfo,
+                            options = state.options,
+                            onOptionSelected = { optionId ->
+                                viewModel.processPayment(optionId)
+                            },
+                            onClose = {
+                                viewModel.cancel()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                            }
+                        )
                     }
-                )
-            }
-            is PaymentUiState.CollectingData -> {
-                CollectDataContent(
-                    currentStepIndex = state.currentStepIndex,
-                    totalSteps = state.totalSteps,
-                    currentField = state.currentField,
-                    currentValue = state.currentValue,
-                    onValueSubmit = { fieldId, value ->
-                        viewModel.submitFieldValue(fieldId, value)
-                    },
-                    onClose = {
-                        viewModel.cancel()
-                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    is PaymentUiState.CollectingData -> {
+                        CollectDataContent(
+                            currentStepIndex = state.currentStepIndex,
+                            totalSteps = state.totalSteps,
+                            currentField = state.currentField,
+                            currentValue = state.currentValue,
+                            onValueSubmit = { fieldId, value ->
+                                viewModel.submitFieldValue(fieldId, value)
+                            },
+                            onClose = {
+                                viewModel.cancel()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                            }
+                        )
                     }
-                )
-            }
-            is PaymentUiState.Processing -> {
-                ProcessingContent(
-                    message = state.message,
-                    onClose = {
-                        viewModel.cancel()
-                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    is PaymentUiState.Processing -> {
+                        ProcessingContent(
+                            message = state.message,
+                            onClose = {
+                                viewModel.cancel()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                            }
+                        )
                     }
-                )
-            }
-            is PaymentUiState.Success -> {
-                SuccessContent(
-                    paymentInfo = state.paymentInfo,
-                    resultInfo = state.resultInfo,
-                    onDone = {
-                        viewModel.cancel()
-                        onPaymentSuccess()
-                        navController.popBackStack(Route.Connections.path, inclusive = false)
-                        Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
-                    },
-                    onClose = {
-                        viewModel.cancel()
-                        onPaymentSuccess()
-                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    is PaymentUiState.Success -> {
+                        SuccessContent(
+                            paymentInfo = state.paymentInfo,
+                            resultInfo = state.resultInfo,
+                            onDone = {
+                                viewModel.cancel()
+                                onPaymentSuccess()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
+                            },
+                            onClose = {
+                                viewModel.cancel()
+                                onPaymentSuccess()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                            }
+                        )
                     }
-                )
-            }
-            is PaymentUiState.Error -> {
-                ErrorContent(
-                    message = state.message,
-                    onRetry = {
-                        // Retry not available in event-based flow - close dialog
-                        viewModel.cancel()
-                        navController.popBackStack(Route.Connections.path, inclusive = false)
-                    },
-                    onClose = {
-                        viewModel.cancel()
-                        navController.popBackStack(Route.Connections.path, inclusive = false)
+                    is PaymentUiState.Error -> {
+                        ErrorContent(
+                            message = state.message,
+                            onRetry = {
+                                // Retry not available in event-based flow - close dialog
+                                viewModel.cancel()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                            },
+                            onClose = {
+                                viewModel.cancel()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                            }
+                        )
                     }
-                )
+                    // WebViewDataCollection is handled outside SemiTransparentDialog
+                    is PaymentUiState.WebViewDataCollection -> { /* handled above */ }
+                }
             }
         }
     }
@@ -1874,171 +1884,170 @@ private fun WebViewDataCollectionContent(
 
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
+            .fillMaxSize()
+            .background(Color(0xFF141414))
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Header with close button only
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
-            ) {
-                IconButton(
-                    onClick = onClose,
+        Column(modifier = Modifier.fillMaxSize()) {
+
+            // Error display
+            loadError?.let { error ->
+                Column(
                     modifier = Modifier
-                        .size(32.dp)
-                        .align(Alignment.TopEnd)
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        tint = Color(0xFF9E9E9E)
+                    Text(
+                        text = error,
+                        color = Color(0xFFD85140),
+                        textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { loadError = null },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3396FF)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Retry", color = Color.White)
+                    }
                 }
+                return@Column
             }
 
-        // Error display
-        loadError?.let { error ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = error,
-                    color = Color(0xFFD85140),
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { loadError = null },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3396FF)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Retry", color = Color.White)
-                }
-            }
-            return@Column
-        }
-
-        // WebView wrapped in FrameLayout to fix Compose rendering issues
-        val context = LocalContext.current
-        AndroidView(
-            factory = { ctx ->
-                // Wrap WebView in FrameLayout to isolate from Compose rendering
-                android.widget.FrameLayout(ctx).apply {
-                    layoutParams = android.widget.FrameLayout.LayoutParams(
-                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT
-                    )
-
-                    val webView = WebView(ctx).apply {
+            // WebView wrapped in FrameLayout to fix Compose rendering issues
+            val context = LocalContext.current
+            AndroidView(
+                factory = { ctx ->
+                    // Wrap WebView in FrameLayout to isolate from Compose rendering
+                    android.widget.FrameLayout(ctx).apply {
                         layoutParams = android.widget.FrameLayout.LayoutParams(
                             android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                             android.widget.FrameLayout.LayoutParams.MATCH_PARENT
                         )
 
-                        // Enable WebView debugging - inspect via chrome://inspect on desktop
-                        WebView.setWebContentsDebuggingEnabled(true)
+                        val webView = WebView(ctx).apply {
+                            layoutParams = android.widget.FrameLayout.LayoutParams(
+                                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                                android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                            )
 
-                        // Set white background to avoid black flash while loading
-                        setBackgroundColor(android.graphics.Color.WHITE)
+                            // Enable WebView debugging - inspect via chrome://inspect on desktop
+                            WebView.setWebContentsDebuggingEnabled(true)
 
-                        // Fix for text input issues in Compose - disable nested scrolling
-                        isNestedScrollingEnabled = false
-                        overScrollMode = android.view.View.OVER_SCROLL_NEVER
+                            // Set dark background to match the web content theme
+                            setBackgroundColor(0xFF141414.toInt())
 
-                        // Ensure proper focus handling
-                        isFocusable = true
-                        isFocusableInTouchMode = true
+                            // Fix for text input issues in Compose - disable nested scrolling
+                            isNestedScrollingEnabled = false
+                            overScrollMode = android.view.View.OVER_SCROLL_NEVER
 
-                        settings.apply {
-                            javaScriptEnabled = true
-                            domStorageEnabled = true
-                            allowFileAccess = false
-                            allowContentAccess = false
-                            useWideViewPort = true
-                            loadWithOverviewMode = true
-                            setSupportZoom(true)
-                            builtInZoomControls = true
-                            displayZoomControls = false
-                        }
+                            // Ensure proper focus handling
+                            isFocusable = true
+                            isFocusableInTouchMode = true
 
-                        // Add JS interface for IC completion
-                        val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
-                        addJavascriptInterface(
-                            AndroidWalletJsInterface(
-                                onComplete = {
-                                    Log.d("PaymentWebView", "IC_COMPLETE received - WebView data collection successful")
-                                    mainHandler.post {
-                                        Log.d("PaymentWebView", "Proceeding to payment options")
-                                        currentOnComplete()
+                            settings.apply {
+                                javaScriptEnabled = true
+                                domStorageEnabled = true
+                                allowFileAccess = false
+                                allowContentAccess = false
+                                useWideViewPort = true
+                                loadWithOverviewMode = true
+                                setSupportZoom(true)
+                                builtInZoomControls = true
+                                displayZoomControls = false
+                            }
+
+                            // Add JS interface for IC completion
+                            val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+                            addJavascriptInterface(
+                                AndroidWalletJsInterface(
+                                    onComplete = {
+                                        Log.d("PaymentWebView", "IC_COMPLETE received - WebView data collection successful")
+                                        mainHandler.post {
+                                            Log.d("PaymentWebView", "Proceeding to payment options")
+                                            currentOnComplete()
+                                        }
+                                    },
+                                    onError = { error ->
+                                        Log.e("PaymentWebView", "IC_ERROR received - WebView error: $error")
+                                        mainHandler.post {
+                                            Log.e("PaymentWebView", "Showing error to user: $error")
+                                            currentOnError(error)
+                                        }
                                     }
-                                },
-                                onError = { error ->
-                                    Log.e("PaymentWebView", "IC_ERROR received - WebView error: $error")
-                                    mainHandler.post {
-                                        Log.e("PaymentWebView", "Showing error to user: $error")
-                                        currentOnError(error)
+                                ),
+                                "AndroidWallet"
+                            )
+
+                            webViewClient = object : WebViewClient() {
+                                override fun shouldOverrideUrlLoading(
+                                    view: WebView?,
+                                    request: WebResourceRequest?
+                                ): Boolean {
+                                    val requestUrl = request?.url?.toString() ?: return false
+                                    val originalHost = Uri.parse(url).host
+
+                                    // If the URL is from a different host, open in external browser
+                                    if (Uri.parse(requestUrl).host != originalHost) {
+                                        try {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(requestUrl))
+                                            ctx.startActivity(intent)
+                                            return true
+                                        } catch (e: Exception) {
+                                            Log.e("PaymentWebView", "Failed to open external URL: $requestUrl", e)
+                                        }
                                     }
+                                    return false
                                 }
-                            ),
-                            "AndroidWallet"
-                        )
 
-                        webViewClient = object : WebViewClient() {
-                            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                                isLoading = true
-                            }
+                                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                    isLoading = true
+                                }
 
-                            override fun onPageFinished(view: WebView?, finishedUrl: String?) {
-                                isLoading = false
-                            }
-
-                            override fun onReceivedError(
-                                view: WebView?,
-                                request: WebResourceRequest?,
-                                error: WebResourceError?
-                            ) {
-                                if (request?.isForMainFrame == true) {
+                                override fun onPageFinished(view: WebView?, finishedUrl: String?) {
                                     isLoading = false
-                                    loadError = error?.description?.toString() ?: "Failed to load"
+                                }
+
+                                override fun onReceivedError(
+                                    view: WebView?,
+                                    request: WebResourceRequest?,
+                                    error: WebResourceError?
+                                ) {
+                                    if (request?.isForMainFrame == true) {
+                                        isLoading = false
+                                        loadError = error?.description?.toString() ?: "Failed to load"
+                                    }
+                                }
+
+                                override fun onReceivedSslError(
+                                    view: WebView?,
+                                    handler: SslErrorHandler?,
+                                    error: SslError?
+                                ) {
+                                    handler?.cancel()
+                                    loadError = "SSL certificate error"
                                 }
                             }
 
-                            override fun onReceivedSslError(
-                                view: WebView?,
-                                handler: SslErrorHandler?,
-                                error: SslError?
-                            ) {
-                                handler?.cancel()
-                                loadError = "SSL certificate error"
-                            }
+                            Log.d("PaymentWebView", "Loading URL: $url")
+                            loadUrl(url)
                         }
 
-                        Log.d("PaymentWebView", "Loading URL: $url")
-                        loadUrl(url)
+                        addView(webView)
                     }
-
-                    addView(webView)
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(550.dp)
-        )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
         }
 
         // Centered loading overlay
         if (isLoading) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(550.dp)
-                    .background(Color.White),
+                    .fillMaxSize()
+                    .background(Color(0xFF141414)),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
@@ -2047,6 +2056,25 @@ private fun WebViewDataCollectionContent(
                     color = Color(0xFF3396FF)
                 )
             }
+        }
+
+        // Floating close button overlay
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF2A2A2A))
+                .clickable { onClose() },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

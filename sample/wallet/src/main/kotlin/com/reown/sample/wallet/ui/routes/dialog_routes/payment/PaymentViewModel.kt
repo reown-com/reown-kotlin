@@ -163,6 +163,10 @@ class PaymentViewModel : ViewModel() {
                 prefillData.put("dob", EthAccountDelegate.PREFILL_DOB)
             }
 
+            if ("pobAddress" in requiredFields) {
+                prefillData.put("pobAddress", EthAccountDelegate.PREFILL_POB_ADDRESS)
+            }
+
             // Only return if we have data to prefill
             if (prefillData.length() == 0) return null
 
@@ -437,7 +441,8 @@ class PaymentViewModel : ViewModel() {
         icSchema = null
         collectedValues.clear()
         currentFieldIndex = 0
-        _uiState.value = PaymentUiState.Loading
+        // Don't set state to Loading here - we're navigating away anyway
+        // and it causes a brief flash of the loading screen
         // Clear replay cache to prevent stale data on next payment
         WalletKitDelegate.clearPaymentOptions()
     }
