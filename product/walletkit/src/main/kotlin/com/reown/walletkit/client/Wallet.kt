@@ -579,8 +579,7 @@ object Wallet {
         data class ConfirmPaymentResponse(
             val status: PaymentStatus,
             val isFinal: Boolean,
-            val pollInMs: Long?,
-            val info: PaymentResultInfo?
+            val pollInMs: Long?
         ) : Model()
     }
 }

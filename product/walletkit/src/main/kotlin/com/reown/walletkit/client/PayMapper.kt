@@ -122,8 +122,7 @@ internal fun Pay.ConfirmPaymentResponse.toWallet(): Wallet.Model.ConfirmPaymentR
     Wallet.Model.ConfirmPaymentResponse(
         status = status.toWallet(),
         isFinal = isFinal,
-        pollInMs = pollInMs,
-        info = info?.toWallet()
+        pollInMs = pollInMs
     )
 
 // Wallet.Model -> Pay mappers (for request types)

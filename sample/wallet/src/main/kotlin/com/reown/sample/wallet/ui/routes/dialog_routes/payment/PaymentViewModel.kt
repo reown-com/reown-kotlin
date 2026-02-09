@@ -348,21 +348,17 @@ class PaymentViewModel : ViewModel() {
                 onSuccess = { response ->
                     when (response.status) {
                         Wallet.Model.PaymentStatus.SUCCEEDED -> {
-                            Log.d("PaymentViewModel", "Payment SUCCEEDED - resultInfo: ${response.info}")
-                            Log.d("PaymentViewModel", "resultInfo txId: ${response.info?.txId}")
-                            Log.d("PaymentViewModel", "resultInfo optionAmount: ${response.info?.optionAmount}")
+                            Log.d("PaymentViewModel", "Payment SUCCEEDED")
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment completed successfully!",
-                                paymentInfo = storedPaymentInfo,
-                                resultInfo = response.info
+                                paymentInfo = storedPaymentInfo
                             )
                         }
                         Wallet.Model.PaymentStatus.PROCESSING -> {
-                            Log.d("PaymentViewModel", "Payment PROCESSING - resultInfo: ${response.info}")
+                            Log.d("PaymentViewModel", "Payment PROCESSING")
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment is being processed...",
-                                paymentInfo = storedPaymentInfo,
-                                resultInfo = response.info
+                                paymentInfo = storedPaymentInfo
                             )
                         }
                         Wallet.Model.PaymentStatus.FAILED -> {
@@ -496,8 +492,7 @@ sealed class PaymentUiState {
 
     data class Success(
         val message: String,
-        val paymentInfo: Wallet.Model.PaymentInfo? = null,
-        val resultInfo: Wallet.Model.PaymentResultInfo? = null
+        val paymentInfo: Wallet.Model.PaymentInfo? = null
     ) : PaymentUiState()
 
     data class Error(val message: String) : PaymentUiState()
