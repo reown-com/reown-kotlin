@@ -12,6 +12,11 @@ import java.security.Security
 // TODO Move to Common
 object EthAccountDelegate {
     lateinit var application: Application
+
+    // Hardcoded test user data for IC form prefill (PoC)
+    const val PREFILL_FULL_NAME = "Test User"
+    const val PREFILL_DOB = "1990-01-15"
+    const val PREFILL_POB_ADDRESS = "123 Main Street, New York, NY 10001"
     private val sharedPreferences: SharedPreferences by lazy { application.getSharedPreferences("Wallet_Sample_Shared_Prefs", Context.MODE_PRIVATE) }
     private const val ACCOUNT_TAG = "self_account_tag"
     private const val PRIVATE_KEY_TAG = "self_private_key"

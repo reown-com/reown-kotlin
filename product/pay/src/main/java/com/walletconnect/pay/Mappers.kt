@@ -19,6 +19,7 @@ import uniffi.yttrium_wcpay.CollectDataField as YttriumCollectDataField
 import uniffi.yttrium_wcpay.CollectDataFieldType as YttriumCollectDataFieldType
 import uniffi.yttrium_wcpay.ConfirmPaymentResultResponse as YttriumConfirmPaymentResponse
 import uniffi.yttrium_wcpay.CollectDataFieldResult as YttriumCollectDataFieldResult
+import uniffi.yttrium_wcpay.PaymentResultInfo as YttriumPaymentResultInfo
 import uniffi.yttrium_wcpay.GetPaymentOptionsException as YttriumGetPaymentOptionsError
 import uniffi.yttrium_wcpay.GetPaymentRequestException as YttriumGetPaymentRequestError
 import uniffi.yttrium_wcpay.ConfirmPaymentException as YttriumConfirmPaymentError
@@ -94,7 +95,9 @@ internal object Mappers {
 
     private fun mapCollectDataAction(action: YttriumCollectDataAction): Pay.CollectDataAction {
         return Pay.CollectDataAction(
-            fields = action.fields.map { mapCollectDataField(it) }
+            fields = action.fields.map { mapCollectDataField(it) },
+            url = action.url,
+            schema = action.schema
         )
     }
 
@@ -111,6 +114,7 @@ internal object Mappers {
         return when (type) {
             YttriumCollectDataFieldType.TEXT -> Pay.CollectDataFieldType.TEXT
             YttriumCollectDataFieldType.DATE -> Pay.CollectDataFieldType.DATE
+            YttriumCollectDataFieldType.CHECKBOX -> Pay.CollectDataFieldType.CHECKBOX
         }
     }
 
@@ -119,6 +123,14 @@ internal object Mappers {
             status = mapPaymentStatus(response.status),
             isFinal = response.isFinal,
             pollInMs = response.pollInMs,
+            info = response.info?.let { mapPaymentResultInfo(it) }
+        )
+    }
+
+    private fun mapPaymentResultInfo(info: YttriumPaymentResultInfo): Pay.PaymentResultInfo {
+        return Pay.PaymentResultInfo(
+            txId = info.txId,
+            optionAmount = mapAmount(info.optionAmount)
         )
     }
 
