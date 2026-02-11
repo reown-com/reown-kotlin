@@ -210,7 +210,7 @@ private fun LazyItemScope.SessionChainItem(
     onSessionClick: (String) -> Unit
 ) {
     Box(
-        modifier = Modifier.animateItemPlacement(),
+        modifier = Modifier.animateItem(),
     ) {
         Column(
             modifier = Modifier
