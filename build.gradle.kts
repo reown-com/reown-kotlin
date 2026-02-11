@@ -1,9 +1,11 @@
 import com.android.build.gradle.BaseExtension
+import groovy.json.JsonSlurper
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpDelete
 import org.apache.http.entity.StringEntity
+import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -116,8 +118,7 @@ tasks.register("closeAndReleaseMultipleRepositories") {
         println("Fetching staging repositories...")
         val repos = fetchStagingRepositories()
         if (repos.isEmpty()) {
-            println("No staging repositories found")
-            return@doLast
+            throw RuntimeException("No staging repositories found. Publishing to staging may have failed.")
         }
 
         println("Found ${repos.size} staging repositories")
@@ -125,27 +126,23 @@ tasks.register("closeAndReleaseMultipleRepositories") {
             println("Repository: ${repo.key}, State: ${repo.state}")
         }
 
-        // Upload each repository individually using their specific keys
-        // This works better with the OSSRH Staging API than the defaultRepository endpoint
         val openRepos = repos.filter { it.state == "open" }
         val closedRepos = repos.filter { it.state == "closed" }
 
         println("Processing ${openRepos.size} open repositories and ${closedRepos.size} closed repositories")
 
         if (openRepos.isNotEmpty()) {
-            println("Uploading ${openRepos.size} open repositories to Central Portal using individual repository keys")
-            uploadRepositoriesToPortal(openRepos)
+            println("WARNING: Found ${openRepos.size} open repositories. These must be closed before upload.")
+            println("Open repos will be skipped. Run closeReownStagingRepository/closeWalletconnectStagingRepository first.")
         }
 
-        if (closedRepos.isNotEmpty()) {
-            println("Uploading ${closedRepos.size} closed repositories to Central Portal using individual repository keys")
-            uploadRepositoriesToPortal(closedRepos)
+        if (closedRepos.isEmpty()) {
+            throw RuntimeException("No closed staging repositories found. Ensure repos are closed before uploading. " +
+                "Run closeReownStagingRepository and closeWalletconnectStagingRepository first.")
         }
 
-        if (openRepos.isEmpty() && closedRepos.isEmpty()) {
-            println("No repositories to upload to Portal")
-            return@doLast
-        }
+        println("Uploading ${closedRepos.size} closed repositories to Central Portal")
+        uploadRepositoriesToPortal(closedRepos)
 
         println("Starting to wait for artifacts to be available on Maven Central...")
         // Wait for artifacts to be available on Maven Central since we're using automatic publishing
@@ -188,52 +185,46 @@ tasks.register("dropStagingRepositories") {
 
 data class StagingRepository(val key: String, val state: String, val portalDeploymentId: String?)
 
+fun createHttpClient(): CloseableHttpClient = HttpClients.custom()
+    .setDefaultRequestConfig(
+        RequestConfig.custom()
+            .setConnectTimeout(30000)
+            .setSocketTimeout(60000)
+            .build()
+    )
+    .build()
+
+fun authHeader(): String = "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray())
+
 fun fetchStagingRepositories(): List<StagingRepository> {
-    val client = HttpClients.custom()
-        .setDefaultRequestConfig(
-            RequestConfig.custom()
-                .setConnectTimeout(30000) // 30 seconds
-                .setSocketTimeout(60000) // 60 seconds
-                .build()
-        )
-        .build()
-    val httpGet = HttpGet("$manualApiUrl/search/repositories").apply {
-        setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
-    }
+    val client = createHttpClient()
+    try {
+        val httpGet = HttpGet("$manualApiUrl/search/repositories").apply {
+            setHeader("Authorization", authHeader())
+        }
 
-    val response = client.execute(httpGet)
-    val responseBody = EntityUtils.toString(response.entity)
-    if (response.statusLine.statusCode != 200) {
-        throw RuntimeException("Failed: HTTP error code : ${response.statusLine.statusCode} $responseBody")
-    }
+        val response = client.execute(httpGet)
+        val responseBody = EntityUtils.toString(response.entity)
+        if (response.statusLine.statusCode != 200) {
+            throw RuntimeException("Failed: HTTP error code : ${response.statusLine.statusCode} $responseBody")
+        }
 
-    return parseRepositoriesResponse(responseBody)
+        return parseRepositoriesResponse(responseBody)
+    } finally {
+        client.close()
+    }
 }
 
 fun parseRepositoriesResponse(jsonResponse: String): List<StagingRepository> {
-    // Simple JSON parsing - in a real implementation you might want to use a proper JSON library
-    val repositories = mutableListOf<StagingRepository>()
-
-    // Extract repositories array from JSON response
-    val repositoriesStart = jsonResponse.indexOf("\"repositories\":")
-    if (repositoriesStart == -1) return repositories
-
-    val arrayStart = jsonResponse.indexOf("[", repositoriesStart)
-    val arrayEnd = jsonResponse.lastIndexOf("]")
-    if (arrayStart == -1 || arrayEnd == -1) return repositories
-
-    val repositoriesArray = jsonResponse.substring(arrayStart + 1, arrayEnd)
-
-    // Parse each repository object (simple regex-based parsing)
-    val repoPattern = """"key":\s*"([^"]+)".*?"state":\s*"([^"]+)".*?(?:"portal_deployment_id":\s*"([^"]*)")?""".toRegex()
-    repoPattern.findAll(repositoriesArray).forEach { match ->
-        val key = match.groupValues[1]
-        val state = match.groupValues[2]
-        val portalDeploymentId = match.groupValues.getOrNull(3)?.takeIf { it.isNotEmpty() }
-        repositories.add(StagingRepository(key, state, portalDeploymentId))
+    val parsed = JsonSlurper().parseText(jsonResponse) as? Map<*, *> ?: return emptyList()
+    val repos = parsed["repositories"] as? List<*> ?: return emptyList()
+    return repos.mapNotNull { item ->
+        val repo = item as? Map<*, *> ?: return@mapNotNull null
+        val key = repo["key"] as? String ?: return@mapNotNull null
+        val state = repo["state"] as? String ?: return@mapNotNull null
+        val portalDeploymentId = repo["portal_deployment_id"] as? String
+        StagingRepository(key, state, portalDeploymentId)
     }
-
-    return repositories
 }
 
 fun uploadRepositoriesToPortal(repositories: List<StagingRepository>) {
@@ -246,165 +237,150 @@ fun uploadRepositoriesToPortal(repositories: List<StagingRepository>) {
     println("Completed upload of all ${repositories.size} repositories to Central Portal")
 }
 
-fun uploadRepositoryToPortal(repositoryKey: String) {
-    val client = HttpClients.custom()
-        .setDefaultRequestConfig(
-            RequestConfig.custom()
-                .setConnectTimeout(30000) // 30 seconds
-                .setSocketTimeout(60000) // 60 seconds
-                .build()
-        )
-        .build()
+fun uploadRepositoryToPortal(repositoryKey: String, maxRetries: Int = 3) {
     val uploadUrl = "$manualApiUrl/upload/repository/$repositoryKey"
-
     println("Starting upload for repository: $repositoryKey")
     println("Upload URL: $uploadUrl")
 
-    val httpPost = HttpPost(uploadUrl).apply {
-        setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
-        setHeader("Content-Type", "application/json")
-        // Use automatic publishing type to automatically release if validation passes
-        entity = StringEntity("""{"publishing_type": "automatic"}""")
-    }
-
-    try {
-        println("Executing HTTP POST request...")
-        val response = client.execute(httpPost)
-        println("Received response with status: ${response.statusLine.statusCode}")
-
-        val responseBody = EntityUtils.toString(response.entity)
-        println("Response body length: ${responseBody.length}")
-
-        if (response.statusLine.statusCode == 200 || response.statusLine.statusCode == 201) {
-            println("Successfully uploaded repository $repositoryKey to Central Portal")
-            println("Response: $responseBody")
-        } else {
-            throw RuntimeException("Failed to upload repository $repositoryKey: HTTP ${response.statusLine.statusCode} - $responseBody")
-        }
-    } catch (e: Exception) {
-        println("Exception during upload of repository $repositoryKey: ${e.message}")
-        e.printStackTrace()
-        throw RuntimeException("Failed to upload repository $repositoryKey: ${e.message}", e)
-    } finally {
+    var lastException: Exception? = null
+    repeat(maxRetries) { attempt ->
+        val client = createHttpClient()
         try {
-            httpPost.releaseConnection()
+            val httpPost = HttpPost(uploadUrl).apply {
+                setHeader("Authorization", authHeader())
+                setHeader("Content-Type", "application/json")
+                entity = StringEntity("""{"publishing_type": "automatic"}""")
+            }
+
+            println("Executing HTTP POST request (attempt ${attempt + 1}/$maxRetries)...")
+            val response = client.execute(httpPost)
+            val statusCode = response.statusLine.statusCode
+            println("Received response with status: $statusCode")
+
+            val responseBody = EntityUtils.toString(response.entity)
+            println("Response body length: ${responseBody.length}")
+
+            if (statusCode == 200 || statusCode == 201) {
+                println("Successfully uploaded repository $repositoryKey to Central Portal")
+                println("Response: $responseBody")
+                return
+            } else {
+                lastException = RuntimeException("HTTP $statusCode - $responseBody")
+                println("Upload attempt ${attempt + 1}/$maxRetries failed for $repositoryKey: HTTP $statusCode")
+            }
         } catch (e: Exception) {
-            println("Warning: Failed to release connection: ${e.message}")
+            lastException = e
+            println("Upload attempt ${attempt + 1}/$maxRetries failed for $repositoryKey: ${e.message}")
+        } finally {
+            client.close()
+        }
+        if (attempt < maxRetries - 1) {
+            println("Retrying in 10 seconds...")
+            Thread.sleep(10_000)
         }
     }
+    throw RuntimeException("Failed to upload repository $repositoryKey after $maxRetries attempts", lastException)
 }
 
 fun dropStagingRepository(repositoryKey: String) {
-    val client = HttpClients.custom()
-        .setDefaultRequestConfig(
-            RequestConfig.custom()
-                .setConnectTimeout(30000) // 30 seconds
-                .setSocketTimeout(60000) // 60 seconds
-                .build()
-        )
-        .build()
+    val client = createHttpClient()
     val dropUrl = "$manualApiUrl/drop/repository/$repositoryKey"
 
     println("Starting drop for repository: $repositoryKey")
     println("Drop URL: $dropUrl")
 
     val httpDelete = HttpDelete(dropUrl).apply {
-        setHeader("Authorization", "Bearer " + Base64.getEncoder().encodeToString("$nexusUsername:$nexusPassword".toByteArray()))
+        setHeader("Authorization", authHeader())
     }
 
     try {
         println("Executing HTTP DELETE request...")
         val response = client.execute(httpDelete)
-        println("Received response with status: ${response.statusLine.statusCode}")
+        val statusCode = response.statusLine.statusCode
+        println("Received response with status: $statusCode")
 
-        val responseBody = if (response.entity != null) {
-            EntityUtils.toString(response.entity)
-        } else {
-            ""
-        }
+        val responseBody = if (response.entity != null) EntityUtils.toString(response.entity) else ""
         println("Response body length: ${responseBody.length}")
 
-        if (response.statusLine.statusCode == 200 || response.statusLine.statusCode == 201 || response.statusLine.statusCode == 204) {
+        if (statusCode == 200 || statusCode == 201 || statusCode == 204) {
             println("Successfully dropped repository $repositoryKey")
             if (responseBody.isNotEmpty()) {
                 println("Response: $responseBody")
             }
         } else {
-            throw RuntimeException("Failed to drop repository $repositoryKey: HTTP ${response.statusLine.statusCode} - $responseBody")
+            throw RuntimeException("Failed to drop repository $repositoryKey: HTTP $statusCode - $responseBody")
         }
     } catch (e: Exception) {
+        if (e is RuntimeException && e.message?.startsWith("Failed to drop") == true) throw e
         println("Exception during drop of repository $repositoryKey: ${e.message}")
-        e.printStackTrace()
         throw RuntimeException("Failed to drop repository $repositoryKey: ${e.message}", e)
     } finally {
-        try {
-            httpDelete.releaseConnection()
-        } catch (e: Exception) {
-            println("Warning: Failed to release connection: ${e.message}")
-        }
+        client.close()
     }
 }
 
 fun waitForArtifactsToBeAvailable() {
-    val repoIds: List<String> = repoIdWithVersion.map { it.first }
-    val client = HttpClients.custom()
-        .setDefaultRequestConfig(
-            RequestConfig.custom()
-                .setConnectTimeout(30000) // 30 seconds
-                .setSocketTimeout(60000) // 60 seconds
-                .build()
-        )
-        .build()
-    val artifactUrls = repoIdWithVersion.map { (repoId, version) ->
-        println("Checking: https://repo1.maven.org/maven2/com/reown/$repoId/$version/")
-        "https://repo1.maven.org/maven2/com/reown/$repoId/$version/"
-    }
-    val maxRetries = 40
-    var attempt = 0
-    val availableRepos = mutableSetOf<String>()
+    val artifactIds = artifactsToCheck.map { it.artifactId }
+    val client = createHttpClient()
+    try {
+        val artifactUrls = artifactsToCheck.map { (group, artifactId, version) ->
+            val url = "https://repo1.maven.org/maven2/$group/$artifactId/$version/"
+            println("Checking: $url")
+            url
+        }
+        val maxRetries = 40
+        var attempt = 0
+        val availableRepos = mutableSetOf<String>()
 
-    while (availableRepos.size < repoIds.size && attempt < maxRetries) {
-        artifactUrls.forEachIndexed { index, artifactUrl ->
-            if (!availableRepos.contains(repoIds[index])) {
-                val httpGet = HttpGet(artifactUrl)
-                try {
-                    val response = client.execute(httpGet)
-                    val statusCode = response.statusLine.statusCode
-                    EntityUtils.consume(response.entity) // Ensure the response is fully consumed
-                    if (statusCode == 200 || statusCode == 201) {
-                        println("Artifact for repository ${repoIds[index]} is now available.")
-                        availableRepos.add(repoIds[index])
-                    } else {
-                        println("Artifact for repository ${repoIds[index]} not yet available. Status code: $statusCode")
+        while (availableRepos.size < artifactIds.size && attempt < maxRetries) {
+            artifactUrls.forEachIndexed { index, artifactUrl ->
+                if (!availableRepos.contains(artifactIds[index])) {
+                    val httpGet = HttpGet(artifactUrl)
+                    try {
+                        val response = client.execute(httpGet)
+                        val statusCode = response.statusLine.statusCode
+                        EntityUtils.consume(response.entity)
+                        if (statusCode == 200 || statusCode == 201) {
+                            println("Artifact for repository ${artifactIds[index]} is now available.")
+                            availableRepos.add(artifactIds[index])
+                        } else {
+                            println("Artifact for repository ${artifactIds[index]} not yet available. Status code: $statusCode")
+                        }
+                    } catch (e: Exception) {
+                        println("Error checking artifact for repository ${artifactIds[index]}: ${e.message}")
+                    } finally {
+                        httpGet.releaseConnection()
                     }
-                } catch (e: Exception) {
-                    println("Error checking artifact for repository ${repoIds[index]}: ${e.message}")
-                } finally {
-                    httpGet.releaseConnection() // Ensure the connection is released
                 }
             }
+            if (availableRepos.size < artifactIds.size) {
+                println("Waiting for artifacts to be available... Attempt: ${attempt + 1}")
+                attempt++
+                Thread.sleep(45000)
+            }
         }
-        if (availableRepos.size < repoIds.size) {
-            println("Waiting for artifacts to be available... Attempt: ${attempt + 1}")
-            attempt++
-            Thread.sleep(45000) // Wait for 45 seconds before retrying
-        }
-    }
 
-    if (availableRepos.size < repoIds.size) {
-        throw RuntimeException("Artifacts were not available after ${maxRetries * 45} seconds.")
-    } else {
-        println("All artifacts are now available.")
+        if (availableRepos.size < artifactIds.size) {
+            throw RuntimeException("Artifacts were not available after ${maxRetries * 45} seconds.")
+        } else {
+            println("All artifacts are now available.")
+        }
+    } finally {
+        client.close()
     }
 }
 
-private val repoIdWithVersion = listOf(
-    Pair(ANDROID_BOM, BOM_VERSION),
-    Pair(FOUNDATION, FOUNDATION_VERSION),
-    Pair(ANDROID_CORE, CORE_VERSION),
-    Pair(SIGN, SIGN_VERSION),
-    Pair(NOTIFY, NOTIFY_VERSION),
-    Pair(WALLETKIT, WALLETKIT_VERSION),
-    Pair(APPKIT, APPKIT_VERSION),
-    Pair(MODAL_CORE, MODAL_CORE_VERSION)
+private data class ArtifactCheck(val group: String, val artifactId: String, val version: String)
+
+private val artifactsToCheck = listOf(
+    ArtifactCheck("com/reown", ANDROID_BOM, BOM_VERSION),
+    ArtifactCheck("com/reown", FOUNDATION, FOUNDATION_VERSION),
+    ArtifactCheck("com/reown", ANDROID_CORE, CORE_VERSION),
+    ArtifactCheck("com/reown", SIGN, SIGN_VERSION),
+    ArtifactCheck("com/reown", NOTIFY, NOTIFY_VERSION),
+    ArtifactCheck("com/reown", WALLETKIT, WALLETKIT_VERSION),
+    ArtifactCheck("com/reown", APPKIT, APPKIT_VERSION),
+    ArtifactCheck("com/reown", MODAL_CORE, MODAL_CORE_VERSION),
+    ArtifactCheck("com/walletconnect", PAY, PAY_VERSION),
+    ArtifactCheck("com/walletconnect", POS, POS_VERSION),
 )

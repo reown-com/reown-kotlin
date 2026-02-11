@@ -39,7 +39,7 @@ afterEvaluate {
                 pom {
                     name.set("Reown ${requireNotNull(extra.get(KEY_SDK_NAME))}")
                     description.set("${requireNotNull(extra.get(KEY_SDK_NAME))} SDK for Reown")
-                    url.set("https://github.com/reown-con/reown-kotlin")
+                    url.set("https://github.com/reown-com/reown-kotlin")
 
                     licenses {
                         license {
@@ -61,9 +61,9 @@ afterEvaluate {
                     }
 
                     scm {
-                        connection.set("scm:git:git://github.com/reown-con/reown-kotlin.git")
-                        developerConnection.set("scm:git:ssh://github.com/reown-con/reown-kotlin.git")
-                        url.set("https://github.com/reown-con/reown-kotlin")
+                        connection.set("scm:git:git://github.com/reown-com/reown-kotlin.git")
+                        developerConnection.set("scm:git:ssh://github.com/reown-com/reown-kotlin.git")
+                        url.set("https://github.com/reown-com/reown-kotlin")
                     }
                 }
             }
