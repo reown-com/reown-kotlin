@@ -10,8 +10,8 @@ agp = "8.13.0"
 
 minSdk = "23"
 mockkAndroid = "1.12.0"
-targetSdk = "34"
-compileSdk = "34"
+targetSdk = "35"
+compileSdk = "36"
 
 composeCompiler = "1.6.0"
 composeBOM = "2024.05.00"
