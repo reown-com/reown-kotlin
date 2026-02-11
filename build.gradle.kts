@@ -12,7 +12,6 @@ import java.util.Base64
 
 plugins {
     alias(libs.plugins.nexusPublish)
-    alias(libs.plugins.sonarqube)
     id("release-scripts")
     id("version-bump")
     alias(libs.plugins.compose.compiler) apply false
@@ -39,41 +38,7 @@ allprojects {
     }
 }
 
-////todo: user sonar cloud after repos are public
-//sonar {
-//    properties {
-//        properties(
-//            mapOf(
-//                "sonar.projectKey" to "WalletConnect_WalletConnectKotlinV2",
-//                "sonar.organization" to "walletconnect",
-//                "sonar.host.url" to "https://sonarcloud.io",
-//                "sonar.gradle.skipCompile" to true,
-//                "sonar.coverage.exclusions" to "sample/**,**/di/**,/buildSrc/**,**/gradle/**,**/test/**,**/androidTest/**,**/build.gradle.kts",
-//            )
-//        )
-//    }
-//}
-
 subprojects {
-    apply(plugin = rootProject.libs.plugins.sonarqube.get().pluginId)
-
-////todo: user sonar cloud after repos are public
-//    extensions.configure<SonarExtension> {
-//        setAndroidVariant("debug")
-//
-//        isSkipProject = name == "bom"
-//        properties {
-//            properties(
-//                mapOf(
-//                    "sonar.gradle.skipCompile" to true,
-//                    "sonar.sources" to "${projectDir}/src/main/kotlin",
-//                    "sonar.java.binaries" to layout.buildDirectory,
-//                    "sonar.coverage.jacoco.xmlReportPaths" to "${layout.buildDirectory}/reports/jacoco/xml/jacoco.xml"
-//                )
-//            )
-//        }
-//    }
-
     afterEvaluate {
         if (hasProperty("android")) {
             extensions.configure(BaseExtension::class.java) {
