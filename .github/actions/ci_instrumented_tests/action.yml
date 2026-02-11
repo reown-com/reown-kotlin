@@ -51,7 +51,7 @@ runs:
         MERCHANT_API_KEY: ${{ inputs.merchantApiKey }}
       run: ./gradlew ${{ inputs.command }} -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       if: always()
       with:
         name: ${{ inputs.name }}
