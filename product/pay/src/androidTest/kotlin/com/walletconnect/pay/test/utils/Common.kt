@@ -4,7 +4,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import junit.framework.TestCase.fail
 
 internal object Common {
-    const val MERCHANT_ID = "ingenico-demo"
+    const val MERCHANT_ID = "merchant-1768556907"
     val MERCHANT_API_KEY: String by lazy {
         InstrumentationRegistry.getArguments().getString("MERCHANT_API_KEY")
             ?: error("MERCHANT_API_KEY environment variable not set")

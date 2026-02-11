@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -77,27 +78,25 @@ class WcPayIntegrationTest {
         }
         println("Signatures generated: ${signatures.size}")
 
-        // Step 5: Confirm payment with signatures
+        // Step 5: Build collected data from schema
+        val collectedData = options.collectDataAction?.schema?.let { schema ->
+            buildCollectedDataFromSchema(schema)
+        }
+        println("Collected data from schema: ${collectedData?.map { "${it.id}=${it.value}" }}")
+
+        // Step 6: Confirm payment with signatures
         val confirmResult = WalletConnectPay.confirmPayment(
             paymentId = options.paymentId,
             optionId = selectedOption.id,
             signatures = signatures,
-            collectedData = options.collectDataAction?.fields?.map { field ->
-                Pay.CollectDataFieldResult(
-                    id = field.id,
-                    value = when (field.fieldType) {
-                        Pay.CollectDataFieldType.TEXT -> "test@example.com"
-                        Pay.CollectDataFieldType.DATE -> "1990-01-01"
-                    }
-                )
-            }
+            collectedData = collectedData
         )
         assertTrue("Failed to confirm payment: ${confirmResult.exceptionOrNull()}", confirmResult.isSuccess)
 
         val confirmation = confirmResult.getOrThrow()
         println("Payment confirmation status: ${confirmation.status}")
 
-        // Step 6: Assert payment succeeded or is processing
+        // Step 7: Assert payment succeeded or is processing
         assertTrue(
             "Unexpected payment status: ${confirmation.status}",
             confirmation.status == Pay.PaymentStatus.SUCCEEDED || confirmation.status == Pay.PaymentStatus.PROCESSING
@@ -228,5 +227,44 @@ class WcPayIntegrationTest {
         )
         assertTrue("Failed to create test payment: ${response.errorBody()?.string()}", response.isSuccessful)
         return response.body()!!
+    }
+
+    /**
+     * Parse schema to build collected data for confirmPayment.
+     * Uses the 'required' array and 'properties' to determine what fields to fill.
+     */
+    private fun buildCollectedDataFromSchema(schema: String): List<Pay.CollectDataFieldResult> {
+        val schemaJson = JSONObject(schema)
+        val properties = schemaJson.optJSONObject("properties") ?: return emptyList()
+        val requiredArray = schemaJson.optJSONArray("required") ?: return emptyList()
+
+        val collectedData = mutableListOf<Pay.CollectDataFieldResult>()
+
+        for (i in 0 until requiredArray.length()) {
+            val fieldId = requiredArray.getString(i)
+            val fieldProps = properties.optJSONObject(fieldId) ?: continue
+            val fieldType = fieldProps.optString("type")
+            val fieldFormat = fieldProps.optString("format")
+
+            val value = when {
+                // Boolean fields (like tosConfirmed)
+                fieldType == "boolean" -> "true"
+                // Date fields
+                fieldFormat == "date" || fieldId == "dob" -> "1990-01-15"
+                // Country code fields (pattern: ^[A-Z]{2}$)
+                fieldId == "pobCountry" -> "US"
+                // Address fields
+                fieldId == "pobAddress" -> "New York, NY"
+                // Name fields
+                fieldId == "fullName" -> "Test User"
+                // Default text fields
+                fieldType == "string" -> "test value"
+                else -> "test"
+            }
+
+            collectedData.add(Pay.CollectDataFieldResult(id = fieldId, value = value))
+        }
+
+        return collectedData
     }
 }

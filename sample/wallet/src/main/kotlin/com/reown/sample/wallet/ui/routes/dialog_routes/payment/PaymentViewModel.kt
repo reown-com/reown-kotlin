@@ -15,8 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import org.json.JSONArray
+import org.json.JSONObject
 import org.web3j.crypto.ECKeyPair
 import org.web3j.crypto.Sign
 import org.web3j.crypto.StructuredDataEncoder
@@ -44,6 +47,12 @@ class PaymentViewModel : ViewModel() {
     private val collectedValues: MutableMap<String, String> = mutableMapOf()
     private var currentFieldIndex: Int = 0
 
+    // Information Capture WebView URL (from collectDataAction.url)
+    private var icWebViewUrl: String? = null
+
+    // Information Capture schema (for determining prefill fields)
+    private var icSchema: String? = null
+
     init {
         // Collect payment options event (has replay=1 to ensure we receive it even if emitted before collecting)
         WalletKitDelegate.paymentOptionsEvent
@@ -56,8 +65,10 @@ class PaymentViewModel : ViewModel() {
      */
     private fun processPaymentOptionsResponse(response: Wallet.Model.PaymentOptionsResponse) {
         currentPaymentId = response.paymentId
-        // Store collect data fields from response (if any)
+        // Store collect data fields, WebView URL, and schema from response
         collectDataFields = response.collectDataAction?.fields ?: emptyList()
+        icWebViewUrl = response.collectDataAction?.url
+        icSchema = response.collectDataAction?.schema
         collectedValues.clear()
         currentFieldIndex = 0
 
@@ -67,8 +78,8 @@ class PaymentViewModel : ViewModel() {
 
         if (response.options.isEmpty()) {
             _uiState.value = PaymentUiState.Error("No payment options available")
-        } else if (collectDataFields.isNotEmpty()) {
-            // Show intro screen only when information capture is required
+        } else if (icWebViewUrl != null || collectDataFields.isNotEmpty()) {
+            // Show intro screen when information capture is required (WebView or fields)
             _uiState.value = PaymentUiState.Intro(
                 paymentInfo = storedPaymentInfo,
                 hasInfoCapture = true
@@ -91,15 +102,85 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Proceed from the intro screen to either information capture or payment options.
+     * Proceed from the intro screen to Information Capture (WebView) or Options.
      */
     fun proceedFromIntro() {
-        if (collectDataFields.isNotEmpty()) {
-            // Show information capture first
+        val baseUrl = icWebViewUrl
+
+        if (baseUrl != null) {
+            // Build URL with prefill parameter
+            val urlWithPrefill = buildUrlWithPrefill(baseUrl, icSchema)
+
+            // Use WebView for Information Capture (URL from API)
+            _uiState.value = PaymentUiState.WebViewDataCollection(
+                url = urlWithPrefill,
+                paymentInfo = storedPaymentInfo
+            )
+        } else if (collectDataFields.isNotEmpty()) {
+            // Fallback: Field-by-field collection (existing flow)
             showCurrentField()
         } else {
-            // No fields to collect, show options directly
+            // No IC required, show options directly
             proceedToOptions()
+        }
+    }
+
+    /**
+     * Append prefill query parameter to IC URL if user data is available.
+     */
+    private fun buildUrlWithPrefill(baseUrl: String, schema: String?): String {
+        val prefill = buildPrefillParam(schema) ?: return baseUrl
+
+        val uri = Uri.parse(baseUrl)
+        return uri.buildUpon()
+            .appendQueryParameter("prefill", prefill)
+            .build()
+            .toString()
+    }
+
+    /**
+     * Build the prefill query parameter for IC WebView URL.
+     * Creates Base64-encoded JSON with available user data.
+     * Only includes fields that are in the schema's required array.
+     */
+    private fun buildPrefillParam(schema: String?): String? {
+        if (schema == null) return null
+
+        return try {
+            // Parse schema to get required fields
+            val schemaJson = JSONObject(schema)
+            val requiredArray = schemaJson.optJSONArray("required") ?: return null
+            val requiredFields = (0 until requiredArray.length()).map { requiredArray.getString(it) }
+
+            // Build prefill JSON with available user data
+            val prefillData = JSONObject()
+
+            if ("fullName" in requiredFields) {
+                prefillData.put("fullName", EthAccountDelegate.PREFILL_FULL_NAME)
+            }
+
+            if ("dob" in requiredFields) {
+                prefillData.put("dob", EthAccountDelegate.PREFILL_DOB)
+            }
+
+            if ("pobAddress" in requiredFields) {
+                prefillData.put("pobAddress", EthAccountDelegate.PREFILL_POB_ADDRESS)
+            }
+
+            // Only return if we have data to prefill
+            if (prefillData.length() == 0) return null
+
+            // Base64 encode the JSON (NO_WRAP avoids newlines, URL_SAFE for URL compatibility)
+            val encoded = Base64.encodeToString(
+                prefillData.toString().toByteArray(Charsets.UTF_8),
+                Base64.NO_WRAP or Base64.URL_SAFE
+            )
+
+            Log.d("PaymentViewModel", "Built prefill param: $prefillData -> $encoded")
+            encoded
+        } catch (e: Exception) {
+            Log.e("PaymentViewModel", "Failed to build prefill param", e)
+            null
         }
     }
 
@@ -206,8 +287,23 @@ class PaymentViewModel : ViewModel() {
     fun goBackToIntro() {
         _uiState.value = PaymentUiState.Intro(
             paymentInfo = storedPaymentInfo,
-            hasInfoCapture = collectDataFields.isNotEmpty()
+            hasInfoCapture = icWebViewUrl != null || collectDataFields.isNotEmpty()
         )
+    }
+
+    /**
+     * Called when WebView signals IC_COMPLETE.
+     * Proceeds to payment options.
+     */
+    fun onICWebViewComplete() {
+        proceedToOptions()
+    }
+
+    /**
+     * Called when WebView signals IC_ERROR.
+     */
+    fun onICWebViewError(errorMessage: String) {
+        _uiState.value = PaymentUiState.Error("Information capture failed: $errorMessage")
     }
 
     /**
@@ -252,12 +348,14 @@ class PaymentViewModel : ViewModel() {
                 onSuccess = { response ->
                     when (response.status) {
                         Wallet.Model.PaymentStatus.SUCCEEDED -> {
+                            Log.d("PaymentViewModel", "Payment SUCCEEDED")
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment completed successfully!",
                                 paymentInfo = storedPaymentInfo
                             )
                         }
                         Wallet.Model.PaymentStatus.PROCESSING -> {
+                            Log.d("PaymentViewModel", "Payment PROCESSING")
                             _uiState.value = PaymentUiState.Success(
                                 message = "Payment is being processed...",
                                 paymentInfo = storedPaymentInfo
@@ -335,9 +433,12 @@ class PaymentViewModel : ViewModel() {
         storedPaymentOptions = emptyList()
         pendingWalletRpcActions = emptyList()
         collectDataFields = emptyList()
+        icWebViewUrl = null
+        icSchema = null
         collectedValues.clear()
         currentFieldIndex = 0
-        _uiState.value = PaymentUiState.Loading
+        // Don't set state to Loading here - we're navigating away anyway
+        // and it causes a brief flash of the loading screen
         // Clear replay cache to prevent stale data on next payment
         WalletKitDelegate.clearPaymentOptions()
     }
@@ -359,6 +460,14 @@ sealed class PaymentUiState {
         val estimatedTime: String = "~2min"
     ) : PaymentUiState()
 
+    /**
+     * WebView-based Information Capture (replaces CollectingData when URL is available).
+     */
+    data class WebViewDataCollection(
+        val url: String,
+        val paymentInfo: Wallet.Model.PaymentInfo?
+    ) : PaymentUiState()
+
     data class Options(
         val paymentLink: String,
         val paymentInfo: Wallet.Model.PaymentInfo?,
@@ -366,7 +475,7 @@ sealed class PaymentUiState {
     ) : PaymentUiState()
 
     /**
-     * State for collecting user data (Information Capture).
+     * State for collecting user data (Information Capture) - fallback when no WebView URL.
      */
     data class CollectingData(
         val currentStepIndex: Int,

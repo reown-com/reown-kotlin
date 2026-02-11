@@ -531,7 +531,8 @@ object Wallet {
 
         enum class CollectDataFieldType {
             TEXT,
-            DATE
+            DATE,
+            CHECKBOX
         }
 
         data class CollectDataField(
@@ -542,7 +543,10 @@ object Wallet {
         ) : Model()
 
         data class CollectDataAction(
-            val fields: List<CollectDataField>
+            @Deprecated("Use url for WebView-based data collection or schema to parse field requirements")
+            val fields: List<CollectDataField>,
+            val url: String?,
+            val schema: String?
         ) : Model()
 
         data class CollectDataFieldResult(
@@ -566,6 +570,11 @@ object Wallet {
         sealed class RequiredAction : Model() {
             data class WalletRpc(val action: WalletRpcAction) : RequiredAction()
         }
+
+        data class PaymentResultInfo(
+            val txId: String,
+            val optionAmount: PaymentAmount
+        ) : Model()
 
         data class ConfirmPaymentResponse(
             val status: PaymentStatus,
