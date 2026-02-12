@@ -244,35 +244,34 @@ fun uploadRepositoryToPortal(repositoryKey: String, maxRetries: Int = 3) {
 
     var lastException: Exception? = null
     repeat(maxRetries) { attempt ->
-        val client = createHttpClient()
-        try {
-            val httpPost = HttpPost(uploadUrl).apply {
-                setHeader("Authorization", authHeader())
-                setHeader("Content-Type", "application/json")
-                entity = StringEntity("""{"publishing_type": "automatic"}""")
+        createHttpClient().use { client ->
+            try {
+                val httpPost = HttpPost(uploadUrl).apply {
+                    setHeader("Authorization", authHeader())
+                    setHeader("Content-Type", "application/json")
+                    entity = StringEntity("""{"publishing_type": "automatic"}""")
+                }
+
+                println("Executing HTTP POST request (attempt ${attempt + 1}/$maxRetries)...")
+                val response = client.execute(httpPost)
+                val statusCode = response.statusLine.statusCode
+                println("Received response with status: $statusCode")
+
+                val responseBody = EntityUtils.toString(response.entity)
+                println("Response body length: ${responseBody.length}")
+
+                if (statusCode == 200 || statusCode == 201) {
+                    println("Successfully uploaded repository $repositoryKey to Central Portal")
+                    println("Response: $responseBody")
+                    return
+                } else {
+                    lastException = RuntimeException("HTTP $statusCode - $responseBody")
+                    println("Upload attempt ${attempt + 1}/$maxRetries failed for $repositoryKey: HTTP $statusCode")
+                }
+            } catch (e: Exception) {
+                lastException = e
+                println("Upload attempt ${attempt + 1}/$maxRetries failed for $repositoryKey: ${e.message}")
             }
-
-            println("Executing HTTP POST request (attempt ${attempt + 1}/$maxRetries)...")
-            val response = client.execute(httpPost)
-            val statusCode = response.statusLine.statusCode
-            println("Received response with status: $statusCode")
-
-            val responseBody = EntityUtils.toString(response.entity)
-            println("Response body length: ${responseBody.length}")
-
-            if (statusCode == 200 || statusCode == 201) {
-                println("Successfully uploaded repository $repositoryKey to Central Portal")
-                println("Response: $responseBody")
-                return
-            } else {
-                lastException = RuntimeException("HTTP $statusCode - $responseBody")
-                println("Upload attempt ${attempt + 1}/$maxRetries failed for $repositoryKey: HTTP $statusCode")
-            }
-        } catch (e: Exception) {
-            lastException = e
-            println("Upload attempt ${attempt + 1}/$maxRetries failed for $repositoryKey: ${e.message}")
-        } finally {
-            client.close()
         }
         if (attempt < maxRetries - 1) {
             println("Retrying in 10 seconds...")
