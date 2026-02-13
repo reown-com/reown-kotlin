@@ -1,32 +1,27 @@
-name: Create GitHub Release
+name: Create GitHub Release (Manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'BOM version (e.g., 1.6.5)'
+        required: true
+        type: string
 
 jobs:
   create_release:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v6
-
-    - name: Generate Release Notes
-      id: drafter
-      uses: release-drafter/release-drafter@v6
       with:
-        config-name: release-drafter.yml
-      env:
-        GITHUB_TOKEN: ${{ secrets.PUSH_GITHUB_TOKEN }}
+        ref: master
 
     - name: Create GitHub Release
-      uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.PUSH_GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        body: ${{ steps.drafter.outputs.changelog }}
-        draft: false
-        prerelease: false
-        target_commitish: master
+        GH_TOKEN: ${{ secrets.PUSH_GITHUB_TOKEN }}
+      run: |
+        gh release create "BOM_${{ inputs.version }}" \
+          --target master \
+          --title "BOM_${{ inputs.version }}" \
+          --generate-notes
