@@ -1,6 +1,5 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.payment
 
-import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -13,15 +12,12 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -57,7 +53,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -118,8 +113,7 @@ fun PaymentRoute(
                     viewModel.onICWebViewError(error)
                 },
                 onClose = {
-                    // Go back to Intro screen instead of canceling entirely
-                    viewModel.goBackToIntro()
+                    viewModel.goBackToOptions()
                 }
             )
         }
@@ -129,25 +123,14 @@ fun PaymentRoute(
                     is PaymentUiState.Loading -> {
                         LoadingContent()
                     }
-                    is PaymentUiState.Intro -> {
-                        IntroContent(
-                            paymentInfo = state.paymentInfo,
-                            hasInfoCapture = state.hasInfoCapture,
-                            estimatedTime = state.estimatedTime,
-                            onStart = { viewModel.proceedFromIntro() },
-                            onClose = {
-                                viewModel.cancel()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
-                            }
-                        )
-                    }
                     is PaymentUiState.Options -> {
                         PaymentOptionsContent(
                             paymentInfo = state.paymentInfo,
                             options = state.options,
                             onOptionSelected = { optionId ->
-                                viewModel.processPayment(optionId)
+                                viewModel.onOptionSelected(optionId)
                             },
+                            onWhyInfoRequired = { viewModel.showWhyInfoRequired() },
                             onClose = {
                                 viewModel.cancel()
                                 navController.popBackStack(Route.Connections.path, inclusive = false)
@@ -163,6 +146,26 @@ fun PaymentRoute(
                             onValueSubmit = { fieldId, value ->
                                 viewModel.submitFieldValue(fieldId, value)
                             },
+                            onClose = {
+                                viewModel.cancel()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                            }
+                        )
+                    }
+                    is PaymentUiState.Summary -> {
+                        SummaryContent(
+                            paymentInfo = state.paymentInfo,
+                            selectedOption = state.selectedOption,
+                            onConfirm = { viewModel.confirmFromSummary() },
+                            onClose = {
+                                viewModel.cancel()
+                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                            }
+                        )
+                    }
+                    is PaymentUiState.WhyInfoRequired -> {
+                        WhyInfoRequiredContent(
+                            onBack = { viewModel.dismissWhyInfoRequired() },
                             onClose = {
                                 viewModel.cancel()
                                 navController.popBackStack(Route.Connections.path, inclusive = false)
@@ -198,7 +201,6 @@ fun PaymentRoute(
                         ErrorContent(
                             message = state.message,
                             onRetry = {
-                                // Retry not available in event-based flow - close dialog
                                 viewModel.cancel()
                                 navController.popBackStack(Route.Connections.path, inclusive = false)
                             },
@@ -237,13 +239,18 @@ private fun LoadingContent() {
 }
 
 @Composable
-private fun IntroContent(
+private fun PaymentOptionsContent(
     paymentInfo: Wallet.Model.PaymentInfo?,
-    hasInfoCapture: Boolean,
-    estimatedTime: String,
-    onStart: () -> Unit,
+    options: List<Wallet.Model.PaymentOption>,
+    onOptionSelected: (String) -> Unit,
+    onWhyInfoRequired: () -> Unit,
     onClose: () -> Unit
 ) {
+    var selectedOptionId by remember { mutableStateOf<String?>(options.firstOrNull()?.id) }
+    val anyOptionHasCollectData = options.any { it.collectData != null }
+    val selectedOption = options.find { it.id == selectedOptionId }
+    val selectedHasCollectData = selectedOption?.collectData != null
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -251,11 +258,33 @@ private fun IntroContent(
             .background(Color.White)
             .padding(20.dp)
     ) {
-        // Close button at top right
-        Box(
+        // Header: "Why info required?" pill (left) + X close (right)
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.TopEnd
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            if (anyOptionHasCollectData) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFFF0F0F0))
+                        .clickable { onWhyInfoRequired() }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "Why info required?",
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF666666)
+                        )
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.size(32.dp))
+            }
+
             IconButton(
                 onClick = onClose,
                 modifier = Modifier.size(32.dp)
@@ -268,440 +297,53 @@ private fun IntroContent(
                 )
             }
         }
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        // Merchant icon
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Merchant icon and payment title
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            paymentInfo?.merchant?.iconUrl?.let { iconUrl ->
-                AsyncImage(
-                    model = iconUrl,
-                    contentDescription = "Merchant icon",
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.Black)
-                )
-            } ?: run {
-                // Placeholder icon if no merchant icon
-                Box(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.Black),
-                    contentAlignment = Alignment.Center
-                ) {
-            Text(
-                        text = paymentInfo?.merchant?.name?.take(1)?.uppercase() ?: "P",
-                style = TextStyle(
-                            fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                        )
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(20.dp))
-            
-            // Payment title with verified badge
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
-                val formattedAmount = if (paymentInfo != null) {
-                    formatAmount(
-                        value = paymentInfo.amount.value,
-                        decimals = paymentInfo.amount.display?.decimals ?: 2,
-                        symbol = paymentInfo.amount.display?.assetSymbol ?: paymentInfo.amount.unit
-                    )
-                } else {
-                    "Payment"
-                }
-                
-                Text(
-                    text = "Pay $formattedAmount to $merchantName",
-                    style = TextStyle(
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
-                    )
-                )
-                
-                Spacer(modifier = Modifier.width(6.dp))
-                
-                // Verified badge
-                Box(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF3396FF)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Verified",
-                        tint = Color.White,
-                        modifier = Modifier.size(12.dp)
-                    )
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Steps timeline
-        IntroStepsTimeline(
-            hasInfoCapture = hasInfoCapture,
-            estimatedTime = estimatedTime
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Let's start button
-        Button(
-            onClick = onStart,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFF3396FF)
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text(
-                text = "Let's start",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            )
-        }
-    }
-}
+            MerchantIcon(paymentInfo = paymentInfo, size = 64.dp)
 
-@Composable
-private fun IntroStepsTimeline(
-    hasInfoCapture: Boolean,
-    estimatedTime: String
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-    ) {
-        // Step 1: Provide information (only if info capture is required)
-        if (hasInfoCapture) {
-            IntroStepItem(
-                stepNumber = 1,
-                totalSteps = 2,
-                title = "Provide information",
-                description = "A quick one-time check required for regulated payments.",
-                estimatedTime = estimatedTime,
-                isFirst = true,
-                isLast = false
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Step 2: Confirm payment
-            IntroStepItem(
-                stepNumber = 2,
-                totalSteps = 2,
-                title = "Confirm payment",
-                description = "Review the details and approve the payment.",
-                estimatedTime = null,
-                isFirst = false,
-                isLast = true
-            )
-        } else {
-            // Only show payment confirmation step
-            IntroStepItem(
-                stepNumber = 1,
-                totalSteps = 1,
-                title = "Confirm payment",
-                description = "Review the details and approve the payment.",
-                estimatedTime = null,
-                isFirst = true,
-                isLast = true
-            )
-        }
-    }
-}
-
-@Composable
-private fun IntroStepItem(
-    stepNumber: Int,
-    totalSteps: Int,
-    title: String,
-    description: String,
-    estimatedTime: String?,
-    isFirst: Boolean,
-    isLast: Boolean
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start
-    ) {
-        // Timeline indicator column
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.width(24.dp)
-        ) {
-            // Connector line (top part)
-            if (!isFirst) {
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(8.dp)
-                        .background(Color(0xFFE0E0E0))
-                )
-            } else {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            
-            // Circle indicator
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFE0E0E0))
-            )
-            
-            // Connector line (bottom part)
-            if (!isLast) {
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(48.dp)
-                        .background(Color(0xFFE0E0E0))
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        // Step content
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = title,
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
-                    )
-                )
-                
-                // Estimated time badge
-                estimatedTime?.let { time ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFF0F0F0))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = time,
-                            style = TextStyle(
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color(0xFF666666)
-                            )
-                        )
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
-            Text(
-                text = description,
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    color = Color(0xFF9E9E9E),
-                    lineHeight = 20.sp
-                )
-            )
-        }
-    }
-}
-
-@Composable
-private fun PaymentOptionsContent(
-    paymentInfo: Wallet.Model.PaymentInfo?,
-    options: List<Wallet.Model.PaymentOption>,
-    onOptionSelected: (String) -> Unit,
-    onClose: () -> Unit
-) {
-    var selectedOptionId by remember { mutableStateOf<String?>(options.firstOrNull()?.id) }
-    var isOptionsExpanded by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(20.dp)
-    ) {
-        // Header with progress and close
-        PaymentOptionsHeader(
-            onClose = onClose
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Merchant icon and payment title
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-            paymentInfo?.merchant?.iconUrl?.let { iconUrl ->
-            AsyncImage(
-                model = iconUrl,
-                contentDescription = "Merchant icon",
-                modifier = Modifier
-                    .size(64.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color.Black)
-                )
-            } ?: run {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Color.Black),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = paymentInfo?.merchant?.name?.take(1)?.uppercase() ?: "P",
-                        style = TextStyle(
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    )
-                }
-            }
-            
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Payment title with verified badge
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
-                val displayAmount = paymentInfo?.let {
-                    formatDisplayAmount(
-                        value = it.amount.value,
-                        decimals = it.amount.display?.decimals ?: 2,
-                        symbol = it.amount.display?.assetSymbol ?: it.amount.unit
-                    )
-                } ?: ""
-                
-                Text(
-                    text = "Pay $displayAmount to $merchantName",
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
-                    )
-                )
-                
-                Spacer(modifier = Modifier.width(6.dp))
-                
-                // Verified badge
-                Box(
-                    modifier = Modifier
-                        .size(18.dp)
-                    .clip(CircleShape)
-                        .background(Color(0xFF3396FF)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Verified",
-                        tint = Color.White,
-                        modifier = Modifier.size(10.dp)
-                    )
-                }
-            }
+
+            PaymentTitle(paymentInfo = paymentInfo, fontSize = 18)
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
-        // Amount row
-        paymentInfo?.let { info ->
-            val displayAmount = formatDisplayAmount(
-                value = info.amount.value,
-                decimals = info.amount.display?.decimals ?: 2,
-                symbol = info.amount.display?.assetSymbol ?: info.amount.unit
-            )
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFF5F5F5))
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-        Text(
-                    text = "Amount",
-            style = TextStyle(
-                        fontSize = 16.sp,
-                        color = Color(0xFF666666)
-                    )
+
+        // Flat list of option cards
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            options.forEach { option ->
+                PaymentOptionCard(
+                    option = option,
+                    isSelected = selectedOptionId == option.id,
+                    onClick = { selectedOptionId = option.id }
                 )
-                Text(
-                    text = displayAmount,
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                        color = Color.Black
-            )
-        )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Pay with dropdown
-        PayWithDropdown(
-            options = options,
-            selectedOptionId = selectedOptionId,
-            isExpanded = isOptionsExpanded,
-            onExpandToggle = { isOptionsExpanded = !isOptionsExpanded },
-            onOptionSelected = { optionId ->
-                selectedOptionId = optionId
-                isOptionsExpanded = false
-            }
-        )
-        
         Spacer(modifier = Modifier.height(24.dp))
-        
-        // Pay button
-        val buttonAmount = paymentInfo?.let {
-            formatDisplayAmount(
-                value = it.amount.value,
-                decimals = it.amount.display?.decimals ?: 2,
-                symbol = it.amount.display?.assetSymbol ?: it.amount.unit
-            )
-        } ?: "Pay"
-        
+
+        // Bottom button: "Pay" or "Continue"
+        val buttonText = if (selectedHasCollectData) {
+            "Continue"
+        } else {
+            val buttonAmount = paymentInfo?.let {
+                formatDisplayAmount(
+                    value = it.amount.value,
+                    decimals = it.amount.display?.decimals ?: 2,
+                    symbol = it.amount.display?.assetSymbol ?: it.amount.unit
+                )
+            } ?: ""
+            "Pay $buttonAmount"
+        }
+
         Button(
             onClick = { selectedOptionId?.let { onOptionSelected(it) } },
             modifier = Modifier
@@ -714,256 +356,84 @@ private fun PaymentOptionsContent(
             ),
             shape = RoundedCornerShape(16.dp)
         ) {
-        Text(
-                text = "Pay $buttonAmount",
-            style = TextStyle(
+            Text(
+                text = buttonText,
+                style = TextStyle(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                color = Color.White
-            )
-        )
-        }
-    }
-}
-
-@Composable
-private fun PaymentOptionsHeader(
-    onClose: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Empty spacer for balance
-        Spacer(modifier = Modifier.size(32.dp))
-        
-        // Progress indicator (2 steps, both completed)
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Step 1 - completed
-            Box(
-                modifier = Modifier
-                    .width(48.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(Color(0xFF3396FF))
-            )
-            // Step 2 - current
-            Box(
-                modifier = Modifier
-                    .width(48.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(Color(0xFF3396FF))
-            )
-        }
-        
-        // Close button
-        IconButton(
-            onClick = onClose,
-            modifier = Modifier.size(32.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = Color(0xFF9E9E9E),
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun PayWithDropdown(
-    options: List<Wallet.Model.PaymentOption>,
-    selectedOptionId: String?,
-    isExpanded: Boolean,
-    onExpandToggle: () -> Unit,
-    onOptionSelected: (String) -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFF5F5F5))
-    ) {
-        // Header row with "Pay with" label
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onExpandToggle() }
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Pay with",
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    color = Color(0xFF666666)
+                    color = Color.White
                 )
             )
-            
-            val selectedOption = options.find { it.id == selectedOptionId }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End
-            ) {
-            if (selectedOption != null) {
-                    val display = selectedOption.amount.display
-                    val tokenAmount = formatTokenAmount(
-                        value = selectedOption.amount.value,
-                        decimals = display?.decimals ?: 18,
-                        symbol = display?.assetSymbol ?: "Token"
-                    )
-
-                    Text(
-                        text = tokenAmount,
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    display?.iconUrl?.let { iconUrl ->
-                        TokenIconWithNetwork(
-                            tokenIconUrl = iconUrl,
-                            networkIconUrl = display.networkIconUrl,
-                            tokenIconSize = 24.dp,
-                            networkIconSize = 12.dp
-                        )
-                }
-            } else {
-                Text(
-                        text = "Select",
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        color = Color.Gray
-                    )
-                )
-            }
-                
-                Spacer(modifier = Modifier.width(4.dp))
-
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "Collapse" else "Expand",
-                    tint = Color(0xFF666666),
-                    modifier = Modifier.size(20.dp)
-            )
-            }
-        }
-
-        // Expandable options list
-        AnimatedVisibility(
-            visible = isExpanded,
-            enter = expandVertically(),
-            exit = shrinkVertically()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .padding(bottom = 8.dp)
-            ) {
-                options.forEach { option ->
-                    PaymentOptionItem(
-                        option = option,
-                        isSelected = selectedOptionId == option.id,
-                        onClick = { onOptionSelected(option.id) }
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                }
-            }
         }
     }
 }
 
 @Composable
-private fun PaymentOptionItem(
+private fun PaymentOptionCard(
     option: Wallet.Model.PaymentOption,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor = if (isSelected) Color(0xFFE3F2FD) else Color.White
+    val backgroundColor = if (isSelected) Color(0xFFEBF4FF) else Color(0xFFF5F5F5)
+    val borderColor = if (isSelected) Color(0xFF3396FF) else Color.Transparent
+    val borderWidth = if (isSelected) 1.5.dp else 0.dp
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
             .background(backgroundColor)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Asset icon with network badge
-                option.amount.display?.iconUrl?.let { iconUrl ->
-                    TokenIconWithNetwork(
-                        tokenIconUrl = iconUrl,
-                        networkIconUrl = option.amount.display?.networkIconUrl,
-                        tokenIconSize = 36.dp,
-                        networkIconSize = 16.dp
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Asset icon with network badge
+            option.amount.display?.iconUrl?.let { iconUrl ->
+                TokenIconWithNetwork(
+                    tokenIconUrl = iconUrl,
+                    networkIconUrl = option.amount.display?.networkIconUrl,
+                    tokenIconSize = 36.dp,
+                    networkIconSize = 16.dp
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
 
-            // Token amount and network
+            // Token amount only (no network text name)
             val display = option.amount.display
             val tokenAmount = formatTokenAmount(
                 value = option.amount.value,
                 decimals = display?.decimals ?: 18,
                 symbol = display?.assetSymbol ?: "Token"
             )
-            val networkName = display?.networkName ?: ""
 
-                Column {
-                        Text(
-                    text = tokenAmount,
+            Text(
+                text = tokenAmount,
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black
+                )
+            )
+        }
+
+        // "Info required" badge if option has collectData
+        if (option.collectData != null) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFE8E8E8))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "Info required",
                     style = TextStyle(
-                        fontSize = 16.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.Black
+                        color = Color(0xFF888888)
                     )
-                )
-                if (networkName.isNotEmpty()) {
-                    Text(
-                        text = "on $networkName",
-                            style = TextStyle(
-                                fontSize = 12.sp,
-                            color = Color(0xFF9E9E9E)
-                            )
-                        )
-                    }
-                }
-            }
-
-        // Radio button indicator
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                .border(
-                    width = if (isSelected) 0.dp else 2.dp,
-                    color = if (isSelected) Color.Transparent else Color(0xFFE0E0E0),
-                    shape = CircleShape
-                )
-                .background(if (isSelected) Color(0xFF3396FF) else Color.Transparent),
-                    contentAlignment = Alignment.Center
-                ) {
-            if (isSelected) {
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(Color.White)
                 )
             }
         }
@@ -997,6 +467,309 @@ private fun TokenIconWithNetwork(
                     .clip(CircleShape)
                     .border(1.dp, Color.White, CircleShape)
                     .align(Alignment.BottomEnd)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MerchantIcon(paymentInfo: Wallet.Model.PaymentInfo?, size: Dp) {
+    paymentInfo?.merchant?.iconUrl?.let { iconUrl ->
+        AsyncImage(
+            model = iconUrl,
+            contentDescription = "Merchant icon",
+            modifier = Modifier
+                .size(size)
+                .clip(RoundedCornerShape(size / 4))
+                .background(Color.Black)
+        )
+    } ?: run {
+        Box(
+            modifier = Modifier
+                .size(size)
+                .clip(RoundedCornerShape(size / 4))
+                .background(Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = paymentInfo?.merchant?.name?.take(1)?.uppercase() ?: "P",
+                style = TextStyle(
+                    fontSize = (size.value * 0.44f).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun PaymentTitle(paymentInfo: Wallet.Model.PaymentInfo?, fontSize: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
+        val displayAmount = paymentInfo?.let {
+            formatDisplayAmount(
+                value = it.amount.value,
+                decimals = it.amount.display?.decimals ?: 2,
+                symbol = it.amount.display?.assetSymbol ?: it.amount.unit
+            )
+        } ?: ""
+
+        Text(
+            text = "Pay $displayAmount to $merchantName",
+            style = TextStyle(
+                fontSize = fontSize.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black
+            )
+        )
+
+        Spacer(modifier = Modifier.width(6.dp))
+
+        Box(
+            modifier = Modifier
+                .size((fontSize - 2).dp)
+                .clip(CircleShape)
+                .background(Color(0xFF3396FF)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Verified",
+                tint = Color.White,
+                modifier = Modifier.size((fontSize - 8).dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryContent(
+    paymentInfo: Wallet.Model.PaymentInfo?,
+    selectedOption: Wallet.Model.PaymentOption,
+    onConfirm: () -> Unit,
+    onClose: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp)
+    ) {
+        // Close button at top right
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopEnd
+        ) {
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF9E9E9E),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Merchant icon and payment title
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            MerchantIcon(paymentInfo = paymentInfo, size = 64.dp)
+            Spacer(modifier = Modifier.height(16.dp))
+            PaymentTitle(paymentInfo = paymentInfo, fontSize = 18)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // "Pay with" row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFFF5F5F5))
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Pay with",
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    color = Color(0xFF666666)
+                )
+            )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val display = selectedOption.amount.display
+                val tokenAmount = formatTokenAmount(
+                    value = selectedOption.amount.value,
+                    decimals = display?.decimals ?: 18,
+                    symbol = display?.assetSymbol ?: "Token"
+                )
+
+                Text(
+                    text = tokenAmount,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                display?.iconUrl?.let { iconUrl ->
+                    TokenIconWithNetwork(
+                        tokenIconUrl = iconUrl,
+                        networkIconUrl = display.networkIconUrl,
+                        tokenIconSize = 24.dp,
+                        networkIconSize = 12.dp
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Confirm button
+        val buttonAmount = paymentInfo?.let {
+            formatDisplayAmount(
+                value = it.amount.value,
+                decimals = it.amount.display?.decimals ?: 2,
+                symbol = it.amount.display?.assetSymbol ?: it.amount.unit
+            )
+        } ?: ""
+
+        Button(
+            onClick = onConfirm,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color(0xFF3396FF)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text(
+                text = "Pay $buttonAmount",
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun WhyInfoRequiredContent(
+    onBack: () -> Unit,
+    onClose: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp)
+    ) {
+        // Header: back arrow (left) + X close (right)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Back",
+                    tint = Color(0xFF9E9E9E),
+                    modifier = Modifier
+                        .size(24.dp)
+                        .graphicsLayer(rotationZ = 90f)
+                )
+            }
+
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF9E9E9E),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Why we need your information?",
+            style = TextStyle(
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "For regulatory compliance, we collect basic information on your first payment: full name, date of birth, and place of birth.",
+            style = TextStyle(
+                fontSize = 14.sp,
+                color = Color(0xFF666666),
+                lineHeight = 22.sp
+            )
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "This information is tied to your wallet address and this specific network. If you use the same wallet on this network again, you won't need to provide it again.",
+            style = TextStyle(
+                fontSize = 14.sp,
+                color = Color(0xFF9E9E9E),
+                lineHeight = 22.sp
+            )
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = onBack,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color(0xFF3396FF)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text(
+                text = "Got it!",
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
             )
         }
     }

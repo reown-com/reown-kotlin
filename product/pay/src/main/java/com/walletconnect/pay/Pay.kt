@@ -36,7 +36,8 @@ object Pay {
         val id: String,
         val amount: Amount,
         val account: String,
-        val estimatedTxs: Int?
+        val estimatedTxs: Int?,
+        val collectData: CollectDataAction? = null
     )
 
     data class MerchantInfo(

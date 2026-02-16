@@ -526,7 +526,8 @@ object Wallet {
             val id: String,
             val amount: PaymentAmount,
             val account: String,
-            val estimatedTxs: Int?
+            val estimatedTxs: Int?,
+            val collectData: CollectDataAction? = null
         ) : Model()
 
         enum class CollectDataFieldType {
