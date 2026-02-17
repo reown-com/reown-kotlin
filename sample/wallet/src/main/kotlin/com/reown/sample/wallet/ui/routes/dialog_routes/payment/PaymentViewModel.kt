@@ -61,6 +61,8 @@ class PaymentViewModel : ViewModel() {
      * Always goes directly to Options state (no Intro screen).
      */
     private fun processPaymentOptionsResponse(response: Wallet.Model.PaymentOptionsResponse) {
+        // Clear replay cache immediately after consuming to prevent stale data leaking to other ViewModel instances
+        WalletKitDelegate.clearPaymentOptions()
         currentPaymentId = response.paymentId
         collectedValues.clear()
         currentFieldIndex = 0
