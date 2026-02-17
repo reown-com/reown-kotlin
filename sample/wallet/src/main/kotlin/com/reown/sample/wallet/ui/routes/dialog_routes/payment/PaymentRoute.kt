@@ -133,7 +133,7 @@ fun PaymentRoute(
                             onWhyInfoRequired = { viewModel.showWhyInfoRequired() },
                             onClose = {
                                 viewModel.cancel()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                dismissPaymentDialog(navController)
                             }
                         )
                     }
@@ -148,7 +148,7 @@ fun PaymentRoute(
                             },
                             onClose = {
                                 viewModel.cancel()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                dismissPaymentDialog(navController)
                             }
                         )
                     }
@@ -159,7 +159,7 @@ fun PaymentRoute(
                             onConfirm = { viewModel.confirmFromSummary() },
                             onClose = {
                                 viewModel.cancel()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                dismissPaymentDialog(navController)
                             }
                         )
                     }
@@ -168,7 +168,7 @@ fun PaymentRoute(
                             onBack = { viewModel.dismissWhyInfoRequired() },
                             onClose = {
                                 viewModel.cancel()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                dismissPaymentDialog(navController)
                             }
                         )
                     }
@@ -177,7 +177,7 @@ fun PaymentRoute(
                             message = state.message,
                             onClose = {
                                 viewModel.cancel()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                dismissPaymentDialog(navController)
                             }
                         )
                     }
@@ -187,13 +187,13 @@ fun PaymentRoute(
                             onDone = {
                                 viewModel.cancel()
                                 onPaymentSuccess()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                dismissPaymentDialog(navController)
                                 Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
                             },
                             onClose = {
                                 viewModel.cancel()
                                 onPaymentSuccess()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                dismissPaymentDialog(navController)
                             }
                         )
                     }
@@ -202,11 +202,11 @@ fun PaymentRoute(
                             message = state.message,
                             onRetry = {
                                 viewModel.cancel()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                dismissPaymentDialog(navController)
                             },
                             onClose = {
                                 viewModel.cancel()
-                                navController.popBackStack(Route.Connections.path, inclusive = false)
+                                dismissPaymentDialog(navController)
                             }
                         )
                     }
@@ -215,6 +215,12 @@ fun PaymentRoute(
                 }
             }
         }
+    }
+}
+
+private fun dismissPaymentDialog(navController: NavHostController) {
+    if (!navController.popBackStack(Route.Connections.path, inclusive = false)) {
+        navController.popBackStack()
     }
 }
 
