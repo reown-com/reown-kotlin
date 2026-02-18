@@ -146,10 +146,7 @@ tasks.register("closeAndReleaseMultipleRepositories") {
             return@doLast
         }
 
-        println("Starting to wait for artifacts to be available on Maven Central...")
-        // Wait for artifacts to be available on Maven Central since we're using automatic publishing
-        waitForArtifactsToBeAvailable()
-        println("closeAndReleaseMultipleRepositories task completed successfully!")
+        println("closeAndReleaseMultipleRepositories task completed successfully! Publish manually from the Maven Central Portal dashboard.")
     }
 }
 
@@ -261,7 +258,7 @@ fun uploadRepositoryToPortal(repositoryKey: String, maxRetries: Int = 3) {
                 val httpPost = HttpPost(uploadUrl).apply {
                     setHeader("Authorization", authHeader())
                     setHeader("Content-Type", "application/json")
-                    entity = StringEntity("""{"publishing_type": "automatic"}""")
+                    entity = StringEntity("""{"publishing_type": "USER_MANAGED"}""")
                 }
 
                 println("Executing HTTP POST request (attempt ${attempt + 1}/$maxRetries)...")
@@ -336,68 +333,3 @@ fun dropStagingRepository(repositoryKey: String) {
     }
 }
 
-fun waitForArtifactsToBeAvailable() {
-    val artifactIds = artifactsToCheck.map { it.artifactId }
-    val client = createHttpClient()
-    try {
-        val artifactUrls = artifactsToCheck.map { (group, artifactId, version) ->
-            val url = "https://repo1.maven.org/maven2/$group/$artifactId/$version/"
-            println("Checking: $url")
-            url
-        }
-        val maxRetries = 40
-        var attempt = 0
-        val availableRepos = mutableSetOf<String>()
-
-        while (availableRepos.size < artifactIds.size && attempt < maxRetries) {
-            artifactUrls.forEachIndexed { index, artifactUrl ->
-                if (!availableRepos.contains(artifactIds[index])) {
-                    val httpGet = HttpGet(artifactUrl)
-                    try {
-                        val response = client.execute(httpGet)
-                        val statusCode = response.statusLine.statusCode
-                        EntityUtils.consume(response.entity)
-                        if (statusCode == 200 || statusCode == 201) {
-                            println("Artifact for repository ${artifactIds[index]} is now available.")
-                            availableRepos.add(artifactIds[index])
-                        } else {
-                            println("Artifact for repository ${artifactIds[index]} not yet available. Status code: $statusCode")
-                        }
-                    } catch (e: Exception) {
-                        println("Error checking artifact for repository ${artifactIds[index]}: ${e.message}")
-                    } finally {
-                        httpGet.releaseConnection()
-                    }
-                }
-            }
-            if (availableRepos.size < artifactIds.size) {
-                println("Waiting for artifacts to be available... Attempt: ${attempt + 1}")
-                attempt++
-                Thread.sleep(45000)
-            }
-        }
-
-        if (availableRepos.size < artifactIds.size) {
-            throw RuntimeException("Artifacts were not available after ${maxRetries * 45} seconds.")
-        } else {
-            println("All artifacts are now available.")
-        }
-    } finally {
-        client.close()
-    }
-}
-
-private data class ArtifactCheck(val group: String, val artifactId: String, val version: String)
-
-private val artifactsToCheck = listOf(
-    ArtifactCheck("com/reown", ANDROID_BOM, BOM_VERSION),
-    ArtifactCheck("com/reown", FOUNDATION, FOUNDATION_VERSION),
-    ArtifactCheck("com/reown", ANDROID_CORE, CORE_VERSION),
-    ArtifactCheck("com/reown", SIGN, SIGN_VERSION),
-    ArtifactCheck("com/reown", NOTIFY, NOTIFY_VERSION),
-    ArtifactCheck("com/reown", WALLETKIT, WALLETKIT_VERSION),
-    ArtifactCheck("com/reown", APPKIT, APPKIT_VERSION),
-    ArtifactCheck("com/reown", MODAL_CORE, MODAL_CORE_VERSION),
-    ArtifactCheck("com/walletconnect", PAY, PAY_VERSION),
-    ArtifactCheck("com/walletconnect", POS, POS_VERSION),
-)
