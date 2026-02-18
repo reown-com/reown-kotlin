@@ -132,17 +132,19 @@ tasks.register("closeAndReleaseMultipleRepositories") {
         println("Processing ${openRepos.size} open repositories and ${closedRepos.size} closed repositories")
 
         if (openRepos.isNotEmpty()) {
-            println("WARNING: Found ${openRepos.size} open repositories. These must be closed before upload.")
-            println("Open repos will be skipped. Run closeReownStagingRepository/closeWalletconnectStagingRepository first.")
+            println("Uploading ${openRepos.size} open repositories to Central Portal")
+            uploadRepositoriesToPortal(openRepos)
         }
 
-        if (closedRepos.isEmpty()) {
-            throw RuntimeException("No closed staging repositories found. Ensure repos are closed before uploading. " +
-                "Run closeReownStagingRepository and closeWalletconnectStagingRepository first.")
+        if (closedRepos.isNotEmpty()) {
+            println("Uploading ${closedRepos.size} closed repositories to Central Portal")
+            uploadRepositoriesToPortal(closedRepos)
         }
 
-        println("Uploading ${closedRepos.size} closed repositories to Central Portal")
-        uploadRepositoriesToPortal(closedRepos)
+        if (openRepos.isEmpty() && closedRepos.isEmpty()) {
+            println("No repositories to upload to Portal")
+            return@doLast
+        }
 
         println("Starting to wait for artifacts to be available on Maven Central...")
         // Wait for artifacts to be available on Maven Central since we're using automatic publishing

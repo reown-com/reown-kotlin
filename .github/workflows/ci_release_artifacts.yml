@@ -80,15 +80,6 @@ jobs:
         run: |
           ./gradlew releaseAllSDKs -Ptype=sonatype
 
-      - name: Close staging repositories
-        env:
-          CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
-          CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
-          REOWN_SONATYPE_STAGING_PROFILE_ID: ${{ secrets.REOWN_SONATYPE_STAGING_PROFILE_ID }}
-          WC_SONATYPE_STAGING_PROFILE_ID: ${{ secrets.WC_SONATYPE_STAGING_PROFILE_ID }}
-        run: |
-          ./gradlew closeReownStagingRepository closeWalletconnectStagingRepository
-
       - name: Upload staging repositories to Central Portal and release
         env:
           CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
