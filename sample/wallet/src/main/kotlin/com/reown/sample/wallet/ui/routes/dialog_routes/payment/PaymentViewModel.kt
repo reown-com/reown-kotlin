@@ -43,15 +43,11 @@ class PaymentViewModel : ViewModel() {
 
     // Information Capture state
     private var pendingWalletRpcActions: List<Wallet.Model.RequiredAction.WalletRpc> = emptyList()
-    private var collectDataFields: List<Wallet.Model.CollectDataField> = emptyList()
     private val collectedValues: MutableMap<String, String> = mutableMapOf()
     private var currentFieldIndex: Int = 0
 
-    // Information Capture WebView URL (from collectDataAction.url)
-    private var icWebViewUrl: String? = null
-
-    // Information Capture schema (for determining prefill fields)
-    private var icSchema: String? = null
+    // Per-option IC fields (from the selected option's collectData)
+    private var currentCollectDataFields: List<Wallet.Model.CollectDataField> = emptyList()
 
     init {
         // Collect payment options event (has replay=1 to ensure we receive it even if emitted before collecting)
@@ -62,13 +58,12 @@ class PaymentViewModel : ViewModel() {
 
     /**
      * Process payment options response received from onPaymentRequest callback.
+     * Always goes directly to Options state (no Intro screen).
      */
     private fun processPaymentOptionsResponse(response: Wallet.Model.PaymentOptionsResponse) {
+        // Clear replay cache immediately after consuming to prevent stale data leaking to other ViewModel instances
+        WalletKitDelegate.clearPaymentOptions()
         currentPaymentId = response.paymentId
-        // Store collect data fields, WebView URL, and schema from response
-        collectDataFields = response.collectDataAction?.fields ?: emptyList()
-        icWebViewUrl = response.collectDataAction?.url
-        icSchema = response.collectDataAction?.schema
         collectedValues.clear()
         currentFieldIndex = 0
 
@@ -78,14 +73,7 @@ class PaymentViewModel : ViewModel() {
 
         if (response.options.isEmpty()) {
             _uiState.value = PaymentUiState.Error("No payment options available")
-        } else if (icWebViewUrl != null || collectDataFields.isNotEmpty()) {
-            // Show intro screen when information capture is required (WebView or fields)
-            _uiState.value = PaymentUiState.Intro(
-                paymentInfo = storedPaymentInfo,
-                hasInfoCapture = true
-            )
         } else {
-            // No information capture required, go directly to options
             _uiState.value = PaymentUiState.Options(
                 paymentLink = currentPaymentLink ?: "",
                 paymentInfo = storedPaymentInfo,
@@ -102,26 +90,35 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Proceed from the intro screen to Information Capture (WebView) or Options.
+     * Called when user taps "Pay" or "Continue" on a selected option.
+     * If the option has collectData with a URL, show WebView.
+     * If it has collectData with fields only, show field-by-field collection.
+     * Otherwise, proceed directly to payment processing.
      */
-    fun proceedFromIntro() {
-        val baseUrl = icWebViewUrl
+    fun onOptionSelected(optionId: String) {
+        val option = storedPaymentOptions.find { it.id == optionId } ?: return
+        selectedOptionId = optionId
 
-        if (baseUrl != null) {
-            // Build URL with prefill parameter
-            val urlWithPrefill = buildUrlWithPrefill(baseUrl, icSchema)
+        val collectData = option.collectData
+        val url = collectData?.url
+        val schema = collectData?.schema
 
-            // Use WebView for Information Capture (URL from API)
+        if (url != null) {
+            // WebView-based IC with per-option URL
+            val urlWithPrefill = buildUrlWithPrefill(url, schema)
             _uiState.value = PaymentUiState.WebViewDataCollection(
                 url = urlWithPrefill,
                 paymentInfo = storedPaymentInfo
             )
-        } else if (collectDataFields.isNotEmpty()) {
-            // Fallback: Field-by-field collection (existing flow)
+        } else if (collectData?.fields?.isNotEmpty() == true) {
+            // Fallback: field-by-field collection
+            currentCollectDataFields = collectData.fields
+            collectedValues.clear()
+            currentFieldIndex = 0
             showCurrentField()
         } else {
-            // No IC required, show options directly
-            proceedToOptions()
+            // No IC required, proceed to payment
+            processPayment(optionId)
         }
     }
 
@@ -228,28 +225,16 @@ class PaymentViewModel : ViewModel() {
      * Show the current field for data collection.
      */
     private fun showCurrentField() {
-        if (currentFieldIndex < collectDataFields.size) {
-            val field = collectDataFields[currentFieldIndex]
+        if (currentFieldIndex < currentCollectDataFields.size) {
+            val field = currentCollectDataFields[currentFieldIndex]
             _uiState.value = PaymentUiState.CollectingData(
                 currentStepIndex = currentFieldIndex,
-                totalSteps = collectDataFields.size,
+                totalSteps = currentCollectDataFields.size,
                 currentField = field,
                 currentValue = collectedValues[field.id] ?: "",
-                allFields = collectDataFields
+                allFields = currentCollectDataFields
             )
         }
-    }
-
-    /**
-     * Proceed to payment options after information capture is complete.
-     */
-    private fun proceedToOptions() {
-        val paymentLink = currentPaymentLink ?: return
-        _uiState.value = PaymentUiState.Options(
-            paymentLink = paymentLink,
-            paymentInfo = storedPaymentInfo,
-            options = storedPaymentOptions
-        )
     }
 
     /**
@@ -259,12 +244,17 @@ class PaymentViewModel : ViewModel() {
         collectedValues[fieldId] = value
         currentFieldIndex++
 
-        if (currentFieldIndex < collectDataFields.size) {
+        if (currentFieldIndex < currentCollectDataFields.size) {
             // Show next field
             showCurrentField()
         } else {
-            // All fields collected, proceed to payment options
-            proceedToOptions()
+            // All fields collected, show summary
+            val optionId = selectedOptionId ?: return
+            val option = storedPaymentOptions.find { it.id == optionId } ?: return
+            _uiState.value = PaymentUiState.Summary(
+                paymentInfo = storedPaymentInfo,
+                selectedOption = option
+            )
         }
     }
 
@@ -276,27 +266,33 @@ class PaymentViewModel : ViewModel() {
             currentFieldIndex--
             showCurrentField()
         } else {
-            // On first field, go back to intro
-            goBackToIntro()
+            // On first field, go back to options
+            goBackToOptions()
         }
     }
 
     /**
-     * Go back to the intro screen.
+     * Go back to the options screen.
      */
-    fun goBackToIntro() {
-        _uiState.value = PaymentUiState.Intro(
+    fun goBackToOptions() {
+        _uiState.value = PaymentUiState.Options(
+            paymentLink = currentPaymentLink ?: "",
             paymentInfo = storedPaymentInfo,
-            hasInfoCapture = icWebViewUrl != null || collectDataFields.isNotEmpty()
+            options = storedPaymentOptions
         )
     }
 
     /**
      * Called when WebView signals IC_COMPLETE.
-     * Proceeds to payment options.
+     * Shows Summary screen instead of going back to options.
      */
     fun onICWebViewComplete() {
-        proceedToOptions()
+        val optionId = selectedOptionId ?: return
+        val option = storedPaymentOptions.find { it.id == optionId } ?: return
+        _uiState.value = PaymentUiState.Summary(
+            paymentInfo = storedPaymentInfo,
+            selectedOption = option
+        )
     }
 
     /**
@@ -304,6 +300,30 @@ class PaymentViewModel : ViewModel() {
      */
     fun onICWebViewError(errorMessage: String) {
         _uiState.value = PaymentUiState.Error("Information capture failed: $errorMessage")
+    }
+
+    /**
+     * Confirm payment from the Summary screen.
+     */
+    fun confirmFromSummary() {
+        val optionId = selectedOptionId ?: return
+        processPayment(optionId)
+    }
+
+    /**
+     * Show the "Why info required?" explanation screen.
+     */
+    fun showWhyInfoRequired() {
+        _uiState.value = PaymentUiState.WhyInfoRequired(
+            paymentInfo = storedPaymentInfo
+        )
+    }
+
+    /**
+     * Dismiss the "Why info required?" screen and return to options.
+     */
+    fun dismissWhyInfoRequired() {
+        goBackToOptions()
     }
 
     /**
@@ -432,9 +452,7 @@ class PaymentViewModel : ViewModel() {
         storedPaymentInfo = null
         storedPaymentOptions = emptyList()
         pendingWalletRpcActions = emptyList()
-        collectDataFields = emptyList()
-        icWebViewUrl = null
-        icSchema = null
+        currentCollectDataFields = emptyList()
         collectedValues.clear()
         currentFieldIndex = 0
         // Don't set state to Loading here - we're navigating away anyway
@@ -450,15 +468,6 @@ class PaymentViewModel : ViewModel() {
  */
 sealed class PaymentUiState {
     data object Loading : PaymentUiState()
-
-    /**
-     * Intro screen shown before information capture.
-     */
-    data class Intro(
-        val paymentInfo: Wallet.Model.PaymentInfo?,
-        val hasInfoCapture: Boolean,
-        val estimatedTime: String = "~2min"
-    ) : PaymentUiState()
 
     /**
      * WebView-based Information Capture (replaces CollectingData when URL is available).
@@ -483,6 +492,21 @@ sealed class PaymentUiState {
         val currentField: Wallet.Model.CollectDataField,
         val currentValue: String,
         val allFields: List<Wallet.Model.CollectDataField>
+    ) : PaymentUiState()
+
+    /**
+     * Summary screen shown after IC completion, before confirming payment.
+     */
+    data class Summary(
+        val paymentInfo: Wallet.Model.PaymentInfo?,
+        val selectedOption: Wallet.Model.PaymentOption
+    ) : PaymentUiState()
+
+    /**
+     * Explanation dialog for why information is required.
+     */
+    data class WhyInfoRequired(
+        val paymentInfo: Wallet.Model.PaymentInfo?
     ) : PaymentUiState()
 
     data class Processing(
