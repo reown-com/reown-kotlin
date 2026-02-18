@@ -56,7 +56,8 @@ internal object Mappers {
             id = option.id,
             amount = mapAmount(option.amount),
             estimatedTxs = option.etaS.coerceAtMost(Int.MAX_VALUE.toULong().toLong()).toInt(),
-            account = option.account
+            account = option.account,
+            collectData = option.collectData?.let { mapCollectDataAction(it) }
         )
     }
 
