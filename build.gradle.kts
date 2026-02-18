@@ -187,11 +187,11 @@ tasks.register("dropStagingRepositories") {
 
 data class StagingRepository(val key: String, val state: String, val portalDeploymentId: String?)
 
-fun createHttpClient(): CloseableHttpClient = HttpClients.custom()
+fun createHttpClient(socketTimeoutMs: Int = 60000): CloseableHttpClient = HttpClients.custom()
     .setDefaultRequestConfig(
         RequestConfig.custom()
             .setConnectTimeout(30000)
-            .setSocketTimeout(60000)
+            .setSocketTimeout(socketTimeoutMs)
             .build()
     )
     .build()
@@ -231,10 +231,19 @@ fun parseRepositoriesResponse(jsonResponse: String): List<StagingRepository> {
 
 fun uploadRepositoriesToPortal(repositories: List<StagingRepository>) {
     println("Starting upload of ${repositories.size} repositories to Central Portal...")
+    val failedRepos = mutableListOf<String>()
     repositories.forEachIndexed { index, repo ->
         println("Uploading repository ${index + 1}/${repositories.size}: ${repo.key}")
-        uploadRepositoryToPortal(repo.key)
-        println("Completed upload of repository ${index + 1}/${repositories.size}: ${repo.key}")
+        try {
+            uploadRepositoryToPortal(repo.key)
+            println("Completed upload of repository ${index + 1}/${repositories.size}: ${repo.key}")
+        } catch (e: Exception) {
+            println("Failed to upload repository ${index + 1}/${repositories.size}: ${repo.key} - ${e.message}")
+            failedRepos.add(repo.key)
+        }
+    }
+    if (failedRepos.isNotEmpty()) {
+        throw RuntimeException("Failed to upload ${failedRepos.size}/${repositories.size} repositories: $failedRepos")
     }
     println("Completed upload of all ${repositories.size} repositories to Central Portal")
 }
@@ -245,8 +254,9 @@ fun uploadRepositoryToPortal(repositoryKey: String, maxRetries: Int = 3) {
     println("Upload URL: $uploadUrl")
 
     var lastException: Exception? = null
+    var hadTimeout = false
     repeat(maxRetries) { attempt ->
-        createHttpClient().use { client ->
+        createHttpClient(socketTimeoutMs = 180_000).use { client ->
             try {
                 val httpPost = HttpPost(uploadUrl).apply {
                     setHeader("Authorization", authHeader())
@@ -260,16 +270,22 @@ fun uploadRepositoryToPortal(repositoryKey: String, maxRetries: Int = 3) {
                 println("Received response with status: $statusCode")
 
                 val responseBody = EntityUtils.toString(response.entity)
-                println("Response body length: ${responseBody.length}")
+                println("Response body: $responseBody")
 
                 if (statusCode == 200 || statusCode == 201) {
                     println("Successfully uploaded repository $repositoryKey to Central Portal")
-                    println("Response: $responseBody")
+                    return
+                } else if (statusCode == 400 && hadTimeout) {
+                    println("Got 400 after a previous timeout for $repositoryKey — the timed-out request likely succeeded. Treating as success.")
                     return
                 } else {
                     lastException = RuntimeException("HTTP $statusCode - $responseBody")
                     println("Upload attempt ${attempt + 1}/$maxRetries failed for $repositoryKey: HTTP $statusCode")
                 }
+            } catch (e: java.net.SocketTimeoutException) {
+                hadTimeout = true
+                lastException = e
+                println("Upload attempt ${attempt + 1}/$maxRetries timed out for $repositoryKey: ${e.message}")
             } catch (e: Exception) {
                 lastException = e
                 println("Upload attempt ${attempt + 1}/$maxRetries failed for $repositoryKey: ${e.message}")
