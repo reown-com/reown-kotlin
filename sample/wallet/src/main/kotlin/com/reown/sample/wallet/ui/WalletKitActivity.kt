@@ -187,7 +187,9 @@ class WalletKitActivity : AppCompatActivity() {
             .onEach { paymentLink ->
                 navigateWhenReady {
                     val encodedLink = URLEncoder.encode(paymentLink, "UTF-8")
-                    navController.navigate("${Route.Payment.path}/$encodedLink")
+                    navController.navigate("${Route.Payment.path}/$encodedLink") {
+                        launchSingleTop = true
+                    }
                 }
             }
             .launchIn(lifecycleScope)
@@ -209,7 +211,9 @@ class WalletKitActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 navigateWhenReady {
                     val encodedLink = URLEncoder.encode(dataString, "UTF-8")
-                    navController.navigate("${Route.Payment.path}/$encodedLink")
+                    navController.navigate("${Route.Payment.path}/$encodedLink") {
+                        launchSingleTop = true
+                    }
                 }
             }
             return
