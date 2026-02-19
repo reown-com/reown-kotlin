@@ -236,6 +236,7 @@ internal object Mappers {
             is YttriumConfirmPaymentError.ConnectionFailed -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.NoConnection -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.RequestTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
+            is YttriumConfirmPaymentError.PollingTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
         }
     }
 
