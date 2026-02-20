@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
+import com.walletconnect.sample.pos.nfc.NfcManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -107,6 +108,7 @@ class POSViewModel : ViewModel() {
                 _isLoading.value = false
                 currentAmount = paymentEvent.amount
                 currentPaymentId = paymentEvent.paymentId
+                NfcManager.updateNdefMessage(paymentEvent.uri.toString())
                 _posNavEventsFlow.emit(
                     PosNavEvent.QrReady(
                         uri = paymentEvent.uri,
@@ -125,11 +127,13 @@ class POSViewModel : ViewModel() {
             }
 
             is Pos.PaymentEvent.PaymentSuccess -> {
+                NfcManager.clearNdefMessage()
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
                 _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info))
             }
 
             is Pos.PaymentEvent.PaymentError -> {
+                NfcManager.clearNdefMessage()
                 _isLoading.value = false
                 val errorMessage = when (val error: Pos.PaymentEvent.PaymentError = paymentEvent) {
                     is Pos.PaymentEvent.PaymentError.CreatePaymentFailed -> "Failed to create payment, try again: ${error.message}"
@@ -178,11 +182,13 @@ class POSViewModel : ViewModel() {
     }
 
     fun cancelPayment() {
+        NfcManager.clearNdefMessage()
         PosClient.cancelPayment()
         _isLoading.value = false
     }
 
     fun resetForNewPayment() {
+        NfcManager.clearNdefMessage()
         currentAmount = null
         currentPaymentId = null
         _isLoading.value = false

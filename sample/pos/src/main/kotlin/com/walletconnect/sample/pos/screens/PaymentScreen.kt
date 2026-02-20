@@ -2,6 +2,7 @@ package com.walletconnect.sample.pos.screens
 
 import android.content.res.Resources
 import android.graphics.Bitmap
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,8 +12,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,6 +31,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.PosEvent
+import com.walletconnect.sample.pos.nfc.NfcManager
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -165,8 +173,11 @@ private fun ScanToPayContent(
         ) {
             Spacer(Modifier.height(16.dp))
 
+            val context = LocalContext.current
+            val isNfcActive = remember { NfcManager.isHceSupported(context) && NfcManager.isNfcEnabled(context) }
+
             Text(
-                "Scan to Pay",
+                if (isNfcActive) "Scan or Tap to Pay" else "Scan to Pay",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold,
                 textAlign = TextAlign.Center,
@@ -188,6 +199,12 @@ private fun ScanToPayContent(
                 ) {
                     QrImage(data = qrUrl, size = 170.dp)
                 }
+            }
+
+            // NFC Tap indicator
+            if (isNfcActive) {
+                Spacer(Modifier.height(8.dp))
+                NfcTapIndicator()
             }
 
             Spacer(Modifier.height(12.dp))
@@ -508,6 +525,56 @@ fun QrImage(
             bitmap = bmp!!.asImageBitmap(),
             contentDescription = "QR Code",
             modifier = Modifier.size(size)
+        )
+    }
+}
+
+/**
+ * A small contactless/NFC icon with "or Tap to Pay" label.
+ * Uses a Canvas-drawn contactless symbol (radio waves emanating from a dot).
+ */
+@Composable
+private fun NfcTapIndicator() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Contactless icon drawn with Canvas
+        Canvas(modifier = Modifier.size(20.dp)) {
+            val centerX = size.width * 0.35f
+            val centerY = size.height * 0.65f
+            val color = BrandColor
+
+            // Draw the dot
+            drawCircle(
+                color = color,
+                radius = 2.dp.toPx(),
+                center = Offset(centerX, centerY)
+            )
+
+            // Draw 3 arcs radiating outward
+            for (i in 1..3) {
+                val radius = i * 5.dp.toPx()
+                drawArc(
+                    color = color,
+                    startAngle = -70f,
+                    sweepAngle = -40f,
+                    useCenter = false,
+                    topLeft = Offset(centerX - radius, centerY - radius),
+                    size = Size(radius * 2, radius * 2),
+                    style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                )
+            }
+        }
+
+        Spacer(Modifier.width(6.dp))
+
+        Text(
+            "or Tap to Pay",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF888888),
+            fontWeight = FontWeight.Medium
         )
     }
 }
