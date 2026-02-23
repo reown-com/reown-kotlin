@@ -205,7 +205,7 @@ fun Web3WalletNavGraph(
                 PaymentRoute(
                     navController = navController,
                     paymentLink = paymentLink,
-                    onPaymentSuccess = { connectionsViewModel.fetchUsdcBalances() }
+                    onPaymentSuccess = { connectionsViewModel.fetchBalances() }
                 )
             }
         }
