@@ -96,23 +96,19 @@ jobs:
           echo "bom_version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Extracted BOM version: $VERSION"
 
-      - name: Create git tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          TAG="BOM_${{ steps.version.outputs.bom_version }}"
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping tag creation"
-          else
-            git tag "$TAG"
-            git push origin "$TAG"
-          fi
-
-      - name: Create GitHub Release
+      - name: Create git tag and GitHub Release
         env:
           GH_TOKEN: ${{ secrets.PUSH_GITHUB_TOKEN }}
         run: |
-          gh release create "BOM_${{ steps.version.outputs.bom_version }}" \
+          TAG="BOM_${{ steps.version.outputs.bom_version }}"
+          if gh api repos/${{ github.repository }}/git/refs/tags/$TAG >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping tag creation"
+          else
+            gh api repos/${{ github.repository }}/git/refs \
+              -f ref="refs/tags/$TAG" \
+              -f sha="${{ github.sha }}"
+          fi
+          gh release create "$TAG" \
             --target master \
-            --title "BOM_${{ steps.version.outputs.bom_version }}" \
+            --title "$TAG" \
             --generate-notes

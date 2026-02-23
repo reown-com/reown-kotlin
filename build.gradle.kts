@@ -147,7 +147,6 @@ tasks.register("closeAndReleaseMultipleRepositories") {
         }
 
         println("Starting to wait for artifacts to be available on Maven Central...")
-        // Wait for artifacts to be available on Maven Central since we're using automatic publishing
         waitForArtifactsToBeAvailable()
         println("closeAndReleaseMultipleRepositories task completed successfully!")
     }
@@ -249,7 +248,7 @@ fun uploadRepositoriesToPortal(repositories: List<StagingRepository>) {
 }
 
 fun uploadRepositoryToPortal(repositoryKey: String, maxRetries: Int = 3) {
-    val uploadUrl = "$manualApiUrl/upload/repository/$repositoryKey"
+    val uploadUrl = "$manualApiUrl/upload/repository/$repositoryKey?publishing_type=automatic"
     println("Starting upload for repository: $repositoryKey")
     println("Upload URL: $uploadUrl")
 
@@ -260,8 +259,6 @@ fun uploadRepositoryToPortal(repositoryKey: String, maxRetries: Int = 3) {
             try {
                 val httpPost = HttpPost(uploadUrl).apply {
                     setHeader("Authorization", authHeader())
-                    setHeader("Content-Type", "application/json")
-                    entity = StringEntity("""{"publishing_type": "automatic"}""")
                 }
 
                 println("Executing HTTP POST request (attempt ${attempt + 1}/$maxRetries)...")

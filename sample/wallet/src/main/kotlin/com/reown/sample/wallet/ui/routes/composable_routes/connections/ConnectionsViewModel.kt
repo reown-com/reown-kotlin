@@ -40,16 +40,20 @@ class ConnectionsViewModel : ViewModel() {
     private val _usdcBalances = MutableStateFlow<List<TokenBalance>>(emptyList())
     val usdcBalances: StateFlow<List<TokenBalance>> = _usdcBalances.asStateFlow()
 
+    // EUROC Balance state
+    private val _eurocBalances = MutableStateFlow<List<TokenBalance>>(emptyList())
+    val eurocBalances: StateFlow<List<TokenBalance>> = _eurocBalances.asStateFlow()
+
     private val _isLoadingBalances = MutableStateFlow(false)
     val isLoadingBalances: StateFlow<Boolean> = _isLoadingBalances.asStateFlow()
 
     private val balanceApiService = createBalanceApiService()
 
     init {
-        fetchUsdcBalances()
+        fetchBalances()
     }
 
-    fun fetchUsdcBalances() {
+    fun fetchBalances() {
         viewModelScope.launch(Dispatchers.IO) {
             _isLoadingBalances.value = true
             try {
@@ -71,11 +75,23 @@ class ConnectionsViewModel : ViewModel() {
                         balance.symbol == "USDC" && balance.chainId in listOf(
                             "eip155:1",     // Ethereum Mainnet
                             "eip155:137",   // Polygon
-                            "eip155:8453"   // Base
+                            "eip155:8453",  // Base
+                            "eip155:10"     // Optimism
                         )
                     }
                     _usdcBalances.value = usdcBalances
                     Log.d("Web3Wallet", "Filtered USDC balances: $usdcBalances")
+
+                    // Filter for EURC on Ethereum and Base (not deployed on Polygon)
+                    val eurocBalances = balances.filter { balance ->
+                        balance.symbol == "EURC" && balance.chainId in listOf(
+                            "eip155:1",     // Ethereum Mainnet
+                            "eip155:8453",  // Base
+                            "eip155:10"     // Optimism
+                        )
+                    }
+                    _eurocBalances.value = eurocBalances
+                    Log.d("Web3Wallet", "Filtered EURC balances: $eurocBalances")
                 } else {
                     Log.e("Web3Wallet", "Failed to fetch balances: ${response.code()} - ${response.errorBody()?.string()}")
                 }
