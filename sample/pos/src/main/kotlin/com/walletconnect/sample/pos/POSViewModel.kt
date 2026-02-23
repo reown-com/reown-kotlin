@@ -108,7 +108,7 @@ class POSViewModel : ViewModel() {
                 _isLoading.value = false
                 currentAmount = paymentEvent.amount
                 currentPaymentId = paymentEvent.paymentId
-                NfcManager.updateNdefMessage(paymentEvent.uri.toString())
+                NfcManager.updatePaymentUri(paymentEvent.uri.toString())
                 _posNavEventsFlow.emit(
                     PosNavEvent.QrReady(
                         uri = paymentEvent.uri,
@@ -127,13 +127,13 @@ class POSViewModel : ViewModel() {
             }
 
             is Pos.PaymentEvent.PaymentSuccess -> {
-                NfcManager.clearNdefMessage()
+                NfcManager.clearPaymentUri()
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
                 _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info))
             }
 
             is Pos.PaymentEvent.PaymentError -> {
-                NfcManager.clearNdefMessage()
+                NfcManager.clearPaymentUri()
                 _isLoading.value = false
                 val errorMessage = when (val error: Pos.PaymentEvent.PaymentError = paymentEvent) {
                     is Pos.PaymentEvent.PaymentError.CreatePaymentFailed -> "Failed to create payment, try again: ${error.message}"
@@ -182,13 +182,13 @@ class POSViewModel : ViewModel() {
     }
 
     fun cancelPayment() {
-        NfcManager.clearNdefMessage()
+        NfcManager.clearPaymentUri()
         PosClient.cancelPayment()
         _isLoading.value = false
     }
 
     fun resetForNewPayment() {
-        NfcManager.clearNdefMessage()
+        NfcManager.clearPaymentUri()
         currentAmount = null
         currentPaymentId = null
         _isLoading.value = false

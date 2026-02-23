@@ -1,5 +1,3 @@
-@file:JvmSynthetic
-
 package com.walletconnect.sample.pos.nfc
 
 
@@ -19,13 +17,13 @@ import java.io.ByteArrayOutputStream
  * Implements the NFC Forum Type 4 Tag Operation specification:
  * SELECT NDEF App → SELECT CC → READ CC → SELECT NDEF → READ NDEF
  */
-internal class NdefHostApduService : HostApduService() {
+class NdefHostApduService : HostApduService() {
 
     companion object {
-        // NDEF Tag Application AID (D2760000850101)
+        // NDEF Tag Application AID (D2760000850101) — 7 bytes per NFC Forum Type 4 spec
         private val NDEF_AID = byteArrayOf(
             0xD2.toByte(), 0x76.toByte(), 0x00.toByte(), 0x00.toByte(),
-            0x00.toByte(), 0x85.toByte(), 0x01.toByte(), 0x01.toByte()
+            0x85.toByte(), 0x01.toByte(), 0x01.toByte()
         )
 
         // File IDs
@@ -37,6 +35,7 @@ internal class NdefHostApduService : HostApduService() {
         private val SW_NOT_FOUND = byteArrayOf(0x6A.toByte(), 0x82.toByte())
         private val SW_WRONG_PARAMS = byteArrayOf(0x6B.toByte(), 0x00.toByte())
         private val SW_INS_NOT_SUPPORTED = byteArrayOf(0x6D.toByte(), 0x00.toByte())
+        private val SW_CLA_NOT_SUPPORTED = byteArrayOf(0x6E.toByte(), 0x00.toByte())
 
         // APDU instruction bytes
         private const val INS_SELECT = 0xA4.toByte()
@@ -44,6 +43,9 @@ internal class NdefHostApduService : HostApduService() {
 
         // Max NDEF message size (2 KB should be more than enough for a URI)
         private const val MAX_NDEF_SIZE = 2048
+
+        // Per ISO 7816-4, Le=0x00 in short APDU means 256 bytes
+        private const val MAX_READ_SIZE = 256
 
         /**
          * The current NDEF message bytes to serve. Set by [NfcManager].
@@ -105,13 +107,23 @@ internal class NdefHostApduService : HostApduService() {
     }
 
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray {
+        Timber.d("NFC: <<< APDU received (%d bytes): %s", commandApdu.size, commandApdu.toHexString())
+
         if (commandApdu.size < 4) {
+            Timber.w("NFC: APDU too short")
             return SW_WRONG_PARAMS
         }
 
+        val cla = commandApdu[0]
         val ins = commandApdu[1]
 
-        return when (ins) {
+        // Only accept ISO 7816-4 interindustry commands (CLA=0x00)
+        if (cla != 0x00.toByte()) {
+            Timber.w("NFC: Unsupported CLA: 0x%02X", cla)
+            return SW_CLA_NOT_SUPPORTED
+        }
+
+        val response = when (ins) {
             INS_SELECT -> handleSelect(commandApdu)
             INS_READ_BINARY -> handleReadBinary(commandApdu)
             else -> {
@@ -119,6 +131,9 @@ internal class NdefHostApduService : HostApduService() {
                 SW_INS_NOT_SUPPORTED
             }
         }
+
+        Timber.d("NFC: >>> Response (%d bytes): %s", response.size, response.toHexString())
+        return response
     }
 
     private fun handleSelect(apdu: ByteArray): ByteArray {
@@ -158,7 +173,10 @@ internal class NdefHostApduService : HostApduService() {
 
     private fun handleReadBinary(apdu: ByteArray): ByteArray {
         val offset = ((apdu[2].toInt() and 0xFF) shl 8) or (apdu[3].toInt() and 0xFF)
-        val le = if (apdu.size > 4) apdu[4].toInt() and 0xFF else 0
+        // Per ISO 7816-4: Le=0x00 means 256 bytes (max short Le).
+        // If Le byte is absent, default to reading all remaining data.
+        val rawLe = if (apdu.size > 4) apdu[4].toInt() and 0xFF else 0
+        val le = if (rawLe == 0) MAX_READ_SIZE else rawLe
 
         val fileData = when (selectedFile) {
             SelectedFile.CC -> {
@@ -173,17 +191,27 @@ internal class NdefHostApduService : HostApduService() {
         }
 
         if (offset >= fileData.size) {
+            Timber.w("NFC: READ BINARY offset %d beyond file size %d", offset, fileData.size)
             return SW_WRONG_PARAMS
         }
 
         val end = (offset + le).coerceAtMost(fileData.size)
         val responseData = fileData.copyOfRange(offset, end)
+        Timber.d(
+            "NFC: READ BINARY file=%s offset=%d le=%d returning %d bytes",
+            selectedFile, offset, le, responseData.size
+        )
 
         return responseData + SW_OK
     }
 
     override fun onDeactivated(reason: Int) {
-        Timber.d("NFC: Deactivated, reason: %d", reason)
+        val reasonStr = when (reason) {
+            DEACTIVATION_LINK_LOSS -> "LINK_LOSS"
+            DEACTIVATION_DESELECTED -> "DESELECTED"
+            else -> "UNKNOWN($reason)"
+        }
+        Timber.d("NFC: Deactivated — reason: %s", reasonStr)
         selectedFile = SelectedFile.NONE
     }
 

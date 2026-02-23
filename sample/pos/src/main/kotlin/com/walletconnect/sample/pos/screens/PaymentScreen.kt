@@ -174,7 +174,7 @@ private fun ScanToPayContent(
             Spacer(Modifier.height(16.dp))
 
             val context = LocalContext.current
-            val isNfcActive = remember { NfcManager.isHceSupported(context) && NfcManager.isNfcEnabled(context) }
+            val isNfcActive = remember { NfcManager.isNfcAvailable(context) && NfcManager.isNfcEnabled(context) }
 
             Text(
                 if (isNfcActive) "Scan or Tap to Pay" else "Scan to Pay",

@@ -50,6 +50,7 @@ import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.nfc.PaymentHceService
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
@@ -205,6 +206,22 @@ class WalletKitActivity : AppCompatActivity() {
     }
 
     private fun handleAppLink(intent: Intent?) {
+        // Handle payment URL received via NFC tap from POS terminal
+        if (intent?.action == PaymentHceService.ACTION_PAYMENT_URL_RECEIVED) {
+            val paymentUrl = intent.getStringExtra(PaymentHceService.EXTRA_PAYMENT_URL)
+            if (paymentUrl != null) {
+                Timber.d("NFC: Payment URL received via NFC: %s", paymentUrl)
+                // Use pair() which detects payment links, fetches payment options,
+                // and emits to paymentEventFlow (which triggers navigation)
+                lifecycleScope.launch {
+                    navigateWhenReady {
+                        web3walletViewModel.pair(paymentUrl)
+                    }
+                }
+                return
+            }
+        }
+
         val dataString = intent?.dataString
         // Check for WalletConnect Pay URL - pass the full link (URL encoded)
         if (dataString != null && isPaymentUrl(dataString)) {
