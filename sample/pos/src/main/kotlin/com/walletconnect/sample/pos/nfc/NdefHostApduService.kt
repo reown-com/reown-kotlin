@@ -180,8 +180,10 @@ class NdefHostApduService : HostApduService() {
 
         val fileData = when (selectedFile) {
             SelectedFile.CC -> {
-                val ndefFile = buildNdefFile()
-                buildCapabilityContainer(ndefFile.size.coerceAtMost(MAX_NDEF_SIZE))
+                // Always report MAX_NDEF_SIZE as the file capacity.
+                // The actual NDEF message length is in the 2-byte prefix of the NDEF file.
+                // Using a fixed size avoids CC/NDEF inconsistency if the message changes mid-read.
+                buildCapabilityContainer(MAX_NDEF_SIZE)
             }
             SelectedFile.NDEF -> buildNdefFile()
             SelectedFile.NONE -> {
@@ -213,6 +215,10 @@ class NdefHostApduService : HostApduService() {
         }
         Timber.d("NFC: Deactivated — reason: %s", reasonStr)
         selectedFile = SelectedFile.NONE
+
+        if (reason == DEACTIVATION_LINK_LOSS) {
+            NfcManager.rearmHce()
+        }
     }
 
     private fun ByteArray.toHexString(): String =

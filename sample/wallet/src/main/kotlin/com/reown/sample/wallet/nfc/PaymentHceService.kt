@@ -9,9 +9,15 @@ import java.io.ByteArrayOutputStream
 /**
  * HCE service that receives payment URLs from a POS terminal via NFC.
  *
- * The POS terminal (e.g., Ingenico AXIUM DX8000) acts as an NFC reader
- * and sends the payment URL using a custom APDU protocol:
+ * Uses a custom Reown Pay AID (F052454F574E504159) to avoid conflicts with
+ * Android's built-in NDEF tag handler, which would cause a disambiguation
+ * dialog and require double-tap. The custom AID gives single-tap UX.
  *
+ * For multi-wallet support: all wallets register the same Reown Pay AID.
+ * Android shows a picker only when multiple wallet apps are installed —
+ * not conflicting with system services.
+ *
+ * Protocol:
  * 1. POS sends SELECT with Reown Pay AID (F052454F574E504159)
  * 2. POS sends one or more PUSH_URL APDUs containing the URL bytes
  * 3. This service reassembles the URL and launches the wallet Activity
@@ -108,7 +114,6 @@ class PaymentHceService : HostApduService() {
     }
 
     private fun deliverPaymentUrl(url: String) {
-        // Launch wallet activity with the payment URL
         val intent = Intent(this, Class.forName("com.reown.sample.wallet.ui.WalletKitActivity")).apply {
             action = ACTION_PAYMENT_URL_RECEIVED
             putExtra(EXTRA_PAYMENT_URL, url)

@@ -102,6 +102,12 @@ object PosClient {
     fun cancelPayment() {
         currentPollingJob?.cancel()
         currentPollingJob = null
+        // Cancel and recreate the scope to forcibly terminate in-flight HTTP
+        // calls. Job.cancel() is cooperative — an OkHttp call on Dispatchers.IO
+        // may finish before the next suspension point, letting the polling loop
+        // continue. Cancelling the scope ensures immediate termination.
+        scope?.cancel()
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 
     /**

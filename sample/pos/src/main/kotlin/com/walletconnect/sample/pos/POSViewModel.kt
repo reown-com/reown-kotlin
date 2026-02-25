@@ -62,6 +62,19 @@ class POSViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
+    // HCE-only mode: disables reader mode so POS acts as an NFC tag for iOS testing
+    private val _hceOnlyMode = MutableStateFlow(false)
+    val hceOnlyMode = _hceOnlyMode.asStateFlow()
+
+    fun toggleHceOnlyMode() {
+        val newValue = !_hceOnlyMode.value
+        // Set NfcManager flag BEFORE emitting to StateFlow. lifecycleScope uses
+        // Dispatchers.Main.immediate, so the collector in POSActivity resumes inline
+        // within the setter — it must see the updated hceOnlyMode when enable() runs.
+        NfcManager.hceOnlyMode = newValue
+        _hceOnlyMode.value = newValue
+    }
+
     // Transaction history state
     private val _transactionHistoryState = MutableStateFlow<TransactionHistoryUiState>(TransactionHistoryUiState.Idle)
     val transactionHistoryState = _transactionHistoryState.asStateFlow()
@@ -127,13 +140,13 @@ class POSViewModel : ViewModel() {
             }
 
             is Pos.PaymentEvent.PaymentSuccess -> {
-                NfcManager.clearPaymentUri()
+                PosClient.cancelPayment()
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
                 _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info))
             }
 
             is Pos.PaymentEvent.PaymentError -> {
-                NfcManager.clearPaymentUri()
+                PosClient.cancelPayment()
                 _isLoading.value = false
                 val errorMessage = when (val error: Pos.PaymentEvent.PaymentError = paymentEvent) {
                     is Pos.PaymentEvent.PaymentError.CreatePaymentFailed -> "Failed to create payment, try again: ${error.message}"
@@ -189,6 +202,7 @@ class POSViewModel : ViewModel() {
 
     fun resetForNewPayment() {
         NfcManager.clearPaymentUri()
+        PosClient.cancelPayment()
         currentAmount = null
         currentPaymentId = null
         _isLoading.value = false

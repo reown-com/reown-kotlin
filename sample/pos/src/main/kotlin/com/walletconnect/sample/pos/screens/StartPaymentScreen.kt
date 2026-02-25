@@ -98,6 +98,35 @@ fun StartPaymentScreen(
                 .padding(bottom = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // HCE-Only Mode toggle (for iOS testing)
+            val hceOnlyMode by viewModel.hceOnlyMode.collectAsState()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "HCE-Only Mode",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                    Text(
+                        "Disable reader — act as NFC tag for iOS",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF888888)
+                    )
+                }
+                Switch(
+                    checked = hceOnlyMode,
+                    onCheckedChange = { viewModel.toggleHceOnlyMode() },
+                    colors = SwitchDefaults.colors(checkedTrackColor = BrandColor)
+                )
+            }
+
             // New Payment button
             Button(
                 onClick = { viewModel.navigateToAmountScreen() },

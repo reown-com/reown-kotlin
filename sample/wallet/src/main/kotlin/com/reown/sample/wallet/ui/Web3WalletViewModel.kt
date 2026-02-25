@@ -201,6 +201,7 @@ class Web3WalletViewModel : ViewModel() {
                     _paymentEventFlow.emit(response.paymentId)
                 },
                 onFailure = { error ->
+                    println("kobe: Error: $error")
                     _isLoadingFlow.value = false
                     _eventsSharedFlow.emit(PairingEvent.Error(error.message ?: "Payment error"))
                 }
