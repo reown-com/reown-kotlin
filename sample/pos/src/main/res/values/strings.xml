@@ -1,5 +1,3 @@
 <resources>
     <string name="app_name">POSApplication</string>
-    <string name="nfc_service_description">Payment NFC Tag Emulation</string>
-    <string name="nfc_aid_group_description">NDEF Tag</string>
 </resources>

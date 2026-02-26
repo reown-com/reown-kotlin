@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
 import com.walletconnect.sample.pos.nfc.NfcManager
+import com.walletconnect.sample.pos.receipt.ReceiptPrinter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -62,17 +63,12 @@ class POSViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
-    // HCE-only mode: disables reader mode so POS acts as an NFC tag for iOS testing
-    private val _hceOnlyMode = MutableStateFlow(false)
-    val hceOnlyMode = _hceOnlyMode.asStateFlow()
+    // Print receipt toggle
+    private val _printReceiptEnabled = MutableStateFlow(true)
+    val printReceiptEnabled = _printReceiptEnabled.asStateFlow()
 
-    fun toggleHceOnlyMode() {
-        val newValue = !_hceOnlyMode.value
-        // Set NfcManager flag BEFORE emitting to StateFlow. lifecycleScope uses
-        // Dispatchers.Main.immediate, so the collector in POSActivity resumes inline
-        // within the setter — it must see the updated hceOnlyMode when enable() runs.
-        NfcManager.hceOnlyMode = newValue
-        _hceOnlyMode.value = newValue
+    fun togglePrintReceipt() {
+        _printReceiptEnabled.value = !_printReceiptEnabled.value
     }
 
     // Transaction history state
@@ -143,6 +139,12 @@ class POSViewModel : ViewModel() {
                 PosClient.cancelPayment()
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
                 _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info))
+                if (_printReceiptEnabled.value && ReceiptPrinter.isAvailable) {
+                    ReceiptPrinter.printPaymentReceipt(
+                        paymentInfo = paymentEvent.info,
+                        fiatAmount = currentAmount?.format()
+                    )
+                }
             }
 
             is Pos.PaymentEvent.PaymentError -> {

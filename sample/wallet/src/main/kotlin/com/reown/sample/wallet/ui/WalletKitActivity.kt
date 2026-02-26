@@ -50,6 +50,7 @@ import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.nfc.NfcPaymentReader
 import com.reown.sample.wallet.nfc.PaymentHceService
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
@@ -68,6 +69,7 @@ class WalletKitActivity : AppCompatActivity() {
     private lateinit var navController: NavHostController
     private val web3walletViewModel = Web3WalletViewModel()
     private val connectionsViewModel = ConnectionsViewModel()
+    private lateinit var nfcPaymentReader: NfcPaymentReader
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -79,6 +81,10 @@ class WalletKitActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        nfcPaymentReader = NfcPaymentReader(this) { paymentUrl ->
+            Timber.d("NFC: Payment URL read from tag: %s", paymentUrl)
+            web3walletViewModel.pair(paymentUrl)
+        }
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
         askNotificationPermission()
@@ -88,17 +94,15 @@ class WalletKitActivity : AppCompatActivity() {
         setBeagle()
     }
 
-//    override fun onResume() {
-//        super.onResume()
-//
-//        CoreClient.Relay.connect { error: Core.Model.Error -> println("kobe: connect error: $error") }
-//    }
-//
-//    override fun onPause() {
-//        super.onPause()
-//
-//        CoreClient.Relay.disconnect { error: Core.Model.Error -> println("kobe: disconnect error: $error") }
-//    }
+    override fun onResume() {
+        super.onResume()
+        nfcPaymentReader.enable()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        nfcPaymentReader.disable()
+    }
 
     @OptIn(ExperimentalMaterialNavigationApi::class)
     private fun setContent(

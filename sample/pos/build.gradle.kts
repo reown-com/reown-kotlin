@@ -68,6 +68,7 @@ android {
 }
 
 dependencies {
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(project(":sample:common"))
 
     debugImplementation(project(":product:pos"))

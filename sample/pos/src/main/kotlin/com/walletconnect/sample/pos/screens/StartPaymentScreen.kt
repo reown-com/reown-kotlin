@@ -89,7 +89,7 @@ fun StartPaymentScreen(
             )
         }
         
-        // Bottom section with button
+        // Bottom section with toggle and buttons
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,32 +98,28 @@ fun StartPaymentScreen(
                 .padding(bottom = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // HCE-Only Mode toggle (for iOS testing)
-            val hceOnlyMode by viewModel.hceOnlyMode.collectAsState()
+            // Print receipt toggle
+            val printEnabled by viewModel.printReceiptEnabled.collectAsState()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "HCE-Only Mode",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black
-                    )
-                    Text(
-                        "Disable reader — act as NFC tag for iOS",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF888888)
-                    )
-                }
+                Text(
+                    "Print Receipt",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Medium
+                )
                 Switch(
-                    checked = hceOnlyMode,
-                    onCheckedChange = { viewModel.toggleHceOnlyMode() },
-                    colors = SwitchDefaults.colors(checkedTrackColor = BrandColor)
+                    checked = printEnabled,
+                    onCheckedChange = { viewModel.togglePrintReceipt() },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = BrandColor
+                    )
                 )
             }
 
