@@ -40,6 +40,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.reown.sample.common.ui.theme.WCTheme
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -171,11 +172,7 @@ fun WalletBalanceItem(balance: TokenBalance) {
             ) {
                 Text(
                     text = balance.symbol.take(1),
-                    style = TextStyle(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
+                    style = WCTheme.typography.bodyLgMedium.copy(color = Color.White)
                 )
             }
         }
@@ -185,16 +182,13 @@ fun WalletBalanceItem(balance: TokenBalance) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "${balance.quantity.numeric} ${balance.symbol}",
-                style = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
+                style = WCTheme.typography.bodyLgMedium.copy(
                     color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
                 )
             )
             Text(
                 text = "$chainName \u00B7 $shortAddress",
-                style = TextStyle(
-                    fontSize = 13.sp,
+                style = WCTheme.typography.bodySmRegular.copy(
                     color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
                 )
             )
@@ -214,33 +208,22 @@ fun WalletBalanceItem(balance: TokenBalance) {
 
 @Composable
 private fun EmptyWallets() {
-    val contentColor = themedColor(darkColor = Color(0xFF585F5F), lightColor = Color(0xFF9EA9A9))
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(id = R.drawable.ic_wallet),
-            contentDescription = null,
-            modifier = Modifier.size(48.dp),
-            tint = contentColor
-        )
-        Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "No token balances found",
-            style = TextStyle(
-                fontWeight = FontWeight.Medium,
-                fontSize = 15.sp,
-                color = contentColor
+            text = "No token balances yet",
+            style = WCTheme.typography.h6Regular.copy(
+                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
             )
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Pull to refresh",
-            style = TextStyle(
-                fontSize = 13.sp,
-                color = contentColor
+            text = "Pull to refresh to load your balances.",
+            style = WCTheme.typography.bodyLgRegular.copy(
+                color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF9EA9A9)
             )
         )
     }

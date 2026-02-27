@@ -2,12 +2,16 @@ package com.reown.sample.wallet.ui.routes.host
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -19,11 +23,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.reown.sample.common.ui.themedColor
+import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.common.ui.theme.blue_accent
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.Route
@@ -48,31 +54,53 @@ data class BottomBarState(
     val isDisplayed: Boolean = true,
 )
 
-
 @Composable
 fun BottomBar(navController: NavController, state: BottomBarState, screens: Array<BottomBarItem> = BottomBarItem.values()) {
+    val activeColor = themedColor(darkColor = Color(0xFFFFFFFF), lightColor = Color(0xFF202020))
+    val inactiveColor = Color(0xFF9A9A9A)
+
     Column {
         Divider(color = MaterialTheme.colors.onSurface.copy(alpha = 0.12f))
-        BottomNavigation(backgroundColor = MaterialTheme.colors.background, elevation = 0.dp) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 20.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             val currentRoute = currentRoute(navController)
             screens.forEach { screen ->
+                val isSelected = currentRoute == screen.route.path
                 val hasNotification = when (screen) {
                     BottomBarItem.WALLETS -> state.doesConnectionsItemHaveNotifications
                     else -> false
                 }
 
-                BottomNavigationItem(
-                    label = { Text(screen.label, fontSize = 12.sp, maxLines = 1) },
-                    icon = { BottomNavIconWithBadge(screen.icon, hasNotification) },
-                    selected = currentRoute == screen.route.path,
-                    onClick = {
-                        navController.navigate(screen.route.path) {
-                            popUpTo(Route.Wallets.path) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            navController.navigate(screen.route.path) {
+                                popUpTo(Route.Wallets.path) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
-                    }
-                )
+                        .padding(vertical = 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    BottomNavIconWithBadge(screen.icon, hasNotification, isSelected)
+                    Text(
+                        screen.label,
+                        style = WCTheme.typography.bodySmRegular.copy(
+                            color = if (isSelected) activeColor else inactiveColor
+                        ),
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
@@ -86,7 +114,10 @@ fun currentRoute(navController: NavController): String? {
 }
 
 @Composable
-fun BottomNavIconWithBadge(@DrawableRes icon: Int, hasNotification: Boolean) {
+fun BottomNavIconWithBadge(@DrawableRes icon: Int, hasNotification: Boolean, isSelected: Boolean = false) {
+    val activeColor = themedColor(darkColor = Color(0xFFFFFFFF), lightColor = Color(0xFF202020))
+    val inactiveColor = Color(0xFF9A9A9A)
+
     Box(
         contentAlignment = Alignment.TopEnd,
         modifier = Modifier
@@ -97,7 +128,7 @@ fun BottomNavIconWithBadge(@DrawableRes icon: Int, hasNotification: Boolean) {
             painterResource(id = icon),
             contentDescription = null,
             modifier = Modifier.size(28.dp),
-            tint = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+            tint = if (isSelected) activeColor else inactiveColor
         )
 
         if (hasNotification) {

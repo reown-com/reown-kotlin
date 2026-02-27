@@ -1,11 +1,10 @@
 package com.reown.sample.wallet.ui.routes.composable_routes.settings
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,12 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
@@ -31,253 +27,299 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.reown.sample.common.ui.WCTopAppBar
-import com.reown.sample.common.ui.theme.PreviewTheme
-import com.reown.sample.common.ui.theme.UiModePreview
+import com.reown.sample.common.ui.themedColor
+import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.StacksAccountDelegate
+import com.reown.sample.wallet.domain.ThemeManager
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
-import com.reown.sample.wallet.ui.routes.Route
+import com.reown.sample.wallet.ui.routes.host.WalletHeader
+
+private data class SettingsSection(val title: String, val items: List<SettingItem>)
+private data class SettingItem(val key: String, val value: String)
 
 @Composable
 fun SettingsRoute(navController: NavHostController) {
     val viewModel: SettingsViewModel = viewModel()
     val deviceToken = viewModel.deviceToken.collectAsState().value
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
 
     val sections = listOf(
-        Section.SettingsSection(
+        SettingsSection(
             "EIP155 Account", listOf(
-                Item.SettingCopyableItem("CAIP-10", viewModel.caip10),
-//                Item.SettingCopyableItem("Safe Smart Account Address", viewModel.getSmartAccount()),
-                Item.SettingCopyableItem("Private key", viewModel.privateKey),
+                SettingItem("CAIP-10", viewModel.caip10),
+                SettingItem("Private key", viewModel.privateKey),
             )
         ),
-        Section.SettingsSection(
+        SettingsSection(
             "TON Account", listOf(
-                Item.SettingCopyableItem("Friendly address", TONAccountDelegate.addressFriendly),
-                Item.SettingCopyableItem("Secret key", TONAccountDelegate.secretKey),
-                Item.SettingCopyableItem("Public key", TONAccountDelegate.publicKey),
+                SettingItem("Friendly address", TONAccountDelegate.addressFriendly),
+                SettingItem("Secret key", TONAccountDelegate.secretKey),
+                SettingItem("Public key", TONAccountDelegate.publicKey),
             )
         ),
-        Section.SettingsSection(
+        SettingsSection(
             "Solana Account", listOf(
-                Item.SettingCopyableItem("Keypair", SolanaAccountDelegate.keyPair),
-                Item.SettingCopyableItem("public key", SolanaAccountDelegate.keys.second),
+                SettingItem("Keypair", SolanaAccountDelegate.keyPair),
+                SettingItem("Public key", SolanaAccountDelegate.keys.second),
             )
         ),
-        Section.SettingsSection(
+        SettingsSection(
             "Stacks Account", listOf(
-                Item.SettingCopyableItem("Wallet", StacksAccountDelegate.importedWallet),
-                Item.SettingCopyableItem("Address Mainnet", StacksAccountDelegate.mainnetAddress),
-                Item.SettingCopyableItem("Address Testnet", StacksAccountDelegate.testnetAddress),
+                SettingItem("Wallet", StacksAccountDelegate.importedWallet),
+                SettingItem("Address Mainnet", StacksAccountDelegate.mainnetAddress),
+                SettingItem("Address Testnet", StacksAccountDelegate.testnetAddress),
             )
         ),
-        Section.SettingsSection(
+        SettingsSection(
             "SUI Account", listOf(
-                Item.SettingCopyableItem("Address", SuiAccountDelegate.address),
-                Item.SettingCopyableItem("Key pair", SuiAccountDelegate.keypair),
-                Item.SettingCopyableItem("Public key", SuiAccountDelegate.publicKey)
+                SettingItem("Address", SuiAccountDelegate.address),
+                SettingItem("Key pair", SuiAccountDelegate.keypair),
+                SettingItem("Public key", SuiAccountDelegate.publicKey),
             )
         ),
-        Section.SettingsSection(
+        SettingsSection(
             "Tron Account", listOf(
-                Item.SettingCopyableItem("Address", TronAccountDelegate.address),
-                Item.SettingCopyableItem("Secret key", TronAccountDelegate.secretKey),
-                Item.SettingCopyableItem("Public key", TronAccountDelegate.publicKey)
+                SettingItem("Address", TronAccountDelegate.address),
+                SettingItem("Secret key", TronAccountDelegate.secretKey),
+                SettingItem("Public key", TronAccountDelegate.publicKey),
             )
         ),
-        Section.SettingsSection(
+        SettingsSection(
             "Device", listOf(
-                Item.SettingCopyableItem("Client ID", viewModel.clientId),
-                Item.SettingCopyableItem("Device token", deviceToken),
-                Item.SettingCopyableItem("App Version", BuildConfig.VERSION_NAME)
+                SettingItem("Client ID", viewModel.clientId),
+                SettingItem("Device token", deviceToken),
+                SettingItem("App Version", BuildConfig.VERSION_NAME),
             )
         ),
     )
 
-    val context: Context = LocalContext.current
-    val clipboardManager: ClipboardManager = LocalClipboardManager.current
+    Column(modifier = Modifier.fillMaxSize()) {
+        WalletHeader(navController)
 
-    SettingsScreen(
-        sections,
-        onLogoutClicked = { navController.popBackStack() },
-        onSettingClicked = {
-            Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
-            clipboardManager.setText(AnnotatedString(it))
-        },
-        onTransactionClick = { navController.navigate(Route.TransactionDialog.path) }
-    )
-}
-
-@Composable
-private fun SettingsScreen(
-    sections: List<Section>,
-    onLogoutClicked: () -> Unit,
-    onSettingClicked: (String) -> Unit,
-    onTransactionClick: () -> Unit,
-) {
-    Divider()
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        WCTopAppBar(titleText = "Settings")
-        Divider()
-        FeaturesSection()
-//        Divider()
-//        Text(
-//            modifier = Modifier
-//                .clip(RoundedCornerShape(5.dp))
-//                .clickable { onTransactionClick() }
-//                .padding(vertical = 5.dp),
-//            text = "Send Transaction",
-//            style = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Blue))
-        Divider()
-        LazyColumn {
-            itemsIndexed(sections) { index, section ->
-                when (section) {
-                    is Section.SettingsSection -> SettingsSection(section.title, section.items, onSettingClicked)
-                    is Section.LogoutSection -> LogoutSection(onLogoutClicked)
-                }
-                if (index != sections.lastIndex) Divider()
-            }
-        }
-    }
-}
-
-@Composable
-private fun FeaturesSection() {
-    val isSafeEnabled by SmartAccountEnabler.isSmartAccountEnabled.collectAsState()
-    Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-        horizontalAlignment = Alignment.Start,
-    ) {
-        Text(text = "Features", style = TextStyle(fontSize = 15.sp), fontWeight = FontWeight(700))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Safe Smart Account", style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight(400),
-                    color = MaterialTheme.colors.onBackground.copy(0.75f)
+            item { Spacer(modifier = Modifier.height(4.dp)) }
+
+            // Theme toggle
+            item { ThemeToggleCard() }
+
+            // Smart Account toggle
+            item { SmartAccountToggleCard() }
+
+            // Account sections
+            items(sections) { section ->
+                AccountSectionCard(
+                    section = section,
+                    onCopy = { value ->
+                        clipboardManager.setText(AnnotatedString(value))
+                        Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+                    }
                 )
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Switch(
-                checked = isSafeEnabled,
-                onCheckedChange = { isChecked -> SmartAccountEnabler.enableSmartAccount(isChecked) },
-                colors = SwitchDefaults.colors(checkedThumbColor = Color.Green)
-            )
-        }
-    }
-}
-
-@Composable
-fun SettingsSection(title: String, items: List<Item>, onSettingClicked: (String) -> Unit) {
-    Column(
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.Start,
-    ) {
-        Text(text = title, style = TextStyle(fontSize = 15.sp), fontWeight = FontWeight(700))
-        Spacer(modifier = Modifier.height(24.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items.filterIsInstance<Item.SettingCopyableItem>().forEach {
-                SettingCopyableItem(it.key, it.value, onSettingClicked)
             }
+
+            item { Spacer(modifier = Modifier.height(8.dp)) }
         }
     }
 }
 
 @Composable
-fun SettingCopyableItem(key: String, value: String, onSettingClicked: (String) -> Unit) {
-    val shape = RoundedCornerShape(12.dp)
+private fun ThemeToggleCard() {
+    val themeMode by ThemeManager.themeMode.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = MaterialTheme.colors.surface, shape = shape)
-            .clip(shape)
-            .clickable { onSettingClicked(value) }
-            .padding(horizontal = 12.dp, vertical = 16.dp)
-
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = key, style = TextStyle(
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight(500),
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                color = themedColor(
+                    darkColor = Color(0xFF1A1A1A),
+                    lightColor = Color(0xFFF5F5F5)
                 )
             )
-            Spacer(modifier = Modifier.width(6.dp))
-            Icon(painter = painterResource(id = R.drawable.ic_copy_small), contentDescription = "Copy", tint = MaterialTheme.colors.onBackground)
-        }
+            .padding(16.dp)
+    ) {
         Text(
-            text = value, style = TextStyle(
-                fontSize = 14.sp,
-                fontWeight = FontWeight(400),
-                color = MaterialTheme.colors.onBackground.copy(0.75f)
+            text = "Theme",
+            style = WCTheme.typography.bodyMdMedium.copy(
+                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+            )
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(
+                    color = themedColor(
+                        darkColor = Color(0xFF252525),
+                        lightColor = Color(0xFFE0E0E0)
+                    )
+                )
+                .padding(3.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            val options = listOf("Light" to 0, "Dark" to 1, "System" to -1)
+            options.forEach { (label, mode) ->
+                val isSelected = themeMode == mode
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            if (isSelected) themedColor(
+                                darkColor = Color(0xFF3A3A3A),
+                                lightColor = Color.White
+                            ) else Color.Transparent
+                        )
+                        .clickable {
+                            if (mode == -1) ThemeManager.setFollowSystem()
+                            else ThemeManager.setDarkMode(mode == 1)
+                        }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        style = if (isSelected) {
+                            WCTheme.typography.bodyMdMedium.copy(
+                                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+                            )
+                        } else {
+                            WCTheme.typography.bodyMdRegular.copy(
+                                color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+                            )
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SmartAccountToggleCard() {
+    val isSafeEnabled by SmartAccountEnabler.isSmartAccountEnabled.collectAsState()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                color = themedColor(
+                    darkColor = Color(0xFF1A1A1A),
+                    lightColor = Color(0xFFF5F5F5)
+                )
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "Safe Smart Account",
+            style = WCTheme.typography.bodyMdMedium.copy(
+                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+            )
+        )
+        Switch(
+            checked = isSafeEnabled,
+            onCheckedChange = { SmartAccountEnabler.enableSmartAccount(it) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color(0xFF3396FF),
+                checkedTrackColor = Color(0xFF3396FF).copy(alpha = 0.5f)
             )
         )
     }
 }
 
-
 @Composable
-fun LogoutSection(onLogoutClicked: () -> Unit) {
-    val color = Color(0xFFC05C5C)
-    Text(
+private fun AccountSectionCard(
+    section: SettingsSection,
+    onCopy: (String) -> Unit,
+) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 24.dp)
-            .border(width = 1.dp, color = color, shape = CircleShape)
-            .clip(shape = CircleShape)
-            .clickable { onLogoutClicked() }
-            .padding(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 12.dp),
-        text = "Log out",
-        color = color,
-        textAlign = TextAlign.Center,
-        fontWeight = FontWeight(600)
-    )
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                color = themedColor(
+                    darkColor = Color(0xFF1A1A1A),
+                    lightColor = Color(0xFFF5F5F5)
+                )
+            )
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = section.title,
+            style = WCTheme.typography.bodyMdMedium.copy(
+                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+            )
+        )
+
+        section.items.forEach { item ->
+            CopyableItemCard(item, onCopy)
+        }
+    }
 }
 
 @Composable
-@UiModePreview
-fun SettingScreenPreview() {
-    val sections = listOf(
-        Section.SettingsSection(
-            "Account", listOf(
-                Item.SettingCopyableItem("CAIP-10", "eip155:1:0xC3F909f02cF8D9a023d7eb76437E06D312E5f0Cb"),
-                Item.SettingCopyableItem("Private key", "b01d06bb4a18636c12245d9e8b4078917822e461b557b3bf5e4060fee5621b01")
+private fun CopyableItemCard(
+    item: SettingItem,
+    onCopy: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                color = themedColor(
+                    darkColor = Color(0xFF252525),
+                    lightColor = Color(0xFFFFFFFF)
+                )
             )
-        ),
-        Section.SettingsSection(
-            "Device", listOf(
-                Item.SettingCopyableItem("Client ID", "did:key:z6Mko1GgpY4uTw9VL245is45kPYi9UnYKTXYJEhWhgrxsDXz"),
-                Item.SettingCopyableItem("Device token", "314875502ff3a6e23f8a6e8dc3259fe4ee0b429d0ab874efa837e8677b2d215d"),
-                Item.SettingCopyableItem("App Version", BuildConfig.VERSION_NAME)
+            .clickable { onCopy(item.value) }
+            .padding(12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = item.key,
+                style = WCTheme.typography.bodySmMedium.copy(
+                    color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+                )
             )
-        ),
-    )
-
-    PreviewTheme {
-        SettingsScreen(sections = sections, onLogoutClicked = { }, onSettingClicked = { }, onTransactionClick = {})
+            Spacer(modifier = Modifier.width(6.dp))
+            Icon(
+                painter = painterResource(id = R.drawable.ic_copy_small),
+                contentDescription = "Copy",
+                tint = themedColor(
+                    darkColor = Color(0xFF788686),
+                    lightColor = Color(0xFF788686)
+                )
+            )
+        }
+        Text(
+            text = item.value,
+            style = WCTheme.typography.bodySmRegular.copy(
+                color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+            )
+        )
     }
 }

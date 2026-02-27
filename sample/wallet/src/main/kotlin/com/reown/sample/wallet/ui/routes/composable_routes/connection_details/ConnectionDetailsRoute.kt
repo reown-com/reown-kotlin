@@ -8,8 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,10 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scanner_options.ModalCloseButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +48,8 @@ import coil.request.ImageRequest
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.sample.common.ui.themedColor
+import com.reown.sample.common.ui.theme.KhTekaFontFamily
+import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionType
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionUI
@@ -77,11 +75,11 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                 .background(
                     color = themedColor(
                         darkColor = Color(0xFF1A1A1A),
-                        lightColor = Color(0xFFF5F5F5)
+                        lightColor = Color.White
                     ),
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
                 )
-                .padding(16.dp)
+                .padding(20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             // Top bar: Disconnect button + Close button
@@ -93,11 +91,11 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                 // Disconnect button
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(12.dp))
                         .background(
                             color = themedColor(
-                                darkColor = Color(0xFF2A2A2A),
-                                lightColor = Color(0xFFE8E8E8)
+                                darkColor = Color.White,
+                                lightColor = Color(0xFF202020)
                             )
                         )
                         .clickable(enabled = !isDisconnecting) {
@@ -110,7 +108,7 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                 onLoading = { isDisconnecting = it }
                             )
                         }
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (isDisconnecting) {
@@ -118,8 +116,8 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
                             color = themedColor(
-                                darkColor = Color(0xFFe3e7e7),
-                                lightColor = Color(0xFF141414)
+                                darkColor = Color(0xFF202020),
+                                lightColor = Color.White
                             )
                         )
                     } else {
@@ -128,49 +126,25 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
                             tint = themedColor(
-                                darkColor = Color(0xFFe3e7e7),
-                                lightColor = Color(0xFF141414)
+                                darkColor = Color(0xFF202020),
+                                lightColor = Color.White
                             )
                         )
                     }
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Disconnect",
-                        style = TextStyle(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
+                        style = WCTheme.typography.bodyMdRegular.copy(
                             color = themedColor(
-                                darkColor = Color(0xFFe3e7e7),
-                                lightColor = Color(0xFF141414)
+                                darkColor = Color(0xFF202020),
+                                lightColor = Color.White
                             )
                         )
                     )
                 }
 
                 // Close button
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(
-                            color = themedColor(
-                                darkColor = Color(0xFF2A2A2A),
-                                lightColor = Color(0xFFE8E8E8)
-                            )
-                        )
-                        .clickable { navController.popBackStack() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        modifier = Modifier.size(18.dp),
-                        tint = themedColor(
-                            darkColor = Color(0xFFe3e7e7),
-                            lightColor = Color(0xFF141414)
-                        )
-                    )
-                }
+                ModalCloseButton(onClick = { navController.popBackStack() })
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -178,13 +152,13 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
             // App info card
             AppInfoCard(uiConnection)
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Methods section
             val methods = getSessionMethods(uiConnection)
             if (methods.isNotEmpty()) {
                 InfoSection(title = "Methods", items = methods)
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             // Events section
@@ -193,7 +167,7 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                 InfoSection(title = "Events", items = events)
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     } ?: run {
         Column(
@@ -204,7 +178,9 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
         ) {
             Text(
                 text = "Connection not found",
-                color = themedColor(darkColor = Color(0xFF788686), lightColor = Color(0xFF788686))
+                style = WCTheme.typography.bodyLgRegular.copy(
+                    color = themedColor(darkColor = Color(0xFF9A9A9A), lightColor = Color(0xFF9A9A9A))
+                )
             )
         }
     }
@@ -227,26 +203,26 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(
                 color = themedColor(
                     darkColor = Color(0xFF252525),
-                    lightColor = Color(0xFFFFFFFF)
+                    lightColor = Color(0xFFF3F3F3)
                 )
             )
-            .padding(12.dp),
+            .padding(20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // App icon
         val iconModifier = Modifier
-            .size(44.dp)
+            .size(42.dp)
             .clip(RoundedCornerShape(12.dp))
             .border(
                 width = 1.dp,
                 shape = RoundedCornerShape(12.dp),
                 color = themedColor(
                     darkColor = Color(0xFF2A2A2A),
-                    lightColor = Color(0xFFE0E0E0)
+                    lightColor = Color(0xFFD0D0D0)
                 )
             )
 
@@ -254,7 +230,7 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
             val painter = rememberAsyncImagePainter(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(connectionUI.icon)
-                    .size(44)
+                    .size(42)
                     .crossfade(true)
                     .error(com.reown.sample.common.R.drawable.ic_walletconnect_circle_blue)
                     .build()
@@ -279,17 +255,14 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = connectionUI.name,
-                style = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+                style = WCTheme.typography.bodyLgRegular.copy(
+                    color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF202020)
                 )
             )
             Text(
                 text = connectionUI.uri,
-                style = TextStyle(
-                    fontSize = 13.sp,
-                    color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+                style = WCTheme.typography.bodyLgRegular.copy(
+                    color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF9A9A9A)
                 )
             )
         }
@@ -308,7 +281,7 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
                         .background(color)
                         .border(
                             1.5.dp,
-                            themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFFFFFFFF)),
+                            themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFFF3F3F3)),
                             CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -316,6 +289,7 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
                     Text(
                         text = label,
                         style = TextStyle(
+                            fontFamily = KhTekaFontFamily,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -333,7 +307,7 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
                         )
                         .border(
                             1.5.dp,
-                            themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFFFFFFFF)),
+                            themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFFF3F3F3)),
                             CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -341,6 +315,7 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
                     Text(
                         text = "+${chains.size - 4}",
                         style = TextStyle(
+                            fontFamily = KhTekaFontFamily,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -352,35 +327,31 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun InfoSection(title: String, items: List<String>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(
                 color = themedColor(
                     darkColor = Color(0xFF252525),
-                    lightColor = Color(0xFFFFFFFF)
+                    lightColor = Color(0xFFF3F3F3)
                 )
             )
-            .padding(16.dp)
+            .padding(20.dp)
     ) {
         Text(
             text = title,
-            style = TextStyle(
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+            style = WCTheme.typography.bodyLgRegular.copy(
+                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF202020)
             )
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = items.joinToString(", "),
-            style = TextStyle(
-                fontSize = 13.sp,
-                color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+            style = WCTheme.typography.bodyMdRegular.copy(
+                color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF9A9A9A)
             )
         )
     }

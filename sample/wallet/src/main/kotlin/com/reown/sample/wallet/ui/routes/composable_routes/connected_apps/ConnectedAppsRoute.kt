@@ -42,6 +42,8 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.reown.sample.common.ui.themedColor
+import com.reown.sample.common.ui.theme.KhTekaFontFamily
+import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionType
@@ -142,16 +144,13 @@ fun ConnectedAppItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = connectionUI.name,
-                style = TextStyle(
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
+                style = WCTheme.typography.bodyLgMedium.copy(
                     color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
                 )
             )
             Text(
                 text = connectionUI.uri,
-                style = TextStyle(
-                    fontSize = 13.sp,
+                style = WCTheme.typography.bodySmRegular.copy(
                     color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
                 )
             )
@@ -194,6 +193,7 @@ private fun ChainIcons(connectionUI: ConnectionUI) {
                     Text(
                         text = label,
                         style = TextStyle(
+                            fontFamily = KhTekaFontFamily,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -213,6 +213,7 @@ private fun ChainIcons(connectionUI: ConnectionUI) {
                     Text(
                         text = "+${chains.size - 4}",
                         style = TextStyle(
+                            fontFamily = KhTekaFontFamily,
                             fontSize = 8.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -240,33 +241,22 @@ fun chainInfo(chainId: String): Pair<Color, String> {
 
 @Composable
 private fun EmptyConnectedApps() {
-    val contentColor = themedColor(darkColor = Color(0xFF585F5F), lightColor = Color(0xFF9EA9A9))
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(id = R.drawable.ic_stack),
-            contentDescription = null,
-            modifier = Modifier.size(48.dp),
-            tint = contentColor
-        )
-        Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "No connected apps",
-            style = TextStyle(
-                fontWeight = FontWeight.Medium,
-                fontSize = 15.sp,
-                color = contentColor
+            text = "No connected apps yet",
+            style = WCTheme.typography.h6Regular.copy(
+                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
             )
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Scan a QR code to connect",
-            style = TextStyle(
-                fontSize = 13.sp,
-                color = contentColor
+            text = "Scan a WalletConnect QR code to get started.",
+            style = WCTheme.typography.bodyLgRegular.copy(
+                color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF9EA9A9)
             )
         )
     }

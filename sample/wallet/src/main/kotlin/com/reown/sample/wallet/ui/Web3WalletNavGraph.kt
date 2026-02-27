@@ -34,7 +34,7 @@ import com.reown.sample.wallet.ui.routes.composable_routes.connection_details.Co
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.composable_routes.settings.SettingsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.wallets.WalletsRoute
-import com.reown.sample.wallet.ui.routes.dialog_routes.paste_uri.PasteUriRoute
+import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scanner_options.ScannerOptionsRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_authenticate.SessionAuthenticateRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal.SessionProposalRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.chain_abstraction.ChainAbstractionRoute
@@ -55,7 +55,7 @@ fun Web3WalletNavGraph(
     modifier: Modifier = Modifier,
     startDestination: String = Route.Wallets.path,
 ) {
-    var scrimColor by remember { mutableStateOf(Color.Unspecified) }
+    var scrimColor by remember { mutableStateOf(Color.Black.copy(alpha = 0.32f)) }
 
     navController.addOnDestinationChangedListener(
         listener = { _, destination, _ ->
@@ -128,7 +128,7 @@ fun Web3WalletNavGraph(
             }
             bottomSheet(Route.ScanUri.path) {
                 web3walletViewModel.showLoader(false)
-                scrimColor = Color.Unspecified
+                scrimColor = Color.Transparent
                 ScanUriRoute(navController, sheetState, onScanSuccess = {
                     web3walletViewModel.pair(it)
                 })
@@ -147,16 +147,16 @@ fun Web3WalletNavGraph(
             ) {
                 SessionRequestRoute(navController)
             }
-            dialog(Route.PasteUri.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
-                PasteUriRoute(onSubmit = {
-                    web3walletViewModel.pair(it)
-                    navController.popBackStack()
-                })
+            bottomSheet(Route.ScannerOptions.path) {
+                ScannerOptionsRoute(
+                    navController = navController,
+                    onPair = { web3walletViewModel.pair(it) }
+                )
             }
             bottomSheet("${Route.SnackbarMessage.path}/{message}", arguments = listOf(
                 navArgument("message") { type = NavType.StringType }
             )) {
-                scrimColor = Color.Unspecified
+                scrimColor = Color.Transparent
                 SnackbarMessageRoute(navController, it.arguments?.getString("message"))
             }
             dialog(
