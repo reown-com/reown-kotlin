@@ -166,6 +166,17 @@ internal object UsdkServiceHelper {
             svc.register(param, binderToken)
             isRegistered = true
             Timber.d("USDK: Registered with device service")
+
+            // Release the RF hardware from reader mode immediately after registration.
+            // The ePay module claims the RF card on register; closing it here frees the
+            // hardware so NFC tag emulation can use it later without conflict.
+            try {
+                val bundle = Bundle().apply { putString("rfDeviceName", RFDeviceName.INNER) }
+                URFReader.Stub.asInterface(svc.getRFReader(bundle))?.closeDevice()
+                Timber.d("USDK: RF reader closed after registration")
+            } catch (_: Exception) {
+                // May fail if RF not open — safe to ignore.
+            }
         } catch (e: Exception) {
             isRegistered = false
             Timber.e(e, "USDK: Failed to register — %s", e.message)

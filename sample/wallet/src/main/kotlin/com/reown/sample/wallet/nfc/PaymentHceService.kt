@@ -114,10 +114,11 @@ class PaymentHceService : HostApduService() {
     }
 
     private fun deliverPaymentUrl(url: String) {
-        val intent = Intent(this, Class.forName("com.reown.sample.wallet.ui.WalletKitActivity")).apply {
+        // Deliver to NfcPaymentActivity for quick-pay overlay (Google Pay-like UX)
+        val intent = Intent(this, Class.forName("com.reown.sample.wallet.ui.NfcPaymentActivity")).apply {
             action = ACTION_PAYMENT_URL_RECEIVED
             putExtra(EXTRA_PAYMENT_URL, url)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
     }

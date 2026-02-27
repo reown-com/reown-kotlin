@@ -80,6 +80,50 @@
                 android:value="" />
         </activity>
 
+        <!-- NFC quick-pay overlay: intercepts NDEF tags from POS terminal (home screen tap) -->
+        <activity
+            android:name="com.reown.sample.wallet.ui.NfcPaymentActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Wallet.Translucent">
+
+            <!-- NDEF tag with custom MIME type (application/vnd.reown.pay).
+                 POS emits MIME as the first NDEF record so that Android dispatches
+                 NDEF_DISCOVERED based on MIME type — bypasses Samsung's NFC handler
+                 which intercepts HTTPS URLs and opens them in the browser. -->
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.reown.pay" />
+            </intent-filter>
+
+            <!-- TECH_DISCOVERED fallback: catches ISO-DEP / NFC-A/B tags that
+                 some card emulation modes produce when NDEF_DISCOVERED doesn't fire -->
+            <intent-filter>
+                <action android:name="android.nfc.action.TECH_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.nfc.action.TECH_DISCOVERED"
+                android:resource="@xml/nfc_tech_filter" />
+
+            <!-- Android App Link fallback: if the NFC service opens the URL in the
+                 browser, App Links redirects to this activity instead.
+                 Verified via lab.reown.com/.well-known/assetlinks.json -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="lab.reown.com"
+                    android:pathPrefix="/wallet" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name="com.reown.sample.wallet.WalletKitMessageService"
             android:exported="false">

@@ -424,6 +424,9 @@ class WalletKitActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
+        // NFC foreground dispatch: handle tags when wallet is in the foreground
+        if (nfcPaymentReader.handleIntent(intent)) return
+
         handleAppLink(intent)
     }
 
