@@ -219,7 +219,7 @@ fun PaymentRoute(
 }
 
 private fun dismissPaymentDialog(navController: NavHostController) {
-    if (!navController.popBackStack(Route.Connections.path, inclusive = false)) {
+    if (!navController.popBackStack(Route.Wallets.path, inclusive = false)) {
         navController.popBackStack()
     }
 }

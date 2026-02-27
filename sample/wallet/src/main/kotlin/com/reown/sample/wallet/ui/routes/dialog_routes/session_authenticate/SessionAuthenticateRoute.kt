@@ -133,7 +133,7 @@ fun ScammerScreen(
                     .fillMaxWidth()
                     .clickable {
                         navController.popBackStack(
-                            route = Route.Connections.path,
+                            route = Route.Wallets.path,
                             inclusive = false
                         )
                     },
@@ -168,7 +168,7 @@ private fun SessionAuthenticateDialog(
                 isCancelLoading = true
 
                 if (authenticateRequestUI.peerUI.linkMode) {
-                    navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                    navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                     connectionsViewModel.refreshConnections()
                 }
 
@@ -177,7 +177,7 @@ private fun SessionAuthenticateDialog(
                         onSuccess = { redirect ->
                             isCancelLoading = false
                             composableScope.launch(Dispatchers.Main) {
-                                navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                                navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                             }
 
                             if (redirect.isNotEmpty()) {
@@ -199,7 +199,7 @@ private fun SessionAuthenticateDialog(
                 isConfirmLoading = true
 
                 if (authenticateRequestUI.peerUI.linkMode) {
-                    navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                    navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                     connectionsViewModel.refreshConnections()
                 }
 
@@ -208,7 +208,7 @@ private fun SessionAuthenticateDialog(
                         onSuccess = { redirect ->
                             isConfirmLoading = false
                             composableScope.launch(Dispatchers.Main) {
-                                navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                                navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                                 connectionsViewModel.refreshConnections()
                             }
 

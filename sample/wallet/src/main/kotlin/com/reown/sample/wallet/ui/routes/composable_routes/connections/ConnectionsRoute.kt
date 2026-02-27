@@ -5,7 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.MaterialTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -448,12 +448,12 @@ fun Connection(
 
 @Composable
 fun NoConnections(modifier: Modifier) {
-    val contentColor = Color(if (isSystemInDarkTheme()) 0xFF585F5F else 0xFF9EA9A9)
+    val contentColor = Color(if (!androidx.compose.material.MaterialTheme.colors.isLight) 0xFF585F5F else 0xFF9EA9A9)
     Column(modifier = modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.weight(1f))
         Icon(
             tint = contentColor,
-            imageVector = ImageVector.vectorResource(if (isSystemInDarkTheme()) R.drawable.no_connections_icon_dark else R.drawable.no_connections_icon_light), contentDescription = null
+            imageVector = ImageVector.vectorResource(if (!androidx.compose.material.MaterialTheme.colors.isLight) R.drawable.no_connections_icon_dark else R.drawable.no_connections_icon_light), contentDescription = null
         )
         Spacer(modifier = Modifier.height(10.dp))
         Text(text = "Apps you connect with will appear here.", maxLines = 1, color = contentColor, style = TextStyle(fontWeight = FontWeight.Medium, fontSize = 15.sp))
