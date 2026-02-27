@@ -29,10 +29,11 @@ import com.google.accompanist.navigation.material.bottomSheet
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scan_uri.ScanUriRoute
+import com.reown.sample.wallet.ui.routes.composable_routes.connected_apps.ConnectedAppsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.connection_details.ConnectionDetailsRoute
-import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.composable_routes.settings.SettingsRoute
+import com.reown.sample.wallet.ui.routes.composable_routes.wallets.WalletsRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.paste_uri.PasteUriRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_authenticate.SessionAuthenticateRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal.SessionProposalRoute
@@ -66,7 +67,7 @@ fun Web3WalletNavGraph(
     ModalBottomSheetLayout(
         modifier = modifier,
         bottomSheetNavigator = bottomSheetNavigator,
-        sheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+        sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         sheetBackgroundColor = Color.Transparent, sheetElevation = 0.dp,
         scrimColor = scrimColor
     ) {
@@ -101,15 +102,12 @@ fun Web3WalletNavGraph(
             }
         ) {
             composable(Route.Wallets.path) {
-                ConnectionsRoute(navController, connectionsViewModel, web3walletViewModel)
+                WalletsRoute(navController, connectionsViewModel)
             }
             composable(Route.ConnectedApps.path) {
-                ConnectionsRoute(navController, connectionsViewModel, web3walletViewModel)
+                ConnectedAppsRoute(navController, connectionsViewModel)
             }
-            composable(Route.Connections.path) {
-                ConnectionsRoute(navController, connectionsViewModel, web3walletViewModel)
-            }
-            composable("${Route.ConnectionDetails.path}/{connectionId}", arguments = listOf(
+            bottomSheet("${Route.ConnectionDetails.path}/{connectionId}", arguments = listOf(
                 navArgument("connectionId") { type = NavType.IntType }
             )) {
                 ConnectionDetailsRoute(navController, it.arguments?.getInt("connectionId"), connectionsViewModel)
