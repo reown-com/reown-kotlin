@@ -99,3 +99,4 @@ protocol/sign/property 'buildDir'
 
 product/pos/property 'buildDir'
 .idea/codeStyles
+.DS_Store

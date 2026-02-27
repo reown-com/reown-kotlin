@@ -3,7 +3,6 @@ package com.reown.sample.wallet.ui.routes
 import androidx.navigation.NavController
 
 sealed class Route(val path: String) {
-    data object GetStarted : Route("get_started")
     data object Connections : Route("connections")
     data object SessionProposal : Route("session_proposal")
     data object SessionRequest : Route("session_request")

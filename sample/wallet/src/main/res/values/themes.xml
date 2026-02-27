@@ -12,4 +12,10 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
+
+    <style name="Theme.Wallet.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#202020</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/walletconnect_splash_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.Wallet</item>
+    </style>
 </resources>
