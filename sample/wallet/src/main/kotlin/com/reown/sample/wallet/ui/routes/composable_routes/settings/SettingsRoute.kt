@@ -243,7 +243,8 @@ private fun SmartAccountToggleCard() {
             onCheckedChange = { SmartAccountEnabler.enableSmartAccount(it) },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color(0xFF3396FF),
-                checkedTrackColor = Color(0xFF3396FF).copy(alpha = 0.5f)
+                checkedTrackColor = Color(0xFF3396FF).copy(alpha = 0.5f),
+                uncheckedThumbColor = WCTheme.colors.foregroundTertiary
             )
         )
     }

@@ -7,15 +7,9 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -25,7 +19,6 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import androidx.navigation.compose.composable
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.google.accompanist.navigation.material.bottomSheet
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.ui.routes.Route
@@ -56,8 +49,6 @@ fun Web3WalletNavGraph(
     modifier: Modifier = Modifier,
     startDestination: String = Route.Wallets.path,
 ) {
-    var scrimColor by remember { mutableStateOf(Color.Black.copy(alpha = 0.32f)) }
-
     navController.addOnDestinationChangedListener(
         listener = { _, destination, _ ->
             if (destination.route == Route.Wallets.path) {
@@ -65,98 +56,88 @@ fun Web3WalletNavGraph(
             }
         })
 
-    ModalBottomSheetLayout(
-        modifier = modifier,
-        bottomSheetNavigator = bottomSheetNavigator,
-        sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        sheetBackgroundColor = Color.Transparent, sheetElevation = 0.dp,
-        scrimColor = scrimColor
-    ) {
-        val sheetState = remember { bottomSheetNavigator.navigatorSheetState }
+    val sheetState = remember { bottomSheetNavigator.navigatorSheetState }
 
-        AnimatedNavHost(
-            navController = navController,
-            startDestination = startDestination,
-            enterTransition = { fadeIn(animationSpec = tween(200)) },
-            exitTransition = { fadeOut(animationSpec = tween(200)) },
-            popEnterTransition = { fadeIn(animationSpec = tween(200)) },
-            popExitTransition = { fadeOut(animationSpec = tween(200)) }
+    AnimatedNavHost(
+        navController = navController,
+        modifier = modifier,
+        startDestination = startDestination,
+        enterTransition = { fadeIn(animationSpec = tween(200)) },
+        exitTransition = { fadeOut(animationSpec = tween(200)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(200)) },
+        popExitTransition = { fadeOut(animationSpec = tween(200)) }
+    ) {
+        composable(Route.Wallets.path) {
+            WalletsRoute(navController, connectionsViewModel)
+        }
+        composable(Route.ConnectedApps.path) {
+            ConnectedAppsRoute(navController, connectionsViewModel)
+        }
+        bottomSheet("${Route.ConnectionDetails.path}/{connectionId}", arguments = listOf(
+            navArgument("connectionId") { type = NavType.IntType }
+        )) {
+            ConnectionDetailsRoute(navController, it.arguments?.getInt("connectionId"), connectionsViewModel)
+        }
+        dialog(
+            route = "${Route.ChainAbstraction.path}/{isError}",
+            arguments = listOf(
+                navArgument("isError") {
+                    type = NavType.BoolType
+                    nullable = false
+                }),
+            dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            composable(Route.Wallets.path) {
-                WalletsRoute(navController, connectionsViewModel)
-            }
-            composable(Route.ConnectedApps.path) {
-                ConnectedAppsRoute(navController, connectionsViewModel)
-            }
-            bottomSheet("${Route.ConnectionDetails.path}/{connectionId}", arguments = listOf(
-                navArgument("connectionId") { type = NavType.IntType }
-            )) {
-                ConnectionDetailsRoute(navController, it.arguments?.getInt("connectionId"), connectionsViewModel)
-            }
-            dialog(
-                route = "${Route.ChainAbstraction.path}/{isError}",
-                arguments = listOf(
-                    navArgument("isError") {
-                        type = NavType.BoolType
-                        nullable = false
-                    }),
-                dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
-            ) {
-                ChainAbstractionRoute(navController, it.arguments?.getBoolean("isError")!!)
-            }
-            composable(Route.Settings.path) {
-                SettingsRoute(navController)
-            }
-            bottomSheet(Route.ScanUri.path) {
-                web3walletViewModel.showLoader(false)
-                scrimColor = Color.Transparent
-                ScanUriRoute(navController, sheetState, onScanSuccess = {
-                    web3walletViewModel.pair(it)
-                })
-            }
+            ChainAbstractionRoute(navController, it.arguments?.getBoolean("isError")!!)
+        }
+        composable(Route.Settings.path) {
+            SettingsRoute(navController)
+        }
+        bottomSheet(Route.ScanUri.path) {
+            web3walletViewModel.showLoader(false)
+            ScanUriRoute(navController, sheetState, onScanSuccess = {
+                web3walletViewModel.pair(it)
+            })
+        }
 //            dialog(Route.TransactionDialog.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
 //                TransactionRoute(navController)
 //            }
-            bottomSheet(Route.SessionProposal.path) {
-                SessionProposalRoute(navController)
-            }
-            bottomSheet(Route.SessionAuthenticate.path) {
-                SessionAuthenticateRoute(navController, connectionsViewModel)
-            }
-            bottomSheet(Route.SessionRequest.path) {
-                SessionRequestRoute(navController)
-            }
-            bottomSheet(Route.ScannerOptions.path) {
-                ScannerOptionsRoute(
-                    navController = navController,
-                    onPair = { web3walletViewModel.pair(it) }
-                )
-            }
-            bottomSheet("${Route.SnackbarMessage.path}/{message}", arguments = listOf(
-                navArgument("message") { type = NavType.StringType }
-            )) {
-                scrimColor = Color.Transparent
-                SnackbarMessageRoute(navController, it.arguments?.getString("message"))
-            }
-            dialog(
-                "${Route.Payment.path}/{paymentLink}",
-                arguments = listOf(
-                    navArgument("paymentLink") {
-                        type = NavType.StringType
-                        nullable = false
-                    }
-                ),
-                dialogProperties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)
-            ) {
-                val encodedLink = it.arguments?.getString("paymentLink") ?: ""
-                val paymentLink = java.net.URLDecoder.decode(encodedLink, "UTF-8")
-                PaymentRoute(
-                    navController = navController,
-                    paymentLink = paymentLink,
-                    onPaymentSuccess = { connectionsViewModel.fetchBalances() }
-                )
-            }
+        bottomSheet(Route.SessionProposal.path) {
+            SessionProposalRoute(navController)
+        }
+        bottomSheet(Route.SessionAuthenticate.path) {
+            SessionAuthenticateRoute(navController, connectionsViewModel)
+        }
+        bottomSheet(Route.SessionRequest.path) {
+            SessionRequestRoute(navController)
+        }
+        bottomSheet(Route.ScannerOptions.path) {
+            ScannerOptionsRoute(
+                navController = navController,
+                onPair = { web3walletViewModel.pair(it) }
+            )
+        }
+        bottomSheet("${Route.SnackbarMessage.path}/{message}", arguments = listOf(
+            navArgument("message") { type = NavType.StringType }
+        )) {
+            SnackbarMessageRoute(navController, it.arguments?.getString("message"))
+        }
+        dialog(
+            "${Route.Payment.path}/{paymentLink}",
+            arguments = listOf(
+                navArgument("paymentLink") {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            ),
+            dialogProperties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)
+        ) {
+            val encodedLink = it.arguments?.getString("paymentLink") ?: ""
+            val paymentLink = java.net.URLDecoder.decode(encodedLink, "UTF-8")
+            PaymentRoute(
+                navController = navController,
+                paymentLink = paymentLink,
+                onPaymentSuccess = { connectionsViewModel.fetchBalances() }
+            )
         }
     }
 }
-
