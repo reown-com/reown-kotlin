@@ -8,6 +8,14 @@ name: Kotlin Dapp to Kotlin Wallet personal_sign Rejected
 - tapOn: "NOT NOW"
 - tapOn: "Ethereum_Main"
 - tapOn: "personal_sign"
+- extendedWaitUntil:
+    visible:
+      text: "Cancel"
+    timeout: 30000
 - tapOn: "Cancel"
+- extendedWaitUntil:
+    visible:
+      text: "result_error"
+    timeout: 15000
 - assertVisible: result_error
 - stopRecording
