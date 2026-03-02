@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -87,22 +86,6 @@ fun WalletsRoute(
                     item { Spacer(modifier = Modifier.height(4.dp)) }
                     items(allBalances) { balance ->
                         WalletBalanceItem(balance)
-                    }
-                    if (isLoadingBalances && allBalances.isEmpty()) {
-                        item {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(32.dp),
-                                    strokeWidth = 3.dp,
-                                    color = Color(0xFF3396FF)
-                                )
-                            }
-                        }
                     }
                     item { Spacer(modifier = Modifier.height(8.dp)) }
                 }
@@ -221,7 +204,7 @@ private fun EmptyWallets() {
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Pull to refresh to load your balances.",
+            text = "Import a funded wallet or send tokens to this address.",
             style = WCTheme.typography.bodyLgRegular.copy(
                 color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF9EA9A9)
             )

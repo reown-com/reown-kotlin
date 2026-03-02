@@ -43,7 +43,7 @@ import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 
 @Composable
-fun ImportWalletRoute(navController: NavController) {
+fun ImportWalletRoute(navController: NavController, onImportSuccess: () -> Unit = {}) {
     val viewModel: ImportWalletViewModel = viewModel()
     val selectedChain by viewModel.selectedChain.collectAsState()
     val inputText by viewModel.inputText.collectAsState()
@@ -58,6 +58,7 @@ fun ImportWalletRoute(navController: NavController) {
         when (val result = importResult) {
             is ImportResult.Success -> {
                 Toast.makeText(context, "${selectedChain.label} wallet imported: ${result.address}", Toast.LENGTH_SHORT).show()
+                onImportSuccess()
                 navController.popBackStack()
             }
 

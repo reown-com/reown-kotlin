@@ -98,7 +98,10 @@ fun Web3WalletNavGraph(
             SecretKeysRoute(navController)
         }
         bottomSheet(Route.ImportWallet.path) {
-            ImportWalletRoute(navController)
+            ImportWalletRoute(
+                navController = navController,
+                onImportSuccess = { connectionsViewModel.fetchBalances() }
+            )
         }
         bottomSheet(Route.ScanUri.path) {
             web3walletViewModel.showLoader(false)
