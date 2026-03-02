@@ -10,7 +10,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.style.TextOverflow
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.ui.common.peer.Validation
 
@@ -30,10 +29,11 @@ fun AppInfoCard(
 
     AccordionCard(
         headerContent = {
+            val colors = WCTheme.colors
             Text(
                 text = formatDomain(url),
                 style = WCTheme.typography.bodyLgRegular.copy(
-                    color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF9A9A9A)
+                    color = colors.textSecondary
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

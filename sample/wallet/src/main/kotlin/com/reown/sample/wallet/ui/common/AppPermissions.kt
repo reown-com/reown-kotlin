@@ -16,11 +16,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.unit.dp
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 
@@ -37,14 +34,17 @@ private val PERMISSIONS = listOf(
 
 @Composable
 fun AppPermissions() {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing3)) {
         PERMISSIONS.forEach { permission ->
-            val bgColor = if (permission.allowed) Color(0xFF30A46B) else Color(0xFFDF4A34)
+            val statusColor = if (permission.allowed) colors.textSuccess else colors.textError
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(24.dp)
-                        .background(bgColor, CircleShape),
+                        .size(spacing.spacing5)
+                        .background(statusColor, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -52,15 +52,15 @@ fun AppPermissions() {
                             id = if (permission.allowed) R.drawable.ic_check else R.drawable.ic_close
                         ),
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = Color.White
+                        modifier = Modifier.size(spacing.spacing3),
+                        tint = colors.textInvert
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(spacing.spacing2))
                 Text(
                     text = permission.text,
                     style = WCTheme.typography.bodyMdRegular.copy(
-                        color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF202020)
+                        color = colors.textPrimary
                     )
                 )
             }

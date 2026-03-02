@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -23,16 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.reown.sample.common.ui.themedColor
-import com.reown.sample.common.ui.theme.KhTekaFontFamily
 import com.reown.sample.common.ui.theme.WCTheme
 
 data class ChainItem(
@@ -48,13 +41,31 @@ fun NetworkSelector(
     selectedChainIds: List<String>,
     onSelectionChange: (List<String>) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+    val accentColor = colors.bgAccentPrimary
+    val rowHeight = spacing.spacing13 + spacing.spacing1
+    val rowGap = spacing.spacing1 + spacing.spacing05
+    val borderWidth = spacing.spacing05 / 2
+
+    Column(verticalArrangement = Arrangement.spacedBy(rowGap)) {
         availableChains.forEach { chain ->
             val isSelected = selectedChainIds.contains(chain.chainId)
             val canToggle = !chain.isRequired || !isSelected
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(rowHeight)
+                    .clip(borderRadius.shapeLarge)
+                    .background(
+                        if (isSelected) colors.foregroundAccentPrimary10
+                        else colors.foregroundSecondary
+                    )
+                    .then(
+                        if (isSelected) Modifier.border(borderWidth, colors.borderAccentPrimary, borderRadius.shapeLarge)
+                        else Modifier
+                    )
                     .then(
                         if (canToggle) {
                             Modifier.clickable {
@@ -68,20 +79,20 @@ fun NetworkSelector(
                             Modifier
                         }
                     )
-                    .padding(vertical = 8.dp),
+                    .padding(horizontal = spacing.spacing5),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(spacing.spacing3)
                 ) {
                     ChainLogo(chainId = chain.chainId)
                     Text(
                         text = chain.name,
-                        style = WCTheme.typography.bodyMdRegular.copy(
-                            color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF202020)
+                        style = WCTheme.typography.bodyLgRegular.copy(
+                            color = colors.textPrimary
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -95,13 +106,15 @@ fun NetworkSelector(
 
 @Composable
 private fun ChainLogo(chainId: String) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
     val icon = getChainIcon(chainId)
     if (icon != null) {
         Image(
             painter = painterResource(id = icon),
             contentDescription = null,
             modifier = Modifier
-                .size(24.dp)
+                .size(spacing.spacing8)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
@@ -109,19 +122,14 @@ private fun ChainLogo(chainId: String) {
         val (color, label) = chainInfo(chainId)
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .size(spacing.spacing8)
                 .clip(CircleShape)
                 .background(color),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = label,
-                style = TextStyle(
-                    fontFamily = KhTekaFontFamily,
-                    fontSize = 8.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                style = WCTheme.typography.bodySmMedium.copy(color = colors.textInvert)
             )
         }
     }
@@ -129,22 +137,27 @@ private fun ChainLogo(chainId: String) {
 
 @Composable
 private fun Checkbox(checked: Boolean, locked: Boolean = false) {
-    val accentColor = Color(0xFF0988F0)
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+    val accentColor = colors.bgAccentPrimary
     val lockedColor = accentColor.copy(alpha = 0.5f)
-    val borderColor = themedColor(darkColor = Color(0xFF4F4F4F), lightColor = Color(0xFFD0D0D0))
+    val borderColor = colors.borderSecondary
+    val borderWidth = spacing.spacing05 / 2
+    val checkSize = spacing.spacing3 + spacing.spacing05
     val bgColor = if (locked) lockedColor else accentColor
 
     Box(
         modifier = Modifier
-            .size(24.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .size(spacing.spacing6)
+            .clip(borderRadius.shapeXSmall)
             .then(
                 if (checked) {
                     Modifier
                         .background(bgColor)
-                        .border(1.dp, bgColor, RoundedCornerShape(8.dp))
+                        .border(borderWidth, bgColor, borderRadius.shapeXSmall)
                 } else {
-                    Modifier.border(1.dp, borderColor, RoundedCornerShape(8.dp))
+                    Modifier.border(borderWidth, borderColor, borderRadius.shapeXSmall)
                 }
             ),
         contentAlignment = Alignment.Center
@@ -153,8 +166,8 @@ private fun Checkbox(checked: Boolean, locked: Boolean = false) {
             Icon(
                 imageVector = Icons.Filled.Check,
                 contentDescription = null,
-                modifier = Modifier.size(14.dp),
-                tint = Color.White
+                modifier = Modifier.size(checkSize),
+                tint = colors.textInvert
             )
         }
     }

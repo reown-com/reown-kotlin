@@ -172,7 +172,7 @@ private fun SessionAuthenticateContent(
             Text(
                 text = "Messages to sign (${authenticateRequestUI.messages.size})",
                 style = WCTheme.typography.bodyLgRegular.copy(
-                    color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF9A9A9A)
+                    color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF6C6C6C)
                 )
             )
 

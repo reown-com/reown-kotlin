@@ -30,8 +30,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -61,19 +61,20 @@ fun ConnectedAppsRoute(
         if (connections.isEmpty()) {
             EmptyConnectedApps()
         } else {
+            val spacing = WCTheme.spacing
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = WCTheme.spacing.spacing3),
-                verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
+                    .padding(horizontal = spacing.spacing3),
+                verticalArrangement = Arrangement.spacedBy(spacing.spacing2)
             ) {
-                item { Spacer(modifier = Modifier.height(WCTheme.spacing.spacing1)) }
+                item { Spacer(modifier = Modifier.height(spacing.spacing1)) }
                 items(connections) { connectionUI ->
                     ConnectedAppItem(connectionUI) {
                         navController.navigate("${Route.ConnectionDetails.path}/${connectionUI.id}")
                     }
                 }
-                item { Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2)) }
+                item { Spacer(modifier = Modifier.height(spacing.spacing2)) }
             }
         }
     }
@@ -84,30 +85,37 @@ fun ConnectedAppItem(
     connectionUI: ConnectionUI,
     onClick: () -> Unit,
 ) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+    val iconSize = spacing.spacing10 + spacing.spacing1
+    val iconSizePx = with(LocalDensity.current) { iconSize.roundToPx() }
+    val borderWidth = spacing.spacing05 / 2
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(WCTheme.borderRadius.radius4))
-            .background(color = WCTheme.colors.foregroundPrimary)
+            .clip(RoundedCornerShape(borderRadius.radius4))
+            .background(color = colors.foregroundPrimary)
             .clickable(onClick = onClick)
-            .padding(WCTheme.spacing.spacing3),
+            .padding(spacing.spacing3),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // App icon
         val iconModifier = Modifier
-            .size(44.dp)
-            .clip(RoundedCornerShape(WCTheme.borderRadius.radius3))
+            .size(iconSize)
+            .clip(RoundedCornerShape(borderRadius.radius3))
             .border(
-                width = 1.dp,
-                shape = RoundedCornerShape(WCTheme.borderRadius.radius3),
-                color = WCTheme.colors.foregroundSecondary
+                width = borderWidth,
+                shape = RoundedCornerShape(borderRadius.radius3),
+                color = colors.foregroundSecondary
             )
 
         if (connectionUI.icon?.isNotBlank() == true) {
             val painter = rememberAsyncImagePainter(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(connectionUI.icon)
-                    .size(44)
+                    .size(iconSizePx)
                     .crossfade(true)
                     .error(com.reown.sample.common.R.drawable.ic_walletconnect_circle_blue)
                     .build()
@@ -127,25 +135,25 @@ fun ConnectedAppItem(
             )
         }
 
-        Spacer(modifier = Modifier.width(WCTheme.spacing.spacing3))
+        Spacer(modifier = Modifier.width(spacing.spacing3))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = connectionUI.name,
                 style = WCTheme.typography.bodyLgMedium.copy(
-                    color = WCTheme.colors.textPrimary
+                    color = colors.textPrimary
                 )
             )
             Text(
                 text = formatDomain(connectionUI.uri),
                 style = WCTheme.typography.bodySmRegular.copy(
-                    color = WCTheme.colors.textSecondary
+                    color = colors.textSecondary
                 )
             )
         }
 
         // Chain icons
-        ChainIcons(chainIds = getConnectionChainIds(connectionUI), size = 20)
+        ChainIcons(chainIds = getConnectionChainIds(connectionUI), size = spacing.spacing5)
     }
 }
 
@@ -165,6 +173,9 @@ internal fun getConnectionChainIds(connectionUI: ConnectionUI): List<String> {
 
 @Composable
 private fun EmptyConnectedApps() {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -173,14 +184,14 @@ private fun EmptyConnectedApps() {
         Text(
             text = "No connected apps yet",
             style = WCTheme.typography.h6Regular.copy(
-                color = WCTheme.colors.textPrimary
+                color = colors.textPrimary
             )
         )
-        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing1))
+        Spacer(modifier = Modifier.height(spacing.spacing1))
         Text(
             text = "Scan a WalletConnect QR code to get started.",
             style = WCTheme.typography.bodyLgRegular.copy(
-                color = WCTheme.colors.textSecondary
+                color = colors.textSecondary
             )
         )
     }

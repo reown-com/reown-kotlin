@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
@@ -17,45 +18,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.reown.sample.common.ui.themedColor
-import com.reown.sample.common.ui.theme.KhTekaFontFamily
+import androidx.compose.ui.unit.Dp
+import com.reown.sample.common.ui.theme.WCTheme
 
 @Composable
 fun ChainIcons(
     chainIds: List<String>,
-    size: Int = 24,
+    size: Dp = WCTheme.spacing.spacing6,
     maxVisible: Int = 5,
 ) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
     val uniqueChainIds = chainIds.distinct()
     val visibleChainIds = uniqueChainIds.take(maxVisible)
     val remainingCount = (uniqueChainIds.size - maxVisible).coerceAtLeast(0)
 
-    val borderColor = themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFFF3F3F3))
+    val borderColor = colors.borderPrimary
+    val containerSize = size + spacing.spacing1
+    val pillHeight = size + spacing.spacing1
+    val pillMinWidth = size + spacing.spacing3
 
     Row(
-        horizontalArrangement = Arrangement.spacedBy((-8).dp),
+        horizontalArrangement = Arrangement.spacedBy(-spacing.spacing2),
         verticalAlignment = Alignment.CenterVertically
     ) {
         visibleChainIds.forEach { chainId ->
             val icon = getChainIcon(chainId)
             Box(
                 modifier = Modifier
-                    .size((size + 4).dp)
+                    .size(containerSize)
                     .clip(CircleShape)
-                    .background(
-                        themedColor(
-                            darkColor = Color(0xFF363636),
-                            lightColor = Color(0xFFD0D0D0)
-                        )
-                    )
-                    .border(2.dp, borderColor, CircleShape),
+                    .background(colors.foregroundTertiary)
+                    .border(spacing.spacing05, borderColor, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 if (icon != null) {
@@ -63,7 +60,7 @@ fun ChainIcons(
                         painter = painterResource(id = icon),
                         contentDescription = null,
                         modifier = Modifier
-                            .size(size.dp)
+                            .size(size)
                             .clip(CircleShape),
                         contentScale = ContentScale.Crop
                     )
@@ -71,19 +68,14 @@ fun ChainIcons(
                     val (color, label) = chainInfo(chainId)
                     Box(
                         modifier = Modifier
-                            .size(size.dp)
+                            .size(size)
                             .clip(CircleShape)
                             .background(color),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = label,
-                            style = TextStyle(
-                                fontFamily = KhTekaFontFamily,
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
+                            style = WCTheme.typography.bodySmMedium.copy(color = colors.textInvert)
                         )
                     }
                 }
@@ -92,30 +84,17 @@ fun ChainIcons(
         if (remainingCount > 0) {
             Box(
                 modifier = Modifier
-                    .size((size + 4).dp)
-                    .widthIn(min = 36.dp)
-                    .clip(CircleShape)
-                    .background(
-                        themedColor(
-                            darkColor = Color(0xFF363636),
-                            lightColor = Color(0xFFD0D0D0)
-                        )
-                    )
-                    .border(2.dp, borderColor, CircleShape)
-                    .padding(horizontal = 4.dp),
+                    .height(pillHeight)
+                    .widthIn(min = pillMinWidth)
+                    .clip(borderRadius.shapeFull)
+                    .background(colors.foregroundTertiary)
+                    .border(spacing.spacing05, borderColor, borderRadius.shapeFull)
+                    .padding(horizontal = spacing.spacing2),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "+$remainingCount",
-                    style = TextStyle(
-                        fontFamily = KhTekaFontFamily,
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = themedColor(
-                            darkColor = Color(0xFFe3e7e7),
-                            lightColor = Color(0xFF202020)
-                        )
-                    )
+                    style = WCTheme.typography.bodySmMedium.copy(color = colors.textPrimary)
                 )
             }
         }
