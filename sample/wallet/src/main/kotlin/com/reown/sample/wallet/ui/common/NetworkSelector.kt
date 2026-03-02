@@ -39,6 +39,7 @@ data class ChainItem(
     val chainId: String,
     val name: String,
     val namespace: String = "",
+    val isRequired: Boolean = false,
 )
 
 @Composable
@@ -50,16 +51,23 @@ fun NetworkSelector(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         availableChains.forEach { chain ->
             val isSelected = selectedChainIds.contains(chain.chainId)
+            val canToggle = !chain.isRequired || !isSelected
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        if (isSelected) {
-                            onSelectionChange(selectedChainIds - chain.chainId)
+                    .then(
+                        if (canToggle) {
+                            Modifier.clickable {
+                                if (isSelected) {
+                                    onSelectionChange(selectedChainIds - chain.chainId)
+                                } else {
+                                    onSelectionChange(selectedChainIds + chain.chainId)
+                                }
+                            }
                         } else {
-                            onSelectionChange(selectedChainIds + chain.chainId)
+                            Modifier
                         }
-                    }
+                    )
                     .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -79,7 +87,7 @@ fun NetworkSelector(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                Checkbox(checked = isSelected)
+                Checkbox(checked = isSelected, locked = chain.isRequired && isSelected)
             }
         }
     }
@@ -120,9 +128,11 @@ private fun ChainLogo(chainId: String) {
 }
 
 @Composable
-private fun Checkbox(checked: Boolean) {
+private fun Checkbox(checked: Boolean, locked: Boolean = false) {
     val accentColor = Color(0xFF0988F0)
+    val lockedColor = accentColor.copy(alpha = 0.5f)
     val borderColor = themedColor(darkColor = Color(0xFF4F4F4F), lightColor = Color(0xFFD0D0D0))
+    val bgColor = if (locked) lockedColor else accentColor
 
     Box(
         modifier = Modifier
@@ -131,8 +141,8 @@ private fun Checkbox(checked: Boolean) {
             .then(
                 if (checked) {
                     Modifier
-                        .background(accentColor)
-                        .border(1.dp, accentColor, RoundedCornerShape(8.dp))
+                        .background(bgColor)
+                        .border(1.dp, bgColor, RoundedCornerShape(8.dp))
                 } else {
                     Modifier.border(1.dp, borderColor, RoundedCornerShape(8.dp))
                 }

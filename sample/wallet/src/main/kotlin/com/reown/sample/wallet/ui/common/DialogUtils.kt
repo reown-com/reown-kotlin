@@ -1,3 +1,5 @@
+@file:JvmSynthetic
+
 package com.reown.sample.wallet.ui.common
 
 import android.content.Context

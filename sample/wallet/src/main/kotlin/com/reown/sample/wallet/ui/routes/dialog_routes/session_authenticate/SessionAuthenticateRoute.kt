@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +38,10 @@ fun SessionAuthenticateRoute(
     connectionsViewModel: ConnectionsViewModel,
     sessionAuthenticateViewModel: SessionAuthenticateViewModel = viewModel()
 ) {
-    val authenticateRequestUI = sessionAuthenticateViewModel.sessionAuthenticateUI ?: throw Exception("Missing authenticate request")
+    val authenticateRequestUI = sessionAuthenticateViewModel.sessionAuthenticateUI ?: run {
+        LaunchedEffect(Unit) { navController.popBackStack() }
+        return
+    }
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -94,10 +98,6 @@ private fun SessionAuthenticateContent(
         isLoadingReject = isCancelLoading,
         onApprove = {
             isConfirmLoading = true
-            if (authenticateRequestUI.peerUI.linkMode) {
-                navController.popBackStack()
-                connectionsViewModel.refreshConnections()
-            }
             try {
                 viewModel.approve(
                     onSuccess = { redirect ->
@@ -118,10 +118,6 @@ private fun SessionAuthenticateContent(
         },
         onReject = {
             isCancelLoading = true
-            if (authenticateRequestUI.peerUI.linkMode) {
-                navController.popBackStack()
-                connectionsViewModel.refreshConnections()
-            }
             try {
                 viewModel.reject(
                     onSuccess = { redirect ->

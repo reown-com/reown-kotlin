@@ -54,9 +54,6 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                 isLoadingReject = isCancelLoading,
                 onApprove = {
                     isConfirmLoading = true
-                    if (sessionRequestUI.peerUI.linkMode) {
-                        navController.popBackStack()
-                    }
                     try {
                         sessionRequestViewModel.approve(
                             onSuccess = { uri ->
@@ -74,9 +71,6 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                 },
                 onReject = {
                     isCancelLoading = true
-                    if (sessionRequestUI.peerUI.linkMode) {
-                        navController.popBackStack()
-                    }
                     try {
                         sessionRequestViewModel.reject(
                             onSuccess = { uri ->

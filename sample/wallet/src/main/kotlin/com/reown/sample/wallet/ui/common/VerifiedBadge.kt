@@ -35,6 +35,12 @@ fun VerifiedBadge(
         else -> "Unverified" to themedColor(darkColor = Color(0xFF363636), lightColor = Color(0xFFD0D0D0))
     }
 
+    val textColor = if (validation == null && isScam != true) {
+        themedColor(darkColor = Color.White, lightColor = Color(0xFF202020))
+    } else {
+        Color.White
+    }
+
     Box(
         modifier = Modifier
             .height(28.dp)
@@ -45,7 +51,7 @@ fun VerifiedBadge(
     ) {
         Text(
             text = label,
-            style = WCTheme.typography.bodyMdMedium.copy(color = Color.White)
+            style = WCTheme.typography.bodyMdMedium.copy(color = textColor)
         )
     }
 }

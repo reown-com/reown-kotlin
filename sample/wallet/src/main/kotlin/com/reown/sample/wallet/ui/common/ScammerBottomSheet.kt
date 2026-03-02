@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.mismatch_color
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.common.generated.CancelButton
@@ -38,7 +39,7 @@ fun ScammerBottomSheet(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Color(0xFF1A1A1A),
+                color = themedColor(darkColor = Color(0xFF1A1A1A), lightColor = Color.White),
                 shape = RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp)
             )
             .background(mismatch_color.copy(alpha = .15f))

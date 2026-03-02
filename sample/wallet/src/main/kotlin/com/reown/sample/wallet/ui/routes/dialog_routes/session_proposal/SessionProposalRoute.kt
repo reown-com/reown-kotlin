@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +33,10 @@ import com.reown.sample.wallet.ui.common.showError
 
 @Composable
 fun SessionProposalRoute(navController: NavHostController, sessionProposalViewModel: SessionProposalViewModel = viewModel()) {
-    val sessionProposalUI = sessionProposalViewModel.sessionProposal ?: throw Exception("Missing session proposal")
+    val sessionProposalUI = sessionProposalViewModel.sessionProposal ?: run {
+        LaunchedEffect(Unit) { navController.popBackStack() }
+        return
+    }
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -78,6 +82,7 @@ private fun SessionProposalContent(
     var expandedAccordion by remember { mutableStateOf<String?>(null) }
 
     val availableChains = remember { extractAvailableChains(sessionProposalUI) }
+    val requiredChainIds = remember { availableChains.filter { it.isRequired }.map { it.chainId }.toSet() }
     var selectedChainIds by remember { mutableStateOf(availableChains.map { it.chainId }) }
 
     val composableScope = rememberCoroutineScope()
@@ -87,7 +92,7 @@ private fun SessionProposalContent(
         peerUI = sessionProposalUI.peerUI,
         intention = "Connect your wallet to",
         approveLabel = "Connect",
-        approveEnabled = selectedChainIds.isNotEmpty(),
+        approveEnabled = selectedChainIds.isNotEmpty() && selectedChainIds.containsAll(requiredChainIds),
         isLoadingApprove = isConfirmLoading,
         isLoadingReject = isCancelLoading,
         onApprove = {
@@ -184,19 +189,20 @@ private fun SessionProposalContent(
 }
 
 private fun extractAvailableChains(sessionProposalUI: SessionProposalUI): List<ChainItem> {
-    val requiredChains = sessionProposalUI.namespaces.flatMap { (namespaceKey, proposal) ->
+    val requiredChainIds = sessionProposalUI.namespaces.flatMap { (namespaceKey, proposal) ->
+        proposal.chains ?: listOf(namespaceKey)
+    }.toSet()
+    val optionalChainIds = sessionProposalUI.optionalNamespaces.flatMap { (namespaceKey, proposal) ->
         proposal.chains ?: listOf(namespaceKey)
     }
-    val optionalChains = sessionProposalUI.optionalNamespaces.flatMap { (namespaceKey, proposal) ->
-        proposal.chains ?: listOf(namespaceKey)
-    }
-    val allChainIds = (requiredChains + optionalChains).distinct()
+    val allChainIds = (requiredChainIds + optionalChainIds).distinct()
 
     return allChainIds.map { chainId ->
         ChainItem(
             chainId = chainId,
             name = getChainName(chainId),
-            namespace = chainId.split(":").firstOrNull() ?: ""
+            namespace = chainId.split(":").firstOrNull() ?: "",
+            isRequired = chainId in requiredChainIds
         )
     }
 }
