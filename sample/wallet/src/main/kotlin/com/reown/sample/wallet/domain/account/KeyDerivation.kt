@@ -34,4 +34,4 @@ internal fun derivePrivateKeyFromMnemonic(mnemonic: String, coinType: Int): Stri
     return normalizePrivateKeyHex(derivedKeypair.privateKey.toString(16))
 }
 
-private fun Char.isHexChar(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
+internal fun Char.isHexChar(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'

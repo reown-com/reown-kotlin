@@ -12,7 +12,9 @@ import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.domain.account.bytesToHex
 import com.reown.sample.wallet.domain.account.derivePrivateKeyFromMnemonic
+import com.reown.sample.wallet.domain.account.isHexChar
 import com.reown.sample.wallet.domain.account.normalizePrivateKeyHex
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -62,7 +64,7 @@ internal class ImportWalletViewModel : ViewModel() {
         val input = _inputText.value.trim().replace(Regex("\\s+"), " ")
         if (input.isEmpty()) return
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             _isLoading.value = true
             _importResult.value = try {
                 val address = when (_selectedChain.value) {
@@ -77,6 +79,7 @@ internal class ImportWalletViewModel : ViewModel() {
             } catch (e: Exception) {
                 ImportResult.Error(e.message ?: "Import failed")
             } finally {
+                _inputText.value = ""
                 _isLoading.value = false
             }
         }
@@ -143,6 +146,4 @@ internal class ImportWalletViewModel : ViewModel() {
         return StacksAccountDelegate.mainnetAddress
     }
 
-    private fun Char.isHexChar(): Boolean =
-        this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
 }

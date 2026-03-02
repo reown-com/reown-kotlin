@@ -28,9 +28,11 @@ object EthAccountDelegate {
             PUBLIC_KEY_TAG, null) != null)
 
     private fun storeAccount(privateKey: String? = null): Triple<String, String, String> = generateKeys(privateKey).also { (publicKey, privateKey, address) ->
-        sharedPreferences.edit { putString(ACCOUNT_TAG, address) }
-        sharedPreferences.edit { putString(PRIVATE_KEY_TAG, privateKey) }
-        sharedPreferences.edit { putString(PUBLIC_KEY_TAG, publicKey) }
+        sharedPreferences.edit {
+            putString(ACCOUNT_TAG, address)
+            putString(PRIVATE_KEY_TAG, privateKey)
+            putString(PUBLIC_KEY_TAG, publicKey)
+        }
     }
 
     val ethAccount: String
