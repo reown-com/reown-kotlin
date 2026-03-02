@@ -15,38 +15,25 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
-import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,21 +45,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.reown.sample.wallet.ui.common.SemiTransparentDialog
+import com.reown.sample.common.ui.theme.WCTheme
+import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.walletkit.client.Wallet
 import org.json.JSONObject
@@ -97,7 +81,6 @@ fun PaymentRoute(
         viewModel.setPaymentLink(paymentLink)
     }
 
-    // WebView needs fullscreen, so handle it outside SemiTransparentDialog
     when (val state = uiState) {
         is PaymentUiState.WebViewDataCollection -> {
             WebViewDataCollectionContent(
@@ -112,103 +95,68 @@ fun PaymentRoute(
                 }
             )
         }
-        else -> {
-            SemiTransparentDialog {
-                when (state) {
-                    is PaymentUiState.Loading -> {
-                        LoadingContent()
-                    }
-                    is PaymentUiState.Options -> {
-                        PaymentOptionsContent(
-                            paymentInfo = state.paymentInfo,
-                            options = state.options,
-                            onOptionSelected = { optionId ->
-                                viewModel.onOptionSelected(optionId)
-                            },
-                            onWhyInfoRequired = { viewModel.showWhyInfoRequired() },
-                            onClose = {
-                                viewModel.cancel()
-                                dismissPaymentDialog(navController)
-                            }
-                        )
-                    }
-                    is PaymentUiState.CollectingData -> {
-                        CollectDataContent(
-                            currentStepIndex = state.currentStepIndex,
-                            totalSteps = state.totalSteps,
-                            currentField = state.currentField,
-                            currentValue = state.currentValue,
-                            onValueSubmit = { fieldId, value ->
-                                viewModel.submitFieldValue(fieldId, value)
-                            },
-                            onClose = {
-                                viewModel.cancel()
-                                dismissPaymentDialog(navController)
-                            }
-                        )
-                    }
-                    is PaymentUiState.Summary -> {
-                        SummaryContent(
-                            paymentInfo = state.paymentInfo,
-                            selectedOption = state.selectedOption,
-                            onConfirm = { viewModel.confirmFromSummary() },
-                            onClose = {
-                                viewModel.cancel()
-                                dismissPaymentDialog(navController)
-                            }
-                        )
-                    }
-                    is PaymentUiState.WhyInfoRequired -> {
-                        WhyInfoRequiredContent(
-                            onBack = { viewModel.dismissWhyInfoRequired() },
-                            onClose = {
-                                viewModel.cancel()
-                                dismissPaymentDialog(navController)
-                            }
-                        )
-                    }
-                    is PaymentUiState.Processing -> {
-                        ProcessingContent(
-                            message = state.message,
-                            onClose = {
-                                viewModel.cancel()
-                                dismissPaymentDialog(navController)
-                            }
-                        )
-                    }
-                    is PaymentUiState.Success -> {
-                        SuccessContent(
-                            paymentInfo = state.paymentInfo,
-                            onDone = {
-                                viewModel.cancel()
-                                onPaymentSuccess()
-                                dismissPaymentDialog(navController)
-                                Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
-                            },
-                            onClose = {
-                                viewModel.cancel()
-                                onPaymentSuccess()
-                                dismissPaymentDialog(navController)
-                            }
-                        )
-                    }
-                    is PaymentUiState.Error -> {
-                        ErrorContent(
-                            message = state.message,
-                            onRetry = {
-                                viewModel.cancel()
-                                dismissPaymentDialog(navController)
-                            },
-                            onClose = {
-                                viewModel.cancel()
-                                dismissPaymentDialog(navController)
-                            }
-                        )
-                    }
-                    // WebViewDataCollection is handled outside SemiTransparentDialog
-                    is PaymentUiState.WebViewDataCollection -> { /* handled above */ }
+        is PaymentUiState.Loading -> {
+            LoadingContent()
+        }
+        is PaymentUiState.Options -> {
+            PaymentOptionsContent(
+                paymentInfo = state.paymentInfo,
+                options = state.options,
+                onOptionSelected = { optionId ->
+                    viewModel.onOptionSelected(optionId)
+                },
+                onWhyInfoRequired = { viewModel.showWhyInfoRequired() },
+                onClose = {
+                    viewModel.cancel()
+                    dismissPaymentDialog(navController)
                 }
-            }
+            )
+        }
+        is PaymentUiState.Summary -> {
+            SummaryContent(
+                paymentInfo = state.paymentInfo,
+                selectedOption = state.selectedOption,
+                onConfirm = { viewModel.confirmFromSummary() },
+                onClose = {
+                    viewModel.cancel()
+                    dismissPaymentDialog(navController)
+                }
+            )
+        }
+        is PaymentUiState.WhyInfoRequired -> {
+            WhyInfoRequiredContent(
+                onBack = { viewModel.dismissWhyInfoRequired() },
+                onClose = {
+                    viewModel.cancel()
+                    dismissPaymentDialog(navController)
+                }
+            )
+        }
+        is PaymentUiState.Processing -> {
+            ProcessingContent(
+                message = state.message
+            )
+        }
+        is PaymentUiState.Success -> {
+            SuccessContent(
+                paymentInfo = state.paymentInfo,
+                onDone = {
+                    viewModel.cancel()
+                    onPaymentSuccess()
+                    dismissPaymentDialog(navController)
+                    Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
+        is PaymentUiState.Error -> {
+            ErrorContent(
+                message = state.message,
+                errorType = state.errorType,
+                onClose = {
+                    viewModel.cancel()
+                    dismissPaymentDialog(navController)
+                }
+            )
         }
     }
 }
@@ -224,17 +172,18 @@ private fun LoadingContent() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .height(400.dp)
+            .background(WCTheme.colors.bgPrimary)
+            .padding(horizontal = WCTheme.spacing.spacing4),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(48.dp),
-            color = Color(0xFF3396FF)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        WalletConnectLoader(size = 120.dp)
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
         Text(
-            text = "Loading payment options...",
-            style = TextStyle(fontSize = 16.sp, color = Color.White)
+            text = "Preparing your payment...",
+            style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -255,51 +204,29 @@ private fun PaymentOptionsContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(20.dp)
+            .background(WCTheme.colors.bgPrimary)
+            .padding(WCTheme.spacing.spacing5)
     ) {
-        // Header: "Why info required?" pill (left) + X close (right)
+        // Header: "?" icon button (left) + X close (right)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (anyOptionHasCollectData) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFF0F0F0))
-                        .clickable { onWhyInfoRequired() }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = "Why info required?",
-                        style = TextStyle(
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF666666)
-                        )
-                    )
-                }
+                ModalIconButton(
+                    iconRes = R.drawable.ic_question_mark,
+                    contentDescription = "Why info needed",
+                    onClick = onWhyInfoRequired
+                )
             } else {
-                Spacer(modifier = Modifier.size(32.dp))
+                Spacer(modifier = Modifier.size(38.dp))
             }
 
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = Color(0xFF9E9E9E),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            ModalCloseButton(onClick = onClose)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
         // Merchant icon and payment title
         Column(
@@ -308,17 +235,17 @@ private fun PaymentOptionsContent(
         ) {
             MerchantIcon(paymentInfo = paymentInfo, size = 64.dp)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
-            PaymentTitle(paymentInfo = paymentInfo, fontSize = 18)
+            PaymentTitle(paymentInfo = paymentInfo)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
 
         // Flat list of option cards
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
         ) {
             options.forEach { option ->
                 PaymentOptionCard(
@@ -329,7 +256,7 @@ private fun PaymentOptionsContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
 
         // Bottom button: "Pay" or "Continue"
         val buttonText = if (selectedHasCollectData) {
@@ -345,27 +272,12 @@ private fun PaymentOptionsContent(
             "Pay $buttonAmount"
         }
 
-        Button(
-            onClick = { selectedOptionId?.let { onOptionSelected(it) } },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            enabled = selectedOptionId != null,
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFF3396FF),
-                disabledBackgroundColor = Color(0xFFB3D9FF)
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text(
-                text = buttonText,
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            )
-        }
+        val isEnabled = selectedOptionId != null
+        PrimaryActionButton(
+            text = buttonText,
+            enabled = isEnabled,
+            onClick = { selectedOptionId?.let { onOptionSelected(it) } }
+        )
     }
 }
 
@@ -375,18 +287,22 @@ private fun PaymentOptionCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor = if (isSelected) Color(0xFFEBF4FF) else Color(0xFFF5F5F5)
-    val borderColor = if (isSelected) Color(0xFF3396FF) else Color.Transparent
+    val animatedBg by animateColorAsState(
+        targetValue = if (isSelected) WCTheme.colors.foregroundAccentPrimary10 else WCTheme.colors.foregroundPrimary,
+        label = "optionBg"
+    )
+    val borderColor = if (isSelected) WCTheme.colors.borderAccentPrimary else Color.Transparent
     val borderWidth = if (isSelected) 1.5.dp else 0.dp
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
-            .background(backgroundColor)
+            .height(68.dp)
+            .clip(WCTheme.borderRadius.shapeLarge)
+            .border(borderWidth, borderColor, WCTheme.borderRadius.shapeLarge)
+            .background(animatedBg)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = WCTheme.spacing.spacing4),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -396,13 +312,13 @@ private fun PaymentOptionCard(
                 TokenIconWithNetwork(
                     tokenIconUrl = iconUrl,
                     networkIconUrl = option.amount.display?.networkIconUrl,
-                    tokenIconSize = 36.dp,
+                    tokenIconSize = 40.dp,
                     networkIconSize = 16.dp
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(WCTheme.spacing.spacing3))
             }
 
-            // Token amount only (no network text name)
+            // Token amount
             val display = option.amount.display
             val tokenAmount = formatTokenAmount(
                 value = option.amount.value,
@@ -412,29 +328,23 @@ private fun PaymentOptionCard(
 
             Text(
                 text = tokenAmount,
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
-                )
+                style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textPrimary)
             )
         }
 
         // "Info required" badge if option has collectData
         if (option.collectData != null) {
+            val pillBg = if (isSelected) WCTheme.colors.bgAccentPrimary.copy(alpha = 0.9f) else WCTheme.colors.foregroundTertiary
+            val pillText = if (isSelected) Color.White else WCTheme.colors.textPrimary
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFE8E8E8))
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                    .clip(RoundedCornerShape(WCTheme.borderRadius.radius2))
+                    .background(pillBg)
+                    .padding(horizontal = WCTheme.spacing.spacing2, vertical = 6.dp)
             ) {
                 Text(
                     text = "Info required",
-                    style = TextStyle(
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF888888)
-                    )
+                    style = WCTheme.typography.bodyMdMedium.copy(color = pillText)
                 )
             }
         }
@@ -494,57 +404,28 @@ private fun MerchantIcon(paymentInfo: Wallet.Model.PaymentInfo?, size: Dp) {
         ) {
             Text(
                 text = paymentInfo?.merchant?.name?.take(1)?.uppercase() ?: "P",
-                style = TextStyle(
-                    fontSize = (size.value * 0.44f).sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                style = WCTheme.typography.h4Regular.copy(color = Color.White)
             )
         }
     }
 }
 
 @Composable
-private fun PaymentTitle(paymentInfo: Wallet.Model.PaymentInfo?, fontSize: Int) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
-        val displayAmount = paymentInfo?.let {
-            formatDisplayAmount(
-                value = it.amount.value,
-                decimals = it.amount.display?.decimals ?: 2,
-                symbol = it.amount.display?.assetSymbol ?: it.amount.unit
-            )
-        } ?: ""
-
-        Text(
-            text = "Pay $displayAmount to $merchantName",
-            style = TextStyle(
-                fontSize = fontSize.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            )
+private fun PaymentTitle(paymentInfo: Wallet.Model.PaymentInfo?) {
+    val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
+    val displayAmount = paymentInfo?.let {
+        formatDisplayAmount(
+            value = it.amount.value,
+            decimals = it.amount.display?.decimals ?: 2,
+            symbol = it.amount.display?.assetSymbol ?: it.amount.unit
         )
+    } ?: ""
 
-        Spacer(modifier = Modifier.width(6.dp))
-
-        Box(
-            modifier = Modifier
-                .size((fontSize - 2).dp)
-                .clip(CircleShape)
-                .background(Color(0xFF3396FF)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "Verified",
-                tint = Color.White,
-                modifier = Modifier.size((fontSize - 8).dp)
-            )
-        }
-    }
+    Text(
+        text = "Pay $displayAmount to $merchantName",
+        style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
+        textAlign = TextAlign.Center
+    )
 }
 
 @Composable
@@ -557,29 +438,18 @@ private fun SummaryContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(20.dp)
+            .background(WCTheme.colors.bgPrimary)
+            .padding(WCTheme.spacing.spacing5)
     ) {
         // Close button at top right
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.TopEnd
         ) {
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = Color(0xFF9E9E9E),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            ModalCloseButton(onClick = onClose)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
         // Merchant icon and payment title
         Column(
@@ -587,28 +457,26 @@ private fun SummaryContent(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             MerchantIcon(paymentInfo = paymentInfo, size = 64.dp)
-            Spacer(modifier = Modifier.height(16.dp))
-            PaymentTitle(paymentInfo = paymentInfo, fontSize = 18)
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
+            PaymentTitle(paymentInfo = paymentInfo)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
 
         // "Pay with" row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF5F5F5))
-                .padding(16.dp),
+                .height(68.dp)
+                .clip(WCTheme.borderRadius.shapeLarge)
+                .background(WCTheme.colors.foregroundPrimary)
+                .padding(horizontal = WCTheme.spacing.spacing4),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Pay with",
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    color = Color(0xFF666666)
-                )
+                style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary)
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -621,14 +489,10 @@ private fun SummaryContent(
 
                 Text(
                     text = tokenAmount,
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black
-                    )
+                    style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textPrimary)
                 )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(WCTheme.spacing.spacing2))
 
                 display?.iconUrl?.let { iconUrl ->
                     TokenIconWithNetwork(
@@ -641,7 +505,7 @@ private fun SummaryContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
 
         // Confirm button
         val buttonAmount = paymentInfo?.let {
@@ -652,25 +516,10 @@ private fun SummaryContent(
             )
         } ?: ""
 
-        Button(
-            onClick = onConfirm,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFF3396FF)
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text(
-                text = "Pay $buttonAmount",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            )
-        }
+        PrimaryActionButton(
+            text = "Pay $buttonAmount",
+            onClick = onConfirm
+        )
     }
 }
 
@@ -682,9 +531,9 @@ private fun WhyInfoRequiredContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(20.dp)
+            .background(WCTheme.colors.bgPrimary)
+            .padding(WCTheme.spacing.spacing5),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Header: back arrow (left) + X close (right)
         Row(
@@ -692,87 +541,45 @@ private fun WhyInfoRequiredContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Back",
-                    tint = Color(0xFF9E9E9E),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .graphicsLayer(rotationZ = 90f)
-                )
-            }
+            ModalIconButton(
+                iconRes = R.drawable.ic_arrow_left,
+                contentDescription = "Back",
+                onClick = onBack
+            )
 
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = Color(0xFF9E9E9E),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            ModalCloseButton(onClick = onClose)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
         Text(
             text = "Why we need your information?",
-            style = TextStyle(
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
+            style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
+            textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
         Text(
             text = "For regulatory compliance, we collect basic information on your first payment: full name, date of birth, and place of birth.",
-            style = TextStyle(
-                fontSize = 14.sp,
-                color = Color(0xFF666666),
-                lineHeight = 22.sp
-            )
+            style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary),
+            textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing3))
 
         Text(
             text = "This information is tied to your wallet address and this specific network. If you use the same wallet on this network again, you won't need to provide it again.",
-            style = TextStyle(
-                fontSize = 14.sp,
-                color = Color(0xFF9E9E9E),
-                lineHeight = 22.sp
-            )
+            style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary),
+            textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
-        Button(
-            onClick = onBack,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFF3396FF)
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text(
-                text = "Got it!",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            )
-        }
+        PrimaryActionButton(
+            text = "Got it!",
+            onClick = onBack
+        )
     }
 }
 
@@ -875,107 +682,60 @@ private fun formatExpiration(expiresAt: Long): String {
 
 @Composable
 private fun ProcessingContent(
-    message: String,
-    onClose: () -> Unit
+    message: String
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .height(400.dp)
+            .background(WCTheme.colors.bgPrimary)
+            .padding(WCTheme.spacing.spacing5),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        // Close button at top right
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.TopEnd
-        ) {
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = Color(0xFF9E9E9E),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Animated WalletConnect loader
-        WalletConnectLoader(size = 88.dp)
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
+        WalletConnectLoader(size = 120.dp)
+
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
+
         Text(
             text = "Confirming your payment...",
-            style = TextStyle(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Black
-            ),
+            style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
             textAlign = TextAlign.Center
         )
-        
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
 @Composable
 private fun SuccessContent(
     paymentInfo: Wallet.Model.PaymentInfo?,
-    onDone: () -> Unit,
-    onClose: () -> Unit
+    onDone: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(20.dp),
+            .background(WCTheme.colors.bgPrimary)
+            .padding(WCTheme.spacing.spacing5),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Close button at top right
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.TopEnd
-        ) {
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = Color(0xFF9E9E9E),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
 
         // Green checkmark circle
         Box(
             modifier = Modifier
-                .size(56.dp)
+                .size(40.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF4CAF50)),
+                .background(WCTheme.colors.iconSuccess),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Check,
+                imageVector = ImageVector.vectorResource(id = R.drawable.ic_check),
                 contentDescription = "Success",
                 tint = Color.White,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
 
         // Success message with payment details
         val displayAmount = paymentInfo?.let {
@@ -989,453 +749,156 @@ private fun SuccessContent(
 
         Text(
             text = "You've paid $displayAmount to $merchantName",
-            style = TextStyle(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            ),
+            style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Got it button
-        Button(
-            onClick = onDone,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFF3396FF)
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text(
-                text = "Got it!",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            )
-        }
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
+
+        PrimaryActionButton(
+            text = "Got it!",
+            onClick = onDone
+        )
     }
 }
 
 @Composable
 private fun ErrorContent(
     message: String,
-    onRetry: () -> Unit,
+    errorType: PaymentErrorType,
     onClose: () -> Unit
 ) {
+    val title = when (errorType) {
+        PaymentErrorType.INSUFFICIENT_FUNDS -> "Not enough funds"
+        PaymentErrorType.EXPIRED -> "Payment expired"
+        PaymentErrorType.NOT_FOUND -> "Payment not found"
+        PaymentErrorType.GENERIC -> "Transaction failed"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(20.dp),
+            .background(WCTheme.colors.bgPrimary)
+            .padding(WCTheme.spacing.spacing5),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Close button at top right
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.TopEnd
-        ) {
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = Color(0xFF9E9E9E),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Red/orange circle with exclamation mark
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
+
+        // Error icon circle
         Box(
             modifier = Modifier
-                .size(56.dp)
+                .size(40.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFD85140)),
+                .background(WCTheme.colors.iconError),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "!",
-                style = TextStyle(
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                style = WCTheme.typography.bodyXlMedium.copy(color = Color.White)
             )
         }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Error message
+
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
+
         Text(
-            text = message,
-            style = TextStyle(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            ),
+            text = title,
+            style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
             textAlign = TextAlign.Center
         )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Try again button
-        Button(
-            onClick = onRetry,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFF3396FF)
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
+
+        if (errorType == PaymentErrorType.GENERIC && message.isNotBlank()) {
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
             Text(
-                text = "Try again",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
-            )
-        }
-    }
-}
-
-// ==================== Information Capture Components ====================
-
-@Composable
-private fun CollectDataContent(
-    currentStepIndex: Int,
-    totalSteps: Int,
-    currentField: Wallet.Model.CollectDataField,
-    currentValue: String,
-    onValueSubmit: (String, String) -> Unit,
-    onClose: () -> Unit
-) {
-    var inputValue by remember(currentField.id) { mutableStateOf(currentValue) }
-    
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(20.dp)
-    ) {
-        // Header with back, progress, and close
-        CollectDataHeader(
-            currentStep = currentStepIndex,
-            totalSteps = totalSteps,
-            onClose = onClose
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Question text
-        Text(
-            text = currentField.name,
-            style = TextStyle(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                text = message,
+                style = WCTheme.typography.bodyMdRegular.copy(color = WCTheme.colors.textSecondary),
                 textAlign = TextAlign.Center
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Input field based on type
-        when (currentField.fieldType) {
-            Wallet.Model.CollectDataFieldType.TEXT -> {
-                TextFieldInput(
-                    value = inputValue,
-                    onValueChange = { inputValue = it },
-                    placeholder = currentField.name
-                )
-            }
-            Wallet.Model.CollectDataFieldType.DATE -> {
-                DatePickerInput(
-                    value = inputValue,
-                    onValueChange = { inputValue = it }
-                )
-            }
-
-            Wallet.Model.CollectDataFieldType.CHECKBOX -> {
-
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Continue button
-        Button(
-            onClick = { onValueSubmit(currentField.id, inputValue) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            enabled = inputValue.isNotBlank(),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color(0xFF3396FF),
-                disabledBackgroundColor = Color(0xFFB3D9FF)
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text(
-                text = "Continue",
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
-                )
             )
         }
-    }
-}
 
-@Composable
-private fun CollectDataHeader(
-    currentStep: Int,
-    totalSteps: Int,
-    onClose: () -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Empty spacer for balance
-        Spacer(modifier = Modifier.size(48.dp))
-        
-        // Progress indicator
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            for (i in 0 until totalSteps) {
-                Box(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(
-                            if (i <= currentStep) Color(0xFF3396FF) else Color(0xFFE0E0E0)
-                        )
-                )
-            }
-        }
-        
-        // Close button
-        IconButton(onClick = onClose) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = Color.Black
-            )
-        }
-    }
-}
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
 
-@Composable
-private fun TextFieldInput(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
-        placeholder = {
-            Text(
-                text = placeholder,
-                color = Color.Gray
-            )
-        },
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            textColor = Color.Black,
-            backgroundColor = Color(0xFFF5F5F5),
-            focusedBorderColor = Color(0xFF3396FF),
-            unfocusedBorderColor = Color.Transparent,
-            cursorColor = Color(0xFF3396FF)
-        ),
-        shape = RoundedCornerShape(12.dp),
-        singleLine = true
-    )
-}
-
-@Composable
-private fun DatePickerInput(
-    value: String,
-    onValueChange: (String) -> Unit
-) {
-    // Default values
-    val defaultYear = "1990"
-    val defaultMonth = "01"
-    val defaultDay = "01"
-    
-    // Parse existing value (YYYY-MM-DD format) or use defaults
-    val initialYear: String
-    val initialMonth: String
-    val initialDay: String
-    
-    if (value.isNotBlank() && value.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) {
-        val parts = value.split("-")
-        initialYear = parts[0]
-        initialMonth = parts[1]
-        initialDay = parts[2]
-    } else {
-        initialYear = defaultYear
-        initialMonth = defaultMonth
-        initialDay = defaultDay
-    }
-    
-    var selectedYear by remember(value) { mutableStateOf(initialYear) }
-    var selectedMonth by remember(value) { mutableStateOf(initialMonth) }
-    var selectedDay by remember(value) { mutableStateOf(initialDay) }
-    
-    val months = listOf(
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    )
-    val days = (1..31).map { it.toString().padStart(2, '0') }
-    val years = (1920..2025).map { it.toString() }.reversed()
-    
-    // Update combined value when any selection changes (ISO 8601 format: YYYY-MM-DD)
-    LaunchedEffect(selectedYear, selectedMonth, selectedDay) {
-        val formattedDate = "${selectedYear}-${selectedMonth}-${selectedDay}"
-        onValueChange(formattedDate)
-    }
-    
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF5F5F5)),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Month picker
-        DateWheelPicker(
-            pickerItems = months,
-            selectedItem = months.getOrNull((selectedMonth.toIntOrNull() ?: 1) - 1) ?: "January",
-            onItemSelected = { month ->
-                selectedMonth = (months.indexOf(month) + 1).toString().padStart(2, '0')
-            },
-            modifier = Modifier.weight(1.5f)
-        )
-
-        // Day picker
-        DateWheelPicker(
-            pickerItems = days,
-            selectedItem = selectedDay.takeIf { it in days } ?: "01",
-            onItemSelected = { selectedDay = it },
-            modifier = Modifier.weight(0.8f)
-        )
-
-        // Year picker
-        DateWheelPicker(
-            pickerItems = years,
-            selectedItem = selectedYear.takeIf { it in years } ?: "2000",
-            onItemSelected = { selectedYear = it },
-            modifier = Modifier.weight(1f)
+        PrimaryActionButton(
+            text = "Close",
+            onClick = onClose
         )
     }
 }
 
+// ==================== Shared Modal Components ====================
+
 @Composable
-private fun DateWheelPicker(
-    pickerItems: List<String>,
-    selectedItem: String,
-    onItemSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val initialIndex = pickerItems.indexOf(selectedItem).coerceAtLeast(0)
-    val itemHeight = 40.dp
-    val visibleItems = 5
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
-
-    // The center picker item index equals firstVisibleItemIndex because we have
-    // (visibleItems / 2) padding spacers at the top that offset the center
-    val centerPickerIndex = listState.firstVisibleItemIndex
-
-    // Update selection when scrolling stops
-    LaunchedEffect(listState.isScrollInProgress) {
-        if (!listState.isScrollInProgress) {
-            val clampedIndex = centerPickerIndex.coerceIn(0, pickerItems.size - 1)
-            if (pickerItems.getOrNull(clampedIndex) != selectedItem) {
-                onItemSelected(pickerItems[clampedIndex])
-            }
-        }
-    }
-
-    // Scroll to selected item when it changes externally
-    LaunchedEffect(selectedItem) {
-        val targetIndex = pickerItems.indexOf(selectedItem).coerceAtLeast(0)
-        if (!listState.isScrollInProgress && listState.firstVisibleItemIndex != targetIndex) {
-            listState.animateScrollToItem(targetIndex)
-        }
-    }
-
+private fun ModalCloseButton(onClick: () -> Unit) {
     Box(
-        modifier = modifier.height(itemHeight * visibleItems),
+        modifier = Modifier
+            .size(38.dp)
+            .clip(RoundedCornerShape(WCTheme.borderRadius.radius3))
+            .border(
+                width = 1.dp,
+                color = WCTheme.colors.borderSecondary,
+                shape = RoundedCornerShape(WCTheme.borderRadius.radius3)
+            )
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.height(itemHeight * visibleItems),
-            flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
-        ) {
-            // Padding items at top to allow first item to be centered
-            items(List(visibleItems / 2) { it }) {
-                Spacer(modifier = Modifier.height(itemHeight))
-            }
+        Icon(
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_x_close),
+            contentDescription = "Close",
+            modifier = Modifier.size(20.dp),
+            tint = WCTheme.colors.textPrimary
+        )
+    }
+}
 
-            itemsIndexed(pickerItems) { index, item ->
-                // Item is visually centered if its index matches centerPickerIndex
-                val isVisuallySelected = index == centerPickerIndex
-                Box(
-                    modifier = Modifier
-                        .height(itemHeight)
-                        .fillMaxWidth()
-                        .clickable { onItemSelected(item) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = item,
-                        style = TextStyle(
-                            fontSize = if (isVisuallySelected) 20.sp else 16.sp,
-                            fontWeight = if (isVisuallySelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isVisuallySelected) Color.Black else Color(0xFFAAAAAA)
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+@Composable
+private fun ModalIconButton(
+    iconRes: Int,
+    contentDescription: String,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(RoundedCornerShape(WCTheme.borderRadius.radius3))
+            .border(
+                width = 1.dp,
+                color = WCTheme.colors.borderSecondary,
+                shape = RoundedCornerShape(WCTheme.borderRadius.radius3)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(id = iconRes),
+            contentDescription = contentDescription,
+            modifier = Modifier.size(20.dp),
+            tint = WCTheme.colors.textPrimary
+        )
+    }
+}
 
-            // Padding items at bottom to allow last item to be centered
-            items(List(visibleItems / 2) { it }) {
-                Spacer(modifier = Modifier.height(itemHeight))
-            }
-        }
-
-        // Selection highlight overlay
-        Box(
-            modifier = Modifier
-                .height(itemHeight)
-                .fillMaxWidth()
-                .background(Color(0x10000000), RoundedCornerShape(8.dp))
+@Composable
+private fun PrimaryActionButton(
+    text: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(WCTheme.borderRadius.shapeLarge)
+            .background(
+                if (enabled) WCTheme.colors.bgAccentPrimary
+                else WCTheme.colors.bgAccentPrimary.copy(alpha = 0.6f)
+            )
+            .then(
+                if (enabled) Modifier.clickable(onClick = onClick) else Modifier
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = WCTheme.typography.bodyLgRegular.copy(color = Color.White)
         )
     }
 }
@@ -1501,6 +964,7 @@ private fun WebViewDataCollectionContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF141414))
+            .statusBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
 
@@ -1514,17 +978,14 @@ private fun WebViewDataCollectionContent(
                 ) {
                     Text(
                         text = error,
-                        color = Color(0xFFD85140),
+                        style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textError),
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(
-                        onClick = { loadError = null },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF3396FF)),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Retry", color = Color.White)
-                    }
+                    Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
+                    PrimaryActionButton(
+                        text = "Retry",
+                        onClick = { loadError = null }
+                    )
                 }
                 return@Column
             }
@@ -1668,7 +1129,7 @@ private fun WebViewDataCollectionContent(
                 CircularProgressIndicator(
                     modifier = Modifier.size(48.dp),
                     strokeWidth = 4.dp,
-                    color = Color(0xFF3396FF)
+                    color = WCTheme.colors.bgAccentPrimary
                 )
             }
         }
@@ -1677,19 +1138,9 @@ private fun WebViewDataCollectionContent(
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF2A2A2A))
-                .clickable { onClose() },
-            contentAlignment = Alignment.Center
+                .padding(WCTheme.spacing.spacing4)
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
+            ModalCloseButton(onClick = onClose)
         }
     }
 }

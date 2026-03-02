@@ -10,10 +10,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
-import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import androidx.navigation.compose.composable
@@ -80,14 +78,13 @@ fun Web3WalletNavGraph(
         )) {
             ConnectionDetailsRoute(navController, it.arguments?.getInt("connectionId"), connectionsViewModel)
         }
-        dialog(
+        bottomSheet(
             route = "${Route.ChainAbstraction.path}/{isError}",
             arguments = listOf(
                 navArgument("isError") {
                     type = NavType.BoolType
                     nullable = false
-                }),
-            dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+                })
         ) {
             ChainAbstractionRoute(navController, it.arguments?.getBoolean("isError")!!)
         }
@@ -132,15 +129,14 @@ fun Web3WalletNavGraph(
         )) {
             SnackbarMessageRoute(navController, it.arguments?.getString("message"))
         }
-        dialog(
+        bottomSheet(
             "${Route.Payment.path}/{paymentLink}",
             arguments = listOf(
                 navArgument("paymentLink") {
                     type = NavType.StringType
                     nullable = false
                 }
-            ),
-            dialogProperties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)
+            )
         ) {
             val encodedLink = it.arguments?.getString("paymentLink") ?: ""
             val paymentLink = java.net.URLDecoder.decode(encodedLink, "UTF-8")

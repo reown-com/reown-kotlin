@@ -54,7 +54,7 @@ import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.common.Buttons
 import com.reown.sample.wallet.ui.common.ButtonsVertical
 import com.reown.sample.wallet.ui.common.InnerContent
-import com.reown.sample.wallet.ui.common.SemiTransparentDialog
+import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.ui.common.generated.ButtonWithLoader
 import com.reown.sample.wallet.ui.common.peer.Peer
 import com.reown.sample.wallet.ui.common.peer.PeerUI
@@ -84,7 +84,7 @@ fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, ch
                 val allowButtonColor = getColor(sessionRequestUI.peerContextUI)
                 WalletKitDelegate.currentId = sessionRequestUI.requestId
 
-                SemiTransparentDialog {
+                Column(modifier = Modifier.fillMaxWidth().background(WCTheme.colors.bgPrimary)) {
                     Spacer(modifier = Modifier.height(24.dp))
                     Peer(peerUI = sessionRequestUI.peerUI, "Review transaction", sessionRequestUI.peerContextUI)
                     Spacer(modifier = Modifier.height(16.dp))
@@ -142,7 +142,7 @@ fun ChainAbstractionRoute(navController: NavHostController, isError: Boolean, ch
             }
 
             SessionRequestUI.Initial -> {
-                SemiTransparentDialog {
+                Column(modifier = Modifier.fillMaxWidth().background(WCTheme.colors.bgPrimary)) {
                     Spacer(modifier = Modifier.height(24.dp))
                     Peer(peerUI = PeerUI.Empty, null)
                     Spacer(modifier = Modifier.height(200.dp))
@@ -171,7 +171,7 @@ fun ErrorDialog(
     navController: NavHostController,
     chainAbstractionViewModel: ChainAbstractionViewModel
 ) {
-    SemiTransparentDialog {
+    Column(modifier = Modifier.fillMaxWidth().background(WCTheme.colors.bgPrimary)) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
@@ -332,7 +332,7 @@ fun SuccessDialog(
     navController: NavHostController,
     chainAbstractionViewModel: ChainAbstractionViewModel
 ) {
-    SemiTransparentDialog {
+    Column(modifier = Modifier.fillMaxWidth().background(WCTheme.colors.bgPrimary)) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
