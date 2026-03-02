@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.CircularProgressIndicator
@@ -38,23 +36,21 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.sample.common.ui.themedColor
-import com.reown.sample.common.ui.theme.KhTekaFontFamily
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.ui.common.ChainIcons
+import com.reown.sample.wallet.ui.common.formatDomain
+import com.reown.sample.wallet.ui.routes.composable_routes.connected_apps.getConnectionChainIds
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionType
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionUI
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
-import com.reown.sample.wallet.ui.routes.composable_routes.connected_apps.chainInfo
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.Dispatchers
@@ -155,14 +151,14 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
             Spacer(modifier = Modifier.height(8.dp))
 
             // Methods section
-            val methods = getSessionMethods(uiConnection)
+            val methods = getSessionItems(uiConnection) { it.methods }
             if (methods.isNotEmpty()) {
                 InfoSection(title = "Methods", items = methods)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             // Events section
-            val events = getSessionEvents(uiConnection)
+            val events = getSessionItems(uiConnection) { it.events }
             if (events.isNotEmpty()) {
                 InfoSection(title = "Events", items = events)
             }
@@ -188,18 +184,6 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
 
 @Composable
 private fun AppInfoCard(connectionUI: ConnectionUI) {
-    val chains = when (val type = connectionUI.type) {
-        is ConnectionType.Sign -> {
-            type.namespaces.values
-                .flatMap { session -> session.accounts }
-                .map { account ->
-                    val parts = account.split(":")
-                    if (parts.size >= 2) "${parts[0]}:${parts[1]}" else account
-                }
-                .distinct()
-        }
-    }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -260,7 +244,7 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
                 )
             )
             Text(
-                text = connectionUI.uri,
+                text = formatDomain(connectionUI.uri),
                 style = WCTheme.typography.bodyLgRegular.copy(
                     color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF9A9A9A)
                 )
@@ -268,62 +252,7 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
         }
 
         // Chain icons
-        Row(
-            modifier = Modifier.padding(start = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy((-6).dp)
-        ) {
-            chains.take(4).forEach { chainId ->
-                val (color, label) = chainInfo(chainId)
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .border(
-                            1.5.dp,
-                            themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFFF3F3F3)),
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = label,
-                        style = TextStyle(
-                            fontFamily = KhTekaFontFamily,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    )
-                }
-            }
-            if (chains.size > 4) {
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clip(CircleShape)
-                        .background(
-                            themedColor(darkColor = Color(0xFF3A3A3A), lightColor = Color(0xFFBBBBBB))
-                        )
-                        .border(
-                            1.5.dp,
-                            themedColor(darkColor = Color(0xFF252525), lightColor = Color(0xFFF3F3F3)),
-                            CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "+${chains.size - 4}",
-                        style = TextStyle(
-                            fontFamily = KhTekaFontFamily,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    )
-                }
-            }
-        }
+        ChainIcons(chainIds = getConnectionChainIds(connectionUI), size = 20)
     }
 }
 
@@ -357,24 +286,11 @@ private fun InfoSection(title: String, items: List<String>) {
     }
 }
 
-private fun getSessionMethods(connectionUI: ConnectionUI): List<String> {
-    return when (val type = connectionUI.type) {
-        is ConnectionType.Sign -> {
-            type.namespaces.values
-                .flatMap { session -> session.methods }
-                .distinct()
-        }
-    }
-}
-
-private fun getSessionEvents(connectionUI: ConnectionUI): List<String> {
-    return when (val type = connectionUI.type) {
-        is ConnectionType.Sign -> {
-            type.namespaces.values
-                .flatMap { session -> session.events }
-                .distinct()
-        }
-    }
+private fun getSessionItems(
+    connectionUI: ConnectionUI,
+    selector: (Wallet.Model.Namespace.Session) -> List<String>
+): List<String> = when (val type = connectionUI.type) {
+    is ConnectionType.Sign -> type.namespaces.values.flatMap(selector).distinct()
 }
 
 private fun disconnectSession(

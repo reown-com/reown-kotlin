@@ -25,20 +25,26 @@ import com.reown.util.hexToBytes
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.reown.walletkit.utils.CacaoSigner
-import org.json.JSONArray
 import timber.log.Timber
 import uniffi.yttrium_utils.solanaSignPrehash
 import uniffi.yttrium_utils.tronSignMessage
-import java.util.Base64
 
 class SessionProposalViewModel : ViewModel() {
     val sessionProposal: SessionProposalUI? = generateSessionProposalUI()
-    fun approve(proposalPublicKey: String, onSuccess: (String) -> Unit = {}, onError: (Throwable) -> Unit = {}) {
+    fun approve(
+        proposalPublicKey: String,
+        selectedChainIds: List<String> = emptyList(),
+        onSuccess: (String) -> Unit = {},
+        onError: (Throwable) -> Unit = {}
+    ) {
         val proposal = WalletKit.getSessionProposals().find { it.proposerPublicKey == proposalPublicKey }
         if (proposal != null) {
             try {
                 Timber.d("Approving session proposal: $proposalPublicKey")
-                val (sessionNamespaces, sessionProperties) = getNamespacesAndProperties(proposal)
+                val (sessionNamespaces, sessionProperties) = getNamespacesAndProperties(
+                    proposal = proposal,
+                    selectedChainIds = selectedChainIds
+                )
                 val scopedProperties = mapOf(
                     "eip155" to "{\"walletService\":[{\"url\":\"https://rpc.walletconnect.org/v1/wallet?projectId=${BuildConfig.PROJECT_ID}&st=wkca&sv=reown-kotlin-${AndroidBuildConfig.SDK_VERSION}\", \"methods\":[\"wallet_getAssets\"]}]}"
                 )
@@ -158,30 +164,51 @@ class SessionProposalViewModel : ViewModel() {
         }
     }
 
-    private fun getNamespacesAndProperties(proposal: Wallet.Model.SessionProposal): Pair<Map<String, Wallet.Model.Namespace.Session>, Map<String, String>> {
-//        return if (SmartAccountEnabler.isSmartAccountEnabled.value) {
-//            val sessionNamespaces =
-//                WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = smartAccountWalletMetadata.namespaces)
-//            val ownerAccount = Wallet.Params.Account(EthAccountDelegate.sepoliaAddress)
-//            val smartAccountAddress = try {
-//                WalletKit.getSmartAccount(Wallet.Params.GetSmartAccountAddress(ownerAccount))
-//            } catch (e: Exception) {
-//                Firebase.crashlytics.recordException(e)
-//                ""
-//            }
-//
-//            val capability = "{\"$smartAccountAddress\":{\"0xaa36a7\":{\"atomicBatch\":{\"supported\":true}}}}"
-//            val sessionProperties = mapOf("bundler_name" to "pimlico", "capabilities" to capability)
-//            Pair(sessionNamespaces, sessionProperties)
-//        } else {
-        val sessionNamespaces = WalletKit.generateApprovedNamespaces(sessionProposal = proposal, supportedNamespaces = walletMetaData.namespaces)
+    private fun getNamespacesAndProperties(
+        proposal: Wallet.Model.SessionProposal,
+        selectedChainIds: List<String>
+    ): Pair<Map<String, Wallet.Model.Namespace.Session>, Map<String, String>> {
+        val filteredSupportedNamespaces = filterSupportedNamespaces(selectedChainIds)
+        val sessionNamespaces = WalletKit.generateApprovedNamespaces(
+            sessionProposal = proposal,
+            supportedNamespaces = filteredSupportedNamespaces
+        )
         val sessionProperties = mapOf(
             "tron_method_version" to "v1",
             "ton_getPublicKey" to TONAccountDelegate.publicKey,
             "ton_getStateInit" to TONClient.getStateInitBoc(TONAccountDelegate.keypair)
         )
         return Pair(sessionNamespaces, sessionProperties)
-//        }
+    }
+
+    private fun filterSupportedNamespaces(selectedChainIds: List<String>): Map<String, Wallet.Model.Namespace.Session> {
+        if (selectedChainIds.isEmpty()) return walletMetaData.namespaces
+
+        val selectedChainIdSet = selectedChainIds.toSet()
+        return walletMetaData.namespaces.mapNotNull { (namespaceKey, namespaceSession) ->
+            val filteredChains = namespaceSession.chains?.filter { chainId ->
+                chainId in selectedChainIdSet
+            }
+            val filteredAccounts = namespaceSession.accounts.filter { accountId ->
+                val accountParts = accountId.split(":")
+                if (accountParts.size < 2) {
+                    false
+                } else {
+                    "${accountParts[0]}:${accountParts[1]}" in selectedChainIdSet
+                }
+            }
+
+            val hasSelectedChains = !filteredChains.isNullOrEmpty()
+            val hasSelectedAccounts = filteredAccounts.isNotEmpty()
+            if (!hasSelectedChains && !hasSelectedAccounts) return@mapNotNull null
+
+            namespaceKey to Wallet.Model.Namespace.Session(
+                chains = filteredChains,
+                methods = namespaceSession.methods,
+                events = namespaceSession.events,
+                accounts = filteredAccounts
+            )
+        }.toMap()
     }
 
     private fun collectAuthMessages(proposal: Wallet.Model.SessionProposal): List<String> {

@@ -5,20 +5,17 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -34,17 +31,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.reown.sample.common.ui.themedColor
-import com.reown.sample.common.ui.theme.KhTekaFontFamily
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.ui.common.ChainIcons
+import com.reown.sample.wallet.ui.common.formatDomain
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionType
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionUI
@@ -149,7 +144,7 @@ fun ConnectedAppItem(
                 )
             )
             Text(
-                text = connectionUI.uri,
+                text = formatDomain(connectionUI.uri),
                 style = WCTheme.typography.bodySmRegular.copy(
                     color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
                 )
@@ -157,13 +152,12 @@ fun ConnectedAppItem(
         }
 
         // Chain icons
-        ChainIcons(connectionUI)
+        ChainIcons(chainIds = getConnectionChainIds(connectionUI), size = 20)
     }
 }
 
-@Composable
-private fun ChainIcons(connectionUI: ConnectionUI) {
-    val chains = when (val type = connectionUI.type) {
+internal fun getConnectionChainIds(connectionUI: ConnectionUI): List<String> {
+    return when (val type = connectionUI.type) {
         is ConnectionType.Sign -> {
             type.namespaces.values
                 .flatMap { session -> session.accounts }
@@ -173,69 +167,6 @@ private fun ChainIcons(connectionUI: ConnectionUI) {
                 }
                 .distinct()
         }
-    }
-
-    if (chains.isNotEmpty()) {
-        Row(
-            modifier = Modifier.padding(start = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy((-6).dp)
-        ) {
-            chains.take(4).forEach { chainId ->
-                val (color, label) = chainInfo(chainId)
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .border(1.5.dp, themedColor(darkColor = Color(0xFF1A1A1A), lightColor = Color(0xFFF5F5F5)), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = label,
-                        style = TextStyle(
-                            fontFamily = KhTekaFontFamily,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    )
-                }
-            }
-            if (chains.size > 4) {
-                Box(
-                    modifier = Modifier
-                        .size(22.dp)
-                        .clip(CircleShape)
-                        .background(themedColor(darkColor = Color(0xFF3A3A3A), lightColor = Color(0xFFBBBBBB)))
-                        .border(1.5.dp, themedColor(darkColor = Color(0xFF1A1A1A), lightColor = Color(0xFFF5F5F5)), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "+${chains.size - 4}",
-                        style = TextStyle(
-                            fontFamily = KhTekaFontFamily,
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    )
-                }
-            }
-        }
-    }
-}
-
-fun chainInfo(chainId: String): Pair<Color, String> {
-    return when (chainId) {
-        "eip155:1" -> Color(0xFF627EEA) to "E"
-        "eip155:137" -> Color(0xFF8247E5) to "P"
-        "eip155:8453" -> Color(0xFF0052FF) to "B"
-        "eip155:10" -> Color(0xFFFF0420) to "O"
-        "eip155:42161" -> Color(0xFF28A0F0) to "A"
-        "eip155:56" -> Color(0xFFF0B90B) to "B"
-        "eip155:43114" -> Color(0xFFE84142) to "Av"
-        "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" -> Color(0xFF9945FF) to "S"
-        else -> Color(0xFF666666) to chainId.takeLast(2)
     }
 }
 

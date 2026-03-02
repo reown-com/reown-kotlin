@@ -3,9 +3,10 @@
 package com.reown.sample.wallet.ui
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -76,30 +77,10 @@ fun Web3WalletNavGraph(
         AnimatedNavHost(
             navController = navController,
             startDestination = startDestination,
-            enterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
-                    animationSpec = tween(700)
-                )
-            },
-            exitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Companion.Left,
-                    animationSpec = tween(700)
-                )
-            },
-            popEnterTransition = {
-                slideIntoContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
-                    animationSpec = tween(700)
-                )
-            },
-            popExitTransition = {
-                slideOutOfContainer(
-                    towards = AnimatedContentTransitionScope.SlideDirection.Companion.Right,
-                    animationSpec = tween(700)
-                )
-            }
+            enterTransition = { fadeIn(animationSpec = tween(200)) },
+            exitTransition = { fadeOut(animationSpec = tween(200)) },
+            popEnterTransition = { fadeIn(animationSpec = tween(200)) },
+            popExitTransition = { fadeOut(animationSpec = tween(200)) }
         ) {
             composable(Route.Wallets.path) {
                 WalletsRoute(navController, connectionsViewModel)
@@ -136,15 +117,13 @@ fun Web3WalletNavGraph(
 //            dialog(Route.TransactionDialog.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
 //                TransactionRoute(navController)
 //            }
-            dialog(Route.SessionProposal.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
+            bottomSheet(Route.SessionProposal.path) {
                 SessionProposalRoute(navController)
             }
-            dialog(Route.SessionAuthenticate.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
+            bottomSheet(Route.SessionAuthenticate.path) {
                 SessionAuthenticateRoute(navController, connectionsViewModel)
             }
-            dialog(
-                Route.SessionRequest.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
-            ) {
+            bottomSheet(Route.SessionRequest.path) {
                 SessionRequestRoute(navController)
             }
             bottomSheet(Route.ScannerOptions.path) {

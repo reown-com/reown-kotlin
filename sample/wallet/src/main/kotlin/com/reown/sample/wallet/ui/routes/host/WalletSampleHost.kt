@@ -39,12 +39,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.material.BottomSheetNavigator
@@ -81,7 +78,10 @@ fun WalletSampleHost(
             val shouldHideBottomBar = route == Route.ScanUri.path ||
                 route == Route.ScannerOptions.path ||
                 route.startsWith(Route.ConnectionDetails.path) ||
-                route.startsWith(Route.SnackbarMessage.path)
+                route.startsWith(Route.SnackbarMessage.path) ||
+                route == Route.SessionProposal.path ||
+                route == Route.SessionRequest.path ||
+                route == Route.SessionAuthenticate.path
             bottomBarState.value = bottomBarState.value.copy(isDisplayed = !shouldHideBottomBar)
         }
         navController.addOnDestinationChangedListener(listener)
@@ -124,9 +124,19 @@ fun WalletSampleHost(
             )
 
             if (connectionState is ConnectionState.Error) {
-                ErrorBanner((connectionState as ConnectionState.Error).message)
+                Banner(
+                    message = "Network connection lost: ${(connectionState as ConnectionState.Error).message}",
+                    backgroundColor = Color(0xFFDC143C),
+                    iconResId = R.drawable.invalid_domain,
+                    durationMs = 5000
+                )
             } else if (connectionState is ConnectionState.Ok) {
-                RestoredConnectionBanner()
+                Banner(
+                    message = "Network connection is OK",
+                    backgroundColor = Color(0xFF93c47d),
+                    iconResId = R.drawable.ic_check_white,
+                    durationMs = 2000
+                )
             }
 
             if (isLoader) {
@@ -197,11 +207,11 @@ private fun BoxScope.Loader(initMessage: String, updateMessage: String) {
 }
 
 @Composable
-private fun ErrorBanner(message: String) {
+private fun Banner(message: String, backgroundColor: Color, iconResId: Int, durationMs: Long) {
     var shouldShow by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = Unit) {
-        delay(5000)
+        delay(durationMs)
         shouldShow = false
     }
 
@@ -209,46 +219,18 @@ private fun ErrorBanner(message: String) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFDC143C))
+                .background(backgroundColor)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                imageVector = ImageVector.vectorResource(id = R.drawable.invalid_domain),
+                imageVector = ImageVector.vectorResource(id = iconResId),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
                 colorFilter = ColorFilter.tint(color = Color.White)
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Network connection lost: $message", style = WCTheme.typography.bodyMdRegular.copy(color = Color.White))
-        }
-    }
-}
-
-@Composable
-private fun RestoredConnectionBanner() {
-    var shouldShow by remember { mutableStateOf(true) }
-
-    LaunchedEffect(key1 = Unit) {
-        delay(2000)
-        shouldShow = false
-    }
-    if (shouldShow) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF93c47d))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                imageVector = ImageVector.vectorResource(id = R.drawable.ic_check_white),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(color = Color.White)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Network connection is OK", style = WCTheme.typography.bodyMdRegular.copy(color = Color.White))
+            Text(text = message, style = WCTheme.typography.bodyMdRegular.copy(color = Color.White))
         }
     }
 }

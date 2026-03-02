@@ -4,10 +4,12 @@ package com.reown.sample.common.ui.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.sp
 import com.reown.sample.common.R
 
@@ -43,28 +45,44 @@ data class WCTypography(
     val bodySmMedium: TextStyle,
 )
 
-val DefaultWCTypography = WCTypography(
-    h1Regular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 50.sp, letterSpacing = (-1).sp),
-    h1Medium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 50.sp, letterSpacing = (-1).sp),
-    h2Regular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 44.sp, letterSpacing = (-0.88).sp),
-    h2Medium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 44.sp, letterSpacing = (-0.88).sp),
-    h3Regular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 38.sp, letterSpacing = (-0.76).sp),
-    h3Medium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 38.sp, letterSpacing = (-0.76).sp),
-    h4Regular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 32.sp, letterSpacing = (-0.32).sp),
-    h4Medium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 32.sp, letterSpacing = (-0.32).sp),
-    h5Regular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 28.sp, letterSpacing = (-0.28).sp),
-    h5Medium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 28.sp, letterSpacing = (-0.28).sp),
-    h6Regular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 20.sp, letterSpacing = (-0.6).sp),
-    h6Medium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 20.sp, letterSpacing = (-0.6).sp),
+private val noFontPadding = PlatformTextStyle(includeFontPadding = false)
+private val trimLineHeight = LineHeightStyle(
+    alignment = LineHeightStyle.Alignment.Center,
+    trim = LineHeightStyle.Trim.Both
+)
 
-    bodyXlRegular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 18.sp, letterSpacing = (-0.18).sp),
-    bodyXlMedium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 18.sp, letterSpacing = (-0.18).sp),
-    bodyLgRegular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 16.sp, letterSpacing = (-0.16).sp),
-    bodyLgMedium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 16.sp, letterSpacing = (-0.16).sp),
-    bodyMdRegular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 14.sp, letterSpacing = (-0.14).sp),
-    bodyMdMedium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp, letterSpacing = (-0.14).sp),
-    bodySmRegular = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp, letterSpacing = (-0.12).sp),
-    bodySmMedium = TextStyle(fontFamily = KhTekaFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp, letterSpacing = (-0.12).sp),
+private fun khTekaStyle(weight: FontWeight, size: Float, tracking: Float) = TextStyle(
+    fontFamily = KhTekaFontFamily,
+    fontWeight = weight,
+    fontSize = size.sp,
+    letterSpacing = tracking.sp,
+    lineHeight = size.sp,
+    lineHeightStyle = trimLineHeight,
+    platformStyle = noFontPadding,
+)
+
+val DefaultWCTypography = WCTypography(
+    h1Regular = khTekaStyle(FontWeight.Normal, 50f, -1f),
+    h1Medium = khTekaStyle(FontWeight.Medium, 50f, -1f),
+    h2Regular = khTekaStyle(FontWeight.Normal, 44f, -0.88f),
+    h2Medium = khTekaStyle(FontWeight.Medium, 44f, -0.88f),
+    h3Regular = khTekaStyle(FontWeight.Normal, 38f, -0.76f),
+    h3Medium = khTekaStyle(FontWeight.Medium, 38f, -0.76f),
+    h4Regular = khTekaStyle(FontWeight.Normal, 32f, -0.32f),
+    h4Medium = khTekaStyle(FontWeight.Medium, 32f, -0.32f),
+    h5Regular = khTekaStyle(FontWeight.Normal, 28f, -0.28f),
+    h5Medium = khTekaStyle(FontWeight.Medium, 28f, -0.28f),
+    h6Regular = khTekaStyle(FontWeight.Normal, 20f, -0.6f),
+    h6Medium = khTekaStyle(FontWeight.Medium, 20f, -0.6f),
+
+    bodyXlRegular = khTekaStyle(FontWeight.Normal, 18f, -0.18f),
+    bodyXlMedium = khTekaStyle(FontWeight.Medium, 18f, -0.18f),
+    bodyLgRegular = khTekaStyle(FontWeight.Normal, 16f, -0.16f),
+    bodyLgMedium = khTekaStyle(FontWeight.Medium, 16f, -0.16f),
+    bodyMdRegular = khTekaStyle(FontWeight.Normal, 14f, -0.14f),
+    bodyMdMedium = khTekaStyle(FontWeight.Medium, 14f, -0.14f),
+    bodySmRegular = khTekaStyle(FontWeight.Normal, 12f, -0.12f),
+    bodySmMedium = khTekaStyle(FontWeight.Medium, 12f, -0.12f),
 )
 
 // Material Typography with KH Teka as default font for backward compatibility
