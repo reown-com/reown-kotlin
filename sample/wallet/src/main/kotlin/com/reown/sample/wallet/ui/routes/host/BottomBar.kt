@@ -23,14 +23,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
-import com.reown.sample.common.ui.theme.blue_accent
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.Route
 
@@ -56,15 +53,12 @@ data class BottomBarState(
 
 @Composable
 fun BottomBar(navController: NavController, state: BottomBarState, screens: Array<BottomBarItem> = BottomBarItem.values()) {
-    val activeColor = themedColor(darkColor = Color(0xFFFFFFFF), lightColor = Color(0xFF202020))
-    val inactiveColor = Color(0xFF9A9A9A)
-
     Column {
         Divider(color = MaterialTheme.colors.onSurface.copy(alpha = 0.12f))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 20.dp),
+                .padding(vertical = WCTheme.spacing.spacing5),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -89,14 +83,14 @@ fun BottomBar(navController: NavController, state: BottomBarState, screens: Arra
                                 restoreState = true
                             }
                         }
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = WCTheme.spacing.spacing1),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     BottomNavIconWithBadge(screen.icon, hasNotification, isSelected)
                     Text(
                         screen.label,
                         style = WCTheme.typography.bodySmRegular.copy(
-                            color = if (isSelected) activeColor else inactiveColor
+                            color = if (isSelected) WCTheme.colors.textPrimary else WCTheme.colors.textSecondary
                         ),
                         maxLines = 1,
                     )
@@ -115,28 +109,25 @@ fun currentRoute(navController: NavController): String? {
 
 @Composable
 fun BottomNavIconWithBadge(@DrawableRes icon: Int, hasNotification: Boolean, isSelected: Boolean = false) {
-    val activeColor = themedColor(darkColor = Color(0xFFFFFFFF), lightColor = Color(0xFF202020))
-    val inactiveColor = Color(0xFF9A9A9A)
-
     Box(
         contentAlignment = Alignment.TopEnd,
         modifier = Modifier
-            .padding(vertical = 4.dp)
+            .padding(vertical = WCTheme.spacing.spacing1)
             .size(28.dp)
     ) {
         Icon(
             painterResource(id = icon),
             contentDescription = null,
             modifier = Modifier.size(28.dp),
-            tint = if (isSelected) activeColor else inactiveColor
+            tint = if (isSelected) WCTheme.colors.textPrimary else WCTheme.colors.textSecondary
         )
 
         if (hasNotification) {
-            val color = blue_accent
+            val accentColor = WCTheme.colors.bgAccentPrimary
             val bgColor = MaterialTheme.colors.background
             Canvas(modifier = Modifier.size(10.dp)) {
                 drawCircle(color = bgColor)
-                drawCircle(color = color, radius = 3.dp.toPx())
+                drawCircle(color = accentColor, radius = 3.dp.toPx())
             }
         }
     }
