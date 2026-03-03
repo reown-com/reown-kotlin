@@ -5,7 +5,6 @@ package com.walletconnect.sample.pos.nfc
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
 import timber.log.Timber
-import java.net.URLEncoder
 
 /**
  * Manages NFC payment link delivery for the POS payment flow.
@@ -13,19 +12,20 @@ import java.net.URLEncoder
  * Uses Ingenico USDK NFC tag emulation — the POS acts as an NDEF tag
  * that both Android and iOS wallets can read by tapping the terminal.
  *
- * The payment URL is wrapped in a Universal Link so that:
- * - **iOS**: Background Tag Reading recognises the URL as a Universal Link
- *   (applinks:lab.reown.com) and opens the wallet app directly via a
- *   system notification — no Safari involved.
- * - **Android**: NDEF_DISCOVERED intent filter on `lab.reown.com/wallet`
- *   launches the NfcPaymentActivity quick-pay overlay from the home screen.
+ * The raw payment URL (e.g. https://pay.walletconnect.com/pay_abc123)
+ * is emitted directly in the NDEF message. Wallets register for the
+ * payment domain via:
+ * - **iOS**: Universal Links (applinks:pay.walletconnect.com) — Background
+ *   Tag Reading opens the wallet directly from the home screen.
+ * - **Android**: NDEF_DISCOVERED intent filter — system shows a chooser
+ *   when multiple wallets are installed.
  *
- * Wrapper format:
- *   https://lab.reown.com/wallet?payUrl=<url-encoded payment URL>
+ * The NDEF message contains two records:
+ * 1. MIME record (application/vnd.reown.pay) — Android dispatches based on
+ *    this, bypassing Samsung's HTTPS URL interception.
+ * 2. URI record — the raw payment URL for iOS Background Tag Reading.
  */
 internal object NfcManager {
-
-    private const val UNIVERSAL_LINK_BASE = "https://lab.reown.com/wallet"
 
     @Volatile
     private var currentUri: String? = null
@@ -83,32 +83,26 @@ internal object NfcManager {
      * 1. MIME record (application/vnd.reown.pay) — Android dispatches NDEF_DISCOVERED
      *    based on the first record's MIME type, bypassing Samsung's HTTPS URL interception.
      *    Payload contains the raw payment URL.
-     * 2. URI record — Universal Link for iOS Background Tag Reading. iOS checks all
-     *    records for Universal Links, so it picks this up even as the second record.
+     * 2. URI record — the raw payment URL. iOS Background Tag Reading checks all
+     *    records for Universal Links. Wallets that register applinks:pay.walletconnect.com
+     *    will be opened directly.
      */
+    // TODO: Remove staging rewrite once production AASA is deployed
+    private fun rewriteForStaging(uri: String): String =
+        uri.replace("pay.walletconnect.com", "staging.pay.walletconnect.com")
+
     private fun emitNdef(paymentUri: String) {
-        val wrappedUri = wrapInUniversalLink(paymentUri)
-        Timber.d("NFC: Emitting wrapped URI: %s", wrappedUri)
+        val stagingUri = rewriteForStaging(paymentUri)
+        Timber.d("NFC: Emitting payment URI: %s (staging: %s)", paymentUri, stagingUri)
         val ndefMessage = NdefMessage(
             arrayOf(
-                NdefRecord.createMime(REOWN_PAY_MIME, paymentUri.toByteArray(Charsets.UTF_8)),
-                NdefRecord.createUri(wrappedUri)
+                NdefRecord.createMime(REOWN_PAY_MIME, stagingUri.toByteArray(Charsets.UTF_8)),
+                NdefRecord.createUri(stagingUri)
             )
         )
         Timber.d("NFC: NDEF message size: %d bytes", ndefMessage.toByteArray().size)
         IngenicoNfcTagEmulator.enable(ndefMessage.toByteArray(), timeoutSeconds = 30) {
             Timber.d("NFC: Tag being read")
         }
-    }
-
-    /**
-     * Wraps a raw payment URL inside the wallet's Universal Link.
-     *
-     * Input:  https://pay.walletconnect.com/pay_abc123
-     * Output: https://lab.reown.com/wallet?payUrl=https%3A%2F%2Fpay.walletconnect.com%2Fpay_abc123
-     */
-    private fun wrapInUniversalLink(paymentUri: String): String {
-        val encoded = URLEncoder.encode(paymentUri, "UTF-8")
-        return "$UNIVERSAL_LINK_BASE?payUrl=$encoded"
     }
 }

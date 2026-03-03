@@ -113,15 +113,15 @@
             <!-- Android App Link fallback: if the NFC service opens the URL in the
                  browser, App Links redirects to this activity instead.
                  Verified via lab.reown.com/.well-known/assetlinks.json -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="lab.reown.com"
-                    android:pathPrefix="/wallet" />
-            </intent-filter>
+<!--            <intent-filter android:autoVerify="true">-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+<!--                <data-->
+<!--                    android:scheme="https"-->
+<!--                    android:host="lab.reown.com"-->
+<!--                    android:pathPrefix="/wallet" />-->
+<!--            </intent-filter>-->
         </activity>
 
         <service
