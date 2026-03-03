@@ -22,10 +22,12 @@ import com.google.accompanist.navigation.material.ExperimentalMaterialNavigation
 import com.google.accompanist.navigation.material.bottomSheet
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.ui.routes.Route
+import com.reown.sample.wallet.ui.routes.bottomsheet_routes.import_wallet.ImportWalletRoute
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scan_uri.ScanUriRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.connected_apps.ConnectedAppsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.connection_details.ConnectionDetailsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
+import com.reown.sample.wallet.ui.routes.composable_routes.secret_keys.SecretKeysRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.settings.SettingsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.wallets.WalletsRoute
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scanner_options.ScannerOptionsRoute
@@ -91,6 +93,15 @@ fun Web3WalletNavGraph(
         }
         composable(Route.Settings.path) {
             SettingsRoute(navController)
+        }
+        composable(Route.SecretKeysAndPhrases.path) {
+            SecretKeysRoute(navController)
+        }
+        bottomSheet(Route.ImportWallet.path) {
+            ImportWalletRoute(
+                navController = navController,
+                onImportSuccess = { connectionsViewModel.fetchBalances() }
+            )
         }
         bottomSheet(Route.ScanUri.path) {
             web3walletViewModel.showLoader(false)

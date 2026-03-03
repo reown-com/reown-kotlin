@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Switch
@@ -31,24 +29,16 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
-import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.ThemeManager
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
-import com.reown.sample.wallet.domain.account.TONAccountDelegate
-import com.reown.sample.wallet.domain.account.TronAccountDelegate
-import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
-import com.reown.sample.wallet.domain.account.SuiAccountDelegate
+import com.reown.sample.wallet.ui.routes.CopyableItem
+import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.host.WalletHeader
-
-private data class SettingsSection(val title: String, val items: List<SettingItem>)
-private data class SettingItem(val key: String, val value: String)
 
 @Composable
 fun SettingsRoute(navController: NavHostController) {
@@ -56,56 +46,7 @@ fun SettingsRoute(navController: NavHostController) {
     val deviceToken = viewModel.deviceToken.collectAsState().value
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
-
-    val sections = listOf(
-        SettingsSection(
-            "EIP155 Account", listOf(
-                SettingItem("CAIP-10", viewModel.caip10),
-                SettingItem("Private key", viewModel.privateKey),
-            )
-        ),
-        SettingsSection(
-            "TON Account", listOf(
-                SettingItem("Friendly address", TONAccountDelegate.addressFriendly),
-                SettingItem("Secret key", TONAccountDelegate.secretKey),
-                SettingItem("Public key", TONAccountDelegate.publicKey),
-            )
-        ),
-        SettingsSection(
-            "Solana Account", listOf(
-                SettingItem("Keypair", SolanaAccountDelegate.keyPair),
-                SettingItem("Public key", SolanaAccountDelegate.keys.second),
-            )
-        ),
-        SettingsSection(
-            "Stacks Account", listOf(
-                SettingItem("Wallet", StacksAccountDelegate.importedWallet),
-                SettingItem("Address Mainnet", StacksAccountDelegate.mainnetAddress),
-                SettingItem("Address Testnet", StacksAccountDelegate.testnetAddress),
-            )
-        ),
-        SettingsSection(
-            "SUI Account", listOf(
-                SettingItem("Address", SuiAccountDelegate.address),
-                SettingItem("Key pair", SuiAccountDelegate.keypair),
-                SettingItem("Public key", SuiAccountDelegate.publicKey),
-            )
-        ),
-        SettingsSection(
-            "Tron Account", listOf(
-                SettingItem("Address", TronAccountDelegate.address),
-                SettingItem("Secret key", TronAccountDelegate.secretKey),
-                SettingItem("Public key", TronAccountDelegate.publicKey),
-            )
-        ),
-        SettingsSection(
-            "Device", listOf(
-                SettingItem("Client ID", viewModel.clientId),
-                SettingItem("Device token", deviceToken),
-                SettingItem("App Version", BuildConfig.VERSION_NAME),
-            )
-        ),
-    )
+    val spacing = WCTheme.spacing
 
     Column(modifier = Modifier.fillMaxSize()) {
         WalletHeader(navController)
@@ -113,21 +54,33 @@ fun SettingsRoute(navController: NavHostController) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = spacing.spacing3),
+            verticalArrangement = Arrangement.spacedBy(spacing.spacing2)
         ) {
-            item { Spacer(modifier = Modifier.height(4.dp)) }
+            item { Spacer(modifier = Modifier.height(spacing.spacing1)) }
 
-            // Theme toggle
             item { ThemeToggleCard() }
-
-            // Smart Account toggle
             item { SmartAccountToggleCard() }
 
-            // Account sections
-            items(sections) { section ->
-                AccountSectionCard(
-                    section = section,
+            item {
+                NavigationCard(
+                    title = "Secret Keys & Phrases",
+                    onClick = { navController.navigate(Route.SecretKeysAndPhrases.path) }
+                )
+            }
+
+            item {
+                NavigationCard(
+                    title = "Import Wallet",
+                    onClick = { navController.navigate(Route.ImportWallet.path) }
+                )
+            }
+
+            item {
+                DeviceSectionCard(
+                    clientId = viewModel.clientId,
+                    deviceToken = deviceToken,
+                    appVersion = BuildConfig.VERSION_NAME,
                     onCopy = { value ->
                         clipboardManager.setText(AnnotatedString(value))
                         Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
@@ -135,46 +88,95 @@ fun SettingsRoute(navController: NavHostController) {
                 )
             }
 
-            item { Spacer(modifier = Modifier.height(8.dp)) }
+            item { Spacer(modifier = Modifier.height(spacing.spacing2)) }
         }
+    }
+}
+
+@Composable
+private fun NavigationCard(title: String, onClick: () -> Unit) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(borderRadius.radius4))
+            .background(color = colors.foregroundSecondary)
+            .clickable { onClick() }
+            .padding(horizontal = spacing.spacing4, vertical = spacing.spacing4),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title,
+            style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
+        )
+        Icon(
+            painter = painterResource(id = R.drawable.ic_chevron_right),
+            contentDescription = null,
+            tint = colors.iconDefault
+        )
+    }
+}
+
+@Composable
+private fun DeviceSectionCard(
+    clientId: String,
+    deviceToken: String,
+    appVersion: String,
+    onCopy: (String) -> Unit,
+) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(borderRadius.radius4))
+            .background(color = colors.foregroundSecondary)
+            .padding(spacing.spacing4),
+        verticalArrangement = Arrangement.spacedBy(spacing.spacing3)
+    ) {
+        Text(
+            text = "Device",
+            style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
+        )
+
+        CopyableItem(key = "Client ID", value = clientId, onCopy = onCopy)
+        CopyableItem(key = "Device token", value = deviceToken, onCopy = onCopy)
+        CopyableItem(key = "App Version", value = appVersion, onCopy = onCopy)
     }
 }
 
 @Composable
 private fun ThemeToggleCard() {
     val themeMode by ThemeManager.themeMode.collectAsState()
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                color = themedColor(
-                    darkColor = Color(0xFF1A1A1A),
-                    lightColor = Color(0xFFF5F5F5)
-                )
-            )
-            .padding(16.dp)
+            .clip(RoundedCornerShape(borderRadius.radius4))
+            .background(color = colors.foregroundSecondary)
+            .padding(spacing.spacing4)
     ) {
         Text(
             text = "Theme",
-            style = WCTheme.typography.bodyMdMedium.copy(
-                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
-            )
+            style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
         )
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(spacing.spacing3))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .background(
-                    color = themedColor(
-                        darkColor = Color(0xFF252525),
-                        lightColor = Color(0xFFE0E0E0)
-                    )
-                )
-                .padding(3.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                .clip(RoundedCornerShape(borderRadius.radius3))
+                .background(color = colors.foregroundPrimary)
+                .padding(spacing.spacing1),
+            horizontalArrangement = Arrangement.spacedBy(spacing.spacing1)
         ) {
             val options = listOf("Light" to 0, "Dark" to 1, "System" to -1)
             options.forEach { (label, mode) ->
@@ -182,30 +184,23 @@ private fun ThemeToggleCard() {
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(borderRadius.radius2))
                         .background(
-                            if (isSelected) themedColor(
-                                darkColor = Color(0xFF3A3A3A),
-                                lightColor = Color.White
-                            ) else Color.Transparent
+                            if (isSelected) colors.foregroundTertiary else Color.Transparent
                         )
                         .clickable {
                             if (mode == -1) ThemeManager.setFollowSystem()
                             else ThemeManager.setDarkMode(mode == 1)
                         }
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = spacing.spacing2),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = label,
                         style = if (isSelected) {
-                            WCTheme.typography.bodyMdMedium.copy(
-                                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
-                            )
+                            WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
                         } else {
-                            WCTheme.typography.bodyMdRegular.copy(
-                                color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
-                            )
+                            WCTheme.typography.bodyMdRegular.copy(color = colors.textSecondary)
                         }
                     )
                 }
@@ -217,109 +212,30 @@ private fun ThemeToggleCard() {
 @Composable
 private fun SmartAccountToggleCard() {
     val isSafeEnabled by SmartAccountEnabler.isSmartAccountEnabled.collectAsState()
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                color = themedColor(
-                    darkColor = Color(0xFF1A1A1A),
-                    lightColor = Color(0xFFF5F5F5)
-                )
-            )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .clip(RoundedCornerShape(borderRadius.radius4))
+            .background(color = colors.foregroundSecondary)
+            .padding(horizontal = spacing.spacing4, vertical = spacing.spacing3),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = "Safe Smart Account",
-            style = WCTheme.typography.bodyMdMedium.copy(
-                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
-            )
+            style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
         )
         Switch(
             checked = isSafeEnabled,
             onCheckedChange = { SmartAccountEnabler.enableSmartAccount(it) },
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color(0xFF3396FF),
-                checkedTrackColor = Color(0xFF3396FF).copy(alpha = 0.5f),
-                uncheckedThumbColor = WCTheme.colors.foregroundTertiary
-            )
-        )
-    }
-}
-
-@Composable
-private fun AccountSectionCard(
-    section: SettingsSection,
-    onCopy: (String) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                color = themedColor(
-                    darkColor = Color(0xFF1A1A1A),
-                    lightColor = Color(0xFFF5F5F5)
-                )
-            )
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Text(
-            text = section.title,
-            style = WCTheme.typography.bodyMdMedium.copy(
-                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
-            )
-        )
-
-        section.items.forEach { item ->
-            CopyableItemCard(item, onCopy)
-        }
-    }
-}
-
-@Composable
-private fun CopyableItemCard(
-    item: SettingItem,
-    onCopy: (String) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(
-                color = themedColor(
-                    darkColor = Color(0xFF252525),
-                    lightColor = Color(0xFFFFFFFF)
-                )
-            )
-            .clickable { onCopy(item.value) }
-            .padding(12.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = item.key,
-                style = WCTheme.typography.bodySmMedium.copy(
-                    color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
-                )
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Icon(
-                painter = painterResource(id = R.drawable.ic_copy_small),
-                contentDescription = "Copy",
-                tint = themedColor(
-                    darkColor = Color(0xFF788686),
-                    lightColor = Color(0xFF788686)
-                )
-            )
-        }
-        Text(
-            text = item.value,
-            style = WCTheme.typography.bodySmRegular.copy(
-                color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+                checkedThumbColor = colors.bgAccentPrimary,
+                checkedTrackColor = colors.foregroundAccentPrimary40,
+                uncheckedThumbColor = colors.foregroundTertiary
             )
         )
     }
