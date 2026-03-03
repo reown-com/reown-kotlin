@@ -15,6 +15,14 @@ name: Kotlin Dapp to Kotlin Wallet Connection Rejected
 - tapOn: "Connect via AppKit"
 - tapOn: "All wallets"
 - tapOn: "Android Sample Internal"
+- extendedWaitUntil:
+    visible:
+      text: "Cancel"
+    timeout: 30000
 - tapOn: "Cancel"
+- extendedWaitUntil:
+    visible:
+      text: "Connection declined"
+    timeout: 15000
 - assertVisible: "Connection declined"
 - stopRecording

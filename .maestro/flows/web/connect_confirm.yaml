@@ -7,7 +7,11 @@ name: AppKit Web to Kotlin Wallet Connection Confirmed
 - startRecording: "Web to Native Connection Confirmed"
 - tapOn: "Connect Wallet"
 - tapOn: "Kotlin Sample Wallet Kotlin Sample Wallet"
-- tapOn: "Confirm"
+- extendedWaitUntil:
+    visible:
+      text: "Connect"
+    timeout: 30000
+- tapOn: "Connect"
 - back
 - back
 - assertVisible: "AppKit Interactions"

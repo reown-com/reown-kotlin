@@ -18,7 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
@@ -39,16 +42,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.pandulapeter.beagle.DebugMenuView
 import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
@@ -74,15 +75,23 @@ fun WalletSampleHost(
     val bottomBarState = rememberBottomBarMutableState()
     val isLoader by web3walletViewModel.isLoadingFlow.collectAsState(false)
     val isRequestLoader by web3walletViewModel.isRequestLoadingFlow.collectAsState(false)
+    val fallbackDimColor = Color.Black.copy(alpha = 0.48f)
+    val sheetState = remember(bottomSheetNavigator) { bottomSheetNavigator.navigatorSheetState }
+    val isSheetVisible =
+        sheetState.currentValue != ModalBottomSheetValue.Hidden || sheetState.targetValue != ModalBottomSheetValue.Hidden
+    var shouldDimBackground by remember { mutableStateOf(true) }
+    val dimProgress by animateFloatAsState(
+        targetValue = if (isSheetVisible && shouldDimBackground) 1f else 0f,
+        animationSpec = tween(durationMillis = 220),
+        label = "bottom_sheet_dim_alpha"
+    )
 
     DisposableEffect(navController) {
         val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
             val route = destination.route ?: ""
-            val shouldHideBottomBar = route == Route.ScanUri.path ||
-                route == Route.ScannerOptions.path ||
-                route.startsWith(Route.ConnectionDetails.path) ||
-                route.startsWith(Route.SnackbarMessage.path)
+            val shouldHideBottomBar = route.startsWith(Route.SnackbarMessage.path)
             bottomBarState.value = bottomBarState.value.copy(isDisplayed = !shouldHideBottomBar)
+            shouldDimBackground = !route.startsWith(Route.SnackbarMessage.path)
         }
         navController.addOnDestinationChangedListener(listener)
         onDispose { navController.removeOnDestinationChangedListener(listener) }
@@ -105,39 +114,68 @@ fun WalletSampleHost(
         }
     }
 
-    Scaffold(
-        scaffoldState = scaffoldState,
-        drawerGesturesEnabled = true,
-        drawerContent = { BeagleDrawer() },
-        bottomBar = {
-            if (bottomBarState.value.isDisplayed) {
-                BottomBar(navController, bottomBarState.value)
-            }
-        },
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            Web3WalletNavGraph(
-                bottomSheetNavigator = bottomSheetNavigator,
-                navController = navController,
-                web3walletViewModel = web3walletViewModel,
-                connectionsViewModel = connectionsViewModel,
-            )
+    ModalBottomSheetLayout(
+        modifier = Modifier.fillMaxSize(),
+        bottomSheetNavigator = bottomSheetNavigator,
+        sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        sheetBackgroundColor = Color.Transparent,
+        sheetElevation = 0.dp,
+        scrimColor = Color.Transparent
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                scaffoldState = scaffoldState,
+                drawerGesturesEnabled = true,
+                drawerContent = { BeagleDrawer() },
+                bottomBar = {
+                    if (bottomBarState.value.isDisplayed) {
+                        BottomBar(navController, bottomBarState.value)
+                    }
+                },
+            ) { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding)) {
+                    Web3WalletNavGraph(
+                        bottomSheetNavigator = bottomSheetNavigator,
+                        navController = navController,
+                        web3walletViewModel = web3walletViewModel,
+                        connectionsViewModel = connectionsViewModel,
+                    )
 
-            if (connectionState is ConnectionState.Error) {
-                ErrorBanner((connectionState as ConnectionState.Error).message)
-            } else if (connectionState is ConnectionState.Ok) {
-                RestoredConnectionBanner()
+                    if (connectionState is ConnectionState.Error) {
+                        Banner(
+                            message = "Network connection lost: ${(connectionState as ConnectionState.Error).message}",
+                            backgroundColor = Color(0xFFDC143C),
+                            iconResId = R.drawable.invalid_domain,
+                            durationMs = 5000
+                        )
+                    } else if (connectionState is ConnectionState.Ok) {
+                        Banner(
+                            message = "Network connection is OK",
+                            backgroundColor = Color(0xFF93c47d),
+                            iconResId = R.drawable.ic_check_white,
+                            durationMs = 2000
+                        )
+                    }
+
+                    if (isLoader) {
+                        Loader(initMessage = "WalletConnect is pairing...", updateMessage = "Pairing is taking longer than usual, please try again...")
+                    }
+
+                    if (isRequestLoader) {
+                        Loader(initMessage = "Awaiting a request...", updateMessage = "It is taking longer than usual..")
+                    }
+
+                    Timer(web3walletViewModel)
+                }
             }
 
-            if (isLoader) {
-                Loader(initMessage = "WalletConnect is pairing...", updateMessage = "Pairing is taking longer than usual, please try again...")
+            if (dimProgress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(fallbackDimColor.copy(alpha = fallbackDimColor.alpha * dimProgress))
+                )
             }
-
-            if (isRequestLoader) {
-                Loader(initMessage = "Awaiting a request...", updateMessage = "It is taking longer than usual..")
-            }
-
-            Timer(web3walletViewModel)
         }
     }
 }
@@ -197,11 +235,11 @@ private fun BoxScope.Loader(initMessage: String, updateMessage: String) {
 }
 
 @Composable
-private fun ErrorBanner(message: String) {
+private fun Banner(message: String, backgroundColor: Color, iconResId: Int, durationMs: Long) {
     var shouldShow by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = Unit) {
-        delay(5000)
+        delay(durationMs)
         shouldShow = false
     }
 
@@ -209,46 +247,18 @@ private fun ErrorBanner(message: String) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFDC143C))
+                .background(backgroundColor)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                imageVector = ImageVector.vectorResource(id = R.drawable.invalid_domain),
+                imageVector = ImageVector.vectorResource(id = iconResId),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
                 colorFilter = ColorFilter.tint(color = Color.White)
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Network connection lost: $message", style = WCTheme.typography.bodyMdRegular.copy(color = Color.White))
-        }
-    }
-}
-
-@Composable
-private fun RestoredConnectionBanner() {
-    var shouldShow by remember { mutableStateOf(true) }
-
-    LaunchedEffect(key1 = Unit) {
-        delay(2000)
-        shouldShow = false
-    }
-    if (shouldShow) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF93c47d))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                imageVector = ImageVector.vectorResource(id = R.drawable.ic_check_white),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(color = Color.White)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Network connection is OK", style = WCTheme.typography.bodyMdRegular.copy(color = Color.White))
+            Text(text = message, style = WCTheme.typography.bodyMdRegular.copy(color = Color.White))
         }
     }
 }

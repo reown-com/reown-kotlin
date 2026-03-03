@@ -47,6 +47,7 @@ import com.reown.notify.client.cacao.CacaoSigner
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.wallet.BuildConfig
@@ -115,7 +116,7 @@ class WalletKitActivity : AppCompatActivity() {
                 initialValue = ModalBottomSheetValue.Hidden,
                 skipHalfExpanded = true
             )
-            val bottomSheetNavigator = BottomSheetNavigator(sheetState)
+            val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
             val navController = rememberAnimatedNavController(bottomSheetNavigator)
             this.navController = navController
             val themeMode by ThemeManager.themeMode.collectAsState()
