@@ -12,12 +12,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -83,6 +77,7 @@ import com.reown.sample.wallet.ui.routes.Route
 import com.reown.walletkit.client.Wallet
 import org.json.JSONObject
 import java.math.BigDecimal
+import com.reown.sample.wallet.ui.common.WalletConnectLoader
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -219,7 +214,7 @@ fun PaymentRoute(
 }
 
 private fun dismissPaymentDialog(navController: NavHostController) {
-    if (!navController.popBackStack(Route.Connections.path, inclusive = false)) {
+    if (!navController.popBackStack(Route.Wallets.path, inclusive = false)) {
         navController.popBackStack()
     }
 }
@@ -911,8 +906,8 @@ private fun ProcessingContent(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Animated Reown logo
-        AnimatedReownLogo()
+        // Animated WalletConnect loader
+        WalletConnectLoader(size = 88.dp)
         
         Spacer(modifier = Modifier.height(32.dp))
         
@@ -927,113 +922,6 @@ private fun ProcessingContent(
         )
         
         Spacer(modifier = Modifier.height(24.dp))
-    }
-}
-
-@Composable
-private fun AnimatedReownLogo() {
-    val infiniteTransition = rememberInfiniteTransition(label = "logo_animation")
-    
-    // Create staggered pulse animations for each block
-    val scale1 by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale1"
-    )
-    
-    val scale2 by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(600, delayMillis = 150, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale2"
-    )
-    
-    val scale3 by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(600, delayMillis = 300, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale3"
-    )
-    
-    val scale4 by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(600, delayMillis = 450, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale4"
-    )
-    
-    // Logo colors
-    val grayColor = Color(0xFF9EA0A6)
-    val blueColor = Color(0xFF3396FF)
-    val lightGrayColor = Color(0xFFD4D5D9)
-    val darkColor = Color(0xFF2D3131)
-    
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top row: gray rectangle + blue rounded square
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Gray horizontal rectangle
-            Box(
-                modifier = Modifier
-                    .scale(scale1)
-                    .width(40.dp)
-                    .height(28.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(grayColor)
-            )
-            
-            // Blue rounded square
-            Box(
-                modifier = Modifier
-                    .scale(scale2)
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(blueColor)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(4.dp))
-        
-        // Bottom row: light gray square + dark circle
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Light gray rounded square
-            Box(
-                modifier = Modifier
-                    .scale(scale3)
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(lightGrayColor)
-            )
-            
-            // Dark circle
-            Box(
-                modifier = Modifier
-                    .scale(scale4)
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(darkColor)
-            )
-        }
     }
 }
 

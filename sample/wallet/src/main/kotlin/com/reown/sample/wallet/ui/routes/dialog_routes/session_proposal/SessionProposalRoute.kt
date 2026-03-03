@@ -111,7 +111,7 @@ fun ScammerScreen(
                     .fillMaxWidth()
                     .clickable {
                         navController.popBackStack(
-                            route = Route.Connections.path,
+                            route = Route.Wallets.path,
                             inclusive = false
                         )
                     },
@@ -162,7 +162,7 @@ private fun SessionProposalDialog(
         Spacer(modifier = Modifier.height(18.dp))
         AccountAndNetwork(sessionProposalUI) { error ->
             coroutineScope.launch(Dispatchers.Main) {
-                navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                 Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             }
         }
@@ -177,7 +177,7 @@ private fun SessionProposalDialog(
                         onSuccess = { redirect ->
                             isCancelLoading = false
                             coroutineScope.launch(Dispatchers.Main) {
-                                navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                                navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                             }
 
                             if (redirect.isNotEmpty()) {
@@ -205,7 +205,7 @@ private fun SessionProposalDialog(
                         onSuccess = { redirect ->
                             isConfirmLoading = false
                             coroutineScope.launch(Dispatchers.Main) {
-                                navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                                navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                             }
 
                             if (redirect.isNotEmpty()) {

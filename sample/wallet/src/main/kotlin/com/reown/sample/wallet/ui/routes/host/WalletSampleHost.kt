@@ -24,12 +24,14 @@ import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +51,7 @@ import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.pandulapeter.beagle.DebugMenuView
 import com.reown.sample.common.ui.themedColor
+import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.Web3WalletNavGraph
 import com.reown.sample.wallet.ui.Web3WalletViewModel
@@ -72,12 +75,25 @@ fun WalletSampleHost(
     val isLoader by web3walletViewModel.isLoadingFlow.collectAsState(false)
     val isRequestLoader by web3walletViewModel.isRequestLoadingFlow.collectAsState(false)
 
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+            val route = destination.route ?: ""
+            val shouldHideBottomBar = route == Route.ScanUri.path ||
+                route == Route.ScannerOptions.path ||
+                route.startsWith(Route.ConnectionDetails.path) ||
+                route.startsWith(Route.SnackbarMessage.path)
+            bottomBarState.value = bottomBarState.value.copy(isDisplayed = !shouldHideBottomBar)
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose { navController.removeOnDestinationChangedListener(listener) }
+    }
+
     LaunchedEffect(Unit) {
         web3walletViewModel.eventsSharedFlow.collect {
             when (it) {
                 is PairingEvent.Error -> {
-                    if (navController.currentDestination?.route != Route.Connections.path) {
-                        navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                    if (navController.currentDestination?.route != Route.Wallets.path) {
+                        navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                     }
                     Toast.makeText(navController.context, it.message, Toast.LENGTH_SHORT).show()
                 }
@@ -93,7 +109,11 @@ fun WalletSampleHost(
         scaffoldState = scaffoldState,
         drawerGesturesEnabled = true,
         drawerContent = { BeagleDrawer() },
-        bottomBar = { BottomBar(navController, bottomBarState.value) },
+        bottomBar = {
+            if (bottomBarState.value.isDisplayed) {
+                BottomBar(navController, bottomBarState.value)
+            }
+        },
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             Web3WalletNavGraph(
@@ -130,9 +150,7 @@ private fun BoxScope.Timer(web3walletViewModel: Web3WalletViewModel) {
             .align(Alignment.BottomStart),
         text = timer,
         maxLines = 1,
-        style = TextStyle(
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
+        style = WCTheme.typography.bodySmMedium.copy(
             color = themedColor(Color(0xFFb9b3b5), Color(0xFF484648))
         ),
     )
@@ -171,9 +189,7 @@ private fun BoxScope.Loader(initMessage: String, updateMessage: String) {
             textAlign = TextAlign.Center,
             text = if (shouldChangeText) updateMessage else initMessage,
             maxLines = 2,
-            style = TextStyle(
-                fontWeight = FontWeight.Medium,
-                fontSize = 22.sp,
+            style = WCTheme.typography.h6Medium.copy(
                 color = themedColor(Color(0xFFb9b3b5), Color(0xFF484648))
             ),
         )
@@ -204,7 +220,7 @@ private fun ErrorBanner(message: String) {
                 colorFilter = ColorFilter.tint(color = Color.White)
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Network connection lost: $message", color = Color.White)
+            Text(text = "Network connection lost: $message", style = WCTheme.typography.bodyMdRegular.copy(color = Color.White))
         }
     }
 }
@@ -232,7 +248,7 @@ private fun RestoredConnectionBanner() {
                 colorFilter = ColorFilter.tint(color = Color.White)
             )
             Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Network connection is OK", color = Color.White)
+            Text(text = "Network connection is OK", style = WCTheme.typography.bodyMdRegular.copy(color = Color.White))
         }
     }
 }

@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.BlurMaskFilter
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -17,11 +17,11 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun themedColor(darkColor: Color, lightColor: Color): Color =
-    if (isSystemInDarkTheme()) darkColor else lightColor
+    if (!MaterialTheme.colors.isLight) darkColor else lightColor
 
 @Composable
 fun themedColor(darkColor: Long, lightColor: Long): Color =
-    if (isSystemInDarkTheme()) Color(darkColor) else Color(lightColor)
+    if (!MaterialTheme.colors.isLight) Color(darkColor) else Color(lightColor)
 
 fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this

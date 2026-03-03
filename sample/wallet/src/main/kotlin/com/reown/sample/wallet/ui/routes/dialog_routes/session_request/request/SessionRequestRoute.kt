@@ -124,14 +124,14 @@ private fun cancelRequest(
 ) {
     toggleCancelLoader(true)
     if (sessionRequestUI.peerUI.linkMode) {
-        navController.popBackStack(route = Route.Connections.path, inclusive = false)
+        navController.popBackStack(route = Route.Wallets.path, inclusive = false)
     }
     try {
         sessionRequestViewModel.reject(
             onSuccess = { uri ->
                 toggleCancelLoader(false)
                 composableScope.launch(Dispatchers.Main) {
-                    navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                    navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                 }
                 if (uri != null && uri.toString().isNotEmpty()) {
                     context.sendResponseDeepLink(uri)
@@ -160,14 +160,14 @@ private fun confirmRequest(
 ) {
     toggleConfirmLoader(true)
     if (sessionRequestUI.peerUI.linkMode) {
-        navController.popBackStack(route = Route.Connections.path, inclusive = false)
+        navController.popBackStack(route = Route.Wallets.path, inclusive = false)
     }
     try {
         sessionRequestViewModel.approve(
             onSuccess = { uri ->
                 toggleConfirmLoader(false)
                 composableScope.launch(Dispatchers.Main) {
-                    navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                    navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                 }
                 if (uri != null && uri.toString().isNotEmpty()) {
                     context.sendResponseDeepLink(uri)
