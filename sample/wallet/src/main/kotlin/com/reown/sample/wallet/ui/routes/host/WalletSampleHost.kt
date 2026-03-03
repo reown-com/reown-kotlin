@@ -89,8 +89,10 @@ fun WalletSampleHost(
     DisposableEffect(navController) {
         val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
             val route = destination.route ?: ""
-            val shouldHideBottomBar = route.startsWith(Route.SnackbarMessage.path)
-            bottomBarState.value = bottomBarState.value.copy(isDisplayed = !shouldHideBottomBar)
+            val isTabRoute = route == Route.Wallets.path ||
+                    route == Route.ConnectedApps.path ||
+                    route == Route.Settings.path
+            bottomBarState.value = bottomBarState.value.copy(isDisplayed = isTabRoute)
             shouldDimBackground = !route.startsWith(Route.SnackbarMessage.path)
         }
         navController.addOnDestinationChangedListener(listener)
