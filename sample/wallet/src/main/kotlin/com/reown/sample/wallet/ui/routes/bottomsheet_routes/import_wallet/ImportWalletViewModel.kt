@@ -14,17 +14,21 @@ import com.reown.sample.wallet.domain.account.bytesToHex
 import com.reown.sample.wallet.domain.account.derivePrivateKeyFromMnemonic
 import com.reown.sample.wallet.domain.account.isHexChar
 import com.reown.sample.wallet.domain.account.normalizePrivateKeyHex
+import java.math.BigInteger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.web3j.crypto.ECKeyPair
+import org.web3j.crypto.Sign
+import uniffi.yttrium_utils.TronKeypair
+import uniffi.yttrium_utils.solanaDeriveKeypairFromMnemonic
+import uniffi.yttrium_utils.suiDeriveKeypairFromMnemonic
 
 internal enum class ImportWalletChain(val label: String, val placeholder: String) {
     EVM("EVM", "Enter mnemonic phrase or private key (0x...)"),
-    TON("TON", "Enter secret key:public key (hex, colon separated)"),
-    SOLANA("Solana", "Enter base58-encoded keypair"),
-    SUI("SUI", "Enter keypair string"),
+    TON("TON", "Enter secret key:public key (colon separated)"),
+    SOLANA("Solana", "Enter mnemonic phrase or base58 keypair"),
+    SUI("SUI", "Enter mnemonic phrase or keypair string"),
     TRON("Tron", "Enter mnemonic phrase or private key (64 hex)"),
     STACKS("Stacks", "Enter wallet string"),
 }
@@ -86,7 +90,6 @@ internal class ImportWalletViewModel : ViewModel() {
     }
 
     private fun importEvm(input: String): String {
-        // Auto-detect: spaces → mnemonic, otherwise → private key
         return if (input.contains(" ")) {
             EthAccountDelegate.importFromMnemonic(input)
             EthAccountDelegate.address
@@ -99,44 +102,48 @@ internal class ImportWalletViewModel : ViewModel() {
 
     private fun importTon(input: String): String {
         val parts = input.split(":", limit = 2).map { it.trim() }
-        require(parts.size == 2) {
+        require(parts.size == 2 && parts.all { it.isNotEmpty() }) {
             "Enter secret key and public key separated by ':'"
         }
         val (sk, pk) = parts
-        require(sk.length in listOf(64, 128) && sk.all { it.isHexChar() }) {
-            "Invalid secret key format"
-        }
-        require(pk.length == 64 && pk.all { it.isHexChar() }) {
-            "Public key must be 64 hex characters"
-        }
-        // Order matters: set publicKey first, then secretKey
-        TONAccountDelegate.publicKey = pk
-        TONAccountDelegate.secretKey = sk
+        TONAccountDelegate.importKeypair(sk, pk)
         return TONAccountDelegate.addressFriendly
     }
 
     private fun importSolana(input: String): String {
-        require(input.isNotBlank()) { "Enter a base58-encoded keypair" }
-        SolanaAccountDelegate.keyPair = input
+        require(input.isNotBlank()) { "Enter a mnemonic phrase or base58 keypair" }
+        val keypair = if (input.contains(" ")) {
+            solanaDeriveKeypairFromMnemonic(input.lowercase(), "m/44'/501'/0'/0'")
+        } else {
+            input
+        }
+        SolanaAccountDelegate.keyPair = keypair
         return SolanaAccountDelegate.keys.second
     }
 
     private fun importSui(input: String): String {
-        require(input.isNotBlank()) { "Enter a keypair string" }
-        SuiAccountDelegate.keypair = input
+        require(input.isNotBlank()) { "Enter a mnemonic phrase or keypair string" }
+        val keypair = if (input.contains(" ")) {
+            suiDeriveKeypairFromMnemonic(input.lowercase())
+        } else {
+            input
+        }
+        SuiAccountDelegate.keypair = keypair
         return SuiAccountDelegate.address
     }
 
     private fun importTron(input: String): String {
         val sk = if (input.contains(" ")) {
-            derivePrivateKeyFromMnemonic(input, coinType = 195)
+            derivePrivateKeyFromMnemonic(input.lowercase(), coinType = 195)
         } else {
             normalizePrivateKeyHex(input)
         }
-        val ecKeypair = ECKeyPair.create(io.ipfs.multibase.Base16.decode(sk.lowercase()))
-        val pk = ecKeypair.publicKey.toByteArray().bytesToHex()
-        TronAccountDelegate.publicKey = pk
-        TronAccountDelegate.secretKey = sk
+        val compressedPk = Sign.publicPointFromPrivate(BigInteger(sk, 16))
+            .getEncoded(true)
+            .bytesToHex()
+        val keypair = TronKeypair(sk, compressedPk)
+        TronAccountDelegate.publicKey = keypair.pk
+        TronAccountDelegate.secretKey = keypair.sk
         return TronAccountDelegate.address
     }
 
