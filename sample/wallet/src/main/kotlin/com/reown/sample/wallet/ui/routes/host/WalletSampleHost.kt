@@ -75,7 +75,7 @@ fun WalletSampleHost(
     val bottomBarState = rememberBottomBarMutableState()
     val isLoader by web3walletViewModel.isLoadingFlow.collectAsState(false)
     val isRequestLoader by web3walletViewModel.isRequestLoadingFlow.collectAsState(false)
-    val fallbackDimColor = Color.Black.copy(alpha = 0.48f)
+    val fallbackDimColor = WCTheme.colors.bgInvert.copy(alpha = 0.48f)
     val sheetState = remember(bottomSheetNavigator) { bottomSheetNavigator.navigatorSheetState }
     val isSheetVisible =
         sheetState.currentValue != ModalBottomSheetValue.Hidden || sheetState.targetValue != ModalBottomSheetValue.Hidden
@@ -117,7 +117,7 @@ fun WalletSampleHost(
     ModalBottomSheetLayout(
         modifier = Modifier.fillMaxSize(),
         bottomSheetNavigator = bottomSheetNavigator,
-        sheetShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        sheetShape = RoundedCornerShape(topStart = WCTheme.borderRadius.radius6, topEnd = WCTheme.borderRadius.radius6),
         sheetBackgroundColor = Color.Transparent,
         sheetElevation = 0.dp,
         scrimColor = Color.Transparent
@@ -144,14 +144,14 @@ fun WalletSampleHost(
                     if (connectionState is ConnectionState.Error) {
                         Banner(
                             message = "Network connection lost: ${(connectionState as ConnectionState.Error).message}",
-                            backgroundColor = Color(0xFFDC143C),
+                            backgroundColor = WCTheme.colors.textError,
                             iconResId = R.drawable.invalid_domain,
                             durationMs = 5000
                         )
                     } else if (connectionState is ConnectionState.Ok) {
                         Banner(
                             message = "Network connection is OK",
-                            backgroundColor = Color(0xFF93c47d),
+                            backgroundColor = WCTheme.colors.textSuccess,
                             iconResId = R.drawable.ic_check_white,
                             durationMs = 2000
                         )
@@ -189,7 +189,7 @@ private fun BoxScope.Timer(web3walletViewModel: Web3WalletViewModel) {
         text = timer,
         maxLines = 1,
         style = WCTheme.typography.bodySmMedium.copy(
-            color = themedColor(Color(0xFFb9b3b5), Color(0xFF484648))
+            color = WCTheme.colors.textTertiary
         ),
     )
 }
@@ -213,7 +213,7 @@ private fun BoxScope.Loader(initMessage: String, updateMessage: String) {
             .align(Alignment.Center)
             .clip(RoundedCornerShape(34.dp))
             .background(themedColor(Color(0xFF242425).copy(alpha = .95f), Color(0xFFF2F2F7).copy(alpha = .95f)))
-            .padding(24.dp),
+            .padding(WCTheme.spacing.spacing6),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -222,13 +222,13 @@ private fun BoxScope.Loader(initMessage: String, updateMessage: String) {
             modifier = Modifier
                 .size(75.dp), color = Color(0xFFB8F53D)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
         Text(
             textAlign = TextAlign.Center,
             text = if (shouldChangeText) updateMessage else initMessage,
             maxLines = 2,
             style = WCTheme.typography.h6Medium.copy(
-                color = themedColor(Color(0xFFb9b3b5), Color(0xFF484648))
+                color = WCTheme.colors.textTertiary
             ),
         )
     }
@@ -248,17 +248,17 @@ private fun Banner(message: String, backgroundColor: Color, iconResId: Int, dura
             modifier = Modifier
                 .fillMaxWidth()
                 .background(backgroundColor)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = WCTheme.spacing.spacing4, vertical = WCTheme.spacing.spacing2),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
                 imageVector = ImageVector.vectorResource(id = iconResId),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(color = Color.White)
+                colorFilter = ColorFilter.tint(color = WCTheme.colors.textInvert)
             )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = message, style = WCTheme.typography.bodyMdRegular.copy(color = Color.White))
+            Spacer(modifier = Modifier.width(WCTheme.spacing.spacing1))
+            Text(text = message, style = WCTheme.typography.bodyMdRegular.copy(color = WCTheme.colors.textInvert))
         }
     }
 }

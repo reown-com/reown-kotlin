@@ -10,7 +10,6 @@ import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.StacksAccountDelegate.wallet
 import com.reown.android.BuildConfig as AndroidBuildConfig
 import com.reown.sample.wallet.domain.WalletKitDelegate
-import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
@@ -56,7 +55,7 @@ class SessionProposalViewModel : ViewModel() {
                     authRequest.chains.forEach { chainId ->
                         val signatureAndIssuer: Pair<Wallet.Model.Cacao.Signature, String> = when {
                             chainId.contains("eip155") -> {
-                                val issuer = "did:pkh:$chainId:$ACCOUNTS_1_EIP155_ADDRESS"
+                                val issuer = "did:pkh:$chainId:${EthAccountDelegate.address}"
                                 val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
                                 Pair(CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191), issuer)
                             }
@@ -182,10 +181,11 @@ class SessionProposalViewModel : ViewModel() {
     }
 
     private fun filterSupportedNamespaces(selectedChainIds: List<String>): Map<String, Wallet.Model.Namespace.Session> {
-        if (selectedChainIds.isEmpty()) return walletMetaData.namespaces
+        val supportedNamespaces = walletMetaData().namespaces
+        if (selectedChainIds.isEmpty()) return supportedNamespaces
 
         val selectedChainIdSet = selectedChainIds.toSet()
-        return walletMetaData.namespaces.mapNotNull { (namespaceKey, namespaceSession) ->
+        return supportedNamespaces.mapNotNull { (namespaceKey, namespaceSession) ->
             val filteredChains = namespaceSession.chains?.filter { chainId ->
                 chainId in selectedChainIdSet
             }
@@ -217,7 +217,7 @@ class SessionProposalViewModel : ViewModel() {
 
         authRequests.forEach { authRequest ->
             authRequest.chains.forEach { chainId ->
-                val issuer = "did:pkh:$chainId:$ACCOUNTS_1_EIP155_ADDRESS"
+                val issuer = "did:pkh:$chainId:${EthAccountDelegate.address}"
                 val message = runCatching {
                     WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
                 }.onFailure { error ->

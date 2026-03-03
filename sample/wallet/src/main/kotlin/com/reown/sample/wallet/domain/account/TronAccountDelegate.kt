@@ -74,6 +74,10 @@ object TronAccountDelegate {
             storeAccount(TronKeypair(currentSk, value))
         }
 
+    fun importKeypair(keypair: TronKeypair) {
+        storeAccount(keypair)
+    }
+
     val keypair: TronKeypair
         get() = TronKeypair(secretKey, publicKey)
 }

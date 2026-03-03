@@ -23,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.domain.WalletKitDelegate.currentId
 import com.reown.sample.wallet.ui.common.AccordionCard
@@ -91,8 +90,8 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                 }
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing4),
+                    verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
                 ) {
                     AppInfoCard(
                         url = sessionRequestUI.peerUI.peerUri,
@@ -111,7 +110,7 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                                 Text(
                                     text = "Network",
                                     style = WCTheme.typography.bodyLgRegular.copy(
-                                        color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF6C6C6C)
+                                        color = WCTheme.colors.textSecondary
                                     )
                                 )
                             },
@@ -124,7 +123,7 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                         ) {}
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
                 }
             }
         }

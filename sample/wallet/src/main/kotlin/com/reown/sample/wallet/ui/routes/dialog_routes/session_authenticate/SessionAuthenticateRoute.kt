@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.ui.common.AppInfoCard
 import com.reown.sample.wallet.ui.common.MessageCard
@@ -149,19 +148,16 @@ private fun SessionAuthenticateContent(
         }
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing4),
+            verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
         ) {
             Divider(
                 modifier = Modifier.fillMaxWidth(),
-                color = themedColor(
-                    darkColor = 0xFF3A3A3A,
-                    lightColor = 0xFFD0D0D0
-                ),
+                color = WCTheme.colors.borderPrimary,
                 thickness = 1.dp
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing1))
 
             AppInfoCard(
                 url = authenticateRequestUI.peerUI.peerUri,
@@ -172,7 +168,7 @@ private fun SessionAuthenticateContent(
             Text(
                 text = "Messages to sign (${authenticateRequestUI.messages.size})",
                 style = WCTheme.typography.bodyLgRegular.copy(
-                    color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF6C6C6C)
+                    color = WCTheme.colors.textSecondary
                 )
             )
 
@@ -182,7 +178,7 @@ private fun SessionAuthenticateContent(
                 maxHeight = 250.dp
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
         }
     }
 }

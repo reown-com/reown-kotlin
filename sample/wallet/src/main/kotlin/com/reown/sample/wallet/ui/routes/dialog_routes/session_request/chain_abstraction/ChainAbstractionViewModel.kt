@@ -9,7 +9,6 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.signer.EthSigner
-import com.reown.sample.wallet.domain.signer.Signer
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.WalletKitDelegate.prepareAvailable
 import com.reown.sample.wallet.domain.chain_abstraction.clearSessionRequest
@@ -24,8 +23,6 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.web3j.utils.Numeric
 
 data class TxSuccess(
     val redirect: Uri?,
@@ -185,19 +182,6 @@ class ChainAbstractionViewModel : ViewModel() {
         }
     }
 
-    private fun extractMessageParamFromPersonalSign(input: String): String {
-        val jsonArray = JSONArray(input)
-        return if (jsonArray.length() > 0) {
-            if (jsonArray.getString(0).startsWith("0x")) {
-                String(Numeric.hexStringToByteArray(jsonArray.getString(0)))
-            } else {
-                jsonArray.getString(0)
-            }
-        } else {
-            throw IllegalArgumentException()
-        }
-    }
-
     private fun generateSessionRequestUI(): SessionRequestUI {
         return if (WalletKitDelegate.sessionRequestEvent != null) {
             val (sessionRequest, context) = WalletKitDelegate.sessionRequestEvent!!
@@ -211,7 +195,7 @@ class ChainAbstractionViewModel : ViewModel() {
                 ),
                 topic = sessionRequest.topic,
                 requestId = sessionRequest.request.id,
-                param = if (sessionRequest.request.method == Signer.PERSONAL_SIGN) extractMessageParamFromPersonalSign(sessionRequest.request.params) else sessionRequest.request.params,
+                param = sessionRequest.request.params,
                 chain = sessionRequest.chainId,
                 method = sessionRequest.request.method,
                 peerContextUI = context.toPeerUI()

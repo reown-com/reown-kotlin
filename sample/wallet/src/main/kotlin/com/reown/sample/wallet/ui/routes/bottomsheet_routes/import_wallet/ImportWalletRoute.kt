@@ -113,6 +113,14 @@ fun ImportWalletRoute(navController: NavController, onImportSuccess: () -> Unit 
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
+        Spacer(modifier = Modifier.height(spacing.spacing2))
+
+        Text(
+            text = "Importing a wallet disconnects all active sessions.",
+            style = WCTheme.typography.bodySmRegular.copy(color = colors.textWarning),
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(modifier = Modifier.height(spacing.spacing4))
 
         Row(
