@@ -28,19 +28,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.reown.sample.common.ui.themedColor
+import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.Route
 
 @Composable
 fun WalletHeader(navController: NavController) {
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val safeTop = if (statusBarTop > 0.dp) statusBarTop + 8.dp else 45.dp
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .padding(top = safeTop, bottom = 8.dp),
+            .padding(horizontal = WCTheme.spacing.spacing5)
+            .padding(top = statusBarTop + WCTheme.spacing.spacing2, bottom = WCTheme.spacing.spacing2),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -49,7 +48,7 @@ fun WalletHeader(navController: NavController) {
             modifier = Modifier
                 .size(38.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF0988F0)),
+                .background(WCTheme.colors.bgAccentPrimary),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -60,17 +59,12 @@ fun WalletHeader(navController: NavController) {
             )
         }
 
-        // Scan button - dark rounded rect with barcode icon
+        // Scan button - inverted rounded rect with barcode icon
         Box(
             modifier = Modifier
                 .size(38.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    themedColor(
-                        darkColor = Color(0xFFFFFFFF),
-                        lightColor = Color(0xFF202020)
-                    )
-                )
+                .clip(RoundedCornerShape(WCTheme.borderRadius.radius3))
+                .background(WCTheme.colors.bgInvert)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(bounded = true),
@@ -82,10 +76,7 @@ fun WalletHeader(navController: NavController) {
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_qr_code),
                 contentDescription = "Scan",
                 modifier = Modifier.size(18.dp),
-                tint = themedColor(
-                    darkColor = Color(0xFF202020),
-                    lightColor = Color(0xFFFFFFFF)
-                )
+                tint = WCTheme.colors.bgPrimary
             )
         }
     }
