@@ -12,6 +12,10 @@ private val Project.secrets: Properties
         if (!extra.has("wc.secrets")) {
             val secretsFile = rootProject.file("secrets.properties")
             if (!secretsFile.exists()) {
+                val isCi = System.getenv("CI").equals("true", ignoreCase = true)
+                if (isCi) {
+                    error("Missing secrets.properties in CI. Ensure the SECRETS_PROPERTIES secret is configured.")
+                }
                 secretsFile.writeText(
                     listOf(
                         "WC_KEYSTORE_ALIAS=mock_alias",

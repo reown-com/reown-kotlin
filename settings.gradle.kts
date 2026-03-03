@@ -4,6 +4,13 @@
 fun generateMockGoogleServicesJson(sampleDir: File, packageName: String) {
     val googleServicesFile = File(sampleDir, "google-services.json")
     if (!googleServicesFile.exists()) {
+        val isCi = System.getenv("CI").equals("true", ignoreCase = true)
+        if (isCi) {
+            throw GradleException(
+                "Missing google-services.json for sample '${sampleDir.name}' in CI. " +
+                    "Ensure the GOOGLE_SERVICES_JSON secret is configured."
+            )
+        }
         googleServicesFile.writeText("""
 {
   "project_info": {
