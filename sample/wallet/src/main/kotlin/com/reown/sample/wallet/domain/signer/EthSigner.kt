@@ -15,18 +15,14 @@ object EthSigner {
 
     fun personalSign(message: String): String = CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191).s
 
+    fun extractMessageFromParams(params: String): String {
+        val messageParam = extractMessageParam(params)
+        val bytes = messageParam.toPersonalSignBytes()
+        return String(bytes, Charsets.UTF_8)
+    }
+
     fun personalSignFromParams(params: String): String {
-        val jsonArray = JSONArray(params)
-        require(jsonArray.length() > 0) { "personal_sign params are empty" }
-
-        val first = jsonArray.getString(0)
-        val second = jsonArray.optString(1).takeIf { it.isNotBlank() }
-
-        val messageParam = when {
-            first.isLikelyEvmAddress() && second != null -> second
-            second?.isLikelyEvmAddress() == true -> first
-            else -> first
-        }
+        val messageParam = extractMessageParam(params)
 
         val dataToSign = messageParam.toPersonalSignBytes()
         val keyPair = ECKeyPair.create(EthAccountDelegate.privateKey.hexToBytes())
@@ -57,6 +53,20 @@ object EthSigner {
         val vHex = v.toString(16)
         val result = "0x$rHex$sHex$vHex"
         return result
+    }
+
+    private fun extractMessageParam(params: String): String {
+        val jsonArray = JSONArray(params)
+        require(jsonArray.length() > 0) { "personal_sign params are empty" }
+
+        val first = jsonArray.getString(0)
+        val second = jsonArray.optString(1).takeIf { it.isNotBlank() }
+
+        return when {
+            first.isLikelyEvmAddress() && second != null -> second
+            second?.isLikelyEvmAddress() == true -> first
+            else -> first
+        }
     }
 
     private fun String.toPersonalSignBytes(): ByteArray {

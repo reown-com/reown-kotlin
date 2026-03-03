@@ -9,6 +9,7 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.signer.EthSigner
+import com.reown.sample.wallet.domain.signer.Signer.PERSONAL_SIGN
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.WalletKitDelegate.prepareAvailable
 import com.reown.sample.wallet.domain.chain_abstraction.clearSessionRequest
@@ -195,7 +196,9 @@ class ChainAbstractionViewModel : ViewModel() {
                 ),
                 topic = sessionRequest.topic,
                 requestId = sessionRequest.request.id,
-                param = sessionRequest.request.params,
+                param = if (sessionRequest.request.method == PERSONAL_SIGN) {
+                    runCatching { EthSigner.extractMessageFromParams(sessionRequest.request.params) }.getOrDefault(sessionRequest.request.params)
+                } else sessionRequest.request.params,
                 chain = sessionRequest.chainId,
                 method = sessionRequest.request.method,
                 peerContextUI = context.toPeerUI()
