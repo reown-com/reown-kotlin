@@ -1,9 +1,7 @@
 package com.reown.sample.wallet.ui.routes.composable_routes.connection_details
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,22 +27,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
-import com.reown.sample.wallet.ui.common.ChainIcons
-import com.reown.sample.wallet.ui.common.formatDomain
+import com.reown.sample.wallet.ui.common.AppConnectionRow
 import com.reown.sample.wallet.ui.routes.composable_routes.connected_apps.getConnectionChainIds
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionType
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionUI
@@ -171,72 +163,18 @@ private fun AppInfoCard(connectionUI: ConnectionUI) {
     val colors = WCTheme.colors
     val spacing = WCTheme.spacing
     val borderRadius = WCTheme.borderRadius
-    val iconSize = spacing.spacing10 + spacing.spacing05
-    val iconSizePx = with(LocalDensity.current) { iconSize.roundToPx() }
-    val borderWidth = spacing.spacing05 / 2
 
-    Row(
+    AppConnectionRow(
+        iconUrl = connectionUI.icon,
+        name = connectionUI.name,
+        uri = connectionUI.uri,
+        chainIds = getConnectionChainIds(connectionUI),
         modifier = Modifier
             .fillMaxWidth()
             .clip(borderRadius.shapeXLarge)
             .background(color = colors.foregroundPrimary)
-            .padding(spacing.spacing5),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // App icon
-        val iconModifier = Modifier
-            .size(iconSize)
-            .clip(RoundedCornerShape(borderRadius.radius3))
-            .border(
-                width = borderWidth,
-                shape = RoundedCornerShape(borderRadius.radius3),
-                color = colors.borderSecondary
-            )
-
-        if (connectionUI.icon?.isNotBlank() == true) {
-            val painter = rememberAsyncImagePainter(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(connectionUI.icon)
-                    .size(iconSizePx)
-                    .crossfade(true)
-                    .error(com.reown.sample.common.R.drawable.ic_walletconnect_circle_blue)
-                    .build()
-            )
-            Image(
-                painter = painter,
-                contentDescription = "${connectionUI.name} icon",
-                modifier = iconModifier,
-                contentScale = ContentScale.Fit,
-                alignment = Alignment.Center
-            )
-        } else {
-            Icon(
-                modifier = iconModifier.alpha(.7f),
-                imageVector = ImageVector.vectorResource(id = R.drawable.sad_face),
-                contentDescription = "No icon"
-            )
-        }
-
-        Spacer(modifier = Modifier.width(spacing.spacing3))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = connectionUI.name,
-                style = WCTheme.typography.bodyLgRegular.copy(
-                    color = colors.textPrimary
-                )
-            )
-            Text(
-                text = formatDomain(connectionUI.uri),
-                style = WCTheme.typography.bodyLgRegular.copy(
-                    color = colors.textSecondary
-                )
-            )
-        }
-
-        // Chain icons
-        ChainIcons(chainIds = getConnectionChainIds(connectionUI), size = spacing.spacing5)
-    }
+            .padding(spacing.spacing5)
+    )
 }
 
 @Composable
