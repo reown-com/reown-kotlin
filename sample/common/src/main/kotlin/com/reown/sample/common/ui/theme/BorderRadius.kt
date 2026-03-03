@@ -23,6 +23,7 @@ object WCBorderRadius {
     val radius13: Dp = 64.dp
     val radiusFull: Dp = 9999.dp
 
+    val shapeXSmall = RoundedCornerShape(radius2)
     val shapeSmall = RoundedCornerShape(radius1)
     val shapeMedium = RoundedCornerShape(radius3)
     val shapeLarge = RoundedCornerShape(radius4)

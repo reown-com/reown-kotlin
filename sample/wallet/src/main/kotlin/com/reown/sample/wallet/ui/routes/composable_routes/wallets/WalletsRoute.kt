@@ -1,8 +1,9 @@
 package com.reown.sample.wallet.ui.routes.composable_routes.wallets
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,13 +12,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -30,23 +31,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.AnnotatedString
 import com.reown.sample.common.ui.theme.WCTheme
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.blockchain.TokenBalance
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
+import com.reown.sample.wallet.ui.common.getChainIcon
+import com.reown.sample.wallet.ui.common.getChainName
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletHeader
 
@@ -66,6 +67,9 @@ fun WalletsRoute(
         onRefresh = { connectionsViewModel.fetchBalances() }
     )
 
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+
     Column(modifier = Modifier.fillMaxSize()) {
         WalletHeader(navController)
 
@@ -80,14 +84,14 @@ fun WalletsRoute(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(horizontal = spacing.spacing3),
+                    verticalArrangement = Arrangement.spacedBy(spacing.spacing2)
                 ) {
-                    item { Spacer(modifier = Modifier.height(4.dp)) }
+                    item { Spacer(modifier = Modifier.height(spacing.spacing1)) }
                     items(allBalances) { balance ->
                         WalletBalanceItem(balance)
                     }
-                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                    item { Spacer(modifier = Modifier.height(spacing.spacing2)) }
                 }
             }
 
@@ -95,8 +99,8 @@ fun WalletsRoute(
                 refreshing = isLoadingBalances,
                 state = pullRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter),
-                backgroundColor = themedColor(darkColor = Color(0xFF2A2A2A), lightColor = Color.White),
-                contentColor = Color(0xFF3396FF)
+                backgroundColor = colors.foregroundSecondary,
+                contentColor = colors.bgAccentPrimary
             )
         }
     }
@@ -104,93 +108,120 @@ fun WalletsRoute(
 
 @Composable
 fun WalletBalanceItem(balance: TokenBalance) {
-    val chainName = when (balance.chainId) {
-        "eip155:1" -> "Ethereum"
-        "eip155:137" -> "Polygon"
-        "eip155:8453" -> "Base"
-        "eip155:10" -> "Optimism"
-        else -> balance.chainId
-    }
-
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+    val chainName = getChainName(balance.chainId)
     val address = EthAccountDelegate.address
     val shortAddress = "${address.take(6)}...${address.takeLast(4)}"
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+    val iconSize = spacing.spacing10
+    val iconSizePx = with(LocalDensity.current) { iconSize.roundToPx() }
+    val badgeSize = spacing.spacing4 + spacing.spacing05
+    val badgeIconSize = spacing.spacing3 + spacing.spacing05
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                color = themedColor(
-                    darkColor = Color(0xFF1A1A1A),
-                    lightColor = Color(0xFFF5F5F5)
-                )
-            )
-            .padding(12.dp),
+            .clip(borderRadius.shapeXLarge)
+            .background(color = colors.foregroundPrimary)
+            .padding(spacing.spacing5),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Token icon
-        val iconModifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
+        // Token icon with chain badge
+        Box {
+            val iconModifier = Modifier
+                .size(iconSize)
+                .clip(CircleShape)
 
-        if (balance.iconUrl != null) {
-            val painter = rememberAsyncImagePainter(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(balance.iconUrl)
-                    .size(40)
-                    .crossfade(true)
-                    .build()
-            )
-            Image(
-                painter = painter,
-                contentDescription = "${balance.symbol} icon",
-                modifier = iconModifier,
-                contentScale = ContentScale.Fit
-            )
-        } else {
-            Box(
-                modifier = iconModifier
-                    .background(Color(0xFF3396FF)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = balance.symbol.take(1),
-                    style = WCTheme.typography.bodyLgMedium.copy(color = Color.White)
+            if (balance.iconUrl != null) {
+                val painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(balance.iconUrl)
+                        .size(iconSizePx)
+                        .crossfade(true)
+                        .build()
                 )
+                Image(
+                    painter = painter,
+                    contentDescription = "${balance.symbol} icon",
+                    modifier = iconModifier,
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Box(
+                    modifier = iconModifier
+                        .background(colors.bgAccentPrimary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = balance.symbol.take(1),
+                        style = WCTheme.typography.bodyLgMedium.copy(color = colors.textInvert)
+                    )
+                }
+            }
+
+            // Chain badge overlay
+            val chainIcon = getChainIcon(balance.chainId)
+            if (chainIcon != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .offset(x = spacing.spacing05, y = spacing.spacing05)
+                        .size(badgeSize)
+                        .clip(CircleShape)
+                        .background(colors.foregroundPrimary)
+                        .padding(spacing.spacing05)
+                ) {
+                    Image(
+                        painter = painterResource(id = chainIcon),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(badgeIconSize)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(spacing.spacing3))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "${balance.quantity.numeric} ${balance.symbol}",
-                style = WCTheme.typography.bodyLgMedium.copy(
-                    color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+                style = WCTheme.typography.bodyLgRegular.copy(
+                    color = colors.textPrimary
                 )
             )
             Text(
-                text = "$chainName \u00B7 $shortAddress",
-                style = WCTheme.typography.bodySmRegular.copy(
-                    color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+                text = shortAddress,
+                style = WCTheme.typography.bodyLgRegular.copy(
+                    color = colors.textSecondary
                 )
             )
         }
 
         Icon(
             imageVector = ImageVector.vectorResource(id = R.drawable.ic_copy),
-            contentDescription = "Copy",
-            modifier = Modifier.size(20.dp),
-            tint = themedColor(
-                darkColor = Color(0xFF788686),
-                lightColor = Color(0xFF788686)
-            )
+            contentDescription = "Copy address",
+            modifier = Modifier
+                .size(spacing.spacing5)
+                .clickable {
+                    clipboardManager.setText(AnnotatedString(address))
+                    Toast.makeText(context, "$chainName address copied", Toast.LENGTH_SHORT).show()
+                },
+            tint = colors.iconDefault
         )
     }
 }
 
 @Composable
 private fun EmptyWallets() {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -199,14 +230,14 @@ private fun EmptyWallets() {
         Text(
             text = "No token balances yet",
             style = WCTheme.typography.h6Regular.copy(
-                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+                color = colors.textPrimary
             )
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(spacing.spacing1 + spacing.spacing05))
         Text(
             text = "Import a funded wallet or send tokens to this address.",
             style = WCTheme.typography.bodyLgRegular.copy(
-                color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF9EA9A9)
+                color = colors.textSecondary
             )
         )
     }

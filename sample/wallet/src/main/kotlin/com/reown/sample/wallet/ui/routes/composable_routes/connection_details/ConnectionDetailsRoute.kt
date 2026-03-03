@@ -1,9 +1,7 @@
 package com.reown.sample.wallet.ui.routes.composable_routes.connection_details
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,24 +27,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
-import com.reown.sample.wallet.ui.common.ChainIcons
-import com.reown.sample.wallet.ui.common.formatDomain
+import com.reown.sample.wallet.ui.common.AppConnectionRow
 import com.reown.sample.wallet.ui.routes.composable_routes.connected_apps.getConnectionChainIds
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionType
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionUI
@@ -63,19 +53,19 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
     var isDisconnecting by remember { mutableStateOf(false) }
     val composableScope = rememberCoroutineScope()
     val context = LocalContext.current
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
 
     connectionUI?.let { uiConnection ->
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    color = themedColor(
-                        darkColor = Color(0xFF1A1A1A),
-                        lightColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+                    color = colors.bgPrimary,
+                    shape = RoundedCornerShape(topStart = borderRadius.radius8, topEnd = borderRadius.radius8)
                 )
-                .padding(20.dp)
+                .padding(spacing.spacing5)
                 .verticalScroll(rememberScrollState())
         ) {
             // Top bar: Disconnect button + Close button
@@ -87,13 +77,8 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                 // Disconnect button
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            color = themedColor(
-                                darkColor = Color.White,
-                                lightColor = Color(0xFF202020)
-                            )
-                        )
+                        .clip(RoundedCornerShape(borderRadius.radius3))
+                        .background(color = colors.bgInvert)
                         .clickable(enabled = !isDisconnecting) {
                             disconnectSession(
                                 uiConnection,
@@ -104,37 +89,28 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                                 onLoading = { isDisconnecting = it }
                             )
                         }
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = spacing.spacing4, vertical = spacing.spacing3),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (isDisconnecting) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp,
-                            color = themedColor(
-                                darkColor = Color(0xFF202020),
-                                lightColor = Color.White
-                            )
+                            modifier = Modifier.size(spacing.spacing4),
+                            strokeWidth = spacing.spacing05,
+                            color = colors.textInvert
                         )
                     } else {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.ic_link_break),
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = themedColor(
-                                darkColor = Color(0xFF202020),
-                                lightColor = Color.White
-                            )
+                            modifier = Modifier.size(spacing.spacing4),
+                            tint = colors.textInvert
                         )
                     }
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(spacing.spacing1 + spacing.spacing05))
                     Text(
                         text = "Disconnect",
                         style = WCTheme.typography.bodyMdRegular.copy(
-                            color = themedColor(
-                                darkColor = Color(0xFF202020),
-                                lightColor = Color.White
-                            )
+                            color = colors.textInvert
                         )
                     )
                 }
@@ -143,18 +119,18 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                 ModalCloseButton(onClick = { navController.popBackStack() })
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(spacing.spacing5))
 
             // App info card
             AppInfoCard(uiConnection)
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(spacing.spacing2))
 
             // Methods section
             val methods = getSessionItems(uiConnection) { it.methods }
             if (methods.isNotEmpty()) {
                 InfoSection(title = "Methods", items = methods)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(spacing.spacing2))
             }
 
             // Events section
@@ -163,19 +139,19 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
                 InfoSection(title = "Events", items = events)
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(spacing.spacing5))
         }
     } ?: run {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(spacing.spacing8),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "Connection not found",
                 style = WCTheme.typography.bodyLgRegular.copy(
-                    color = themedColor(darkColor = Color(0xFF9A9A9A), lightColor = Color(0xFF9A9A9A))
+                    color = colors.textSecondary
                 )
             )
         }
@@ -184,103 +160,47 @@ fun ConnectionDetailsRoute(navController: NavController, connectionId: Int?, con
 
 @Composable
 private fun AppInfoCard(connectionUI: ConnectionUI) {
-    Row(
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+
+    AppConnectionRow(
+        iconUrl = connectionUI.icon,
+        name = connectionUI.name,
+        uri = connectionUI.uri,
+        chainIds = getConnectionChainIds(connectionUI),
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                color = themedColor(
-                    darkColor = Color(0xFF252525),
-                    lightColor = Color(0xFFF3F3F3)
-                )
-            )
-            .padding(20.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // App icon
-        val iconModifier = Modifier
-            .size(42.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .border(
-                width = 1.dp,
-                shape = RoundedCornerShape(12.dp),
-                color = themedColor(
-                    darkColor = Color(0xFF2A2A2A),
-                    lightColor = Color(0xFFD0D0D0)
-                )
-            )
-
-        if (connectionUI.icon?.isNotBlank() == true) {
-            val painter = rememberAsyncImagePainter(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(connectionUI.icon)
-                    .size(42)
-                    .crossfade(true)
-                    .error(com.reown.sample.common.R.drawable.ic_walletconnect_circle_blue)
-                    .build()
-            )
-            Image(
-                painter = painter,
-                contentDescription = "${connectionUI.name} icon",
-                modifier = iconModifier,
-                contentScale = ContentScale.Fit,
-                alignment = Alignment.Center
-            )
-        } else {
-            Icon(
-                modifier = iconModifier.alpha(.7f),
-                imageVector = ImageVector.vectorResource(id = R.drawable.sad_face),
-                contentDescription = "No icon"
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = connectionUI.name,
-                style = WCTheme.typography.bodyLgRegular.copy(
-                    color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF202020)
-                )
-            )
-            Text(
-                text = formatDomain(connectionUI.uri),
-                style = WCTheme.typography.bodyLgRegular.copy(
-                    color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF9A9A9A)
-                )
-            )
-        }
-
-        // Chain icons
-        ChainIcons(chainIds = getConnectionChainIds(connectionUI), size = 20)
-    }
+            .clip(borderRadius.shapeXLarge)
+            .background(color = colors.foregroundPrimary)
+            .padding(spacing.spacing5)
+    )
 }
 
 @Composable
 private fun InfoSection(title: String, items: List<String>) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                color = themedColor(
-                    darkColor = Color(0xFF252525),
-                    lightColor = Color(0xFFF3F3F3)
-                )
-            )
-            .padding(20.dp)
+            .clip(borderRadius.shapeXLarge)
+            .background(color = colors.foregroundPrimary)
+            .padding(spacing.spacing5)
     ) {
         Text(
             text = title,
             style = WCTheme.typography.bodyLgRegular.copy(
-                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF202020)
+                color = colors.textPrimary
             )
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(spacing.spacing2))
         Text(
             text = items.joinToString(", "),
             style = WCTheme.typography.bodyMdRegular.copy(
-                color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF9A9A9A)
+                color = colors.textSecondary
             )
         )
     }

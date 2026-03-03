@@ -15,18 +15,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.reown.sample.common.ui.themedColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import com.reown.sample.common.ui.theme.WCTheme
+import com.reown.sample.wallet.R
 
 private const val ANIMATION_DURATION = 250
 
@@ -39,22 +36,21 @@ fun AccordionCard(
     hideExpand: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                color = themedColor(
-                    darkColor = Color(0xFF252525),
-                    lightColor = Color(0xFFF3F3F3)
-                )
-            )
+            .clip(borderRadius.shapeLarge)
+            .background(color = colors.foregroundPrimary)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(if (!hideExpand) Modifier.clickable { onPress() } else Modifier)
-                .padding(20.dp),
+                .padding(spacing.spacing5),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -63,20 +59,15 @@ fun AccordionCard(
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(spacing.spacing2)
             ) {
                 rightContent()
                 if (!hideExpand) {
                     Icon(
-                        imageVector = Icons.Filled.KeyboardArrowDown,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_caret_up_down),
                         contentDescription = "Toggle",
-                        modifier = Modifier
-                            .size(17.dp)
-                            .rotate(if (isExpanded) 180f else 0f),
-                        tint = themedColor(
-                            darkColor = Color(0xFFe3e7e7),
-                            lightColor = Color(0xFF202020)
-                        )
+                        modifier = Modifier.size(spacing.spacing5),
+                        tint = colors.iconInvert
                     )
                 }
             }
@@ -90,7 +81,7 @@ fun AccordionCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
+                    .padding(start = spacing.spacing5, end = spacing.spacing5, bottom = spacing.spacing5)
             ) {
                 content()
             }
