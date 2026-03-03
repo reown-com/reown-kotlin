@@ -29,7 +29,7 @@ private val Project.secrets: Properties
                 )
                 logger.warn("Generated mock secrets.properties (not suitable for production use)")
             }
-            extra["wc.secrets"] = Properties().apply { load(secretsFile.inputStream()) }
+            extra["wc.secrets"] = Properties().apply { secretsFile.inputStream().use { load(it) } }
         }
         return extra["wc.secrets"] as Properties
     }
