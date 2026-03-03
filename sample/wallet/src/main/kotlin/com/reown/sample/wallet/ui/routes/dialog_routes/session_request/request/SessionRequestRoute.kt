@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.reown.sample.common.ui.theme.WCTheme
+import com.reown.sample.wallet.domain.signer.EthSigner
+import com.reown.sample.wallet.domain.signer.Signer.PERSONAL_SIGN
 import com.reown.sample.wallet.domain.WalletKitDelegate.currentId
 import com.reown.sample.wallet.ui.common.AccordionCard
 import com.reown.sample.wallet.ui.common.AppInfoCard
@@ -99,8 +101,12 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                         isScam = sessionRequestUI.peerContextUI.isScam
                     )
 
+                    val displayParam = if (sessionRequestUI.method == PERSONAL_SIGN) {
+                        runCatching { EthSigner.extractMessageFromParams(sessionRequestUI.param) }.getOrDefault(sessionRequestUI.param)
+                    } else sessionRequestUI.param
+
                     MessageCard(
-                        message = sessionRequestUI.param,
+                        message = displayParam,
                         title = "Params"
                     )
 
