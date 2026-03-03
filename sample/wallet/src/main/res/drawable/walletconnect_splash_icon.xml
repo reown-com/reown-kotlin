@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Keep a square intrinsic size so Android 12+ splash masking doesn't crop the logo. -->
+    <item
+        android:width="100dp"
+        android:height="100dp"
+        android:gravity="center"
+        android:drawable="@android:color/transparent" />
+
+    <item
+        android:width="100dp"
+        android:height="10.8dp"
+        android:gravity="center"
+        android:drawable="@drawable/walletconnect_logo" />
+</layer-list>

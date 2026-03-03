@@ -35,7 +35,6 @@ import com.reown.sample.wallet.ui.routes.bottomsheet_routes.update_subscription.
 import com.reown.sample.wallet.ui.routes.composable_routes.connection_details.ConnectionDetailsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
-import com.reown.sample.wallet.ui.routes.composable_routes.get_started.GetStartedRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.inbox.InboxRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.inbox.InboxViewModel
 import com.reown.sample.wallet.ui.routes.composable_routes.notifications.NotificationsScreenRoute
@@ -58,9 +57,8 @@ fun Web3WalletNavGraph(
     navController: NavHostController,
     web3walletViewModel: Web3WalletViewModel,
     connectionsViewModel: ConnectionsViewModel,
-    getStartedVisited: Boolean,
     modifier: Modifier = Modifier,
-    startDestination: String = if (getStartedVisited) Route.Connections.path else Route.GetStarted.path,
+    startDestination: String = Route.Connections.path,
 ) {
     var scrimColor by remember { mutableStateOf(Color.Unspecified) }
     val inboxViewModel: InboxViewModel = viewModel()
@@ -109,9 +107,6 @@ fun Web3WalletNavGraph(
                 )
             }
         ) {
-            composable(Route.GetStarted.path) {
-                GetStartedRoute(navController)
-            }
             composable(Route.Connections.path) {
                 ConnectionsRoute(navController, connectionsViewModel, web3walletViewModel)
             }

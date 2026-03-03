@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.pandulapeter.beagle.DebugMenuView
@@ -66,12 +65,10 @@ fun WalletSampleHost(
     navController: NavHostController,
     web3walletViewModel: Web3WalletViewModel,
     connectionsViewModel: ConnectionsViewModel,
-    getStartedVisited: Boolean,
 ) {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     val connectionState by web3walletViewModel.connectionState.collectAsState()
     val bottomBarState = rememberBottomBarMutableState()
-    val currentRoute = navController.currentBackStackEntryAsState()
     val isLoader by web3walletViewModel.isLoadingFlow.collectAsState(false)
     val isRequestLoader by web3walletViewModel.isRequestLoadingFlow.collectAsState(false)
 
@@ -96,13 +93,12 @@ fun WalletSampleHost(
         scaffoldState = scaffoldState,
         drawerGesturesEnabled = true,
         drawerContent = { BeagleDrawer() },
-        bottomBar = { if (currentRoute.value?.destination?.route != Route.GetStarted.path) BottomBar(navController, bottomBarState.value) },
+        bottomBar = { BottomBar(navController, bottomBarState.value) },
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             Web3WalletNavGraph(
                 bottomSheetNavigator = bottomSheetNavigator,
                 navController = navController,
-                getStartedVisited = getStartedVisited,
                 web3walletViewModel = web3walletViewModel,
                 connectionsViewModel = connectionsViewModel,
             )

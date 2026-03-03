@@ -44,6 +44,7 @@ import com.reown.android.utils.cacao.sign
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.notify.client.cacao.CacaoSigner
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
@@ -77,6 +78,7 @@ class WalletKitActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
@@ -112,15 +114,12 @@ class WalletKitActivity : AppCompatActivity() {
             val bottomSheetNavigator = BottomSheetNavigator(sheetState)
             val navController = rememberAnimatedNavController(bottomSheetNavigator)
             this.navController = navController
-            val sharedPref = getPreferences(MODE_PRIVATE)
-            val getStartedVisited = sharedPref.getBoolean("get_started_visited", false)
             WCSampleAppTheme {
                 WalletSampleHost(
                     bottomSheetNavigator,
                     navController,
                     web3walletViewModel,
                     connectionsViewModel,
-                    getStartedVisited
                 )
             }
         }
