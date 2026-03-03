@@ -14,6 +14,8 @@ import com.reown.sample.wallet.domain.account.bytesToHex
 import com.reown.sample.wallet.domain.account.derivePrivateKeyFromMnemonic
 import com.reown.sample.wallet.domain.account.isHexChar
 import com.reown.sample.wallet.domain.account.normalizePrivateKeyHex
+import com.reown.sample.wallet.domain.client.Stacks
+import com.reown.sample.wallet.domain.client.SuiUtils
 import java.math.BigInteger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -117,8 +119,10 @@ internal class ImportWalletViewModel : ViewModel() {
         } else {
             input
         }
+        // Validate before persistence so failed imports don't corrupt stored account state.
+        val publicKey = SolanaAccountDelegate.getSolanaPubKeyForKeyPair(keypair)
         SolanaAccountDelegate.keyPair = keypair
-        return SolanaAccountDelegate.keys.second
+        return publicKey
     }
 
     private fun importSui(input: String): String {
@@ -128,8 +132,11 @@ internal class ImportWalletViewModel : ViewModel() {
         } else {
             input
         }
+        // Validate before persistence so failed imports don't corrupt stored account state.
+        val publicKey = SuiUtils.getPublicKeyFromKeyPair(keypair)
+        val address = SuiUtils.getAddressFromPublicKey(publicKey)
         SuiAccountDelegate.keypair = keypair
-        return SuiAccountDelegate.address
+        return address
     }
 
     private fun importTron(input: String): String {
@@ -149,6 +156,8 @@ internal class ImportWalletViewModel : ViewModel() {
 
     private fun importStacks(input: String): String {
         require(input.isNotBlank()) { "Enter a wallet string" }
+        // Validate before persistence so failed imports don't corrupt stored account state.
+        Stacks.getAddress(input, Stacks.Version.mainnetP2PKH)
         StacksAccountDelegate.importedWallet = input
         return StacksAccountDelegate.mainnetAddress
     }
