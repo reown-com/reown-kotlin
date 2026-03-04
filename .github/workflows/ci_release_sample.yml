@@ -40,21 +40,22 @@ on:
         default: true
 
 env:
-  BUILD_TYPE: ${{ inputs.build_type || (github.event_name == 'release' && 'Release') || 'Internal' }}
+  BUILD_TYPE: ${{ github.event.inputs.build_type || (github.event_name == 'release' && 'Release') || 'Internal' }}
 
 jobs:
   release_sample:
     strategy:
+      fail-fast: false
       matrix:
         app: [wallet, dapp, modal, pos]
     if: >-
       (github.event_name == 'push') ||
       (github.event_name == 'release' && matrix.app != 'pos') ||
       (github.event_name == 'workflow_dispatch' &&
-        ((matrix.app == 'wallet' && inputs.wallet) ||
-         (matrix.app == 'dapp' && inputs.dapp) ||
-         (matrix.app == 'modal' && inputs.modal) ||
-         (matrix.app == 'pos' && inputs.pos)))
+        ((matrix.app == 'wallet' && github.event.inputs.wallet == 'true') ||
+         (matrix.app == 'dapp' && github.event.inputs.dapp == 'true') ||
+         (matrix.app == 'modal' && github.event.inputs.modal == 'true') ||
+         (matrix.app == 'pos' && github.event.inputs.pos == 'true')))
     name: ${{ matrix.app }}
     runs-on: ubuntu-latest
     steps:
@@ -155,7 +156,7 @@ jobs:
                       "type": "button",
                       "text": { "type": "plain_text", "text": "View Workflow Run" },
                       "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                    }${{ steps.firebase.outputs.url && format(',{{"type":"button","text":{{"type":"plain_text","text":"Download on Firebase"}},"url":"{0}"}}', steps.firebase.outputs.url) || '' }}
+                    }${{ steps.firebase.outputs.url && format(',{{"type":"button","text":{{"type":"plain_text","text":"Download on Firebase"}},"url":{0}}}', toJSON(steps.firebase.outputs.url)) || '' }}
                   ]
                 }
               ]
