@@ -27,6 +27,10 @@ internal class ApiClient(
     merchantBaseUrl: String = BuildConfig.MERCHANT_API_BASE_URL,
     private val internalMerchantApiKey: String = BuildConfig.INTERNAL_MERCHANT_API
 ) {
+    companion object {
+        private const val WCP_VERSION = "2026-02-18"
+    }
+
     private val moshi = Moshi.Builder()
         .addLast(KotlinJsonAdapterFactory())
         .build()
@@ -219,6 +223,7 @@ internal class ApiClient(
                 .addHeader("Sdk-Name", "pos-kotlin")
                 .addHeader("Sdk-Version", BuildConfig.SDK_VERSION)
                 .addHeader("Sdk-Platform", "android")
+                .addHeader("WCP-Version", WCP_VERSION)
                 .addHeader("Content-Type", "application/json")
                 .build()
             chain.proceed(request)
@@ -229,6 +234,7 @@ internal class ApiClient(
         return Interceptor { chain ->
             val request = chain.request().newBuilder()
                 .addHeader("x-api-key", internalMerchantApiKey)
+                .addHeader("WCP-Version", WCP_VERSION)
                 .addHeader("Content-Type", "application/json")
                 .build()
             chain.proceed(request)

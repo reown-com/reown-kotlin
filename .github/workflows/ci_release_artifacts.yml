@@ -80,7 +80,7 @@ jobs:
         run: |
           ./gradlew releaseAllSDKs -Ptype=sonatype
 
-      - name: Upload staging repositories to Central Portal and release
+      - name: Upload open staging repositories to Central Portal
         env:
           CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
           CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}

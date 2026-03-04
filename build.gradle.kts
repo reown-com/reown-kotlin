@@ -129,22 +129,19 @@ tasks.register("closeAndReleaseMultipleRepositories") {
         val openRepos = repos.filter { it.state == "open" }
         val closedRepos = repos.filter { it.state == "closed" }
 
-        println("Processing ${openRepos.size} open repositories and ${closedRepos.size} closed repositories")
-
-        if (openRepos.isNotEmpty()) {
-            println("Uploading ${openRepos.size} open repositories to Central Portal")
-            uploadRepositoriesToPortal(openRepos)
-        }
+        println("Found ${openRepos.size} open repositories and ${closedRepos.size} closed repositories")
 
         if (closedRepos.isNotEmpty()) {
-            println("Uploading ${closedRepos.size} closed repositories to Central Portal")
-            uploadRepositoriesToPortal(closedRepos)
+            println("Skipping ${closedRepos.size} closed repositories (stale from previous releases)")
         }
 
-        if (openRepos.isEmpty() && closedRepos.isEmpty()) {
-            println("No repositories to upload to Portal")
+        if (openRepos.isEmpty()) {
+            println("No open repositories to upload to Portal")
             return@doLast
         }
+
+        println("Uploading ${openRepos.size} open repositories to Central Portal")
+        uploadRepositoriesToPortal(openRepos)
 
         println("Starting to wait for artifacts to be available on Maven Central...")
         waitForArtifactsToBeAvailable()

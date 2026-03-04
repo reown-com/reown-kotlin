@@ -33,6 +33,9 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -65,11 +68,12 @@ fun ConnectionsRoute(navController: NavController, connectionsViewModel: Connect
     connectionsViewModel.refreshConnections()
     val connections by connectionsViewModel.connections.collectAsState(initial = emptyList())
     val usdcBalances by connectionsViewModel.usdcBalances.collectAsState()
+    val eurocBalances by connectionsViewModel.eurocBalances.collectAsState()
     val isLoadingBalances by connectionsViewModel.isLoadingBalances.collectAsState()
 
     val pullRefreshState = rememberPullRefreshState(
         refreshing = isLoadingBalances,
-        onRefresh = { connectionsViewModel.fetchUsdcBalances() }
+        onRefresh = { connectionsViewModel.fetchBalances() }
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -83,7 +87,7 @@ fun ConnectionsRoute(navController: NavController, connectionsViewModel: Connect
                 modifier = Modifier.fillMaxSize()
             ) {
                 item {
-                    UsdcBalanceSection(usdcBalances, isLoadingBalances)
+                    TokenBalanceCard(usdcBalances, eurocBalances, isLoadingBalances)
                 }
                 item {
                     ConnectionsContent(connections) { connectionUI ->
@@ -103,11 +107,15 @@ fun ConnectionsRoute(navController: NavController, connectionsViewModel: Connect
 }
 
 @Composable
-fun UsdcBalanceSection(balances: List<TokenBalance>, isLoading: Boolean) {
+fun TokenBalanceCard(usdcBalances: List<TokenBalance>, eurocBalances: List<TokenBalance>, isLoading: Boolean) {
     val shape = RoundedCornerShape(16.dp)
     val address = EthAccountDelegate.address
     val shortAddress = "${address.take(6)}...${address.takeLast(4)}"
-    
+    val tabs = listOf("USDC", "EUROC")
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val balances = if (selectedTab == 0) usdcBalances else eurocBalances
+    val emptyText = if (selectedTab == 0) "No USDC balance found" else "No EUROC balance found"
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -135,7 +143,7 @@ fun UsdcBalanceSection(balances: List<TokenBalance>, isLoading: Boolean) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "USDC Balances",
+                text = "Token Balances",
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
@@ -152,6 +160,48 @@ fun UsdcBalanceSection(balances: List<TokenBalance>, isLoading: Boolean) {
         }
         Spacer(modifier = Modifier.height(12.dp))
 
+        // Tab row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .background(
+                    color = themedColor(
+                        darkColor = Color(0xFF252525),
+                        lightColor = Color(0xFFE0E0E0)
+                    )
+                )
+                .padding(3.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            tabs.forEachIndexed { index, title ->
+                val isSelected = selectedTab == index
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            if (isSelected) themedColor(darkColor = Color(0xFF3A3A3A), lightColor = Color.White)
+                            else Color.Transparent
+                        )
+                        .clickable { selectedTab = index }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = title,
+                        style = TextStyle(
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 14.sp,
+                            color = if (isSelected) themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF141414)
+                            else themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
+                        )
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+
         if (isLoading) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -165,7 +215,7 @@ fun UsdcBalanceSection(balances: List<TokenBalance>, isLoading: Boolean) {
             }
         } else if (balances.isEmpty()) {
             Text(
-                text = "No USDC balance found",
+                text = emptyText,
                 style = TextStyle(
                     fontSize = 14.sp,
                     color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
@@ -173,7 +223,7 @@ fun UsdcBalanceSection(balances: List<TokenBalance>, isLoading: Boolean) {
             )
         } else {
             balances.forEach { balance ->
-                UsdcBalanceItem(balance)
+                TokenBalanceItem(balance)
                 if (balance != balances.last()) {
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -183,11 +233,12 @@ fun UsdcBalanceSection(balances: List<TokenBalance>, isLoading: Boolean) {
 }
 
 @Composable
-fun UsdcBalanceItem(balance: TokenBalance) {
+fun TokenBalanceItem(balance: TokenBalance) {
     val chainName = when (balance.chainId) {
         "eip155:1" -> "Ethereum"
         "eip155:137" -> "Polygon"
         "eip155:8453" -> "Base"
+        "eip155:10" -> "Optimism"
         else -> balance.chainId
     }
 
@@ -215,7 +266,7 @@ fun UsdcBalanceItem(balance: TokenBalance) {
                 )
             )
             Text(
-                text = "USDC",
+                text = balance.symbol,
                 style = TextStyle(
                     fontSize = 12.sp,
                     color = themedColor(darkColor = 0xFF788686, lightColor = 0xFF788686)
@@ -223,7 +274,7 @@ fun UsdcBalanceItem(balance: TokenBalance) {
             )
         }
         Text(
-            text = "${balance.quantity.numeric} USDC",
+            text = "${balance.quantity.numeric} ${balance.symbol}",
             style = TextStyle(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
