@@ -14,7 +14,7 @@ import org.web3j.crypto.StructuredDataEncoder
 
 /**
  * Shared signing logic for payment RPC actions.
- * Used by both PaymentViewModel (full flow) and NfcQuickPayViewModel (auto-pay).
+ * Used by PaymentViewModel for the payment flow.
  */
 internal object PaymentSigner {
 
