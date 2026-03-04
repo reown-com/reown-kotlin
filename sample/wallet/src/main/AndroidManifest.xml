@@ -99,13 +99,6 @@
                 <data android:scheme="https" android:host="staging.pay.walletconnect.com" />
             </intent-filter>
 
-            <!-- Fallback: MIME-based dispatch for the second NDEF record -->
-            <intent-filter>
-                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="application/com.walletconnect.pay" />
-            </intent-filter>
-
             <!-- TECH_DISCOVERED fallback: catches ISO-DEP / NFC-A/B tags that
                  some card emulation modes produce when NDEF_DISCOVERED doesn't fire -->
             <intent-filter>

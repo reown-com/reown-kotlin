@@ -21,11 +21,6 @@ import timber.log.Timber
  */
 class NfcPaymentActivity : AppCompatActivity() {
 
-    companion object {
-        /** Must match the MIME type used by POS NfcManager */
-        private const val REOWN_PAY_MIME = "application/com.walletconnect.pay"
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -123,26 +118,10 @@ class NfcPaymentActivity : AppCompatActivity() {
         return null
     }
 
-    /**
-     * Extracts a payment URL from a single NDEF record.
-     * Handles both MIME records (application/com.walletconnect.pay) and URI records.
-     */
     private fun extractUrlFromRecord(record: NdefRecord): String? {
-        // MIME record: application/com.walletconnect.pay — payload is the raw payment URL
-        if (record.tnf == NdefRecord.TNF_MIME_MEDIA) {
-            val mimeType = String(record.type, Charsets.US_ASCII)
-            if (mimeType == REOWN_PAY_MIME) {
-                val paymentUrl = String(record.payload, Charsets.UTF_8)
-                Timber.d("NFC Payment: Found payment URL in MIME record: %s", paymentUrl)
-                return paymentUrl
-            }
-        }
-
-        // URI record
         val uri = record.toUri()?.toString() ?: return null
         val paymentUrl = unwrapPaymentUrl(uri)
         if (isPaymentUrl(paymentUrl)) return paymentUrl
-
         return null
     }
 

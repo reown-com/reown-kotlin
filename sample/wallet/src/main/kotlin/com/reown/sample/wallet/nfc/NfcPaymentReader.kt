@@ -31,11 +31,6 @@ internal class NfcPaymentReader(
 
     private val nfcAdapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(activity)
 
-    companion object {
-        /** Must match the MIME type used by POS NfcManager */
-        private const val REOWN_PAY_MIME = "application/com.walletconnect.pay"
-    }
-
     private val pendingIntent: PendingIntent by lazy {
         PendingIntent.getActivity(
             activity, 0,
@@ -46,11 +41,7 @@ internal class NfcPaymentReader(
 
     private val intentFilters: Array<IntentFilter> by lazy {
         arrayOf(
-            // Primary: custom MIME type from POS tag emulation
-            IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED).apply {
-                addDataType(REOWN_PAY_MIME)
-            },
-            // Fallback: TECH_DISCOVERED for tags that don't match NDEF_DISCOVERED
+            // TECH_DISCOVERED: catches NDEF tags from POS tag emulation
             IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED)
         )
     }
@@ -139,18 +130,8 @@ internal class NfcPaymentReader(
     }
 
     private fun extractUrlFromRecord(record: NdefRecord): String? {
-        // MIME record: application/com.walletconnect.pay — payload is the raw payment URL
-        if (record.tnf == NdefRecord.TNF_MIME_MEDIA) {
-            val mimeType = String(record.type, Charsets.US_ASCII)
-            if (mimeType == REOWN_PAY_MIME) {
-                return String(record.payload, Charsets.UTF_8)
-            }
-        }
-
-        // URI record
         val uri = record.toUri()?.toString() ?: return null
         if (isPaymentUrl(uri)) return unwrapPaymentUrl(uri)
-
         return null
     }
 
