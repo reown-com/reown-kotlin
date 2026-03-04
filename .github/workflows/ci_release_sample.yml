@@ -64,6 +64,10 @@ jobs:
             [[ "${{ github.event.inputs.modal }}" == "true" ]] && APPS+=("\"modal\"")
             [[ "${{ github.event.inputs.pos }}" == "true" ]] && APPS+=("\"pos\"")
             JOINED=$(IFS=,; echo "${APPS[*]}")
+            if [[ -z "$JOINED" ]]; then
+              echo "Error: At least one app must be selected" >&2
+              exit 1
+            fi
             echo "matrix={\"app\":[${JOINED}]}" >> $GITHUB_OUTPUT
           fi
 
