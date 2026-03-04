@@ -1,5 +1,8 @@
 name: Release Samples
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
