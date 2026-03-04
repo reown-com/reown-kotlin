@@ -120,6 +120,7 @@ jobs:
           CMD=":sample:${{ matrix.app }}:assemble${{ env.BUILD_TYPE }}"
           if [[ "${{ matrix.app }}" != "pos" ]]; then
             CMD="$CMD :sample:${{ matrix.app }}:appDistributionUpload${{ env.BUILD_TYPE }}"
+            CMD="$CMD -PappDistributionReleaseNotes=${{ matrix.app }} (${{ env.BUILD_TYPE }}) - Branch: ${{ github.ref_name }}"
           fi
           ./gradlew $CMD
 
@@ -131,15 +132,15 @@ jobs:
         if: always() && matrix.app != 'pos'
         run: |
           case "${{ matrix.app }}-${{ env.BUILD_TYPE }}" in
-            wallet-Release) echo "url=${{ secrets.FIREBASE_WALLET_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
-            wallet-Internal) echo "url=${{ secrets.FIREBASE_WALLET_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
-            wallet-Debug) echo "url=${{ secrets.FIREBASE_WALLET_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
-            dapp-Release) echo "url=${{ secrets.FIREBASE_DAPP_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
-            dapp-Internal) echo "url=${{ secrets.FIREBASE_DAPP_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
-            dapp-Debug) echo "url=${{ secrets.FIREBASE_DAPP_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
-            modal-Release) echo "url=${{ secrets.FIREBASE_MODAL_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
-            modal-Internal) echo "url=${{ secrets.FIREBASE_MODAL_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
-            modal-Debug) echo "url=${{ secrets.FIREBASE_MODAL_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
+            wallet-Release) echo "url=${{ vars.FIREBASE_WALLET_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
+            wallet-Internal) echo "url=${{ vars.FIREBASE_WALLET_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
+            wallet-Debug) echo "url=${{ vars.FIREBASE_WALLET_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
+            dapp-Release) echo "url=${{ vars.FIREBASE_DAPP_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
+            dapp-Internal) echo "url=${{ vars.FIREBASE_DAPP_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
+            dapp-Debug) echo "url=${{ vars.FIREBASE_DAPP_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
+            modal-Release) echo "url=${{ vars.FIREBASE_MODAL_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
+            modal-Internal) echo "url=${{ vars.FIREBASE_MODAL_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
+            modal-Debug) echo "url=${{ vars.FIREBASE_MODAL_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
           esac
 
       - name: Send Slack notification
