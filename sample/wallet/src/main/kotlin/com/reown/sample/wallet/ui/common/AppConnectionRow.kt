@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -49,10 +48,10 @@ fun AppConnectionRow(
         // App icon
         val iconModifier = Modifier
             .size(iconSize)
-            .clip(RoundedCornerShape(borderRadius.radius3))
+            .clip(borderRadius.shapeMedium)
             .border(
                 width = borderWidth,
-                shape = RoundedCornerShape(borderRadius.radius3),
+                shape = borderRadius.shapeMedium,
                 color = colors.foregroundSecondary
             )
 

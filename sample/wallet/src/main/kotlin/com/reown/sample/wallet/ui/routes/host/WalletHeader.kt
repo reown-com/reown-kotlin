@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.ripple
 import androidx.compose.runtime.Composable
@@ -22,7 +21,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
@@ -55,7 +53,7 @@ fun WalletHeader(navController: NavController) {
                 imageVector = ImageVector.vectorResource(id = R.drawable.ic_walletconnect_logo),
                 contentDescription = "WalletConnect Logo",
                 modifier = Modifier.size(width = 28.dp, height = 18.dp),
-                colorFilter = ColorFilter.tint(Color.White)
+                colorFilter = ColorFilter.tint(WCTheme.colors.textInvert)
             )
         }
 
@@ -63,7 +61,7 @@ fun WalletHeader(navController: NavController) {
         Box(
             modifier = Modifier
                 .size(38.dp)
-                .clip(RoundedCornerShape(WCTheme.borderRadius.radius3))
+                .clip(WCTheme.borderRadius.shapeMedium)
                 .background(WCTheme.colors.bgInvert)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },

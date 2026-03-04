@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -25,24 +24,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import androidx.compose.material.CircularProgressIndicator
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scanner_options.ModalCloseButton
-
-private val accentBlue = Color(0xFF0988F0)
 
 @Composable
 fun RequestBottomSheet(
@@ -63,11 +57,8 @@ fun RequestBottomSheet(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = themedColor(
-                    darkColor = Color(0xFF1A1A1A),
-                    lightColor = Color.White
-                ),
-                shape = RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp)
+                color = WCTheme.colors.bgPrimary,
+                shape = RoundedCornerShape(topStart = WCTheme.borderRadius.radius8, topEnd = WCTheme.borderRadius.radius8)
             )
     ) {
         // Header
@@ -111,7 +102,7 @@ private fun ModalHeader(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(horizontal = WCTheme.spacing.spacing4, vertical = WCTheme.spacing.spacing4),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Close button (top-right)
@@ -123,34 +114,31 @@ private fun ModalHeader(
 
         // Link mode badge
         if (isLinkMode) {
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing1))
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(accentBlue)
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .clip(WCTheme.borderRadius.shapeXSmall)
+                    .background(WCTheme.colors.bgAccentPrimary)
+                    .padding(horizontal = WCTheme.spacing.spacing3, vertical = WCTheme.spacing.spacing1),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "LINK MODE",
-                    style = WCTheme.typography.bodySmMedium.copy(color = Color.White)
+                    style = WCTheme.typography.bodySmMedium.copy(color = WCTheme.colors.textInvert)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
 
         // App icon
         val iconModifier = Modifier
             .size(64.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(WCTheme.borderRadius.shapeLarge)
             .border(
                 width = 1.dp,
-                shape = RoundedCornerShape(16.dp),
-                color = themedColor(
-                    darkColor = Color(0xFF3A3A3A),
-                    lightColor = Color(0xFFD0D0D0)
-                )
+                shape = WCTheme.borderRadius.shapeLarge,
+                color = WCTheme.colors.borderPrimary
             )
 
         if (peerUI.peerIcon.isNotBlank() && peerUI.peerIcon != "null") {
@@ -177,17 +165,17 @@ private fun ModalHeader(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
 
         // Title: "{intention} {appName}"
         val appName = peerUI.peerName.takeIf { it.isNotBlank() } ?: "Unknown"
         Text(
             text = "$intention $appName",
             style = WCTheme.typography.h6Regular.copy(
-                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF202020)
+                color = WCTheme.colors.textPrimary
             ),
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+            modifier = Modifier.padding(top = WCTheme.spacing.spacing1, bottom = WCTheme.spacing.spacing3)
         )
     }
 }
@@ -205,9 +193,9 @@ private fun ModalFooter(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(top = 16.dp, bottom = 32.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = WCTheme.spacing.spacing4)
+            .padding(top = WCTheme.spacing.spacing4, bottom = WCTheme.spacing.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
     ) {
         val buttonsDisabled = isLoadingApprove || isLoadingReject
 
@@ -216,20 +204,12 @@ private fun ModalFooter(
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(
-                    themedColor(
-                        darkColor = Color(0xFF202020),
-                        lightColor = Color.White
-                    )
-                )
+                .clip(WCTheme.borderRadius.shapeLarge)
+                .background(WCTheme.colors.bgPrimary)
                 .border(
                     width = 1.dp,
-                    color = themedColor(
-                        darkColor = Color(0xFF4F4F4F),
-                        lightColor = Color(0xFFD0D0D0)
-                    ),
-                    shape = RoundedCornerShape(16.dp)
+                    color = WCTheme.colors.borderSecondary,
+                    shape = WCTheme.borderRadius.shapeLarge
                 )
                 .then(
                     if (!buttonsDisabled) Modifier.clickable { onReject() } else Modifier
@@ -240,26 +220,27 @@ private fun ModalFooter(
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp,
-                    color = themedColor(darkColor = Color.White, lightColor = Color.Black)
+                    color = WCTheme.colors.textPrimary
                 )
             } else {
                 Text(
                     text = rejectLabel,
                     style = WCTheme.typography.bodyLgRegular.copy(
-                        color = themedColor(darkColor = 0xFFFFFFFF, lightColor = 0xFF202020)
+                        color = WCTheme.colors.textPrimary
                     )
                 )
             }
         }
 
         // Approve button (primary - filled)
+        val accentColor = WCTheme.colors.bgAccentPrimary
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(WCTheme.borderRadius.shapeLarge)
                 .background(
-                    if (approveEnabled) accentBlue else accentBlue.copy(alpha = 0.6f)
+                    if (approveEnabled) accentColor else accentColor.copy(alpha = 0.6f)
                 )
                 .then(
                     if (approveEnabled && !buttonsDisabled) {
@@ -274,13 +255,13 @@ private fun ModalFooter(
                 CircularProgressIndicator(
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp,
-                    color = Color.White
+                    color = WCTheme.colors.textInvert
                 )
             } else {
                 Text(
                     text = approveLabel,
                     style = WCTheme.typography.bodyLgRegular.copy(
-                        color = Color.White
+                        color = WCTheme.colors.textInvert
                     )
                 )
             }

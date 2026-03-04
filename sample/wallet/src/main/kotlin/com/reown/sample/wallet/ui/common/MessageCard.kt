@@ -9,16 +9,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
 
 @Composable
@@ -34,29 +31,24 @@ fun MessageCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(max = maxHeight)
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                themedColor(
-                    darkColor = Color(0xFF252525),
-                    lightColor = Color(0xFFF3F3F3)
-                )
-            )
+            .clip(WCTheme.borderRadius.shapeLarge)
+            .background(WCTheme.colors.foregroundPrimary)
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(WCTheme.spacing.spacing5),
+        verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
     ) {
         if (showTitle) {
             Text(
                 text = title,
                 style = WCTheme.typography.bodyLgRegular.copy(
-                    color = themedColor(darkColor = 0xFF9A9A9A, lightColor = 0xFF9A9A9A)
+                    color = WCTheme.colors.textSecondary
                 )
             )
         }
         Text(
             text = message,
             style = WCTheme.typography.bodyMdRegular.copy(
-                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF202020)
+                color = WCTheme.colors.textPrimary
             )
         )
     }

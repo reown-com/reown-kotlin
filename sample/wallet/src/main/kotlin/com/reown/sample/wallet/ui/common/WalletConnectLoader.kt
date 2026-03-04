@@ -17,21 +17,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-
-private val LightGrayColor = Color(0xFFE8E8E8)
-private val DarkGrayColor = Color(0xFF363636)
-private val GrayColor = Color(0xFF6C6C6C)
-private val AccentBlueColor = Color(0xFF0988F0)
+import com.reown.sample.common.ui.theme.WCTheme
 
 private const val CYCLE_DURATION = 4000
 private const val FADE_TIME = 80
 
 @Composable
 fun WalletConnectLoader(size: Dp = 120.dp) {
-    val gap = 2.dp
+    val colors = WCTheme.colors
+    val gap = WCTheme.spacing.spacing05
     val squareSize = (size - gap) / 2
     val halfSquare = squareSize / 2
     val squareSizeFloat = squareSize.value
@@ -178,7 +174,7 @@ fun WalletConnectLoader(size: Dp = 120.dp) {
                 .offset(x = 0.dp, y = 0.dp)
                 .size(squareSize)
                 .clip(RoundedCornerShape(cornerTL.dp))
-                .background(LightGrayColor.copy(alpha = opacityTL))
+                .background(colors.foregroundSecondary.copy(alpha = opacityTL))
         )
 
         // Top-right: Dark gray square
@@ -187,7 +183,7 @@ fun WalletConnectLoader(size: Dp = 120.dp) {
                 .offset(x = squareSize + gap, y = 0.dp)
                 .size(squareSize)
                 .clip(RoundedCornerShape(cornerTR.dp))
-                .background(DarkGrayColor.copy(alpha = opacityTR))
+                .background(colors.foregroundTertiary.copy(alpha = opacityTR))
         )
 
         // Bottom-left: Gray half-height pill
@@ -196,7 +192,7 @@ fun WalletConnectLoader(size: Dp = 120.dp) {
                 .offset(x = 0.dp, y = squareSize + gap + halfSquare)
                 .size(width = squareSize, height = halfSquare)
                 .clip(RoundedCornerShape(cornerBL.dp))
-                .background(GrayColor.copy(alpha = opacityBL))
+                .background(colors.textSecondary.copy(alpha = opacityBL))
         )
 
         // Bottom-right: Accent blue square
@@ -205,7 +201,7 @@ fun WalletConnectLoader(size: Dp = 120.dp) {
                 .offset(x = squareSize + gap, y = squareSize + gap)
                 .size(squareSize)
                 .clip(RoundedCornerShape(cornerBR.dp))
-                .background(AccentBlueColor.copy(alpha = opacityBR))
+                .background(colors.bgAccentPrimary.copy(alpha = opacityBR))
         )
     }
 }

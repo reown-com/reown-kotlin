@@ -20,14 +20,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.Route
@@ -44,13 +42,10 @@ fun ScannerOptionsRoute(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = themedColor(
-                    darkColor = Color(0xFF1A1A1A),
-                    lightColor = Color(0xFFFFFFFF)
-                ),
-                shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+                color = WCTheme.colors.bgPrimary,
+                shape = RoundedCornerShape(topStart = WCTheme.borderRadius.radius8, topEnd = WCTheme.borderRadius.radius8)
             )
-            .padding(20.dp)
+            .padding(WCTheme.spacing.spacing5)
     ) {
         // Close button row
         Row(
@@ -60,7 +55,7 @@ fun ScannerOptionsRoute(
             ModalCloseButton(onClick = { navController.popBackStack() })
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing5))
 
         // Scan QR code option
         OptionCard(
@@ -72,7 +67,7 @@ fun ScannerOptionsRoute(
             }
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
 
         // Paste a URL option
         OptionCard(
@@ -89,7 +84,7 @@ fun ScannerOptionsRoute(
             }
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing5))
     }
 }
 
@@ -98,14 +93,11 @@ fun ModalCloseButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(38.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(WCTheme.borderRadius.shapeMedium)
             .border(
                 width = 1.dp,
-                color = themedColor(
-                    darkColor = Color(0xFF3A3A3A),
-                    lightColor = Color(0xFFD0D0D0)
-                ),
-                shape = RoundedCornerShape(12.dp)
+                color = WCTheme.colors.borderPrimary,
+                shape = WCTheme.borderRadius.shapeMedium
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -114,10 +106,7 @@ fun ModalCloseButton(onClick: () -> Unit) {
             imageVector = ImageVector.vectorResource(id = R.drawable.ic_x_close),
             contentDescription = "Close",
             modifier = Modifier.size(20.dp),
-            tint = themedColor(
-                darkColor = Color(0xFFe3e7e7),
-                lightColor = Color(0xFF202020)
-            )
+            tint = WCTheme.colors.textPrimary
         )
     }
 }
@@ -132,32 +121,24 @@ private fun OptionCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(76.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                color = themedColor(
-                    darkColor = Color(0xFF252525),
-                    lightColor = Color(0xFFF3F3F3)
-                )
-            )
+            .clip(WCTheme.borderRadius.shapeXLarge)
+            .background(color = WCTheme.colors.foregroundPrimary)
             .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = WCTheme.spacing.spacing6),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
             style = WCTheme.typography.bodyLgRegular.copy(
-                color = themedColor(darkColor = 0xFFe3e7e7, lightColor = 0xFF202020)
+                color = WCTheme.colors.textPrimary
             )
         )
         Icon(
             imageVector = ImageVector.vectorResource(id = iconRes),
             contentDescription = label,
             modifier = Modifier.size(24.dp),
-            tint = themedColor(
-                darkColor = Color(0xFFe3e7e7),
-                lightColor = Color(0xFF202020)
-            )
+            tint = WCTheme.colors.textPrimary
         )
     }
 }

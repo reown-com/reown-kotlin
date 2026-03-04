@@ -12,19 +12,27 @@ import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.domain.account.bytesToHex
 import com.reown.sample.wallet.domain.account.derivePrivateKeyFromMnemonic
-import com.reown.sample.wallet.domain.account.isHexChar
+import com.reown.sample.wallet.domain.account.generateKeys
 import com.reown.sample.wallet.domain.account.normalizePrivateKeyHex
+import com.reown.sample.wallet.domain.client.Keypair
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.SuiUtils
+import com.reown.sample.wallet.domain.client.TONClient
+import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit
 import java.math.BigInteger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import org.web3j.crypto.Sign
 import uniffi.yttrium_utils.TronKeypair
 import uniffi.yttrium_utils.solanaDeriveKeypairFromMnemonic
+import uniffi.yttrium_utils.tronGetAddress
 import uniffi.yttrium_utils.suiDeriveKeypairFromMnemonic
+import kotlin.coroutines.resume
 
 internal enum class ImportWalletChain(val label: String, val placeholder: String) {
     EVM("EVM", "Enter mnemonic phrase or private key (0x...)"),
@@ -81,6 +89,7 @@ internal class ImportWalletViewModel : ViewModel() {
                     ImportWalletChain.TRON -> importTron(input)
                     ImportWalletChain.STACKS -> importStacks(input)
                 }
+                disconnectAllSessions()
                 ImportResult.Success(address)
             } catch (e: Exception) {
                 ImportResult.Error(e.message ?: "Import failed")
@@ -93,10 +102,14 @@ internal class ImportWalletViewModel : ViewModel() {
 
     private fun importEvm(input: String): String {
         return if (input.contains(" ")) {
-            EthAccountDelegate.importFromMnemonic(input)
+            val mnemonic = input.lowercase()
+            val derivedPrivateKey = normalizePrivateKeyHex(derivePrivateKeyFromMnemonic(mnemonic, coinType = 60))
+            with(EthAccountDelegate) { generateKeys(derivedPrivateKey) }
+            EthAccountDelegate.importFromMnemonic(mnemonic)
             EthAccountDelegate.address
         } else {
             val key = normalizePrivateKeyHex(input)
+            with(EthAccountDelegate) { generateKeys(key) }
             EthAccountDelegate.privateKey = key
             EthAccountDelegate.address
         }
@@ -108,8 +121,9 @@ internal class ImportWalletViewModel : ViewModel() {
             "Enter secret key and public key separated by ':'"
         }
         val (sk, pk) = parts
+        val wallet = TONClient.getAddressFromKeyPair(Keypair(sk, pk))
         TONAccountDelegate.importKeypair(sk, pk)
-        return TONAccountDelegate.addressFriendly
+        return wallet.friendly
     }
 
     private fun importSolana(input: String): String {
@@ -149,9 +163,9 @@ internal class ImportWalletViewModel : ViewModel() {
             .getEncoded(true)
             .bytesToHex()
         val keypair = TronKeypair(sk, compressedPk)
-        TronAccountDelegate.publicKey = keypair.pk
-        TronAccountDelegate.secretKey = keypair.sk
-        return TronAccountDelegate.address
+        val address = tronGetAddress(keypair).base58
+        TronAccountDelegate.importKeypair(keypair)
+        return address
     }
 
     private fun importStacks(input: String): String {
@@ -160,6 +174,29 @@ internal class ImportWalletViewModel : ViewModel() {
         Stacks.getAddress(input, Stacks.Version.mainnetP2PKH)
         StacksAccountDelegate.importedWallet = input
         return StacksAccountDelegate.mainnetAddress
+    }
+
+    private suspend fun disconnectAllSessions() {
+        val sessions = WalletKit.getListOfActiveSessions()
+        sessions.forEach { session ->
+            disconnectSession(session.topic)
+        }
+    }
+
+    private suspend fun disconnectSession(topic: String) {
+        withTimeoutOrNull(10_000) {
+            suspendCancellableCoroutine { continuation ->
+                try {
+                    WalletKit.disconnectSession(
+                        params = Wallet.Params.SessionDisconnect(topic),
+                        onSuccess = { if (continuation.isActive) continuation.resume(Unit) },
+                        onError = { if (continuation.isActive) continuation.resume(Unit) }
+                    )
+                } catch (_: Exception) {
+                    if (continuation.isActive) continuation.resume(Unit)
+                }
+            }
+        }
     }
 
 }
