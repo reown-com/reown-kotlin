@@ -89,14 +89,21 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Wallet.Translucent">
 
-            <!-- NDEF tag with custom MIME type (application/vnd.reown.pay).
-                 POS emits MIME as the first NDEF record so that Android dispatches
-                 NDEF_DISCOVERED based on MIME type — bypasses Samsung's NFC handler
-                 which intercepts HTTPS URLs and opens them in the browser. -->
+            <!-- NDEF tag with payment URL: POS emits the payment URI as the first
+                 NDEF record. Wallet intercepts via the URI host so it opens directly
+                 instead of the browser. -->
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="application/vnd.reown.pay" />
+                <data android:scheme="https" android:host="pay.walletconnect.com" />
+                <data android:scheme="https" android:host="staging.pay.walletconnect.com" />
+            </intent-filter>
+
+            <!-- Fallback: MIME-based dispatch for the second NDEF record -->
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/com.walletconnect.pay" />
             </intent-filter>
 
             <!-- TECH_DISCOVERED fallback: catches ISO-DEP / NFC-A/B tags that
@@ -110,18 +117,20 @@
                 android:name="android.nfc.action.TECH_DISCOVERED"
                 android:resource="@xml/nfc_tech_filter" />
 
-            <!-- Android App Link fallback: if the NFC service opens the URL in the
-                 browser, App Links redirects to this activity instead.
-                 Verified via lab.reown.com/.well-known/assetlinks.json -->
-<!--            <intent-filter android:autoVerify="true">-->
-<!--                <action android:name="android.intent.action.VIEW" />-->
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--                <category android:name="android.intent.category.BROWSABLE" />-->
-<!--                <data-->
-<!--                    android:scheme="https"-->
-<!--                    android:host="lab.reown.com"-->
-<!--                    android:pathPrefix="/wallet" />-->
-<!--            </intent-filter>-->
+            <!-- Android App Links: when the browser opens the payment URL from NFC,
+                 App Links auto-redirects to this activity (if wallet is installed).
+                 Requires /.well-known/assetlinks.json on the payment domain. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="pay.walletconnect.com" />
+                <data
+                    android:scheme="https"
+                    android:host="staging.pay.walletconnect.com" />
+            </intent-filter>
         </activity>
 
         <service

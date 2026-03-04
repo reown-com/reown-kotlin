@@ -8,27 +8,22 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.reown.sample.wallet.nfc.PaymentHceService
 import timber.log.Timber
 
 /**
- * Translucent overlay activity for NFC quick-pay (Apple Pay / Google Pay-like UX).
+ * Translucent activity that intercepts NFC payment intents and redirects
+ * to WalletKitActivity where the user can pick a payment option.
  *
  * Launched when the user taps the phone on a POS terminal from the home screen.
- * Intercepts NDEF_DISCOVERED intents containing the payment URL, then runs the
- * full auto-pay pipeline without user interaction.
- *
- * If all payment options require collectData (information capture), falls back
- * to the full WalletKitActivity payment flow.
+ * Extracts the payment URL from the NFC intent and opens the full payment modal.
  */
 class NfcPaymentActivity : AppCompatActivity() {
 
     companion object {
         /** Must match the MIME type used by POS NfcManager */
-        private const val REOWN_PAY_MIME = "application/vnd.reown.pay"
+        private const val REOWN_PAY_MIME = "application/com.walletconnect.pay"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,31 +31,32 @@ class NfcPaymentActivity : AppCompatActivity() {
 
         val paymentUrl = extractPaymentUrl(intent)
         if (paymentUrl == null) {
-            Timber.w("NFC QuickPay: No payment URL found in intent")
+            Timber.w("NFC Payment: No payment URL found in intent")
             finish()
             return
         }
-        Timber.d("NFC QuickPay: Starting with URL: %s", paymentUrl)
-
-        setContent {
-            val vm: NfcQuickPayViewModel = viewModel()
-
-            // Start payment on first composition
-            androidx.compose.runtime.LaunchedEffect(Unit) {
-                vm.startPayment(paymentUrl)
-            }
-
-            NfcQuickPayScreen(
-                viewModel = vm,
-                onDone = { finish() },
-                onFallback = { url -> fallbackToFullApp(url) }
-            )
-        }
+        Timber.d("NFC Payment: Redirecting to full payment modal with URL: %s", paymentUrl)
+        openFullPaymentModal(paymentUrl)
+        finish()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        // Ignore additional taps while payment is in progress
+        val paymentUrl = extractPaymentUrl(intent) ?: return
+        openFullPaymentModal(paymentUrl)
+        finish()
+    }
+
+    /**
+     * Open WalletKitActivity with the payment URL to show the full payment modal.
+     */
+    private fun openFullPaymentModal(paymentUrl: String) {
+        val intent = Intent(this, WalletKitActivity::class.java).apply {
+            action = PaymentHceService.ACTION_PAYMENT_URL_RECEIVED
+            putExtra(PaymentHceService.EXTRA_PAYMENT_URL, paymentUrl)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+        startActivity(intent)
     }
 
     /**
@@ -68,7 +64,6 @@ class NfcPaymentActivity : AppCompatActivity() {
      *
      * Supports:
      * - NDEF_DISCOVERED: NDEF tag with URI record (from POS tag emulation)
-     *   The URI may be a Universal Link wrapper: https://lab.reown.com/wallet?payUrl=<encoded>
      * - TECH_DISCOVERED: Fallback for ISO-DEP / NFC-A/B tags where NDEF_DISCOVERED didn't fire.
      *   Reads NDEF manually from the tag.
      * - HCE delivery: ACTION_PAYMENT_URL_RECEIVED from PaymentHceService
@@ -77,7 +72,7 @@ class NfcPaymentActivity : AppCompatActivity() {
     private fun extractPaymentUrl(intent: Intent?): String? {
         if (intent == null) return null
 
-        Timber.d("NFC QuickPay: Intent action=%s, data=%s", intent.action, intent.data)
+        Timber.d("NFC Payment: Intent action=%s, data=%s", intent.action, intent.data)
 
         // HCE-delivered payment URL
         if (intent.action == PaymentHceService.ACTION_PAYMENT_URL_RECEIVED) {
@@ -91,17 +86,16 @@ class NfcPaymentActivity : AppCompatActivity() {
 
         // TECH_DISCOVERED fallback: manually read NDEF from the tag
         if (intent.action == NfcAdapter.ACTION_TECH_DISCOVERED) {
-            Timber.d("NFC QuickPay: TECH_DISCOVERED — reading NDEF from tag")
+            Timber.d("NFC Payment: TECH_DISCOVERED — reading NDEF from tag")
             return extractFromTechIntent(intent)
                 ?: extractFromNdefIntent(intent) // Some tags include NDEF extras even in TECH
         }
 
-        // ACTION_VIEW: Android App Link fallback — if the NFC URL opens in the browser,
-        // App Links verification redirects lab.reown.com/wallet to this activity
+        // ACTION_VIEW: Android App Link fallback
         if (intent.action == Intent.ACTION_VIEW) {
             val rawUri = intent.data?.toString()
             if (rawUri != null) {
-                Timber.d("NFC QuickPay: ACTION_VIEW — extracting from: %s", rawUri)
+                Timber.d("NFC Payment: ACTION_VIEW — extracting from: %s", rawUri)
                 return unwrapPaymentUrl(rawUri)
             }
         }
@@ -110,7 +104,6 @@ class NfcPaymentActivity : AppCompatActivity() {
     }
 
     private fun extractFromNdefIntent(intent: Intent): String? {
-        // Parse NDEF messages from extras (handles both MIME and URI records)
         val ndefMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
         if (ndefMessages != null) {
             for (msg in ndefMessages) {
@@ -122,7 +115,6 @@ class NfcPaymentActivity : AppCompatActivity() {
             }
         }
 
-        // Fallback: check intent.data for URI-based dispatch
         val rawUri = intent.data?.toString()
         if (rawUri != null) {
             return unwrapPaymentUrl(rawUri)
@@ -133,15 +125,15 @@ class NfcPaymentActivity : AppCompatActivity() {
 
     /**
      * Extracts a payment URL from a single NDEF record.
-     * Handles both MIME records (application/vnd.reown.pay) and URI records.
+     * Handles both MIME records (application/com.walletconnect.pay) and URI records.
      */
     private fun extractUrlFromRecord(record: NdefRecord): String? {
-        // MIME record: application/vnd.reown.pay — payload is the raw payment URL
+        // MIME record: application/com.walletconnect.pay — payload is the raw payment URL
         if (record.tnf == NdefRecord.TNF_MIME_MEDIA) {
             val mimeType = String(record.type, Charsets.US_ASCII)
             if (mimeType == REOWN_PAY_MIME) {
                 val paymentUrl = String(record.payload, Charsets.UTF_8)
-                Timber.d("NFC QuickPay: Found payment URL in MIME record: %s", paymentUrl)
+                Timber.d("NFC Payment: Found payment URL in MIME record: %s", paymentUrl)
                 return paymentUrl
             }
         }
@@ -166,7 +158,7 @@ class NfcPaymentActivity : AppCompatActivity() {
             }
             null
         } catch (e: Exception) {
-            Timber.e(e, "NFC QuickPay: Error reading NDEF from tag")
+            Timber.e(e, "NFC Payment: Error reading NDEF from tag")
             null
         } finally {
             try { ndef.close() } catch (_: Exception) {}
@@ -177,13 +169,6 @@ class NfcPaymentActivity : AppCompatActivity() {
         url.contains("pay.walletconnect.com") ||
             (url.contains("lab.reown.com/wallet") && url.contains("payUrl="))
 
-    /**
-     * Unwrap the payment URL from a Universal Link wrapper if present.
-     * Input:  https://lab.reown.com/wallet?payUrl=https%3A%2F%2Fpay.walletconnect.com%2Fpay_xxx
-     * Output: https://pay.walletconnect.com/pay_xxx
-     *
-     * If the URL is already a direct payment URL, returns it as-is.
-     */
     private fun unwrapPaymentUrl(url: String): String {
         return try {
             val uri = Uri.parse(url)
@@ -191,20 +176,5 @@ class NfcPaymentActivity : AppCompatActivity() {
         } catch (e: Exception) {
             url
         }
-    }
-
-    /**
-     * Fall back to full WalletKitActivity when auto-pay isn't possible
-     * (e.g., all options require collectData).
-     */
-    private fun fallbackToFullApp(paymentUrl: String) {
-        Timber.d("NFC QuickPay: Falling back to full app for: %s", paymentUrl)
-        val intent = Intent(this, WalletKitActivity::class.java).apply {
-            action = PaymentHceService.ACTION_PAYMENT_URL_RECEIVED
-            putExtra(PaymentHceService.EXTRA_PAYMENT_URL, paymentUrl)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        }
-        startActivity(intent)
-        finish()
     }
 }

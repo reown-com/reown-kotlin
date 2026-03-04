@@ -20,10 +20,11 @@ import timber.log.Timber
  * - **Android**: NDEF_DISCOVERED intent filter — system shows a chooser
  *   when multiple wallets are installed.
  *
- * The NDEF message contains two records:
- * 1. MIME record (application/vnd.reown.pay) — Android dispatches based on
- *    this, bypassing Samsung's HTTPS URL interception.
- * 2. URI record — the raw payment URL for iOS Background Tag Reading.
+ * The NDEF message contains a single URI record with the payment URL.
+ * Android opens the URL via the browser, which auto-redirects to the
+ * wallet via verified App Links (if installed) or loads the payment
+ * page directly (if not). No system "New tag scanned" dialog.
+ * iOS Background Tag Reading uses the URI record for Universal Links.
  */
 internal object NfcManager {
 
@@ -70,23 +71,6 @@ internal object NfcManager {
         IngenicoNfcTagEmulator.disable()
     }
 
-    /**
-     * Custom MIME type for Android NDEF_DISCOVERED dispatch.
-     * Samsung's NFC handler intercepts HTTPS URLs and opens them in the browser,
-     * bypassing NDEF_DISCOVERED intent filters. Using a custom MIME type as the
-     * first NDEF record ensures Android dispatches to our app instead.
-     */
-    private const val REOWN_PAY_MIME = "application/vnd.reown.pay"
-
-    /**
-     * Emits an NDEF message with two records:
-     * 1. MIME record (application/vnd.reown.pay) — Android dispatches NDEF_DISCOVERED
-     *    based on the first record's MIME type, bypassing Samsung's HTTPS URL interception.
-     *    Payload contains the raw payment URL.
-     * 2. URI record — the raw payment URL. iOS Background Tag Reading checks all
-     *    records for Universal Links. Wallets that register applinks:pay.walletconnect.com
-     *    will be opened directly.
-     */
     // TODO: Remove staging rewrite once production AASA is deployed
     private fun rewriteForStaging(uri: String): String =
         uri.replace("pay.walletconnect.com", "staging.pay.walletconnect.com")
@@ -96,7 +80,6 @@ internal object NfcManager {
         Timber.d("NFC: Emitting payment URI: %s (staging: %s)", paymentUri, stagingUri)
         val ndefMessage = NdefMessage(
             arrayOf(
-                NdefRecord.createMime(REOWN_PAY_MIME, stagingUri.toByteArray(Charsets.UTF_8)),
                 NdefRecord.createUri(stagingUri)
             )
         )

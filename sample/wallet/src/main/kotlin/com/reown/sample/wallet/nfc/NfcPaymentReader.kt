@@ -33,7 +33,7 @@ internal class NfcPaymentReader(
 
     companion object {
         /** Must match the MIME type used by POS NfcManager */
-        private const val REOWN_PAY_MIME = "application/vnd.reown.pay"
+        private const val REOWN_PAY_MIME = "application/com.walletconnect.pay"
     }
 
     private val pendingIntent: PendingIntent by lazy {
@@ -139,7 +139,7 @@ internal class NfcPaymentReader(
     }
 
     private fun extractUrlFromRecord(record: NdefRecord): String? {
-        // MIME record: application/vnd.reown.pay — payload is the raw payment URL
+        // MIME record: application/com.walletconnect.pay — payload is the raw payment URL
         if (record.tnf == NdefRecord.TNF_MIME_MEDIA) {
             val mimeType = String(record.type, Charsets.US_ASCII)
             if (mimeType == REOWN_PAY_MIME) {

@@ -2,6 +2,8 @@
 
 package com.walletconnect.sample.pos.nfc
 
+import android.os.Handler
+import android.os.Looper
 import com.usdk.apiservice.aidl.data.BytesValue
 import com.usdk.apiservice.aidl.rfreader.IoCtrlCmd
 import com.usdk.apiservice.aidl.rfreader.OnNFCTagListener
@@ -22,6 +24,9 @@ internal object IngenicoNfcTagEmulator {
 
     private const val DEFAULT_TIMEOUT_SECONDS = 30
 
+    /** Watchdog fires a few seconds after the USDK timeout to catch missed callbacks. */
+    private const val WATCHDOG_PADDING_MS = 5_000L
+
     @Volatile
     private var currentNdefBytes: ByteArray? = null
 
@@ -33,6 +38,15 @@ internal object IngenicoNfcTagEmulator {
 
     @Volatile
     private var active: Boolean = false
+
+    private val handler = Handler(Looper.getMainLooper())
+
+    private val watchdogRunnable = Runnable {
+        if (active) {
+            Timber.d("NFC Tag Emulation: Watchdog — re-arming (callback may have been missed)")
+            rearm()
+        }
+    }
 
     /**
      * Whether the USDK NFC tag emulation module is available on this device.
@@ -102,6 +116,8 @@ internal object IngenicoNfcTagEmulator {
                 return
             }
 
+            scheduleWatchdog()
+
             Timber.d("NFC Tag Emulation: Enabled (timeout=%ds, payload=%d bytes, hex=%s)",
                 timeoutSeconds, ndefBytes.size, ndefBytes.toHexString())
         } catch (e: Exception) {
@@ -118,6 +134,7 @@ internal object IngenicoNfcTagEmulator {
         active = false
         currentNdefBytes = null
         onBeingReadCallback = null
+        handler.removeCallbacks(watchdogRunnable)
 
         val rfReader = UsdkServiceHelper.getRFReader()
         val nfcTag = UsdkServiceHelper.getNFCTag()
@@ -166,14 +183,19 @@ internal object IngenicoNfcTagEmulator {
     }
 
     /**
-     * Re-arms emulation after a timeout. Uses the last known NDEF payload.
+     * Re-arms emulation after a timeout or read. Uses the last known NDEF payload.
+     * Re-registers the event listener to ensure callbacks keep working across cycles.
      */
     private fun rearm() {
         if (!active) return
         val bytes = currentNdefBytes ?: return
 
         val rfReader = UsdkServiceHelper.getRFReader() ?: return
+        val nfcTag = UsdkServiceHelper.getNFCTag()
         try {
+            // Re-register event listener to keep callbacks alive across AIDL cycles
+            nfcTag?.startEventListener(nfcTagListener)
+
             val out = BytesValue()
 
             var ret = rfReader.ioControl(IoCtrlCmd.SetCardEmuSwitch, byteArrayOf(1), out)
@@ -194,9 +216,21 @@ internal object IngenicoNfcTagEmulator {
                 return
             }
 
+            scheduleWatchdog()
+
             Timber.d("NFC Tag Emulation: Re-armed (timeout=%ds)", currentTimeoutSeconds)
         } catch (e: Exception) {
             Timber.e(e, "NFC Tag Emulation: Failed to re-arm")
         }
+    }
+
+    /**
+     * Schedules a watchdog timer that re-arms emulation if the USDK callback
+     * is missed (e.g. AIDL listener binder went stale).
+     */
+    private fun scheduleWatchdog() {
+        handler.removeCallbacks(watchdogRunnable)
+        val delayMs = currentTimeoutSeconds * 1_000L + WATCHDOG_PADDING_MS
+        handler.postDelayed(watchdogRunnable, delayMs)
     }
 }
