@@ -7,11 +7,35 @@ plugins {
 }
 
 private val Project.secrets: Properties
-    get() = rootProject.file("secrets.properties").let { secretsFile ->
-        check(secretsFile.exists()) { "Secrets file not found at path: ${secretsFile.absolutePath}" }
-        Properties().apply {
-            load(secretsFile.inputStream())
+    get() {
+        val extra = rootProject.extra
+        if (!extra.has("wc.secrets")) {
+            val secretsFile = rootProject.file("secrets.properties")
+            if (!secretsFile.exists()) {
+                val isCi = System.getenv("CI")?.equals("true", ignoreCase = true) == true
+                if (isCi) {
+                    error("Missing secrets.properties in CI. Ensure the SECRETS_PROPERTIES secret is configured.")
+                }
+                secretsFile.writeText(
+                    listOf(
+                        "WC_KEYSTORE_ALIAS=mock_alias",
+                        "WC_KEYSTORE_ALIAS_DEBUG=mock_alias_debug",
+                        "WC_FILENAME_DEBUG=mock_debug.keystore",
+                        "WC_STORE_PASSWORD_DEBUG=mock",
+                        "WC_KEY_PASSWORD_DEBUG=mock",
+                        "WC_FILENAME_INTERNAL=mock_internal.keystore",
+                        "WC_STORE_PASSWORD_INTERNAL=mock",
+                        "WC_KEY_PASSWORD_INTERNAL=mock",
+                        "WC_FILENAME_UPLOAD=mock_upload.keystore",
+                        "WC_STORE_PASSWORD_UPLOAD=mock",
+                        "WC_KEY_PASSWORD_UPLOAD=mock",
+                    ).joinToString("\n")
+                )
+                logger.warn("Generated mock secrets.properties (not suitable for production use)")
+            }
+            extra["wc.secrets"] = Properties().apply { secretsFile.inputStream().use { load(it) } }
         }
+        return extra["wc.secrets"] as Properties
     }
 
 project.extensions.configure(BaseExtension::class.java) {
