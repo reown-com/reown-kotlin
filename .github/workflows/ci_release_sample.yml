@@ -120,9 +120,8 @@ jobs:
           CMD=":sample:${{ matrix.app }}:assemble${{ env.BUILD_TYPE }}"
           if [[ "${{ matrix.app }}" != "pos" ]]; then
             CMD="$CMD :sample:${{ matrix.app }}:appDistributionUpload${{ env.BUILD_TYPE }}"
-            CMD="$CMD -PappDistributionReleaseNotes=\"${{ matrix.app }} (${{ env.BUILD_TYPE }}) - Branch: ${{ github.ref_name }}\""
           fi
-          ./gradlew $CMD
+          ./gradlew $CMD -PappDistributionReleaseNotes="${{ matrix.app }} (${{ env.BUILD_TYPE }}) - Branch: ${{ github.ref_name }}"
 
       - name: Stop Gradle
         run: ./gradlew --stop
