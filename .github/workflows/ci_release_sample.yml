@@ -43,19 +43,32 @@ env:
   BUILD_TYPE: ${{ github.event.inputs.build_type || (github.event_name == 'release' && 'Release') || 'Internal' }}
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo 'matrix={"app":["wallet","dapp","modal","pos"]}' >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            echo 'matrix={"app":["wallet","dapp","modal"]}' >> $GITHUB_OUTPUT
+          else
+            APPS=()
+            [[ "${{ github.event.inputs.wallet }}" == "true" ]] && APPS+=("\"wallet\"")
+            [[ "${{ github.event.inputs.dapp }}" == "true" ]] && APPS+=("\"dapp\"")
+            [[ "${{ github.event.inputs.modal }}" == "true" ]] && APPS+=("\"modal\"")
+            [[ "${{ github.event.inputs.pos }}" == "true" ]] && APPS+=("\"pos\"")
+            JOINED=$(IFS=,; echo "${APPS[*]}")
+            echo "matrix={\"app\":[${JOINED}]}" >> $GITHUB_OUTPUT
+          fi
+
   release_sample:
+    needs: setup
     strategy:
       fail-fast: false
-      matrix:
-        app: [wallet, dapp, modal, pos]
-    if: >-
-      (github.event_name == 'push') ||
-      (github.event_name == 'release' && matrix.app != 'pos') ||
-      (github.event_name == 'workflow_dispatch' &&
-        ((matrix.app == 'wallet' && github.event.inputs.wallet == 'true') ||
-         (matrix.app == 'dapp' && github.event.inputs.dapp == 'true') ||
-         (matrix.app == 'modal' && github.event.inputs.modal == 'true') ||
-         (matrix.app == 'pos' && github.event.inputs.pos == 'true')))
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
     name: ${{ matrix.app }}
     runs-on: ubuntu-latest
     steps:
