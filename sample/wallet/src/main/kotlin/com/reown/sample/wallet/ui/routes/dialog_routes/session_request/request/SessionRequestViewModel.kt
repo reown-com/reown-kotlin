@@ -9,14 +9,11 @@ import com.google.firebase.ktx.Firebase
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.signer.Signer
-import com.reown.sample.wallet.domain.signer.Signer.PERSONAL_SIGN
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.web3j.utils.Numeric.hexStringToByteArray
 
 class SessionRequestViewModel : ViewModel() {
     var sessionRequestUI: SessionRequestUI = generateSessionRequestUI()
@@ -91,19 +88,6 @@ class SessionRequestViewModel : ViewModel() {
         }
     }
 
-    private fun extractMessageParamFromPersonalSign(input: String): String {
-        val jsonArray = JSONArray(input)
-        return if (jsonArray.length() > 0) {
-            if (jsonArray.getString(0).startsWith("0x")) {
-                String(hexStringToByteArray(jsonArray.getString(0)))
-            } else {
-                jsonArray.getString(0)
-            }
-        } else {
-            throw IllegalArgumentException()
-        }
-    }
-
     private fun clearSessionRequest() {
         WalletKitDelegate.sessionRequestEvent = null
         WalletKitDelegate.currentId = null
@@ -123,7 +107,7 @@ class SessionRequestViewModel : ViewModel() {
                 ),
                 topic = sessionRequest.topic,
                 requestId = sessionRequest.request.id,
-                param = if (sessionRequest.request.method == PERSONAL_SIGN) extractMessageParamFromPersonalSign(sessionRequest.request.params) else sessionRequest.request.params,
+                param = sessionRequest.request.params,
                 chain = sessionRequest.chainId,
                 method = sessionRequest.request.method,
                 peerContextUI = context.toPeerUI()

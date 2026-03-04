@@ -28,5 +28,8 @@ val verified_color = Color(0xFF3396FF)
 val unverified_color = Color(0xFFFF800A)
 val mismatch_color = Color(0xFFED4747)
 
+@Deprecated("Use WCTheme.colors.bgAccentPrimary", ReplaceWith("WCTheme.colors.bgAccentPrimary"))
 val blue_accent = Color(0xFF3396FF)
+
+@Deprecated("Use WCTheme.colors.borderPrimary", ReplaceWith("WCTheme.colors.borderPrimary"))
 val border_stroke = Color(0x1A062B2B)

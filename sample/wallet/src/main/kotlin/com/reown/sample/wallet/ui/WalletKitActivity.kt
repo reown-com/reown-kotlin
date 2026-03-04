@@ -44,9 +44,15 @@ import com.reown.android.utils.cacao.sign
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.notify.client.cacao.CacaoSigner
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.domain.ThemeManager
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
@@ -80,6 +86,7 @@ class WalletKitActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         nfcPaymentReader = NfcPaymentReader(this) { paymentUrl ->
             Timber.d("NFC: Payment URL read from tag: %s", paymentUrl)
@@ -114,18 +121,21 @@ class WalletKitActivity : AppCompatActivity() {
                 initialValue = ModalBottomSheetValue.Hidden,
                 skipHalfExpanded = true
             )
-            val bottomSheetNavigator = BottomSheetNavigator(sheetState)
+            val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
             val navController = rememberAnimatedNavController(bottomSheetNavigator)
             this.navController = navController
-            val sharedPref = getPreferences(MODE_PRIVATE)
-            val getStartedVisited = sharedPref.getBoolean("get_started_visited", false)
-            WCSampleAppTheme {
+            val themeMode by ThemeManager.themeMode.collectAsState()
+            val isDarkTheme = when (themeMode) {
+                0 -> false
+                1 -> true
+                else -> isSystemInDarkTheme()
+            }
+            WCSampleAppTheme(darkTheme = isDarkTheme) {
                 WalletSampleHost(
                     bottomSheetNavigator,
                     navController,
                     web3walletViewModel,
                     connectionsViewModel,
-                    getStartedVisited
                 )
             }
         }
@@ -165,8 +175,8 @@ class WalletKitActivity : AppCompatActivity() {
                     }
 
                     is SignEvent.ExpiredRequest -> {
-                        if (navController.currentDestination?.route != Route.Connections.path) {
-                            navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                        if (navController.currentDestination?.route != Route.Wallets.path) {
+                            navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                         }
                         Toast.makeText(baseContext, "Request expired", Toast.LENGTH_SHORT).show()
                     }
@@ -174,11 +184,11 @@ class WalletKitActivity : AppCompatActivity() {
                     is SignEvent.Disconnect -> {
                         connectionsViewModel.refreshConnections()
 
-                        if (navController.currentDestination?.route != Route.Connections.path &&
+                        if (navController.currentDestination?.route != Route.Wallets.path &&
                             navController.currentDestination?.route != Route.SessionProposal.path &&
                             navController.currentDestination?.route != Route.SessionAuthenticate.path
                         ) {
-                            navController.navigate(Route.Connections.path)
+                            navController.navigate(Route.Wallets.path)
                         }
                     }
 

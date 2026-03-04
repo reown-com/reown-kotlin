@@ -6,7 +6,6 @@ name: Kotlin Dapp to Kotlin Wallet Connection Rejected
     appId: "com.reown.sample.wallet.internal"
 - startRecording: "Native Connection Rejected"
 - tapOn: "NOT NOW"
-- tapOn: "Get Started"
 - launchApp:
     appId: "com.reown.sample.dapp.internal"
     permissions:
@@ -16,6 +15,14 @@ name: Kotlin Dapp to Kotlin Wallet Connection Rejected
 - tapOn: "Connect via AppKit"
 - tapOn: "All wallets"
 - tapOn: "Android Sample Internal"
+- extendedWaitUntil:
+    visible:
+      text: "Cancel"
+    timeout: 30000
 - tapOn: "Cancel"
+- extendedWaitUntil:
+    visible:
+      text: "Connection declined"
+    timeout: 15000
 - assertVisible: "Connection declined"
 - stopRecording

@@ -25,4 +25,10 @@
         <item name="colorPrimary">#FF3396ff</item>
         <item name="colorOnPrimary">@color/white</item>
     </style>
+
+    <style name="Theme.Wallet.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#202020</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/walletconnect_splash_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.Wallet</item>
+    </style>
 </resources>
