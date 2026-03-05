@@ -45,6 +45,7 @@ import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.notify.client.cacao.CacaoSigner
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -120,7 +121,7 @@ class WalletKitActivity : AppCompatActivity() {
             )
             val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
             val navController = rememberAnimatedNavController(bottomSheetNavigator)
-            navControllerFlow.value = navController
+            LaunchedEffect(navController) { navControllerFlow.value = navController }
             val themeMode by ThemeManager.themeMode.collectAsState()
             val isDarkTheme = when (themeMode) {
                 0 -> false
