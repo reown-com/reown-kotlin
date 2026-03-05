@@ -29,6 +29,7 @@ internal class ApiClient(
 ) {
     companion object {
         private const val WCP_VERSION = "2026-02-18"
+        private const val MIN_POLL_INTERVAL_MS = 1000L
     }
 
     private val moshi = Moshi.Builder()
@@ -111,7 +112,7 @@ internal class ApiClient(
                 eventTracker.trackPaymentCreated(data.paymentId, context)
                 onEvent(paymentCreatedEvent)
 
-                startPolling(data.paymentId, context, onEvent)
+                startPolling(data.paymentId, data.expiresAt, context, onEvent)
             } else {
                 val error = parseErrorResponse(response)
                 val paymentError = mapCreatePaymentError(error.code, error.message)
@@ -134,12 +135,20 @@ internal class ApiClient(
 
     private suspend fun startPolling(
         paymentId: String,
+        expiresAt: Long,
         context: PaymentContext,
         onEvent: (Pos.PaymentEvent) -> Unit
     ) {
         var lastEmittedStatus: String? = null
 
         while (true) {
+            if (System.currentTimeMillis() / 1000 >= expiresAt) {
+                val expiredError = Pos.PaymentEvent.PaymentError.PaymentExpired("Payment has expired")
+                eventTracker.trackPaymentFailed(paymentId, context, expiredError)
+                onEvent(expiredError)
+                break
+            }
+
             when (val result = getPaymentStatus(paymentId)) {
                 is ApiResult.Success -> {
                     val data = result.data
@@ -155,7 +164,7 @@ internal class ApiClient(
                         break
                     }
 
-                    delay(data.pollInMs)
+                    delay(maxOf(data.pollInMs, MIN_POLL_INTERVAL_MS))
                 }
 
                 is ApiResult.Error -> {
