@@ -111,8 +111,6 @@ object PosClient {
      * Does nothing if there is no active payment to poll.
      */
     fun resume() {
-        checkInitialized()
-
         if (apiClient?.activePollingState == null) return
         currentPollingJob?.cancel()
         currentPollingJob = scope?.launch {
@@ -129,8 +127,6 @@ object PosClient {
      * or when the POS screen is closed.
      */
     fun cancelPayment() {
-        checkInitialized()
-
         currentPollingJob?.cancel()
         currentPollingJob = null
         apiClient?.clearActivePollingState()
