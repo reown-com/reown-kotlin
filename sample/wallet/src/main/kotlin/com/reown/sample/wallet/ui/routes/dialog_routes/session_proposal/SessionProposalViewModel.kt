@@ -217,7 +217,16 @@ class SessionProposalViewModel : ViewModel() {
 
         authRequests.forEach { authRequest ->
             authRequest.chains.forEach { chainId ->
-                val issuer = "did:pkh:$chainId:${EthAccountDelegate.address}"
+                val address = when {
+                    chainId.contains("eip155") -> EthAccountDelegate.address
+                    chainId.contains("ton") -> TONAccountDelegate.addressFriendly
+                    chainId.contains("solana") -> SolanaAccountDelegate.keys.second
+                    chainId.contains("stacks") -> Stacks.getAddress(wallet, Stacks.Version.mainnetP2PKH)
+                    chainId.contains("sui") -> SuiAccountDelegate.address
+                    chainId.contains("tron") -> TronAccountDelegate.address
+                    else -> EthAccountDelegate.address
+                }
+                val issuer = "did:pkh:$chainId:$address"
                 val message = runCatching {
                     WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
                 }.onFailure { error ->

@@ -12,7 +12,6 @@ import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.domain.account.bytesToHex
 import com.reown.sample.wallet.domain.account.derivePrivateKeyFromMnemonic
-import com.reown.sample.wallet.domain.account.generateKeys
 import com.reown.sample.wallet.domain.account.normalizePrivateKeyHex
 import com.reown.sample.wallet.domain.client.Keypair
 import com.reown.sample.wallet.domain.client.Stacks
@@ -102,15 +101,10 @@ internal class ImportWalletViewModel : ViewModel() {
 
     private fun importEvm(input: String): String {
         return if (input.contains(" ")) {
-            val mnemonic = input.lowercase()
-            val derivedPrivateKey = normalizePrivateKeyHex(derivePrivateKeyFromMnemonic(mnemonic, coinType = 60))
-            with(EthAccountDelegate) { generateKeys(derivedPrivateKey) }
-            EthAccountDelegate.importFromMnemonic(mnemonic)
+            EthAccountDelegate.importFromMnemonic(input.lowercase())
             EthAccountDelegate.address
         } else {
-            val key = normalizePrivateKeyHex(input)
-            with(EthAccountDelegate) { generateKeys(key) }
-            EthAccountDelegate.privateKey = key
+            EthAccountDelegate.privateKey = normalizePrivateKeyHex(input)
             EthAccountDelegate.address
         }
     }

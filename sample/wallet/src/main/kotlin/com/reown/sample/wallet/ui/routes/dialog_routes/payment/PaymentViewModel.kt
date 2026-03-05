@@ -430,6 +430,7 @@ class PaymentViewModel : ViewModel() {
         return when {
             msg.contains("insufficient") || msg.contains("not enough") || msg.contains("balance") -> PaymentErrorType.INSUFFICIENT_FUNDS
             msg.contains("expired") || msg.contains("timeout") -> PaymentErrorType.EXPIRED
+            msg.contains("cancelled") || msg.contains("canceled") -> PaymentErrorType.CANCELLED
             msg.contains("not found") || msg.contains("404") -> PaymentErrorType.NOT_FOUND
             else -> PaymentErrorType.GENERIC
         }
@@ -511,6 +512,7 @@ sealed class PaymentUiState {
 enum class PaymentErrorType {
     INSUFFICIENT_FUNDS,
     EXPIRED,
+    CANCELLED,
     NOT_FOUND,
     GENERIC
 }

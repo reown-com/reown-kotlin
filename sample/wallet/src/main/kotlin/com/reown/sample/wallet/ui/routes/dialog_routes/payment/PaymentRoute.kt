@@ -155,6 +155,11 @@ fun PaymentRoute(
                 onClose = {
                     viewModel.cancel()
                     dismissPaymentDialog(navController)
+                },
+                onScanNewQrCode = {
+                    viewModel.cancel()
+                    dismissPaymentDialog(navController)
+                    navController.navigate(Route.ScannerOptions.path)
                 }
             )
         }
@@ -766,13 +771,23 @@ private fun SuccessContent(
 private fun ErrorContent(
     message: String,
     errorType: PaymentErrorType,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onScanNewQrCode: () -> Unit = {}
 ) {
     val title = when (errorType) {
         PaymentErrorType.INSUFFICIENT_FUNDS -> "Not enough funds"
-        PaymentErrorType.EXPIRED -> "Payment expired"
+        PaymentErrorType.EXPIRED -> "Your payment has expired"
+        PaymentErrorType.CANCELLED -> "This payment was cancelled"
         PaymentErrorType.NOT_FOUND -> "Payment not found"
         PaymentErrorType.GENERIC -> "Transaction failed"
+    }
+
+    val subtitle = when (errorType) {
+        PaymentErrorType.INSUFFICIENT_FUNDS -> "You don't have enough funds to complete this payment."
+        PaymentErrorType.EXPIRED -> "Please ask the merchant to generate a new payment and try again."
+        PaymentErrorType.CANCELLED -> "Please ask the merchant to generate a new payment and try again."
+        PaymentErrorType.NOT_FOUND -> "This payment link is no longer valid."
+        PaymentErrorType.GENERIC -> message.ifBlank { null }
     }
 
     Column(
@@ -782,23 +797,22 @@ private fun ErrorContent(
             .padding(WCTheme.spacing.spacing5),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
-
-        // Error icon circle
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(WCTheme.colors.iconError),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "!",
-                style = WCTheme.typography.bodyXlMedium.copy(color = Color.White)
-            )
+        // Close button (top-right)
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+            ModalCloseButton(onClick = onClose)
         }
 
-        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing7))
+
+        // Warning icon
+        Icon(
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_warning_circle),
+            contentDescription = "Warning",
+            modifier = Modifier.size(40.dp),
+            tint = WCTheme.colors.textPrimary
+        )
+
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
         Text(
             text = title,
@@ -806,21 +820,28 @@ private fun ErrorContent(
             textAlign = TextAlign.Center
         )
 
-        if (errorType == PaymentErrorType.GENERIC && message.isNotBlank()) {
+        if (subtitle != null) {
             Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
             Text(
-                text = message,
-                style = WCTheme.typography.bodyMdRegular.copy(color = WCTheme.colors.textSecondary),
+                text = subtitle,
+                style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary),
                 textAlign = TextAlign.Center
             )
         }
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
 
-        PrimaryActionButton(
-            text = "Close",
-            onClick = onClose
-        )
+        if (errorType == PaymentErrorType.EXPIRED || errorType == PaymentErrorType.CANCELLED || errorType == PaymentErrorType.NOT_FOUND) {
+            PrimaryActionButton(
+                text = "Scan new QR code",
+                onClick = onScanNewQrCode
+            )
+        } else {
+            PrimaryActionButton(
+                text = "Close",
+                onClick = onClose
+            )
+        }
     }
 }
 
