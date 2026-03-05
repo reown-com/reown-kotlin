@@ -71,8 +71,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val NETWORK_BADGE_OVERLAP = 4.dp
-
 @Composable
 fun PaymentRoute(
     navController: NavHostController,

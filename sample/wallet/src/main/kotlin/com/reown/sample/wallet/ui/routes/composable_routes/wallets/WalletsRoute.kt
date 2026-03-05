@@ -117,7 +117,7 @@ fun WalletBalanceItem(balance: TokenBalance) {
     val shortAddress = "${address.take(6)}...${address.takeLast(4)}"
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
-    val iconSize = 38.dp
+    val iconSize = spacing.spacing10
     val iconSizePx = with(LocalDensity.current) { iconSize.roundToPx() }
     val badgeSize = spacing.spacing4 + spacing.spacing05
     val badgeIconSize = spacing.spacing3 + spacing.spacing05

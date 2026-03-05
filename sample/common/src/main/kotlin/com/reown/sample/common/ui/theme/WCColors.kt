@@ -58,7 +58,7 @@ data class WCColors(
     val iconError: Color,
     val iconWarning: Color,
 
-    // Brand
+    // Brand – same value in both themes by design
     val accentBrand: Color,
 )
 
