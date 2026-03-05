@@ -80,67 +80,12 @@ The repository includes several sample applications that demonstrate different u
 - JDK 11 or later
 
 ### Setup Steps
-1. **Configure Keystore Properties**
-   Create a `secrets.properties` file in the root directory with empty strings:
-   ```properties
-   WC_KEYSTORE_ALIAS=""
-   WC_KEYSTORE_ALIAS_DEBUG=""
-   WC_FILENAME_DEBUG=""
-   WC_STORE_PASSWORD_DEBUG=""
-   WC_KEY_PASSWORD_DEBUG=""
-   WC_FILENAME_INTERNAL=""
-   WC_STORE_PASSWORD_INTERNAL=""
-   WC_KEY_PASSWORD_INTERNAL=""
-   WC_FILENAME_UPLOAD=""
-   WC_STORE_PASSWORD_UPLOAD=""
-   WC_KEY_PASSWORD_UPLOAD=""
-   ```
 
-2. **Configure Google Services**
-   Each sample app requires a `google-services.json` file in its `src` directory. The file should contain:
-   - `mobilesdk_app_id`: Your Firebase project ID
-   - `package_name`: The sample app's package name
-   - `api_key`: Your Firebase API key
+No manual setup is needed for debug builds. Mock `secrets.properties` and `google-services.json` files are auto-generated on first build if they are missing.
 
-   **Example `google-services.json` file:**
-   ```json
-   {
-     "project_info": {
-       "project_number": "1234567890",
-       "project_id": "dummy-project-id",
-       "storage_bucket": "dummy-project-id.appspot.com"
-     },
-     "client": [
-       {
-         "client_info": {
-           "mobilesdk_app_id": "1:1234567890:android:abcdef123456",
-           "android_client_info": {
-             "package_name": "com.reown.sample.{sample_name}.debug"
-           }
-         },
-         "oauth_client": [
-           {
-             "client_id": "1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com",
-             "client_type": 3
-           }
-         ],
-         "api_key": [
-           {
-             "current_key": "AIzaDummyKeyForSample123456"
-           }
-         ],
-         "services": {
-           "appinvite_service": {
-             "other_platform_oauth_client": []
-           }
-         }
-       }
-     ],
-     "configuration_version": "1"
-   }
-   ```
-
-   **Note:** Replace `{sample_name}` with the actual sample name: `wallet`, `dapp`, `pos`, or `modal`. You need to create this file for each sample app you want to build. Use the example content if you want to just build samples locally.
+For production or internal builds, provide real configuration:
+- `secrets.properties` in the root directory with valid keystore paths and passwords
+- `google-services.json` in each sample app directory with real Firebase credentials
 
 ### Available Sample Apps
 
@@ -174,6 +119,6 @@ The repository includes several sample applications that demonstrate different u
 ### Troubleshooting
 
 - **Build errors**: Ensure all dependencies are synced with `./gradlew build`
-- **Keystore issues**: Verify `secrets.properties` contains valid keystore information
-- **Google Services**: Ensure `google-services.json` is properly configured for each sample
+- **Keystore issues**: Delete `secrets.properties` and rebuild to regenerate mock values, or provide real keystore config
+- **Google Services**: Delete `google-services.json` from the sample directory and rebuild to regenerate, or provide real Firebase config
 - **Gradle sync**: Try `./gradlew clean` followed by `./gradlew build`

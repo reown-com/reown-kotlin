@@ -94,6 +94,33 @@ object PosClient {
     }
 
     /**
+     * Pauses payment status polling.
+     *
+     * Call this when the app goes to the background to stop polling.
+     * Use [resume] to restart polling when the app returns to the foreground.
+     */
+    fun pause() {
+        currentPollingJob?.cancel()
+        currentPollingJob = null
+    }
+
+    /**
+     * Resumes payment status polling if a payment is active.
+     *
+     * Call this when the app returns to the foreground.
+     * Does nothing if there is no active payment to poll.
+     */
+    fun resume() {
+        if (apiClient?.activePollingState == null) return
+        currentPollingJob?.cancel()
+        currentPollingJob = scope?.launch {
+            apiClient!!.resumePolling { event ->
+                emitEvent(event)
+            }
+        }
+    }
+
+    /**
      * Cancels any ongoing polling and releases resources.
      *
      * Call this when the payment flow is cancelled by the user
@@ -102,6 +129,7 @@ object PosClient {
     fun cancelPayment() {
         currentPollingJob?.cancel()
         currentPollingJob = null
+        apiClient?.clearActivePollingState()
     }
 
     /**
