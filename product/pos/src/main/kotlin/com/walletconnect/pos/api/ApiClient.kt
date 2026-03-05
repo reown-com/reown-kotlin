@@ -30,6 +30,7 @@ internal class ApiClient(
     companion object {
         private const val WCP_VERSION = "2026-02-18"
         private const val MIN_POLL_INTERVAL_MS = 1000L
+        private const val MAX_TRANSIENT_RETRIES = 3
     }
 
     private val moshi = Moshi.Builder()
@@ -160,6 +161,7 @@ internal class ApiClient(
     ) {
         activePollingState = ActivePollingState(paymentId, expiresAt, context)
         var lastEmittedStatus: String? = null
+        var consecutiveTransientErrors = 0
 
         try {
             while (true) {
@@ -173,6 +175,7 @@ internal class ApiClient(
                 when (val result = getPaymentStatus(paymentId)) {
                     is ApiResult.Success -> {
                         val data = result.data
+                        consecutiveTransientErrors = 0
 
                         if (data.status != lastEmittedStatus) {
                             lastEmittedStatus = data.status
@@ -190,11 +193,11 @@ internal class ApiClient(
                     }
 
                     is ApiResult.Error -> {
-                        if (isSdkError(result.code)) {
+                        if (isSdkError(result.code) && ++consecutiveTransientErrors < MAX_TRANSIENT_RETRIES) {
                             // Transient error (network/parse) — retry after delay
                             delay(MIN_POLL_INTERVAL_MS)
                         } else {
-                            // API error (payment not found, expired, etc.) — stop polling
+                            // Persistent or API error — stop polling
                             activePollingState = null
                             val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
                             eventTracker.trackPaymentFailed(paymentId, context, paymentError)
