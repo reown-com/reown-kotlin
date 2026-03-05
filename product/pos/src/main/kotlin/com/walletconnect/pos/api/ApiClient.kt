@@ -168,12 +168,16 @@ internal class ApiClient(
                 }
 
                 is ApiResult.Error -> {
-                    val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
-                    if (!isSdkError(result.code)) {
+                    if (isSdkError(result.code)) {
+                        // Transient error (network/parse) — retry after delay
+                        delay(MIN_POLL_INTERVAL_MS)
+                    } else {
+                        // API error (payment not found, expired, etc.) — stop polling
+                        val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
                         eventTracker.trackPaymentFailed(paymentId, context, paymentError)
+                        onEvent(paymentError)
+                        break
                     }
-                    onEvent(paymentError)
-                    break
                 }
             }
         }
