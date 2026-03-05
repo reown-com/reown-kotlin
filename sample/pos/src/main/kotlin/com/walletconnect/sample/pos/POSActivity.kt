@@ -6,6 +6,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.walletconnect.sample.pos.nfc.NfcManager
 import com.walletconnect.sample.pos.nfc.UsdkServiceHelper
+import com.walletconnect.pos.PosClient
 
 class POSActivity : AppCompatActivity() {
     private val viewModel: POSViewModel = POSViewModel()
@@ -30,5 +31,15 @@ class POSActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         UsdkServiceHelper.unbind(this)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        PosClient.resume()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        PosClient.pause()
     }
 }

@@ -29,6 +29,8 @@ internal class ApiClient(
 ) {
     companion object {
         private const val WCP_VERSION = "2026-02-18"
+        private const val MIN_POLL_INTERVAL_MS = 1000L
+        private const val MAX_TRANSIENT_RETRIES = 3
     }
 
     private val moshi = Moshi.Builder()
@@ -75,6 +77,17 @@ internal class ApiClient(
     private val payApi: PayApi = retrofit.create(PayApi::class.java)
     private val merchantApi: MerchantApi = merchantRetrofit.create(MerchantApi::class.java)
 
+    // Active polling state for pause/resume
+    @Volatile
+    internal var activePollingState: ActivePollingState? = null
+        private set
+
+    internal data class ActivePollingState(
+        val paymentId: String,
+        val expiresAt: Long,
+        val context: PaymentContext
+    )
+
     suspend fun createPayment(
         referenceId: String,
         unit: String,
@@ -111,7 +124,7 @@ internal class ApiClient(
                 eventTracker.trackPaymentCreated(data.paymentId, context)
                 onEvent(paymentCreatedEvent)
 
-                startPolling(data.paymentId, context, onEvent)
+                startPolling(data.paymentId, data.expiresAt, context, onEvent)
             } else {
                 val error = parseErrorResponse(response)
                 val paymentError = mapCreatePaymentError(error.code, error.message)
@@ -132,41 +145,72 @@ internal class ApiClient(
         }
     }
 
+    fun clearActivePollingState() {
+        activePollingState = null
+    }
+
+    suspend fun resumePolling(onEvent: (Pos.PaymentEvent) -> Unit) {
+        val state = activePollingState ?: return
+        startPolling(state.paymentId, state.expiresAt, state.context, onEvent)
+    }
+
     private suspend fun startPolling(
         paymentId: String,
+        expiresAt: Long,
         context: PaymentContext,
         onEvent: (Pos.PaymentEvent) -> Unit
     ) {
+        activePollingState = ActivePollingState(paymentId, expiresAt, context)
         var lastEmittedStatus: String? = null
+        var consecutiveTransientErrors = 0
 
-        while (true) {
-            when (val result = getPaymentStatus(paymentId)) {
-                is ApiResult.Success -> {
-                    val data = result.data
-
-                    if (data.status != lastEmittedStatus) {
-                        lastEmittedStatus = data.status
-                        val event = mapStatusToPaymentEvent(data.status, paymentId, data.info)
-                        trackPaymentStatusEvent(paymentId, context, data.status, event)
-                        onEvent(event)
-                    }
-
-                    if (data.isFinal || data.pollInMs == null) {
-                        break
-                    }
-
-                    delay(data.pollInMs)
-                }
-
-                is ApiResult.Error -> {
-                    val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
-                    if (!isSdkError(result.code)) {
-                        eventTracker.trackPaymentFailed(paymentId, context, paymentError)
-                    }
-                    onEvent(paymentError)
+        try {
+            while (true) {
+                if (System.currentTimeMillis() / 1000 >= expiresAt) {
+                    val expiredError = Pos.PaymentEvent.PaymentError.PaymentExpired("Payment has expired")
+                    eventTracker.trackPaymentFailed(paymentId, context, expiredError)
+                    onEvent(expiredError)
                     break
                 }
+
+                when (val result = getPaymentStatus(paymentId)) {
+                    is ApiResult.Success -> {
+                        val data = result.data
+                        consecutiveTransientErrors = 0
+
+                        if (data.status != lastEmittedStatus) {
+                            lastEmittedStatus = data.status
+                            val event = mapStatusToPaymentEvent(data.status, paymentId, data.info)
+                            trackPaymentStatusEvent(paymentId, context, data.status, event)
+                            onEvent(event)
+                        }
+
+                        if (data.isFinal || data.pollInMs == null) {
+                            activePollingState = null
+                            break
+                        }
+
+                        delay(maxOf(data.pollInMs, MIN_POLL_INTERVAL_MS))
+                    }
+
+                    is ApiResult.Error -> {
+                        if (isSdkError(result.code) && ++consecutiveTransientErrors <= MAX_TRANSIENT_RETRIES) {
+                            // Transient error (network/parse) — retry after delay
+                            delay(MIN_POLL_INTERVAL_MS)
+                        } else {
+                            // Persistent or API error — stop polling
+                            activePollingState = null
+                            val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
+                            eventTracker.trackPaymentFailed(paymentId, context, paymentError)
+                            onEvent(paymentError)
+                            break
+                        }
+                    }
+                }
             }
+        } catch (e: CancellationException) {
+            // Polling was paused/cancelled — keep activePollingState for resume
+            throw e
         }
     }
 

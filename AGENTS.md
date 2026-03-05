@@ -113,9 +113,7 @@ reown-kotlin/
 ./gradlew :sample:pos:assembleDebug
 ```
 
-Sample apps require:
-- `google-services.json` in their `src/` directories
-- `secrets.properties` file in root (see ReadMe.md)
+Sample apps auto-generate mock `google-services.json` and `secrets.properties` files on first build if they are missing, so no manual setup is needed for debug builds.
 
 ## Architecture Overview
 
