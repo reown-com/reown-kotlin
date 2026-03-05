@@ -190,7 +190,7 @@ internal class ApiClient(
                             break
                         }
 
-                        delay(maxOf(data.pollInMs, MIN_POLL_INTERVAL_MS))
+                        delay(data.pollInMs)
                     }
 
                     is ApiResult.Error -> {
