@@ -78,6 +78,7 @@ internal class ApiClient(
     private val merchantApi: MerchantApi = merchantRetrofit.create(MerchantApi::class.java)
 
     // Active polling state for pause/resume
+    @Volatile
     internal var activePollingState: ActivePollingState? = null
         private set
 
@@ -193,7 +194,7 @@ internal class ApiClient(
                     }
 
                     is ApiResult.Error -> {
-                        if (isSdkError(result.code) && ++consecutiveTransientErrors < MAX_TRANSIENT_RETRIES) {
+                        if (isSdkError(result.code) && ++consecutiveTransientErrors <= MAX_TRANSIENT_RETRIES) {
                             // Transient error (network/parse) — retry after delay
                             delay(MIN_POLL_INTERVAL_MS)
                         } else {
