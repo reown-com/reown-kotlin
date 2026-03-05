@@ -42,6 +42,7 @@ data class WCColors(
     val foregroundSecondary: Color,
     val foregroundTertiary: Color,
     val foregroundAccentPrimary10: Color,
+    val foregroundAccentPrimary10Solid: Color,
     val foregroundAccentPrimary40: Color,
     val foregroundAccentPrimary60: Color,
     val foregroundAccentSecondary10: Color,
@@ -56,6 +57,9 @@ data class WCColors(
     val iconSuccess: Color,
     val iconError: Color,
     val iconWarning: Color,
+
+    // Brand
+    val accentBrand: Color,
 )
 
 val LightWCColors = WCColors(
@@ -93,6 +97,7 @@ val LightWCColors = WCColors(
     foregroundSecondary = Color(0xFFE9E9E9),
     foregroundTertiary = Color(0xFFD0D0D0),
     foregroundAccentPrimary10 = Color(0x1A0988F0),
+    foregroundAccentPrimary10Solid = Color(0xFFE6F3FE),
     foregroundAccentPrimary40 = Color(0x660988F0),
     foregroundAccentPrimary60 = Color(0x990988F0),
     foregroundAccentSecondary10 = Color(0x1AC7B994),
@@ -107,6 +112,9 @@ val LightWCColors = WCColors(
     iconSuccess = Color(0xFF30A46B),
     iconError = Color(0xFFDF4A34),
     iconWarning = Color(0xFFF3A13F),
+
+    // Brand
+    accentBrand = Color(0xFFB8F53D),
 )
 
 val DarkWCColors = WCColors(
@@ -144,6 +152,7 @@ val DarkWCColors = WCColors(
     foregroundSecondary = Color(0xFF2A2A2A),
     foregroundTertiary = Color(0xFF363636),
     foregroundAccentPrimary10 = Color(0x1A0988F0),
+    foregroundAccentPrimary10Solid = Color(0xFF222F39),
     foregroundAccentPrimary40 = Color(0x660988F0),
     foregroundAccentPrimary60 = Color(0x990988F0),
     foregroundAccentSecondary10 = Color(0x1AC7B994),
@@ -158,6 +167,9 @@ val DarkWCColors = WCColors(
     iconSuccess = Color(0xFF30A46B),
     iconError = Color(0xFFDF4A34),
     iconWarning = Color(0xFFF3A13F),
+
+    // Brand
+    accentBrand = Color(0xFFB8F53D),
 )
 
 val LocalWCColors = staticCompositionLocalOf { LightWCColors }

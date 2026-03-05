@@ -67,7 +67,7 @@ class PaymentViewModel : ViewModel() {
         storedPaymentOptions = response.options
 
         if (response.options.isEmpty()) {
-            _uiState.value = PaymentUiState.Error("No payment options available", PaymentErrorType.GENERIC)
+            _uiState.value = PaymentUiState.Error("No payment options available", PaymentErrorType.INSUFFICIENT_FUNDS)
         } else if (response.options.size == 1 && response.options[0].collectData == null) {
             // Single option with no IC required — skip directly to Summary
             val option = response.options[0]

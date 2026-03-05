@@ -50,9 +50,9 @@ fun WalletHeader(navController: NavController) {
             contentAlignment = Alignment.Center
         ) {
             Image(
-                imageVector = ImageVector.vectorResource(id = R.drawable.ic_walletconnect_logo),
+                imageVector = ImageVector.vectorResource(id = R.drawable.ic_walletconnect_brandmark),
                 contentDescription = "WalletConnect Logo",
-                modifier = Modifier.size(width = 28.dp, height = 18.dp),
+                modifier = Modifier.size(width = 29.dp, height = 18.dp),
                 colorFilter = ColorFilter.tint(WCTheme.colors.textInvert)
             )
         }
