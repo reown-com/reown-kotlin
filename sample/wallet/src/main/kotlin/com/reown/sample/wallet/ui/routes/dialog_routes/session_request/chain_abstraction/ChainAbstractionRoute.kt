@@ -55,6 +55,7 @@ import com.reown.sample.wallet.ui.common.Buttons
 import com.reown.sample.wallet.ui.common.ButtonsVertical
 import com.reown.sample.wallet.ui.common.InnerContent
 import com.reown.sample.wallet.ui.common.SemiTransparentDialog
+import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.ui.common.generated.ButtonWithLoader
 import com.reown.sample.wallet.ui.common.peer.Peer
 import com.reown.sample.wallet.ui.common.peer.PeerUI
@@ -498,14 +499,14 @@ private fun cancelRequest(
 ) {
     toggleCancelLoader(true)
     if (sessionRequestUI.peerUI.linkMode) {
-        navController.popBackStack(route = Route.Connections.path, inclusive = false)
+        navController.popBackStack(route = Route.Wallets.path, inclusive = false)
     }
     try {
         chainAbstractionViewModel.reject(
             onSuccess = { uri ->
                 toggleCancelLoader(false)
                 composableScope.launch(Dispatchers.Main) {
-                    navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                    navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                 }
                 if (uri != null && uri.toString().isNotEmpty()) {
                     context.sendResponseDeepLink(uri)
@@ -536,7 +537,7 @@ private fun confirmRequest(
 ) {
     toggleConfirmLoader(true)
     if (sessionRequestUI.peerUI.linkMode) {
-        navController.popBackStack(route = Route.Connections.path, inclusive = false)
+        navController.popBackStack(route = Route.Wallets.path, inclusive = false)
     }
     try {
         chainAbstractionViewModel.approve(

@@ -350,3 +350,37 @@ object WalletConnectPay {
 See `sample/wallet/src/main/kotlin/com/reown/sample/wallet/`:
 - `PaymentViewModel.kt` - Complete payment flow with StateFlow
 - `PaymentRoute.kt` - Jetpack Compose UI
+
+## Wallet Sample Design System
+
+When writing or modifying UI code in the wallet sample (`sample/wallet/`), you **must** use the design token system defined in `sample/common/src/main/kotlin/com/reown/sample/common/ui/theme/`. **Never hardcode colors, spacing, border radius, or font styles.**
+
+### How to access tokens
+
+All tokens are available via the `WCTheme` object inside any `@Composable` function:
+
+```kotlin
+val colors = WCTheme.colors         // WCColors - semantic light/dark colors
+val typography = WCTheme.typography  // WCTypography - KH Teka font styles
+val spacing = WCTheme.spacing       // WCSpacing - spacing scale (0dp–64dp)
+val borderRadius = WCTheme.borderRadius // WCBorderRadius - radius scale + pre-built shapes
+```
+
+### Rules
+
+- **Colors**: Use `WCTheme.colors.*` (e.g., `WCTheme.colors.bgPrimary`, `WCTheme.colors.textSecondary`). Never use `Color(0xFF...)` inline.
+- **Spacing/Padding**: Use `WCTheme.spacing.*` (e.g., `WCTheme.spacing.spacing4` for 16dp). Never use raw `16.dp`.
+- **Border radius**: Use `WCTheme.borderRadius.*` (e.g., `WCTheme.borderRadius.radius4` for 16dp) or pre-built shapes (`WCTheme.borderRadius.shapeLarge`). Never use `RoundedCornerShape(16.dp)`.
+- **Typography**: Use `WCTheme.typography.*` (e.g., `WCTheme.typography.bodyLgMedium`). Never define inline `TextStyle(fontSize = 16.sp, ...)`.
+- **Font**: The custom font is KH Teka (Regular/Medium). It is already set as `defaultFontFamily` in Material Typography and in all `WCTypography` styles.
+
+### Token files
+
+| File | Contents |
+|------|----------|
+| `WCColors.kt` | `WCColors` data class, `LightWCColors`, `DarkWCColors`, `LocalWCColors` |
+| `Spacing.kt` | `WCSpacing` object with `spacing0`–`spacing13` |
+| `BorderRadius.kt` | `WCBorderRadius` object with `radius0`–`radius13`, `radiusFull`, pre-built shapes |
+| `Type.kt` | `KhTekaFontFamily`, `WCTypography` data class, `DefaultWCTypography`, `LocalWCTypography` |
+| `Theme.kt` | `WCSampleAppTheme`, `WCTheme` accessor object, `CompositionLocalProvider` setup |
+| `Color.kt` | Legacy colors (deprecated, kept for backward compat) |

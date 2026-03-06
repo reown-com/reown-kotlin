@@ -7,6 +7,10 @@ name: AppKit Web to Kotlin Wallet Sign Request Rejected
 - scroll
 - scroll
 - tapOn: "Sign Message"
+- extendedWaitUntil:
+    visible:
+      text: "Cancel"
+    timeout: 30000
 - tapOn: "Cancel"
 - back
 - assertVisible: "Signing Failed"
