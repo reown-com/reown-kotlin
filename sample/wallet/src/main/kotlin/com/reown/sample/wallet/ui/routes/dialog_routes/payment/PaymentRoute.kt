@@ -15,7 +15,11 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,12 +28,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -81,87 +85,93 @@ fun PaymentRoute(
         viewModel.setPaymentLink(paymentLink)
     }
 
-    when (val state = uiState) {
-        is PaymentUiState.WebViewDataCollection -> {
-            WebViewDataCollectionContent(
-                url = state.url,
-                paymentInfo = state.paymentInfo,
-                onComplete = { viewModel.onICWebViewComplete() },
-                onError = { error ->
-                    viewModel.onICWebViewError(error)
-                },
-                onClose = {
-                    viewModel.goBackToOptions()
-                }
-            )
-        }
-        is PaymentUiState.Loading -> {
-            LoadingContent()
-        }
-        is PaymentUiState.Options -> {
-            PaymentOptionsContent(
-                paymentInfo = state.paymentInfo,
-                options = state.options,
-                onOptionSelected = { optionId ->
-                    viewModel.onOptionSelected(optionId)
-                },
-                onWhyInfoRequired = { viewModel.showWhyInfoRequired() },
-                onClose = {
-                    viewModel.cancel()
-                    dismissPaymentDialog(navController)
-                }
-            )
-        }
-        is PaymentUiState.Summary -> {
-            SummaryContent(
-                paymentInfo = state.paymentInfo,
-                selectedOption = state.selectedOption,
-                onConfirm = { viewModel.confirmFromSummary() },
-                onClose = {
-                    viewModel.cancel()
-                    dismissPaymentDialog(navController)
-                }
-            )
-        }
-        is PaymentUiState.WhyInfoRequired -> {
-            WhyInfoRequiredContent(
-                onBack = { viewModel.dismissWhyInfoRequired() },
-                onClose = {
-                    viewModel.cancel()
-                    dismissPaymentDialog(navController)
-                }
-            )
-        }
-        is PaymentUiState.Processing -> {
-            ProcessingContent(
-                message = state.message
-            )
-        }
-        is PaymentUiState.Success -> {
-            SuccessContent(
-                paymentInfo = state.paymentInfo,
-                onDone = {
-                    viewModel.cancel()
-                    onPaymentSuccess()
-                    dismissPaymentDialog(navController)
-                    Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
-                }
-            )
-        }
-        is PaymentUiState.Error -> {
-            ErrorContent(
-                message = state.message,
-                errorType = state.errorType,
-                onClose = {
-                    viewModel.cancel()
-                    dismissPaymentDialog(navController)
-                },
-                onScanNewQrCode = {
-                    viewModel.cancel()
-                    dismissPaymentDialog(navController)
-                    navController.navigate(Route.ScannerOptions.path)
-                }
-            )
+    AnimatedContent(
+        targetState = uiState,
+        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        label = "paymentState"
+    ) { state ->
+        when (state) {
+            is PaymentUiState.WebViewDataCollection -> {
+                WebViewDataCollectionContent(
+                    url = state.url,
+                    paymentInfo = state.paymentInfo,
+                    onComplete = { viewModel.onICWebViewComplete() },
+                    onError = { error ->
+                        viewModel.onICWebViewError(error)
+                    },
+                    onClose = {
+                        viewModel.goBackToOptions()
+                    }
+                )
+            }
+            is PaymentUiState.Loading -> {
+                LoadingContent()
+            }
+            is PaymentUiState.Options -> {
+                PaymentOptionsContent(
+                    paymentInfo = state.paymentInfo,
+                    options = state.options,
+                    onOptionSelected = { optionId ->
+                        viewModel.onOptionSelected(optionId)
+                    },
+                    onWhyInfoRequired = { viewModel.showWhyInfoRequired() },
+                    onClose = {
+                        viewModel.cancel()
+                        dismissPaymentDialog(navController)
+                    }
+                )
+            }
+            is PaymentUiState.Summary -> {
+                SummaryContent(
+                    paymentInfo = state.paymentInfo,
+                    selectedOption = state.selectedOption,
+                    onConfirm = { viewModel.confirmFromSummary() },
+                    onClose = {
+                        viewModel.cancel()
+                        dismissPaymentDialog(navController)
+                    }
+                )
+            }
+            is PaymentUiState.WhyInfoRequired -> {
+                WhyInfoRequiredContent(
+                    onBack = { viewModel.dismissWhyInfoRequired() },
+                    onClose = {
+                        viewModel.cancel()
+                        dismissPaymentDialog(navController)
+                    }
+                )
+            }
+            is PaymentUiState.Processing -> {
+                ProcessingContent(
+                    message = state.message
+                )
+            }
+            is PaymentUiState.Success -> {
+                SuccessContent(
+                    paymentInfo = state.paymentInfo,
+                    onDone = {
+                        viewModel.cancel()
+                        onPaymentSuccess()
+                        dismissPaymentDialog(navController)
+                        Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+            is PaymentUiState.Error -> {
+                ErrorContent(
+                    message = state.message,
+                    errorType = state.errorType,
+                    onClose = {
+                        viewModel.cancel()
+                        dismissPaymentDialog(navController)
+                    },
+                    onScanNewQrCode = {
+                        viewModel.cancel()
+                        dismissPaymentDialog(navController)
+                        navController.navigate(Route.ScannerOptions.path)
+                    }
+                )
+            }
         }
     }
 }
@@ -297,7 +307,7 @@ private fun PaymentOptionCard(
         label = "optionBg"
     )
     val borderColor = if (isSelected) WCTheme.colors.borderAccentPrimary else Color.Transparent
-    val borderWidth = if (isSelected) 1.5.dp else 0.dp
+    val borderWidth = 1.dp
 
     Row(
         modifier = Modifier
@@ -314,11 +324,20 @@ private fun PaymentOptionCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Asset icon with network badge
             option.amount.display?.iconUrl?.let { iconUrl ->
+                val networkBadgeStrokeColor = if (isSelected) {
+                    WCTheme.colors.foregroundAccentPrimary10Solid
+                } else {
+                    WCTheme.colors.foregroundPrimary
+                }
+
                 TokenIconWithNetwork(
                     tokenIconUrl = iconUrl,
                     networkIconUrl = option.amount.display?.networkIconUrl,
                     tokenIconSize = 40.dp,
-                    networkIconSize = 16.dp
+                    networkIconSize = 16.dp,
+                    networkIconBorderWidth = 2.dp,
+                    networkIconBorderColor = networkBadgeStrokeColor,
+                    useExternalNetworkBorder = true
                 )
                 Spacer(modifier = Modifier.width(WCTheme.spacing.spacing3))
             }
@@ -364,26 +383,56 @@ private fun TokenIconWithNetwork(
     tokenIconUrl: String,
     networkIconUrl: String?,
     tokenIconSize: Dp,
-    networkIconSize: Dp
+    networkIconSize: Dp,
+    networkIconBorderWidth: Dp = 1.dp,
+    networkIconBorderColor: Color = Color.White,
+    useExternalNetworkBorder: Boolean = false
 ) {
-    Box {
+    Box(modifier = Modifier.size(tokenIconSize)) {
         AsyncImage(
             model = tokenIconUrl,
             contentDescription = null,
             modifier = Modifier
-                .size(tokenIconSize)
+                .fillMaxSize()
                 .clip(CircleShape)
         )
         networkIconUrl?.let { networkUrl ->
-            AsyncImage(
-                model = networkUrl,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(networkIconSize)
-                    .clip(CircleShape)
-                    .border(1.dp, Color.White, CircleShape)
-                    .align(Alignment.BottomEnd)
-            )
+            if (useExternalNetworkBorder && networkIconBorderWidth > 0.dp) {
+                val badgeSize = networkIconSize + (networkIconBorderWidth * 2)
+                val badgeOffset = tokenIconSize - badgeSize
+                Box(
+                    modifier = Modifier
+                        .size(badgeSize)
+                        .offset(
+                            x = badgeOffset,
+                            y = badgeOffset
+                        )
+                        .clip(CircleShape)
+                        .background(networkIconBorderColor)
+                        .padding(networkIconBorderWidth)
+                ) {
+                    AsyncImage(
+                        model = networkUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                    )
+                }
+            } else {
+                AsyncImage(
+                    model = networkUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(networkIconSize)
+                        .offset(
+                            x = tokenIconSize - networkIconSize,
+                            y = tokenIconSize - networkIconSize
+                        )
+                        .clip(CircleShape)
+                        .border(networkIconBorderWidth, networkIconBorderColor, CircleShape)
+                )
+            }
         }
     }
 }
@@ -503,8 +552,10 @@ private fun SummaryContent(
                     TokenIconWithNetwork(
                         tokenIconUrl = iconUrl,
                         networkIconUrl = display.networkIconUrl,
-                        tokenIconSize = 24.dp,
-                        networkIconSize = 12.dp
+                        tokenIconSize = 32.dp,
+                        networkIconSize = 16.dp,
+                        networkIconBorderWidth = 2.dp,
+                        networkIconBorderColor = WCTheme.colors.foregroundPrimary
                     )
                 }
             }
@@ -549,7 +600,8 @@ private fun WhyInfoRequiredContent(
             ModalIconButton(
                 iconRes = R.drawable.ic_arrow_left,
                 contentDescription = "Back",
-                onClick = onBack
+                onClick = onBack,
+                showBorder = false
             )
 
             ModalCloseButton(onClick = onClose)
@@ -783,7 +835,7 @@ private fun ErrorContent(
     }
 
     val subtitle = when (errorType) {
-        PaymentErrorType.INSUFFICIENT_FUNDS -> "You don't have enough funds to complete this payment."
+        PaymentErrorType.INSUFFICIENT_FUNDS -> "This wallet doesn't have enough funds on the supported networks to complete the payment."
         PaymentErrorType.EXPIRED -> "Please ask the merchant to generate a new payment and try again."
         PaymentErrorType.CANCELLED -> "Please ask the merchant to generate a new payment and try again."
         PaymentErrorType.NOT_FOUND -> "This payment link is no longer valid."
@@ -809,7 +861,7 @@ private fun ErrorContent(
             imageVector = ImageVector.vectorResource(id = R.drawable.ic_warning_circle),
             contentDescription = "Warning",
             modifier = Modifier.size(40.dp),
-            tint = WCTheme.colors.textPrimary
+            tint = Color.Unspecified
         )
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
@@ -831,16 +883,25 @@ private fun ErrorContent(
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
 
-        if (errorType == PaymentErrorType.EXPIRED || errorType == PaymentErrorType.CANCELLED || errorType == PaymentErrorType.NOT_FOUND) {
-            PrimaryActionButton(
-                text = "Scan new QR code",
-                onClick = onScanNewQrCode
-            )
-        } else {
-            PrimaryActionButton(
-                text = "Close",
-                onClick = onClose
-            )
+        when (errorType) {
+            PaymentErrorType.EXPIRED, PaymentErrorType.CANCELLED, PaymentErrorType.NOT_FOUND -> {
+                PrimaryActionButton(
+                    text = "Scan new QR code",
+                    onClick = onScanNewQrCode
+                )
+            }
+            PaymentErrorType.INSUFFICIENT_FUNDS -> {
+                PrimaryActionButton(
+                    text = "Got it!",
+                    onClick = onClose
+                )
+            }
+            else -> {
+                PrimaryActionButton(
+                    text = "Close",
+                    onClick = onClose
+                )
+            }
         }
     }
 }
@@ -874,16 +935,19 @@ private fun ModalCloseButton(onClick: () -> Unit) {
 private fun ModalIconButton(
     iconRes: Int,
     contentDescription: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    showBorder: Boolean = true
 ) {
     Box(
         modifier = Modifier
             .size(38.dp)
             .clip(RoundedCornerShape(WCTheme.borderRadius.radius3))
-            .border(
-                width = 1.dp,
-                color = WCTheme.colors.borderSecondary,
-                shape = RoundedCornerShape(WCTheme.borderRadius.radius3)
+            .then(
+                if (showBorder) Modifier.border(
+                    width = 1.dp,
+                    color = WCTheme.colors.borderSecondary,
+                    shape = RoundedCornerShape(WCTheme.borderRadius.radius3)
+                ) else Modifier
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -1144,14 +1208,10 @@ private fun WebViewDataCollectionContent(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF141414)),
+                    .background(WCTheme.colors.bgPrimary),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp),
-                    strokeWidth = 4.dp,
-                    color = WCTheme.colors.bgAccentPrimary
-                )
+                WalletConnectLoader(size = 120.dp)
             }
         }
 

@@ -18,7 +18,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -88,7 +87,14 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                     }
                 },
                 onClose = {
-                    navController.popBackStack()
+                    try {
+                        sessionRequestViewModel.reject(
+                            onSuccess = { uri -> handleRedirect(uri, navController, composableScope, context) },
+                            onError = { error -> showError(navController, error, composableScope, context) }
+                        )
+                    } catch (e: Throwable) {
+                        showError(navController, e, composableScope, context)
+                    }
                 }
             ) {
                 Column(
@@ -142,7 +148,7 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                 approveEnabled = false,
                 onClose = {
                     navController.popBackStack()
-                }
+                },
             ) {
                 Box(
                     modifier = Modifier
@@ -153,7 +159,7 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                     CircularProgressIndicator(
                         strokeWidth = 8.dp,
                         modifier = Modifier.size(75.dp),
-                        color = Color(0xFFB8F53D)
+                        color = WCTheme.colors.accentBrand
                     )
                 }
             }
