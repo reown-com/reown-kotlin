@@ -177,9 +177,11 @@ internal object Mappers {
 
             is YttriumGetPaymentOptionsError.InternalException ->
                 Pay.GetPaymentOptionsError.InternalError(error.v1)
+
             is YttriumGetPaymentOptionsError.ConnectionFailed -> Pay.GetPaymentOptionsError.Http(error.v1)
             is YttriumGetPaymentOptionsError.NoConnection -> Pay.GetPaymentOptionsError.Http(error.v1)
             is YttriumGetPaymentOptionsError.RequestTimeout -> Pay.GetPaymentOptionsError.Http(error.v1)
+            is YttriumGetPaymentOptionsError.RateLimited -> Pay.GetPaymentOptionsError.Http(error.v1)
         }
     }
 
@@ -203,9 +205,10 @@ internal object Mappers {
             is YttriumGetPaymentRequestError.InternalException ->
                 Pay.GetPaymentRequestError.InternalError(error.v1)
 
-            is YttriumGetPaymentRequestError.ConnectionFailed ->  Pay.GetPaymentRequestError.Http(error.v1)
-            is YttriumGetPaymentRequestError.NoConnection ->  Pay.GetPaymentRequestError.Http(error.v1)
-            is YttriumGetPaymentRequestError.RequestTimeout ->  Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.ConnectionFailed -> Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.NoConnection -> Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.RequestTimeout -> Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.RateLimited -> Pay.GetPaymentRequestError.Http(error.v1)
         }
     }
 
@@ -237,6 +240,7 @@ internal object Mappers {
             is YttriumConfirmPaymentError.NoConnection -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.RequestTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.PollingTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
+            is YttriumConfirmPaymentError.RateLimited -> Pay.ConfirmPaymentError.Http(error.v1)
         }
     }
 
@@ -245,9 +249,10 @@ internal object Mappers {
             is YttriumPayError.Http -> Pay.PayError.Http(error.v1)
             is YttriumPayError.Api -> Api(error.v1)
             is YttriumPayError.Timeout -> Pay.PayError.Timeout
-            is YttriumPayError.ConnectionFailed ->  Pay.PayError.Http(error.v1)
-            is YttriumPayError.NoConnection ->  Pay.PayError.Http(error.v1)
-            is YttriumPayError.RequestTimeout ->  Pay.PayError.Http(error.v1)
+            is YttriumPayError.ConnectionFailed -> Pay.PayError.Http(error.v1)
+            is YttriumPayError.NoConnection -> Pay.PayError.Http(error.v1)
+            is YttriumPayError.RequestTimeout -> Pay.PayError.Http(error.v1)
+            is YttriumPayError.RateLimited -> Pay.PayError.Http(error.v1)
         }
     }
 }

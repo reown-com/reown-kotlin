@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.walletconnect.pos.PosClient
 
 class POSActivity : AppCompatActivity() {
     private val viewModel: POSViewModel = POSViewModel()
@@ -12,5 +13,15 @@ class POSActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent { POSSampleHost(viewModel) }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        PosClient.resume()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        PosClient.pause()
     }
 }

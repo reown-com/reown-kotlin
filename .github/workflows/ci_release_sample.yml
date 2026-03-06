@@ -1,19 +1,82 @@
 name: Release Samples
 
+permissions:
+  contents: read
+
 on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'foundation/**'
+      - 'core/**'
+      - 'protocol/**'
+      - 'product/**'
+      - 'sample/**'
   release:
     types: [ published ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        type: choice
+        options:
+          - Internal
+          - Debug
+          - Release
+        default: Internal
+      wallet:
+        description: 'Wallet'
+        type: boolean
+        default: true
+      dapp:
+        description: 'dApp'
+        type: boolean
+        default: true
+      modal:
+        description: 'Modal'
+        type: boolean
+        default: true
+      pos:
+        description: 'POS'
+        type: boolean
+        default: true
+
+env:
+  BUILD_TYPE: ${{ github.event.inputs.build_type || (github.event_name == 'release' && 'Release') || 'Internal' }}
 
 jobs:
-  release_samples:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo 'matrix={"app":["wallet","dapp","modal","pos"]}' >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            echo 'matrix={"app":["wallet","dapp","modal"]}' >> $GITHUB_OUTPUT
+          else
+            APPS=()
+            [[ "${{ github.event.inputs.wallet }}" == "true" ]] && APPS+=("\"wallet\"")
+            [[ "${{ github.event.inputs.dapp }}" == "true" ]] && APPS+=("\"dapp\"")
+            [[ "${{ github.event.inputs.modal }}" == "true" ]] && APPS+=("\"modal\"")
+            [[ "${{ github.event.inputs.pos }}" == "true" ]] && APPS+=("\"pos\"")
+            JOINED=$(IFS=,; echo "${APPS[*]}")
+            if [[ -z "$JOINED" ]]; then
+              echo "Error: At least one app must be selected" >&2
+              exit 1
+            fi
+            echo "matrix={\"app\":[${JOINED}]}" >> $GITHUB_OUTPUT
+          fi
+
+  release_sample:
+    needs: setup
     strategy:
-      matrix:
-        conf: [
-          { name: wallet, command: ":sample:wallet:assembleRelease :sample:wallet:appDistributionUploadRelease" },
-          { name: dapp, command: ":sample:dapp:assembleRelease :sample:dapp:appDistributionUploadRelease" },
-          { name: modal, command: ":sample:modal:assembleRelease :sample:modal:appDistributionUploadRelease" }
-        ]
-    name: ${{ matrix.conf.name }}
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    name: ${{ matrix.app }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -52,10 +115,69 @@ jobs:
       - name: Release sample
         env:
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
+          POS_PROJECT_ID: ${{ secrets.POS_PROJECT_ID }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
-        run: ./gradlew ${{ matrix.conf.command }}
+          MIX_PANEL: ${{ secrets.MIX_PANEL }}
+        run: |
+          CMD=":sample:${{ matrix.app }}:assemble${{ env.BUILD_TYPE }}"
+          if [[ "${{ matrix.app }}" != "pos" ]]; then
+            CMD="$CMD :sample:${{ matrix.app }}:appDistributionUpload${{ env.BUILD_TYPE }}"
+          fi
+          ./gradlew $CMD
 
       - name: Stop Gradle
         run: ./gradlew --stop
+
+      - name: Resolve Firebase URL
+        id: firebase
+        if: always() && matrix.app != 'pos'
+        run: |
+          case "${{ matrix.app }}-${{ env.BUILD_TYPE }}" in
+            wallet-Release) echo "url=${{ vars.FIREBASE_WALLET_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
+            wallet-Internal) echo "url=${{ vars.FIREBASE_WALLET_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
+            wallet-Debug) echo "url=${{ vars.FIREBASE_WALLET_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
+            dapp-Release) echo "url=${{ vars.FIREBASE_DAPP_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
+            dapp-Internal) echo "url=${{ vars.FIREBASE_DAPP_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
+            dapp-Debug) echo "url=${{ vars.FIREBASE_DAPP_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
+            modal-Release) echo "url=${{ vars.FIREBASE_MODAL_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
+            modal-Internal) echo "url=${{ vars.FIREBASE_MODAL_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
+            modal-Debug) echo "url=${{ vars.FIREBASE_MODAL_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
+          esac
+
+      - name: Send Slack notification
+        if: always() && !cancelled()
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Android Sample Build - ${{ matrix.app }} (${{ env.BUILD_TYPE }})",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "Android Sample Build Report" }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*App:*\n`${{ matrix.app }}`" },
+                    { "type": "mrkdwn", "text": "*Build Type:*\n`${{ env.BUILD_TYPE }}`" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.ref_name }}`" },
+                    { "type": "mrkdwn", "text": "*Status:*\n`${{ job.status == 'success' && 'Success' || 'Failed' }}`" }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Workflow Run" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }${{ steps.firebase.outputs.url && format(',{{"type":"button","text":{{"type":"plain_text","text":"Download on Firebase"}},"url":{0}}}', toJSON(steps.firebase.outputs.url)) || '' }}
+                  ]
+                }
+              ]
+            }

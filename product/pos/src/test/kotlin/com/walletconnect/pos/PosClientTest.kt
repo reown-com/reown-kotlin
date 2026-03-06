@@ -387,6 +387,51 @@ class PosClientTest {
     }
 
     @Test
+    fun `pause - safe to call before init`() {
+        PosClient.pause()
+        // No exception means success
+    }
+
+    @Test
+    fun `pause - safe to call when not polling`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.pause()
+        // No exception means success
+    }
+
+    @Test
+    fun `resume - safe to call before init`() {
+        PosClient.resume()
+        // No exception means success - no active polling state, returns early
+    }
+
+    @Test
+    fun `resume - safe to call when not polling`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.resume()
+        // No exception means success - no active polling state
+    }
+
+    @Test
+    fun `pause and resume - does not resume after cancelPayment`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.setDelegate(object : POSDelegate {
+            override fun onEvent(event: Pos.PaymentEvent) {}
+        })
+
+        PosClient.createPaymentIntent(
+            amount = Pos.Amount(unit = "iso4217/USD", value = "1000"),
+            referenceId = "ORDER-123"
+        )
+        Thread.sleep(50)
+
+        // cancelPayment clears active state — resume should do nothing
+        PosClient.cancelPayment()
+        PosClient.resume()
+        // No exception means success
+    }
+
+    @Test
     fun `referenceId - accepts special characters`() {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.setDelegate(object : POSDelegate {
