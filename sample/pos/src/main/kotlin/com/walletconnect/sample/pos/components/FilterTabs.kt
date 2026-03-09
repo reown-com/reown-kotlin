@@ -80,7 +80,7 @@ fun FilterTabs(
                 Text(
                     text = filter.label,
                     style = WCTheme.typography.bodyLgRegular,
-                    color = WCTheme.colors.textPrimary
+                    color = if (isSelected) WCTheme.colors.textPrimary else WCTheme.colors.textSecondary
                 )
             }
         }

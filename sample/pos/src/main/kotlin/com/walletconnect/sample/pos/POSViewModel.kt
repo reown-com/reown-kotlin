@@ -228,8 +228,8 @@ class POSViewModel : ViewModel() {
         val majorUnits = valueInCents / 100.0
         val currencyCode = amount.unit.substringAfter("/", "USD")
         val currency = Currency.fromCode(currencyCode)
-        return formatAmountWithSymbol(String.format("%.2f", majorUnits), currency)
-    }
+        formatAmountWithSymbol(String.format(java.util.Locale.US, "%.2f", majorUnits), currency)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
     // Transaction History Methods
 
