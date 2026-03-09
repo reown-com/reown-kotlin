@@ -153,8 +153,8 @@ internal class ApiClient(
     suspend fun cancelPayment(paymentId: String) {
         try {
             payApi.cancelPayment(paymentId)
-        } catch (_: CancellationException) {
-            // Swallow — this is fire-and-forget
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             // Silently ignore errors (matches RN behavior)
         }

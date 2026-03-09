@@ -29,7 +29,7 @@ internal fun mapStatusToPaymentEvent(
         PaymentStatus.SUCCEEDED -> Pos.PaymentEvent.PaymentSuccess(paymentId, info?.toPaymentInfo())
         PaymentStatus.EXPIRED -> Pos.PaymentEvent.PaymentError.PaymentExpired("Payment has expired")
         PaymentStatus.FAILED -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment failed") //TODO: add error message?
-        PaymentStatus.CANCELLED -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment cancelled")
+        PaymentStatus.CANCELLED -> Pos.PaymentEvent.PaymentError.PaymentCancelled("Payment cancelled")
         else -> Pos.PaymentEvent.PaymentError.Undefined("Unknown payment status: $status")
     }
 }

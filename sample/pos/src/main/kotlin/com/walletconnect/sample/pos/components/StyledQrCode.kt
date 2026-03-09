@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -17,6 +16,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.reown.sample.common.ui.theme.WCTheme
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.minus
 import com.github.alexzhirkevich.customqrgenerator.QrData
@@ -66,9 +66,9 @@ fun StyledQrCode(
         contentDescription = "QR Code",
         modifier = modifier
             .size(size)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(WCTheme.borderRadius.shapeLarge)
             .background(Color.White)
-            .padding(12.dp)
+            .padding(WCTheme.spacing.spacing3)
             .aspectRatio(1f)
     )
 }

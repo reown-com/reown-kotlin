@@ -35,5 +35,5 @@ enum class Currency(
 fun formatAmountWithSymbol(amount: String, currency: Currency): String =
     when (currency.symbolPosition) {
         SymbolPosition.LEFT -> "${currency.symbol}$amount"
-        SymbolPosition.RIGHT -> "$amount${currency.symbol}"
+        SymbolPosition.RIGHT -> "$amount\u00A0${currency.symbol}"
     }

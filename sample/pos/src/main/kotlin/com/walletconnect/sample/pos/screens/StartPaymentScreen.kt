@@ -1,11 +1,9 @@
 package com.walletconnect.sample.pos.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -23,12 +20,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.R
+import com.walletconnect.sample.pos.components.BrandLogoRow
 
 @Composable
 fun StartPaymentScreen(
@@ -44,37 +41,11 @@ fun StartPaymentScreen(
             .padding(WCTheme.spacing.spacing5)
     ) {
         // Logos row at top
-        Row(
+        BrandLogoRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = WCTheme.spacing.spacing5),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(R.drawable.ic_wcpay_logo),
-                contentDescription = "WCPay",
-                modifier = Modifier
-                    .width(60.dp)
-                    .height(18.dp),
-                contentScale = ContentScale.Fit
-            )
-            Spacer(Modifier.width(WCTheme.spacing.spacing2))
-            Image(
-                painter = painterResource(R.drawable.ic_plus_header),
-                contentDescription = "+",
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.width(WCTheme.spacing.spacing2))
-            Image(
-                painter = painterResource(R.drawable.ic_ingenico_logo),
-                contentDescription = "Ingenico",
-                modifier = Modifier
-                    .width(78.dp)
-                    .height(22.dp),
-                contentScale = ContentScale.Fit
-            )
-        }
+                .padding(top = WCTheme.spacing.spacing5)
+        )
 
         Spacer(Modifier.height(WCTheme.spacing.spacing5))
 

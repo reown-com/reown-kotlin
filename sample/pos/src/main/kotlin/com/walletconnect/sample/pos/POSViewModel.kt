@@ -156,6 +156,7 @@ class POSViewModel : ViewModel() {
                     is Pos.PaymentEvent.PaymentError.PaymentExpired -> "expired"
                     is Pos.PaymentEvent.PaymentError.CreatePaymentFailed -> "create_failed"
                     is Pos.PaymentEvent.PaymentError.PaymentFailed -> "failed"
+                    is Pos.PaymentEvent.PaymentError.PaymentCancelled -> "cancelled"
                     is Pos.PaymentEvent.PaymentError.PaymentNotFound -> "not_found"
                     is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest -> "invalid_request"
                     is Pos.PaymentEvent.PaymentError.Undefined -> "unknown"
