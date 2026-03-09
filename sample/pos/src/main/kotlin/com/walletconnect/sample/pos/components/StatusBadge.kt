@@ -23,6 +23,7 @@ fun StatusBadge(status: Pos.TransactionStatus, modifier: Modifier = Modifier) {
         Pos.TransactionStatus.SUCCEEDED -> Triple("Completed", SuccessBg, Color.White)
         Pos.TransactionStatus.FAILED -> Triple("Failed", ErrorBg, Color.White)
         Pos.TransactionStatus.EXPIRED -> Triple("Expired", ErrorBg, Color.White)
+        Pos.TransactionStatus.CANCELLED -> Triple("Cancelled", ErrorBg, Color.White)
         Pos.TransactionStatus.PROCESSING, Pos.TransactionStatus.REQUIRES_ACTION ->
             Triple("Pending", WCTheme.colors.foregroundTertiary, WCTheme.colors.textPrimary)
         Pos.TransactionStatus.UNKNOWN ->

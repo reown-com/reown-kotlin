@@ -6,6 +6,9 @@ import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import com.walletconnect.sample.pos.components.TransactionFilter
+import com.walletconnect.sample.pos.model.Currency
+import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -66,6 +69,14 @@ class POSViewModel : ViewModel() {
         lastPaymentInfo = info
     }
 
+    // Selected currency
+    private val _selectedCurrency = MutableStateFlow(Currency.USD)
+    val selectedCurrency = _selectedCurrency.asStateFlow()
+
+    fun setCurrency(currency: Currency) {
+        _selectedCurrency.value = currency
+    }
+
     // Loading state for "Start Payment" button
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -74,8 +85,8 @@ class POSViewModel : ViewModel() {
     private val _transactionHistoryState = MutableStateFlow<TransactionHistoryUiState>(TransactionHistoryUiState.Idle)
     val transactionHistoryState = _transactionHistoryState.asStateFlow()
 
-    private val _selectedStatusFilter = MutableStateFlow<Pos.TransactionStatus?>(null)
-    val selectedStatusFilter = _selectedStatusFilter.asStateFlow()
+    private val _selectedFilter = MutableStateFlow(TransactionFilter.ALL)
+    val selectedFilter = _selectedFilter.asStateFlow()
 
     // Store selected date range option index (not the computed DateRange) to avoid comparison issues
     // Index mapping: 0=All Time, 1=Today, 2=Last 7 Days, 3=This Week, 4=This Month
@@ -169,14 +180,15 @@ class POSViewModel : ViewModel() {
      * @param amountValue Amount in minor units (cents for USD)
      * @param currency Currency code (e.g., "USD", "EUR")
      */
-    fun createPayment(amountValue: String, currency: String = "USD") {
+    fun createPayment(amountValue: String) {
         try {
+            val currency = _selectedCurrency.value
             val referenceId = "ORDER-${System.currentTimeMillis()}"
             _isLoading.value = true
 
             PosClient.createPaymentIntent(
                 amount = Pos.Amount(
-                    unit = "iso4217/$currency",
+                    unit = currency.unit,
                     value = amountValue
                 ),
                 referenceId = referenceId
@@ -196,6 +208,10 @@ class POSViewModel : ViewModel() {
         _isLoading.value = false
     }
 
+    fun printReceipt() {
+        // TODO: Implement receipt printing via POS terminal SDK
+    }
+
     fun resetForNewPayment() {
         currentAmount = null
         currentPaymentId = null
@@ -205,9 +221,10 @@ class POSViewModel : ViewModel() {
     fun getDisplayAmount(): String {
         val amount = currentAmount ?: return ""
         val valueInCents = amount.value.toLongOrNull() ?: 0L
-        val dollars = valueInCents / 100.0
-        val currency = amount.unit.substringAfter("/", "USD")
-        return String.format("$%.2f %s", dollars, currency)
+        val majorUnits = valueInCents / 100.0
+        val currencyCode = amount.unit.substringAfter("/", "USD")
+        val currency = Currency.fromCode(currencyCode)
+        return formatAmountWithSymbol(String.format("%.2f", majorUnits), currency)
     }
 
     // Transaction History Methods
@@ -236,7 +253,7 @@ class POSViewModel : ViewModel() {
             val result = PosClient.getTransactionHistory(
                 limit = 20,
                 cursor = currentCursor,
-                status = _selectedStatusFilter.value,
+                statuses = _selectedFilter.value.statuses,
                 dateRange = getDateRangeForOptionIndex(_selectedDateRangeOptionIndex.value)
             )
 
@@ -280,8 +297,8 @@ class POSViewModel : ViewModel() {
         }
     }
 
-    fun setStatusFilter(status: Pos.TransactionStatus?) {
-        _selectedStatusFilter.value = status
+    fun setFilter(filter: TransactionFilter) {
+        _selectedFilter.value = filter
         loadTransactionHistory(refresh = true)
     }
 

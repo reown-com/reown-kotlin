@@ -92,6 +92,7 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                     viewModel = viewModel,
                     qrUrl = qrUrl.orEmpty(),
                     expiresAt = expiresAt,
+                    onBack = { navController.popBackStack() },
                     onReturnToStart = {
                         viewModel.resetForNewPayment()
                         navController.navigate(Screen.StartPaymentScreen.route) {
@@ -159,6 +160,9 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                             launchSingleTop = true
                         }
                         navController.navigate(Screen.AmountScreen.route)
+                    },
+                    onPrintReceipt = {
+                        viewModel.printReceipt()
                     }
                 )
             }
@@ -174,6 +178,7 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
 
             composable(Screen.SettingsScreen.route) {
                 SettingsScreen(
+                    viewModel = viewModel,
                     onClose = {
                         navController.popBackStack()
                     }

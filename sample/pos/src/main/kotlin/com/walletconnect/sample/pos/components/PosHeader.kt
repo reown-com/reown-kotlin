@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
-import androidx.compose.material.Text
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
@@ -48,21 +48,25 @@ fun PosHeader(
             Image(
                 painter = painterResource(R.drawable.ic_wcpay_logo),
                 contentDescription = "WCPay",
-                modifier = Modifier.height(18.dp),
-                contentScale = ContentScale.FillHeight
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(18.dp),
+                contentScale = ContentScale.Fit
             )
             Spacer(Modifier.width(WCTheme.spacing.spacing2))
-            Text(
-                text = "x",
-                style = WCTheme.typography.bodyMdRegular,
-                color = WCTheme.colors.textTertiary
+            Image(
+                painter = painterResource(R.drawable.ic_plus_header),
+                contentDescription = "+",
+                modifier = Modifier.size(20.dp)
             )
             Spacer(Modifier.width(WCTheme.spacing.spacing2))
             Image(
                 painter = painterResource(R.drawable.ic_ingenico_logo),
                 contentDescription = "Ingenico",
-                modifier = Modifier.height(18.dp),
-                contentScale = ContentScale.FillHeight
+                modifier = Modifier
+                    .width(78.dp)
+                    .height(22.dp),
+                contentScale = ContentScale.Fit
             )
         }
     }

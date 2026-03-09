@@ -32,6 +32,7 @@ import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.components.BigAmountDisplay
 import com.walletconnect.sample.pos.components.NumericKeyboard
 import com.walletconnect.sample.pos.components.PosHeader
+import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 
 @Composable
 fun AmountScreen(
@@ -41,6 +42,7 @@ fun AmountScreen(
 ) {
     var amountDisplay by rememberSaveable { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsState()
+    val currency by viewModel.selectedCurrency.collectAsState()
 
     fun getAmountInCents(): String {
         val dollars = amountDisplay.toDoubleOrNull() ?: 0.0
@@ -50,7 +52,7 @@ fun AmountScreen(
     val isValid = amountDisplay.isNotBlank() && (amountDisplay.toDoubleOrNull() ?: 0.0) > 0 && !isLoading
     val chargeText = if (isValid) {
         val dollars = amountDisplay.toDoubleOrNull() ?: 0.0
-        "Charge $${String.format("%.2f", dollars)}"
+        "Charge ${formatAmountWithSymbol(String.format("%.2f", dollars), currency)}"
     } else {
         "Enter amount"
     }
@@ -60,24 +62,33 @@ fun AmountScreen(
             .fillMaxSize()
             .background(WCTheme.colors.bgPrimary)
             .windowInsetsPadding(WindowInsets.statusBars)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = WCTheme.spacing.spacing5),
+            .windowInsetsPadding(WindowInsets.navigationBars),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         PosHeader(onBack = onBack)
 
         // Amount display area
-        Spacer(Modifier.weight(1f))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(horizontal = WCTheme.spacing.spacing5),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.weight(1f))
 
-        BigAmountDisplay(
-            currencySymbol = "$",
-            amount = amountDisplay
-        )
+            BigAmountDisplay(
+                currencySymbol = currency.symbol,
+                amount = amountDisplay,
+                symbolPosition = currency.symbolPosition
+            )
 
-        Spacer(Modifier.weight(1f))
+            Spacer(Modifier.weight(1f))
+        }
 
         // Numeric keyboard
         NumericKeyboard(
+            modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5),
             onDigit = { digit ->
                 val newAmount = amountDisplay + digit
                 // Limit decimal places to 2
@@ -105,13 +116,14 @@ fun AmountScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = WCTheme.spacing.spacing5)
                 .height(WCTheme.spacing.spacing12)
                 .alpha(if (isValid) 1f else 0.6f)
                 .clip(WCTheme.borderRadius.shapeLarge)
                 .background(WCTheme.colors.bgAccentPrimary)
                 .then(
                     if (isValid) Modifier.clickable {
-                        viewModel.createPayment(getAmountInCents(), "USD")
+                        viewModel.createPayment(getAmountInCents())
                     } else Modifier
                 ),
             contentAlignment = Alignment.Center

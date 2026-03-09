@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,18 +15,22 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.R
+import com.walletconnect.sample.pos.components.PosHeader
 
 @Composable
 fun ErrorScreen(
@@ -39,54 +44,72 @@ fun ErrorScreen(
             .fillMaxSize()
             .background(WCTheme.colors.bgPrimary)
             .windowInsetsPadding(WindowInsets.statusBars)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = WCTheme.spacing.spacing5),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .windowInsetsPadding(WindowInsets.navigationBars),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.weight(1f))
+        PosHeader(onBack = onNewPayment)
 
-        Icon(
-            imageVector = Icons.Default.Warning,
-            contentDescription = "Error",
-            tint = WCTheme.colors.iconError,
-            modifier = Modifier.size(48.dp)
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(horizontal = WCTheme.spacing.spacing5),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_warning_circle),
+                contentDescription = "Warning",
+                tint = WCTheme.colors.bgAccentPrimary,
+                modifier = Modifier.size(40.dp)
+            )
 
-        Spacer(Modifier.height(WCTheme.spacing.spacing5))
+            Spacer(Modifier.height(WCTheme.spacing.spacing4))
 
-        Text(
-            text = title,
-            style = WCTheme.typography.h5Regular,
-            color = WCTheme.colors.textPrimary,
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = title,
+                style = WCTheme.typography.h6Regular,
+                color = WCTheme.colors.textPrimary,
+                textAlign = TextAlign.Center
+            )
 
-        Spacer(Modifier.height(WCTheme.spacing.spacing3))
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
-        Text(
-            text = subtitle,
-            style = WCTheme.typography.bodyLgRegular,
-            color = WCTheme.colors.textSecondary,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(Modifier.weight(1f))
+            Text(
+                text = subtitle,
+                style = WCTheme.typography.bodyLgRegular,
+                color = WCTheme.colors.textTertiary,
+                textAlign = TextAlign.Center
+            )
+        }
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(WCTheme.spacing.spacing12)
+                .padding(horizontal = WCTheme.spacing.spacing5)
+                .height(48.dp)
                 .clip(WCTheme.borderRadius.shapeLarge)
                 .background(WCTheme.colors.bgAccentPrimary)
                 .clickable(onClick = onNewPayment),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "New payment",
-                style = WCTheme.typography.bodyLgMedium,
-                color = WCTheme.colors.textInvert
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "New payment",
+                    style = WCTheme.typography.bodyLgRegular,
+                    color = WCTheme.colors.textInvert
+                )
+                Spacer(Modifier.width(WCTheme.spacing.spacing2))
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = WCTheme.colors.textInvert,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
 
         Spacer(Modifier.height(WCTheme.spacing.spacing5))
@@ -95,11 +118,11 @@ fun ErrorScreen(
 
 private fun getErrorMessages(errorCode: String): Pair<String, String> {
     return when (errorCode) {
-        "expired" -> "Payment expired" to "Your payment has expired. Please generate a new payment and try again."
+        "expired" -> "Your payment has expired" to "This payment request has expired. Please generate a new payment and try again."
         "cancelled" -> "Payment cancelled" to "Payment was cancelled. You can start a new payment anytime."
-        "create_failed" -> "Payment failed" to "We couldn't create the payment. Please check your connection and try again."
+        "create_failed" -> "Payment can't be completed" to "We're unable to complete this payment at this time. Please generate a new payment and try again."
         "not_found" -> "Payment not found" to "The payment could not be found. Please try creating a new one."
         "invalid_request" -> "Invalid request" to "The payment request was invalid. Please try again with a valid amount."
-        else -> "Payment failed" to "We're unable to complete this payment at this time. Please try again."
+        else -> "Payment can't be completed" to "We're unable to complete this payment at this time. Please generate a new payment and try again."
     }
 }

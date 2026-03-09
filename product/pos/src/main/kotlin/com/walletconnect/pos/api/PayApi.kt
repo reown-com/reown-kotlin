@@ -13,4 +13,7 @@ internal interface PayApi {
 
     @GET("v1/merchant/payment/{id}/status")
     suspend fun getPaymentStatus(@Path("id") paymentId: String): Response<GetPaymentStatusResponse>
+
+    @POST("v1/payments/{id}/cancel")
+    suspend fun cancelPayment(@Path("id") paymentId: String): Response<Unit>
 }

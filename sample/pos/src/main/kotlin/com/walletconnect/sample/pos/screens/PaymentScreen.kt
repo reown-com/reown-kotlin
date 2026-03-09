@@ -1,8 +1,5 @@
 package com.walletconnect.sample.pos.screens
 
-import android.content.res.Resources
-import android.graphics.Bitmap
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Text
@@ -25,20 +21,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.EncodeHintType
-import com.google.zxing.qrcode.QRCodeWriter
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.PosEvent
 import com.walletconnect.sample.pos.components.CloseButton
+import com.walletconnect.sample.pos.components.StyledQrCode
 import com.walletconnect.sample.pos.components.PosHeader
 import com.walletconnect.sample.pos.components.WalletConnectLoader
 import kotlinx.coroutines.delay
@@ -54,6 +46,7 @@ fun PaymentScreen(
     viewModel: POSViewModel,
     qrUrl: String,
     expiresAt: Long,
+    onBack: () -> Unit,
     onReturnToStart: () -> Unit,
     onNavigateToAmount: () -> Unit,
     navigateToErrorScreen: (error: String) -> Unit,
@@ -110,7 +103,10 @@ fun PaymentScreen(
             onReturnToStart()
         }
 
-        PosHeader(onBack = onCancel)
+        PosHeader(onBack = {
+            viewModel.cancelPayment()
+            onBack()
+        })
 
         when (uiState) {
             PaymentUiState.WaitingForScan -> {
@@ -163,7 +159,7 @@ private fun ScanContent(
         }
 
         // QR Code
-        QrImage(data = qrUrl, size = 240.dp)
+        StyledQrCode(data = qrUrl, size = 320.dp)
 
         Spacer(Modifier.height(WCTheme.spacing.spacing4))
 
@@ -223,37 +219,3 @@ private fun ProcessingContent(onCancel: () -> Unit) {
     }
 }
 
-@Composable
-fun QrImage(data: String, size: Dp = 220.dp) {
-    val bmp by remember(data) {
-        mutableStateOf(
-            generateQrBitmap(
-                data,
-                sizePx = (size.value * Resources.getSystem().displayMetrics.density).toInt()
-            )
-        )
-    }
-    if (bmp != null) {
-        Image(
-            bitmap = bmp!!.asImageBitmap(),
-            contentDescription = "QR Code",
-            modifier = Modifier.size(size)
-        )
-    }
-}
-
-private fun generateQrBitmap(data: String, sizePx: Int): Bitmap? {
-    return try {
-        val hints = mapOf(EncodeHintType.MARGIN to 1)
-        val bitMatrix = QRCodeWriter().encode(data, BarcodeFormat.QR_CODE, sizePx, sizePx, hints)
-        val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
-        for (x in 0 until sizePx) {
-            for (y in 0 until sizePx) {
-                bmp.setPixel(x, y, if (bitMatrix[x, y]) 0xFF000000.toInt() else 0xFFFFFFFF.toInt())
-            }
-        }
-        bmp
-    } catch (_: Throwable) {
-        null
-    }
-}

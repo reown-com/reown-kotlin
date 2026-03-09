@@ -54,21 +54,25 @@ fun StartPaymentScreen(
             Image(
                 painter = painterResource(R.drawable.ic_wcpay_logo),
                 contentDescription = "WCPay",
-                modifier = Modifier.height(28.dp),
-                contentScale = ContentScale.FillHeight
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(18.dp),
+                contentScale = ContentScale.Fit
             )
-            Spacer(Modifier.width(WCTheme.spacing.spacing5))
-            Text(
-                "x",
-                style = WCTheme.typography.h4Regular,
-                color = WCTheme.colors.textPrimary
+            Spacer(Modifier.width(WCTheme.spacing.spacing2))
+            Image(
+                painter = painterResource(R.drawable.ic_plus_header),
+                contentDescription = "+",
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(Modifier.width(WCTheme.spacing.spacing5))
+            Spacer(Modifier.width(WCTheme.spacing.spacing2))
             Image(
                 painter = painterResource(R.drawable.ic_ingenico_logo),
                 contentDescription = "Ingenico",
-                modifier = Modifier.height(28.dp),
-                contentScale = ContentScale.FillHeight
+                modifier = Modifier
+                    .width(78.dp)
+                    .height(22.dp),
+                contentScale = ContentScale.Fit
             )
         }
 

@@ -58,6 +58,7 @@ fun PaymentSuccessScreen(
     displayAmount: String,
     paymentInfo: Pos.PaymentInfo?,
     onNewPayment: () -> Unit,
+    onPrintReceipt: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val configuration = LocalConfiguration.current
@@ -117,22 +118,27 @@ fun PaymentSuccessScreen(
                 Image(
                     painter = painterResource(R.drawable.ic_wcpay_logo),
                     contentDescription = "WCPay",
-                    modifier = Modifier.height(18.dp),
-                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(18.dp),
+                    contentScale = ContentScale.Fit,
                     colorFilter = ColorFilter.tint(Color.White)
                 )
                 Spacer(Modifier.width(WCTheme.spacing.spacing2))
-                Text(
-                    text = "x",
-                    style = WCTheme.typography.bodyMdRegular,
-                    color = Color.White.copy(alpha = 0.6f)
+                Image(
+                    painter = painterResource(R.drawable.ic_plus_header),
+                    contentDescription = "+",
+                    modifier = Modifier.size(20.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
                 )
                 Spacer(Modifier.width(WCTheme.spacing.spacing2))
                 Image(
                     painter = painterResource(R.drawable.ic_ingenico_logo),
                     contentDescription = "Ingenico",
-                    modifier = Modifier.height(18.dp),
-                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier
+                        .width(78.dp)
+                        .height(22.dp),
+                    contentScale = ContentScale.Fit,
                     colorFilter = ColorFilter.tint(Color.White)
                 )
             }
@@ -159,6 +165,37 @@ fun PaymentSuccessScreen(
             }
 
             Spacer(Modifier.weight(1f))
+
+            // Print receipt button - dark bg always
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(WCTheme.spacing.spacing12)
+                    .clip(WCTheme.borderRadius.shapeLarge)
+                    .background(ButtonBgColor)
+                    .clickable(onClick = onPrintReceipt),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Print receipt",
+                        style = WCTheme.typography.bodyLgMedium,
+                        color = Color.White
+                    )
+                    Spacer(Modifier.width(WCTheme.spacing.spacing2))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_receipt),
+                        contentDescription = null,
+                        tint = WCTheme.colors.iconDefault,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing3))
 
             // New payment button - dark bg always
             Box(
