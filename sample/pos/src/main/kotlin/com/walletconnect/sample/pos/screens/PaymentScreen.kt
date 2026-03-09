@@ -17,6 +17,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -54,6 +56,7 @@ fun PaymentScreen(
 ) {
     var uiState by remember { mutableStateOf<PaymentUiState>(PaymentUiState.WaitingForScan) }
     var remainingSeconds by remember { mutableLongStateOf(0L) }
+    val displayAmount by viewModel.displayAmount.collectAsState()
 
     // Listen for payment events
     LaunchedEffect(Unit) {
@@ -75,14 +78,16 @@ fun PaymentScreen(
         }
     }
 
-    // Countdown timer
+    // Countdown timer — guard against navigating to error if already processing/succeeded
     LaunchedEffect(expiresAt) {
         if (expiresAt <= 0L) return@LaunchedEffect
         while (true) {
             val now = System.currentTimeMillis() / 1000
             val remaining = expiresAt - now
             if (remaining <= 0) {
-                navigateToErrorScreen("expired")
+                if (uiState is PaymentUiState.WaitingForScan) {
+                    navigateToErrorScreen("expired")
+                }
                 break
             }
             remainingSeconds = remaining
@@ -112,7 +117,7 @@ fun PaymentScreen(
             PaymentUiState.WaitingForScan -> {
                 ScanContent(
                     qrUrl = qrUrl,
-                    displayAmount = viewModel.getDisplayAmount(),
+                    displayAmount = displayAmount,
                     remainingSeconds = remainingSeconds,
                     onCancel = onCancel
                 )

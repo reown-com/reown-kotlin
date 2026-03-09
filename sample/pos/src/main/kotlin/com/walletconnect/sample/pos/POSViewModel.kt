@@ -12,7 +12,10 @@ import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.net.URI
 
@@ -58,7 +61,7 @@ class POSViewModel : ViewModel() {
     val posEventsFlow = _posEventsFlow.asSharedFlow()
 
     // Current payment info
-    private var currentAmount: Pos.Amount? = null
+    private val _currentAmount = MutableStateFlow<Pos.Amount?>(null)
     private var currentPaymentId: String? = null
 
     // Last successful payment info for success screen
@@ -125,7 +128,7 @@ class POSViewModel : ViewModel() {
         when (paymentEvent) {
             is Pos.PaymentEvent.PaymentCreated -> {
                 _isLoading.value = false
-                currentAmount = paymentEvent.amount
+                _currentAmount.value = paymentEvent.amount
                 currentPaymentId = paymentEvent.paymentId
                 _posNavEventsFlow.emit(
                     PosNavEvent.QrReady(
@@ -147,7 +150,7 @@ class POSViewModel : ViewModel() {
 
             is Pos.PaymentEvent.PaymentSuccess -> {
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
-                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info, currentAmount))
+                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info, _currentAmount.value))
             }
 
             is Pos.PaymentEvent.PaymentError -> {
@@ -214,13 +217,13 @@ class POSViewModel : ViewModel() {
     }
 
     fun resetForNewPayment() {
-        currentAmount = null
+        _currentAmount.value = null
         currentPaymentId = null
         _isLoading.value = false
     }
 
-    fun getDisplayAmount(): String {
-        val amount = currentAmount ?: return ""
+    val displayAmount = _currentAmount.map { amount ->
+        if (amount == null) return@map ""
         val valueInCents = amount.value.toLongOrNull() ?: 0L
         val majorUnits = valueInCents / 100.0
         val currencyCode = amount.unit.substringAfter("/", "USD")

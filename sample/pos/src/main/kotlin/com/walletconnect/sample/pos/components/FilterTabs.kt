@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.reown.sample.common.ui.theme.WCBorderRadius
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.pos.Pos
 
@@ -33,7 +34,7 @@ enum class TransactionFilter(val label: String, val statuses: List<Pos.Transacti
     COMPLETED("Completed", listOf(Pos.TransactionStatus.SUCCEEDED))
 }
 
-private val PillShape = RoundedCornerShape(16.dp)
+private val PillShape = RoundedCornerShape(WCBorderRadius.radius4)
 
 @Composable
 fun FilterTabs(

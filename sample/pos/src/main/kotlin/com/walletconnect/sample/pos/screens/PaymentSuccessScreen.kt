@@ -48,8 +48,6 @@ import kotlinx.coroutines.launch
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-// Dark mode foreground-primary color, always used for the button regardless of theme
-private val ButtonBgColor = Color(0xFF252525)
 private const val INITIAL_CIRCLE_SIZE = 20
 
 @Composable
@@ -174,7 +172,7 @@ fun PaymentSuccessScreen(
                     .fillMaxWidth()
                     .height(WCTheme.spacing.spacing12)
                     .clip(WCTheme.borderRadius.shapeLarge)
-                    .background(ButtonBgColor)
+                    .background(WCTheme.colors.bgInvert)
                     .clickable(onClick = onNewPayment),
                 contentAlignment = Alignment.Center
             ) {
@@ -185,13 +183,13 @@ fun PaymentSuccessScreen(
                     Text(
                         text = "New payment",
                         style = WCTheme.typography.bodyLgMedium,
-                        color = Color.White
+                        color = WCTheme.colors.textInvert
                     )
                     Spacer(Modifier.width(WCTheme.spacing.spacing2))
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        tint = WCTheme.colors.iconDefault,
+                        tint = WCTheme.colors.iconInvert,
                         modifier = Modifier.size(20.dp)
                     )
                 }
