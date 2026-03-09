@@ -49,7 +49,7 @@ object Pos {
     }
 
     sealed interface PaymentEvent {
-        data class PaymentCreated(val uri: URI, val amount: Amount, val paymentId: String) : PaymentEvent
+        data class PaymentCreated(val uri: URI, val amount: Amount, val paymentId: String, val expiresAt: Long) : PaymentEvent
         data object PaymentRequested : PaymentEvent
         data object PaymentProcessing : PaymentEvent
         data class PaymentSuccess(val paymentId: String, val info: PaymentInfo?) : PaymentEvent

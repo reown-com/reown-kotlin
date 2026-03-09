@@ -17,10 +17,11 @@ sealed interface PosNavEvent {
     data object ToStart : PosNavEvent
     data object ToAmount : PosNavEvent
     data object FlowFinished : PosNavEvent
-    data class QrReady(val uri: URI, val amount: Pos.Amount, val paymentId: String) : PosNavEvent
+    data class QrReady(val uri: URI, val amount: Pos.Amount, val paymentId: String, val expiresAt: Long) : PosNavEvent
     data class ToErrorScreen(val error: String) : PosNavEvent
-    data class PaymentSuccessScreen(val paymentId: String, val info: Pos.PaymentInfo?) : PosNavEvent
+    data class PaymentSuccessScreen(val paymentId: String, val info: Pos.PaymentInfo?, val amount: Pos.Amount?) : PosNavEvent
     data object ToTransactionHistory : PosNavEvent
+    data object ToSettings : PosNavEvent
 }
 
 sealed interface PosEvent {
@@ -56,6 +57,14 @@ class POSViewModel : ViewModel() {
     // Current payment info
     private var currentAmount: Pos.Amount? = null
     private var currentPaymentId: String? = null
+
+    // Last successful payment info for success screen
+    var lastPaymentInfo: Pos.PaymentInfo? = null
+        private set
+
+    fun storeLastPaymentInfo(info: Pos.PaymentInfo?) {
+        lastPaymentInfo = info
+    }
 
     // Loading state for "Start Payment" button
     private val _isLoading = MutableStateFlow(false)
@@ -111,7 +120,8 @@ class POSViewModel : ViewModel() {
                     PosNavEvent.QrReady(
                         uri = paymentEvent.uri,
                         amount = paymentEvent.amount,
-                        paymentId = paymentEvent.paymentId
+                        paymentId = paymentEvent.paymentId,
+                        expiresAt = paymentEvent.expiresAt
                     )
                 )
             }
@@ -126,27 +136,31 @@ class POSViewModel : ViewModel() {
 
             is Pos.PaymentEvent.PaymentSuccess -> {
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
-                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info))
+                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info, currentAmount))
             }
 
             is Pos.PaymentEvent.PaymentError -> {
                 _isLoading.value = false
-                val errorMessage = when (val error: Pos.PaymentEvent.PaymentError = paymentEvent) {
-                    is Pos.PaymentEvent.PaymentError.CreatePaymentFailed -> "Failed to create payment, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.PaymentFailed -> "Payment failed, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.PaymentNotFound -> "Payment not found, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.PaymentExpired -> "Payment expired, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest -> "Invalid request, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.Undefined -> "Undefined Error, try again: ${error.message}"
+                val errorCode = when (paymentEvent) {
+                    is Pos.PaymentEvent.PaymentError.PaymentExpired -> "expired"
+                    is Pos.PaymentEvent.PaymentError.CreatePaymentFailed -> "create_failed"
+                    is Pos.PaymentEvent.PaymentError.PaymentFailed -> "failed"
+                    is Pos.PaymentEvent.PaymentError.PaymentNotFound -> "not_found"
+                    is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest -> "invalid_request"
+                    is Pos.PaymentEvent.PaymentError.Undefined -> "unknown"
                 }
-                _posEventsFlow.emit(PosEvent.PaymentError(errorMessage))
-                _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = errorMessage))
+                _posEventsFlow.emit(PosEvent.PaymentError(errorCode))
+                _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = errorCode))
             }
         }
     }
 
     fun navigateToAmountScreen() {
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToAmount) }
+    }
+
+    fun navigateToSettings() {
+        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSettings) }
     }
 
     /**

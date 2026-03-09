@@ -1,51 +1,72 @@
 package com.walletconnect.sample.pos.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.Text
+import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.SubcomposeAsyncImage
-import coil3.compose.SubcomposeAsyncImageContent
+import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.TransactionHistoryUiState
-import java.text.SimpleDateFormat
-import java.util.*
+import com.walletconnect.sample.pos.components.CloseButton
+import com.walletconnect.sample.pos.components.DateRangeSelector
+import com.walletconnect.sample.pos.components.FilterTabs
+import com.walletconnect.sample.pos.components.PosHeader
+import com.walletconnect.sample.pos.components.TransactionCard
+import com.walletconnect.sample.pos.components.TransactionDetailSheet
+import kotlinx.coroutines.launch
 
-private val BrandColor = Color(0xFF0988F0)
-
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TransactionHistoryScreen(
     viewModel: POSViewModel,
-    onBackClick: () -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.transactionHistoryState.collectAsState()
     val selectedFilter by viewModel.selectedStatusFilter.collectAsState()
     val selectedDateRangeOptionIndex by viewModel.selectedDateRangeOptionIndex.collectAsState()
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
+    var selectedTransaction by remember { mutableStateOf<Pos.Transaction?>(null) }
+    val sheetState = rememberModalBottomSheetState(
+        initialValue = ModalBottomSheetValue.Hidden,
+        skipHalfExpanded = true
+    )
 
     // Load more when reaching end of list
     val shouldLoadMore = remember {
@@ -62,165 +83,102 @@ fun TransactionHistoryScreen(
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.White)
+    TransactionDetailSheet(
+        sheetState = sheetState,
+        transaction = selectedTransaction
     ) {
-        // Header with back button
-        TransactionHistoryHeader(onBackClick = onBackClick)
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(WCTheme.colors.bgPrimary)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+        ) {
+            PosHeader(onBack = onClose)
 
-        // Date range filter chips
-        DateRangeSelector(
-            selectedOptionIndex = selectedDateRangeOptionIndex,
-            onOptionSelected = { viewModel.setDateRangeOption(it) }
-        )
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
-        // Status filter chips
-        StatusFilterChips(
-            selectedStatus = selectedFilter,
-            onStatusSelected = { viewModel.setStatusFilter(it) }
-        )
+            // Filter tabs (status)
+            FilterTabs(
+                selectedStatus = selectedFilter,
+                onStatusSelected = { viewModel.setStatusFilter(it) }
+            )
 
-        // Content
-        when (val state = uiState) {
-            TransactionHistoryUiState.Idle,
-            TransactionHistoryUiState.Loading -> {
-                LoadingContent()
-            }
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
-            is TransactionHistoryUiState.Success -> {
-                if (state.transactions.isEmpty()) {
-                    EmptyStateContent()
-                } else {
+            // Date range selector
+            DateRangeSelector(
+                selectedOptionIndex = selectedDateRangeOptionIndex,
+                onOptionSelected = { viewModel.setDateRangeOption(it) }
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing3))
+
+            // Content
+            when (val state = uiState) {
+                TransactionHistoryUiState.Idle,
+                TransactionHistoryUiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = WCTheme.colors.bgAccentPrimary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+
+                is TransactionHistoryUiState.Success -> {
+                    if (state.transactions.isEmpty()) {
+                        EmptyState(modifier = Modifier.weight(1f))
+                    } else {
+                        TransactionList(
+                            transactions = state.transactions,
+                            isLoadingMore = false,
+                            listState = listState,
+                            onTransactionClick = { tx ->
+                                selectedTransaction = tx
+                                scope.launch { sheetState.show() }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                is TransactionHistoryUiState.LoadingMore -> {
                     TransactionList(
                         transactions = state.transactions,
-                        hasMore = state.hasMore,
-                        isLoadingMore = false,
+                        isLoadingMore = true,
                         listState = listState,
-                        stats = state.stats
+                        onTransactionClick = { tx ->
+                            selectedTransaction = tx
+                            scope.launch { sheetState.show() }
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                is TransactionHistoryUiState.Error -> {
+                    ErrorState(
+                        message = state.message,
+                        onRetry = { viewModel.refreshTransactionHistory() },
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            is TransactionHistoryUiState.LoadingMore -> {
-                // Show existing list with loading indicator at bottom
-                TransactionList(
-                    transactions = state.transactions,
-                    hasMore = true,
-                    isLoadingMore = true,
-                    listState = listState,
-                    stats = state.stats
-                )
+            // Close button at bottom
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = WCTheme.spacing.spacing4),
+                contentAlignment = Alignment.Center
+            ) {
+                CloseButton(onClick = onClose)
             }
-
-            is TransactionHistoryUiState.Error -> {
-                ErrorContent(
-                    message = state.message,
-                    onRetry = { viewModel.refreshTransactionHistory() }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TransactionHistoryHeader(onBackClick: () -> Unit) {
-    Surface(
-        color = BrandColor,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = 4.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
-                )
-            }
-            Text(
-                "Transaction History",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-/**
- * Date range filter options.
- * Note: Index order must match ViewModel's getDateRangeForOptionIndex()
- */
-private enum class DateRangeOption(val label: String) {
-    ALL("All Time"),
-    TODAY("Today"),
-    LAST_7_DAYS("7 Days"),
-    THIS_WEEK("This Week"),
-    THIS_MONTH("This Month")
-}
-
-@Composable
-private fun DateRangeSelector(
-    selectedOptionIndex: Int,
-    onOptionSelected: (Int) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        DateRangeOption.entries.forEachIndexed { index, option ->
-            FilterChip(
-                selected = selectedOptionIndex == index,
-                onClick = { onOptionSelected(index) },
-                label = { Text(option.label) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = BrandColor.copy(alpha = 0.8f),
-                    selectedLabelColor = Color.White
-                )
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatusFilterChips(
-    selectedStatus: Pos.TransactionStatus?,
-    onStatusSelected: (Pos.TransactionStatus?) -> Unit
-) {
-    val filters = listOf(
-        null to "All",
-        Pos.TransactionStatus.SUCCEEDED to "Succeeded",
-        Pos.TransactionStatus.FAILED to "Failed",
-        Pos.TransactionStatus.PROCESSING to "Processing",
-        Pos.TransactionStatus.EXPIRED to "Expired"
-    )
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        filters.forEach { (status, label) ->
-            FilterChip(
-                selected = selectedStatus == status,
-                onClick = { onStatusSelected(status) },
-                label = { Text(label) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = BrandColor,
-                    selectedLabelColor = Color.White
-                )
-            )
         }
     }
 }
@@ -228,29 +186,25 @@ private fun StatusFilterChips(
 @Composable
 private fun TransactionList(
     transactions: List<Pos.Transaction>,
-    hasMore: Boolean,
     isLoadingMore: Boolean,
     listState: androidx.compose.foundation.lazy.LazyListState,
-    stats: Pos.TransactionStats?
+    onTransactionClick: (Pos.Transaction) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     LazyColumn(
         state = listState,
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = WCTheme.spacing.spacing5),
+        verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
     ) {
-        // Stats summary card
-        stats?.let { statsData ->
-            item {
-                StatsCard(stats = statsData)
-            }
-        }
-
         items(
             items = transactions,
             key = { it.paymentId }
         ) { transaction ->
-            TransactionItem(transaction = transaction)
+            TransactionCard(
+                transaction = transaction,
+                onClick = { onTransactionClick(transaction) }
+            )
         }
 
         if (isLoadingMore) {
@@ -258,345 +212,84 @@ private fun TransactionList(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(WCTheme.spacing.spacing4),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
-                        color = BrandColor,
+                        color = WCTheme.colors.bgAccentPrimary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
             }
         }
-
-        if (!hasMore && transactions.isNotEmpty()) {
-            item {
-                Text(
-                    "No more transactions",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
     }
 }
 
 @Composable
-private fun StatsCard(stats: Pos.TransactionStats) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = BrandColor.copy(alpha = 0.1f),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            StatItem(
-                label = "Transactions",
-                value = stats.totalTransactions.toString()
-            )
-            StatItem(
-                label = "Customers",
-                value = stats.totalCustomers.toString()
-            )
-            stats.totalRevenue?.let { revenue ->
-                StatItem(
-                    label = "Revenue",
-                    value = revenue.format()
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = BrandColor
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
-        )
-    }
-}
-
-@Composable
-private fun TransactionItem(transaction: Pos.Transaction) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFF5F5F5),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            // Top row: Status + Amount
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    StatusIcon(status = transaction.status)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = transaction.status.displayName(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = transaction.status.color()
-                    )
-                }
-
-                // Amount column (fiat + token)
-                Column(horizontalAlignment = Alignment.End) {
-                    transaction.formatFiatAmount()?.let { amount ->
-                        Text(
-                            text = amount,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
-                    transaction.formatTokenAmount()?.let { tokenAmount ->
-                        Spacer(Modifier.height(4.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            TokenLogo(
-                                logoUrl = transaction.tokenLogo,
-                                tokenSymbol = transaction.tokenSymbol
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text(
-                                text = "$tokenAmount ${transaction.tokenSymbol ?: ""}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-            HorizontalDivider(color = Color(0xFFE0E0E0))
-            Spacer(Modifier.height(12.dp))
-
-            // Details
-            DetailRow("Payment ID", transaction.paymentId.truncateMiddle())
-
-            transaction.txHash?.let { hash ->
-                DetailRow("TX Hash", hash.truncateMiddle())
-            }
-
-            transaction.network?.let { network ->
-                DetailRow("Network", network)
-            }
-
-            DetailRow("Wallet", transaction.walletName)
-
-            transaction.createdAt?.let { timestamp ->
-                DetailRow("Date", formatTimestamp(timestamp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
+private fun EmptyState(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(WCTheme.spacing.spacing8),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            text = "No activity yet",
+            style = WCTheme.typography.h6Medium,
+            color = WCTheme.colors.textPrimary
         )
+        Spacer(Modifier.height(WCTheme.spacing.spacing2))
         Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Black,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.widthIn(max = 200.dp)
+            text = "Your transaction history will appear here",
+            style = WCTheme.typography.bodyMdRegular,
+            color = WCTheme.colors.textSecondary,
+            textAlign = TextAlign.Center
         )
     }
 }
 
 @Composable
-private fun TokenLogo(logoUrl: String?, tokenSymbol: String?) {
-    val fallback: @Composable () -> Unit = {
+private fun ErrorState(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(WCTheme.spacing.spacing8),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Failed to load transactions",
+            style = WCTheme.typography.h6Medium,
+            color = WCTheme.colors.textPrimary
+        )
+        Spacer(Modifier.height(WCTheme.spacing.spacing2))
+        Text(
+            text = message,
+            style = WCTheme.typography.bodyMdRegular,
+            color = WCTheme.colors.textSecondary,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(WCTheme.spacing.spacing4))
         Box(
             modifier = Modifier
-                .size(16.dp)
-                .background(Color.Gray.copy(alpha = 0.3f), CircleShape),
+                .clickable(onClick = onRetry)
+                .background(WCTheme.colors.bgAccentPrimary, WCTheme.borderRadius.shapeMedium)
+                .padding(
+                    horizontal = WCTheme.spacing.spacing5,
+                    vertical = WCTheme.spacing.spacing2
+                ),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = tokenSymbol?.take(1) ?: "?",
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
+                text = "Retry",
+                style = WCTheme.typography.bodyMdMedium,
+                color = WCTheme.colors.textInvert
             )
-        }
-    }
-
-    if (logoUrl != null) {
-        SubcomposeAsyncImage(
-            model = logoUrl,
-            contentDescription = "Token logo",
-            modifier = Modifier
-                .size(16.dp)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop,
-            error = { fallback() },
-            success = { SubcomposeAsyncImageContent() }
-        )
-    } else {
-        fallback()
-    }
-}
-
-@Composable
-private fun StatusIcon(status: Pos.TransactionStatus) {
-    val (icon, color) = status.iconAndColor()
-    Icon(
-        imageVector = icon,
-        contentDescription = null,
-        tint = color,
-        modifier = Modifier.size(20.dp)
-    )
-}
-
-private fun Pos.TransactionStatus.iconAndColor(): Pair<ImageVector, Color> {
-    return when (this) {
-        Pos.TransactionStatus.SUCCEEDED -> Icons.Filled.CheckCircle to Color(0xFF4CAF50)
-        Pos.TransactionStatus.FAILED, Pos.TransactionStatus.EXPIRED -> Icons.Filled.Warning to Color(0xFFF44336)
-        Pos.TransactionStatus.PROCESSING, Pos.TransactionStatus.REQUIRES_ACTION -> Icons.Filled.Refresh to Color(0xFFFF9800)
-        Pos.TransactionStatus.UNKNOWN -> Icons.Filled.Refresh to Color.Gray
-    }
-}
-
-private fun Pos.TransactionStatus.displayName(): String = when (this) {
-    Pos.TransactionStatus.SUCCEEDED -> "Completed"
-    Pos.TransactionStatus.FAILED -> "Failed"
-    Pos.TransactionStatus.EXPIRED -> "Expired"
-    Pos.TransactionStatus.PROCESSING -> "Processing"
-    Pos.TransactionStatus.REQUIRES_ACTION -> "Pending"
-    Pos.TransactionStatus.UNKNOWN -> "Unknown"
-}
-
-private fun Pos.TransactionStatus.color(): Color = when (this) {
-    Pos.TransactionStatus.SUCCEEDED -> Color(0xFF4CAF50)
-    Pos.TransactionStatus.FAILED, Pos.TransactionStatus.EXPIRED -> Color(0xFFF44336)
-    Pos.TransactionStatus.PROCESSING, Pos.TransactionStatus.REQUIRES_ACTION -> Color(0xFFFF9800)
-    Pos.TransactionStatus.UNKNOWN -> Color.Gray
-}
-
-private fun formatTimestamp(timestamp: String): String {
-    return try {
-        // Parse UTC timestamp from server and display in user's local timezone
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-        val outputFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
-        val date = inputFormat.parse(timestamp.substringBefore(".").substringBefore("Z"))
-        date?.let { outputFormat.format(it) } ?: timestamp
-    } catch (e: Exception) {
-        timestamp
-    }
-}
-
-private fun String.truncateMiddle(startChars: Int = 10, endChars: Int = 6): String {
-    return if (length <= startChars + endChars + 3) {
-        this
-    } else {
-        "${take(startChars)}...${takeLast(endChars)}"
-    }
-}
-
-@Composable
-private fun LoadingContent() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(color = BrandColor)
-    }
-}
-
-@Composable
-private fun EmptyStateContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            "No Transactions",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Your transaction history will appear here",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(message: String, onRetry: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Warning,
-            contentDescription = null,
-            tint = Color(0xFFF44336),
-            modifier = Modifier.size(48.dp)
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            "Failed to load transactions",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(24.dp))
-        Button(
-            onClick = onRetry,
-            colors = ButtonDefaults.buttonColors(containerColor = BrandColor)
-        ) {
-            Text("Retry")
         }
     }
 }

@@ -112,7 +112,8 @@ internal class ApiClient(
                 val paymentCreatedEvent = Pos.PaymentEvent.PaymentCreated(
                     uri = URI(data.gatewayUrl),
                     amount = Pos.Amount(unit, value),
-                    paymentId = data.paymentId
+                    paymentId = data.paymentId,
+                    expiresAt = data.expiresAt
                 )
                 val valueMinor = value.toLongOrNull() ?: 0L
                 val context = PaymentContext(
