@@ -141,7 +141,7 @@ fun PaymentSuccessScreen(
                     .fillMaxWidth()
                     .height(WCTheme.spacing.spacing12)
                     .clip(WCTheme.borderRadius.shapeLarge)
-                    .background(ButtonBgColor)
+                    .background(WCTheme.colors.bgInvert)
                     .clickable(onClick = onPrintReceipt),
                 contentAlignment = Alignment.Center
             ) {
