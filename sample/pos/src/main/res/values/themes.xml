@@ -6,4 +6,10 @@
     </style>
 
     <style name="Theme.ReownKotlin" parent="Base.Theme.ReownKotlin" />
+
+    <style name="Theme.ReownKotlin.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#202020</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/wcpay_splash_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.ReownKotlin</item>
+    </style>
 </resources>

@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.androidx.core)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.material)
+    implementation(libs.androidx.splashscreen)
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
