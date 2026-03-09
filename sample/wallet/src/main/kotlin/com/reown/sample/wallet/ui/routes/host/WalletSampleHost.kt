@@ -18,18 +18,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Scaffold
 import androidx.compose.material.ScaffoldState
 import androidx.compose.material.Text
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,19 +42,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.accompanist.navigation.material.BottomSheetNavigator
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.pandulapeter.beagle.DebugMenuView
 import com.reown.sample.common.ui.themedColor
+import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.Web3WalletNavGraph
 import com.reown.sample.wallet.ui.Web3WalletViewModel
@@ -66,21 +69,40 @@ fun WalletSampleHost(
     navController: NavHostController,
     web3walletViewModel: Web3WalletViewModel,
     connectionsViewModel: ConnectionsViewModel,
-    getStartedVisited: Boolean,
 ) {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     val connectionState by web3walletViewModel.connectionState.collectAsState()
     val bottomBarState = rememberBottomBarMutableState()
-    val currentRoute = navController.currentBackStackEntryAsState()
     val isLoader by web3walletViewModel.isLoadingFlow.collectAsState(false)
     val isRequestLoader by web3walletViewModel.isRequestLoadingFlow.collectAsState(false)
+    val fallbackDimColor = WCTheme.colors.bgInvert.copy(alpha = 0.48f)
+    val sheetState = remember(bottomSheetNavigator) { bottomSheetNavigator.navigatorSheetState }
+    val isSheetVisible =
+        sheetState.currentValue != ModalBottomSheetValue.Hidden || sheetState.targetValue != ModalBottomSheetValue.Hidden
+    var shouldDimBackground by remember { mutableStateOf(true) }
+    val dimProgress by animateFloatAsState(
+        targetValue = if (isSheetVisible && shouldDimBackground) 1f else 0f,
+        animationSpec = tween(durationMillis = 220),
+        label = "bottom_sheet_dim_alpha"
+    )
+
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+            val route = destination.route ?: ""
+            val shouldHideBottomBar = route.startsWith(Route.SnackbarMessage.path)
+            bottomBarState.value = bottomBarState.value.copy(isDisplayed = !shouldHideBottomBar)
+            shouldDimBackground = !route.startsWith(Route.SnackbarMessage.path)
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose { navController.removeOnDestinationChangedListener(listener) }
+    }
 
     LaunchedEffect(Unit) {
         web3walletViewModel.eventsSharedFlow.collect {
             when (it) {
                 is PairingEvent.Error -> {
-                    if (navController.currentDestination?.route != Route.Connections.path) {
-                        navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                    if (navController.currentDestination?.route != Route.Wallets.path) {
+                        navController.popBackStack(route = Route.Wallets.path, inclusive = false)
                     }
                     Toast.makeText(navController.context, it.message, Toast.LENGTH_SHORT).show()
                 }
@@ -92,36 +114,68 @@ fun WalletSampleHost(
         }
     }
 
-    Scaffold(
-        scaffoldState = scaffoldState,
-        drawerGesturesEnabled = true,
-        drawerContent = { BeagleDrawer() },
-        bottomBar = { if (currentRoute.value?.destination?.route != Route.GetStarted.path) BottomBar(navController, bottomBarState.value) },
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            Web3WalletNavGraph(
-                bottomSheetNavigator = bottomSheetNavigator,
-                navController = navController,
-                getStartedVisited = getStartedVisited,
-                web3walletViewModel = web3walletViewModel,
-                connectionsViewModel = connectionsViewModel,
-            )
+    ModalBottomSheetLayout(
+        modifier = Modifier.fillMaxSize(),
+        bottomSheetNavigator = bottomSheetNavigator,
+        sheetShape = RoundedCornerShape(topStart = WCTheme.borderRadius.radius6, topEnd = WCTheme.borderRadius.radius6),
+        sheetBackgroundColor = Color.Transparent,
+        sheetElevation = 0.dp,
+        scrimColor = Color.Transparent
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                scaffoldState = scaffoldState,
+                drawerGesturesEnabled = true,
+                drawerContent = { BeagleDrawer() },
+                bottomBar = {
+                    if (bottomBarState.value.isDisplayed) {
+                        BottomBar(navController, bottomBarState.value)
+                    }
+                },
+            ) { innerPadding ->
+                Box(modifier = Modifier.padding(innerPadding)) {
+                    Web3WalletNavGraph(
+                        bottomSheetNavigator = bottomSheetNavigator,
+                        navController = navController,
+                        web3walletViewModel = web3walletViewModel,
+                        connectionsViewModel = connectionsViewModel,
+                    )
 
-            if (connectionState is ConnectionState.Error) {
-                ErrorBanner((connectionState as ConnectionState.Error).message)
-            } else if (connectionState is ConnectionState.Ok) {
-                RestoredConnectionBanner()
+                    if (connectionState is ConnectionState.Error) {
+                        Banner(
+                            message = "Network connection lost: ${(connectionState as ConnectionState.Error).message}",
+                            backgroundColor = WCTheme.colors.textError,
+                            iconResId = R.drawable.invalid_domain,
+                            durationMs = 5000
+                        )
+                    } else if (connectionState is ConnectionState.Ok) {
+                        Banner(
+                            message = "Network connection is OK",
+                            backgroundColor = WCTheme.colors.textSuccess,
+                            iconResId = R.drawable.ic_check_white,
+                            durationMs = 2000
+                        )
+                    }
+
+                    if (isLoader) {
+                        Loader(initMessage = "WalletConnect is pairing...", updateMessage = "Pairing is taking longer than usual, please try again...")
+                    }
+
+                    if (isRequestLoader) {
+                        Loader(initMessage = "Awaiting a request...", updateMessage = "It is taking longer than usual..")
+                    }
+
+                    Timer(web3walletViewModel)
+                }
             }
 
-            if (isLoader) {
-                Loader(initMessage = "WalletConnect is pairing...", updateMessage = "Pairing is taking longer than usual, please try again...")
+            if (dimProgress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(fallbackDimColor.copy(alpha = fallbackDimColor.alpha * dimProgress))
+                )
             }
-
-            if (isRequestLoader) {
-                Loader(initMessage = "Awaiting a request...", updateMessage = "It is taking longer than usual..")
-            }
-
-            Timer(web3walletViewModel)
         }
     }
 }
@@ -134,10 +188,8 @@ private fun BoxScope.Timer(web3walletViewModel: Web3WalletViewModel) {
             .align(Alignment.BottomStart),
         text = timer,
         maxLines = 1,
-        style = TextStyle(
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            color = themedColor(Color(0xFFb9b3b5), Color(0xFF484648))
+        style = WCTheme.typography.bodySmMedium.copy(
+            color = WCTheme.colors.textTertiary
         ),
     )
 }
@@ -161,7 +213,7 @@ private fun BoxScope.Loader(initMessage: String, updateMessage: String) {
             .align(Alignment.Center)
             .clip(RoundedCornerShape(34.dp))
             .background(themedColor(Color(0xFF242425).copy(alpha = .95f), Color(0xFFF2F2F7).copy(alpha = .95f)))
-            .padding(24.dp),
+            .padding(WCTheme.spacing.spacing6),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -170,26 +222,24 @@ private fun BoxScope.Loader(initMessage: String, updateMessage: String) {
             modifier = Modifier
                 .size(75.dp), color = Color(0xFFB8F53D)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
         Text(
             textAlign = TextAlign.Center,
             text = if (shouldChangeText) updateMessage else initMessage,
             maxLines = 2,
-            style = TextStyle(
-                fontWeight = FontWeight.Medium,
-                fontSize = 22.sp,
-                color = themedColor(Color(0xFFb9b3b5), Color(0xFF484648))
+            style = WCTheme.typography.h6Medium.copy(
+                color = WCTheme.colors.textTertiary
             ),
         )
     }
 }
 
 @Composable
-private fun ErrorBanner(message: String) {
+private fun Banner(message: String, backgroundColor: Color, iconResId: Int, durationMs: Long) {
     var shouldShow by remember { mutableStateOf(true) }
 
     LaunchedEffect(key1 = Unit) {
-        delay(5000)
+        delay(durationMs)
         shouldShow = false
     }
 
@@ -197,46 +247,18 @@ private fun ErrorBanner(message: String) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFDC143C))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .background(backgroundColor)
+                .padding(horizontal = WCTheme.spacing.spacing4, vertical = WCTheme.spacing.spacing2),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                imageVector = ImageVector.vectorResource(id = R.drawable.invalid_domain),
+                imageVector = ImageVector.vectorResource(id = iconResId),
                 contentDescription = null,
                 modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(color = Color.White)
+                colorFilter = ColorFilter.tint(color = WCTheme.colors.textInvert)
             )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Network connection lost: $message", color = Color.White)
-        }
-    }
-}
-
-@Composable
-private fun RestoredConnectionBanner() {
-    var shouldShow by remember { mutableStateOf(true) }
-
-    LaunchedEffect(key1 = Unit) {
-        delay(2000)
-        shouldShow = false
-    }
-    if (shouldShow) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF93c47d))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                imageVector = ImageVector.vectorResource(id = R.drawable.ic_check_white),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(color = Color.White)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Network connection is OK", color = Color.White)
+            Spacer(modifier = Modifier.width(WCTheme.spacing.spacing1))
+            Text(text = message, style = WCTheme.typography.bodyMdRegular.copy(color = WCTheme.colors.textInvert))
         }
     }
 }

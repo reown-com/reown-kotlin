@@ -26,8 +26,10 @@ object SuiAccountDelegate {
         }
 
     var keypair: String
-        get() = if (isInitialized) sharedPreferences.getString(KEY_PAIR_TAG, null)!! else storeAccount()
+        get() = getOrRecoverKeypair()
         set(value) {
+            // Validate before persisting to avoid storing a corrupted keypair.
+            SuiUtils.getPublicKeyFromKeyPair(value)
             storeAccount(value)
         }
 
@@ -43,6 +45,20 @@ object SuiAccountDelegate {
     val testnetAddress: String
         get() = "${Chain.SUI_TESTNET.id}:$address"
 
+    private fun getOrRecoverKeypair(): String {
+        val storedKeypair = if (isInitialized) sharedPreferences.getString(KEY_PAIR_TAG, null) else null
+        if (storedKeypair == null) {
+            return storeAccount()
+        }
+
+        return runCatching {
+            SuiUtils.getPublicKeyFromKeyPair(storedKeypair)
+            storedKeypair
+        }.getOrElse {
+            // Self-heal if an invalid keypair was persisted earlier.
+            storeAccount()
+        }
+    }
 
     private fun getSuiAddressForKeyPair(keyPair: String? = null): String {
         val currentKeyPair = keyPair ?: sharedPreferences.getString(KEY_PAIR_TAG, null)!!

@@ -69,6 +69,10 @@ object TONAccountDelegate {
             storeAccount(Keypair(value, currentPublicKey))
         }
 
+    fun importKeypair(sk: String, pk: String) {
+        storeAccount(Keypair(sk, pk))
+    }
+
     val keypair: Keypair
         get() = Keypair(secretKey, publicKey)
 

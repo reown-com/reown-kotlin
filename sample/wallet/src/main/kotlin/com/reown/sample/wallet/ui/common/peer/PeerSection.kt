@@ -1,6 +1,6 @@
 package com.reown.sample.wallet.ui.common.peer
 
-import android.net.Uri
+import com.reown.sample.wallet.ui.common.formatDomain
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -88,7 +88,7 @@ fun Peer(peerUI: PeerUI, actionText: String?, peerContextUI: PeerContextUI? = nu
                 }
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = Uri.parse(peerUI.peerUri).host ?: "", maxLines = 1, style = TextStyle(
+                    text = formatDomain(peerUI.peerUri), maxLines = 1, style = TextStyle(
                         fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = themedColor(darkColor = Color(0xFFC9C9CF).copy(alpha = .6f), lightColor = Color(0xFF3C3C43).copy(alpha = .6f))
                     )
                 )
