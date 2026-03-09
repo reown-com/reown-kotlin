@@ -34,14 +34,15 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.reown.sample.common.ui.theme.WCBorderRadius
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.pos.Pos
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private val SheetShape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
-private val CardShape = RoundedCornerShape(20.dp)
-private val CloseButtonShape = RoundedCornerShape(12.dp)
+private val SheetShape = RoundedCornerShape(topStart = WCBorderRadius.radius8, topEnd = WCBorderRadius.radius8)
+private val CardShape = RoundedCornerShape(WCBorderRadius.radius5)
+private val CloseButtonShape = RoundedCornerShape(WCBorderRadius.radius3)
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable

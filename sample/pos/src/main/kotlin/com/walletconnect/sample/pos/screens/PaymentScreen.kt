@@ -21,6 +21,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
@@ -61,6 +65,7 @@ fun PaymentScreen(
 ) {
     var uiState by remember { mutableStateOf<PaymentUiState>(PaymentUiState.WaitingForScan) }
     var remainingSeconds by remember { mutableLongStateOf(0L) }
+    val displayAmount by viewModel.displayAmount.collectAsState()
 
     // Listen for payment events
     LaunchedEffect(Unit) {
@@ -82,14 +87,16 @@ fun PaymentScreen(
         }
     }
 
-    // Countdown timer
+    // Countdown timer — guard against navigating to error if already processing/succeeded
     LaunchedEffect(expiresAt) {
         if (expiresAt <= 0L) return@LaunchedEffect
         while (true) {
             val now = System.currentTimeMillis() / 1000
             val remaining = expiresAt - now
             if (remaining <= 0) {
-                navigateToErrorScreen("expired")
+                if (uiState is PaymentUiState.WaitingForScan) {
+                    navigateToErrorScreen("expired")
+                }
                 break
             }
             remainingSeconds = remaining
@@ -116,7 +123,7 @@ fun PaymentScreen(
             PaymentUiState.WaitingForScan -> {
                 ScanContent(
                     qrUrl = qrUrl,
-                    displayAmount = viewModel.getDisplayAmount(),
+                    displayAmount = displayAmount,
                     remainingSeconds = remainingSeconds,
                     onCancel = onCancel
                 )
@@ -225,13 +232,10 @@ private fun ProcessingContent(onCancel: () -> Unit) {
 
 @Composable
 fun QrImage(data: String, size: Dp = 220.dp) {
-    val bmp by remember(data) {
-        mutableStateOf(
-            generateQrBitmap(
-                data,
-                sizePx = (size.value * Resources.getSystem().displayMetrics.density).toInt()
-            )
-        )
+    val bmp by produceState<Bitmap?>(null, data) {
+        value = withContext(Dispatchers.Default) {
+            generateQrBitmap(data, sizePx = (size.value * Resources.getSystem().displayMetrics.density).toInt())
+        }
     }
     if (bmp != null) {
         Image(

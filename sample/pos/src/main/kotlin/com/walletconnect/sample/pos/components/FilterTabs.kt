@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.reown.sample.common.ui.theme.WCBorderRadius
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.pos.Pos
 
@@ -35,7 +36,7 @@ val defaultFilterTabs = listOf(
     FilterTab("Completed", Pos.TransactionStatus.SUCCEEDED)
 )
 
-private val PillShape = RoundedCornerShape(16.dp)
+private val PillShape = RoundedCornerShape(WCBorderRadius.radius4)
 
 @Composable
 fun FilterTabs(
@@ -83,7 +84,7 @@ fun FilterTabs(
                 Text(
                     text = tab.label,
                     style = WCTheme.typography.bodyLgRegular,
-                    color = if (isSelected) WCTheme.colors.textPrimary else WCTheme.colors.textPrimary
+                    color = if (isSelected) WCTheme.colors.textPrimary else WCTheme.colors.textSecondary
                 )
             }
         }

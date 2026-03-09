@@ -211,7 +211,7 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
 
                 is PosNavEvent.PaymentSuccessScreen -> {
                     viewModel.storeLastPaymentInfo(event.info)
-                    val displayAmount = viewModel.getDisplayAmount()
+                    val displayAmount = viewModel.displayAmount.value
                     navController.navigate(Screen.PaymentSuccessScreen.routeWith(displayAmount)) {
                         popUpTo(navController.graph.startDestinationId) { inclusive = false }
                         launchSingleTop = true
