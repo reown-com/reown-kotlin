@@ -6,9 +6,21 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
     permissions:
       all: allow
 - startRecording: "Native Connection Confirmed"
+- extendedWaitUntil:
+    visible:
+      text: "Ethereum"
+    timeout: 15000
 - tapOn: "Ethereum"
 - tapOn: "Connect via AppKit"
+- extendedWaitUntil:
+    visible:
+      text: "All wallets"
+    timeout: 15000
 - tapOn: "All wallets"
+- extendedWaitUntil:
+    visible:
+      text: "Android Sample Internal"
+    timeout: 15000
 - tapOn: "Android Sample Internal"
 - extendedWaitUntil:
     visible:
