@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import android.net.Uri
 import android.util.Base64
 import android.util.Log
+import com.reown.sample.wallet.ui.routes.dialog_routes.payment.PaymentUiState.*
 import org.json.JSONArray
 import org.json.JSONObject
 import org.web3j.crypto.ECKeyPair
@@ -273,7 +274,7 @@ class PaymentViewModel : ViewModel() {
      * Called when WebView signals IC_ERROR.
      */
     fun onICWebViewError(errorMessage: String) {
-        _uiState.value = PaymentUiState.Error("Information capture failed: $errorMessage", PaymentErrorType.GENERIC)
+        _uiState.value = PaymentUiState.Error("Information capture failed: $errorMessage", categorizeError(errorMessage))
     }
 
     /**
@@ -340,29 +341,37 @@ class PaymentViewModel : ViewModel() {
 
             confirmResult.fold(
                 onSuccess = { response ->
+                    println("kobe: Response: $response")
+
                     when (response.status) {
                         Wallet.Model.PaymentStatus.SUCCEEDED -> {
                             Log.d("PaymentViewModel", "Payment SUCCEEDED")
-                            _uiState.value = PaymentUiState.Success(
+                            _uiState.value = Success(
                                 message = "Payment completed successfully!",
-                                paymentInfo = storedPaymentInfo
+                                paymentInfo = storedPaymentInfo,
+                                resultInfo = response.info
                             )
                         }
                         Wallet.Model.PaymentStatus.PROCESSING -> {
                             Log.d("PaymentViewModel", "Payment PROCESSING")
-                            _uiState.value = PaymentUiState.Success(
+                            _uiState.value = Success(
                                 message = "Payment is being processed...",
-                                paymentInfo = storedPaymentInfo
+                                paymentInfo = storedPaymentInfo,
+                                resultInfo = response.info
                             )
                         }
                         Wallet.Model.PaymentStatus.FAILED -> {
-                            _uiState.value = PaymentUiState.Error("Payment failed", PaymentErrorType.GENERIC)
+                            _uiState.value = Error("Payment failed", PaymentErrorType.GENERIC)
                         }
                         Wallet.Model.PaymentStatus.EXPIRED -> {
-                            _uiState.value = PaymentUiState.Error("Payment expired", PaymentErrorType.EXPIRED)
+                            _uiState.value = Error("Payment expired", PaymentErrorType.EXPIRED)
                         }
                         Wallet.Model.PaymentStatus.REQUIRES_ACTION -> {
-                            _uiState.value = PaymentUiState.Error("Additional action required", PaymentErrorType.GENERIC)
+                            _uiState.value = Error("Additional action required", PaymentErrorType.GENERIC)
+                        }
+
+                        Wallet.Model.PaymentStatus.CANCELLED -> {
+                            _uiState.value = Error("Payment was cancelled", PaymentErrorType.CANCELLED)
                         }
                     }
                 },
@@ -497,7 +506,8 @@ sealed class PaymentUiState {
 
     data class Success(
         val message: String,
-        val paymentInfo: Wallet.Model.PaymentInfo? = null
+        val paymentInfo: Wallet.Model.PaymentInfo? = null,
+        val resultInfo: Wallet.Model.PaymentResultInfo? = null
     ) : PaymentUiState()
 
     data class Error(

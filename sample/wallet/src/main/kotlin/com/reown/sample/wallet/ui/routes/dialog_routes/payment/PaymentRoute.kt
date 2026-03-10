@@ -51,6 +51,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -149,6 +151,7 @@ fun PaymentRoute(
             is PaymentUiState.Success -> {
                 SuccessContent(
                     paymentInfo = state.paymentInfo,
+                    resultInfo = state.resultInfo,
                     onDone = {
                         viewModel.cancel()
                         onPaymentSuccess()
@@ -765,6 +768,7 @@ private fun ProcessingContent(
 @Composable
 private fun SuccessContent(
     paymentInfo: Wallet.Model.PaymentInfo?,
+    resultInfo: Wallet.Model.PaymentResultInfo? = null,
     onDone: () -> Unit
 ) {
     Column(
@@ -809,6 +813,40 @@ private fun SuccessContent(
             style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
             textAlign = TextAlign.Center
         )
+
+        // Transaction details from result info
+        if (resultInfo != null) {
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
+
+            val clipboardManager = LocalClipboardManager.current
+            val context = LocalContext.current
+
+            val resultAmount = resultInfo.optionAmount.let {
+                formatDisplayAmount(
+                    value = it.value,
+                    decimals = it.display?.decimals ?: 2,
+                    symbol = it.display?.assetSymbol ?: it.unit
+                )
+            }
+
+            Text(
+                text = "Amount: $resultAmount",
+                style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textSecondary),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
+
+            Text(
+                text = "Tx: ${resultInfo.txId.take(6)}...${resultInfo.txId.takeLast(4)}",
+                style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textSecondary),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.clickable {
+                    clipboardManager.setText(AnnotatedString(resultInfo.txId))
+                    Toast.makeText(context, "Transaction ID copied", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
 

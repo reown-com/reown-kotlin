@@ -142,6 +142,7 @@ internal object Mappers {
             YttriumPaymentStatus.SUCCEEDED -> Pay.PaymentStatus.SUCCEEDED
             YttriumPaymentStatus.FAILED -> Pay.PaymentStatus.FAILED
             YttriumPaymentStatus.EXPIRED -> Pay.PaymentStatus.EXPIRED
+            YttriumPaymentStatus.CANCELLED -> Pay.PaymentStatus.CANCELLED
         }
     }
 

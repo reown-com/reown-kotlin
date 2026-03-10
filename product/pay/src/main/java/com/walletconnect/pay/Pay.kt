@@ -14,7 +14,8 @@ object Pay {
         PROCESSING,
         SUCCEEDED,
         FAILED,
-        EXPIRED
+        EXPIRED,
+        CANCELLED
     }
 
     data class AmountDisplay(
