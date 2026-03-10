@@ -38,13 +38,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.walletconnect.sample.pos.R
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.BuildConfig
 import com.walletconnect.sample.pos.POSViewModel
+import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.PosHeader
 import com.walletconnect.sample.pos.model.Currency
@@ -150,79 +149,64 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun ThemeBottomSheet(
-    selectedThemeMode: ThemeMode,
-    onSelect: (ThemeMode) -> Unit,
+private fun BottomSheetHeader(
+    title: String,
     onDismiss: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(WCTheme.spacing.spacing5)
+    Box(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        // Header: title centered, X button on right
+        Text(
+            text = title,
+            style = WCTheme.typography.h6Regular,
+            color = WCTheme.colors.textPrimary,
+            modifier = Modifier.align(Alignment.Center)
+        )
         Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "Theme",
-                style = WCTheme.typography.h6Regular,
-                color = WCTheme.colors.textPrimary,
-                modifier = Modifier.align(Alignment.Center)
-            )
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .align(Alignment.CenterEnd)
-                    .clip(RoundedCornerShape(WCTheme.spacing.spacing3))
-                    .border(
-                        width = 1.dp,
-                        color = WCTheme.colors.borderSecondary,
-                        shape = RoundedCornerShape(WCTheme.spacing.spacing3)
-                    )
-                    .clickable(onClick = onDismiss),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = WCTheme.colors.textPrimary,
-                    modifier = Modifier.size(20.dp)
+            modifier = Modifier
+                .size(38.dp)
+                .align(Alignment.CenterEnd)
+                .clip(RoundedCornerShape(WCTheme.spacing.spacing3))
+                .border(
+                    width = 1.dp,
+                    color = WCTheme.colors.borderSecondary,
+                    shape = RoundedCornerShape(WCTheme.spacing.spacing3)
                 )
-            }
-        }
-
-        Spacer(Modifier.height(WCTheme.spacing.spacing7))
-
-        // Theme options
-        ThemeMode.entries.forEach { mode ->
-            val isSelected = mode == selectedThemeMode
-            val iconRes = when (mode) {
-                ThemeMode.SYSTEM -> R.drawable.ic_device_mobile
-                ThemeMode.LIGHT -> R.drawable.ic_sun
-                ThemeMode.DARK -> R.drawable.ic_moon
-            }
-            ThemeOptionItem(
-                icon = painterResource(iconRes),
-                label = mode.displayName,
-                isSelected = isSelected,
-                onClick = { onSelect(mode) }
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close",
+                tint = WCTheme.colors.textPrimary,
+                modifier = Modifier.size(20.dp)
             )
-            if (mode != ThemeMode.entries.last()) {
-                Spacer(Modifier.height(WCTheme.spacing.spacing2))
-            }
         }
-
-        Spacer(Modifier.height(WCTheme.spacing.spacing5))
     }
 }
 
 @Composable
-private fun ThemeOptionItem(
-    icon: Painter,
+private fun RadioIndicator() {
+    Box(
+        modifier = Modifier
+            .size(24.dp)
+            .border(1.dp, WCTheme.colors.iconAccentPrimary, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .background(WCTheme.colors.iconAccentPrimary, CircleShape)
+        )
+    }
+}
+
+@Composable
+private fun SelectableOptionItem(
     label: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    leadingIcon: @Composable (() -> Unit)? = null
 ) {
     val shape = RoundedCornerShape(WCTheme.borderRadius.radius4)
     Row(
@@ -243,13 +227,10 @@ private fun ThemeOptionItem(
             .padding(horizontal = WCTheme.spacing.spacing5),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = icon,
-            contentDescription = null,
-            tint = if (isSelected) WCTheme.colors.iconAccentPrimary else WCTheme.colors.iconDefault,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(Modifier.width(WCTheme.spacing.spacing2))
+        if (leadingIcon != null) {
+            leadingIcon()
+            Spacer(Modifier.width(WCTheme.spacing.spacing2))
+        }
         Text(
             text = label,
             style = WCTheme.typography.bodyLgRegular,
@@ -257,19 +238,52 @@ private fun ThemeOptionItem(
             modifier = Modifier.weight(1f)
         )
         if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .border(1.dp, WCTheme.colors.iconAccentPrimary, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .background(WCTheme.colors.iconAccentPrimary, CircleShape)
-                )
+            RadioIndicator()
+        }
+    }
+}
+
+@Composable
+private fun ThemeBottomSheet(
+    selectedThemeMode: ThemeMode,
+    onSelect: (ThemeMode) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(WCTheme.spacing.spacing5)
+    ) {
+        BottomSheetHeader(title = "Theme", onDismiss = onDismiss)
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing7))
+
+        ThemeMode.entries.forEach { mode ->
+            val isSelected = mode == selectedThemeMode
+            val iconRes = when (mode) {
+                ThemeMode.SYSTEM -> R.drawable.ic_device_mobile
+                ThemeMode.LIGHT -> R.drawable.ic_sun
+                ThemeMode.DARK -> R.drawable.ic_moon
+            }
+            SelectableOptionItem(
+                label = mode.displayName,
+                isSelected = isSelected,
+                onClick = { onSelect(mode) },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(iconRes),
+                        contentDescription = null,
+                        tint = if (isSelected) WCTheme.colors.iconAccentPrimary else WCTheme.colors.iconDefault,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            )
+            if (mode != ThemeMode.entries.last()) {
+                Spacer(Modifier.height(WCTheme.spacing.spacing2))
             }
         }
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing5))
     }
 }
 
@@ -284,44 +298,13 @@ private fun CurrencyBottomSheet(
             .fillMaxWidth()
             .padding(WCTheme.spacing.spacing5)
     ) {
-        // Header: title centered, X button on right
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "Currency",
-                style = WCTheme.typography.h6Regular,
-                color = WCTheme.colors.textPrimary,
-                modifier = Modifier.align(Alignment.Center)
-            )
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .align(Alignment.CenterEnd)
-                    .clip(RoundedCornerShape(WCTheme.spacing.spacing3))
-                    .border(
-                        width = 1.dp,
-                        color = WCTheme.colors.borderSecondary,
-                        shape = RoundedCornerShape(WCTheme.spacing.spacing3)
-                    )
-                    .clickable(onClick = onDismiss),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close",
-                    tint = WCTheme.colors.textPrimary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
+        BottomSheetHeader(title = "Currency", onDismiss = onDismiss)
 
         Spacer(Modifier.height(WCTheme.spacing.spacing7))
 
-        // Currency options
         Currency.entries.forEach { currency ->
             val isSelected = currency == selectedCurrency
-            CurrencyOptionItem(
+            SelectableOptionItem(
                 label = "${currency.displayName} (${currency.symbol})",
                 isSelected = isSelected,
                 onClick = { onSelect(currency) }
@@ -332,55 +315,6 @@ private fun CurrencyBottomSheet(
         }
 
         Spacer(Modifier.height(WCTheme.spacing.spacing5))
-    }
-}
-
-@Composable
-private fun CurrencyOptionItem(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val shape = RoundedCornerShape(WCTheme.borderRadius.radius4)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(68.dp)
-            .then(
-                if (isSelected) {
-                    Modifier
-                        .border(1.dp, WCTheme.colors.borderAccentPrimary, shape)
-                        .background(WCTheme.colors.foregroundAccentPrimary10, shape)
-                } else {
-                    Modifier.background(WCTheme.colors.foregroundPrimary, shape)
-                }
-            )
-            .clip(shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = WCTheme.spacing.spacing5),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = WCTheme.typography.bodyLgRegular,
-            color = WCTheme.colors.textPrimary,
-            modifier = Modifier.weight(1f)
-        )
-        if (isSelected) {
-            // Radio button: blue circle border with filled inner circle
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .border(1.dp, WCTheme.colors.iconAccentPrimary, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .background(WCTheme.colors.iconAccentPrimary, CircleShape)
-                )
-            }
-        }
     }
 }
 
