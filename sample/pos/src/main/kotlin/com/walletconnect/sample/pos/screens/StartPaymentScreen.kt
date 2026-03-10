@@ -1,173 +1,140 @@
 package com.walletconnect.sample.pos.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.Icon
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.R
-
-// Brand color
-private val BrandColor = Color(0xFF0988F0)
 
 @Composable
 fun StartPaymentScreen(
     viewModel: POSViewModel,
-    merchantName: String = "Sample POS Terminal",
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(WCTheme.colors.bgPrimary)
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(WCTheme.spacing.spacing5)
     ) {
-        // Header - simplified with just NRF text
-        PosHeader()
-
-        // Content - centered logos and tagline
-        Column(
+        // Logos row at top
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(top = WCTheme.spacing.spacing5),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Logos row: WCPay logo + X + Ingenico logo
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // WCPay Logo (using vector drawable)
-                Image(
-                    painter = painterResource(R.drawable.ic_wcpay_logo),
-                    contentDescription = "WCPay",
-                    modifier = Modifier.height(28.dp),
-                    contentScale = ContentScale.FillHeight
-                )
-                
-                Spacer(Modifier.width(20.dp))
-                
-                // X separator
-                Text(
-                    "x",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.Black
-                )
-                
-                Spacer(Modifier.width(20.dp))
-                
-                // Ingenico Logo
-                IngenicoLogo()
-            }
-
-            Spacer(Modifier.height(40.dp))
-
-            // Tagline
+            Image(
+                painter = painterResource(R.drawable.ic_wcpay_logo),
+                contentDescription = "WCPay",
+                modifier = Modifier.height(28.dp),
+                contentScale = ContentScale.FillHeight
+            )
+            Spacer(Modifier.width(WCTheme.spacing.spacing5))
             Text(
-                "Enable crypto payments from any wallet, any asset, anywhere",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF666666),
-                textAlign = TextAlign.Center,
-                lineHeight = 24.sp
+                "x",
+                style = WCTheme.typography.h4Regular,
+                color = WCTheme.colors.textPrimary
+            )
+            Spacer(Modifier.width(WCTheme.spacing.spacing5))
+            Image(
+                painter = painterResource(R.drawable.ic_ingenico_logo),
+                contentDescription = "Ingenico",
+                modifier = Modifier.height(28.dp),
+                contentScale = ContentScale.FillHeight
             )
         }
-        
-        // Bottom section with button
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing5))
+
+        // 3 action buttons filling remaining space
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = 48.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .weight(1f),
+            verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing3)
         ) {
-            // New Payment button
-            Button(
+            ActionButton(
+                iconRes = R.drawable.ic_plus,
+                label = "New sale",
                 onClick = { viewModel.navigateToAmountScreen() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BrandColor)
-            ) {
-                Text(
-                    "New Payment",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            // Transaction History button
-            OutlinedButton(
+                    .weight(1f)
+            )
+            ActionButton(
+                iconRes = R.drawable.ic_clock,
+                label = "Activity",
                 onClick = { viewModel.navigateToTransactionHistory() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = BrandColor),
-                border = BorderStroke(1.dp, BrandColor)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.List,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "Transaction History",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+                    .weight(1f)
+            )
+            ActionButton(
+                iconRes = R.drawable.ic_settings,
+                label = "Settings",
+                onClick = { viewModel.navigateToSettings() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
         }
     }
 }
 
 @Composable
-fun PosHeader() {
+private fun ActionButton(
+    iconRes: Int,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BrandColor)
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier
+            .clip(WCTheme.borderRadius.shapeLarge)
+            .background(WCTheme.colors.foregroundPrimary)
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = label,
+            tint = WCTheme.colors.iconDefault,
+            modifier = Modifier.size(28.dp)
+        )
+        Spacer(Modifier.height(WCTheme.spacing.spacing2))
         Text(
-            "NRF'26 NYC",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
+            text = label,
+            style = WCTheme.typography.bodyXlRegular,
+            color = WCTheme.colors.textPrimary
         )
     }
-}
-
-@Composable
-private fun IngenicoLogo() {
-    Image(
-        painter = painterResource(R.drawable.ic_ingenico_logo),
-        contentDescription = "Ingenico",
-        modifier = Modifier.height(28.dp),
-        contentScale = ContentScale.FillHeight
-    )
 }

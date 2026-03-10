@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.walletconnect.pos.PosClient
 
 class POSActivity : AppCompatActivity() {
@@ -12,7 +13,11 @@ class POSActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { POSSampleHost(viewModel) }
+        setContent {
+            WCSampleAppTheme {
+                POSSampleHost(viewModel)
+            }
+        }
     }
 
     override fun onStart() {

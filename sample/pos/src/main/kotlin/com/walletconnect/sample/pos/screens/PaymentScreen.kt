@@ -4,81 +4,82 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
-import com.walletconnect.pos.Pos
+import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.PosEvent
+import com.walletconnect.sample.pos.components.CloseButton
+import com.walletconnect.sample.pos.components.PosHeader
+import com.walletconnect.sample.pos.components.WalletConnectLoader
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
-import coil3.compose.AsyncImage
-import com.walletconnect.sample.pos.R
-
-// Brand color
-private val BrandColor = Color(0xFF0988F0)
-
-private enum class StepState { Inactive, InProgress, Done }
 
 private sealed interface PaymentUiState {
     data object WaitingForScan : PaymentUiState
-    data class Success(val paymentId: String, val info: Pos.PaymentInfo?) : PaymentUiState
+    data object Processing : PaymentUiState
 }
 
 @Composable
 fun PaymentScreen(
     viewModel: POSViewModel,
     qrUrl: String,
+    expiresAt: Long,
     onReturnToStart: () -> Unit,
+    onNavigateToAmount: () -> Unit,
     navigateToErrorScreen: (error: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var uiState by remember { mutableStateOf<PaymentUiState>(PaymentUiState.WaitingForScan) }
+    var remainingSeconds by remember { mutableLongStateOf(0L) }
+    val displayAmount by viewModel.displayAmount.collectAsState()
 
-    // Timeline step states
-    var scanStep by remember { mutableStateOf(StepState.InProgress) }
-    var processingStep by remember { mutableStateOf(StepState.Inactive) }
-    var confirmingStep by remember { mutableStateOf(StepState.Inactive) }
-
+    // Listen for payment events
     LaunchedEffect(Unit) {
         viewModel.posEventsFlow.collectLatest { event ->
             when (event) {
                 PosEvent.PaymentRequested -> {
-                    scanStep = StepState.Done
-                    processingStep = StepState.InProgress
+                    // requires_action - wallet scanned but still on QR screen
                 }
-
                 PosEvent.PaymentProcessing -> {
-                    processingStep = StepState.Done
-                    confirmingStep = StepState.InProgress
+                    uiState = PaymentUiState.Processing
                 }
-
                 is PosEvent.PaymentSuccess -> {
-                    confirmingStep = StepState.Done
-                    uiState = PaymentUiState.Success(paymentId = event.paymentId, info = event.info)
+                    // Navigation handled by ViewModel nav events
                 }
-
                 is PosEvent.PaymentError -> {
                     navigateToErrorScreen(event.error)
                 }
@@ -86,422 +87,155 @@ fun PaymentScreen(
         }
     }
 
+    // Countdown timer — guard against navigating to error if already processing/succeeded
+    LaunchedEffect(expiresAt) {
+        if (expiresAt <= 0L) return@LaunchedEffect
+        while (true) {
+            val now = System.currentTimeMillis() / 1000
+            val remaining = expiresAt - now
+            if (remaining <= 0) {
+                if (uiState is PaymentUiState.WaitingForScan) {
+                    navigateToErrorScreen("expired")
+                }
+                break
+            }
+            remainingSeconds = remaining
+            delay(1000)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(WCTheme.colors.bgPrimary)
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .windowInsetsPadding(WindowInsets.navigationBars),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header
-        PosHeader()
+        val onCancel = {
+            viewModel.cancelPayment()
+            onReturnToStart()
+        }
 
-        // Content
-        Box(
-            Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            when (val state = uiState) {
-                PaymentUiState.WaitingForScan -> ScanToPayContent(
+        PosHeader(onBack = onCancel)
+
+        when (uiState) {
+            PaymentUiState.WaitingForScan -> {
+                ScanContent(
                     qrUrl = qrUrl,
-                    displayAmount = viewModel.getDisplayAmount(),
-                    scanState = scanStep,
-                    processingState = processingStep,
-                    confirmingState = confirmingStep,
-                    onCancel = {
-                        viewModel.cancelPayment()
-                        onReturnToStart()
-                    }
+                    displayAmount = displayAmount,
+                    remainingSeconds = remainingSeconds,
+                    onCancel = onCancel
                 )
-
-                is PaymentUiState.Success -> SuccessContent(
-                    info = state.info,
-                    onReturnToStart = onReturnToStart
+            }
+            PaymentUiState.Processing -> {
+                ProcessingContent(
+                    onCancel = onCancel
                 )
             }
         }
-
-        // Bottom padding for navigation bars
-        Spacer(
-            Modifier
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .height(16.dp)
-        )
     }
 }
 
 @Composable
-private fun ScanToPayContent(
+private fun ScanContent(
     qrUrl: String,
     displayAmount: String,
-    scanState: StepState,
-    processingState: StepState,
-    confirmingState: StepState,
+    remainingSeconds: Long,
     onCancel: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp)
-    ) {
-        // Close button in top right
-        IconButton(
-            onClick = onCancel,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Cancel",
-                tint = Color.Black,
-                modifier = Modifier.size(28.dp)
-            )
-        }
-        
-        // Main content
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                "Scan to Pay",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center,
-                color = Color.Black
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // QR Code (smaller)
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFF5F5F5),
-                tonalElevation = 0.dp
-            ) {
-                Box(
-                    modifier = Modifier
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    QrImage(data = qrUrl, size = 170.dp)
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            // Amount display (matches QR code width)
-            if (displayAmount.isNotBlank()) {
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = BrandColor.copy(alpha = 0.1f),
-                    modifier = Modifier.width(194.dp) // 170dp QR + 24dp padding
-                ) {
-                    Text(
-                        displayAmount,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        color = BrandColor,
-                        modifier = Modifier.padding(vertical = 6.dp)
-                    )
-                }
-                Spacer(Modifier.height(16.dp))
-            }
-
-            // Timeline
-            StatusRow(
-                state = processingState,
-                inProgressText = "Waiting for wallet scan…",
-                doneText = "Waiting for wallet scan"
-            )
-            Spacer(Modifier.height(8.dp))
-            StatusRow(
-                state = confirmingState,
-                inProgressText = "Processing payment…",
-                doneText = "Payment confirmed"
-            )
-
-            Spacer(Modifier.weight(1f))
-        }
-    }
-}
-
-@Composable
-private fun StatusRow(
-    state: StepState,
-    inProgressText: String,
-    doneText: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        when (state) {
-            StepState.Inactive -> {
-                Box(
-                    modifier = Modifier
-                        .size(18.dp)
-                        .background(Color(0xFFE0E0E0), shape = CircleShape)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    inProgressText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFFBBBBBB)
-                )
-            }
-
-            StepState.InProgress -> {
-                CircularProgressIndicator(
-                    strokeWidth = 2.dp,
-                    modifier = Modifier.size(18.dp),
-                    color = BrandColor
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    inProgressText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF666666)
-                )
-            }
-
-            StepState.Done -> {
-                Icon(
-                    Icons.Filled.CheckCircle,
-                    contentDescription = null,
-                    tint = BrandColor,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    doneText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SuccessContent(
-    info: Pos.PaymentInfo?,
-    onReturnToStart: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(horizontal = WCTheme.spacing.spacing5),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Success Icon
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .background(BrandColor.copy(alpha = 0.1f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = null,
-                tint = BrandColor,
-                modifier = Modifier.size(60.dp)
-            )
-        }
-
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.weight(1f))
 
         Text(
-            "Payment Successful",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            color = Color.Black
+            text = "Scan to pay",
+            style = WCTheme.typography.bodyLgRegular,
+            color = WCTheme.colors.textTertiary
         )
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
-        // Payment Info Card
-        if (info != null) {
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = Color(0xFFF8F9FA),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Token icon with network badge
-                    Box(contentAlignment = Alignment.BottomEnd) {
-                        val iconUrl = info.iconUrl
-                        if (iconUrl != null) {
-                            AsyncImage(
-                                model = iconUrl,
-                                contentDescription = info.assetSymbol,
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .clip(CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .background(BrandColor.copy(alpha = 0.2f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    info.assetSymbol?.take(2) ?: "?",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = BrandColor
-                                )
-                            }
-                        }
+        if (displayAmount.isNotBlank()) {
+            Text(
+                text = displayAmount,
+                style = WCTheme.typography.h3Regular,
+                color = WCTheme.colors.textPrimary
+            )
+            Spacer(Modifier.height(WCTheme.spacing.spacing5))
+        }
 
-                        // Network icon badge
-                        val networkIconUrl = info.networkIconUrl
-                        if (networkIconUrl != null) {
-                            AsyncImage(
-                                model = networkIconUrl,
-                                contentDescription = info.networkName,
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White, CircleShape)
-                            )
-                        }
+        // QR Code
+        QrImage(data = qrUrl, size = 240.dp)
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing4))
+
+        // Expiration countdown
+        if (remainingSeconds > 0) {
+            val minutes = remainingSeconds / 60
+            val seconds = remainingSeconds % 60
+            val timeText = "${minutes}:${String.format("%02d", seconds)}s"
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(color = WCTheme.colors.textSecondary)) {
+                        append("Payment expires in ")
                     }
-
-                    Spacer(Modifier.height(16.dp))
-
-                    // Amount
-                    val formattedAmount = info.formatAmount()
-                    if (formattedAmount.isNotBlank()) {
-                        Text(
-                            formattedAmount,
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                        Spacer(Modifier.height(8.dp))
+                    withStyle(SpanStyle(color = WCTheme.colors.textAccentPrimary)) {
+                        append(timeText)
                     }
-
-                    // Token name & Network
-                    val assetName = info.assetName
-                    val networkName = info.networkName
-                    val subtitle = buildString {
-                        if (assetName != null) append(assetName)
-                        if (networkName != null) {
-                            if (assetName != null) append(" on ")
-                            append(networkName)
-                        }
-                    }
-                    if (subtitle.isNotEmpty()) {
-                        Text(
-                            subtitle,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color(0xFF6B7280)
-                        )
-                    }
-
-                    Spacer(Modifier.height(20.dp))
-
-                    // Divider
-                    HorizontalDivider(
-                        color = Color(0xFFE5E7EB),
-                        thickness = 1.dp
-                    )
-
-                    Spacer(Modifier.height(16.dp))
-
-                    // Transaction Hash - clickable to copy
-                    val clipboardManager = LocalClipboardManager.current
-                    var showCopied by remember { mutableStateOf(false) }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable {
-                                clipboardManager.setText(AnnotatedString(info.txHash))
-                                showCopied = true
-                            }
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Transaction",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF9CA3AF)
-                        )
-                        Text(
-                            if (showCopied) "Copied!" else truncateTxHash(info.txHash),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = if (showCopied) BrandColor else Color(0xFF374151)
-                        )
-                    }
-
-                    // Reset copied state after delay
-                    LaunchedEffect(showCopied) {
-                        if (showCopied) {
-                            kotlinx.coroutines.delay(2000)
-                            showCopied = false
-                        }
-                    }
-                }
-            }
+                },
+                style = WCTheme.typography.bodyLgRegular
+            )
         }
 
         Spacer(Modifier.weight(1f))
 
-        Button(
-            onClick = onReturnToStart,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = BrandColor)
-        ) {
-            Text(
-                "New Payment",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        CloseButton(onClick = onCancel)
 
-        Spacer(Modifier.height(16.dp))
-    }
-}
-
-private fun truncateTxHash(txHash: String): String {
-    return if (txHash.length > 16) {
-        "${txHash.take(8)}...${txHash.takeLast(6)}"
-    } else {
-        txHash
+        Spacer(Modifier.height(WCTheme.spacing.spacing5))
     }
 }
 
 @Composable
-fun QrImage(
-    data: String,
-    size: Dp = 220.dp
-) {
-    val bmp by remember(data) {
-        mutableStateOf(
-            generateQrBitmap(
-                data,
-                sizePx = (size.value * Resources.getSystem().displayMetrics.density).toInt()
-            )
+private fun ProcessingContent(onCancel: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = WCTheme.spacing.spacing5),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Spacer(Modifier.weight(1f))
+
+        WalletConnectLoader(size = 140.dp)
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing5))
+
+        Text(
+            text = "Waiting for payment confirmation...",
+            style = WCTheme.typography.bodyLgRegular,
+            color = WCTheme.colors.textPrimary,
+            textAlign = TextAlign.Center
         )
+
+        Spacer(Modifier.weight(1f))
+
+        CloseButton(onClick = onCancel)
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing5))
+    }
+}
+
+@Composable
+fun QrImage(data: String, size: Dp = 220.dp) {
+    val bmp by produceState<Bitmap?>(null, data) {
+        value = withContext(Dispatchers.Default) {
+            generateQrBitmap(data, sizePx = (size.value * Resources.getSystem().displayMetrics.density).toInt())
+        }
     }
     if (bmp != null) {
         Image(
