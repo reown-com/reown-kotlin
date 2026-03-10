@@ -5,6 +5,10 @@ name: Kotlin Dapp to Kotlin Wallet personal_sign Confirmed
     permissions:
       all: allow
 - startRecording: "Native personal_sign Confirmed"
+- extendedWaitUntil:
+    visible:
+      text: "Ethereum_Main"
+    timeout: 15000
 - tapOn: "Ethereum_Main"
 - tapOn: "personal_sign"
 - extendedWaitUntil:
