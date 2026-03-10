@@ -15,7 +15,7 @@ const val SIGN_VERSION = "1.6.9"
 const val NOTIFY_VERSION = "1.6.9"
 const val WALLETKIT_VERSION = "1.6.9"
 const val APPKIT_VERSION = "1.6.9"
-const val MODAL_CORE_VERSION = "1.6."
+const val MODAL_CORE_VERSION = "1.6.9"
 const val POS_VERSION = "0.0.11"
 const val PAY_VERSION = "1.0.9"
 
