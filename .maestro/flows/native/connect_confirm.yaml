@@ -8,6 +8,10 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
 - startRecording: "Native Connection Confirmed"
 - extendedWaitUntil:
     visible:
+      text: "Chain selection"
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
       text: "Ethereum"
     timeout: 15000
 - tapOn: "Ethereum"
@@ -20,7 +24,7 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
 - extendedWaitUntil:
     visible:
       text: "Android Sample Internal"
-    timeout: 15000
+    timeout: 30000
 - tapOn: "Android Sample Internal"
 - extendedWaitUntil:
     visible:
