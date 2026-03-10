@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,8 +20,12 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
 import androidx.compose.material.rememberModalBottomSheetState
@@ -35,19 +40,31 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.reown.sample.common.ui.theme.WCBorderRadius
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.POSViewModel
+import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.TransactionHistoryUiState
+import com.walletconnect.sample.pos.components.BottomSheetHeader
 import com.walletconnect.sample.pos.components.CloseButton
-import com.walletconnect.sample.pos.components.DateRangeSelector
-import com.walletconnect.sample.pos.components.FilterTabs
 import com.walletconnect.sample.pos.components.PosHeader
+import com.walletconnect.sample.pos.components.SelectableOptionItem
 import com.walletconnect.sample.pos.components.TransactionCard
-import com.walletconnect.sample.pos.components.TransactionDetailSheet
+import com.walletconnect.sample.pos.components.TransactionFilter
 import kotlinx.coroutines.launch
+
+private enum class ActivitySheet { STATUS, DATE_RANGE, TRANSACTION_DETAIL }
+
+private val dateRangeOptions = listOf("All Time", "Today", "7 Days", "This Week", "This Month")
+
+private val SheetShape = RoundedCornerShape(topStart = WCBorderRadius.radius8, topEnd = WCBorderRadius.radius8)
+private val FilterButtonShape = RoundedCornerShape(WCBorderRadius.radius4)
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -63,6 +80,7 @@ fun TransactionHistoryScreen(
     val scope = rememberCoroutineScope()
 
     var selectedTransaction by remember { mutableStateOf<Pos.Transaction?>(null) }
+    var activeSheet by remember { mutableStateOf(ActivitySheet.STATUS) }
     val sheetState = rememberModalBottomSheetState(
         initialValue = ModalBottomSheetValue.Hidden,
         skipHalfExpanded = true
@@ -83,9 +101,42 @@ fun TransactionHistoryScreen(
         }
     }
 
-    TransactionDetailSheet(
+    ModalBottomSheetLayout(
         sheetState = sheetState,
-        transaction = selectedTransaction
+        sheetShape = SheetShape,
+        sheetBackgroundColor = WCTheme.colors.bgPrimary,
+        sheetElevation = 4.dp,
+        scrimColor = Color.Black.copy(alpha = 0.7f),
+        sheetContent = {
+            when (activeSheet) {
+                ActivitySheet.STATUS -> StatusFilterBottomSheet(
+                    selectedFilter = selectedFilter,
+                    onSelect = { filter ->
+                        viewModel.setFilter(filter)
+                        scope.launch { sheetState.hide() }
+                    },
+                    onDismiss = { scope.launch { sheetState.hide() } }
+                )
+                ActivitySheet.DATE_RANGE -> DateRangeFilterBottomSheet(
+                    selectedOptionIndex = selectedDateRangeOptionIndex,
+                    onSelect = { index ->
+                        viewModel.setDateRangeOption(index)
+                        scope.launch { sheetState.hide() }
+                    },
+                    onDismiss = { scope.launch { sheetState.hide() } }
+                )
+                ActivitySheet.TRANSACTION_DETAIL -> {
+                    if (selectedTransaction != null) {
+                        com.walletconnect.sample.pos.components.TransactionDetailContent(
+                            transaction = selectedTransaction!!,
+                            onClose = { scope.launch { sheetState.hide() } }
+                        )
+                    } else {
+                        Spacer(Modifier.height(1.dp))
+                    }
+                }
+            }
+        }
     ) {
         Column(
             modifier = modifier
@@ -98,19 +149,26 @@ fun TransactionHistoryScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
-            // Filter tabs (status)
-            FilterTabs(
-                selectedFilter = selectedFilter,
-                onFilterSelected = { viewModel.setFilter(it) }
-            )
-
-            Spacer(Modifier.height(WCTheme.spacing.spacing2))
-
-            // Date range selector
-            DateRangeSelector(
-                selectedOptionIndex = selectedDateRangeOptionIndex,
-                onOptionSelected = { viewModel.setDateRangeOption(it) }
-            )
+            // Filter buttons
+            Row(
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5),
+                horizontalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
+            ) {
+                FilterButton(
+                    label = if (selectedFilter == TransactionFilter.ALL) "Status" else selectedFilter.label,
+                    onClick = {
+                        activeSheet = ActivitySheet.STATUS
+                        scope.launch { sheetState.show() }
+                    }
+                )
+                FilterButton(
+                    label = if (selectedDateRangeOptionIndex == 0) "Date range" else dateRangeOptions[selectedDateRangeOptionIndex],
+                    onClick = {
+                        activeSheet = ActivitySheet.DATE_RANGE
+                        scope.launch { sheetState.show() }
+                    }
+                )
+            }
 
             Spacer(Modifier.height(WCTheme.spacing.spacing3))
 
@@ -141,6 +199,7 @@ fun TransactionHistoryScreen(
                             listState = listState,
                             onTransactionClick = { tx ->
                                 selectedTransaction = tx
+                                activeSheet = ActivitySheet.TRANSACTION_DETAIL
                                 scope.launch { sheetState.show() }
                             },
                             modifier = Modifier.weight(1f)
@@ -155,6 +214,7 @@ fun TransactionHistoryScreen(
                         listState = listState,
                         onTransactionClick = { tx ->
                             selectedTransaction = tx
+                            activeSheet = ActivitySheet.TRANSACTION_DETAIL
                             scope.launch { sheetState.show() }
                         },
                         modifier = Modifier.weight(1f)
@@ -180,6 +240,112 @@ fun TransactionHistoryScreen(
                 CloseButton(onClick = onClose)
             }
         }
+    }
+}
+
+@Composable
+private fun FilterButton(
+    label: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .height(48.dp)
+            .clip(FilterButtonShape)
+            .background(WCTheme.colors.foregroundPrimary)
+            .clickable(onClick = onClick)
+            .padding(horizontal = WCTheme.spacing.spacing5, vertical = WCTheme.spacing.spacing4),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
+    ) {
+        Text(
+            text = label,
+            style = WCTheme.typography.bodyLgRegular,
+            color = WCTheme.colors.textPrimary
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_caret_up_down),
+            contentDescription = null,
+            tint = WCTheme.colors.iconDefault,
+            modifier = Modifier.size(16.dp)
+        )
+    }
+}
+
+@Composable
+private fun StatusFilterBottomSheet(
+    selectedFilter: TransactionFilter,
+    onSelect: (TransactionFilter) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(WCTheme.spacing.spacing5)
+    ) {
+        BottomSheetHeader(title = "Status", onDismiss = onDismiss)
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing7))
+
+        TransactionFilter.entries.forEach { filter ->
+            val isSelected = filter == selectedFilter
+            val dotColor: Color? = when (filter) {
+                TransactionFilter.COMPLETED -> WCTheme.colors.iconSuccess
+                TransactionFilter.FAILED, TransactionFilter.CANCELLED, TransactionFilter.EXPIRED -> WCTheme.colors.iconError
+                TransactionFilter.PENDING -> WCTheme.colors.foregroundTertiary
+                TransactionFilter.ALL -> null
+            }
+            SelectableOptionItem(
+                label = filter.label,
+                isSelected = isSelected,
+                onClick = { onSelect(filter) },
+                leadingIcon = dotColor?.let { color ->
+                    {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(color, CircleShape)
+                        )
+                    }
+                }
+            )
+            if (filter != TransactionFilter.entries.last()) {
+                Spacer(Modifier.height(WCTheme.spacing.spacing2))
+            }
+        }
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing5))
+    }
+}
+
+@Composable
+private fun DateRangeFilterBottomSheet(
+    selectedOptionIndex: Int,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(WCTheme.spacing.spacing5)
+    ) {
+        BottomSheetHeader(title = "Date range", onDismiss = onDismiss)
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing7))
+
+        dateRangeOptions.forEachIndexed { index, label ->
+            val isSelected = index == selectedOptionIndex
+            SelectableOptionItem(
+                label = label,
+                isSelected = isSelected,
+                onClick = { onSelect(index) }
+            )
+            if (index != dateRangeOptions.lastIndex) {
+                Spacer(Modifier.height(WCTheme.spacing.spacing2))
+            }
+        }
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing5))
     }
 }
 

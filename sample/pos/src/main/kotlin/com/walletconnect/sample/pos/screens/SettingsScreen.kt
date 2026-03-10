@@ -1,7 +1,6 @@
 package com.walletconnect.sample.pos.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,15 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,8 +40,10 @@ import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.BuildConfig
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.R
+import com.walletconnect.sample.pos.components.BottomSheetHeader
 import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.PosHeader
+import com.walletconnect.sample.pos.components.SelectableOptionItem
 import com.walletconnect.sample.pos.model.Currency
 import com.walletconnect.sample.pos.model.ThemeMode
 import kotlinx.coroutines.launch
@@ -144,101 +142,6 @@ fun SettingsScreen(
             CloseButton(onClick = onClose)
 
             Spacer(Modifier.height(WCTheme.spacing.spacing5))
-        }
-    }
-}
-
-@Composable
-private fun BottomSheetHeader(
-    title: String,
-    onDismiss: () -> Unit
-) {
-    Box(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = title,
-            style = WCTheme.typography.h6Regular,
-            color = WCTheme.colors.textPrimary,
-            modifier = Modifier.align(Alignment.Center)
-        )
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .align(Alignment.CenterEnd)
-                .clip(RoundedCornerShape(WCTheme.spacing.spacing3))
-                .border(
-                    width = 1.dp,
-                    color = WCTheme.colors.borderSecondary,
-                    shape = RoundedCornerShape(WCTheme.spacing.spacing3)
-                )
-                .clickable(onClick = onDismiss),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = WCTheme.colors.textPrimary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun RadioIndicator() {
-    Box(
-        modifier = Modifier
-            .size(24.dp)
-            .border(1.dp, WCTheme.colors.iconAccentPrimary, CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(12.dp)
-                .background(WCTheme.colors.iconAccentPrimary, CircleShape)
-        )
-    }
-}
-
-@Composable
-private fun SelectableOptionItem(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    leadingIcon: @Composable (() -> Unit)? = null
-) {
-    val shape = RoundedCornerShape(WCTheme.borderRadius.radius4)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(68.dp)
-            .then(
-                if (isSelected) {
-                    Modifier
-                        .border(1.dp, WCTheme.colors.borderAccentPrimary, shape)
-                        .background(WCTheme.colors.foregroundAccentPrimary10, shape)
-                } else {
-                    Modifier.background(WCTheme.colors.foregroundPrimary, shape)
-                }
-            )
-            .clip(shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = WCTheme.spacing.spacing5),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (leadingIcon != null) {
-            leadingIcon()
-            Spacer(Modifier.width(WCTheme.spacing.spacing2))
-        }
-        Text(
-            text = label,
-            style = WCTheme.typography.bodyLgRegular,
-            color = WCTheme.colors.textPrimary,
-            modifier = Modifier.weight(1f)
-        )
-        if (isSelected) {
-            RadioIndicator()
         }
     }
 }

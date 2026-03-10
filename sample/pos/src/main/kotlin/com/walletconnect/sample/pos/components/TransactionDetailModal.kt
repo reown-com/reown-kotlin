@@ -14,10 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -40,39 +37,11 @@ import com.walletconnect.pos.Pos
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private val SheetShape = RoundedCornerShape(topStart = WCBorderRadius.radius8, topEnd = WCBorderRadius.radius8)
 private val CardShape = RoundedCornerShape(WCBorderRadius.radius5)
 private val CloseButtonShape = RoundedCornerShape(WCBorderRadius.radius3)
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun TransactionDetailSheet(
-    sheetState: ModalBottomSheetState,
-    transaction: Pos.Transaction?,
-    content: @Composable () -> Unit
-) {
-    val scope = rememberCoroutineScope()
-
-    ModalBottomSheetLayout(
-        sheetState = sheetState,
-        sheetShape = SheetShape,
-        sheetBackgroundColor = WCTheme.colors.bgPrimary,
-        sheetContent = {
-            if (transaction != null) {
-                TransactionDetailContent(
-                    transaction = transaction,
-                    onClose = { scope.launch { sheetState.hide() } }
-                )
-            } else {
-                Spacer(Modifier.height(1.dp))
-            }
-        },
-        content = content
-    )
-}
-
-@Composable
-private fun TransactionDetailContent(
+internal fun TransactionDetailContent(
     transaction: Pos.Transaction,
     onClose: () -> Unit
 ) {
