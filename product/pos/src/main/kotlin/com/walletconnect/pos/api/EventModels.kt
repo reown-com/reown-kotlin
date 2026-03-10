@@ -117,6 +117,11 @@ internal fun Pos.PaymentEvent.PaymentError.toErrorFields(): ErrorFields {
             code = ErrorCode.PAYMENT_FAILED,
             message = message
         )
+        is Pos.PaymentEvent.PaymentError.PaymentCancelled -> ErrorFields(
+            category = ErrorCategory.PAYMENT,
+            code = ErrorCode.PAYMENT_FAILED,
+            message = message
+        )
         is Pos.PaymentEvent.PaymentError.PaymentNotFound -> ErrorFields(
             category = ErrorCategory.API,
             code = ErrorCode.PAYMENT_NOT_FOUND,

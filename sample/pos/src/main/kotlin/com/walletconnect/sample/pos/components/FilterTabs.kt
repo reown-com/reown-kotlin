@@ -19,31 +19,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.reown.sample.common.ui.theme.WCBorderRadius
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.pos.Pos
 
-data class FilterTab(
-    val label: String,
-    val status: Pos.TransactionStatus?
-)
-
-val defaultFilterTabs = listOf(
-    FilterTab("All", null),
-    FilterTab("Failed", Pos.TransactionStatus.FAILED),
-    FilterTab("Pending", Pos.TransactionStatus.PROCESSING),
-    FilterTab("Completed", Pos.TransactionStatus.SUCCEEDED)
-)
+enum class TransactionFilter(val label: String, val statuses: List<Pos.TransactionStatus>?) {
+    ALL("All", null),
+    FAILED("Failed", listOf(Pos.TransactionStatus.FAILED)),
+    CANCELLED("Cancelled", listOf(Pos.TransactionStatus.CANCELLED)),
+    EXPIRED("Expired", listOf(Pos.TransactionStatus.EXPIRED)),
+    PENDING("Pending", listOf(Pos.TransactionStatus.REQUIRES_ACTION, Pos.TransactionStatus.PROCESSING)),
+    COMPLETED("Completed", listOf(Pos.TransactionStatus.SUCCEEDED))
+}
 
 private val PillShape = RoundedCornerShape(WCBorderRadius.radius4)
 
 @Composable
 fun FilterTabs(
-    selectedStatus: Pos.TransactionStatus?,
-    onStatusSelected: (Pos.TransactionStatus?) -> Unit,
-    modifier: Modifier = Modifier,
-    tabs: List<FilterTab> = defaultFilterTabs
+    selectedFilter: TransactionFilter,
+    onFilterSelected: (TransactionFilter) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
@@ -51,8 +48,8 @@ fun FilterTabs(
             .padding(horizontal = WCTheme.spacing.spacing5),
         horizontalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
     ) {
-        tabs.forEach { tab ->
-            val isSelected = selectedStatus == tab.status
+        TransactionFilter.entries.forEach { filter ->
+            val isSelected = selectedFilter == filter
             val bgColor = if (isSelected) WCTheme.colors.foregroundAccentPrimary10 else WCTheme.colors.foregroundPrimary
             val borderMod = if (isSelected) Modifier.border(1.dp, WCTheme.colors.borderAccentPrimary, PillShape) else Modifier
 
@@ -61,16 +58,15 @@ fun FilterTabs(
                     .clip(PillShape)
                     .then(borderMod)
                     .background(bgColor)
-                    .clickable { onStatusSelected(tab.status) }
+                    .clickable { onFilterSelected(filter) }
                     .padding(horizontal = WCTheme.spacing.spacing5, vertical = WCTheme.spacing.spacing4),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Status dot (not shown for "All")
-                val dotColor = when (tab.status) {
-                    Pos.TransactionStatus.SUCCEEDED -> WCTheme.colors.iconSuccess
-                    Pos.TransactionStatus.FAILED -> WCTheme.colors.iconError
-                    Pos.TransactionStatus.PROCESSING, Pos.TransactionStatus.REQUIRES_ACTION -> WCTheme.colors.foregroundTertiary
-                    else -> null
+                val dotColor: Color? = when (filter) {
+                    TransactionFilter.COMPLETED -> WCTheme.colors.iconSuccess
+                    TransactionFilter.FAILED, TransactionFilter.CANCELLED, TransactionFilter.EXPIRED -> WCTheme.colors.iconError
+                    TransactionFilter.PENDING -> WCTheme.colors.foregroundTertiary
+                    TransactionFilter.ALL -> null
                 }
                 dotColor?.let { color ->
                     Box(
@@ -82,7 +78,7 @@ fun FilterTabs(
                 }
 
                 Text(
-                    text = tab.label,
+                    text = filter.label,
                     style = WCTheme.typography.bodyLgRegular,
                     color = if (isSelected) WCTheme.colors.textPrimary else WCTheme.colors.textSecondary
                 )

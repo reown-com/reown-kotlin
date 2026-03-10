@@ -57,7 +57,7 @@ fun TransactionHistoryScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.transactionHistoryState.collectAsState()
-    val selectedFilter by viewModel.selectedStatusFilter.collectAsState()
+    val selectedFilter by viewModel.selectedFilter.collectAsState()
     val selectedDateRangeOptionIndex by viewModel.selectedDateRangeOptionIndex.collectAsState()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -100,8 +100,8 @@ fun TransactionHistoryScreen(
 
             // Filter tabs (status)
             FilterTabs(
-                selectedStatus = selectedFilter,
-                onStatusSelected = { viewModel.setStatusFilter(it) }
+                selectedFilter = selectedFilter,
+                onFilterSelected = { viewModel.setFilter(it) }
             )
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))

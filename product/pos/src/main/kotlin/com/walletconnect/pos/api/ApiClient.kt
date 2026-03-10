@@ -28,7 +28,7 @@ internal class ApiClient(
     private val internalMerchantApiKey: String = BuildConfig.INTERNAL_MERCHANT_API
 ) {
     companion object {
-        private const val WCP_VERSION = "2026-02-18"
+        private const val WCP_VERSION = "2026-02-19.preview"
         private const val MIN_POLL_INTERVAL_MS = 1000L
         private const val MAX_TRANSIENT_RETRIES = 3
     }
@@ -150,6 +150,16 @@ internal class ApiClient(
         activePollingState = null
     }
 
+    suspend fun cancelPayment(paymentId: String) {
+        try {
+            payApi.cancelPayment(paymentId)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Silently ignore errors (matches RN behavior)
+        }
+    }
+
     suspend fun resumePolling(onEvent: (Pos.PaymentEvent) -> Unit) {
         val state = activePollingState ?: return
         startPolling(state.paymentId, state.expiresAt, state.context, onEvent)
@@ -225,7 +235,7 @@ internal class ApiClient(
             PaymentStatus.REQUIRES_ACTION -> eventTracker.trackPaymentRequested(paymentId, context)
             PaymentStatus.PROCESSING -> eventTracker.trackPaymentProcessing(paymentId, context)
             PaymentStatus.SUCCEEDED -> eventTracker.trackPaymentCompleted(paymentId, context)
-            PaymentStatus.EXPIRED, PaymentStatus.FAILED -> {
+            PaymentStatus.EXPIRED, PaymentStatus.FAILED, PaymentStatus.CANCELLED -> {
                 if (event is Pos.PaymentEvent.PaymentError) {
                     eventTracker.trackPaymentFailed(paymentId, context, event)
                 }
@@ -316,7 +326,7 @@ internal class ApiClient(
     suspend fun getTransactionHistory(
         limit: Int = 20,
         cursor: String? = null,
-        status: String? = null,
+        status: List<String>? = null,
         startTs: Instant? = null,
         endTs: Instant? = null
     ): ApiResult<TransactionHistoryResponse> {

@@ -56,6 +56,7 @@ object Pos {
         sealed interface PaymentError : PaymentEvent {
             data class CreatePaymentFailed(val message: String) : PaymentError
             data class PaymentFailed(val message: String) : PaymentError
+            data class PaymentCancelled(val message: String) : PaymentError
             data class PaymentNotFound(val message: String) : PaymentError
             data class PaymentExpired(val message: String) : PaymentError
             data class InvalidPaymentRequest(val message: String) : PaymentError
@@ -114,6 +115,7 @@ object Pos {
         SUCCEEDED("succeeded"),
         EXPIRED("expired"),
         FAILED("failed"),
+        CANCELLED("cancelled"),
         UNKNOWN("unknown")
     }
 
