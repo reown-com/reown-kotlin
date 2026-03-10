@@ -242,7 +242,7 @@ internal object Mappers {
             is YttriumConfirmPaymentError.RequestTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.PollingTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.RateLimited -> Pay.ConfirmPaymentError.Http(error.v1)
-            is YttriumConfirmPaymentError.QuoteExpired -> Pay.ConfirmPaymentError.InternalError(error.v1)
+            is YttriumConfirmPaymentError.QuoteExpired -> Pay.ConfirmPaymentError.RouteExpired(error.v1)
         }
     }
 

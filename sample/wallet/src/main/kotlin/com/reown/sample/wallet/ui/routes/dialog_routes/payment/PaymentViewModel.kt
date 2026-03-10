@@ -341,8 +341,6 @@ class PaymentViewModel : ViewModel() {
 
             confirmResult.fold(
                 onSuccess = { response ->
-                    println("kobe: Response: $response")
-
                     when (response.status) {
                         Wallet.Model.PaymentStatus.SUCCEEDED -> {
                             Log.d("PaymentViewModel", "Payment SUCCEEDED")

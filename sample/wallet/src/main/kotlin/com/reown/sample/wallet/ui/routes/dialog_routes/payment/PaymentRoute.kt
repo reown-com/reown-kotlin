@@ -53,7 +53,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -839,12 +844,20 @@ private fun SuccessContent(
 
             Text(
                 text = "Tx: ${resultInfo.txId.take(6)}...${resultInfo.txId.takeLast(4)}",
-                style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textSecondary),
+                style = WCTheme.typography.bodyLgMedium.copy(
+                    color = WCTheme.colors.textSecondary,
+                    textDecoration = TextDecoration.Underline
+                ),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.clickable {
-                    clipboardManager.setText(AnnotatedString(resultInfo.txId))
-                    Toast.makeText(context, "Transaction ID copied", Toast.LENGTH_SHORT).show()
-                }
+                modifier = Modifier
+                    .clickable {
+                        clipboardManager.setText(AnnotatedString(resultInfo.txId))
+                        Toast.makeText(context, "Transaction ID copied", Toast.LENGTH_SHORT).show()
+                    }
+                    .semantics {
+                        role = Role.Button
+                        contentDescription = "Copy transaction ID"
+                    }
             )
         }
 
