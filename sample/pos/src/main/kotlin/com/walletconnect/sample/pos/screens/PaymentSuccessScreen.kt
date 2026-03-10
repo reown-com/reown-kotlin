@@ -49,6 +49,8 @@ import kotlin.math.ceil
 import kotlin.math.sqrt
 
 private const val INITIAL_CIRCLE_SIZE = 20
+private val ButtonDarkBg = Color(0xFF202020)
+private val ButtonWhiteText = Color.White
 
 @Composable
 fun PaymentSuccessScreen(
@@ -135,13 +137,13 @@ fun PaymentSuccessScreen(
 
             Spacer(Modifier.weight(1f))
 
-            // Print receipt button - dark bg always
+            // Print receipt button - always dark bg with white text
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(WCTheme.spacing.spacing12)
                     .clip(WCTheme.borderRadius.shapeLarge)
-                    .background(WCTheme.colors.bgInvert)
+                    .background(ButtonDarkBg)
                     .clickable(onClick = onPrintReceipt),
                 contentAlignment = Alignment.Center
             ) {
@@ -152,7 +154,7 @@ fun PaymentSuccessScreen(
                     Text(
                         text = "Print receipt",
                         style = WCTheme.typography.bodyLgMedium,
-                        color = Color.White
+                        color = ButtonWhiteText
                     )
                     Spacer(Modifier.width(WCTheme.spacing.spacing2))
                     Icon(
@@ -166,13 +168,13 @@ fun PaymentSuccessScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing3))
 
-            // New payment button - dark bg always
+            // New payment button - always dark bg with white text
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(WCTheme.spacing.spacing12)
                     .clip(WCTheme.borderRadius.shapeLarge)
-                    .background(WCTheme.colors.bgInvert)
+                    .background(ButtonDarkBg)
                     .clickable(onClick = onNewPayment),
                 contentAlignment = Alignment.Center
             ) {
@@ -183,13 +185,13 @@ fun PaymentSuccessScreen(
                     Text(
                         text = "New payment",
                         style = WCTheme.typography.bodyLgMedium,
-                        color = WCTheme.colors.textInvert
+                        color = ButtonWhiteText
                     )
                     Spacer(Modifier.width(WCTheme.spacing.spacing2))
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        tint = WCTheme.colors.iconInvert,
+                        tint = WCTheme.colors.iconDefault,
                         modifier = Modifier.size(20.dp)
                     )
                 }

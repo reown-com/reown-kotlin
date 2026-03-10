@@ -203,6 +203,7 @@ Migrations are strictly validated. Schema files are in `src/main/sqldelight/`.
 - **State**: Private `_mutableState` → public `state.asStateFlow()`
 - **Naming**: `*UseCase`, `*Repository`, `*DTO`, `*DO` suffixes
 - **DI Tags**: Use enum-based qualifiers (e.g., `SignDITags.HTTP_CLIENT`)
+- **Icons/Assets**: Use XML vector drawables in `res/drawable/` for all icons and graphics. Never define icons as inline `ImageVector.Builder` code in Kotlin. Load drawables via `painterResource(R.drawable.*)` in Compose.
 
 ### Testing Conventions
 

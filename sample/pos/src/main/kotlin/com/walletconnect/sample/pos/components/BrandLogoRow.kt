@@ -20,7 +20,7 @@ import com.walletconnect.sample.pos.R
 @Composable
 fun BrandLogoRow(
     modifier: Modifier = Modifier,
-    colorFilter: ColorFilter? = null
+    colorFilter: ColorFilter = ColorFilter.tint(WCTheme.colors.textPrimary)
 ) {
     Row(
         modifier = modifier,

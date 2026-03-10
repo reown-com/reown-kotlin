@@ -1,6 +1,8 @@
 package com.walletconnect.sample.pos
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
@@ -8,6 +10,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import com.walletconnect.sample.pos.components.TransactionFilter
 import com.walletconnect.sample.pos.model.Currency
+import com.walletconnect.sample.pos.model.ThemeMode
 import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,7 +55,9 @@ sealed interface TransactionHistoryUiState {
     data class Error(val message: String) : TransactionHistoryUiState
 }
 
-class POSViewModel : ViewModel() {
+class POSViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _posNavEventsFlow: MutableSharedFlow<PosNavEvent> = MutableSharedFlow()
     val posNavEventsFlow = _posNavEventsFlow.asSharedFlow()
@@ -72,12 +77,28 @@ class POSViewModel : ViewModel() {
         lastPaymentInfo = info
     }
 
-    // Selected currency
-    private val _selectedCurrency = MutableStateFlow(Currency.USD)
+    // Selected currency (persisted)
+    private val _selectedCurrency = MutableStateFlow(
+        prefs.getString(KEY_CURRENCY, null)?.let { Currency.fromCode(it) } ?: Currency.USD
+    )
     val selectedCurrency = _selectedCurrency.asStateFlow()
 
     fun setCurrency(currency: Currency) {
         _selectedCurrency.value = currency
+        prefs.edit().putString(KEY_CURRENCY, currency.code).apply()
+    }
+
+    // Selected theme mode (persisted)
+    private val _selectedThemeMode = MutableStateFlow(
+        prefs.getString(KEY_THEME, null)?.let { name ->
+            ThemeMode.entries.find { it.name == name }
+        } ?: ThemeMode.SYSTEM
+    )
+    val selectedThemeMode = _selectedThemeMode.asStateFlow()
+
+    fun setThemeMode(mode: ThemeMode) {
+        _selectedThemeMode.value = mode
+        prefs.edit().putString(KEY_THEME, mode.name).apply()
     }
 
     // Loading state for "Start Payment" button
@@ -313,5 +334,11 @@ class POSViewModel : ViewModel() {
 
     fun refreshTransactionHistory() {
         loadTransactionHistory(refresh = true)
+    }
+
+    companion object {
+        private const val PREFS_NAME = "pos_settings"
+        private const val KEY_CURRENCY = "currency"
+        private const val KEY_THEME = "theme"
     }
 }
