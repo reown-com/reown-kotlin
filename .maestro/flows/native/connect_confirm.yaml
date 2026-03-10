@@ -6,7 +6,6 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
     permissions:
       all: allow
 - startRecording: "Native Connection Confirmed"
-- tapOn: "NOT NOW"
 - tapOn: "Ethereum"
 - tapOn: "Connect via AppKit"
 - tapOn: "All wallets"
