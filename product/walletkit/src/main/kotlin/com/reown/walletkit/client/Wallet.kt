@@ -582,7 +582,7 @@ object Wallet {
             val status: PaymentStatus,
             val isFinal: Boolean,
             val pollInMs: Long?,
-            val info: PaymentResultInfo?
+            val info: PaymentResultInfo? = null
         ) : Model()
     }
 }
