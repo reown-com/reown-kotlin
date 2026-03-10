@@ -12,19 +12,27 @@ import java.security.Security
 // TODO Move to Common
 object EthAccountDelegate {
     lateinit var application: Application
+
+    // Hardcoded test user data for IC form prefill (PoC)
+    const val PREFILL_FULL_NAME = "Test User"
+    const val PREFILL_DOB = "1990-01-15"
+    const val PREFILL_POB_ADDRESS = "123 Main Street, New York, NY 10001"
     private val sharedPreferences: SharedPreferences by lazy { application.getSharedPreferences("Wallet_Sample_Shared_Prefs", Context.MODE_PRIVATE) }
     private const val ACCOUNT_TAG = "self_account_tag"
     private const val PRIVATE_KEY_TAG = "self_private_key"
     private const val PUBLIC_KEY_TAG = "self_public_key"
+    private const val MNEMONIC_TAG = "self_mnemonic"
 
     private val isInitialized
         get() = (sharedPreferences.getString(ACCOUNT_TAG, null) != null) && (sharedPreferences.getString(PRIVATE_KEY_TAG, null) != null) && (sharedPreferences.getString(
             PUBLIC_KEY_TAG, null) != null)
 
     private fun storeAccount(privateKey: String? = null): Triple<String, String, String> = generateKeys(privateKey).also { (publicKey, privateKey, address) ->
-        sharedPreferences.edit { putString(ACCOUNT_TAG, address) }
-        sharedPreferences.edit { putString(PRIVATE_KEY_TAG, privateKey) }
-        sharedPreferences.edit { putString(PUBLIC_KEY_TAG, publicKey) }
+        sharedPreferences.edit {
+            putString(ACCOUNT_TAG, address)
+            putString(PRIVATE_KEY_TAG, privateKey)
+            putString(PUBLIC_KEY_TAG, publicKey)
+        }
     }
 
     val ethAccount: String
@@ -36,16 +44,26 @@ object EthAccountDelegate {
     val address: String
         get() = if (isInitialized) sharedPreferences.getString(ACCOUNT_TAG, null)!! else storeAccount().third
 
+    val mnemonic: String?
+        get() = sharedPreferences.getString(MNEMONIC_TAG, null)
+
+    fun importFromMnemonic(mnemonic: String) {
+        val derivedPrivateKey = derivePrivateKeyFromMnemonic(mnemonic, coinType = 60)
+        storeAccount(derivedPrivateKey)
+        sharedPreferences.edit { putString(MNEMONIC_TAG, mnemonic) }
+    }
+
     var privateKey: String
-        get() = (if (isInitialized) sharedPreferences.getString(PRIVATE_KEY_TAG, null)!! else storeAccount().second).run {
-            if (this.length > 64) {
-                this.removePrefix("00")
+        get() = normalizePrivateKeyHex(
+            if (isInitialized) {
+                sharedPreferences.getString(PRIVATE_KEY_TAG, null)!!
             } else {
-                this
+                storeAccount().second
             }
-        }
+        )
         set(value) {
-            storeAccount(value)
+            storeAccount(normalizePrivateKeyHex(value))
+            sharedPreferences.edit { remove(MNEMONIC_TAG) }
         }
 
     val publicKey: String
@@ -67,9 +85,9 @@ fun generateKeys(privateKey: String? = null): Triple<String, String, String> {
     }
     Security.addProvider(BouncyCastleProvider())
 
-    val keypair = privateKey?.run { ECKeyPair.create(this.hexToBytes()) } ?: Keys.createEcKeyPair()
+    val keypair = privateKey?.run { ECKeyPair.create(normalizePrivateKeyHex(this).hexToBytes()) } ?: Keys.createEcKeyPair()
     val newPublicKey = keypair.publicKey.toByteArray().bytesToHex()
-    val newPrivateKey = keypair.privateKey.toByteArray().bytesToHex()
+    val newPrivateKey = normalizePrivateKeyHex(keypair.privateKey.toString(16))
 
     return Triple(newPublicKey, newPrivateKey, Keys.toChecksumAddress(Keys.getAddress(keypair)))
 }

@@ -44,9 +44,16 @@ import com.reown.android.utils.cacao.sign
 import com.reown.notify.client.Notify
 import com.reown.notify.client.NotifyClient
 import com.reown.notify.client.cacao.CacaoSigner
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.domain.ThemeManager
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
@@ -56,7 +63,9 @@ import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
 import com.reown.util.hexToBytes
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -64,7 +73,7 @@ import timber.log.Timber
 import java.net.URLEncoder
 
 class WalletKitActivity : AppCompatActivity() {
-    private lateinit var navController: NavHostController
+    private val navControllerFlow = MutableStateFlow<NavHostController?>(null)
     private val web3walletViewModel = Web3WalletViewModel()
     private val connectionsViewModel = ConnectionsViewModel()
 
@@ -77,6 +86,7 @@ class WalletKitActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
@@ -109,18 +119,21 @@ class WalletKitActivity : AppCompatActivity() {
                 initialValue = ModalBottomSheetValue.Hidden,
                 skipHalfExpanded = true
             )
-            val bottomSheetNavigator = BottomSheetNavigator(sheetState)
+            val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
             val navController = rememberAnimatedNavController(bottomSheetNavigator)
-            this.navController = navController
-            val sharedPref = getPreferences(MODE_PRIVATE)
-            val getStartedVisited = sharedPref.getBoolean("get_started_visited", false)
-            WCSampleAppTheme {
+            LaunchedEffect(navController) { navControllerFlow.value = navController }
+            val themeMode by ThemeManager.themeMode.collectAsState()
+            val isDarkTheme = when (themeMode) {
+                0 -> false
+                1 -> true
+                else -> isSystemInDarkTheme()
+            }
+            WCSampleAppTheme(darkTheme = isDarkTheme) {
                 WalletSampleHost(
                     bottomSheetNavigator,
                     navController,
                     web3walletViewModel,
                     connectionsViewModel,
-                    getStartedVisited
                 )
             }
         }
@@ -141,8 +154,8 @@ class WalletKitActivity : AppCompatActivity() {
             .onEach {
                 if (it.arrayOfArgs.isNotEmpty()) {
                     web3walletViewModel.showRequestLoader(false)
-                    navigateWhenReady {
-                        navController.navigate(Route.SessionRequest.path)
+                    navigateWhenReady { nav ->
+                        nav.navigate(Route.SessionRequest.path)
                     }
                 }
             }
@@ -151,29 +164,29 @@ class WalletKitActivity : AppCompatActivity() {
         web3walletViewModel.walletEvents
             .onEach { event ->
                 when (event) {
-                    is SignEvent.SessionProposal -> navigateWhenReady { navController.navigate(Route.SessionProposal.path) }
-                    is SignEvent.SessionAuthenticate -> navigateWhenReady { navController.navigate(Route.SessionAuthenticate.path) }
-                    is SignEvent.Fulfilment -> navigateWhenReady {
-                        navController.navigate("${Route.ChainAbstraction.path}/${event.isError}") {
+                    is SignEvent.SessionProposal -> navigateWhenReady { nav -> nav.navigate(Route.SessionProposal.path) }
+                    is SignEvent.SessionAuthenticate -> navigateWhenReady { nav -> nav.navigate(Route.SessionAuthenticate.path) }
+                    is SignEvent.Fulfilment -> navigateWhenReady { nav ->
+                        nav.navigate("${Route.ChainAbstraction.path}/${event.isError}") {
                             popUpTo(Route.TransactionDialog.path) { inclusive = true }
                         }
                     }
 
-                    is SignEvent.ExpiredRequest -> {
-                        if (navController.currentDestination?.route != Route.Connections.path) {
-                            navController.popBackStack(route = Route.Connections.path, inclusive = false)
+                    is SignEvent.ExpiredRequest -> navigateWhenReady { nav ->
+                        if (nav.currentDestination?.route != Route.Wallets.path) {
+                            nav.popBackStack(route = Route.Wallets.path, inclusive = false)
                         }
                         Toast.makeText(baseContext, "Request expired", Toast.LENGTH_SHORT).show()
                     }
 
-                    is SignEvent.Disconnect -> {
+                    is SignEvent.Disconnect -> navigateWhenReady { nav ->
                         connectionsViewModel.refreshConnections()
 
-                        if (navController.currentDestination?.route != Route.Connections.path &&
-                            navController.currentDestination?.route != Route.SessionProposal.path &&
-                            navController.currentDestination?.route != Route.SessionAuthenticate.path
+                        if (nav.currentDestination?.route != Route.Wallets.path &&
+                            nav.currentDestination?.route != Route.SessionProposal.path &&
+                            nav.currentDestination?.route != Route.SessionAuthenticate.path
                         ) {
-                            navController.navigate(Route.Connections.path)
+                            nav.navigate(Route.Wallets.path)
                         }
                     }
 
@@ -185,21 +198,19 @@ class WalletKitActivity : AppCompatActivity() {
         // Handle payment events from QR code scanning
         web3walletViewModel.paymentEventFlow
             .onEach { paymentLink ->
-                navigateWhenReady {
+                navigateWhenReady { nav ->
                     val encodedLink = URLEncoder.encode(paymentLink, "UTF-8")
-                    navController.navigate("${Route.Payment.path}/$encodedLink")
+                    nav.navigate("${Route.Payment.path}/$encodedLink") {
+                        launchSingleTop = true
+                    }
                 }
             }
             .launchIn(lifecycleScope)
     }
 
-    private suspend fun navigateWhenReady(navigate: () -> Unit) {
-        if (!::navController.isInitialized) {
-            delay(400)
-            navigate()
-        } else {
-            navigate()
-        }
+    private suspend fun navigateWhenReady(navigate: (NavHostController) -> Unit) {
+        val navController = navControllerFlow.filterNotNull().first()
+        navigate(navController)
     }
 
     private fun handleAppLink(intent: Intent?) {
@@ -207,9 +218,11 @@ class WalletKitActivity : AppCompatActivity() {
         // Check for WalletConnect Pay URL - pass the full link (URL encoded)
         if (dataString != null && isPaymentUrl(dataString)) {
             lifecycleScope.launch {
-                navigateWhenReady {
+                navigateWhenReady { nav ->
                     val encodedLink = URLEncoder.encode(dataString, "UTF-8")
-                    navController.navigate("${Route.Payment.path}/$encodedLink")
+                    nav.navigate("${Route.Payment.path}/$encodedLink") {
+                        launchSingleTop = true
+                    }
                 }
             }
             return
@@ -236,8 +249,8 @@ class WalletKitActivity : AppCompatActivity() {
 
             if (dataString?.startsWith("kotlin-web3wallet://request") == true || dataString?.contains("requestId") == true) {
                 lifecycleScope.launch {
-                    navigateWhenReady {
-                        if (navController.currentDestination?.route != Route.SessionRequest.path) {
+                    navigateWhenReady { nav ->
+                        if (nav.currentDestination?.route != Route.SessionRequest.path) {
                             web3walletViewModel.showRequestLoader(true)
                         }
                     }

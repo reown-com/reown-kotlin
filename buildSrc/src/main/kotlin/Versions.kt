@@ -8,16 +8,16 @@ const val KEY_SDK_NAME = "SDK_NAME"
 const val DEFAULT_PUBLISH_GROUP = "com.reown"
 
 //Latest versions
-const val BOM_VERSION = "1.6.4"
-const val FOUNDATION_VERSION = "1.6.4"
-const val CORE_VERSION = "1.6.4"
-const val SIGN_VERSION = "1.6.4"
-const val NOTIFY_VERSION = "1.6.4"
-const val WALLETKIT_VERSION = "1.6.4"
-const val APPKIT_VERSION = "1.6.4"
-const val MODAL_CORE_VERSION = "1.6.4"
-const val POS_VERSION = "0.0.6"
-const val PAY_VERSION = "1.0.4"
+const val BOM_VERSION = "1.6.9"
+const val FOUNDATION_VERSION = "1.6.9"
+const val CORE_VERSION = "1.6.9"
+const val SIGN_VERSION = "1.6.9"
+const val NOTIFY_VERSION = "1.6.9"
+const val WALLETKIT_VERSION = "1.6.9"
+const val APPKIT_VERSION = "1.6.9"
+const val MODAL_CORE_VERSION = "1.6.9"
+const val POS_VERSION = "0.0.11"
+const val PAY_VERSION = "1.0.9"
 
 //Artifact ids
 const val ANDROID_BOM = "android-bom"
@@ -35,6 +35,6 @@ const val PAY = "pay"
 val jvmVersion = JavaVersion.VERSION_11
 const val MIN_SDK: Int = 23
 const val TARGET_SDK: Int = 35
-const val COMPILE_SDK: Int = TARGET_SDK
+const val COMPILE_SDK: Int = 36
 val SAMPLE_VERSION_CODE = BOM_VERSION.replace(".", "").toInt()
 const val SAMPLE_VERSION_NAME = BOM_VERSION

@@ -52,7 +52,7 @@ fun compileListOfSDKs(): List<SdkModule> = mutableListOf(
     SdkModule("product", "pay", "android", "walletconnect"), // Published under com.walletconnect
     SdkModule("product", "walletkit", "android"),
     SdkModule("product", "appkit", "android"),
-    SdkModule("product", "pos", "android"),
+    SdkModule("product", "pos", "android", "walletconnect"), // Published under com.walletconnect
 ).apply {
     // The BOM has to be last artifact
     add(SdkModule("core", "bom", "jvm"))

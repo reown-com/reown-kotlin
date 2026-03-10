@@ -9,7 +9,4 @@
 -dontwarn org.openjsse.**
 -dontwarn okhttp3.internal.platform.**
 
--allowaccessmodification
--keeppackagenames doNotKeepAThing
-
 -dontwarn groovy.lang.GroovyShell

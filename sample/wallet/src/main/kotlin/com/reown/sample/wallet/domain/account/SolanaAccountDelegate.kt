@@ -29,16 +29,28 @@ object SolanaAccountDelegate {
             keyPair
         }
 
+    private fun getOrRecoverKeyPair(): String {
+        val storedKeyPair = if (isInitialized) sharedPreferences.getString(KEY_PAIR_TAG, null) else null
+        if (storedKeyPair == null) {
+            return storeAccount()
+        }
+
+        return runCatching {
+            solanaPubkeyForKeypair(storedKeyPair)
+            storedKeyPair
+        }.getOrElse {
+            storeAccount()
+        }
+    }
 
     val keys: Triple<String, String, String>
-        get() = (if (isInitialized) sharedPreferences.getString(KEY_PAIR_TAG, null)!! else storeAccount())
-            .run {
-                decodeKeyPair(this)
-            }
+        get() = decodeKeyPair(keyPair)
 
     var keyPair: String
-        get() = if (isInitialized) sharedPreferences.getString(KEY_PAIR_TAG, null)!! else storeAccount()
+        get() = getOrRecoverKeyPair()
         set(value) {
+            // Validate before persistence so failed imports don't corrupt state.
+            solanaPubkeyForKeypair(value)
             storeAccount(value)
         }
 

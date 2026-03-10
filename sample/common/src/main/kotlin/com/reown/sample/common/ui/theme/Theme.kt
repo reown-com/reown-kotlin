@@ -11,6 +11,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
@@ -50,6 +51,7 @@ fun WCSampleAppTheme(
     content: @Composable () -> Unit,
 ) {
     val colors = if (darkTheme) DarkColors else LightColors
+    val wcColors = if (darkTheme) DarkWCColors else LightWCColors
 
     val view = LocalView.current
 
@@ -74,23 +76,37 @@ fun WCSampleAppTheme(
         }
     }
 
-    WCTheme(colors = colors, content = content)
+    CompositionLocalProvider(
+        LocalWCColors provides wcColors,
+        LocalWCTypography provides DefaultWCTypography,
+    ) {
+        WCMaterialTheme(colors = colors, content = content)
+    }
 }
 
 @Composable
 fun PreviewTheme(content: @Composable () -> Unit) {
-    WCTheme(
-        colors = if (isSystemInDarkTheme()) DarkColors else LightColors,
-        content = {
-            Column(modifier = Modifier.background(MaterialTheme.colors.background)) {
-                content()
+    val darkTheme = isSystemInDarkTheme()
+    val colors = if (darkTheme) DarkColors else LightColors
+    val wcColors = if (darkTheme) DarkWCColors else LightWCColors
+
+    CompositionLocalProvider(
+        LocalWCColors provides wcColors,
+        LocalWCTypography provides DefaultWCTypography,
+    ) {
+        WCMaterialTheme(
+            colors = colors,
+            content = {
+                Column(modifier = Modifier.background(MaterialTheme.colors.background)) {
+                    content()
+                }
             }
-        }
-    )
+        )
+    }
 }
 
 @Composable
-internal fun WCTheme(
+internal fun WCMaterialTheme(
     colors: Colors,
     content: @Composable () -> Unit,
 ) {
@@ -99,6 +115,22 @@ internal fun WCTheme(
         typography = Typography,
         content = content
     )
+}
+
+object WCTheme {
+    val colors: WCColors
+        @Composable
+        get() = LocalWCColors.current
+
+    val typography: WCTypography
+        @Composable
+        get() = LocalWCTypography.current
+
+    val spacing: WCSpacing
+        get() = WCSpacing
+
+    val borderRadius: WCBorderRadius
+        get() = WCBorderRadius
 }
 
 @LightTheme

@@ -492,7 +492,8 @@ object Wallet {
             PROCESSING,
             SUCCEEDED,
             FAILED,
-            EXPIRED
+            EXPIRED,
+            CANCELLED
         }
 
         data class PaymentAmountDisplay(
@@ -526,12 +527,14 @@ object Wallet {
             val id: String,
             val amount: PaymentAmount,
             val account: String,
-            val estimatedTxs: Int?
+            val estimatedTxs: Int?,
+            val collectData: CollectDataAction? = null
         ) : Model()
 
         enum class CollectDataFieldType {
             TEXT,
-            DATE
+            DATE,
+            CHECKBOX
         }
 
         data class CollectDataField(
@@ -542,7 +545,10 @@ object Wallet {
         ) : Model()
 
         data class CollectDataAction(
-            val fields: List<CollectDataField>
+            @Deprecated("Use url for WebView-based data collection or schema to parse field requirements")
+            val fields: List<CollectDataField>,
+            val url: String?,
+            val schema: String?
         ) : Model()
 
         data class CollectDataFieldResult(
@@ -567,10 +573,16 @@ object Wallet {
             data class WalletRpc(val action: WalletRpcAction) : RequiredAction()
         }
 
+        data class PaymentResultInfo(
+            val txId: String,
+            val optionAmount: PaymentAmount
+        ) : Model()
+
         data class ConfirmPaymentResponse(
             val status: PaymentStatus,
             val isFinal: Boolean,
-            val pollInMs: Long?
+            val pollInMs: Long?,
+            val info: PaymentResultInfo? = null
         ) : Model()
     }
 }

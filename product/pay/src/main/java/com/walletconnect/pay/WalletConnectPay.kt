@@ -132,6 +132,7 @@ object WalletConnectPay {
                 collectedData = yttriumCollectedData,
                 maxPollMs = 60000
             )
+
             Result.success(Mappers.mapConfirmPaymentResponse(response))
         } catch (e: uniffi.yttrium_wcpay.ConfirmPaymentException) {
             Result.failure(Mappers.mapConfirmPaymentError(e))

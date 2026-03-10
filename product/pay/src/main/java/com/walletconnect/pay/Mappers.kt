@@ -19,6 +19,7 @@ import uniffi.yttrium_wcpay.CollectDataField as YttriumCollectDataField
 import uniffi.yttrium_wcpay.CollectDataFieldType as YttriumCollectDataFieldType
 import uniffi.yttrium_wcpay.ConfirmPaymentResultResponse as YttriumConfirmPaymentResponse
 import uniffi.yttrium_wcpay.CollectDataFieldResult as YttriumCollectDataFieldResult
+import uniffi.yttrium_wcpay.PaymentResultInfo as YttriumPaymentResultInfo
 import uniffi.yttrium_wcpay.GetPaymentOptionsException as YttriumGetPaymentOptionsError
 import uniffi.yttrium_wcpay.GetPaymentRequestException as YttriumGetPaymentRequestError
 import uniffi.yttrium_wcpay.ConfirmPaymentException as YttriumConfirmPaymentError
@@ -55,7 +56,8 @@ internal object Mappers {
             id = option.id,
             amount = mapAmount(option.amount),
             estimatedTxs = option.etaS.coerceAtMost(Int.MAX_VALUE.toULong().toLong()).toInt(),
-            account = option.account
+            account = option.account,
+            collectData = option.collectData?.let { mapCollectDataAction(it) }
         )
     }
 
@@ -94,7 +96,9 @@ internal object Mappers {
 
     private fun mapCollectDataAction(action: YttriumCollectDataAction): Pay.CollectDataAction {
         return Pay.CollectDataAction(
-            fields = action.fields.map { mapCollectDataField(it) }
+            fields = action.fields.map { mapCollectDataField(it) },
+            url = action.url,
+            schema = action.schema
         )
     }
 
@@ -111,6 +115,7 @@ internal object Mappers {
         return when (type) {
             YttriumCollectDataFieldType.TEXT -> Pay.CollectDataFieldType.TEXT
             YttriumCollectDataFieldType.DATE -> Pay.CollectDataFieldType.DATE
+            YttriumCollectDataFieldType.CHECKBOX -> Pay.CollectDataFieldType.CHECKBOX
         }
     }
 
@@ -119,6 +124,14 @@ internal object Mappers {
             status = mapPaymentStatus(response.status),
             isFinal = response.isFinal,
             pollInMs = response.pollInMs,
+            info = response.info?.let { mapPaymentResultInfo(it) }
+        )
+    }
+
+    private fun mapPaymentResultInfo(info: YttriumPaymentResultInfo): Pay.PaymentResultInfo {
+        return Pay.PaymentResultInfo(
+            txId = info.txId,
+            optionAmount = mapAmount(info.optionAmount)
         )
     }
 
@@ -129,6 +142,7 @@ internal object Mappers {
             YttriumPaymentStatus.SUCCEEDED -> Pay.PaymentStatus.SUCCEEDED
             YttriumPaymentStatus.FAILED -> Pay.PaymentStatus.FAILED
             YttriumPaymentStatus.EXPIRED -> Pay.PaymentStatus.EXPIRED
+            YttriumPaymentStatus.CANCELLED -> Pay.PaymentStatus.CANCELLED
         }
     }
 
@@ -164,9 +178,11 @@ internal object Mappers {
 
             is YttriumGetPaymentOptionsError.InternalException ->
                 Pay.GetPaymentOptionsError.InternalError(error.v1)
+
             is YttriumGetPaymentOptionsError.ConnectionFailed -> Pay.GetPaymentOptionsError.Http(error.v1)
             is YttriumGetPaymentOptionsError.NoConnection -> Pay.GetPaymentOptionsError.Http(error.v1)
             is YttriumGetPaymentOptionsError.RequestTimeout -> Pay.GetPaymentOptionsError.Http(error.v1)
+            is YttriumGetPaymentOptionsError.RateLimited -> Pay.GetPaymentOptionsError.Http(error.v1)
         }
     }
 
@@ -190,9 +206,10 @@ internal object Mappers {
             is YttriumGetPaymentRequestError.InternalException ->
                 Pay.GetPaymentRequestError.InternalError(error.v1)
 
-            is YttriumGetPaymentRequestError.ConnectionFailed ->  Pay.GetPaymentRequestError.Http(error.v1)
-            is YttriumGetPaymentRequestError.NoConnection ->  Pay.GetPaymentRequestError.Http(error.v1)
-            is YttriumGetPaymentRequestError.RequestTimeout ->  Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.ConnectionFailed -> Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.NoConnection -> Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.RequestTimeout -> Pay.GetPaymentRequestError.Http(error.v1)
+            is YttriumGetPaymentRequestError.RateLimited -> Pay.GetPaymentRequestError.Http(error.v1)
         }
     }
 
@@ -223,6 +240,9 @@ internal object Mappers {
             is YttriumConfirmPaymentError.ConnectionFailed -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.NoConnection -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.RequestTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
+            is YttriumConfirmPaymentError.PollingTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
+            is YttriumConfirmPaymentError.RateLimited -> Pay.ConfirmPaymentError.Http(error.v1)
+            is YttriumConfirmPaymentError.QuoteExpired -> Pay.ConfirmPaymentError.RouteExpired(error.v1)
         }
     }
 
@@ -231,9 +251,10 @@ internal object Mappers {
             is YttriumPayError.Http -> Pay.PayError.Http(error.v1)
             is YttriumPayError.Api -> Api(error.v1)
             is YttriumPayError.Timeout -> Pay.PayError.Timeout
-            is YttriumPayError.ConnectionFailed ->  Pay.PayError.Http(error.v1)
-            is YttriumPayError.NoConnection ->  Pay.PayError.Http(error.v1)
-            is YttriumPayError.RequestTimeout ->  Pay.PayError.Http(error.v1)
+            is YttriumPayError.ConnectionFailed -> Pay.PayError.Http(error.v1)
+            is YttriumPayError.NoConnection -> Pay.PayError.Http(error.v1)
+            is YttriumPayError.RequestTimeout -> Pay.PayError.Http(error.v1)
+            is YttriumPayError.RateLimited -> Pay.PayError.Http(error.v1)
         }
     }
 }

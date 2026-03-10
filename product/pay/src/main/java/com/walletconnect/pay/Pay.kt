@@ -14,7 +14,8 @@ object Pay {
         PROCESSING,
         SUCCEEDED,
         FAILED,
-        EXPIRED
+        EXPIRED,
+        CANCELLED
     }
 
     data class AmountDisplay(
@@ -36,7 +37,8 @@ object Pay {
         val id: String,
         val amount: Amount,
         val account: String,
-        val estimatedTxs: Int?
+        val estimatedTxs: Int?,
+        val collectData: CollectDataAction? = null
     )
 
     data class MerchantInfo(
@@ -66,7 +68,8 @@ object Pay {
 
     enum class CollectDataFieldType {
         TEXT,
-        DATE
+        DATE,
+        CHECKBOX
     }
 
     data class CollectDataField(
@@ -77,7 +80,10 @@ object Pay {
     )
 
     data class CollectDataAction(
-        val fields: List<CollectDataField>
+        @Deprecated("Use url for WebView-based data collection or schema to parse field requirements")
+        val fields: List<CollectDataField>,
+        val url: String?,
+        val schema: String?
     )
 
     sealed class RequiredAction {
@@ -89,10 +95,16 @@ object Pay {
         val value: String
     )
 
+    data class PaymentResultInfo(
+        val txId: String,
+        val optionAmount: Amount
+    )
+
     data class ConfirmPaymentResponse(
         val status: PaymentStatus,
         val isFinal: Boolean,
         val pollInMs: Long?,
+        val info: PaymentResultInfo? = null
     )
 
     sealed class PayError : Exception() {

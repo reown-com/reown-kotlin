@@ -7,10 +7,6 @@ on:
       - develop
       - master
 
-    paths:
-      - 'product/pay/**'
-      - 'core/android/**'
-
 permissions:
   contents: read
 
@@ -26,31 +22,7 @@ jobs:
     name: Run Pay Integration Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Check what modules were changed
-        id: what_modules_changed
-        shell: bash
-        run: |
-          check_changes() {
-            local module_path=$1
-            local output_variable_name=$2
-
-            changes=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- "$module_path/")
-
-            if [ -n "$changes" ]; then
-            echo "${output_variable_name}=true" >> $GITHUB_OUTPUT
-            echo "${output_variable_name}=true"
-            else
-            echo "${output_variable_name}=false" >> $GITHUB_OUTPUT
-            echo "${output_variable_name}=false"
-            fi
-          }
-
-          check_changes "product/pay" "PAY_MODULE_CHANGED"
-          check_changes "core/android" "CORE_MODULE_CHANGED"
+      - uses: actions/checkout@v6
 
       - name: Setup Required files to build SDKs
         with:
@@ -72,7 +44,6 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Run Pay instrumented tests
-        if: ${{ steps.what_modules_changed.outputs.PAY_MODULE_CHANGED == 'true' || steps.what_modules_changed.outputs.CORE_MODULE_CHANGED == 'true' || github.event_name == 'workflow_dispatch' }}
         uses: ./.github/actions/ci_instrumented_tests
         with:
           name: "Pay_SDK"

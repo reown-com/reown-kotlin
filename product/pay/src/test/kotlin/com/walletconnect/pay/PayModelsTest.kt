@@ -166,9 +166,10 @@ class PayModelsTest {
     fun `CollectDataFieldType enum should have all required values`() {
         val types = Pay.CollectDataFieldType.entries.toTypedArray()
 
-        assertEquals(2, types.size)
+        assertEquals(3, types.size)
         assertNotNull(Pay.CollectDataFieldType.valueOf("TEXT"))
         assertNotNull(Pay.CollectDataFieldType.valueOf("DATE"))
+        assertNotNull(Pay.CollectDataFieldType.valueOf("CHECKBOX"))
     }
 
     @Test
@@ -202,25 +203,49 @@ class PayModelsTest {
         val response = Pay.ConfirmPaymentResponse(
             status = Pay.PaymentStatus.PROCESSING,
             isFinal = false,
-            pollInMs = 5000L
+            pollInMs = 5000L,
+            info = null
         )
 
         assertEquals(Pay.PaymentStatus.PROCESSING, response.status)
         assertEquals(false, response.isFinal)
         assertEquals(5000L, response.pollInMs)
+        assertNull(response.info)
     }
 
     @Test
     fun `ConfirmPaymentResponse with final status`() {
+        val amount = Pay.Amount(value = "100", unit = "USD", display = null)
+        val resultInfo = Pay.PaymentResultInfo(
+            txId = "0x123abc",
+            optionAmount = amount
+        )
         val response = Pay.ConfirmPaymentResponse(
             status = Pay.PaymentStatus.SUCCEEDED,
             isFinal = true,
-            pollInMs = null
+            pollInMs = null,
+            info = resultInfo
         )
 
         assertEquals(Pay.PaymentStatus.SUCCEEDED, response.status)
         assertEquals(true, response.isFinal)
         assertNull(response.pollInMs)
+        assertNotNull(response.info)
+        assertEquals("0x123abc", response.info?.txId)
+        assertEquals("100", response.info?.optionAmount?.value)
+    }
+
+    @Test
+    fun `PaymentResultInfo should hold correct values`() {
+        val amount = Pay.Amount(value = "50", unit = "USDC", display = null)
+        val resultInfo = Pay.PaymentResultInfo(
+            txId = "tx-456",
+            optionAmount = amount
+        )
+
+        assertEquals("tx-456", resultInfo.txId)
+        assertEquals("50", resultInfo.optionAmount.value)
+        assertEquals("USDC", resultInfo.optionAmount.unit)
     }
 
     @Test
@@ -237,16 +262,52 @@ class PayModelsTest {
                 name = "Date of Birth",
                 fieldType = Pay.CollectDataFieldType.DATE,
                 required = false
+            ),
+            Pay.CollectDataField(
+                id = "terms",
+                name = "Accept Terms",
+                fieldType = Pay.CollectDataFieldType.CHECKBOX,
+                required = true
             )
         )
 
-        val action = Pay.CollectDataAction(fields = fields)
+        val action = Pay.CollectDataAction(
+            fields = fields,
+            url = "https://example.com/ic-form",
+            schema = "ic-schema-v1"
+        )
 
-        assertEquals(2, action.fields.size)
+        assertEquals(3, action.fields.size)
         assertEquals("email", action.fields[0].id)
         assertEquals("dob", action.fields[1].id)
+        assertEquals("terms", action.fields[2].id)
         assertEquals(Pay.CollectDataFieldType.TEXT, action.fields[0].fieldType)
         assertEquals(Pay.CollectDataFieldType.DATE, action.fields[1].fieldType)
+        assertEquals(Pay.CollectDataFieldType.CHECKBOX, action.fields[2].fieldType)
+        assertEquals("https://example.com/ic-form", action.url)
+        assertEquals("ic-schema-v1", action.schema)
+    }
+
+    @Test
+    fun `CollectDataAction should handle null url and schema`() {
+        val fields = listOf(
+            Pay.CollectDataField(
+                id = "email",
+                name = "Email",
+                fieldType = Pay.CollectDataFieldType.TEXT,
+                required = true
+            )
+        )
+
+        val action = Pay.CollectDataAction(
+            fields = fields,
+            url = null,
+            schema = null
+        )
+
+        assertEquals(1, action.fields.size)
+        assertNull(action.url)
+        assertNull(action.schema)
     }
 
     @Test
@@ -273,7 +334,9 @@ class PayModelsTest {
                     fieldType = Pay.CollectDataFieldType.TEXT,
                     required = true
                 )
-            )
+            ),
+            url = null,
+            schema = null
         )
 
         val response = Pay.PaymentOptionsResponse(

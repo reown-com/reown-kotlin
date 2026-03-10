@@ -15,8 +15,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import android.net.Uri
+import android.util.Base64
 import android.util.Log
+import com.reown.sample.wallet.ui.routes.dialog_routes.payment.PaymentUiState.*
 import org.json.JSONArray
+import org.json.JSONObject
 import org.web3j.crypto.ECKeyPair
 import org.web3j.crypto.Sign
 import org.web3j.crypto.StructuredDataEncoder
@@ -40,9 +44,7 @@ class PaymentViewModel : ViewModel() {
 
     // Information Capture state
     private var pendingWalletRpcActions: List<Wallet.Model.RequiredAction.WalletRpc> = emptyList()
-    private var collectDataFields: List<Wallet.Model.CollectDataField> = emptyList()
     private val collectedValues: MutableMap<String, String> = mutableMapOf()
-    private var currentFieldIndex: Int = 0
 
     init {
         // Collect payment options event (has replay=1 to ensure we receive it even if emitted before collecting)
@@ -53,28 +55,29 @@ class PaymentViewModel : ViewModel() {
 
     /**
      * Process payment options response received from onPaymentRequest callback.
+     * Always goes directly to Options state (no Intro screen).
      */
     private fun processPaymentOptionsResponse(response: Wallet.Model.PaymentOptionsResponse) {
+        // Clear replay cache immediately after consuming to prevent stale data leaking to other ViewModel instances
+        WalletKitDelegate.clearPaymentOptions()
         currentPaymentId = response.paymentId
-        // Store collect data fields from response (if any)
-        collectDataFields = response.collectDataAction?.fields ?: emptyList()
         collectedValues.clear()
-        currentFieldIndex = 0
 
         // Store payment options for later use
         storedPaymentInfo = response.info
         storedPaymentOptions = response.options
 
         if (response.options.isEmpty()) {
-            _uiState.value = PaymentUiState.Error("No payment options available")
-        } else if (collectDataFields.isNotEmpty()) {
-            // Show intro screen only when information capture is required
-            _uiState.value = PaymentUiState.Intro(
+            _uiState.value = PaymentUiState.Error("No payment options available", PaymentErrorType.INSUFFICIENT_FUNDS)
+        } else if (response.options.size == 1 && response.options[0].collectData == null) {
+            // Single option with no IC required — skip directly to Summary
+            val option = response.options[0]
+            selectedOptionId = option.id
+            _uiState.value = PaymentUiState.Summary(
                 paymentInfo = storedPaymentInfo,
-                hasInfoCapture = true
+                selectedOption = option
             )
         } else {
-            // No information capture required, go directly to options
             _uiState.value = PaymentUiState.Options(
                 paymentLink = currentPaymentLink ?: "",
                 paymentInfo = storedPaymentInfo,
@@ -84,22 +87,119 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Set the current payment link for reference.
+     * Set the current payment link and fetch payment options.
      */
     fun setPaymentLink(paymentLink: String) {
+        if (currentPaymentLink == paymentLink) return
         currentPaymentLink = paymentLink
+        _uiState.value = PaymentUiState.Loading
+        fetchPaymentOptions(paymentLink)
+    }
+
+    private fun fetchPaymentOptions(paymentLink: String) {
+        viewModelScope.launch {
+            val accounts = listOf(
+                "eip155:1:${EthAccountDelegate.address}",
+                "eip155:137:${EthAccountDelegate.address}",
+                "eip155:8453:${EthAccountDelegate.address}",
+                "eip155:10:${EthAccountDelegate.address}"
+            )
+            val result = WalletKit.Pay.getPaymentOptions(paymentLink, accounts)
+            result.fold(
+                onSuccess = { response -> processPaymentOptionsResponse(response) },
+                onFailure = { error ->
+                    _uiState.value = PaymentUiState.Error(
+                        error.message ?: "Failed to load payment options",
+                        PaymentErrorType.GENERIC
+                    )
+                }
+            )
+        }
     }
 
     /**
-     * Proceed from the intro screen to either information capture or payment options.
+     * Called when user taps "Pay" or "Continue" on a selected option.
+     * If the option has collectData with a URL, show WebView.
+     * If it has collectData with fields only, show field-by-field collection.
+     * Otherwise, proceed directly to payment processing.
      */
-    fun proceedFromIntro() {
-        if (collectDataFields.isNotEmpty()) {
-            // Show information capture first
-            showCurrentField()
+    fun onOptionSelected(optionId: String) {
+        val option = storedPaymentOptions.find { it.id == optionId } ?: return
+        selectedOptionId = optionId
+
+        val collectData = option.collectData
+        val url = collectData?.url
+        val schema = collectData?.schema
+
+        if (url != null) {
+            // WebView-based IC with per-option URL
+            val urlWithPrefill = buildUrlWithPrefill(url, schema)
+            _uiState.value = PaymentUiState.WebViewDataCollection(
+                url = urlWithPrefill,
+                paymentInfo = storedPaymentInfo
+            )
         } else {
-            // No fields to collect, show options directly
-            proceedToOptions()
+            // No IC required, proceed to payment
+            processPayment(optionId)
+        }
+    }
+
+    /**
+     * Append prefill query parameter to IC URL if user data is available.
+     */
+    private fun buildUrlWithPrefill(baseUrl: String, schema: String?): String {
+        val prefill = buildPrefillParam(schema) ?: return baseUrl
+
+        val uri = Uri.parse(baseUrl)
+        return uri.buildUpon()
+            .appendQueryParameter("prefill", prefill)
+            .build()
+            .toString()
+    }
+
+    /**
+     * Build the prefill query parameter for IC WebView URL.
+     * Creates Base64-encoded JSON with available user data.
+     * Only includes fields that are in the schema's required array.
+     */
+    private fun buildPrefillParam(schema: String?): String? {
+        if (schema == null) return null
+
+        return try {
+            // Parse schema to get required fields
+            val schemaJson = JSONObject(schema)
+            val requiredArray = schemaJson.optJSONArray("required") ?: return null
+            val requiredFields = (0 until requiredArray.length()).map { requiredArray.getString(it) }
+
+            // Build prefill JSON with available user data
+            val prefillData = JSONObject()
+
+            if ("fullName" in requiredFields) {
+                prefillData.put("fullName", EthAccountDelegate.PREFILL_FULL_NAME)
+            }
+
+            if ("dob" in requiredFields) {
+                prefillData.put("dob", EthAccountDelegate.PREFILL_DOB)
+            }
+
+            if ("pobAddress" in requiredFields) {
+                prefillData.put("pobAddress", EthAccountDelegate.PREFILL_POB_ADDRESS)
+            }
+
+            // Only return if we have data to prefill
+            if (prefillData.length() == 0) return null
+
+            // Base64 encode the JSON (NO_WRAP avoids newlines, URL_SAFE for URL compatibility)
+            val encoded = Base64.encodeToString(
+                prefillData.toString().toByteArray(Charsets.UTF_8),
+                Base64.NO_WRAP or Base64.URL_SAFE
+            )
+
+            Log.d("PaymentViewModel", "Built prefill param: $prefillData -> $encoded")
+            encoded
+        } catch (e: Exception) {
+            Log.e("PaymentViewModel", "Failed to build prefill param", e)
+            null
         }
     }
 
@@ -125,7 +225,10 @@ class PaymentViewModel : ViewModel() {
                     processActions(paymentId, optionId, actions)
                 },
                 onFailure = { error ->
-                    _uiState.value = PaymentUiState.Error(error.message ?: "Failed to get payment actions")
+                    _uiState.value = PaymentUiState.Error(
+                        error.message ?: "Failed to get payment actions",
+                        categorizeError(error.message)
+                    )
                 }
             )
         }
@@ -144,70 +247,58 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Show the current field for data collection.
+     * Go back to the options screen.
      */
-    private fun showCurrentField() {
-        if (currentFieldIndex < collectDataFields.size) {
-            val field = collectDataFields[currentFieldIndex]
-            _uiState.value = PaymentUiState.CollectingData(
-                currentStepIndex = currentFieldIndex,
-                totalSteps = collectDataFields.size,
-                currentField = field,
-                currentValue = collectedValues[field.id] ?: "",
-                allFields = collectDataFields
-            )
-        }
-    }
-
-    /**
-     * Proceed to payment options after information capture is complete.
-     */
-    private fun proceedToOptions() {
-        val paymentLink = currentPaymentLink ?: return
+    fun goBackToOptions() {
         _uiState.value = PaymentUiState.Options(
-            paymentLink = paymentLink,
+            paymentLink = currentPaymentLink ?: "",
             paymentInfo = storedPaymentInfo,
             options = storedPaymentOptions
         )
     }
 
     /**
-     * Submit the value for the current field and move to the next step.
+     * Called when WebView signals IC_COMPLETE.
+     * Shows Summary screen instead of going back to options.
      */
-    fun submitFieldValue(fieldId: String, value: String) {
-        collectedValues[fieldId] = value
-        currentFieldIndex++
-
-        if (currentFieldIndex < collectDataFields.size) {
-            // Show next field
-            showCurrentField()
-        } else {
-            // All fields collected, proceed to payment options
-            proceedToOptions()
-        }
-    }
-
-    /**
-     * Go back to the previous field.
-     */
-    fun goBackToPreviousField() {
-        if (currentFieldIndex > 0) {
-            currentFieldIndex--
-            showCurrentField()
-        } else {
-            // On first field, go back to intro
-            goBackToIntro()
-        }
-    }
-
-    /**
-     * Go back to the intro screen.
-     */
-    fun goBackToIntro() {
-        _uiState.value = PaymentUiState.Intro(
+    fun onICWebViewComplete() {
+        val optionId = selectedOptionId ?: return
+        val option = storedPaymentOptions.find { it.id == optionId } ?: return
+        _uiState.value = PaymentUiState.Summary(
             paymentInfo = storedPaymentInfo,
-            hasInfoCapture = collectDataFields.isNotEmpty()
+            selectedOption = option
         )
+    }
+
+    /**
+     * Called when WebView signals IC_ERROR.
+     */
+    fun onICWebViewError(errorMessage: String) {
+        _uiState.value = PaymentUiState.Error("Information capture failed: $errorMessage", categorizeError(errorMessage))
+    }
+
+    /**
+     * Confirm payment from the Summary screen.
+     */
+    fun confirmFromSummary() {
+        val optionId = selectedOptionId ?: return
+        processPayment(optionId)
+    }
+
+    /**
+     * Show the "Why info required?" explanation screen.
+     */
+    fun showWhyInfoRequired() {
+        _uiState.value = PaymentUiState.WhyInfoRequired(
+            paymentInfo = storedPaymentInfo
+        )
+    }
+
+    /**
+     * Dismiss the "Why info required?" screen and return to options.
+     */
+    fun dismissWhyInfoRequired() {
+        goBackToOptions()
     }
 
     /**
@@ -252,35 +343,49 @@ class PaymentViewModel : ViewModel() {
                 onSuccess = { response ->
                     when (response.status) {
                         Wallet.Model.PaymentStatus.SUCCEEDED -> {
-                            _uiState.value = PaymentUiState.Success(
+                            Log.d("PaymentViewModel", "Payment SUCCEEDED")
+                            _uiState.value = Success(
                                 message = "Payment completed successfully!",
-                                paymentInfo = storedPaymentInfo
+                                paymentInfo = storedPaymentInfo,
+                                resultInfo = response.info
                             )
                         }
                         Wallet.Model.PaymentStatus.PROCESSING -> {
-                            _uiState.value = PaymentUiState.Success(
+                            Log.d("PaymentViewModel", "Payment PROCESSING")
+                            _uiState.value = Success(
                                 message = "Payment is being processed...",
-                                paymentInfo = storedPaymentInfo
+                                paymentInfo = storedPaymentInfo,
+                                resultInfo = response.info
                             )
                         }
                         Wallet.Model.PaymentStatus.FAILED -> {
-                            _uiState.value = PaymentUiState.Error("Payment failed")
+                            _uiState.value = Error("Payment failed", PaymentErrorType.GENERIC)
                         }
                         Wallet.Model.PaymentStatus.EXPIRED -> {
-                            _uiState.value = PaymentUiState.Error("Payment expired")
+                            _uiState.value = Error("Payment expired", PaymentErrorType.EXPIRED)
                         }
                         Wallet.Model.PaymentStatus.REQUIRES_ACTION -> {
-                            _uiState.value = PaymentUiState.Error("Additional action required")
+                            _uiState.value = Error("Additional action required", PaymentErrorType.GENERIC)
+                        }
+
+                        Wallet.Model.PaymentStatus.CANCELLED -> {
+                            _uiState.value = Error("Payment was cancelled", PaymentErrorType.CANCELLED)
                         }
                     }
                 },
                 onFailure = { error ->
-                    _uiState.value = PaymentUiState.Error(error.message ?: "Failed to confirm payment")
+                    _uiState.value = PaymentUiState.Error(
+                        error.message ?: "Failed to confirm payment",
+                        categorizeError(error.message)
+                    )
                 }
             )
         } catch (e: Exception) {
             Log.e("PaymentViewModel", "Payment processing failed", e)
-            _uiState.value = PaymentUiState.Error(e.message ?: "An error occurred during payment")
+            _uiState.value = PaymentUiState.Error(
+                e.message ?: "An error occurred during payment",
+                categorizeError(e.message)
+            )
         }
     }
 
@@ -325,6 +430,20 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
+     * Categorize an error message into a PaymentErrorType.
+     */
+    private fun categorizeError(message: String?): PaymentErrorType {
+        val msg = message?.lowercase() ?: return PaymentErrorType.GENERIC
+        return when {
+            msg.contains("insufficient") || msg.contains("not enough") || msg.contains("balance") -> PaymentErrorType.INSUFFICIENT_FUNDS
+            msg.contains("expired") || msg.contains("timeout") -> PaymentErrorType.EXPIRED
+            msg.contains("cancelled") || msg.contains("canceled") -> PaymentErrorType.CANCELLED
+            msg.contains("not found") || msg.contains("404") -> PaymentErrorType.NOT_FOUND
+            else -> PaymentErrorType.GENERIC
+        }
+    }
+
+    /**
      * Cancel and reset the payment flow.
      */
     fun cancel() {
@@ -334,10 +453,9 @@ class PaymentViewModel : ViewModel() {
         storedPaymentInfo = null
         storedPaymentOptions = emptyList()
         pendingWalletRpcActions = emptyList()
-        collectDataFields = emptyList()
         collectedValues.clear()
-        currentFieldIndex = 0
-        _uiState.value = PaymentUiState.Loading
+        // Don't set state to Loading here - we're navigating away anyway
+        // and it causes a brief flash of the loading screen
         // Clear replay cache to prevent stale data on next payment
         WalletKitDelegate.clearPaymentOptions()
     }
@@ -351,12 +469,11 @@ sealed class PaymentUiState {
     data object Loading : PaymentUiState()
 
     /**
-     * Intro screen shown before information capture.
+     * WebView-based Information Capture (replaces CollectingData when URL is available).
      */
-    data class Intro(
-        val paymentInfo: Wallet.Model.PaymentInfo?,
-        val hasInfoCapture: Boolean,
-        val estimatedTime: String = "~2min"
+    data class WebViewDataCollection(
+        val url: String,
+        val paymentInfo: Wallet.Model.PaymentInfo?
     ) : PaymentUiState()
 
     data class Options(
@@ -366,14 +483,18 @@ sealed class PaymentUiState {
     ) : PaymentUiState()
 
     /**
-     * State for collecting user data (Information Capture).
+     * Summary screen shown after IC completion, before confirming payment.
      */
-    data class CollectingData(
-        val currentStepIndex: Int,
-        val totalSteps: Int,
-        val currentField: Wallet.Model.CollectDataField,
-        val currentValue: String,
-        val allFields: List<Wallet.Model.CollectDataField>
+    data class Summary(
+        val paymentInfo: Wallet.Model.PaymentInfo?,
+        val selectedOption: Wallet.Model.PaymentOption
+    ) : PaymentUiState()
+
+    /**
+     * Explanation dialog for why information is required.
+     */
+    data class WhyInfoRequired(
+        val paymentInfo: Wallet.Model.PaymentInfo?
     ) : PaymentUiState()
 
     data class Processing(
@@ -383,8 +504,23 @@ sealed class PaymentUiState {
 
     data class Success(
         val message: String,
-        val paymentInfo: Wallet.Model.PaymentInfo? = null
+        val paymentInfo: Wallet.Model.PaymentInfo? = null,
+        val resultInfo: Wallet.Model.PaymentResultInfo? = null
     ) : PaymentUiState()
 
-    data class Error(val message: String) : PaymentUiState()
+    data class Error(
+        val message: String,
+        val errorType: PaymentErrorType = PaymentErrorType.GENERIC
+    ) : PaymentUiState()
+}
+
+/**
+ * Categorized error types for payment failures.
+ */
+enum class PaymentErrorType {
+    INSUFFICIENT_FUNDS,
+    EXPIRED,
+    CANCELLED,
+    NOT_FOUND,
+    GENERIC
 }

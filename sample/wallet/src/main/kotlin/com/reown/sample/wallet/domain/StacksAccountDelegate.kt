@@ -27,12 +27,28 @@ object StacksAccountDelegate {
             wallet
         }
 
+    private fun getOrRecoverWallet(): String {
+        val storedWallet = if (isInitialized) sharedPreferences.getString(WALLET_TAG, null) else null
+        if (storedWallet == null) {
+            return storeWallet()
+        }
+
+        return runCatching {
+            Stacks.getAddress(storedWallet, Stacks.Version.mainnetP2PKH)
+            storedWallet
+        }.getOrElse {
+            storeWallet()
+        }
+    }
+
     val wallet: String
-        get() = if (isInitialized) sharedPreferences.getString(WALLET_TAG, null)!! else storeWallet()
+        get() = getOrRecoverWallet()
 
     var importedWallet: String
         get() = wallet
         set(value) {
+            // Validate before persistence so failed imports don't corrupt state.
+            Stacks.getAddress(value, Stacks.Version.mainnetP2PKH)
             storeWallet(value)
         }
 

@@ -156,8 +156,6 @@ class Web3WalletViewModel : ViewModel() {
 
     fun pair(pairingUri: String) {
         val uri = pairingUri.removePrefix("kotlin-web3wallet://wc?uri=")
-        println("kobe: uri: $uri")
-
         // Check if this is a payment link - use explicit API
         if (WalletKit.Pay.isPaymentLink(uri)) {
             handlePaymentLink(uri)
@@ -185,28 +183,8 @@ class Web3WalletViewModel : ViewModel() {
 
     private fun handlePaymentLink(paymentLink: String) {
         viewModelScope.launch {
-            _isLoadingFlow.value = true
-            val accounts = listOf(
-                "eip155:1:${EthAccountDelegate.address}",
-                "eip155:137:${EthAccountDelegate.address}",
-                "eip155:8453:${EthAccountDelegate.address}",
-                "eip155:10:${EthAccountDelegate.address}"
-            )
-
-            val result = WalletKit.Pay.getPaymentOptions(paymentLink, accounts)
-            result.fold(
-                onSuccess = { response ->
-                    _isLoadingFlow.value = false
-                    // Emit full response for PaymentViewModel to collect via WalletKitDelegate
-                    WalletKitDelegate._paymentOptionsEvent.emit(response)
-                    // Emit paymentId for navigation trigger
-                    _paymentEventFlow.emit(response.paymentId)
-                },
-                onFailure = { error ->
-                    _isLoadingFlow.value = false
-                    _eventsSharedFlow.emit(PairingEvent.Error(error.message ?: "Payment error"))
-                }
-            )
+            // Navigate to payment route immediately — PaymentViewModel handles the fetch
+            _paymentEventFlow.emit(paymentLink)
         }
     }
 }
