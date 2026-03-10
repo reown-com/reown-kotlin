@@ -105,7 +105,6 @@ class WalletKitApplication : Application() {
                 println(error.throwable.stackTraceToString())
             })
 
-        FirebaseAppDistribution.getInstance().updateIfNewReleaseAvailable()
         NotifyClient.initialize(
             init = Notify.Params.Init(CoreClient)
         ) { error ->

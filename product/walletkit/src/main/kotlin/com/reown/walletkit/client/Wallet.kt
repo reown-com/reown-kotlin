@@ -492,7 +492,8 @@ object Wallet {
             PROCESSING,
             SUCCEEDED,
             FAILED,
-            EXPIRED
+            EXPIRED,
+            CANCELLED
         }
 
         data class PaymentAmountDisplay(
@@ -580,7 +581,8 @@ object Wallet {
         data class ConfirmPaymentResponse(
             val status: PaymentStatus,
             val isFinal: Boolean,
-            val pollInMs: Long?
+            val pollInMs: Long?,
+            val info: PaymentResultInfo?
         ) : Model()
     }
 }
