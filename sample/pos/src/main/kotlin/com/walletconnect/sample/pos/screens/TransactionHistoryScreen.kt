@@ -1,7 +1,6 @@
 package com.walletconnect.sample.pos.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,8 +28,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,8 +51,10 @@ import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.TransactionHistoryUiState
+import com.walletconnect.sample.pos.components.BottomSheetHeader
 import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.PosHeader
+import com.walletconnect.sample.pos.components.SelectableOptionItem
 import com.walletconnect.sample.pos.components.TransactionCard
 import com.walletconnect.sample.pos.components.TransactionFilter
 import kotlinx.coroutines.launch
@@ -285,7 +283,7 @@ private fun StatusFilterBottomSheet(
             .fillMaxWidth()
             .padding(WCTheme.spacing.spacing5)
     ) {
-        SheetHeader(title = "Status", onDismiss = onDismiss)
+        BottomSheetHeader(title = "Status", onDismiss = onDismiss)
 
         Spacer(Modifier.height(WCTheme.spacing.spacing7))
 
@@ -297,11 +295,19 @@ private fun StatusFilterBottomSheet(
                 TransactionFilter.PENDING -> WCTheme.colors.foregroundTertiary
                 TransactionFilter.ALL -> null
             }
-            FilterOptionItem(
+            SelectableOptionItem(
                 label = filter.label,
                 isSelected = isSelected,
-                dotColor = dotColor,
-                onClick = { onSelect(filter) }
+                onClick = { onSelect(filter) },
+                leadingIcon = dotColor?.let { color ->
+                    {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(color, CircleShape)
+                        )
+                    }
+                }
             )
             if (filter != TransactionFilter.entries.last()) {
                 Spacer(Modifier.height(WCTheme.spacing.spacing2))
@@ -323,13 +329,13 @@ private fun DateRangeFilterBottomSheet(
             .fillMaxWidth()
             .padding(WCTheme.spacing.spacing5)
     ) {
-        SheetHeader(title = "Date range", onDismiss = onDismiss)
+        BottomSheetHeader(title = "Date range", onDismiss = onDismiss)
 
         Spacer(Modifier.height(WCTheme.spacing.spacing7))
 
         dateRangeOptions.forEachIndexed { index, label ->
             val isSelected = index == selectedOptionIndex
-            FilterOptionItem(
+            SelectableOptionItem(
                 label = label,
                 isSelected = isSelected,
                 onClick = { onSelect(index) }
@@ -340,98 +346,6 @@ private fun DateRangeFilterBottomSheet(
         }
 
         Spacer(Modifier.height(WCTheme.spacing.spacing5))
-    }
-}
-
-@Composable
-private fun SheetHeader(
-    title: String,
-    onDismiss: () -> Unit
-) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = title,
-            style = WCTheme.typography.h6Regular,
-            color = WCTheme.colors.textPrimary,
-            modifier = Modifier.align(Alignment.Center)
-        )
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .align(Alignment.CenterEnd)
-                .clip(RoundedCornerShape(WCTheme.spacing.spacing3))
-                .border(
-                    width = 1.dp,
-                    color = WCTheme.colors.borderSecondary,
-                    shape = RoundedCornerShape(WCTheme.spacing.spacing3)
-                )
-                .clickable(onClick = onDismiss),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = WCTheme.colors.textPrimary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun FilterOptionItem(
-    label: String,
-    isSelected: Boolean,
-    dotColor: Color? = null,
-    onClick: () -> Unit
-) {
-    val shape = RoundedCornerShape(WCBorderRadius.radius4)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(68.dp)
-            .then(
-                if (isSelected) {
-                    Modifier
-                        .border(1.dp, WCTheme.colors.borderAccentPrimary, shape)
-                        .background(WCTheme.colors.foregroundAccentPrimary10, shape)
-                } else {
-                    Modifier.background(WCTheme.colors.foregroundPrimary, shape)
-                }
-            )
-            .clip(shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = WCTheme.spacing.spacing5),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        dotColor?.let { color ->
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .background(color, CircleShape)
-            )
-            Spacer(Modifier.width(WCTheme.spacing.spacing2))
-        }
-        Text(
-            text = label,
-            style = WCTheme.typography.bodyLgRegular,
-            color = WCTheme.colors.textPrimary,
-            modifier = Modifier.weight(1f)
-        )
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .border(1.dp, WCTheme.colors.iconAccentPrimary, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .background(WCTheme.colors.iconAccentPrimary, CircleShape)
-                )
-            }
-        }
     }
 }
 
