@@ -14,7 +14,8 @@ object Pay {
         PROCESSING,
         SUCCEEDED,
         FAILED,
-        EXPIRED
+        EXPIRED,
+        CANCELLED
     }
 
     data class AmountDisplay(
@@ -103,7 +104,7 @@ object Pay {
         val status: PaymentStatus,
         val isFinal: Boolean,
         val pollInMs: Long?,
-        val info: PaymentResultInfo?
+        val info: PaymentResultInfo? = null
     )
 
     sealed class PayError : Exception() {

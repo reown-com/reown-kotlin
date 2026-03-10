@@ -156,7 +156,7 @@ object Signer {
                 }
             }
 
-            sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSign(sessionRequest.param)
+            sessionRequest.method == PERSONAL_SIGN -> EthSigner.personalSignFromParams(sessionRequest.param)
             sessionRequest.method == ETH_SEND_TRANSACTION -> {
                 val txHash = Transaction.send(WalletKitDelegate.sessionRequestEvent!!.first)
                 txHash

@@ -20,11 +20,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetValue
@@ -133,6 +136,7 @@ fun ScanUriRoute(navController: NavController, sheetState: BottomSheetNavigatorS
 
 @Composable
 fun ScanView(navController: NavController, hasCamPermission: Boolean, previewView: PreviewView, previewViewStreamState: StreamState?) {
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Column(
         modifier = Modifier
@@ -171,11 +175,11 @@ fun ScanView(navController: NavController, hasCamPermission: Boolean, previewVie
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp)
+                        .padding(top = statusBarTop + 16.dp)
                 )
                 CloseButton(modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 20.dp, end = 20.dp)
+                    .padding(top = statusBarTop + 20.dp, end = 20.dp)
                     .size(30.dp)
                     .clickable { navController.popBackStack() }
                 )

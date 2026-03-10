@@ -142,6 +142,7 @@ internal object Mappers {
             YttriumPaymentStatus.SUCCEEDED -> Pay.PaymentStatus.SUCCEEDED
             YttriumPaymentStatus.FAILED -> Pay.PaymentStatus.FAILED
             YttriumPaymentStatus.EXPIRED -> Pay.PaymentStatus.EXPIRED
+            YttriumPaymentStatus.CANCELLED -> Pay.PaymentStatus.CANCELLED
         }
     }
 
@@ -241,6 +242,7 @@ internal object Mappers {
             is YttriumConfirmPaymentError.RequestTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.PollingTimeout -> Pay.ConfirmPaymentError.Http(error.v1)
             is YttriumConfirmPaymentError.RateLimited -> Pay.ConfirmPaymentError.Http(error.v1)
+            is YttriumConfirmPaymentError.QuoteExpired -> Pay.ConfirmPaymentError.RouteExpired(error.v1)
         }
     }
 

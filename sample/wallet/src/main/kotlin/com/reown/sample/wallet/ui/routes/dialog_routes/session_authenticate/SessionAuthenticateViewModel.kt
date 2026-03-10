@@ -7,7 +7,6 @@ import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.internal.common.exception.NoConnectivityException
 import com.reown.android.utils.cacao.sign
 import com.reown.sample.wallet.domain.WalletKitDelegate
-import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
@@ -34,7 +33,7 @@ class SessionAuthenticateViewModel : ViewModel() {
 
                 authPayloadParams.chains
                     .forEach { chain ->
-                        val issuer = "did:pkh:$chain:$ACCOUNTS_1_EIP155_ADDRESS"
+                        val issuer = "did:pkh:$chain:${EthAccountDelegate.address}"
                         val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authPayloadParams, issuer))
                         val signature = CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191)
                         val auth = WalletKit.generateAuthObject(authPayloadParams, issuer, signature)
@@ -103,7 +102,7 @@ class SessionAuthenticateViewModel : ViewModel() {
             val messages = mutableListOf<String>()
             sessionAuthenticate.payloadParams.chains
                 .forEach { chain ->
-                    val issuer = "did:pkh:$chain:$ACCOUNTS_1_EIP155_ADDRESS"
+                    val issuer = "did:pkh:$chain:${EthAccountDelegate.address}"
                     val message = try {
                         WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(sessionAuthenticate.payloadParams, issuer))
                     } catch (e: Exception) {
