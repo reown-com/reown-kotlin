@@ -1,195 +1,148 @@
 package com.walletconnect.sample.pos.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.foundation.clickable
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.POSViewModel
-
-// Brand color
-private val BrandColor = Color(0xFF0988F0)
+import com.walletconnect.sample.pos.components.BigAmountDisplay
+import com.walletconnect.sample.pos.components.NumericKeyboard
+import com.walletconnect.sample.pos.components.PosHeader
+import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 
 @Composable
 fun AmountScreen(
     viewModel: POSViewModel,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var amountDisplay by rememberSaveable { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsState()
+    val currency by viewModel.selectedCurrency.collectAsState()
 
-    // Convert display amount (dollars) to minor units (cents)
     fun getAmountInCents(): String {
         val dollars = amountDisplay.toDoubleOrNull() ?: 0.0
         return (dollars * 100).toLong().toString()
     }
 
+    val isValid = amountDisplay.isNotBlank() && (amountDisplay.toDoubleOrNull() ?: 0.0) > 0 && !isLoading
+    val chargeText = if (isValid) {
+        val dollars = amountDisplay.toDoubleOrNull() ?: 0.0
+        "Charge ${formatAmountWithSymbol(String.format("%.2f", dollars), currency)}"
+    } else {
+        "Enter amount"
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
-            .imePadding()
+            .background(WCTheme.colors.bgPrimary)
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .windowInsetsPadding(WindowInsets.navigationBars),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header
-        PosHeader()
+        PosHeader(onBack = onBack)
 
-        // Content
+        // Amount display area
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = WCTheme.spacing.spacing5),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(24.dp))
-
-            Text(
-                "Enter Amount",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
-                textAlign = TextAlign.Center,
-                color = Color.Black
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(
-                "Enter the payment amount in USD",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF666666),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            // Amount input card
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = Color(0xFFF5F5F5),
-                tonalElevation = 0.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    TextField(
-                        value = amountDisplay,
-                        onValueChange = { new ->
-                            // Filter to allow only numbers and one decimal point
-                            val filtered = new
-                                .replace(Regex("[^0-9.]"), "")
-                                .let { s ->
-                                    val firstDot = s.indexOf('.')
-                                    if (firstDot == -1) s else
-                                        s.substring(0, firstDot + 1) + s.substring(firstDot + 1).replace(".", "")
-                                }
-                            // Limit decimal places to 2
-                            val parts = filtered.split(".")
-                            amountDisplay = if (parts.size == 2 && parts[1].length > 2) {
-                                "${parts[0]}.${parts[1].take(2)}"
-                            } else {
-                                filtered
-                            }
-                        },
-                        singleLine = true,
-                        textStyle = TextStyle(
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            textAlign = TextAlign.Center,
-                            color = Color.Black
-                        ),
-                        leadingIcon = {
-                            Text(
-                                "$",
-                                style = MaterialTheme.typography.headlineLarge,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.Black
-                            )
-                        },
-                        placeholder = {
-                            Text(
-                                "0.00",
-                                fontSize = 48.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color(0xFFBBBBBB)
-                            )
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(Modifier.height(8.dp))
-
-                    Text(
-                        "USD",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color(0xFF666666)
-                    )
-                }
-            }
-
             Spacer(Modifier.weight(1f))
 
-            // Start Payment button
-            Button(
-                onClick = {
-                    val amountInCents = getAmountInCents()
-                    if (amountInCents.toLongOrNull() ?: 0L > 0) {
-                        viewModel.createPayment(amountInCents, "USD")
-                    }
-                },
-                enabled = amountDisplay.isNotBlank() &&
-                        (amountDisplay.toDoubleOrNull() ?: 0.0) > 0 &&
-                        !isLoading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = BrandColor,
-                    disabledContainerColor = BrandColor.copy(alpha = 0.5f)
-                )
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(24.dp)
-                    )
-                } else {
-                    Text(
-                        "Start Payment",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+            BigAmountDisplay(
+                currencySymbol = currency.symbol,
+                amount = amountDisplay,
+                symbolPosition = currency.symbolPosition
+            )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.weight(1f))
         }
 
-        // Bottom padding for navigation bars
-        Spacer(
-            Modifier
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .height(16.dp)
+        // Numeric keyboard
+        NumericKeyboard(
+            modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5),
+            onDigit = { digit ->
+                val newAmount = amountDisplay + digit
+                // Limit decimal places to 2
+                val parts = newAmount.split(".")
+                if (parts.size == 2 && parts[1].length > 2) return@NumericKeyboard
+                // Limit total length
+                if (newAmount.replace(".", "").length > 8) return@NumericKeyboard
+                amountDisplay = newAmount
+            },
+            onDecimal = {
+                if (!amountDisplay.contains(".")) {
+                    amountDisplay = if (amountDisplay.isEmpty()) "0." else "$amountDisplay."
+                }
+            },
+            onBackspace = {
+                if (amountDisplay.isNotEmpty()) {
+                    amountDisplay = amountDisplay.dropLast(1)
+                }
+            }
         )
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing4))
+
+        // Charge button
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = WCTheme.spacing.spacing5)
+                .height(WCTheme.spacing.spacing12)
+                .alpha(if (isValid) 1f else 0.6f)
+                .clip(WCTheme.borderRadius.shapeLarge)
+                .background(WCTheme.colors.bgAccentPrimary)
+                .then(
+                    if (isValid) Modifier.clickable {
+                        viewModel.createPayment(getAmountInCents())
+                    } else Modifier
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = WCTheme.colors.textInvert,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(20.dp)
+                )
+            } else {
+                Text(
+                    text = chargeText,
+                    style = WCTheme.typography.bodyLgMedium,
+                    color = WCTheme.colors.textInvert
+                )
+            }
+        }
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing4))
     }
 }

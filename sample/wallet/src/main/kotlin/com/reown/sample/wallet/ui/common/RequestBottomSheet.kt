@@ -133,7 +133,7 @@ private fun ModalHeader(
 
         // App icon
         val iconModifier = Modifier
-            .size(64.dp)
+            .size(WCTheme.spacing.spacing13)
             .clip(WCTheme.borderRadius.shapeLarge)
             .border(
                 width = 1.dp,
@@ -203,7 +203,7 @@ private fun ModalFooter(
         Box(
             modifier = Modifier
                 .weight(1f)
-                .height(48.dp)
+                .height(WCTheme.spacing.spacing11)
                 .clip(WCTheme.borderRadius.shapeLarge)
                 .background(WCTheme.colors.bgPrimary)
                 .border(
@@ -218,8 +218,8 @@ private fun ModalFooter(
         ) {
             if (isLoadingReject) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(WCTheme.spacing.spacing5),
+                    strokeWidth = WCTheme.spacing.spacing05,
                     color = WCTheme.colors.textPrimary
                 )
             } else {
@@ -237,7 +237,7 @@ private fun ModalFooter(
         Box(
             modifier = Modifier
                 .weight(1f)
-                .height(48.dp)
+                .height(WCTheme.spacing.spacing11)
                 .clip(WCTheme.borderRadius.shapeLarge)
                 .background(
                     if (approveEnabled) accentColor else accentColor.copy(alpha = 0.6f)
@@ -253,8 +253,8 @@ private fun ModalFooter(
         ) {
             if (isLoadingApprove) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(WCTheme.spacing.spacing5),
+                    strokeWidth = WCTheme.spacing.spacing05,
                     color = WCTheme.colors.textInvert
                 )
             } else {

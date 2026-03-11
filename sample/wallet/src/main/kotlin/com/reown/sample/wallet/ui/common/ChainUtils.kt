@@ -28,7 +28,7 @@ private val chainRegistry: Map<String, ChainInfo> = mapOf(
     "eip155:421611" to ChainInfo("Arbitrum Rinkeby", com.reown.sample.common.R.drawable.ic_arbitrum, Color(0xFF28A0F0), "A"),
     "eip155:421614" to ChainInfo("Arbitrum Sepolia", com.reown.sample.common.R.drawable.ic_arbitrum, Color(0xFF28A0F0), "A"),
     "eip155:56" to ChainInfo("BNB Smart Chain", com.reown.sample.common.R.drawable.bnb, Color(0xFFF0B90B), "B"),
-    "eip155:8453" to ChainInfo("Base", R.drawable.ic_base, Color(0xFF0052FF), "B"),
+    "eip155:8453" to ChainInfo("Base", R.drawable.ic_base_logo, Color(0xFF0052FF), "B"),
     "eip155:43114" to ChainInfo("Avalanche", R.drawable.ic_avalanche, Color(0xFFE84142), "Av"),
     "eip155:43113" to ChainInfo("Avalanche Fuji", R.drawable.ic_avalanche, Color(0xFFE84142), "Av"),
     "eip155:42220" to ChainInfo("Celo", com.reown.sample.common.R.drawable.ic_celo, Color(0xFFFCFF52), "C"),

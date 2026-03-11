@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import android.net.Uri
 import android.util.Base64
 import android.util.Log
+import com.reown.sample.wallet.ui.routes.dialog_routes.payment.PaymentUiState.*
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -61,7 +63,7 @@ class PaymentViewModel : ViewModel() {
         storedPaymentOptions = response.options
 
         if (response.options.isEmpty()) {
-            _uiState.value = PaymentUiState.Error("No payment options available", PaymentErrorType.GENERIC)
+            _uiState.value = PaymentUiState.Error("No payment options available", PaymentErrorType.INSUFFICIENT_FUNDS)
         } else if (response.options.size == 1 && response.options[0].collectData == null) {
             // Single option with no IC required — skip directly to Summary
             val option = response.options[0]
@@ -267,7 +269,7 @@ class PaymentViewModel : ViewModel() {
      * Called when WebView signals IC_ERROR.
      */
     fun onICWebViewError(errorMessage: String) {
-        _uiState.value = PaymentUiState.Error("Information capture failed: $errorMessage", PaymentErrorType.GENERIC)
+        _uiState.value = PaymentUiState.Error("Information capture failed: $errorMessage", categorizeError(errorMessage))
     }
 
     /**
@@ -337,26 +339,32 @@ class PaymentViewModel : ViewModel() {
                     when (response.status) {
                         Wallet.Model.PaymentStatus.SUCCEEDED -> {
                             Log.d("PaymentViewModel", "Payment SUCCEEDED")
-                            _uiState.value = PaymentUiState.Success(
+                            _uiState.value = Success(
                                 message = "Payment completed successfully!",
-                                paymentInfo = storedPaymentInfo
+                                paymentInfo = storedPaymentInfo,
+                                resultInfo = response.info
                             )
                         }
                         Wallet.Model.PaymentStatus.PROCESSING -> {
                             Log.d("PaymentViewModel", "Payment PROCESSING")
-                            _uiState.value = PaymentUiState.Success(
+                            _uiState.value = Success(
                                 message = "Payment is being processed...",
-                                paymentInfo = storedPaymentInfo
+                                paymentInfo = storedPaymentInfo,
+                                resultInfo = response.info
                             )
                         }
                         Wallet.Model.PaymentStatus.FAILED -> {
-                            _uiState.value = PaymentUiState.Error("Payment failed", PaymentErrorType.GENERIC)
+                            _uiState.value = Error("Payment failed", PaymentErrorType.GENERIC)
                         }
                         Wallet.Model.PaymentStatus.EXPIRED -> {
-                            _uiState.value = PaymentUiState.Error("Payment expired", PaymentErrorType.EXPIRED)
+                            _uiState.value = Error("Payment expired", PaymentErrorType.EXPIRED)
                         }
                         Wallet.Model.PaymentStatus.REQUIRES_ACTION -> {
-                            _uiState.value = PaymentUiState.Error("Additional action required", PaymentErrorType.GENERIC)
+                            _uiState.value = Error("Additional action required", PaymentErrorType.GENERIC)
+                        }
+
+                        Wallet.Model.PaymentStatus.CANCELLED -> {
+                            _uiState.value = Error("Payment was cancelled", PaymentErrorType.CANCELLED)
                         }
                     }
                 },
@@ -391,6 +399,7 @@ class PaymentViewModel : ViewModel() {
         return when {
             msg.contains("insufficient") || msg.contains("not enough") || msg.contains("balance") -> PaymentErrorType.INSUFFICIENT_FUNDS
             msg.contains("expired") || msg.contains("timeout") -> PaymentErrorType.EXPIRED
+            msg.contains("cancelled") || msg.contains("canceled") -> PaymentErrorType.CANCELLED
             msg.contains("not found") || msg.contains("404") -> PaymentErrorType.NOT_FOUND
             else -> PaymentErrorType.GENERIC
         }
@@ -457,7 +466,8 @@ sealed class PaymentUiState {
 
     data class Success(
         val message: String,
-        val paymentInfo: Wallet.Model.PaymentInfo? = null
+        val paymentInfo: Wallet.Model.PaymentInfo? = null,
+        val resultInfo: Wallet.Model.PaymentResultInfo? = null
     ) : PaymentUiState()
 
     data class Error(
@@ -472,6 +482,7 @@ sealed class PaymentUiState {
 enum class PaymentErrorType {
     INSUFFICIENT_FUNDS,
     EXPIRED,
+    CANCELLED,
     NOT_FOUND,
     GENERIC
 }

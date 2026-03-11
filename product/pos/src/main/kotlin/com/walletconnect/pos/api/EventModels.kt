@@ -102,6 +102,7 @@ internal object ErrorCode {
     const val PAYMENT_NOT_FOUND = "PAYMENT_NOT_FOUND"
     const val PAYMENT_EXPIRED = "PAYMENT_EXPIRED"
     const val INVALID_PAYMENT_REQUEST = "INVALID_PAYMENT_REQUEST"
+    const val PAYMENT_CANCELLED = "PAYMENT_CANCELLED"
     const val UNDEFINED_ERROR = "UNDEFINED_ERROR"
 }
 
@@ -115,6 +116,11 @@ internal fun Pos.PaymentEvent.PaymentError.toErrorFields(): ErrorFields {
         is Pos.PaymentEvent.PaymentError.PaymentFailed -> ErrorFields(
             category = ErrorCategory.PAYMENT,
             code = ErrorCode.PAYMENT_FAILED,
+            message = message
+        )
+        is Pos.PaymentEvent.PaymentError.PaymentCancelled -> ErrorFields(
+            category = ErrorCategory.PAYMENT,
+            code = ErrorCode.PAYMENT_CANCELLED,
             message = message
         )
         is Pos.PaymentEvent.PaymentError.PaymentNotFound -> ErrorFields(

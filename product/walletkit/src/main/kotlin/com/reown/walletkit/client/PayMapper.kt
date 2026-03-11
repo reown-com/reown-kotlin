@@ -32,6 +32,7 @@ internal fun Pay.PaymentStatus.toWallet(): Wallet.Model.PaymentStatus =
         Pay.PaymentStatus.SUCCEEDED -> Wallet.Model.PaymentStatus.SUCCEEDED
         Pay.PaymentStatus.FAILED -> Wallet.Model.PaymentStatus.FAILED
         Pay.PaymentStatus.EXPIRED -> Wallet.Model.PaymentStatus.EXPIRED
+        Pay.PaymentStatus.CANCELLED -> Wallet.Model.PaymentStatus.CANCELLED
     }
 
 @JvmSynthetic
@@ -123,7 +124,8 @@ internal fun Pay.ConfirmPaymentResponse.toWallet(): Wallet.Model.ConfirmPaymentR
     Wallet.Model.ConfirmPaymentResponse(
         status = status.toWallet(),
         isFinal = isFinal,
-        pollInMs = pollInMs
+        pollInMs = pollInMs,
+        info = info?.toWallet()
     )
 
 // Wallet.Model -> Pay mappers (for request types)
