@@ -166,7 +166,15 @@ private fun ScanContent(
         // QR Code
         StyledQrCode(data = qrUrl, size = 320.dp)
 
-        Spacer(Modifier.height(WCTheme.spacing.spacing4))
+        Spacer(Modifier.height(WCTheme.spacing.spacing3))
+
+        Text(
+            text = "or tap to pay",
+            style = WCTheme.typography.bodyMdRegular,
+            color = WCTheme.colors.textTertiary
+        )
+
+        Spacer(Modifier.height(WCTheme.spacing.spacing3))
 
         // Expiration countdown
         if (remainingSeconds > 0) {
