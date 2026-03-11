@@ -483,7 +483,7 @@ private fun StatusIcon(status: Pos.TransactionStatus) {
 private fun Pos.TransactionStatus.iconAndColor(): Pair<ImageVector, Color> {
     return when (this) {
         Pos.TransactionStatus.SUCCEEDED -> Icons.Filled.CheckCircle to Color(0xFF4CAF50)
-        Pos.TransactionStatus.FAILED, Pos.TransactionStatus.EXPIRED -> Icons.Filled.Warning to Color(0xFFF44336)
+        Pos.TransactionStatus.FAILED, Pos.TransactionStatus.EXPIRED, Pos.TransactionStatus.CANCELLED -> Icons.Filled.Warning to Color(0xFFF44336)
         Pos.TransactionStatus.PROCESSING, Pos.TransactionStatus.REQUIRES_ACTION -> Icons.Filled.Refresh to Color(0xFFFF9800)
         Pos.TransactionStatus.UNKNOWN -> Icons.Filled.Refresh to Color.Gray
     }
@@ -493,6 +493,7 @@ private fun Pos.TransactionStatus.displayName(): String = when (this) {
     Pos.TransactionStatus.SUCCEEDED -> "Completed"
     Pos.TransactionStatus.FAILED -> "Failed"
     Pos.TransactionStatus.EXPIRED -> "Expired"
+    Pos.TransactionStatus.CANCELLED -> "Cancelled"
     Pos.TransactionStatus.PROCESSING -> "Processing"
     Pos.TransactionStatus.REQUIRES_ACTION -> "Pending"
     Pos.TransactionStatus.UNKNOWN -> "Unknown"
@@ -500,7 +501,7 @@ private fun Pos.TransactionStatus.displayName(): String = when (this) {
 
 private fun Pos.TransactionStatus.color(): Color = when (this) {
     Pos.TransactionStatus.SUCCEEDED -> Color(0xFF4CAF50)
-    Pos.TransactionStatus.FAILED, Pos.TransactionStatus.EXPIRED -> Color(0xFFF44336)
+    Pos.TransactionStatus.FAILED, Pos.TransactionStatus.EXPIRED, Pos.TransactionStatus.CANCELLED -> Color(0xFFF44336)
     Pos.TransactionStatus.PROCESSING, Pos.TransactionStatus.REQUIRES_ACTION -> Color(0xFFFF9800)
     Pos.TransactionStatus.UNKNOWN -> Color.Gray
 }

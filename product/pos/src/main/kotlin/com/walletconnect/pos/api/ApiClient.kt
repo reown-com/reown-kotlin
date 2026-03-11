@@ -294,7 +294,6 @@ internal class ApiClient(
     ): ApiResult<TransactionHistoryResponse> {
         return try {
             val response = payApi.getTransactionHistory(
-                merchantId = merchantId,
                 limit = limit,
                 cursor = cursor,
                 status = status,

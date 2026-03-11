@@ -114,6 +114,7 @@ object Pos {
         SUCCEEDED("succeeded"),
         EXPIRED("expired"),
         FAILED("failed"),
+        CANCELLED("cancelled"),
         UNKNOWN("unknown")
     }
 

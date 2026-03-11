@@ -15,15 +15,14 @@ internal interface PayApi {
     @GET("v1/merchant/payment/{id}/status")
     suspend fun getPaymentStatus(@Path("id") paymentId: String): Response<GetPaymentStatusResponse>
 
-    @GET("v1/merchants/{merchant_id}/payments")
+    @GET("v1/merchants/payments")
     suspend fun getTransactionHistory(
-        @Path("merchant_id") merchantId: String,
         @Query("limit") limit: Int? = null,
         @Query("cursor") cursor: String? = null,
         @Query("status") status: String? = null,
-        @Query("sort_by") sortBy: String? = null,
-        @Query("sort_dir") sortDir: String? = null,
-        @Query("start_ts") startTs: String? = null,
-        @Query("end_ts") endTs: String? = null
+        @Query("sortBy") sortBy: String? = null,
+        @Query("sortDir") sortDir: String? = null,
+        @Query("startTs") startTs: String? = null,
+        @Query("endTs") endTs: String? = null
     ): Response<TransactionHistoryResponse>
 }
