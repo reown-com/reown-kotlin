@@ -121,25 +121,25 @@ object PosClient {
     }
 
     /**
-     * Cancels any ongoing polling, calls the cancel payment API endpoint,
-     * and releases resources.
+     * Cancels an active payment by calling the cancel API endpoint.
+     * If the server confirms cancellation, polling is stopped and resources are released.
+     * If the cancel request fails, polling continues unchanged.
      *
-     * Call this when the payment flow is cancelled by the user
-     * or when the POS screen is closed. The API call is fire-and-forget;
-     * errors are silently ignored.
+     * @return true if the payment was successfully cancelled, false otherwise
+     * @throws IllegalStateException if SDK is not initialized
      */
-    fun cancelPayment() {
-        val paymentId = apiClient?.activePollingState?.paymentId
-        currentPollingJob?.cancel()
-        currentPollingJob = null
-        apiClient?.clearActivePollingState()
+    @Throws(IllegalStateException::class)
+    suspend fun cancelPayment(): Boolean {
+        checkInitialized()
+        val paymentId = apiClient?.activePollingState?.paymentId ?: return false
 
-        // Silently call the cancel endpoint (fire-and-forget)
-        if (paymentId != null) {
-            scope?.launch {
-                apiClient?.cancelPayment(paymentId)
-            }
+        val cancelled = apiClient!!.cancelPayment(paymentId)
+        if (cancelled) {
+            currentPollingJob?.cancel()
+            currentPollingJob = null
+            apiClient?.clearActivePollingState()
         }
+        return cancelled
     }
 
     /**

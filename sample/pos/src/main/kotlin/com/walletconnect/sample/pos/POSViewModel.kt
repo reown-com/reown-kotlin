@@ -229,8 +229,10 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun cancelPayment() {
-        PosClient.cancelPayment()
-        _isLoading.value = false
+        viewModelScope.launch {
+            PosClient.cancelPayment()
+            _isLoading.value = false
+        }
     }
 
     fun printReceipt() {

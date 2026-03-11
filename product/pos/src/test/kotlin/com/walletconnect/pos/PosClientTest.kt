@@ -104,7 +104,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `createPaymentIntent - succeeds when initialized`() {
+    fun `createPaymentIntent - succeeds when initialized`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         var eventReceived = false
@@ -124,10 +124,10 @@ class PosClientTest {
 
         // Cancel the payment to prevent ongoing network calls
         PosClient.cancelPayment()
-    }
+    } }
 
     @Test
-    fun `createPaymentIntent - accepts various currency units`() {
+    fun `createPaymentIntent - accepts various currency units`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
@@ -145,10 +145,10 @@ class PosClientTest {
             referenceId = "ORDER-GBP"
         )
         PosClient.cancelPayment()
-    }
+    } }
 
     @Test
-    fun `createPaymentIntent - cancels previous payment when called again`() {
+    fun `createPaymentIntent - cancels previous payment when called again`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         val events = mutableListOf<Pos.PaymentEvent>()
@@ -174,7 +174,7 @@ class PosClientTest {
 
         Thread.sleep(100)
         PosClient.cancelPayment()
-    }
+    } }
 
     @Test
     fun `checkPaymentStatus - throws when not initialized`() {
@@ -186,7 +186,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `checkPaymentStatus - returns error event for invalid payment`() = runBlocking {
+    fun `checkPaymentStatus - returns error event for invalid payment`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         // This will make a real network call and likely fail
@@ -194,7 +194,7 @@ class PosClientTest {
 
         // Should return an error event (network error or payment not found)
         assertNotNull(result)
-    }
+    } }
 
     @Test
     fun `setDelegate - can set delegate before init`() {
@@ -219,7 +219,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `delegate - receives events from createPaymentIntent`() {
+    fun `delegate - receives events from createPaymentIntent`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         val latch = CountDownLatch(1)
@@ -243,33 +243,35 @@ class PosClientTest {
 
         // We should have received some event (likely an error due to test environment)
         assertNotNull(receivedEvent)
-    }
+    } }
 
     @Test
-    fun `cancelPayment - safe to call when not polling`() {
+    fun `cancelPayment - safe to call when not polling`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.cancelPayment()
         // No exception means success
-    }
+    } }
 
     @Test
-    fun `cancelPayment - safe to call multiple times`() {
+    fun `cancelPayment - safe to call multiple times`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.cancelPayment()
         PosClient.cancelPayment()
         PosClient.cancelPayment()
         // No exception means success
+    } }
+
+    @Test
+    fun `cancelPayment - throws when not initialized`() {
+        assertThrows(IllegalStateException::class.java) {
+            runBlocking {
+                PosClient.cancelPayment()
+            }
+        }
     }
 
     @Test
-    fun `cancelPayment - safe to call before init`() {
-        // Note: This tests current behavior - cancelPayment doesn't require init
-        PosClient.cancelPayment()
-        // No exception means success
-    }
-
-    @Test
-    fun `cancelPayment - stops ongoing payment polling`() {
+    fun `cancelPayment - stops ongoing payment polling`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         val events = mutableListOf<Pos.PaymentEvent>()
@@ -291,7 +293,7 @@ class PosClientTest {
         Thread.sleep(200)
         // Events should not increase significantly after cancel
         assertTrue(events.size <= eventsAfterCancel + 1)
-    }
+    } }
 
     @Test
     fun `shutdown - safe to call multiple times`() {
@@ -372,7 +374,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `referenceId - can be empty string`() {
+    fun `referenceId - can be empty string`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
@@ -384,7 +386,7 @@ class PosClientTest {
             referenceId = ""
         )
         PosClient.cancelPayment()
-    }
+    } }
 
     @Test
     fun `pause - safe to call before init`() {
@@ -413,7 +415,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `pause and resume - does not resume after cancelPayment`() {
+    fun `pause and resume - does not resume after cancelPayment`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
@@ -429,10 +431,10 @@ class PosClientTest {
         PosClient.cancelPayment()
         PosClient.resume()
         // No exception means success
-    }
+    } }
 
     @Test
-    fun `referenceId - accepts special characters`() {
+    fun `referenceId - accepts special characters`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
@@ -443,5 +445,5 @@ class PosClientTest {
             referenceId = "ORDER-123_ABC/2024"
         )
         PosClient.cancelPayment()
-    }
+    } }
 }
