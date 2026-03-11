@@ -100,7 +100,7 @@ object Pos {
             if (tokenAmount == null || tokenDecimals == null) return null
             val value = tokenAmount.toBigDecimalOrNull() ?: return tokenAmount
             val divisor = java.math.BigDecimal.TEN.pow(tokenDecimals)
-            return value.divide(divisor, maxOf(tokenDecimals, 18), java.math.RoundingMode.DOWN)
+            return value.divide(divisor, tokenDecimals, java.math.RoundingMode.DOWN)
                 .stripTrailingZeros()
                 .toPlainString()
         }

@@ -2,6 +2,7 @@ package com.walletconnect.pos
 
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -446,4 +447,99 @@ class PosClientTest {
         )
         PosClient.cancelPayment()
     } }
+
+    @Test
+    fun `createPaymentIntent - throws on non-numeric amount value`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            PosClient.createPaymentIntent(
+                amount = Pos.Amount(unit = "iso4217/USD", value = "abc"),
+                referenceId = "ORDER-123"
+            )
+        }
+    }
+
+    @Test
+    fun `createPaymentIntent - throws on decimal amount value`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            PosClient.createPaymentIntent(
+                amount = Pos.Amount(unit = "iso4217/USD", value = "10.50"),
+                referenceId = "ORDER-123"
+            )
+        }
+    }
+
+    @Test
+    fun `createPaymentIntent - throws on negative amount value`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            PosClient.createPaymentIntent(
+                amount = Pos.Amount(unit = "iso4217/USD", value = "-100"),
+                referenceId = "ORDER-123"
+            )
+        }
+    }
+
+    @Test
+    fun `createPaymentIntent - accepts zero amount`() { runBlocking {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.setDelegate(object : POSDelegate {
+            override fun onEvent(event: Pos.PaymentEvent) {}
+        })
+
+        PosClient.createPaymentIntent(
+            amount = Pos.Amount(unit = "iso4217/USD", value = "0"),
+            referenceId = "ORDER-123"
+        )
+        PosClient.cancelPayment()
+    } }
+
+    @Test
+    fun `getTransactionHistory - throws on invalid limit`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                PosClient.getTransactionHistory(limit = 0)
+            }
+        }
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                PosClient.getTransactionHistory(limit = 201)
+            }
+        }
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                PosClient.getTransactionHistory(limit = -1)
+            }
+        }
+    }
+
+    @Test
+    fun `formatTokenAmount - uses exact token decimals`() {
+        val tx = Pos.Transaction(
+            paymentId = "pay_1",
+            referenceId = null,
+            status = Pos.TransactionStatus.SUCCEEDED,
+            txHash = null,
+            fiatAmount = null,
+            fiatCurrency = null,
+            tokenAmount = "1000000",
+            tokenSymbol = "USDC",
+            tokenDecimals = 6,
+            tokenLogo = null,
+            network = null,
+            chainId = null,
+            walletName = "Test",
+            createdAt = null,
+            confirmedAt = null
+        )
+        assertEquals("1", tx.formatTokenAmount())
+    }
 }

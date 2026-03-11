@@ -1,7 +1,6 @@
 package com.walletconnect.pos.api
 
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.walletconnect.pos.BuildConfig
 import com.walletconnect.pos.Pos
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -10,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.text.SimpleDateFormat
@@ -23,25 +21,14 @@ import java.util.concurrent.TimeUnit
 internal class EventTracker(
     private val merchantId: String,
     private val scope: CoroutineScope,
+    moshi: Moshi,
+    baseHttpClient: OkHttpClient,
     baseUrl: String = BuildConfig.INGEST_BASE_URL
 ) {
-    private val moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
-
-    private val httpClient = OkHttpClient.Builder()
+    private val httpClient = baseHttpClient.newBuilder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
         .writeTimeout(15, TimeUnit.SECONDS)
-        .apply {
-            if (BuildConfig.DEBUG) {
-                addInterceptor(HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
-                    redactHeader("Api-Key")
-                    redactHeader("Merchant-Id")
-                })
-            }
-        }
         .build()
 
     private val retrofit = Retrofit.Builder()
@@ -58,7 +45,7 @@ internal class EventTracker(
         }.format(Date())
     }
 
-    private val silentExceptionHandler = CoroutineExceptionHandler { _, t -> println(t) }
+    private val silentExceptionHandler = CoroutineExceptionHandler { _, _ -> }
 
     companion object {
         private const val MAX_RETRIES = 3

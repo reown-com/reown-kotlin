@@ -1,14 +1,12 @@
 package com.walletconnect.pos.api
 
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.walletconnect.pos.BuildConfig
 import com.walletconnect.pos.Pos
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -23,34 +21,24 @@ internal class ApiClient(
     private val merchantId: String,
     private val eventTracker: EventTracker,
     private val errorTracker: ErrorTracker,
+    moshi: Moshi,
+    baseHttpClient: OkHttpClient,
     baseUrl: String = BuildConfig.CORE_API_BASE_URL
 ) {
     companion object {
         private const val WCP_VERSION = "2026-02-19.preview"
         private const val MIN_POLL_INTERVAL_MS = 1000L
+        private const val MAX_POLL_INTERVAL_MS = 30_000L
         private const val MAX_TRANSIENT_RETRIES = 3
     }
 
-    private val moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
-
     private val errorAdapter = moshi.adapter(ApiErrorWrapper::class.java)
 
-    private val httpClient = OkHttpClient.Builder()
+    private val httpClient = baseHttpClient.newBuilder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(createHeadersInterceptor())
-        .apply {
-            if (BuildConfig.DEBUG) {
-                addInterceptor(HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
-                    redactHeader("Api-Key")
-                    redactHeader("Merchant-Id")
-                })
-            }
-        }
         .build()
 
     private val retrofit = Retrofit.Builder()
@@ -117,7 +105,6 @@ internal class ApiClient(
                 onEvent(paymentError)
             }
         } catch (e: CancellationException) {
-            // Rethrow cancellation to properly propagate coroutine cancellation
             throw e
         } catch (e: IOException) {
             errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "createPayment")
@@ -191,10 +178,8 @@ internal class ApiClient(
 
                     is ApiResult.Error -> {
                         if (isSdkError(result.code) && ++consecutiveTransientErrors <= MAX_TRANSIENT_RETRIES) {
-                            // Transient error (network/parse) — retry after delay
                             delay(MIN_POLL_INTERVAL_MS)
                         } else {
-                            // Persistent or API error — stop polling
                             activePollingState = null
                             val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
                             eventTracker.trackPaymentFailed(paymentId, context, paymentError)
@@ -244,7 +229,6 @@ internal class ApiClient(
                 ApiResult.Error(error.code, error.message)
             }
         } catch (e: CancellationException) {
-            // Rethrow cancellation to properly propagate coroutine cancellation
             throw e
         } catch (e: IOException) {
             errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "getPaymentStatus")
