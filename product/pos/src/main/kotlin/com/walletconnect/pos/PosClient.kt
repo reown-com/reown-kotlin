@@ -150,31 +150,25 @@ object PosClient {
     }
 
     /**
-     * Cancels an active payment by calling the cancel API endpoint.
-     * If the server confirms cancellation, polling is stopped and resources are released.
-     * If the cancel request fails, polling continues unchanged.
+     * Cancels an active payment.
      *
-     * @return true if the payment was successfully cancelled, false otherwise
-     * @throws IllegalStateException if SDK is not initialized
+     * Immediately stops polling and clears state so the UI can navigate away without waiting.
+     * The cancel API request is sent in the background on a best-effort basis;
+     * failures are silently ignored since the user does not need to know.
      */
-    @Throws(IllegalStateException::class)
-    suspend fun cancelPayment(): Boolean {
-        val (client, paymentId) = synchronized(lock) {
-            checkInitialized()
-            val client = apiClient!!
-            val paymentId = client.activePollingState?.paymentId ?: return false
-            Pair(client, paymentId)
-        }
-
-        val cancelled = client.cancelPayment(paymentId)
-        if (cancelled) {
-            synchronized(lock) {
-                currentPollingJob?.cancel()
-                currentPollingJob = null
-                apiClient?.clearActivePollingState()
+    fun cancelPayment() {
+        synchronized(lock) {
+            currentPollingJob?.cancel()
+            currentPollingJob = null
+            val client = apiClient
+            val paymentId = client?.activePollingState?.paymentId
+            client?.clearActivePollingState()
+            if (client != null && paymentId != null) {
+                scope?.launch {
+                    client.cancelPayment(paymentId)
+                }
             }
         }
-        return cancelled
     }
 
     /**

@@ -121,14 +121,13 @@ internal class ApiClient(
         activePollingState = null
     }
 
-    suspend fun cancelPayment(paymentId: String): Boolean {
-        return try {
-            val response = payApi.cancelPayment(paymentId)
-            response.isSuccessful
+    suspend fun cancelPayment(paymentId: String) {
+        try {
+            payApi.cancelPayment(paymentId)
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            false
+            // Best-effort — failures are silently ignored
         }
     }
 

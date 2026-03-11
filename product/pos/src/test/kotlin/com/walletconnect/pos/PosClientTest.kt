@@ -247,32 +247,29 @@ class PosClientTest {
     } }
 
     @Test
-    fun `cancelPayment - safe to call when not polling`() { runBlocking {
+    fun `cancelPayment - safe to call when not polling`() {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.cancelPayment()
         // No exception means success
-    } }
-
-    @Test
-    fun `cancelPayment - safe to call multiple times`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
-        PosClient.cancelPayment()
-        PosClient.cancelPayment()
-        PosClient.cancelPayment()
-        // No exception means success
-    } }
-
-    @Test
-    fun `cancelPayment - throws when not initialized`() {
-        assertThrows(IllegalStateException::class.java) {
-            runBlocking {
-                PosClient.cancelPayment()
-            }
-        }
     }
 
     @Test
-    fun `cancelPayment - stops ongoing payment polling`() { runBlocking {
+    fun `cancelPayment - safe to call multiple times`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.cancelPayment()
+        PosClient.cancelPayment()
+        PosClient.cancelPayment()
+        // No exception means success
+    }
+
+    @Test
+    fun `cancelPayment - safe to call before init`() {
+        PosClient.cancelPayment()
+        // No exception means success — fire-and-forget is safe even before init
+    }
+
+    @Test
+    fun `cancelPayment - stops ongoing payment polling`() {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         val events = mutableListOf<Pos.PaymentEvent>()
@@ -294,7 +291,7 @@ class PosClientTest {
         Thread.sleep(200)
         // Events should not increase significantly after cancel
         assertTrue(events.size <= eventsAfterCancel + 1)
-    } }
+    }
 
     @Test
     fun `shutdown - safe to call multiple times`() {
