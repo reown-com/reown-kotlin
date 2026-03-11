@@ -150,23 +150,25 @@ object PosClient {
     }
 
     /**
-     * Cancels an active payment by calling the cancel API endpoint.
-     * If the server confirms cancellation, polling is stopped and resources are released.
-     * If the cancel request fails, polling continues unchanged.
+     * Cancels an active payment.
      *
-     * @return true if the payment was successfully cancelled, false otherwise
-     * @throws IllegalStateException if SDK is not initialized
+     * Immediately stops polling and clears state so the UI can navigate away without waiting.
+     * The cancel API request is sent in the background on a best-effort basis;
+     * failures are silently ignored since the user does not need to know.
      */
     fun cancelPayment() {
-        currentPollingJob?.cancel()
-        currentPollingJob = null
-        // Cancel and recreate the scope to forcibly terminate in-flight HTTP
-        // calls. Job.cancel() is cooperative — an OkHttp call on Dispatchers.IO
-        // may finish before the next suspension point, letting the polling loop
-        // continue. Cancelling the scope ensures immediate termination.
-        scope?.cancel()
-        scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        apiClient?.clearActivePollingState()
+        synchronized(lock) {
+            currentPollingJob?.cancel()
+            currentPollingJob = null
+            val client = apiClient
+            val paymentId = client?.activePollingState?.paymentId
+            client?.clearActivePollingState()
+            if (client != null && paymentId != null) {
+                scope?.launch {
+                    client.cancelPayment(paymentId)
+                }
+            }
+        }
     }
 
     /**
