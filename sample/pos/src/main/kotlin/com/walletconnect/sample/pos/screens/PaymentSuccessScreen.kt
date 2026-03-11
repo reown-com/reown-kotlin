@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -48,6 +49,8 @@ import kotlin.math.ceil
 import kotlin.math.sqrt
 
 private const val INITIAL_CIRCLE_SIZE = 20
+private val ButtonDarkBg = Color(0xFF202020)
+private val ButtonWhiteText = Color.White
 
 @Composable
 fun PaymentSuccessScreen(
@@ -108,7 +111,7 @@ fun PaymentSuccessScreen(
 
             BrandLogoRow(
                 modifier = Modifier.fillMaxWidth(),
-                colorFilter = ColorFilter.tint(WCTheme.colors.textInvert)
+                colorFilter = ColorFilter.tint(Color.White)
             )
 
             // Center content
@@ -117,7 +120,7 @@ fun PaymentSuccessScreen(
             Text(
                 text = "Payment successful",
                 style = WCTheme.typography.bodyXlRegular,
-                color = WCTheme.colors.textInvert,
+                color = Color.White,
                 textAlign = TextAlign.Center
             )
 
@@ -127,7 +130,7 @@ fun PaymentSuccessScreen(
                 Text(
                     text = displayAmount.uppercase(),
                     style = WCTheme.typography.h3Regular,
-                    color = WCTheme.colors.textInvert,
+                    color = Color.White,
                     textAlign = TextAlign.Center
                 )
             }
@@ -140,7 +143,7 @@ fun PaymentSuccessScreen(
                     .fillMaxWidth()
                     .height(WCTheme.spacing.spacing12)
                     .clip(WCTheme.borderRadius.shapeLarge)
-                    .background(WCTheme.colors.bgInvert)
+                    .background(ButtonDarkBg)
                     .clickable(onClick = onPrintReceipt),
                 contentAlignment = Alignment.Center
             ) {
@@ -151,7 +154,7 @@ fun PaymentSuccessScreen(
                     Text(
                         text = "Print receipt",
                         style = WCTheme.typography.bodyLgMedium,
-                        color = WCTheme.colors.textInvert
+                        color = ButtonWhiteText
                     )
                     Spacer(Modifier.width(WCTheme.spacing.spacing2))
                     Icon(
@@ -171,7 +174,7 @@ fun PaymentSuccessScreen(
                     .fillMaxWidth()
                     .height(WCTheme.spacing.spacing12)
                     .clip(WCTheme.borderRadius.shapeLarge)
-                    .background(WCTheme.colors.bgInvert)
+                    .background(ButtonDarkBg)
                     .clickable(onClick = onNewPayment),
                 contentAlignment = Alignment.Center
             ) {
@@ -182,7 +185,7 @@ fun PaymentSuccessScreen(
                     Text(
                         text = "New payment",
                         style = WCTheme.typography.bodyLgMedium,
-                        color = WCTheme.colors.textInvert
+                        color = ButtonWhiteText
                     )
                     Spacer(Modifier.width(WCTheme.spacing.spacing2))
                     Icon(
