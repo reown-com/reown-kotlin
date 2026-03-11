@@ -83,15 +83,15 @@ dependencies {
     implementation(libs.androidx.compose.navigation)
     implementation(libs.androidx.compose.lifecycle)
 
-    implementation("androidx.compose.material3:material3:1.3.2")
     implementation("io.coil-kt.coil3:coil-compose:3.3.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
     implementation("io.coil-kt.coil3:coil-svg:3.3.0")
-    implementation("com.google.zxing:core:3.5.3")
+    implementation("androidx.compose.material:material-icons-extended")
 
     implementation(libs.androidx.core)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.material)
+    implementation(libs.androidx.splashscreen)
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")

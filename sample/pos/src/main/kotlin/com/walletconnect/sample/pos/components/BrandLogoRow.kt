@@ -1,0 +1,57 @@
+package com.walletconnect.sample.pos.components
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.R
+
+@Composable
+fun BrandLogoRow(
+    modifier: Modifier = Modifier,
+    colorFilter: ColorFilter = ColorFilter.tint(WCTheme.colors.textPrimary)
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_wcpay_logo),
+            contentDescription = "WCPay",
+            modifier = Modifier
+                .width(60.dp)
+                .height(18.dp),
+            contentScale = ContentScale.Fit,
+            colorFilter = colorFilter
+        )
+        Spacer(Modifier.width(WCTheme.spacing.spacing2))
+        Image(
+            painter = painterResource(R.drawable.ic_plus_header),
+            contentDescription = "+",
+            modifier = Modifier.size(20.dp),
+            colorFilter = colorFilter
+        )
+        Spacer(Modifier.width(WCTheme.spacing.spacing2))
+        Image(
+            painter = painterResource(R.drawable.ic_ingenico_logo),
+            contentDescription = "Ingenico",
+            modifier = Modifier
+                .width(78.dp)
+                .height(22.dp),
+            contentScale = ContentScale.Fit,
+            colorFilter = colorFilter
+        )
+    }
+}
