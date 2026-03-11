@@ -12,7 +12,7 @@ internal interface MerchantApi {
         @Path("merchant_id") merchantId: String,
         @Query("limit") limit: Int? = null,
         @Query("cursor") cursor: String? = null,
-        @Query("status") status: String? = null,
+        @Query("status") status: List<String>? = null,
         @Query("sort_by") sortBy: String? = null,
         @Query("sort_dir") sortDir: String? = null,
         @Query("start_ts") startTs: String? = null,

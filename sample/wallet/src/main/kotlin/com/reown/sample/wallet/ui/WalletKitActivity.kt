@@ -56,7 +56,6 @@ import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.ThemeManager
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
-//import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
@@ -97,17 +96,6 @@ class WalletKitActivity : AppCompatActivity() {
         setBeagle()
     }
 
-//    override fun onResume() {
-//        super.onResume()
-//
-//        CoreClient.Relay.connect { error: Core.Model.Error -> println("kobe: connect error: $error") }
-//    }
-//
-//    override fun onPause() {
-//        super.onPause()
-//
-//        CoreClient.Relay.disconnect { error: Core.Model.Error -> println("kobe: disconnect error: $error") }
-//    }
 
     @OptIn(ExperimentalMaterialNavigationApi::class)
     private fun setContent(
@@ -311,35 +299,6 @@ class WalletKitActivity : AppCompatActivity() {
                     )
                 )
             },
-//            TextModule(text = "Solana public key"),
-//            TextModule(text = SolanaAccountDelegate.keys.second) {
-//                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
-//                    ClipData.newPlainText(
-//                        "Solana Account",
-//                        SolanaAccountDelegate.keys.second
-//                    )
-//                )
-//            },
-//            PaddingModule(size = PaddingModule.Size.LARGE),
-//            TextModule(text = "Solana private key"),
-//            TextModule(text = SolanaAccountDelegate.keys.first) {
-//                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
-//                    ClipData.newPlainText(
-//                        "Solana Private Key",
-//                        SolanaAccountDelegate.keys.first
-//                    )
-//                )
-//            },
-//            PaddingModule(size = PaddingModule.Size.LARGE),
-//            TextModule(text = "Solana Key Pair"),
-//            TextModule(text = SolanaAccountDelegate.keyPair) {
-//                (getSystemService(CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
-//                    ClipData.newPlainText(
-//                        "Solana Key Pair",
-//                        SolanaAccountDelegate.keyPair
-//                    )
-//                )
-//            },
             PaddingModule(size = PaddingModule.Size.LARGE),
             TextModule(text = "Client ID"),
             TextModule(text = CoreClient.Push.clientId, id = CoreClient.Push.clientId) {
@@ -355,27 +314,8 @@ class WalletKitActivity : AppCompatActivity() {
                 onValueChanged = { text ->
 
                     EthAccountDelegate.privateKey = text
-//                    NotifyClient.unregister(
-//                        params = Notify.Params.Unregister(
-//                            EthAccountDelegate.ethAccount,
-//                        ),
-//                        onSuccess = {
-//                            println("Unregister Success")
-//                            EthAccountDelegate.privateKey = text
-//                            registerAccount()
-//                        },
-//                        onError = { println(it.throwable.stackTraceToString()) }
-//                    )
                 }
             ),
-//            DividerModule(),
-//            TextInputModule(
-//                text = "Import Solana Key Pair",
-//                areRealTimeUpdatesEnabled = false,
-//                onValueChanged = { text ->
-//                    SolanaAccountDelegate.keyPair = text
-//                }
-//            )
         )
     }
 

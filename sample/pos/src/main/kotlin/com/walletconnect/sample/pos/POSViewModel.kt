@@ -1,15 +1,24 @@
 package com.walletconnect.sample.pos
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import com.walletconnect.sample.pos.components.TransactionFilter
+import com.walletconnect.sample.pos.model.Currency
+import com.walletconnect.sample.pos.model.ThemeMode
+import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.net.URI
 
@@ -17,10 +26,11 @@ sealed interface PosNavEvent {
     data object ToStart : PosNavEvent
     data object ToAmount : PosNavEvent
     data object FlowFinished : PosNavEvent
-    data class QrReady(val uri: URI, val amount: Pos.Amount, val paymentId: String) : PosNavEvent
+    data class QrReady(val uri: URI, val amount: Pos.Amount, val paymentId: String, val expiresAt: Long) : PosNavEvent
     data class ToErrorScreen(val error: String) : PosNavEvent
-    data class PaymentSuccessScreen(val paymentId: String, val info: Pos.PaymentInfo?) : PosNavEvent
+    data class PaymentSuccessScreen(val paymentId: String, val info: Pos.PaymentInfo?, val amount: Pos.Amount?) : PosNavEvent
     data object ToTransactionHistory : PosNavEvent
+    data object ToSettings : PosNavEvent
 }
 
 sealed interface PosEvent {
@@ -45,7 +55,9 @@ sealed interface TransactionHistoryUiState {
     data class Error(val message: String) : TransactionHistoryUiState
 }
 
-class POSViewModel : ViewModel() {
+class POSViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _posNavEventsFlow: MutableSharedFlow<PosNavEvent> = MutableSharedFlow()
     val posNavEventsFlow = _posNavEventsFlow.asSharedFlow()
@@ -54,8 +66,40 @@ class POSViewModel : ViewModel() {
     val posEventsFlow = _posEventsFlow.asSharedFlow()
 
     // Current payment info
-    private var currentAmount: Pos.Amount? = null
+    private val _currentAmount = MutableStateFlow<Pos.Amount?>(null)
     private var currentPaymentId: String? = null
+
+    // Last successful payment info for success screen
+    var lastPaymentInfo: Pos.PaymentInfo? = null
+        private set
+
+    fun storeLastPaymentInfo(info: Pos.PaymentInfo?) {
+        lastPaymentInfo = info
+    }
+
+    // Selected currency (persisted)
+    private val _selectedCurrency = MutableStateFlow(
+        prefs.getString(KEY_CURRENCY, null)?.let { Currency.fromCode(it) } ?: Currency.USD
+    )
+    val selectedCurrency = _selectedCurrency.asStateFlow()
+
+    fun setCurrency(currency: Currency) {
+        _selectedCurrency.value = currency
+        prefs.edit().putString(KEY_CURRENCY, currency.code).apply()
+    }
+
+    // Selected theme mode (persisted)
+    private val _selectedThemeMode = MutableStateFlow(
+        prefs.getString(KEY_THEME, null)?.let { name ->
+            ThemeMode.entries.find { it.name == name }
+        } ?: ThemeMode.SYSTEM
+    )
+    val selectedThemeMode = _selectedThemeMode.asStateFlow()
+
+    fun setThemeMode(mode: ThemeMode) {
+        _selectedThemeMode.value = mode
+        prefs.edit().putString(KEY_THEME, mode.name).apply()
+    }
 
     // Loading state for "Start Payment" button
     private val _isLoading = MutableStateFlow(false)
@@ -65,8 +109,8 @@ class POSViewModel : ViewModel() {
     private val _transactionHistoryState = MutableStateFlow<TransactionHistoryUiState>(TransactionHistoryUiState.Idle)
     val transactionHistoryState = _transactionHistoryState.asStateFlow()
 
-    private val _selectedStatusFilter = MutableStateFlow<Pos.TransactionStatus?>(null)
-    val selectedStatusFilter = _selectedStatusFilter.asStateFlow()
+    private val _selectedFilter = MutableStateFlow(TransactionFilter.ALL)
+    val selectedFilter = _selectedFilter.asStateFlow()
 
     // Store selected date range option index (not the computed DateRange) to avoid comparison issues
     // Index mapping: 0=All Time, 1=Today, 2=Last 7 Days, 3=This Week, 4=This Month
@@ -105,13 +149,14 @@ class POSViewModel : ViewModel() {
         when (paymentEvent) {
             is Pos.PaymentEvent.PaymentCreated -> {
                 _isLoading.value = false
-                currentAmount = paymentEvent.amount
+                _currentAmount.value = paymentEvent.amount
                 currentPaymentId = paymentEvent.paymentId
                 _posNavEventsFlow.emit(
                     PosNavEvent.QrReady(
                         uri = paymentEvent.uri,
                         amount = paymentEvent.amount,
-                        paymentId = paymentEvent.paymentId
+                        paymentId = paymentEvent.paymentId,
+                        expiresAt = paymentEvent.expiresAt
                     )
                 )
             }
@@ -126,21 +171,22 @@ class POSViewModel : ViewModel() {
 
             is Pos.PaymentEvent.PaymentSuccess -> {
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
-                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info))
+                _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info, _currentAmount.value))
             }
 
             is Pos.PaymentEvent.PaymentError -> {
                 _isLoading.value = false
-                val errorMessage = when (val error: Pos.PaymentEvent.PaymentError = paymentEvent) {
-                    is Pos.PaymentEvent.PaymentError.CreatePaymentFailed -> "Failed to create payment, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.PaymentFailed -> "Payment failed, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.PaymentNotFound -> "Payment not found, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.PaymentExpired -> "Payment expired, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest -> "Invalid request, try again: ${error.message}"
-                    is Pos.PaymentEvent.PaymentError.Undefined -> "Undefined Error, try again: ${error.message}"
+                val errorCode = when (paymentEvent) {
+                    is Pos.PaymentEvent.PaymentError.PaymentExpired -> "expired"
+                    is Pos.PaymentEvent.PaymentError.CreatePaymentFailed -> "create_failed"
+                    is Pos.PaymentEvent.PaymentError.PaymentFailed -> "failed"
+                    is Pos.PaymentEvent.PaymentError.PaymentCancelled -> "cancelled"
+                    is Pos.PaymentEvent.PaymentError.PaymentNotFound -> "not_found"
+                    is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest -> "invalid_request"
+                    is Pos.PaymentEvent.PaymentError.Undefined -> "unknown"
                 }
-                _posEventsFlow.emit(PosEvent.PaymentError(errorMessage))
-                _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = errorMessage))
+                _posEventsFlow.emit(PosEvent.PaymentError(errorCode))
+                _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = errorCode))
             }
         }
     }
@@ -149,20 +195,25 @@ class POSViewModel : ViewModel() {
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToAmount) }
     }
 
+    fun navigateToSettings() {
+        viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToSettings) }
+    }
+
     /**
      * Creates a payment intent with the specified amount.
      *
      * @param amountValue Amount in minor units (cents for USD)
      * @param currency Currency code (e.g., "USD", "EUR")
      */
-    fun createPayment(amountValue: String, currency: String = "USD") {
+    fun createPayment(amountValue: String) {
         try {
+            val currency = _selectedCurrency.value
             val referenceId = "ORDER-${System.currentTimeMillis()}"
             _isLoading.value = true
 
             PosClient.createPaymentIntent(
                 amount = Pos.Amount(
-                    unit = "iso4217/$currency",
+                    unit = currency.unit,
                     value = amountValue
                 ),
                 referenceId = referenceId
@@ -182,19 +233,24 @@ class POSViewModel : ViewModel() {
         _isLoading.value = false
     }
 
+    fun printReceipt() {
+        // TODO: Implement receipt printing via POS terminal SDK
+    }
+
     fun resetForNewPayment() {
-        currentAmount = null
+        _currentAmount.value = null
         currentPaymentId = null
         _isLoading.value = false
     }
 
-    fun getDisplayAmount(): String {
-        val amount = currentAmount ?: return ""
+    val displayAmount = _currentAmount.map { amount ->
+        if (amount == null) return@map ""
         val valueInCents = amount.value.toLongOrNull() ?: 0L
-        val dollars = valueInCents / 100.0
-        val currency = amount.unit.substringAfter("/", "USD")
-        return String.format("$%.2f %s", dollars, currency)
-    }
+        val majorUnits = valueInCents / 100.0
+        val currencyCode = amount.unit.substringAfter("/", "USD")
+        val currency = Currency.fromCode(currencyCode)
+        formatAmountWithSymbol(String.format(java.util.Locale.US, "%.2f", majorUnits), currency)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
 
     // Transaction History Methods
 
@@ -222,7 +278,7 @@ class POSViewModel : ViewModel() {
             val result = PosClient.getTransactionHistory(
                 limit = 20,
                 cursor = currentCursor,
-                status = _selectedStatusFilter.value,
+                statuses = _selectedFilter.value.statuses,
                 dateRange = getDateRangeForOptionIndex(_selectedDateRangeOptionIndex.value)
             )
 
@@ -266,8 +322,8 @@ class POSViewModel : ViewModel() {
         }
     }
 
-    fun setStatusFilter(status: Pos.TransactionStatus?) {
-        _selectedStatusFilter.value = status
+    fun setFilter(filter: TransactionFilter) {
+        _selectedFilter.value = filter
         loadTransactionHistory(refresh = true)
     }
 
@@ -278,5 +334,11 @@ class POSViewModel : ViewModel() {
 
     fun refreshTransactionHistory() {
         loadTransactionHistory(refresh = true)
+    }
+
+    companion object {
+        private const val PREFS_NAME = "pos_settings"
+        private const val KEY_CURRENCY = "currency"
+        private const val KEY_THEME = "theme"
     }
 }
