@@ -56,7 +56,7 @@ internal fun PaymentRecord.toTransaction(): Pos.Transaction {
         referenceId = referenceId,
         status = mapToTransactionStatus(status),
         txHash = transaction?.hash,
-        fiatAmount = fiatAmount?.value?.toIntOrNull(),
+        fiatAmount = fiatAmount?.value?.toLongOrNull(),
         fiatCurrency = extractCurrencyCode(fiatAmount?.unit),
         tokenAmount = tokenAmount?.value,
         tokenSymbol = tokenAmount?.display?.assetSymbol,

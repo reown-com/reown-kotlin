@@ -72,7 +72,7 @@ object Pos {
         val referenceId: String?,
         val status: TransactionStatus,
         val txHash: String?,
-        val fiatAmount: Int?,
+        val fiatAmount: Long?,
         val fiatCurrency: String?,
         val tokenAmount: String?,
         val tokenSymbol: String?,
