@@ -11,7 +11,8 @@
         android:theme="@style/Theme.ReownKotlin">
         <activity
             android:name="com.walletconnect.sample.pos.POSActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.ReownKotlin.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

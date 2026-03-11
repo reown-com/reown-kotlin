@@ -57,7 +57,7 @@ internal data class DisplayAmountDto(
 
 @JsonClass(generateAdapter = true)
 internal data class ApiErrorWrapper(
-    @param:Json(name = "status") val status: String,
+    @param:Json(name = "status") val status: String? = null,
     @param:Json(name = "error") val error: ApiErrorDetails
 )
 
@@ -78,6 +78,7 @@ internal object PaymentStatus {
     const val SUCCEEDED = "succeeded"
     const val EXPIRED = "expired"
     const val FAILED = "failed"
+    const val CANCELLED = "cancelled"
 }
 
 internal object ErrorCodes {

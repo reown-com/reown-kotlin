@@ -121,15 +121,25 @@ object PosClient {
     }
 
     /**
-     * Cancels any ongoing polling and releases resources.
+     * Cancels any ongoing polling, calls the cancel payment API endpoint,
+     * and releases resources.
      *
      * Call this when the payment flow is cancelled by the user
-     * or when the POS screen is closed.
+     * or when the POS screen is closed. The API call is fire-and-forget;
+     * errors are silently ignored.
      */
     fun cancelPayment() {
+        val paymentId = apiClient?.activePollingState?.paymentId
         currentPollingJob?.cancel()
         currentPollingJob = null
         apiClient?.clearActivePollingState()
+
+        // Silently call the cancel endpoint (fire-and-forget)
+        if (paymentId != null) {
+            scope?.launch {
+                apiClient?.cancelPayment(paymentId)
+            }
+        }
     }
 
     /**
@@ -137,7 +147,7 @@ object PosClient {
      *
      * @param limit Number of transactions to fetch per page (default 20, max 200)
      * @param cursor Pagination cursor from previous result for fetching next page
-     * @param status Optional status filter (e.g., "succeeded", "failed", "processing")
+     * @param statuses Optional status filter list (e.g., listOf(SUCCEEDED) or listOf(FAILED, EXPIRED, CANCELLED))
      * @param dateRange Optional date range filter. Use [Pos.DateRanges] factory methods
      *                  for common ranges (e.g., `DateRanges.today()`, `DateRanges.thisWeek()`).
      *                  Defaults to null (all time).
@@ -148,12 +158,12 @@ object PosClient {
     suspend fun getTransactionHistory(
         limit: Int = 20,
         cursor: String? = null,
-        status: Pos.TransactionStatus? = null,
+        statuses: List<Pos.TransactionStatus>? = null,
         dateRange: Pos.DateRange? = null
     ): Result<Pos.TransactionHistoryResult> {
         checkInitialized()
 
-        val statusFilter = status?.apiValue
+        val statusFilter = statuses?.map { it.apiValue }
 
         return when (val result = apiClient!!.getTransactionHistory(
             limit = limit,
