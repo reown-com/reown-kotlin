@@ -112,6 +112,16 @@ jobs:
           SIGNING_KEY_STORE_PATH_UPLOAD: ${{ secrets.WC_KOTLIN_UPLOAD_KEYSTORE_PATH }}
         uses: ./.github/actions/ci_setup
 
+      - name: Resolve Firebase App ID
+        if: matrix.app == 'pos'
+        id: firebase-app-id
+        run: |
+          case "${{ env.BUILD_TYPE }}" in
+            Release) echo "id=${{ secrets.FIREBASE_POS_RELEASE_APP_ID }}" >> $GITHUB_OUTPUT ;;
+            Internal) echo "id=${{ secrets.FIREBASE_POS_INTERNAL_APP_ID }}" >> $GITHUB_OUTPUT ;;
+            Debug) echo "id=${{ secrets.FIREBASE_POS_DEBUG_APP_ID }}" >> $GITHUB_OUTPUT ;;
+          esac
+
       - name: Release sample
         env:
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
@@ -120,6 +130,7 @@ jobs:
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
           MIX_PANEL: ${{ secrets.MIX_PANEL }}
+          FIREBASE_APP_ID: ${{ steps.firebase-app-id.outputs.id }}
         run: |
           ./gradlew :sample:${{ matrix.app }}:assemble${{ env.BUILD_TYPE }} :sample:${{ matrix.app }}:appDistributionUpload${{ env.BUILD_TYPE }}
 
