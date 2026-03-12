@@ -76,11 +76,11 @@ internal object NfcManager {
         uri.replace("pay.walletconnect.com", "staging.pay.walletconnect.com")
 
     private fun emitNdef(paymentUri: String) {
-        val stagingUri = rewriteForStaging(paymentUri)
-        Timber.d("NFC: Emitting payment URI: %s (staging: %s)", paymentUri, stagingUri)
+//        val stagingUri = rewriteForStaging(paymentUri)
+        Timber.d("NFC: Emitting payment URI: %s (staging: %s)", paymentUri, paymentUri)
         val ndefMessage = NdefMessage(
             arrayOf(
-                NdefRecord.createUri(stagingUri)
+                NdefRecord.createUri(paymentUri)
             )
         )
         Timber.d("NFC: NDEF message size: %d bytes", ndefMessage.toByteArray().size)

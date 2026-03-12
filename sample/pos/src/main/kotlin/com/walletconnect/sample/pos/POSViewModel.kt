@@ -90,6 +90,17 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         prefs.edit().putString(KEY_CURRENCY, currency.code).apply()
     }
 
+    // Print receipt toggle (persisted)
+    private val _printReceiptEnabled = MutableStateFlow<Boolean>(
+        prefs.getBoolean(KEY_PRINT_RECEIPT, false)
+    )
+    val printReceiptEnabled = _printReceiptEnabled.asStateFlow()
+
+    fun setPrintReceiptEnabled(enabled: Boolean) {
+        _printReceiptEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_PRINT_RECEIPT, enabled).apply()
+    }
+
     // Selected theme mode (persisted)
     private val _selectedThemeMode = MutableStateFlow(
         prefs.getString(KEY_THEME, null)?.let { name ->
@@ -106,14 +117,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     // Loading state for "Start Payment" button
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
-
-    // Print receipt toggle
-    private val _printReceiptEnabled = MutableStateFlow(true)
-    val printReceiptEnabled = _printReceiptEnabled.asStateFlow()
-
-    fun togglePrintReceipt() {
-        _printReceiptEnabled.value = !_printReceiptEnabled.value
-    }
 
     // Transaction history state
     private val _transactionHistoryState = MutableStateFlow<TransactionHistoryUiState>(TransactionHistoryUiState.Idle)
@@ -362,5 +365,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         private const val PREFS_NAME = "pos_settings"
         private const val KEY_CURRENCY = "currency"
         private const val KEY_THEME = "theme"
+        private const val KEY_PRINT_RECEIPT = "print_receipt"
     }
 }
