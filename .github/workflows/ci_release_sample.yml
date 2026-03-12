@@ -130,6 +130,8 @@ jobs:
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
           MIX_PANEL: ${{ secrets.MIX_PANEL }}
+          MERCHANT_API_KEY: ${{ secrets.MERCHANT_API_KEY }}
+          INTERNAL_MERCHANT_API: ${{ secrets.INTERNAL_MERCHANT_API }}
           FIREBASE_APP_ID: ${{ steps.firebase-app-id.outputs.id }}
         run: |
           ./gradlew :sample:${{ matrix.app }}:assemble${{ env.BUILD_TYPE }} :sample:${{ matrix.app }}:appDistributionUpload${{ env.BUILD_TYPE }}
