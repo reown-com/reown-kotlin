@@ -97,7 +97,9 @@ internal class ApiClient(
                 eventTracker.trackPaymentCreated(data.paymentId, context)
                 onEvent(paymentCreatedEvent)
 
-                startPolling(data.paymentId, data.expiresAt, context, onEvent)
+                if (!data.isFinal) {
+                    startPolling(data.paymentId, data.expiresAt, context, onEvent)
+                }
             } else {
                 val error = parseErrorResponse(response)
                 val paymentError = mapCreatePaymentError(error.code, error.message)
@@ -212,9 +214,9 @@ internal class ApiClient(
         }
     }
 
-    suspend fun getPaymentStatus(paymentId: String): ApiResult<GetPaymentStatusResponse> {
+    suspend fun getPaymentStatus(paymentId: String, maxPollMs: Long? = null): ApiResult<GetPaymentStatusResponse> {
         return try {
-            val response = payApi.getPaymentStatus(paymentId)
+            val response = payApi.getPaymentStatus(paymentId, maxPollMs)
 
             if (response.isSuccessful) {
                 val data = response.body()

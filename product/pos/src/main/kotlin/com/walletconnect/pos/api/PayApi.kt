@@ -9,11 +9,14 @@ import retrofit2.http.Query
 
 internal interface PayApi {
 
-    @POST("v1/merchant/payment")
+    @POST("v1/payments")
     suspend fun createPayment(@Body request: CreatePaymentRequest): Response<CreatePaymentResponse>
 
-    @GET("v1/merchant/payment/{id}/status")
-    suspend fun getPaymentStatus(@Path("id") paymentId: String): Response<GetPaymentStatusResponse>
+    @GET("v1/payments/{id}/status")
+    suspend fun getPaymentStatus(
+        @Path("id") paymentId: String,
+        @Query("maxPollMs") maxPollMs: Long? = null
+    ): Response<GetPaymentStatusResponse>
 
     @POST("v1/payments/{id}/cancel")
     suspend fun cancelPayment(@Path("id") paymentId: String): Response<Unit>

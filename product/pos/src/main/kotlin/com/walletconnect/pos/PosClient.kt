@@ -105,13 +105,13 @@ object PosClient {
      * @throws IllegalStateException if SDK is not initialized
      */
     @Throws(IllegalStateException::class)
-    suspend fun checkPaymentStatus(paymentId: String): Pos.PaymentEvent {
+    suspend fun checkPaymentStatus(paymentId: String, maxPollMs: Long? = null): Pos.PaymentEvent {
         val client = synchronized(lock) {
             checkInitialized()
             apiClient!!
         }
 
-        return when (val result = client.getPaymentStatus(paymentId)) {
+        return when (val result = client.getPaymentStatus(paymentId, maxPollMs)) {
             is ApiResult.Success -> mapStatusToPaymentEvent(result.data.status, paymentId)
             is ApiResult.Error -> mapErrorCodeToPaymentError(result.code, result.message)
         }
