@@ -117,9 +117,9 @@ jobs:
         id: firebase-app-id
         run: |
           case "${{ env.BUILD_TYPE }}" in
-            Release) echo "id=${{ secrets.FIREBASE_POS_RELEASE_APP_ID }}" >> $GITHUB_OUTPUT ;;
-            Internal) echo "id=${{ secrets.FIREBASE_POS_INTERNAL_APP_ID }}" >> $GITHUB_OUTPUT ;;
-            Debug) echo "id=${{ secrets.FIREBASE_POS_DEBUG_APP_ID }}" >> $GITHUB_OUTPUT ;;
+            Release) echo "id=${{ vars.FIREBASE_POS_RELEASE_APP_ID }}" >> $GITHUB_OUTPUT ;;
+            Internal) echo "id=${{ vars.FIREBASE_POS_INTERNAL_APP_ID }}" >> $GITHUB_OUTPUT ;;
+            Debug) echo "id=${{ vars.FIREBASE_POS_DEBUG_APP_ID }}" >> $GITHUB_OUTPUT ;;
           esac
 
       - name: Release sample
