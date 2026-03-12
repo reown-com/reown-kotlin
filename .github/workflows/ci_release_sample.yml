@@ -131,6 +131,7 @@ jobs:
             Release) echo "id=${{ vars.FIREBASE_POS_RELEASE_APP_ID }}" >> $GITHUB_OUTPUT ;;
             Internal) echo "id=${{ vars.FIREBASE_POS_INTERNAL_APP_ID }}" >> $GITHUB_OUTPUT ;;
             Debug) echo "id=${{ vars.FIREBASE_POS_DEBUG_APP_ID }}" >> $GITHUB_OUTPUT ;;
+            *) echo "::error::Unexpected BUILD_TYPE: ${{ env.BUILD_TYPE }}" && exit 1 ;;
           esac
 
       - name: Release sample
