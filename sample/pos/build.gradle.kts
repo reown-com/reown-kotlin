@@ -24,6 +24,7 @@ android {
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
         buildConfigField("String", "MERCHANT_API_KEY", "\"${System.getenv("MERCHANT_API_KEY") ?: ""}\"")
+        buildConfigField("String", "MERCHANT_ID", "\"${System.getenv("MERCHANT_ID") ?: ""}\"")
     }
 
     buildTypes {
