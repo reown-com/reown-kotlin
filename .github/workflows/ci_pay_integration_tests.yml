@@ -51,4 +51,5 @@ jobs:
           projectId: ${{ secrets.WC_CLOUD_PROJECT_ID }}
           walletPrivateKey: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
           merchantApiKey: ${{ secrets.MERCHANT_API_KEY }}
+          merchantId: ${{ secrets.MERCHANT_ID }}
           testTimeoutSeconds: ${{ github.event.inputs.testTimeoutSeconds || env.TEST_TIMEOUT_SECONDS }}
