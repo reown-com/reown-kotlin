@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.ErrorCodes
 import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.components.PosHeader
 
@@ -38,7 +39,7 @@ fun ErrorScreen(
     onNewPayment: () -> Unit,
     onClose: (() -> Unit)? = null,
 ) {
-    val isInitError = errorCode == "init_failed"
+    val isInitError = errorCode == ErrorCodes.INIT_FAILED
     val (title, subtitle) = getErrorMessages(errorCode)
 
     Column(
@@ -127,7 +128,7 @@ private fun getErrorMessages(errorCode: String): Pair<String, String> {
         "create_failed" -> "Payment can't be completed" to "We're unable to complete this payment at this time. Please generate a new payment and try again."
         "not_found" -> "Payment not found" to "The payment could not be found. Please try creating a new one."
         "invalid_request" -> "Invalid request" to "The payment request was invalid. Please try again with a valid amount."
-        "init_failed" -> "Initialization failed" to "POS SDK could not be initialized. Check that MERCHANT_API_KEY and MERCHANT_ID are configured correctly."
+        ErrorCodes.INIT_FAILED -> "Initialization failed" to "POS SDK could not be initialized. Check that MERCHANT_API_KEY and MERCHANT_ID are configured correctly."
         else -> "Payment can't be completed" to "We're unable to complete this payment at this time. Please generate a new payment and try again."
     }
 }

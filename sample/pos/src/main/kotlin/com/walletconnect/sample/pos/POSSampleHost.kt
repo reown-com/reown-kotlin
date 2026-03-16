@@ -26,6 +26,10 @@ import com.walletconnect.sample.pos.screens.SettingsScreen
 import com.walletconnect.sample.pos.screens.StartPaymentScreen
 import com.walletconnect.sample.pos.screens.TransactionHistoryScreen
 
+object ErrorCodes {
+    const val INIT_FAILED = "init_failed"
+}
+
 sealed class Screen(val route: String, val label: String) {
     object StartPaymentScreen : Screen("start", "Home")
     object AmountScreen : Screen("amount", "Amount")
@@ -55,7 +59,7 @@ fun POSSampleHost(
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     val initError = POSApplication.initError
     val startDestination = if (initError != null) {
-        Screen.ErrorScreen.routeWith("init_failed")
+        Screen.ErrorScreen.routeWith(ErrorCodes.INIT_FAILED)
     } else {
         Screen.StartPaymentScreen.route
     }
