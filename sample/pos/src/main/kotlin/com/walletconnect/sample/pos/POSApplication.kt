@@ -35,7 +35,7 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
             PosClient.setDelegate(PosSampleDelegate)
             Timber.d("POSClient initialized successfully")
         } catch (e: IllegalStateException) {
-            initError = e.message
+            initError = e.message ?: "Unknown initialization error"
             Timber.e(e, "POSClient initialization failed")
         }
     }

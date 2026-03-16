@@ -125,10 +125,14 @@ jobs:
 
       - name: Check required POS secrets
         if: matrix.app == 'pos'
+        env:
+          MERCHANT_API_KEY: ${{ secrets.MERCHANT_API_KEY }}
+          MERCHANT_ID: ${{ secrets.MERCHANT_ID }}
+          POS_PROJECT_ID: ${{ secrets.POS_PROJECT_ID }}
         run: |
-          [[ -n "${{ secrets.MERCHANT_API_KEY }}" ]] || { echo "::error::MERCHANT_API_KEY secret is not set"; exit 1; }
-          [[ -n "${{ secrets.MERCHANT_ID }}" ]] || { echo "::error::MERCHANT_ID secret is not set"; exit 1; }
-          [[ -n "${{ secrets.POS_PROJECT_ID }}" ]] || { echo "::error::POS_PROJECT_ID secret is not set"; exit 1; }
+          [[ -n "$MERCHANT_API_KEY" ]] || { echo "::error::MERCHANT_API_KEY secret is not set"; exit 1; }
+          [[ -n "$MERCHANT_ID" ]] || { echo "::error::MERCHANT_ID secret is not set"; exit 1; }
+          [[ -n "$POS_PROJECT_ID" ]] || { echo "::error::POS_PROJECT_ID secret is not set"; exit 1; }
 
       - name: Resolve Firebase App ID
         if: matrix.app == 'pos'
