@@ -112,6 +112,13 @@ jobs:
           SIGNING_KEY_STORE_PATH_UPLOAD: ${{ secrets.WC_KOTLIN_UPLOAD_KEYSTORE_PATH }}
         uses: ./.github/actions/ci_setup
 
+      - name: Check required POS secrets
+        if: matrix.app == 'pos'
+        run: |
+          [[ -n "${{ secrets.MERCHANT_API_KEY }}" ]] || { echo "::error::MERCHANT_API_KEY secret is not set"; exit 1; }
+          [[ -n "${{ secrets.MERCHANT_ID }}" ]] || { echo "::error::MERCHANT_ID secret is not set"; exit 1; }
+          [[ -n "${{ secrets.POS_PROJECT_ID }}" ]] || { echo "::error::POS_PROJECT_ID secret is not set"; exit 1; }
+
       - name: Release sample
         env:
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}

@@ -28,18 +28,18 @@ class POSActivity : AppCompatActivity() {
                 ThemeMode.DARK -> true
             }
             WCSampleAppTheme(darkTheme = darkTheme) {
-                POSSampleHost(viewModel)
+                POSSampleHost(viewModel, onClose = { finish() })
             }
         }
     }
 
     override fun onStart() {
         super.onStart()
-        PosClient.resume()
+        if (POSApplication.initError == null) PosClient.resume()
     }
 
     override fun onStop() {
         super.onStop()
-        PosClient.pause()
+        if (POSApplication.initError == null) PosClient.pause()
     }
 }

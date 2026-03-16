@@ -43,6 +43,12 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Check required secrets
+        run: |
+          [[ -n "${{ secrets.MERCHANT_API_KEY }}" ]] || { echo "::error::MERCHANT_API_KEY secret is not set"; exit 1; }
+          [[ -n "${{ secrets.MERCHANT_ID }}" ]] || { echo "::error::MERCHANT_ID secret is not set"; exit 1; }
+          [[ -n "${{ secrets.POS_PROJECT_ID }}" ]] || { echo "::error::POS_PROJECT_ID secret is not set"; exit 1; }
+
       - name: Run Pay instrumented tests
         uses: ./.github/actions/ci_instrumented_tests
         with:

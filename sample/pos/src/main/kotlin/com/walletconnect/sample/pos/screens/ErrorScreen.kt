@@ -36,7 +36,9 @@ import com.walletconnect.sample.pos.components.PosHeader
 fun ErrorScreen(
     errorCode: String,
     onNewPayment: () -> Unit,
+    onClose: (() -> Unit)? = null,
 ) {
+    val isInitError = errorCode == "init_failed"
     val (title, subtitle) = getErrorMessages(errorCode)
 
     Column(
@@ -47,7 +49,7 @@ fun ErrorScreen(
             .windowInsetsPadding(WindowInsets.navigationBars),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        PosHeader(onBack = onNewPayment)
+        PosHeader(onBack = if (isInitError) onClose ?: {} else onNewPayment)
 
         Column(
             modifier = Modifier
@@ -90,7 +92,7 @@ fun ErrorScreen(
                 .height(48.dp)
                 .clip(WCTheme.borderRadius.shapeLarge)
                 .background(WCTheme.colors.bgAccentPrimary)
-                .clickable(onClick = onNewPayment),
+                .clickable(onClick = if (isInitError) onClose ?: {} else onNewPayment),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -98,17 +100,19 @@ fun ErrorScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "New payment",
+                    text = if (isInitError) "Close" else "New payment",
                     style = WCTheme.typography.bodyLgRegular,
                     color = WCTheme.colors.textInvert
                 )
-                Spacer(Modifier.width(WCTheme.spacing.spacing2))
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = null,
-                    tint = WCTheme.colors.textInvert,
-                    modifier = Modifier.size(16.dp)
-                )
+                if (!isInitError) {
+                    Spacer(Modifier.width(WCTheme.spacing.spacing2))
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = WCTheme.colors.textInvert,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
 
@@ -123,6 +127,7 @@ private fun getErrorMessages(errorCode: String): Pair<String, String> {
         "create_failed" -> "Payment can't be completed" to "We're unable to complete this payment at this time. Please generate a new payment and try again."
         "not_found" -> "Payment not found" to "The payment could not be found. Please try creating a new one."
         "invalid_request" -> "Invalid request" to "The payment request was invalid. Please try again with a valid amount."
+        "init_failed" -> "Initialization failed" to "POS SDK could not be initialized. Check that MERCHANT_API_KEY and MERCHANT_ID are configured correctly."
         else -> "Payment can't be completed" to "We're unable to complete this payment at this time. Please generate a new payment and try again."
     }
 }
