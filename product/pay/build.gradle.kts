@@ -34,6 +34,9 @@ android {
         System.getenv("MERCHANT_API_KEY")?.let { apiKey ->
             testInstrumentationRunnerArguments["MERCHANT_API_KEY"] = apiKey
         }
+        System.getenv("MERCHANT_ID")?.let { merchantId ->
+            testInstrumentationRunnerArguments["MERCHANT_ID"] = merchantId
+        }
         System.getenv("WC_CLOUD_PROJECT_ID")?.let { projectId ->
             testInstrumentationRunnerArguments["WC_CLOUD_PROJECT_ID"] = projectId
         }

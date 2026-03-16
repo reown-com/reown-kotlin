@@ -72,7 +72,7 @@ object Pos {
         val referenceId: String?,
         val status: TransactionStatus,
         val txHash: String?,
-        val fiatAmount: Int?,
+        val fiatAmount: Long?,
         val fiatCurrency: String?,
         val tokenAmount: String?,
         val tokenSymbol: String?,
@@ -100,7 +100,7 @@ object Pos {
             if (tokenAmount == null || tokenDecimals == null) return null
             val value = tokenAmount.toBigDecimalOrNull() ?: return tokenAmount
             val divisor = java.math.BigDecimal.TEN.pow(tokenDecimals)
-            return value.divide(divisor, maxOf(tokenDecimals, 18), java.math.RoundingMode.DOWN)
+            return value.divide(divisor, tokenDecimals, java.math.RoundingMode.DOWN)
                 .stripTrailingZeros()
                 .toPlainString()
         }

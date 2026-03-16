@@ -1,5 +1,7 @@
 package com.walletconnect.pos
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.walletconnect.pos.api.ApiClient
 import com.walletconnect.pos.api.ApiResult
 import com.walletconnect.pos.api.ErrorTracker
@@ -14,17 +16,26 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 
 /**
  * POS (Point of Sale) client for handling payment transactions.
  */
 object PosClient {
-    private var delegate: POSDelegate? = null
-    private var apiClient: ApiClient? = null
-    private var eventTracker: EventTracker? = null
-    private var errorTracker: ErrorTracker? = null
-    private var scope: CoroutineScope? = null
-    private var currentPollingJob: Job? = null
+    private val lock = Any()
+
+    @Volatile private var delegate: POSDelegate? = null
+    @Volatile private var apiClient: ApiClient? = null
+    @Volatile private var eventTracker: EventTracker? = null
+    @Volatile private var errorTracker: ErrorTracker? = null
+    @Volatile private var scope: CoroutineScope? = null
+    @Volatile private var currentPollingJob: Job? = null
+    @Volatile private var sharedHttpClient: OkHttpClient? = null
+
+    private val sharedMoshi: Moshi by lazy {
+        Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
+    }
 
     /**
      * Initializes the POS client with API credentials.
@@ -38,16 +49,21 @@ object PosClient {
         check(apiKey.isNotBlank()) { "apiKey cannot be blank" }
         check(merchantId.isNotBlank()) { "merchantId cannot be blank" }
         check(deviceId.isNotBlank()) { "deviceId cannot be blank" }
-        cleanup()
-        val newScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-        this.scope = newScope
-        this.eventTracker = EventTracker(merchantId, newScope)
-        this.errorTracker = ErrorTracker(newScope)
-        this.apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!)
+        synchronized(lock) {
+            cleanup()
+            val baseHttpClient = createBaseHttpClient()
+            sharedHttpClient = baseHttpClient
+            val newScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+            scope = newScope
+            eventTracker = EventTracker(merchantId, newScope, sharedMoshi, baseHttpClient)
+            errorTracker = ErrorTracker(newScope, sharedMoshi, baseHttpClient)
+            apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!, sharedMoshi, baseHttpClient)
+        }
     }
 
     /**
      * Sets the delegate for receiving payment events.
+     * Delegate callbacks are dispatched on the main thread when available.
      *
      * @param delegate The delegate to receive events, or null to remove
      */
@@ -59,19 +75,24 @@ object PosClient {
      * Creates a payment intent and starts the payment flow.
      * All payment events are emitted through the delegate.
      *
-     * @param amount The payment amount
+     * @param amount The payment amount. [Pos.Amount.value] must be a non-negative integer string
+     *               representing the amount in minor units (e.g., cents for USD).
      * @param referenceId Merchant's reference ID for this payment
      * @throws IllegalStateException if SDK is not initialized
+     * @throws IllegalArgumentException if amount value is not a valid non-negative integer
      */
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     fun createPaymentIntent(amount: Pos.Amount, referenceId: String) {
-        checkInitialized()
-        currentPollingJob?.cancel()
-        val valueMinor = amount.value.toLongOrNull() ?: 0L
-        eventTracker?.trackWcPaySelected(referenceId, amount.unit, valueMinor)
-        currentPollingJob = scope?.launch {
-            apiClient!!.createPayment(referenceId, amount.unit, amount.value) { event ->
-                emitEvent(event)
+        synchronized(lock) {
+            checkInitialized()
+            requireValidAmount(amount)
+            currentPollingJob?.cancel()
+            val valueMinor = amount.value.toLong()
+            eventTracker?.trackWcPaySelected(referenceId, amount.unit, valueMinor)
+            currentPollingJob = scope!!.launch {
+                apiClient!!.createPayment(referenceId, amount.unit, amount.value) { event ->
+                    emitEvent(event)
+                }
             }
         }
     }
@@ -84,10 +105,13 @@ object PosClient {
      * @throws IllegalStateException if SDK is not initialized
      */
     @Throws(IllegalStateException::class)
-    suspend fun checkPaymentStatus(paymentId: String): Pos.PaymentEvent {
-        checkInitialized()
+    suspend fun checkPaymentStatus(paymentId: String, maxPollMs: Long? = null): Pos.PaymentEvent {
+        val client = synchronized(lock) {
+            checkInitialized()
+            apiClient!!
+        }
 
-        return when (val result = apiClient!!.getPaymentStatus(paymentId)) {
+        return when (val result = client.getPaymentStatus(paymentId, maxPollMs)) {
             is ApiResult.Success -> mapStatusToPaymentEvent(result.data.status, paymentId)
             is ApiResult.Error -> mapErrorCodeToPaymentError(result.code, result.message)
         }
@@ -100,8 +124,10 @@ object PosClient {
      * Use [resume] to restart polling when the app returns to the foreground.
      */
     fun pause() {
-        currentPollingJob?.cancel()
-        currentPollingJob = null
+        synchronized(lock) {
+            currentPollingJob?.cancel()
+            currentPollingJob = null
+        }
     }
 
     /**
@@ -111,33 +137,36 @@ object PosClient {
      * Does nothing if there is no active payment to poll.
      */
     fun resume() {
-        if (apiClient?.activePollingState == null) return
-        currentPollingJob?.cancel()
-        currentPollingJob = scope?.launch {
-            apiClient!!.resumePolling { event ->
-                emitEvent(event)
+        synchronized(lock) {
+            val client = apiClient ?: return
+            if (client.activePollingState == null) return
+            currentPollingJob?.cancel()
+            currentPollingJob = scope?.launch {
+                client.resumePolling { event ->
+                    emitEvent(event)
+                }
             }
         }
     }
 
     /**
-     * Cancels any ongoing polling, calls the cancel payment API endpoint,
-     * and releases resources.
+     * Cancels an active payment.
      *
-     * Call this when the payment flow is cancelled by the user
-     * or when the POS screen is closed. The API call is fire-and-forget;
-     * errors are silently ignored.
+     * Immediately stops polling and clears state so the UI can navigate away without waiting.
+     * The cancel API request is sent in the background on a best-effort basis;
+     * failures are silently ignored since the user does not need to know.
      */
     fun cancelPayment() {
-        val paymentId = apiClient?.activePollingState?.paymentId
-        currentPollingJob?.cancel()
-        currentPollingJob = null
-        apiClient?.clearActivePollingState()
-
-        // Silently call the cancel endpoint (fire-and-forget)
-        if (paymentId != null) {
-            scope?.launch {
-                apiClient?.cancelPayment(paymentId)
+        synchronized(lock) {
+            currentPollingJob?.cancel()
+            currentPollingJob = null
+            val client = apiClient
+            val paymentId = client?.activePollingState?.paymentId
+            client?.clearActivePollingState()
+            if (client != null && paymentId != null) {
+                scope?.launch {
+                    client.cancelPayment(paymentId)
+                }
             }
         }
     }
@@ -153,19 +182,25 @@ object PosClient {
      *                  Defaults to null (all time).
      * @return Result containing transaction history or error
      * @throws IllegalStateException if SDK is not initialized
+     * @throws IllegalArgumentException if limit is not between 1 and 200
      */
-    @Throws(IllegalStateException::class)
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
     suspend fun getTransactionHistory(
         limit: Int = 20,
         cursor: String? = null,
         statuses: List<Pos.TransactionStatus>? = null,
         dateRange: Pos.DateRange? = null
     ): Result<Pos.TransactionHistoryResult> {
-        checkInitialized()
+        require(limit in 1..200) { "limit must be between 1 and 200" }
+
+        val client = synchronized(lock) {
+            checkInitialized()
+            apiClient!!
+        }
 
         val statusFilter = statuses?.map { it.apiValue }
 
-        return when (val result = apiClient!!.getTransactionHistory(
+        return when (val result = client.getTransactionHistory(
             limit = limit,
             cursor = cursor,
             status = statusFilter,
@@ -195,19 +230,31 @@ object PosClient {
      * Call this when the SDK is no longer needed.
      */
     fun shutdown() {
-        cleanup()
-        delegate = null
+        synchronized(lock) {
+            cleanup()
+            delegate = null
+        }
     }
 
     private fun emitEvent(event: Pos.PaymentEvent) {
-        delegate?.onEvent(event)
+        val currentDelegate = delegate ?: return
+        val currentScope = scope ?: return
+        try {
+            currentScope.launch(Dispatchers.Main.immediate) {
+                currentDelegate.onEvent(event)
+            }
+        } catch (_: IllegalStateException) {
+            // Main dispatcher not available (e.g., in unit tests) — call directly
+            currentDelegate.onEvent(event)
+        }
     }
 
     private fun checkInitialized() {
-        check(apiClient != null) { "ApiClient not initialized, call init() first" }
-        check(scope != null) { "Scope not initialized, call init() first" }
+        check(apiClient != null) { "PosClient not initialized, call init() first" }
+        check(scope != null) { "PosClient not initialized, call init() first" }
     }
 
+    // Must be called within synchronized(lock)
     private fun cleanup() {
         currentPollingJob?.cancel()
         currentPollingJob = null
@@ -216,5 +263,31 @@ object PosClient {
         apiClient = null
         eventTracker = null
         errorTracker = null
+        sharedHttpClient?.let { client ->
+            client.dispatcher.executorService.shutdown()
+            client.connectionPool.evictAll()
+        }
+        sharedHttpClient = null
+    }
+
+    private fun createBaseHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.BODY
+                        redactHeader("Api-Key")
+                        redactHeader("Merchant-Id")
+                    })
+                }
+            }
+            .build()
+    }
+
+    private fun requireValidAmount(amount: Pos.Amount) {
+        val value = amount.value.toLongOrNull()
+        require(value != null && value >= 0) {
+            "amount.value must be a non-negative integer string, got: \"${amount.value}\""
+        }
     }
 }

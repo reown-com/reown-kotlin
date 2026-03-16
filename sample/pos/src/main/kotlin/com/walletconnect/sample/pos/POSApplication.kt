@@ -23,7 +23,7 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
 
         PosClient.init(
             apiKey = BuildConfig.MERCHANT_API_KEY,
-            merchantId = "merchant-1768487888",
+            merchantId = BuildConfig.MERCHANT_ID,
             deviceId = deviceId,
         )
 
