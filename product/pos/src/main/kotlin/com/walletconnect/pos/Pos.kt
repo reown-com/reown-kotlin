@@ -49,13 +49,14 @@ object Pos {
     }
 
     sealed interface PaymentEvent {
-        data class PaymentCreated(val uri: URI, val amount: Amount, val paymentId: String) : PaymentEvent
+        data class PaymentCreated(val uri: URI, val amount: Amount, val paymentId: String, val expiresAt: Long = 0L) : PaymentEvent
         data object PaymentRequested : PaymentEvent
         data object PaymentProcessing : PaymentEvent
         data class PaymentSuccess(val paymentId: String, val info: PaymentInfo?) : PaymentEvent
         sealed interface PaymentError : PaymentEvent {
             data class CreatePaymentFailed(val message: String) : PaymentError
             data class PaymentFailed(val message: String) : PaymentError
+            data class PaymentCancelled(val message: String) : PaymentError
             data class PaymentNotFound(val message: String) : PaymentError
             data class PaymentExpired(val message: String) : PaymentError
             data class InvalidPaymentRequest(val message: String) : PaymentError
@@ -71,7 +72,7 @@ object Pos {
         val referenceId: String?,
         val status: TransactionStatus,
         val txHash: String?,
-        val fiatAmount: Int?,
+        val fiatAmount: Long?,
         val fiatCurrency: String?,
         val tokenAmount: String?,
         val tokenSymbol: String?,
@@ -99,7 +100,7 @@ object Pos {
             if (tokenAmount == null || tokenDecimals == null) return null
             val value = tokenAmount.toBigDecimalOrNull() ?: return tokenAmount
             val divisor = java.math.BigDecimal.TEN.pow(tokenDecimals)
-            return value.divide(divisor, maxOf(tokenDecimals, 18), java.math.RoundingMode.DOWN)
+            return value.divide(divisor, tokenDecimals, java.math.RoundingMode.DOWN)
                 .stripTrailingZeros()
                 .toPlainString()
         }
@@ -114,6 +115,7 @@ object Pos {
         SUCCEEDED("succeeded"),
         EXPIRED("expired"),
         FAILED("failed"),
+        CANCELLED("cancelled"),
         UNKNOWN("unknown")
     }
 

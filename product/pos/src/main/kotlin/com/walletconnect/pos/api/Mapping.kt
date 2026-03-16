@@ -29,6 +29,7 @@ internal fun mapStatusToPaymentEvent(
         PaymentStatus.SUCCEEDED -> Pos.PaymentEvent.PaymentSuccess(paymentId, info?.toPaymentInfo())
         PaymentStatus.EXPIRED -> Pos.PaymentEvent.PaymentError.PaymentExpired("Payment has expired")
         PaymentStatus.FAILED -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment failed") //TODO: add error message?
+        PaymentStatus.CANCELLED -> Pos.PaymentEvent.PaymentError.PaymentCancelled("Payment cancelled")
         else -> Pos.PaymentEvent.PaymentError.Undefined("Unknown payment status: $status")
     }
 }
@@ -54,18 +55,18 @@ internal fun PaymentRecord.toTransaction(): Pos.Transaction {
         paymentId = paymentId,
         referenceId = referenceId,
         status = mapToTransactionStatus(status),
-        txHash = txHash,
-        fiatAmount = fiatAmount,
-        fiatCurrency = extractCurrencyCode(fiatCurrency),
-        tokenAmount = tokenAmount,
-        tokenSymbol = tokenSymbol,
-        tokenDecimals = tokenDecimals,
-        tokenLogo = tokenLogo,
-        network = mapChainIdToNetworkName(chainId),
-        chainId = chainId,
-        walletName = walletName,
+        txHash = transaction?.hash,
+        fiatAmount = fiatAmount?.value?.toLongOrNull(),
+        fiatCurrency = extractCurrencyCode(fiatAmount?.unit),
+        tokenAmount = tokenAmount?.value,
+        tokenSymbol = tokenAmount?.display?.assetSymbol,
+        tokenDecimals = tokenAmount?.display?.decimals,
+        tokenLogo = tokenAmount?.display?.iconUrl,
+        network = tokenAmount?.display?.networkName,
+        chainId = transaction?.networkId,
+        walletName = buyer?.accountProviderName ?: "Unknown",
         createdAt = createdAt,
-        confirmedAt = confirmedAt
+        confirmedAt = settledAt
     )
 }
 
@@ -76,6 +77,7 @@ internal fun mapToTransactionStatus(status: String): Pos.TransactionStatus {
         PaymentStatus.SUCCEEDED -> Pos.TransactionStatus.SUCCEEDED
         PaymentStatus.EXPIRED -> Pos.TransactionStatus.EXPIRED
         PaymentStatus.FAILED -> Pos.TransactionStatus.FAILED
+        PaymentStatus.CANCELLED -> Pos.TransactionStatus.CANCELLED
         else -> Pos.TransactionStatus.UNKNOWN
     }
 }
@@ -90,33 +92,12 @@ internal fun extractCurrencyCode(currency: String?): String? {
     }
 }
 
-internal fun mapChainIdToNetworkName(chainId: String?): String? {
-    if (chainId == null) return null
-    // Handle both raw chain IDs and CAIP-2 format (eip155:1)
-    val numericChainId = chainId.substringAfter("eip155:", chainId)
-    return when (numericChainId) {
-        "1" -> "Ethereum"
-        "137" -> "Polygon"
-        "10" -> "Optimism"
-        "42161" -> "Arbitrum"
-        "8453" -> "Base"
-        "56" -> "BNB Chain"
-        "43114" -> "Avalanche"
-        "250" -> "Fantom"
-        "100" -> "Gnosis"
-        "324" -> "zkSync Era"
-        "59144" -> "Linea"
-        "534352" -> "Scroll"
-        else -> "Chain $numericChainId"
-    }
-}
-
 internal fun TransactionStatsDto?.toTransactionStats(): Pos.TransactionStats? {
     if (this == null) return null
     return Pos.TransactionStats(
         totalTransactions = totalTransactions,
         totalCustomers = totalCustomers,
-        totalRevenue = totalRevenue?.let {
+        totalRevenue = totalRevenue?.firstOrNull()?.let {
             Pos.TotalRevenue(
                 amount = it.amount,
                 currency = extractCurrencyCode(it.currency) ?: it.currency
