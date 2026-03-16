@@ -1,3 +1,5 @@
+import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
+
 plugins {
     id(libs.plugins.android.application.get().pluginId)
     id(libs.plugins.kotlin.android.get().pluginId)
@@ -31,17 +33,25 @@ android {
         getByName("release") {
             manifestPlaceholders["pathPrefix"] = "/dapp_release"
             buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_release\"")
+            resValue("string", "app_name", "POS (Ingenico)")
         }
 
         getByName("internal") {
             manifestPlaceholders["pathPrefix"] = "/dapp_internal"
             buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_internal\"")
-
+            resValue("string", "app_name", "POS Internal (Ingenico)")
         }
 
         getByName("debug") {
             manifestPlaceholders["pathPrefix"] = "/dapp_debug"
             buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_debug\"")
+            resValue("string", "app_name", "POS Debug (Ingenico)")
+        }
+
+        System.getenv("FIREBASE_APP_ID")?.takeIf { it.isNotBlank() }?.let { id ->
+            listOf("release", "internal", "debug").forEach { type ->
+                getByName(type) { firebaseAppDistribution { appId = id } }
+            }
         }
     }
 

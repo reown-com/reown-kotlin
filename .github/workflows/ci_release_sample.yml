@@ -1,4 +1,15 @@
 name: Release Samples
+run-name: >-
+  ${{
+    github.event_name == 'push' && format('All Samples - Internal ({0})', github.ref_name) ||
+    github.event_name == 'release' && format('All Samples - Release ({0})', github.ref_name) ||
+    format('{0}{1}{2}{3} - {4}',
+      inputs.wallet == 'true' && 'Wallet ' || '',
+      inputs.dapp == 'true' && 'dApp ' || '',
+      inputs.modal == 'true' && 'Modal ' || '',
+      inputs.pos == 'true' && 'POS ' || '',
+      inputs.build_type)
+  }}
 
 permissions:
   contents: read
@@ -119,6 +130,17 @@ jobs:
           [[ -n "${{ secrets.MERCHANT_ID }}" ]] || { echo "::error::MERCHANT_ID secret is not set"; exit 1; }
           [[ -n "${{ secrets.POS_PROJECT_ID }}" ]] || { echo "::error::POS_PROJECT_ID secret is not set"; exit 1; }
 
+      - name: Resolve Firebase App ID
+        if: matrix.app == 'pos'
+        id: firebase-app-id
+        run: |
+          case "${{ env.BUILD_TYPE }}" in
+            Release) echo "id=${{ vars.FIREBASE_POS_RELEASE_APP_ID }}" >> $GITHUB_OUTPUT ;;
+            Internal) echo "id=${{ vars.FIREBASE_POS_INTERNAL_APP_ID }}" >> $GITHUB_OUTPUT ;;
+            Debug) echo "id=${{ vars.FIREBASE_POS_DEBUG_APP_ID }}" >> $GITHUB_OUTPUT ;;
+            *) echo "::error::Unexpected BUILD_TYPE: ${{ env.BUILD_TYPE }}" && exit 1 ;;
+          esac
+
       - name: Release sample
         env:
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
@@ -129,19 +151,17 @@ jobs:
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
           MIX_PANEL: ${{ secrets.MIX_PANEL }}
+          INTERNAL_MERCHANT_API: ${{ secrets.INTERNAL_MERCHANT_API }}
+          FIREBASE_APP_ID: ${{ steps.firebase-app-id.outputs.id }}
         run: |
-          CMD=":sample:${{ matrix.app }}:assemble${{ env.BUILD_TYPE }}"
-          if [[ "${{ matrix.app }}" != "pos" ]]; then
-            CMD="$CMD :sample:${{ matrix.app }}:appDistributionUpload${{ env.BUILD_TYPE }}"
-          fi
-          ./gradlew $CMD
+          ./gradlew :sample:${{ matrix.app }}:assemble${{ env.BUILD_TYPE }} :sample:${{ matrix.app }}:appDistributionUpload${{ env.BUILD_TYPE }}
 
       - name: Stop Gradle
         run: ./gradlew --stop
 
       - name: Resolve Firebase URL
         id: firebase
-        if: always() && matrix.app != 'pos'
+        if: always()
         run: |
           case "${{ matrix.app }}-${{ env.BUILD_TYPE }}" in
             wallet-Release) echo "url=${{ vars.FIREBASE_WALLET_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
@@ -153,6 +173,9 @@ jobs:
             modal-Release) echo "url=${{ vars.FIREBASE_MODAL_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
             modal-Internal) echo "url=${{ vars.FIREBASE_MODAL_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
             modal-Debug) echo "url=${{ vars.FIREBASE_MODAL_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
+            pos-Release) echo "url=${{ vars.FIREBASE_POS_RELEASE_URL }}" >> $GITHUB_OUTPUT ;;
+            pos-Internal) echo "url=${{ vars.FIREBASE_POS_INTERNAL_URL }}" >> $GITHUB_OUTPUT ;;
+            pos-Debug) echo "url=${{ vars.FIREBASE_POS_DEBUG_URL }}" >> $GITHUB_OUTPUT ;;
           esac
 
       - name: Send Slack notification
