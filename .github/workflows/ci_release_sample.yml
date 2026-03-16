@@ -116,6 +116,8 @@ jobs:
         env:
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
           POS_PROJECT_ID: ${{ secrets.POS_PROJECT_ID }}
+          MERCHANT_ID: ${{ secrets.MERCHANT_ID }}
+          MERCHANT_API_KEY: ${{ secrets.MERCHANT_API_KEY }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
