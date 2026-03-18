@@ -123,6 +123,17 @@ jobs:
           SIGNING_KEY_STORE_PATH_UPLOAD: ${{ secrets.WC_KOTLIN_UPLOAD_KEYSTORE_PATH }}
         uses: ./.github/actions/ci_setup
 
+      - name: Check required POS secrets
+        if: matrix.app == 'pos'
+        env:
+          MERCHANT_API_KEY: ${{ secrets.MERCHANT_API_KEY }}
+          MERCHANT_ID: ${{ secrets.MERCHANT_ID }}
+          POS_PROJECT_ID: ${{ secrets.POS_PROJECT_ID }}
+        run: |
+          [[ -n "$MERCHANT_API_KEY" ]] || { echo "::error::MERCHANT_API_KEY secret is not set"; exit 1; }
+          [[ -n "$MERCHANT_ID" ]] || { echo "::error::MERCHANT_ID secret is not set"; exit 1; }
+          [[ -n "$POS_PROJECT_ID" ]] || { echo "::error::POS_PROJECT_ID secret is not set"; exit 1; }
+
       - name: Resolve Firebase App ID
         if: matrix.app == 'pos'
         id: firebase-app-id

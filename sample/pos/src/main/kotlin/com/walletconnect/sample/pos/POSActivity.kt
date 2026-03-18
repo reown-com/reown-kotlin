@@ -52,7 +52,7 @@ class POSActivity : AppCompatActivity() {
                     LocalWCColors provides effectiveColors,
                     LocalPosVariant provides variant,
                 ) {
-                    POSSampleHost(viewModel)
+                    POSSampleHost(viewModel, onClose = { finish() })
                 }
             }
         }
@@ -60,11 +60,11 @@ class POSActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        PosClient.resume()
+        if (POSApplication.initError == null) PosClient.resume()
     }
 
     override fun onStop() {
         super.onStop()
-        PosClient.pause()
+        if (POSApplication.initError == null) PosClient.pause()
     }
 }
