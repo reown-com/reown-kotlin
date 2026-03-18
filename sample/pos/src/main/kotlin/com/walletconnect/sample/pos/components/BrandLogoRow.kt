@@ -16,12 +16,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.R
+import com.walletconnect.sample.pos.model.LocalPosVariant
 
 @Composable
 fun BrandLogoRow(
     modifier: Modifier = Modifier,
     colorFilter: ColorFilter = ColorFilter.tint(WCTheme.colors.textPrimary)
 ) {
+    val variant = LocalPosVariant.current
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -45,11 +47,11 @@ fun BrandLogoRow(
         )
         Spacer(Modifier.width(WCTheme.spacing.spacing2))
         Image(
-            painter = painterResource(R.drawable.ic_ingenico_logo),
-            contentDescription = "Ingenico",
+            painter = painterResource(variant.partnerLogoRes),
+            contentDescription = variant.displayName,
             modifier = Modifier
-                .width(78.dp)
-                .height(22.dp),
+                .width(variant.partnerLogoWidthDp.dp)
+                .height(variant.partnerLogoHeightDp.dp),
             contentScale = ContentScale.Fit,
             colorFilter = colorFilter
         )

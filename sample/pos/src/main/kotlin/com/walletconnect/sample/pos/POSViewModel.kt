@@ -10,6 +10,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import com.walletconnect.sample.pos.components.TransactionFilter
 import com.walletconnect.sample.pos.model.Currency
+import com.walletconnect.sample.pos.model.PosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
 import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -99,6 +100,20 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     fun setThemeMode(mode: ThemeMode) {
         _selectedThemeMode.value = mode
         prefs.edit().putString(KEY_THEME, mode.name).apply()
+    }
+
+    // Selected variant (persisted)
+    private val _selectedVariant = MutableStateFlow(
+        prefs.getString(KEY_VARIANT, null)?.let { name ->
+            PosVariant.entries.find { it.name == name }
+        } ?: PosVariant.DEFAULT
+    )
+    val selectedVariant = _selectedVariant.asStateFlow()
+
+    fun setVariant(variant: PosVariant) {
+        _selectedVariant.value = variant
+        prefs.edit().putString(KEY_VARIANT, variant.name).apply()
+        variant.defaultTheme?.let { setThemeMode(it) }
     }
 
     // Loading state for "Start Payment" button
@@ -340,5 +355,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         private const val PREFS_NAME = "pos_settings"
         private const val KEY_CURRENCY = "currency"
         private const val KEY_THEME = "theme"
+        private const val KEY_VARIANT = "variant"
     }
 }
