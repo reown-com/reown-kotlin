@@ -10,6 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.ui.graphics.compositeOver
 import com.reown.sample.common.ui.theme.LocalWCColors
 import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.reown.sample.common.ui.theme.WCTheme
@@ -41,6 +42,7 @@ class POSActivity : AppCompatActivity() {
                         textAccentPrimary = variant.accentColor ?: baseColors.textAccentPrimary,
                         borderAccentPrimary = variant.accentColor ?: baseColors.borderAccentPrimary,
                         foregroundAccentPrimary10 = variant.accentColor?.copy(alpha = 0.1f) ?: baseColors.foregroundAccentPrimary10,
+                        foregroundAccentPrimary10Solid = variant.accentColor?.copy(alpha = 0.1f)?.compositeOver(baseColors.bgPrimary) ?: baseColors.foregroundAccentPrimary10Solid,
                         foregroundAccentPrimary40 = variant.accentColor?.copy(alpha = 0.4f) ?: baseColors.foregroundAccentPrimary40,
                         foregroundAccentPrimary60 = variant.accentColor?.copy(alpha = 0.6f) ?: baseColors.foregroundAccentPrimary60,
                         textInvert = variant.textInvertOverride ?: baseColors.textInvert,

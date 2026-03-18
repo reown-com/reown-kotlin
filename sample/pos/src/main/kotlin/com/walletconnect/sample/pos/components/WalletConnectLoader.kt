@@ -17,11 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
+import com.reown.sample.common.ui.theme.LightWCColors
 import com.reown.sample.common.ui.theme.WCTheme
 
 private const val CYCLE_DURATION = 4000
-private val WcAccentBlue = Color(0xFF0988F0)
+private val WcAccentBlue = LightWCColors.bgAccentPrimary
 private const val FADE_TIME = 80
 
 @Composable
