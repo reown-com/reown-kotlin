@@ -17,9 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.reown.sample.common.ui.theme.LightWCColors
 import com.reown.sample.common.ui.theme.WCTheme
 
 private const val CYCLE_DURATION = 4000
+private val WcAccentBlue = LightWCColors.bgAccentPrimary
 private const val FADE_TIME = 80
 
 @Composable
@@ -146,7 +148,7 @@ fun WalletConnectLoader(size: Dp = 120.dp) {
                 .offset(x = squareSize + gap, y = squareSize + gap)
                 .size(squareSize)
                 .clip(RoundedCornerShape(cornerBR.dp))
-                .background(colors.bgAccentPrimary.copy(alpha = opacityBR))
+                .background(WcAccentBlue.copy(alpha = opacityBR))
         )
     }
 }
