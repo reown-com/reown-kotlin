@@ -58,6 +58,7 @@ fun StyledQrCode(
     val sizePx = with(density) { size.roundToPx() }
 
     val qrBitmap by produceState<ImageBitmap?>(null, data, sizePx) {
+        if (sizePx <= 0) return@produceState
         value = withContext(Dispatchers.Default) {
             val logo = ContextCompat.getDrawable(context, R.drawable.ic_wc_qr_logo)
             val drawable = QrCodeDrawable(
@@ -116,12 +117,10 @@ private fun QrShimmerPlaceholder(size: Dp, modifier: Modifier = Modifier) {
         ),
         label = "qr_shimmer_translate"
     )
+    val shimmerBase = WCTheme.colors.foregroundSecondary
+    val shimmerHighlight = WCTheme.colors.foregroundPrimary
     val shimmerBrush = Brush.linearGradient(
-        colors = listOf(
-            Color(0xFFE0E0E0),
-            Color(0xFFF5F5F5),
-            Color(0xFFE0E0E0),
-        ),
+        colors = listOf(shimmerBase, shimmerHighlight, shimmerBase),
         start = Offset(translateAnim - 500f, translateAnim - 500f),
         end = Offset(translateAnim, translateAnim)
     )
