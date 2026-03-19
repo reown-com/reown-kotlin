@@ -1,6 +1,6 @@
 package com.walletconnect.sample.pos.screens
 
-import android.content.pm.PackageManager
+import android.nfc.NfcAdapter
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -148,7 +148,8 @@ private fun ScanContent(
 ) {
     val context = LocalContext.current
     val hasNfc = remember {
-        context.packageManager.hasSystemFeature(PackageManager.FEATURE_NFC)
+        val nfcAdapter = NfcAdapter.getDefaultAdapter(context)
+        nfcAdapter != null && nfcAdapter.isEnabled
     }
 
     Column(
