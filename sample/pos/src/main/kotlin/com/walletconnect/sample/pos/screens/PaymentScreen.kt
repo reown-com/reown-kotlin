@@ -1,16 +1,22 @@
 package com.walletconnect.sample.pos.screens
 
+import android.content.pm.PackageManager
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,11 +24,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.PosEvent
+import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.StyledQrCode
 import com.walletconnect.sample.pos.components.PosHeader
@@ -138,29 +146,61 @@ private fun ScanContent(
     remainingSeconds: Long,
     onCancel: () -> Unit
 ) {
+    val context = LocalContext.current
+    val hasNfc = remember {
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_NFC)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = WCTheme.spacing.spacing5),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.weight(1f))
+        if (hasNfc) {
+            Spacer(Modifier.height(WCTheme.spacing.spacing8))
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
 
-        Text(
-            text = "Scan to pay",
-            style = WCTheme.typography.bodyLgRegular,
-            color = WCTheme.colors.textTertiary
-        )
+        if (hasNfc) {
 
-        Spacer(Modifier.height(WCTheme.spacing.spacing2))
-
-        if (displayAmount.isNotBlank()) {
-            Text(
-                text = displayAmount,
-                style = WCTheme.typography.h3Regular,
-                color = WCTheme.colors.textPrimary
+            // NFC contactless icon
+            Image(
+                painter = painterResource(R.drawable.ic_nfc_contactless),
+                contentDescription = "NFC contactless",
+                modifier = Modifier.size(60.dp)
             )
+
             Spacer(Modifier.height(WCTheme.spacing.spacing5))
+
+            Text(
+                text = "Open your wallet app and tap",
+                style = WCTheme.typography.bodyXlRegular,
+                color = WCTheme.colors.textSecondary
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing5))
+        } else {
+            Text(
+                text = "Scan to pay",
+                style = WCTheme.typography.bodyLgRegular,
+                color = WCTheme.colors.textTertiary
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+        }
+
+        // Amount with cents in tertiary color
+        if (displayAmount.isNotBlank()) {
+            AmountText(displayAmount = displayAmount)
+            Spacer(Modifier.height(WCTheme.spacing.spacing8))
+        }
+
+        if (hasNfc) {
+            // Divider with "Or scan the QR code"
+            OrScanDivider()
+            Spacer(Modifier.height(WCTheme.spacing.spacing8))
         }
 
         // QR Code
@@ -191,6 +231,55 @@ private fun ScanContent(
         CloseButton(onClick = onCancel)
 
         Spacer(Modifier.height(WCTheme.spacing.spacing5))
+    }
+}
+
+@Composable
+private fun AmountText(displayAmount: String) {
+    // Split amount into whole and decimal parts to color cents differently
+    val dotIndex = displayAmount.indexOf('.')
+    if (dotIndex >= 0) {
+        Text(
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(color = WCTheme.colors.textPrimary)) {
+                    append(displayAmount.substring(0, dotIndex + 1))
+                }
+                withStyle(SpanStyle(color = WCTheme.colors.textTertiary)) {
+                    append(displayAmount.substring(dotIndex + 1))
+                }
+            },
+            style = WCTheme.typography.h1Medium,
+            textAlign = TextAlign.Center
+        )
+    } else {
+        Text(
+            text = displayAmount,
+            style = WCTheme.typography.h1Medium,
+            color = WCTheme.colors.textPrimary
+        )
+    }
+}
+
+@Composable
+private fun OrScanDivider() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Divider(
+            modifier = Modifier.weight(1f),
+            color = WCTheme.colors.borderPrimary
+        )
+        Text(
+            text = "Or scan the QR code",
+            style = WCTheme.typography.bodyXlRegular,
+            color = WCTheme.colors.textSecondary,
+            modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing2)
+        )
+        Divider(
+            modifier = Modifier.weight(1f),
+            color = WCTheme.colors.borderPrimary
+        )
     }
 }
 
