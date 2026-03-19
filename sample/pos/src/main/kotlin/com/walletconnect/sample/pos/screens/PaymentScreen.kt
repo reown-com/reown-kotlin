@@ -255,7 +255,8 @@ private fun AmountText(displayAmount: String) {
         Text(
             text = displayAmount,
             style = WCTheme.typography.h1Medium,
-            color = WCTheme.colors.textPrimary
+            color = WCTheme.colors.textPrimary,
+            textAlign = TextAlign.Center
         )
     }
 }
