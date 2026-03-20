@@ -5,9 +5,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
 import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.sample.pos.model.SymbolPosition
 
@@ -18,11 +15,8 @@ fun BigAmountDisplay(
     symbolPosition: SymbolPosition = SymbolPosition.LEFT,
     modifier: Modifier = Modifier
 ) {
-    val isEmpty = amount.isEmpty()
-    val primaryColor = if (isEmpty) WCTheme.colors.textTertiary else WCTheme.colors.textPrimary
-    val decimalColor = WCTheme.colors.textTertiary
+    val color = if (amount.isEmpty()) WCTheme.colors.textTertiary else WCTheme.colors.textPrimary
     val displayText = amount.ifEmpty { "0.00" }
-    val dotIndex = displayText.indexOf('.')
 
     Row(
         modifier = modifier,
@@ -32,33 +26,19 @@ fun BigAmountDisplay(
             Text(
                 text = currencySymbol,
                 style = WCTheme.typography.h1Medium,
-                color = primaryColor
+                color = color
             )
         }
-        if (dotIndex >= 0) {
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(SpanStyle(color = primaryColor)) {
-                        append(displayText.substring(0, dotIndex + 1))
-                    }
-                    withStyle(SpanStyle(color = decimalColor)) {
-                        append(displayText.substring(dotIndex + 1))
-                    }
-                },
-                style = WCTheme.typography.h1Medium
-            )
-        } else {
-            Text(
-                text = displayText,
-                style = WCTheme.typography.h1Medium,
-                color = primaryColor
-            )
-        }
+        Text(
+            text = displayText,
+            style = WCTheme.typography.h1Medium,
+            color = color
+        )
         if (symbolPosition == SymbolPosition.RIGHT) {
             Text(
                 text = currencySymbol,
                 style = WCTheme.typography.h1Medium,
-                color = primaryColor
+                color = color
             )
         }
     }

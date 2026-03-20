@@ -237,29 +237,12 @@ private fun ScanContent(
 
 @Composable
 private fun AmountText(displayAmount: String) {
-    // Split amount into whole and decimal parts to color cents differently
-    val dotIndex = displayAmount.indexOf('.')
-    if (dotIndex >= 0) {
-        Text(
-            text = buildAnnotatedString {
-                withStyle(SpanStyle(color = WCTheme.colors.textPrimary)) {
-                    append(displayAmount.substring(0, dotIndex + 1))
-                }
-                withStyle(SpanStyle(color = WCTheme.colors.textTertiary)) {
-                    append(displayAmount.substring(dotIndex + 1))
-                }
-            },
-            style = WCTheme.typography.h1Medium,
-            textAlign = TextAlign.Center
-        )
-    } else {
-        Text(
-            text = displayAmount,
-            style = WCTheme.typography.h1Medium,
-            color = WCTheme.colors.textPrimary,
-            textAlign = TextAlign.Center
-        )
-    }
+    Text(
+        text = displayAmount,
+        style = WCTheme.typography.h1Medium,
+        color = WCTheme.colors.textPrimary,
+        textAlign = TextAlign.Center
+    )
 }
 
 @Composable
