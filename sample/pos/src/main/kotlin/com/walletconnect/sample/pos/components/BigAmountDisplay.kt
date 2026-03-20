@@ -24,8 +24,10 @@ fun BigAmountDisplay(
     val dotIndex = amount.indexOf('.')
     // Determine how many decimals the user has typed after the dot
     val decimalCount = if (dotIndex >= 0) amount.length - dotIndex - 1 else -1
-    // Symbol is primary only when all decimals are filled (2 typed) or no dot yet with input
-    val symbolColor = when {
+    // LEFT symbol ($): always primary except placeholder
+    // RIGHT symbol (€): primary only when all decimals filled
+    val leftSymbolColor = if (amount.isEmpty()) tertiary else primary
+    val rightSymbolColor = when {
         amount.isEmpty() -> tertiary
         decimalCount >= 2 -> primary
         dotIndex >= 0 -> tertiary
@@ -42,7 +44,7 @@ fun BigAmountDisplay(
             Text(
                 text = currencySymbol,
                 style = WCTheme.typography.h1Medium,
-                color = symbolColor
+                color = leftSymbolColor
             )
         }
         if (amount.isEmpty()) {
@@ -84,7 +86,7 @@ fun BigAmountDisplay(
             Text(
                 text = currencySymbol,
                 style = WCTheme.typography.h1Medium,
-                color = symbolColor
+                color = rightSymbolColor
             )
         }
     }
