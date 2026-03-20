@@ -19,19 +19,20 @@ internal class ErrorTracker(
     baseHttpClient: OkHttpClient,
     baseUrl: String = BuildConfig.PULSE_BASE_URL
 ) {
-    private val httpClient = baseHttpClient.newBuilder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
-        .writeTimeout(15, TimeUnit.SECONDS)
-        .build()
+    private val pulseApi: PulseApi by lazy {
+        val httpClient = baseHttpClient.newBuilder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
+            .build()
 
-    private val retrofit = Retrofit.Builder()
-        .baseUrl(baseUrl.ensureTrailingSlash())
-        .client(httpClient)
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .build()
-
-    private val pulseApi: PulseApi = retrofit.create(PulseApi::class.java)
+        Retrofit.Builder()
+            .baseUrl(baseUrl.ensureTrailingSlash())
+            .client(httpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(PulseApi::class.java)
+    }
 
     private val silentExceptionHandler = CoroutineExceptionHandler { _, _ -> }
 

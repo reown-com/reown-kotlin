@@ -28,7 +28,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.ui.theme.WCTheme
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.PosEvent
 import com.walletconnect.sample.pos.components.CloseButton
