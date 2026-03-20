@@ -176,9 +176,6 @@ fun POSSampleHost(
                         }
                         navController.navigate(Screen.AmountScreen.route)
                     },
-                    onPrintReceipt = {
-                        viewModel.printReceipt()
-                    }
                 )
             }
 
