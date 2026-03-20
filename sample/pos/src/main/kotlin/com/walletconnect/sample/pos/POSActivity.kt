@@ -14,11 +14,8 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.walletconnect.sample.pos.ui.theme.LocalWCColors
 import com.walletconnect.sample.pos.ui.theme.WCSampleAppTheme
 import com.walletconnect.sample.pos.ui.theme.WCTheme
-import com.reown.sample.common.ui.theme.LocalWCColors
-import com.reown.sample.common.ui.theme.WCSampleAppTheme
 import com.walletconnect.sample.pos.nfc.NfcManager
 import com.walletconnect.sample.pos.nfc.UsdkServiceHelper
-import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.pos.PosClient
 import com.walletconnect.sample.pos.model.LocalPosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
