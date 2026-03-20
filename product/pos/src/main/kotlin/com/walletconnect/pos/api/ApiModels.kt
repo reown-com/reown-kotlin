@@ -20,7 +20,8 @@ internal data class CreatePaymentResponse(
     @param:Json(name = "paymentId") val paymentId: String,
     @param:Json(name = "status") val status: String,
     @param:Json(name = "expiresAt") val expiresAt: Long,
-    @param:Json(name = "pollInMs") val pollInMs: Long,
+    @param:Json(name = "pollInMs") val pollInMs: Long?,
+    @param:Json(name = "isFinal") val isFinal: Boolean,
     @param:Json(name = "gatewayUrl") val gatewayUrl: String
 )
 
@@ -96,42 +97,58 @@ internal object ErrorCodes {
 internal data class TransactionHistoryResponse(
     @param:Json(name = "data") val data: List<PaymentRecord>,
     @param:Json(name = "stats") val stats: TransactionStatsDto?,
-    @param:Json(name = "next_cursor") val nextCursor: String?
+    @param:Json(name = "nextCursor") val nextCursor: String?
 )
 
 @JsonClass(generateAdapter = true)
 internal data class PaymentRecord(
-    @param:Json(name = "payment_id") val paymentId: String,
-    @param:Json(name = "reference_id") val referenceId: String?,
+    @param:Json(name = "paymentId") val paymentId: String,
+    @param:Json(name = "merchantId") val merchantId: String?,
+    @param:Json(name = "referenceId") val referenceId: String?,
     @param:Json(name = "status") val status: String,
-    @param:Json(name = "merchant_id") val merchantId: String,
-    @param:Json(name = "is_terminal") val isTerminal: Boolean,
-    @param:Json(name = "wallet_name") val walletName: String,
-    @param:Json(name = "tx_hash") val txHash: String?,
-    @param:Json(name = "fiat_amount") val fiatAmount: Int?,
-    @param:Json(name = "fiat_currency") val fiatCurrency: String?,
-    @param:Json(name = "token_amount") val tokenAmount: String?,
-    @param:Json(name = "token_caip19") val tokenCaip19: String?,
-    @param:Json(name = "token_symbol") val tokenSymbol: String?,
-    @param:Json(name = "token_decimals") val tokenDecimals: Int?,
-    @param:Json(name = "token_logo") val tokenLogo: String?,
-    @param:Json(name = "chain_id") val chainId: String?,
-    @param:Json(name = "created_at") val createdAt: String?,
-    @param:Json(name = "confirmed_at") val confirmedAt: String?,
-    @param:Json(name = "broadcasted_at") val broadcastedAt: String?,
-    @param:Json(name = "processing_at") val processingAt: String?,
-    @param:Json(name = "finalized_at") val finalizedAt: String?,
-    @param:Json(name = "last_updated_at") val lastUpdatedAt: String?,
-    @param:Json(name = "buyer_caip10") val buyerCaip10: String?,
-    @param:Json(name = "nonce") val nonce: Int?,
-    @param:Json(name = "version") val version: String?
+    @param:Json(name = "isTerminal") val isTerminal: Boolean,
+    @param:Json(name = "fiatAmount") val fiatAmount: AmountWithDisplayDto?,
+    @param:Json(name = "tokenAmount") val tokenAmount: AmountWithDisplayDto?,
+    @param:Json(name = "buyer") val buyer: BuyerDto?,
+    @param:Json(name = "transaction") val transaction: TransactionInfoDto?,
+    @param:Json(name = "settlement") val settlement: SettlementDto?,
+    @param:Json(name = "createdAt") val createdAt: String?,
+    @param:Json(name = "lastUpdatedAt") val lastUpdatedAt: String?,
+    @param:Json(name = "settledAt") val settledAt: String?
+)
+
+@JsonClass(generateAdapter = true)
+internal data class AmountWithDisplayDto(
+    @param:Json(name = "unit") val unit: String?,
+    @param:Json(name = "value") val value: String?,
+    @param:Json(name = "display") val display: DisplayAmountDto?
+)
+
+@JsonClass(generateAdapter = true)
+internal data class BuyerDto(
+    @param:Json(name = "accountCaip10") val accountCaip10: String?,
+    @param:Json(name = "accountProviderName") val accountProviderName: String?,
+    @param:Json(name = "accountProviderIcon") val accountProviderIcon: String?
+)
+
+@JsonClass(generateAdapter = true)
+internal data class TransactionInfoDto(
+    @param:Json(name = "networkId") val networkId: String?,
+    @param:Json(name = "hash") val hash: String?,
+    @param:Json(name = "nonce") val nonce: Int?
+)
+
+@JsonClass(generateAdapter = true)
+internal data class SettlementDto(
+    @param:Json(name = "status") val status: String?,
+    @param:Json(name = "txHash") val txHash: String?
 )
 
 @JsonClass(generateAdapter = true)
 internal data class TransactionStatsDto(
-    @param:Json(name = "total_transactions") val totalTransactions: Int,
-    @param:Json(name = "total_revenue") val totalRevenue: TotalRevenueDto?,
-    @param:Json(name = "total_customers") val totalCustomers: Int
+    @param:Json(name = "totalTransactions") val totalTransactions: Int,
+    @param:Json(name = "totalRevenue") val totalRevenue: List<TotalRevenueDto>?,
+    @param:Json(name = "totalCustomers") val totalCustomers: Int
 )
 
 @JsonClass(generateAdapter = true)

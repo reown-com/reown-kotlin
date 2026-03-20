@@ -6,11 +6,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.ui.graphics.compositeOver
+import com.reown.sample.common.ui.theme.LocalWCColors
 import com.reown.sample.common.ui.theme.WCSampleAppTheme
+import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.pos.PosClient
+import com.walletconnect.sample.pos.model.LocalPosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
 
 class POSActivity : AppCompatActivity() {
@@ -22,24 +27,44 @@ class POSActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             val themeMode by viewModel.selectedThemeMode.collectAsState()
+            val variant by viewModel.selectedVariant.collectAsState()
             val darkTheme = when (themeMode) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
             }
             WCSampleAppTheme(darkTheme = darkTheme) {
-                POSSampleHost(viewModel)
+                val baseColors = WCTheme.colors
+                val effectiveColors = if (variant.accentColor != null || variant.textInvertOverride != null) {
+                    baseColors.copy(
+                        bgAccentPrimary = variant.accentColor ?: baseColors.bgAccentPrimary,
+                        iconAccentPrimary = variant.accentColor ?: baseColors.iconAccentPrimary,
+                        textAccentPrimary = variant.accentColor ?: baseColors.textAccentPrimary,
+                        borderAccentPrimary = variant.accentColor ?: baseColors.borderAccentPrimary,
+                        foregroundAccentPrimary10 = variant.accentColor?.copy(alpha = 0.1f) ?: baseColors.foregroundAccentPrimary10,
+                        foregroundAccentPrimary10Solid = variant.accentColor?.copy(alpha = 0.1f)?.compositeOver(baseColors.bgPrimary) ?: baseColors.foregroundAccentPrimary10Solid,
+                        foregroundAccentPrimary40 = variant.accentColor?.copy(alpha = 0.4f) ?: baseColors.foregroundAccentPrimary40,
+                        foregroundAccentPrimary60 = variant.accentColor?.copy(alpha = 0.6f) ?: baseColors.foregroundAccentPrimary60,
+                        textInvert = variant.textInvertOverride ?: baseColors.textInvert,
+                    )
+                } else baseColors
+                CompositionLocalProvider(
+                    LocalWCColors provides effectiveColors,
+                    LocalPosVariant provides variant,
+                ) {
+                    POSSampleHost(viewModel, onClose = { finish() })
+                }
             }
         }
     }
 
     override fun onStart() {
         super.onStart()
-        PosClient.resume()
+        if (POSApplication.initError == null) PosClient.resume()
     }
 
     override fun onStop() {
         super.onStop()
-        PosClient.pause()
+        if (POSApplication.initError == null) PosClient.pause()
     }
 }

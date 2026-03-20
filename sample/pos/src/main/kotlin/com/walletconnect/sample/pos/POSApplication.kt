@@ -10,6 +10,11 @@ import timber.log.Timber
 
 class POSApplication : Application(), SingletonImageLoader.Factory {
 
+    companion object {
+        var initError: String? = null
+            private set
+    }
+
     override fun onCreate() {
         super.onCreate()
 
@@ -21,16 +26,18 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
         // Initialize the lightweight POS SDK
         val deviceId = "sample_pos_device_${Build.MODEL}_${Build.SERIAL}"
 
-        PosClient.init(
-            apiKey = BuildConfig.MERCHANT_API_KEY,
-            merchantId = "merchant-1768487888",
-            deviceId = deviceId,
-        )
-
-        // Set the delegate to receive payment events
-        PosClient.setDelegate(PosSampleDelegate)
-
-        Timber.d("POSClient initialized successfully")
+        try {
+            PosClient.init(
+                apiKey = BuildConfig.MERCHANT_API_KEY,
+                merchantId = BuildConfig.MERCHANT_ID,
+                deviceId = deviceId,
+            )
+            PosClient.setDelegate(PosSampleDelegate)
+            Timber.d("POSClient initialized successfully")
+        } catch (e: IllegalStateException) {
+            initError = e.message ?: "Unknown initialization error"
+            Timber.e(e, "POSClient initialization failed")
+        }
     }
 
     override fun newImageLoader(context: coil3.PlatformContext): ImageLoader {

@@ -597,7 +597,6 @@ private fun WhyInfoRequiredContent(
             .fillMaxWidth()
             .background(WCTheme.colors.bgPrimary)
             .padding(WCTheme.spacing.spacing5),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Header: back arrow (left) + X close (right)
         Row(
@@ -618,25 +617,15 @@ private fun WhyInfoRequiredContent(
         Spacer(modifier = Modifier.height(28.dp))
 
         Text(
-            text = "Why we need your information?",
-            style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
-            textAlign = TextAlign.Center
+            text = "Why do we collect personal details?",
+            style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary)
         )
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
         Text(
-            text = "For regulatory compliance, we collect basic information on your first payment: full name, date of birth, and place of birth.",
-            style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary),
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing3))
-
-        Text(
-            text = "This information is tied to your wallet address and this specific network. If you use the same wallet on this network again, you won't need to provide it again.",
-            style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary),
-            textAlign = TextAlign.Center
+            text = "To meet compliance requirements, some basic information is collected from WalletConnect Pay users.\n\nThis is typically a one-time step\u2014if you use the same wallet on this network again, you won\u2019t need to provide the info again, unless your information changes.",
+            style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary)
         )
 
         Spacer(modifier = Modifier.height(28.dp))

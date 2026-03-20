@@ -26,6 +26,9 @@ inputs:
   merchantApiKey:
     description: 'Merchant API key for Pay SDK tests'
     required: false
+  merchantId:
+    description: 'Merchant ID for Pay SDK tests'
+    required: false
 
 runs:
   using: "composite"
@@ -49,6 +52,7 @@ runs:
         NOTIFY_INTEGRATION_TESTS_SECRET: ${{ inputs.notifySecret }}
         TEST_WALLET_PRIVATE_KEY: ${{ inputs.walletPrivateKey }}
         MERCHANT_API_KEY: ${{ inputs.merchantApiKey }}
+        MERCHANT_ID: ${{ inputs.merchantId }}
       run: ./gradlew ${{ inputs.command }} -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
 
     - uses: actions/upload-artifact@v5

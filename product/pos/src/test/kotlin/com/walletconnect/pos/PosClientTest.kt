@@ -2,6 +2,7 @@ package com.walletconnect.pos
 
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -104,7 +105,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `createPaymentIntent - succeeds when initialized`() {
+    fun `createPaymentIntent - succeeds when initialized`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         var eventReceived = false
@@ -124,10 +125,10 @@ class PosClientTest {
 
         // Cancel the payment to prevent ongoing network calls
         PosClient.cancelPayment()
-    }
+    } }
 
     @Test
-    fun `createPaymentIntent - accepts various currency units`() {
+    fun `createPaymentIntent - accepts various currency units`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
@@ -145,10 +146,10 @@ class PosClientTest {
             referenceId = "ORDER-GBP"
         )
         PosClient.cancelPayment()
-    }
+    } }
 
     @Test
-    fun `createPaymentIntent - cancels previous payment when called again`() {
+    fun `createPaymentIntent - cancels previous payment when called again`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         val events = mutableListOf<Pos.PaymentEvent>()
@@ -174,7 +175,7 @@ class PosClientTest {
 
         Thread.sleep(100)
         PosClient.cancelPayment()
-    }
+    } }
 
     @Test
     fun `checkPaymentStatus - throws when not initialized`() {
@@ -186,7 +187,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `checkPaymentStatus - returns error event for invalid payment`() = runBlocking {
+    fun `checkPaymentStatus - returns error event for invalid payment`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         // This will make a real network call and likely fail
@@ -194,7 +195,7 @@ class PosClientTest {
 
         // Should return an error event (network error or payment not found)
         assertNotNull(result)
-    }
+    } }
 
     @Test
     fun `setDelegate - can set delegate before init`() {
@@ -219,7 +220,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `delegate - receives events from createPaymentIntent`() {
+    fun `delegate - receives events from createPaymentIntent`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
 
         val latch = CountDownLatch(1)
@@ -243,7 +244,7 @@ class PosClientTest {
 
         // We should have received some event (likely an error due to test environment)
         assertNotNull(receivedEvent)
-    }
+    } }
 
     @Test
     fun `cancelPayment - safe to call when not polling`() {
@@ -263,9 +264,8 @@ class PosClientTest {
 
     @Test
     fun `cancelPayment - safe to call before init`() {
-        // Note: This tests current behavior - cancelPayment doesn't require init
         PosClient.cancelPayment()
-        // No exception means success
+        // No exception means success — fire-and-forget is safe even before init
     }
 
     @Test
@@ -372,7 +372,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `referenceId - can be empty string`() {
+    fun `referenceId - can be empty string`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
@@ -384,7 +384,7 @@ class PosClientTest {
             referenceId = ""
         )
         PosClient.cancelPayment()
-    }
+    } }
 
     @Test
     fun `pause - safe to call before init`() {
@@ -413,7 +413,7 @@ class PosClientTest {
     }
 
     @Test
-    fun `pause and resume - does not resume after cancelPayment`() {
+    fun `pause and resume - does not resume after cancelPayment`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
@@ -429,10 +429,10 @@ class PosClientTest {
         PosClient.cancelPayment()
         PosClient.resume()
         // No exception means success
-    }
+    } }
 
     @Test
-    fun `referenceId - accepts special characters`() {
+    fun `referenceId - accepts special characters`() { runBlocking {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
@@ -443,5 +443,100 @@ class PosClientTest {
             referenceId = "ORDER-123_ABC/2024"
         )
         PosClient.cancelPayment()
+    } }
+
+    @Test
+    fun `createPaymentIntent - throws on non-numeric amount value`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            PosClient.createPaymentIntent(
+                amount = Pos.Amount(unit = "iso4217/USD", value = "abc"),
+                referenceId = "ORDER-123"
+            )
+        }
+    }
+
+    @Test
+    fun `createPaymentIntent - throws on decimal amount value`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            PosClient.createPaymentIntent(
+                amount = Pos.Amount(unit = "iso4217/USD", value = "10.50"),
+                referenceId = "ORDER-123"
+            )
+        }
+    }
+
+    @Test
+    fun `createPaymentIntent - throws on negative amount value`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            PosClient.createPaymentIntent(
+                amount = Pos.Amount(unit = "iso4217/USD", value = "-100"),
+                referenceId = "ORDER-123"
+            )
+        }
+    }
+
+    @Test
+    fun `createPaymentIntent - accepts zero amount`() { runBlocking {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.setDelegate(object : POSDelegate {
+            override fun onEvent(event: Pos.PaymentEvent) {}
+        })
+
+        PosClient.createPaymentIntent(
+            amount = Pos.Amount(unit = "iso4217/USD", value = "0"),
+            referenceId = "ORDER-123"
+        )
+        PosClient.cancelPayment()
+    } }
+
+    @Test
+    fun `getTransactionHistory - throws on invalid limit`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                PosClient.getTransactionHistory(limit = 0)
+            }
+        }
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                PosClient.getTransactionHistory(limit = 201)
+            }
+        }
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                PosClient.getTransactionHistory(limit = -1)
+            }
+        }
+    }
+
+    @Test
+    fun `formatTokenAmount - uses exact token decimals`() {
+        val tx = Pos.Transaction(
+            paymentId = "pay_1",
+            referenceId = null,
+            status = Pos.TransactionStatus.SUCCEEDED,
+            txHash = null,
+            fiatAmount = null,
+            fiatCurrency = null,
+            tokenAmount = "1000000",
+            tokenSymbol = "USDC",
+            tokenDecimals = 6,
+            tokenLogo = null,
+            network = null,
+            chainId = null,
+            walletName = "Test",
+            createdAt = null,
+            confirmedAt = null
+        )
+        assertEquals("1", tx.formatTokenAmount())
     }
 }

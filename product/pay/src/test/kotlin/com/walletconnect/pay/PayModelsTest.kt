@@ -22,12 +22,13 @@ class PayModelsTest {
     fun `PaymentStatus enum should have all required values`() {
         val statuses = Pay.PaymentStatus.entries.toTypedArray()
 
-        assertEquals(5, statuses.size)
+        assertEquals(6, statuses.size)
         assertNotNull(Pay.PaymentStatus.valueOf("REQUIRES_ACTION"))
         assertNotNull(Pay.PaymentStatus.valueOf("PROCESSING"))
         assertNotNull(Pay.PaymentStatus.valueOf("SUCCEEDED"))
         assertNotNull(Pay.PaymentStatus.valueOf("FAILED"))
         assertNotNull(Pay.PaymentStatus.valueOf("EXPIRED"))
+        assertNotNull(Pay.PaymentStatus.valueOf("CANCELLED"))
     }
 
     @Test

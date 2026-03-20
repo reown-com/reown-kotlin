@@ -43,6 +43,14 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Check required secrets
+        env:
+          MERCHANT_API_KEY: ${{ secrets.MERCHANT_API_KEY }}
+          MERCHANT_ID: ${{ secrets.MERCHANT_ID }}
+        run: |
+          [[ -n "$MERCHANT_API_KEY" ]] || { echo "::error::MERCHANT_API_KEY secret is not set"; exit 1; }
+          [[ -n "$MERCHANT_ID" ]] || { echo "::error::MERCHANT_ID secret is not set"; exit 1; }
+
       - name: Run Pay instrumented tests
         uses: ./.github/actions/ci_instrumented_tests
         with:
@@ -51,4 +59,5 @@ jobs:
           projectId: ${{ secrets.WC_CLOUD_PROJECT_ID }}
           walletPrivateKey: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
           merchantApiKey: ${{ secrets.MERCHANT_API_KEY }}
+          merchantId: ${{ secrets.MERCHANT_ID }}
           testTimeoutSeconds: ${{ github.event.inputs.testTimeoutSeconds || env.TEST_TIMEOUT_SECONDS }}

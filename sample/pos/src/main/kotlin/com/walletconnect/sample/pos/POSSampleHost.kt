@@ -26,6 +26,10 @@ import com.walletconnect.sample.pos.screens.SettingsScreen
 import com.walletconnect.sample.pos.screens.StartPaymentScreen
 import com.walletconnect.sample.pos.screens.TransactionHistoryScreen
 
+object ErrorCodes {
+    const val INIT_FAILED = "init_failed"
+}
+
 sealed class Screen(val route: String, val label: String) {
     object StartPaymentScreen : Screen("start", "Home")
     object AmountScreen : Screen("amount", "Amount")
@@ -47,8 +51,18 @@ sealed class Screen(val route: String, val label: String) {
 }
 
 @Composable
-fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = rememberNavController()) {
+fun POSSampleHost(
+    viewModel: POSViewModel,
+    onClose: () -> Unit = {},
+    navController: NavHostController = rememberNavController(),
+) {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
+    val initError = POSApplication.initError
+    val startDestination = if (initError != null) {
+        Screen.ErrorScreen.routeWith(ErrorCodes.INIT_FAILED)
+    } else {
+        Screen.StartPaymentScreen.route
+    }
 
     Scaffold(
         scaffoldState = scaffoldState,
@@ -56,7 +70,7 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
     ) { paddings ->
         NavHost(
             navController = navController,
-            startDestination = Screen.StartPaymentScreen.route,
+            startDestination = startDestination,
             modifier = Modifier
                 .padding(paddings)
                 .background(WCTheme.colors.bgPrimary)
@@ -126,6 +140,7 @@ fun POSSampleHost(viewModel: POSViewModel, navController: NavHostController = re
                 val errorCode = backStackEntry.arguments?.getString(Screen.ErrorScreen.arg)
                 ErrorScreen(
                     errorCode = errorCode.orEmpty(),
+                    onClose = onClose,
                     onNewPayment = {
                         viewModel.resetForNewPayment()
                         navController.navigate(Screen.StartPaymentScreen.route) {

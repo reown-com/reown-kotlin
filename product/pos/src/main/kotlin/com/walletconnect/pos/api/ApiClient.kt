@@ -1,14 +1,12 @@
 package com.walletconnect.pos.api
 
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.walletconnect.pos.BuildConfig
 import com.walletconnect.pos.Pos
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -23,43 +21,24 @@ internal class ApiClient(
     private val merchantId: String,
     private val eventTracker: EventTracker,
     private val errorTracker: ErrorTracker,
-    baseUrl: String = BuildConfig.CORE_API_BASE_URL,
-    merchantBaseUrl: String = BuildConfig.MERCHANT_API_BASE_URL,
-    private val internalMerchantApiKey: String = BuildConfig.INTERNAL_MERCHANT_API
+    moshi: Moshi,
+    baseHttpClient: OkHttpClient,
+    baseUrl: String = BuildConfig.CORE_API_BASE_URL
 ) {
     companion object {
         private const val WCP_VERSION = "2026-02-19.preview"
         private const val MIN_POLL_INTERVAL_MS = 1000L
+        private const val MAX_POLL_INTERVAL_MS = 30_000L
         private const val MAX_TRANSIENT_RETRIES = 3
     }
 
-    private val moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
-
     private val errorAdapter = moshi.adapter(ApiErrorWrapper::class.java)
 
-    private val httpClient = OkHttpClient.Builder()
+    private val httpClient = baseHttpClient.newBuilder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(createHeadersInterceptor())
-        .apply {
-            if (BuildConfig.DEBUG) {
-                addInterceptor(HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
-                    redactHeader("Api-Key")
-                    redactHeader("Merchant-Id")
-                })
-            }
-        }
-        .build()
-
-    private val merchantHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .addInterceptor(createMerchantHeadersInterceptor())
         .build()
 
     private val retrofit = Retrofit.Builder()
@@ -68,14 +47,7 @@ internal class ApiClient(
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
-    private val merchantRetrofit = Retrofit.Builder()
-        .baseUrl(merchantBaseUrl.ensureTrailingSlash())
-        .client(merchantHttpClient)
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .build()
-
     private val payApi: PayApi = retrofit.create(PayApi::class.java)
-    private val merchantApi: MerchantApi = merchantRetrofit.create(MerchantApi::class.java)
 
     // Active polling state for pause/resume
     @Volatile
@@ -125,7 +97,9 @@ internal class ApiClient(
                 eventTracker.trackPaymentCreated(data.paymentId, context)
                 onEvent(paymentCreatedEvent)
 
-                startPolling(data.paymentId, data.expiresAt, context, onEvent)
+                if (!data.isFinal) {
+                    startPolling(data.paymentId, data.expiresAt, context, onEvent)
+                }
             } else {
                 val error = parseErrorResponse(response)
                 val paymentError = mapCreatePaymentError(error.code, error.message)
@@ -133,7 +107,6 @@ internal class ApiClient(
                 onEvent(paymentError)
             }
         } catch (e: CancellationException) {
-            // Rethrow cancellation to properly propagate coroutine cancellation
             throw e
         } catch (e: IOException) {
             errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "createPayment")
@@ -156,7 +129,7 @@ internal class ApiClient(
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            // Silently ignore errors (matches RN behavior)
+            // Best-effort — failures are silently ignored
         }
     }
 
@@ -206,10 +179,8 @@ internal class ApiClient(
 
                     is ApiResult.Error -> {
                         if (isSdkError(result.code) && ++consecutiveTransientErrors <= MAX_TRANSIENT_RETRIES) {
-                            // Transient error (network/parse) — retry after delay
                             delay(MIN_POLL_INTERVAL_MS)
                         } else {
-                            // Persistent or API error — stop polling
                             activePollingState = null
                             val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
                             eventTracker.trackPaymentFailed(paymentId, context, paymentError)
@@ -243,9 +214,9 @@ internal class ApiClient(
         }
     }
 
-    suspend fun getPaymentStatus(paymentId: String): ApiResult<GetPaymentStatusResponse> {
+    suspend fun getPaymentStatus(paymentId: String, maxPollMs: Long? = null): ApiResult<GetPaymentStatusResponse> {
         return try {
-            val response = payApi.getPaymentStatus(paymentId)
+            val response = payApi.getPaymentStatus(paymentId, maxPollMs)
 
             if (response.isSuccessful) {
                 val data = response.body()
@@ -259,7 +230,6 @@ internal class ApiClient(
                 ApiResult.Error(error.code, error.message)
             }
         } catch (e: CancellationException) {
-            // Rethrow cancellation to properly propagate coroutine cancellation
             throw e
         } catch (e: IOException) {
             errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "getPaymentStatus")
@@ -278,17 +248,6 @@ internal class ApiClient(
                 .addHeader("Sdk-Name", "pos-kotlin")
                 .addHeader("Sdk-Version", BuildConfig.SDK_VERSION)
                 .addHeader("Sdk-Platform", "android")
-                .addHeader("WCP-Version", WCP_VERSION)
-                .addHeader("Content-Type", "application/json")
-                .build()
-            chain.proceed(request)
-        }
-    }
-
-    private fun createMerchantHeadersInterceptor(): Interceptor {
-        return Interceptor { chain ->
-            val request = chain.request().newBuilder()
-                .addHeader("x-api-key", internalMerchantApiKey)
                 .addHeader("WCP-Version", WCP_VERSION)
                 .addHeader("Content-Type", "application/json")
                 .build()
@@ -331,8 +290,7 @@ internal class ApiClient(
         endTs: Instant? = null
     ): ApiResult<TransactionHistoryResponse> {
         return try {
-            val response = merchantApi.getTransactionHistory(
-                merchantId = merchantId,
+            val response = payApi.getTransactionHistory(
                 limit = limit,
                 cursor = cursor,
                 status = status,

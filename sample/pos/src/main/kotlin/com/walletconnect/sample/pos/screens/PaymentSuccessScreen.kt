@@ -42,6 +42,7 @@ import com.reown.sample.common.ui.theme.WCTheme
 import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.components.BrandLogoRow
+import com.walletconnect.sample.pos.model.LocalPosVariant
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -66,6 +67,8 @@ fun PaymentSuccessScreen(
     val diagonalLength = sqrt(screenWidth * screenWidth + screenHeight * screenHeight)
     val finalScale = ceil(diagonalLength / INITIAL_CIRCLE_SIZE).toFloat() + 2f
 
+    val variant = LocalPosVariant.current
+    val successTextColor = variant.successTextColor
     val circleScale = remember { Animatable(1f) }
     val contentAlpha = remember { Animatable(0f) }
 
@@ -111,7 +114,7 @@ fun PaymentSuccessScreen(
 
             BrandLogoRow(
                 modifier = Modifier.fillMaxWidth(),
-                colorFilter = ColorFilter.tint(Color.White)
+                colorFilter = ColorFilter.tint(successTextColor)
             )
 
             // Center content
@@ -120,7 +123,7 @@ fun PaymentSuccessScreen(
             Text(
                 text = "Payment successful",
                 style = WCTheme.typography.bodyXlRegular,
-                color = Color.White,
+                color = successTextColor,
                 textAlign = TextAlign.Center
             )
 
@@ -130,7 +133,7 @@ fun PaymentSuccessScreen(
                 Text(
                     text = displayAmount.uppercase(),
                     style = WCTheme.typography.h3Regular,
-                    color = Color.White,
+                    color = successTextColor,
                     textAlign = TextAlign.Center
                 )
             }

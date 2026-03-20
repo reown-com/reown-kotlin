@@ -51,6 +51,8 @@ import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.TransactionHistoryUiState
+import com.walletconnect.sample.pos.model.Currency
+import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 import com.walletconnect.sample.pos.components.BottomSheetHeader
 import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.PosHeader
@@ -170,7 +172,18 @@ fun TransactionHistoryScreen(
                 )
             }
 
-            Spacer(Modifier.height(WCTheme.spacing.spacing3))
+            // Total amount summary
+            val currentState = uiState
+            val stats = when (currentState) {
+                is TransactionHistoryUiState.Success -> currentState.stats
+                is TransactionHistoryUiState.LoadingMore -> currentState.stats
+                else -> null
+            }
+            if (stats != null) {
+                TotalAmountSummary(stats = stats)
+            } else {
+                Spacer(Modifier.height(WCTheme.spacing.spacing3))
+            }
 
             // Content
             when (val state = uiState) {
@@ -268,6 +281,36 @@ private fun FilterButton(
             contentDescription = null,
             tint = WCTheme.colors.iconDefault,
             modifier = Modifier.size(16.dp)
+        )
+    }
+}
+
+@Composable
+private fun TotalAmountSummary(stats: Pos.TransactionStats) {
+    val revenue = stats.totalRevenue
+    val formattedAmount = if (revenue != null) {
+        val currency = Currency.fromCode(revenue.currency)
+        formatAmountWithSymbol(String.format(java.util.Locale.US, "%.2f", revenue.amount), currency)
+    } else {
+        null
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = WCTheme.spacing.spacing5, vertical = WCTheme.spacing.spacing3)
+    ) {
+        if (formattedAmount != null) {
+            Text(
+                text = formattedAmount,
+                style = WCTheme.typography.h4Medium,
+                color = WCTheme.colors.textPrimary
+            )
+        }
+        Text(
+            text = "${stats.totalTransactions} transaction${if (stats.totalTransactions != 1) "s" else ""}",
+            style = WCTheme.typography.bodySmRegular,
+            color = WCTheme.colors.textSecondary
         )
     }
 }
