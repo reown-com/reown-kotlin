@@ -90,6 +90,8 @@ fun AmountScreen(
         NumericKeyboard(
             modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5),
             onDigit = { digit ->
+                // Prevent leading zeros in integer part (e.g. "00", "007")
+                if (!amountDisplay.contains(".") && amountDisplay == "0") return@NumericKeyboard
                 val newAmount = amountDisplay + digit
                 // Limit decimal places to 2
                 val parts = newAmount.split(".")
