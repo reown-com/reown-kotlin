@@ -20,7 +20,8 @@ internal data class CreatePaymentResponse(
     @param:Json(name = "paymentId") val paymentId: String,
     @param:Json(name = "status") val status: String,
     @param:Json(name = "expiresAt") val expiresAt: Long,
-    @param:Json(name = "pollInMs") val pollInMs: Long,
+    @param:Json(name = "pollInMs") val pollInMs: Long?,
+    @param:Json(name = "isFinal") val isFinal: Boolean,
     @param:Json(name = "gatewayUrl") val gatewayUrl: String
 )
 
