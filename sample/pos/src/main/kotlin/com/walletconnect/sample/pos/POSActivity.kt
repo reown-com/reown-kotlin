@@ -9,11 +9,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.ui.graphics.compositeOver
-import com.reown.sample.common.ui.theme.LocalWCColors
-import com.reown.sample.common.ui.theme.WCSampleAppTheme
-import com.reown.sample.common.ui.theme.WCTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.walletconnect.sample.pos.ui.theme.LocalWCColors
+import com.walletconnect.sample.pos.ui.theme.WCSampleAppTheme
+import com.walletconnect.sample.pos.ui.theme.WCTheme
 import com.walletconnect.pos.PosClient
 import com.walletconnect.sample.pos.model.LocalPosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
@@ -60,11 +60,15 @@ class POSActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (POSApplication.initError == null) PosClient.resume()
+        if (POSApplication.initError == null) {
+            try { PosClient.resume() } catch (_: IllegalStateException) { /* not yet initialized */ }
+        }
     }
 
     override fun onStop() {
         super.onStop()
-        if (POSApplication.initError == null) PosClient.pause()
+        if (POSApplication.initError == null) {
+            try { PosClient.pause() } catch (_: IllegalStateException) { /* not yet initialized */ }
+        }
     }
 }

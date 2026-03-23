@@ -32,22 +32,23 @@ internal class ApiClient(
         private const val MAX_TRANSIENT_RETRIES = 3
     }
 
-    private val errorAdapter = moshi.adapter(ApiErrorWrapper::class.java)
+    private val errorAdapter by lazy { moshi.adapter(ApiErrorWrapper::class.java) }
 
-    private val httpClient = baseHttpClient.newBuilder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .addInterceptor(createHeadersInterceptor())
-        .build()
+    private val payApi: PayApi by lazy {
+        val httpClient = baseHttpClient.newBuilder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(createHeadersInterceptor())
+            .build()
 
-    private val retrofit = Retrofit.Builder()
-        .baseUrl(baseUrl.ensureTrailingSlash())
-        .client(httpClient)
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .build()
-
-    private val payApi: PayApi = retrofit.create(PayApi::class.java)
+        Retrofit.Builder()
+            .baseUrl(baseUrl.ensureTrailingSlash())
+            .client(httpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(PayApi::class.java)
+    }
 
     // Active polling state for pause/resume
     @Volatile

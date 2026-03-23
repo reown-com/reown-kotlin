@@ -31,7 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.ui.theme.WCTheme
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.minus
 import com.github.alexzhirkevich.customqrgenerator.QrData

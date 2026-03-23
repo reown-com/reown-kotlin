@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.ui.theme.WCTheme
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.components.BigAmountDisplay
 import com.walletconnect.sample.pos.components.NumericKeyboard
