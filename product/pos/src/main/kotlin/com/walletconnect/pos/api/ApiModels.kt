@@ -12,7 +12,8 @@ internal data class Amount(
 @JsonClass(generateAdapter = true)
 internal data class CreatePaymentRequest(
     @param:Json(name = "referenceId") val referenceId: String? = null,
-    @param:Json(name = "amount") val amount: Amount
+    @param:Json(name = "amount") val amount: Amount,
+    @param:Json(name = "expiresAt") val expiresAt: Long? = null
 )
 
 @JsonClass(generateAdapter = true)

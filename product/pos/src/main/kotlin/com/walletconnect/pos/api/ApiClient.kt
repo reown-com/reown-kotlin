@@ -64,11 +64,14 @@ internal class ApiClient(
         referenceId: String,
         unit: String,
         value: String,
+        expirySeconds: Long,
         onEvent: (Pos.PaymentEvent) -> Unit
     ) {
+        val expiresAt = System.currentTimeMillis() / 1000 + expirySeconds
         val request = CreatePaymentRequest(
             referenceId = referenceId.ifBlank { null },
-            amount = Amount(unit = unit, value = value)
+            amount = Amount(unit = unit, value = value),
+            expiresAt = expiresAt
         )
 
         try {

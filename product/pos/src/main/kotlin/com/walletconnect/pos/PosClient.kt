@@ -23,6 +23,8 @@ import okhttp3.logging.HttpLoggingInterceptor
  * POS (Point of Sale) client for handling payment transactions.
  */
 object PosClient {
+    private const val DEFAULT_EXPIRY_SECONDS = 180L
+
     private val lock = Any()
 
     @Volatile private var delegate: POSDelegate? = null
@@ -78,11 +80,12 @@ object PosClient {
      * @param amount The payment amount. [Pos.Amount.value] must be a non-negative integer string
      *               representing the amount in minor units (e.g., cents for USD).
      * @param referenceId Merchant's reference ID for this payment
+     * @param expirySeconds How many seconds from now the payment should expire. Defaults to 180 (3 minutes).
      * @throws IllegalStateException if SDK is not initialized
      * @throws IllegalArgumentException if amount value is not a valid non-negative integer
      */
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
-    fun createPaymentIntent(amount: Pos.Amount, referenceId: String) {
+    fun createPaymentIntent(amount: Pos.Amount, referenceId: String, expirySeconds: Long = DEFAULT_EXPIRY_SECONDS) {
         synchronized(lock) {
             checkInitialized()
             requireValidAmount(amount)
@@ -90,7 +93,7 @@ object PosClient {
             val valueMinor = amount.value.toLong()
             eventTracker?.trackWcPaySelected(referenceId, amount.unit, valueMinor)
             currentPollingJob = scope!!.launch {
-                apiClient!!.createPayment(referenceId, amount.unit, amount.value) { event ->
+                apiClient!!.createPayment(referenceId, amount.unit, amount.value, expirySeconds) { event ->
                     emitEvent(event)
                 }
             }
