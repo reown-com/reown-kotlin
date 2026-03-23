@@ -27,24 +27,11 @@
             </intent-filter>
         </activity>
 
-        <!-- Disable heavyweight auto-initializing ContentProviders to speed up cold start -->
+        <!-- Disable Firebase auto-init ContentProvider (transitive dep, not used by POS) -->
         <provider
             android:name="com.google.firebase.provider.FirebaseInitProvider"
             android:authorities="${applicationId}.firebaseinitprovider"
             tools:node="remove" />
-
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="merge">
-            <meta-data
-                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-                tools:node="remove" />
-            <meta-data
-                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-                tools:node="remove" />
-        </provider>
     </application>
 
 </manifest>
