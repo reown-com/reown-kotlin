@@ -17,7 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.ui.theme.WCTheme
 import com.walletconnect.sample.pos.screens.AmountScreen
 import com.walletconnect.sample.pos.screens.ErrorScreen
 import com.walletconnect.sample.pos.screens.PaymentScreen
@@ -176,9 +176,6 @@ fun POSSampleHost(
                         }
                         navController.navigate(Screen.AmountScreen.route)
                     },
-                    onPrintReceipt = {
-                        viewModel.printReceipt()
-                    }
                 )
             }
 

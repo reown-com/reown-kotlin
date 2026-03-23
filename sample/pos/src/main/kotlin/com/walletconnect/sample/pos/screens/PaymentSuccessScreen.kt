@@ -38,7 +38,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.ui.theme.WCTheme
 import com.walletconnect.pos.Pos
 import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.components.BrandLogoRow
@@ -58,7 +58,7 @@ fun PaymentSuccessScreen(
     displayAmount: String,
     paymentInfo: Pos.PaymentInfo?,
     onNewPayment: () -> Unit,
-    onPrintReceipt: () -> Unit,
+    // onPrintReceipt: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val configuration = LocalConfiguration.current
@@ -141,35 +141,36 @@ fun PaymentSuccessScreen(
             Spacer(Modifier.weight(1f))
 
             // Print receipt button - always dark bg with white text
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(WCTheme.spacing.spacing12)
-                    .clip(WCTheme.borderRadius.shapeLarge)
-                    .background(ButtonDarkBg)
-                    .clickable(onClick = onPrintReceipt),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Print receipt",
-                        style = WCTheme.typography.bodyLgMedium,
-                        color = ButtonWhiteText
-                    )
-                    Spacer(Modifier.width(WCTheme.spacing.spacing2))
-                    Icon(
-                        painter = painterResource(R.drawable.ic_receipt),
-                        contentDescription = null,
-                        tint = WCTheme.colors.iconDefault,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
+            //TODO: Add print receipt button
+            // Box(
+            //     modifier = Modifier
+            //         .fillMaxWidth()
+            //         .height(WCTheme.spacing.spacing12)
+            //         .clip(WCTheme.borderRadius.shapeLarge)
+            //         .background(ButtonDarkBg)
+            //         .clickable(onClick = onPrintReceipt),
+            //     contentAlignment = Alignment.Center
+            // ) {
+            //     Row(
+            //         verticalAlignment = Alignment.CenterVertically,
+            //         horizontalArrangement = Arrangement.Center
+            //     ) {
+            //         Text(
+            //             text = "Print receipt",
+            //             style = WCTheme.typography.bodyLgMedium,
+            //             color = ButtonWhiteText
+            //         )
+            //         Spacer(Modifier.width(WCTheme.spacing.spacing2))
+            //         Icon(
+            //             painter = painterResource(R.drawable.ic_receipt),
+            //             contentDescription = null,
+            //             tint = WCTheme.colors.iconDefault,
+            //             modifier = Modifier.size(16.dp)
+            //         )
+            //     }
+            // }
 
-            Spacer(Modifier.height(WCTheme.spacing.spacing3))
+            // Spacer(Modifier.height(WCTheme.spacing.spacing3))
 
             // New payment button - always dark bg with white text
             Box(

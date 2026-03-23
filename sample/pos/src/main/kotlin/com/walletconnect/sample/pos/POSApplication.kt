@@ -6,13 +6,19 @@ import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.svg.SvgDecoder
 import com.walletconnect.pos.PosClient
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
+import java.util.concurrent.Executors
 
 class POSApplication : Application(), SingletonImageLoader.Factory {
 
     companion object {
         var initError: String? = null
             private set
+
+        private val _initCompleted = MutableStateFlow(false)
+        val initCompleted = _initCompleted.asStateFlow()
     }
 
     override fun onCreate() {
@@ -23,20 +29,24 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
             Timber.plant(Timber.DebugTree())
         }
 
-        // Initialize the lightweight POS SDK
+        // Initialize the POS SDK on a background thread to avoid blocking the main thread.
+        // OkHttp, Retrofit, and Moshi class loading is expensive on weak POS hardware.
         val deviceId = "sample_pos_device_${Build.MODEL}_${Build.SERIAL}"
-
-        try {
-            PosClient.init(
-                apiKey = BuildConfig.MERCHANT_API_KEY,
-                merchantId = BuildConfig.MERCHANT_ID,
-                deviceId = deviceId,
-            )
-            PosClient.setDelegate(PosSampleDelegate)
-            Timber.d("POSClient initialized successfully")
-        } catch (e: IllegalStateException) {
-            initError = e.message ?: "Unknown initialization error"
-            Timber.e(e, "POSClient initialization failed")
+        Executors.newSingleThreadExecutor().execute {
+            try {
+                PosClient.init(
+                    apiKey = BuildConfig.MERCHANT_API_KEY,
+                    merchantId = BuildConfig.MERCHANT_ID,
+                    deviceId = deviceId,
+                )
+                PosClient.setDelegate(PosSampleDelegate)
+                Timber.d("POSClient initialized successfully")
+            } catch (e: IllegalStateException) {
+                initError = e.message ?: "Unknown initialization error"
+                Timber.e(e, "POSClient initialization failed")
+            } finally {
+                _initCompleted.value = true
+            }
         }
     }
 

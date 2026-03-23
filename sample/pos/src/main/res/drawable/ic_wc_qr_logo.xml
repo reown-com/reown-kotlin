@@ -5,7 +5,7 @@
     android:viewportHeight="512">
   <path
       android:pathData="M256,0L256,0A256,256 0,0 1,512 256L512,256A256,256 0,0 1,256 512L256,512A256,256 0,0 1,0 256L0,256A256,256 0,0 1,256 0z"
-      android:fillColor="#0988F0"
+      android:fillColor="#202020"
       android:fillType="evenOdd"/>
   <group
       android:scaleX="7.886"
