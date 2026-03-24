@@ -4,6 +4,9 @@ package com.walletconnect.sample.pos.nfc
 
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import timber.log.Timber
 
 /**
@@ -27,6 +30,9 @@ import timber.log.Timber
  * iOS Background Tag Reading uses the URI record for Universal Links.
  */
 internal object NfcManager {
+
+    private val _tapEventFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val tapEventFlow: SharedFlow<Unit> = _tapEventFlow.asSharedFlow()
 
     @Volatile
     private var currentUri: String? = null
@@ -86,6 +92,7 @@ internal object NfcManager {
         Timber.d("NFC: NDEF message size: %d bytes", ndefMessage.toByteArray().size)
         IngenicoNfcTagEmulator.enable(ndefMessage.toByteArray(), timeoutSeconds = 30) {
             Timber.d("NFC: Tag being read")
+            _tapEventFlow.tryEmit(Unit)
         }
     }
 }
