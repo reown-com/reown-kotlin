@@ -222,7 +222,7 @@ private fun ScanContent(
             Spacer(Modifier.height(WCTheme.spacing.spacing5))
 
             Text(
-                text = if (tapAnimationTrigger > 0) "Tap detected!" else "Open your wallet app and tap",
+                text = if (tapAnimationTrigger > 0) "Confirm in your wallet app" else "Open your wallet app and tap",
                 style = WCTheme.typography.bodyXlRegular,
                 color = if (tapAnimationTrigger > 0) WCTheme.colors.textAccentPrimary else WCTheme.colors.textSecondary
             )
