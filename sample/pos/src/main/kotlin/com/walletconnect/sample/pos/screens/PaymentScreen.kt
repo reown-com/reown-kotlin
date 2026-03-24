@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.StyledQrCode
 import com.walletconnect.sample.pos.components.PosHeader
 import com.walletconnect.sample.pos.components.WalletConnectLoader
+import com.walletconnect.sample.pos.nfc.IngenicoNfcTagEmulator
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
@@ -147,9 +149,22 @@ private fun ScanContent(
     onCancel: () -> Unit
 ) {
     val context = LocalContext.current
-    val hasNfc = remember {
+    // Check both standard Android NFC and Ingenico USDK NFC tag emulation.
+    // USDK service binds asynchronously, so poll briefly until it becomes available.
+    val hasNfc by produceState(initialValue = false) {
         val nfcAdapter = NfcAdapter.getDefaultAdapter(context)
-        nfcAdapter != null && nfcAdapter.isEnabled
+        if (nfcAdapter != null && nfcAdapter.isEnabled) {
+            value = true
+            return@produceState
+        }
+        // Poll for Ingenico USDK NFC availability (service binds async)
+        repeat(10) {
+            if (IngenicoNfcTagEmulator.isAvailable) {
+                value = true
+                return@produceState
+            }
+            delay(500)
+        }
     }
 
     Column(
@@ -207,15 +222,7 @@ private fun ScanContent(
         // QR Code
         StyledQrCode(data = qrUrl, size = 320.dp)
 
-        Spacer(Modifier.height(WCTheme.spacing.spacing3))
-
-        Text(
-            text = "or tap to pay",
-            style = WCTheme.typography.bodyMdRegular,
-            color = WCTheme.colors.textTertiary
-        )
-
-        Spacer(Modifier.height(WCTheme.spacing.spacing3))
+        Spacer(Modifier.height(WCTheme.spacing.spacing5))
 
         // Expiration countdown
         if (remainingSeconds > 0) {

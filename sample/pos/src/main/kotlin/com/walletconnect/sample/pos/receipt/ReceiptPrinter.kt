@@ -39,72 +39,82 @@ internal object ReceiptPrinter {
                 putBoolean(VectorPrinterData.AUTO_CUT_PAPER, true)
             })
 
-            // Header
+            val centerFmt = Bundle().apply {
+                putInt(VectorPrinterData.ALIGNMENT, Alignment.CENTER)
+                putInt(VectorPrinterData.TEXT_SIZE, TextSize.NORMAL)
+            }
+
+            // Header — Reown Pay logo text
             val headerFmt = Bundle().apply {
                 putInt(VectorPrinterData.TEXT_SIZE, TextSize.LARGE)
                 putInt(VectorPrinterData.ALIGNMENT, Alignment.CENTER)
                 putBoolean(VectorPrinterData.BOLD, true)
             }
-            printer.addText(headerFmt, "WalletConnect\nPAY RECEIPT\n")
+            printer.addText(headerFmt, "WCPay\n")
 
-            // Separator
-            val centerFmt = Bundle().apply {
-                putInt(VectorPrinterData.ALIGNMENT, Alignment.CENTER)
-                putInt(VectorPrinterData.TEXT_SIZE, TextSize.NORMAL)
+            // Dotted separator
+            printer.addText(centerFmt, "· · · · · · · · · · · · · · · · · · · · · · · ·\n\n")
+
+            // Label style (small, left-aligned)
+            val labelFmt = Bundle().apply {
+                putInt(VectorPrinterData.TEXT_SIZE, TextSize.SMALL)
+                putInt(VectorPrinterData.ALIGNMENT, Alignment.NORMAL)
             }
-            printer.addText(centerFmt, "──────────────────────\n")
+            // Value style (normal, bold, left-aligned)
+            val valueFmt = Bundle().apply {
+                putInt(VectorPrinterData.TEXT_SIZE, TextSize.NORMAL)
+                putInt(VectorPrinterData.ALIGNMENT, Alignment.NORMAL)
+                putBoolean(VectorPrinterData.BOLD, true)
+            }
 
             if (paymentInfo != null) {
-                val normalFmt = Bundle().apply {
-                    putInt(VectorPrinterData.TEXT_SIZE, TextSize.NORMAL)
-                }
-                val weights = intArrayOf(1, 1)
-                val aligns = intArrayOf(Alignment.NORMAL, Alignment.OPPOSITE)
+                // TXN ID
+                printer.addText(labelFmt, "TXN ID\n")
+                printer.addText(valueFmt, "${paymentInfo.txHash}\n\n")
 
-                // Crypto amount
+                // DATE
+                val dateStr = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(Date())
+                printer.addText(labelFmt, "DATE\n")
+                printer.addText(valueFmt, "$dateStr\n\n")
+
+                // METHOD
+                printer.addText(labelFmt, "METHOD\n")
+                printer.addText(valueFmt, "WalletConnect Pay\n\n")
+
+                // AMOUNT (fiat)
+                if (fiatAmount != null) {
+                    printer.addText(labelFmt, "AMOUNT\n")
+                    printer.addText(valueFmt, "$fiatAmount\n\n")
+                }
+
+                // PAID WITH (crypto)
                 val cryptoAmount = paymentInfo.formatAmount()
                 if (cryptoAmount.isNotBlank()) {
-                    printer.addTextColumns(normalFmt, arrayOf("Amount:", cryptoAmount), weights, aligns)
+                    printer.addText(labelFmt, "PAID WITH\n")
+                    printer.addText(valueFmt, "$cryptoAmount\n\n")
                 }
 
-                // Fiat amount
-                if (fiatAmount != null) {
-                    printer.addTextColumns(normalFmt, arrayOf("Fiat:", fiatAmount), weights, aligns)
-                }
-
-                // Asset
-                if (paymentInfo.assetName != null) {
-                    printer.addTextColumns(normalFmt, arrayOf("Asset:", paymentInfo.assetName), weights, aligns)
-                }
-
-                // Network
+                // NETWORK
                 if (paymentInfo.networkName != null) {
-                    printer.addTextColumns(normalFmt, arrayOf("Network:", paymentInfo.networkName), weights, aligns)
+                    printer.addText(labelFmt, "NETWORK\n")
+                    printer.addText(valueFmt, "${paymentInfo.networkName}\n\n")
                 }
-
-                // Separator
-                printer.addText(centerFmt, "──────────────────────\n")
-
-                // Tx Hash
-                val smallFmt = Bundle().apply {
-                    putInt(VectorPrinterData.TEXT_SIZE, TextSize.SMALL)
-                    putInt(VectorPrinterData.ALIGNMENT, Alignment.NORMAL)
+            } else {
+                // Fallback when no payment info
+                if (fiatAmount != null) {
+                    printer.addText(labelFmt, "AMOUNT\n")
+                    printer.addText(valueFmt, "$fiatAmount\n\n")
                 }
-                printer.addText(normalFmt, "Tx Hash:\n")
-                printer.addText(smallFmt, "${paymentInfo.txHash}\n")
+                val dateStr = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(Date())
+                printer.addText(labelFmt, "DATE\n")
+                printer.addText(valueFmt, "$dateStr\n\n")
             }
 
-            // Separator + timestamp
-            printer.addText(centerFmt, "──────────────────────\n")
-            val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            val smallCenter = Bundle().apply {
-                putInt(VectorPrinterData.TEXT_SIZE, TextSize.SMALL)
-                putInt(VectorPrinterData.ALIGNMENT, Alignment.CENTER)
-            }
-            printer.addText(smallCenter, "$timestamp\n")
+            // Footer
+            printer.addText(centerFmt, "\nThank you for your payment!\n")
 
             // Feed paper before cut
-            printer.feedPix(50)
+            printer.feedPix(80)
 
             // Print
             printer.startPrint(object : OnPrintListener.Stub() {
