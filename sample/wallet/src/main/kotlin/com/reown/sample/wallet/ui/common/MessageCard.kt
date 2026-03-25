@@ -41,7 +41,7 @@ fun MessageCard(
             Text(
                 text = title,
                 style = WCTheme.typography.bodyLgRegular.copy(
-                    color = WCTheme.colors.textSecondary
+                    color = WCTheme.colors.textTertiary
                 )
             )
         }
