@@ -62,6 +62,7 @@ internal fun engineModule() = module {
             jsonRpcInteractor = get(),
             crypto = get(),
             authenticateResponseTopicRepository = get(),
+            pendingSessionTopicRepository = get(),
             proposalStorageRepository = get(),
             authenticateSessionUseCase = get(),
             sessionStorageRepository = get(),

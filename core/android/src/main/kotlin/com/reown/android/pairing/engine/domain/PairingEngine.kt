@@ -441,16 +441,16 @@ internal class PairingEngine(
 
     private fun Pairing.isNotExpired(): Boolean = (expiry.seconds > currentTimeInSeconds).also { isValid ->
         if (!isValid) {
-            scope.launch {
-                try {
-                    jsonRpcInteractor.unsubscribe(topic = this@isNotExpired.topic)
-                    pairingRepository.deletePairing(this@isNotExpired.topic)
-                    metadataRepository.deleteMetaData(this@isNotExpired.topic)
-                    crypto.removeKeys(this@isNotExpired.topic.value)
-                } catch (e: Exception) {
-                    logger.error("Error when deleting pairing: $e")
-                }
+            try {
+                pairingRepository.deletePairing(this@isNotExpired.topic)
+                metadataRepository.deleteMetaData(this@isNotExpired.topic)
+                runCatching { crypto.removeKeys(this@isNotExpired.topic.value) }.onFailure { logger.error(it) }
+            } catch (e: Exception) {
+                logger.error("Error when deleting expired pairing: $e")
             }
+            jsonRpcInteractor.unsubscribe(topic = this@isNotExpired.topic,
+                onFailure = { logger.error("Failed to unsubscribe expired pairing: $it") }
+            )
         }
     }
 

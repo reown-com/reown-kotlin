@@ -11,6 +11,11 @@ internal class AuthenticateResponseTopicRepository(private val authenticateRespo
     }
 
     @JvmSynthetic
+    fun getResponseTopicByPairingTopic(pairingTopic: String): String? {
+        return authenticateResponseTopicDaoQueries.getByPairingTopic(pairingTopic).executeAsOneOrNull()
+    }
+
+    @JvmSynthetic
     @Throws(SQLiteException::class)
     suspend fun delete(pairingTopic: String) {
         authenticateResponseTopicDaoQueries.deleteByPairingTopic(pairingTopic)
