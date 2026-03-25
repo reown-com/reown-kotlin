@@ -145,7 +145,7 @@ enum class Chains(
         color = "#B2B2B2",
         methods = Info.Cosmos.defaultMethods,
         events = Info.Cosmos.defaultEvents,
-        order = 7
+        order = 9
     ),
     BNB(
         chainName = "BNB Smart Chain",
@@ -155,7 +155,7 @@ enum class Chains(
         color = "#F3BA2F",
         methods = Info.Eth.defaultMethods,
         events = Info.Eth.defaultEvents,
-        order = 8
+        order = 10
     ),
     MONAD(
         chainName = "Monad",
@@ -165,7 +165,7 @@ enum class Chains(
         color = "#836EF9",
         methods = Info.Eth.defaultMethods,
         events = Info.Eth.defaultEvents,
-        order = 10
+        order = 11
     ),
     SOLANA(
         chainName = "Solana Mainnet",
@@ -175,7 +175,7 @@ enum class Chains(
         color = "#F3BA2F",
         methods = Info.Solana.defaultMethods,
         events = Info.Solana.defaultEvents,
-        order = 11
+        order = 12
     );
 
     sealed class Info {
