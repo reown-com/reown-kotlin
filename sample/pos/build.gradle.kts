@@ -112,6 +112,9 @@ dependencies {
     implementation(libs.androidx.material)
     implementation(libs.androidx.splashscreen)
 
+    // Secure storage
+    implementation(libs.androidx.security)
+
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
     testImplementation(libs.jUnit)
