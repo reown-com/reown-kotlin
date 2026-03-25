@@ -348,14 +348,12 @@ internal class SignEngine(
         }
     }
 
-    private fun resubscribeToPendingAuthenticateTopics() {
-        scope.launch {
-            try {
-                val responseTopics = authenticateResponseTopicRepository.getResponseTopics().map { responseTopic -> responseTopic }
-                jsonRpcInteractor.batchSubscribe(responseTopics) { error -> scope.launch { _engineEvent.emit(SDKError(error)) } }
-            } catch (e: Exception) {
-                scope.launch { _engineEvent.emit(SDKError(e)) }
-            }
+    private suspend fun resubscribeToPendingAuthenticateTopics() {
+        try {
+            val responseTopics = authenticateResponseTopicRepository.getResponseTopics()
+            jsonRpcInteractor.batchSubscribe(responseTopics) { error -> scope.launch { _engineEvent.emit(SDKError(error)) } }
+        } catch (e: Exception) {
+            scope.launch { _engineEvent.emit(SDKError(e)) }
         }
     }
 
