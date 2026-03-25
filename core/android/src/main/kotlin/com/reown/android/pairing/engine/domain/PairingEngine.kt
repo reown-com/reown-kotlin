@@ -328,7 +328,7 @@ internal class PairingEngine(
             .onEach {
                 try {
                     pairingRepository.getListOfPairings()
-                        .filter { pairing -> !pairing.isNotExpired() }
+                        .forEach { pairing -> pairing.isNotExpired() }
                 } catch (e: Exception) {
                     logger.error(e)
                 }

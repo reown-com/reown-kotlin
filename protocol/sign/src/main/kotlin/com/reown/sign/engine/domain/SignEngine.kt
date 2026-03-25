@@ -46,6 +46,7 @@ import com.reown.sign.engine.use_case.calls.GetVerifyContextByIdUseCaseInterface
 import com.reown.sign.engine.use_case.calls.PairUseCaseInterface
 import com.reown.sign.engine.use_case.calls.PingUseCaseInterface
 import com.reown.sign.engine.use_case.calls.ProposeSessionUseCaseInterface
+import com.reown.sign.engine.use_case.calls.ReconcileOrphanSubscriptionsUseCase
 import com.reown.sign.engine.use_case.calls.RejectSessionAuthenticateUseCaseInterface
 import com.reown.sign.engine.use_case.calls.RejectSessionUseCaseInterface
 import com.reown.sign.engine.use_case.calls.RespondSessionRequestUseCaseInterface
@@ -142,6 +143,7 @@ internal class SignEngine(
     private val onSessionSettleResponseUseCase: OnSessionSettleResponseUseCase,
     private val onSessionUpdateResponseUseCase: OnSessionUpdateResponseUseCase,
     private val onSessionRequestResponseUseCase: OnSessionRequestResponseUseCase,
+    private val reconcileOrphanSubscriptionsUseCase: ReconcileOrphanSubscriptionsUseCase,
     private val insertEventUseCase: InsertTelemetryEventUseCase,
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
     private val logger: Logger
@@ -358,39 +360,7 @@ internal class SignEngine(
     }
 
     private suspend fun reconcileOrphanSubscriptions() {
-        try {
-            val subscribedTopics = jsonRpcInteractor.getSubscriptionTopics()
-            if (subscribedTopics.isEmpty()) return
-
-            val knownTopics = mutableSetOf<String>()
-
-            // Session topics
-            knownTopics.addAll(
-                sessionStorageRepository.getListOfSessionVOsWithoutMetadata().map { it.topic.value }
-            )
-
-            // Auth response topics
-            knownTopics.addAll(authenticateResponseTopicRepository.getResponseTopics())
-
-            // Pending session topics
-            knownTopics.addAll(pendingSessionTopicRepository.getAllSessionTopics())
-
-            // Pairing topics
-            runCatching {
-                knownTopics.addAll(getPairingsUseCase.getListOfSettledPairings().map { it.topic.value })
-            }.onFailure { logger.error(it) }
-
-            val orphanTopics = subscribedTopics - knownTopics
-            orphanTopics.forEach { topic ->
-                logger.log("Reconciliation: unsubscribing orphan topic: $topic")
-                runCatching { crypto.removeKeys(topic) }.onFailure { logger.error(it) }
-                jsonRpcInteractor.unsubscribe(Topic(topic),
-                    onFailure = { logger.error("Failed to unsubscribe orphan topic: $it") }
-                )
-            }
-        } catch (e: Exception) {
-            logger.error("Reconciliation error: $e")
-        }
+        reconcileOrphanSubscriptionsUseCase.reconcile()
     }
 
     private fun setupSequenceExpiration() {
