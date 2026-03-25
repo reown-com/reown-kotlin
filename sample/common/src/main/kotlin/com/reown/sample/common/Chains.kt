@@ -116,6 +116,17 @@ enum class Chains(
         order = 6
     ),
 
+    CELO(
+        chainName = "Celo",
+        chainNamespace = Info.Eth.chain,
+        chainReference = "42220",
+        icon = R.drawable.ic_celo,
+        color = "#FCFF52",
+        methods = Info.Eth.defaultMethods,
+        events = Info.Eth.defaultEvents,
+        order = 7
+    ),
+
     CELO_ALFAJORES(
         chainName = "Celo Alfajores",
         chainNamespace = Info.Eth.chain,
@@ -124,7 +135,7 @@ enum class Chains(
         color = "#f9cb5b",
         methods = Info.Eth.defaultMethods,
         events = Info.Eth.defaultEvents,
-        order = 7
+        order = 8
     ),
     COSMOS(
         chainName = "Cosmos",
@@ -146,6 +157,16 @@ enum class Chains(
         events = Info.Eth.defaultEvents,
         order = 8
     ),
+    MONAD(
+        chainName = "Monad",
+        chainNamespace = Info.Eth.chain,
+        chainReference = "143",
+        icon = R.drawable.ic_monad,
+        color = "#836EF9",
+        methods = Info.Eth.defaultMethods,
+        events = Info.Eth.defaultEvents,
+        order = 10
+    ),
     SOLANA(
         chainName = "Solana Mainnet",
         chainNamespace = Info.Solana.chain,
@@ -154,7 +175,7 @@ enum class Chains(
         color = "#F3BA2F",
         methods = Info.Solana.defaultMethods,
         events = Info.Solana.defaultEvents,
-        order = 9
+        order = 11
     );
 
     sealed class Info {
