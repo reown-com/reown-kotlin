@@ -35,7 +35,7 @@ fun CopyableItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(borderRadius.radius3))
-            .background(color = colors.foregroundPrimary)
+            .background(color = colors.foregroundSecondary)
             .clickable { onCopy(value) }
             .padding(spacing.spacing3)
     ) {
