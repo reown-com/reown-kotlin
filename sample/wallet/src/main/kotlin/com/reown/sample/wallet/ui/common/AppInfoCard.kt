@@ -33,7 +33,7 @@ fun AppInfoCard(
             Text(
                 text = formatDomain(url),
                 style = WCTheme.typography.bodyLgRegular.copy(
-                    color = colors.textSecondary
+                    color = colors.textTertiary
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

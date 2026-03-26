@@ -44,6 +44,7 @@ private val chainRegistry: Map<String, ChainInfo> = mapOf(
     "eip155:1285" to ChainInfo("Moonriver", R.drawable.ic_moonriver, Color(0xFFF2B705), "Mr"),
     "eip155:7777777" to ChainInfo("Zora", R.drawable.ic_zora, Color(0xFF2B5DF0), "Z"),
     "eip155:1313161554" to ChainInfo("Aurora", R.drawable.ic_aurora, Color(0xFF70D44B), "Au"),
+    "eip155:143" to ChainInfo("Monad", com.reown.sample.common.R.drawable.ic_monad, Color(0xFF836EF9), "Mo"),
     // Solana
     "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp" to ChainInfo("Solana", com.reown.sample.common.R.drawable.ic_solana, Color(0xFF9945FF), "S"),
     // Cosmos
