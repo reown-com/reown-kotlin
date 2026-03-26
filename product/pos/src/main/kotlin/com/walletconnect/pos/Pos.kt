@@ -177,6 +177,17 @@ object Pos {
      * Note: End times include a 2-minute buffer to account for potential clock skew
      * between the device and server, ensuring recently completed transactions are included.
      */
+    sealed interface MtlsConfig {
+        /** Use the bundled test certificate (for development/testing). */
+        data object Default : MtlsConfig
+
+        /** Load certificate from a PKCS12 file path on the device. */
+        data class FromFile(val p12Path: String, val password: String = "") : MtlsConfig
+
+        /** Disable mTLS — use plain TLS only. */
+        data object Disabled : MtlsConfig
+    }
+
     object DateRanges {
         // Buffer to account for clock skew between device and server
         private const val CLOCK_SKEW_BUFFER_SECONDS = 120L

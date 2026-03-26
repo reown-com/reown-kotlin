@@ -100,3 +100,4 @@ protocol/sign/property 'buildDir'
 product/pos/property 'buildDir'
 .idea/codeStyles
 .DS_Store
+product/pos/scripts/certs/

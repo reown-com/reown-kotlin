@@ -6,6 +6,8 @@ import com.walletconnect.pos.api.ApiClient
 import com.walletconnect.pos.api.ApiResult
 import com.walletconnect.pos.api.ErrorTracker
 import com.walletconnect.pos.api.EventTracker
+import com.walletconnect.pos.api.MtlsConfig
+import com.walletconnect.pos.api.TestClientCertificate
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import com.walletconnect.pos.api.toTransaction
@@ -18,6 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import java.io.FileInputStream
 
 /**
  * POS (Point of Sale) client for handling payment transactions.
@@ -32,6 +35,7 @@ object PosClient {
     @Volatile private var scope: CoroutineScope? = null
     @Volatile private var currentPollingJob: Job? = null
     @Volatile private var sharedHttpClient: OkHttpClient? = null
+    @Volatile private var payHttpClient: OkHttpClient? = null
 
     private val sharedMoshi: Moshi by lazy {
         Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
@@ -45,7 +49,12 @@ object PosClient {
      * @param deviceId Unique identifier for this POS device
      */
     @Throws(IllegalStateException::class)
-    fun init(apiKey: String, merchantId: String, deviceId: String) {
+    fun init(
+        apiKey: String,
+        merchantId: String,
+        deviceId: String,
+        mtlsConfig: Pos.MtlsConfig = Pos.MtlsConfig.Default
+    ) {
         check(apiKey.isNotBlank()) { "apiKey cannot be blank" }
         check(merchantId.isNotBlank()) { "merchantId cannot be blank" }
         check(deviceId.isNotBlank()) { "deviceId cannot be blank" }
@@ -53,11 +62,25 @@ object PosClient {
             cleanup()
             val baseHttpClient = createBaseHttpClient()
             sharedHttpClient = baseHttpClient
+
+            val mtlsClient = when (mtlsConfig) {
+                is Pos.MtlsConfig.Default -> createMtlsHttpClient(
+                    TestClientCertificate.asInputStream(),
+                    TestClientCertificate.PASSWORD.toCharArray()
+                )
+                is Pos.MtlsConfig.FromFile -> createMtlsHttpClient(
+                    FileInputStream(mtlsConfig.p12Path),
+                    mtlsConfig.password.toCharArray()
+                )
+                is Pos.MtlsConfig.Disabled -> baseHttpClient
+            }
+            payHttpClient = mtlsClient
+
             val newScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
             scope = newScope
             eventTracker = EventTracker(merchantId, newScope, sharedMoshi, baseHttpClient)
             errorTracker = ErrorTracker(newScope, sharedMoshi, baseHttpClient)
-            apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!, sharedMoshi, baseHttpClient)
+            apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!, sharedMoshi, mtlsClient)
         }
     }
 
@@ -263,6 +286,13 @@ object PosClient {
         apiClient = null
         eventTracker = null
         errorTracker = null
+        payHttpClient?.let { client ->
+            if (client !== sharedHttpClient) {
+                client.dispatcher.executorService.shutdown()
+                client.connectionPool.evictAll()
+            }
+        }
+        payHttpClient = null
         sharedHttpClient?.let { client ->
             client.dispatcher.executorService.shutdown()
             client.connectionPool.evictAll()
@@ -272,6 +302,25 @@ object PosClient {
 
     private fun createBaseHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.BODY
+                        redactHeader("Api-Key")
+                        redactHeader("Merchant-Id")
+                    })
+                }
+            }
+            .build()
+    }
+
+    private fun createMtlsHttpClient(
+        p12Stream: java.io.InputStream,
+        password: CharArray
+    ): OkHttpClient {
+        val (sslSocketFactory, trustManager) = MtlsConfig.createSslConfig(p12Stream, password)
+        return OkHttpClient.Builder()
+            .sslSocketFactory(sslSocketFactory, trustManager)
             .apply {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(HttpLoggingInterceptor().apply {
