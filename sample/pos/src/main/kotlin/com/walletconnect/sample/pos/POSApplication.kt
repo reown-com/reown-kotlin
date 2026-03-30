@@ -37,8 +37,8 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
         Executors.newSingleThreadExecutor().execute {
             try {
                 PosClient.init(
-                    apiKey = credentialsManager.getApiKey(),
-                    merchantId = credentialsManager.getMerchantId(),
+                    apiKey = "wcp_kZEqRgAfH9Bmg_NZtOeqK80IHZwQsiRa",//credentialsManager.getApiKey(),
+                    merchantId = "pos-staging-demo-1",//credentialsManager.getMerchantId(),
                     deviceId = deviceId,
                 )
                 PosClient.setDelegate(PosSampleDelegate)
