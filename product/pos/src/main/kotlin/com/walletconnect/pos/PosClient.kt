@@ -64,13 +64,13 @@ object PosClient {
             sharedHttpClient = baseHttpClient
 
             val mtlsClient = when (mtlsConfig) {
-                is Pos.MtlsConfig.Default -> createMtlsHttpClient(
-                    TestClientCertificate.asInputStream(),
-                    TestClientCertificate.PASSWORD.toCharArray()
+                is Pos.MtlsConfig.Default -> createMtlsHttpClientFromPem(
+                    TestClientCertificate.certInputStream(),
+                    TestClientCertificate.keyInputStream()
                 )
-                is Pos.MtlsConfig.FromFile -> createMtlsHttpClient(
-                    FileInputStream(mtlsConfig.p12Path),
-                    mtlsConfig.password.toCharArray()
+                is Pos.MtlsConfig.FromPemFiles -> createMtlsHttpClientFromPem(
+                    FileInputStream(mtlsConfig.certPath),
+                    FileInputStream(mtlsConfig.keyPath)
                 )
                 is Pos.MtlsConfig.Disabled -> baseHttpClient
             }
@@ -314,11 +314,18 @@ object PosClient {
             .build()
     }
 
-    private fun createMtlsHttpClient(
-        p12Stream: java.io.InputStream,
-        password: CharArray
+    private fun createMtlsHttpClientFromPem(
+        certStream: java.io.InputStream,
+        keyStream: java.io.InputStream
     ): OkHttpClient {
-        val (sslSocketFactory, trustManager) = MtlsConfig.createSslConfig(p12Stream, password)
+        val (sslSocketFactory, trustManager) = MtlsConfig.createSslConfigFromPem(certStream, keyStream)
+        return buildMtlsOkHttpClient(sslSocketFactory, trustManager)
+    }
+
+    private fun buildMtlsOkHttpClient(
+        sslSocketFactory: javax.net.ssl.SSLSocketFactory,
+        trustManager: javax.net.ssl.X509TrustManager
+    ): OkHttpClient {
         return OkHttpClient.Builder()
             .sslSocketFactory(sslSocketFactory, trustManager)
             .apply {

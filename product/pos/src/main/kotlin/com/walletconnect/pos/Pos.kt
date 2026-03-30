@@ -181,8 +181,8 @@ object Pos {
         /** Use the bundled test certificate (for development/testing). */
         data object Default : MtlsConfig
 
-        /** Load certificate from a PKCS12 file path on the device. */
-        data class FromFile(val p12Path: String, val password: String = "") : MtlsConfig
+        /** Load certificate from separate PEM .crt and .key file paths on the device. */
+        data class FromPemFiles(val certPath: String, val keyPath: String) : MtlsConfig
 
         /** Disable mTLS — use plain TLS only. */
         data object Disabled : MtlsConfig
