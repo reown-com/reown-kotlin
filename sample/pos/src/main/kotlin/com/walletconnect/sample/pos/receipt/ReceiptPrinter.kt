@@ -2,12 +2,17 @@
 
 package com.walletconnect.sample.pos.receipt
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Bundle
+import androidx.core.content.ContextCompat
 import com.usdk.apiservice.aidl.vectorprinter.Alignment
 import com.usdk.apiservice.aidl.vectorprinter.OnPrintListener
 import com.usdk.apiservice.aidl.vectorprinter.TextSize
 import com.usdk.apiservice.aidl.vectorprinter.VectorPrinterData
 import com.walletconnect.pos.Pos
+import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.nfc.UsdkServiceHelper
 import timber.log.Timber
 import java.text.SimpleDateFormat
@@ -21,6 +26,7 @@ internal object ReceiptPrinter {
             UsdkServiceHelper.getVectorPrinter() != null
 
     fun printPaymentReceipt(
+        context: Context,
         paymentInfo: Pos.PaymentInfo?,
         fiatAmount: String?,
         onFinish: () -> Unit = {},
@@ -44,13 +50,22 @@ internal object ReceiptPrinter {
                 putInt(VectorPrinterData.TEXT_SIZE, TextSize.NORMAL)
             }
 
-            // Header — Reown Pay logo text
-            val headerFmt = Bundle().apply {
-                putInt(VectorPrinterData.TEXT_SIZE, TextSize.LARGE)
+            // Header — WCPay logo image
+            val logoBitmap = vectorDrawableToBitmap(context, R.drawable.ic_wcpay_logo, widthPx = 240, heightPx = 72)
+            if (logoBitmap != null) {
+                val imgFmt = Bundle().apply {
+                    putInt(VectorPrinterData.ALIGNMENT, Alignment.CENTER)
+                }
+                printer.addImage(imgFmt, logoBitmap)
+            }
+
+            // Sub-header
+            val subHeaderFmt = Bundle().apply {
+                putInt(VectorPrinterData.TEXT_SIZE, TextSize.NORMAL)
                 putInt(VectorPrinterData.ALIGNMENT, Alignment.CENTER)
                 putBoolean(VectorPrinterData.BOLD, true)
             }
-            printer.addText(headerFmt, "WCPay - WalletCon\n")
+            printer.addText(subHeaderFmt, "WalletCon Cannes\n")
 
             // Dotted separator
             printer.addText(centerFmt, "· · · · · · · · · · · · · · · · · · · · · · · ·\n\n")
@@ -136,5 +151,14 @@ internal object ReceiptPrinter {
             Timber.e(e, "Receipt: Failed to print")
             onError(e.message ?: "Print failed")
         }
+    }
+
+    private fun vectorDrawableToBitmap(context: Context, drawableRes: Int, widthPx: Int, heightPx: Int): Bitmap? {
+        val drawable = ContextCompat.getDrawable(context, drawableRes) ?: return null
+        val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, widthPx, heightPx)
+        drawable.draw(canvas)
+        return bitmap
     }
 }

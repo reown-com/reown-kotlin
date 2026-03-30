@@ -317,6 +317,7 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                 _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info, _currentAmount.value))
                 if (_printReceiptEnabled.value && ReceiptPrinter.isAvailable) {
                     ReceiptPrinter.printPaymentReceipt(
+                        context = getApplication(),
                         paymentInfo = paymentEvent.info,
                         fiatAmount = _currentAmount.value?.format()
                     )
