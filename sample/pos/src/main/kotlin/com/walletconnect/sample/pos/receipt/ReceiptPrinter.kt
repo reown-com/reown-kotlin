@@ -50,7 +50,7 @@ internal object ReceiptPrinter {
                 putInt(VectorPrinterData.ALIGNMENT, Alignment.CENTER)
                 putBoolean(VectorPrinterData.BOLD, true)
             }
-            printer.addText(headerFmt, "WCPay\n")
+            printer.addText(headerFmt, "WCPay - WalletCon\n")
 
             // Dotted separator
             printer.addText(centerFmt, "· · · · · · · · · · · · · · · · · · · · · · · ·\n\n")
