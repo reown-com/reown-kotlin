@@ -76,7 +76,8 @@ class ConnectionsViewModel : ViewModel() {
                             "eip155:1",     // Ethereum Mainnet
                             "eip155:137",   // Polygon
                             "eip155:8453",  // Base
-                            "eip155:10"     // Optimism
+                            "eip155:10",    // Optimism
+                            "eip155:42220"  // Celo
                         )
                     }
                     _usdcBalances.value = usdcBalances
