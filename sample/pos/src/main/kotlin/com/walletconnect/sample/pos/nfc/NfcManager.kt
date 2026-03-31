@@ -4,6 +4,7 @@ package com.walletconnect.sample.pos.nfc
 
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
+import com.walletconnect.sample.pos.log.PosLogStore
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -39,6 +40,23 @@ internal object NfcManager {
 
     @Volatile
     private var isEnabled: Boolean = false
+
+    /**
+     * Registers a reconnect listener so NFC auto-recovers after USDK service restarts.
+     * Call once during app initialization (e.g. in Activity.onCreate after UsdkServiceHelper.bind).
+     */
+    fun registerReconnectHandler() {
+        UsdkServiceHelper.onServiceReconnected = {
+            Timber.d("NFC: USDK service reconnected — re-enabling emulation")
+            PosLogStore.info("USDK service reconnected — re-enabling NFC", source = "NfcManager")
+            if (isEnabled) {
+                val uri = currentUri
+                if (uri != null) {
+                    emitNdef(uri)
+                }
+            }
+        }
+    }
 
     /**
      * Sets the payment URI to deliver via NFC tag emulation.
@@ -90,8 +108,14 @@ internal object NfcManager {
             )
         )
         Timber.d("NFC: NDEF message size: %d bytes", ndefMessage.toByteArray().size)
+        PosLogStore.info(
+            "NFC emulation enabled",
+            source = "NfcManager",
+            data = "uri: $paymentUri\nNDEF size: ${ndefMessage.toByteArray().size} bytes"
+        )
         IngenicoNfcTagEmulator.enable(ndefMessage.toByteArray(), timeoutSeconds = 30) {
             Timber.d("NFC: Tag being read")
+            PosLogStore.info("NFC tag read by external device", source = "NfcManager")
             _tapEventFlow.tryEmit(Unit)
         }
     }

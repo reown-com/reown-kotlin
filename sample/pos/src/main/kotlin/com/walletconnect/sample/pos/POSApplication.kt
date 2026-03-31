@@ -7,6 +7,7 @@ import coil3.SingletonImageLoader
 import coil3.svg.SvgDecoder
 import com.walletconnect.pos.PosClient
 import com.walletconnect.sample.pos.credentials.MerchantCredentialsManager
+import com.walletconnect.sample.pos.log.PosLogStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
@@ -43,9 +44,11 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
                 )
                 PosClient.setDelegate(PosSampleDelegate)
                 Timber.d("POSClient initialized successfully")
+                PosLogStore.info("POS SDK initialized", source = "POSApplication")
             } catch (e: IllegalStateException) {
                 initError = e.message ?: "Unknown initialization error"
                 Timber.e(e, "POSClient initialization failed")
+                PosLogStore.error("POS SDK init failed: ${e.message}", source = "POSApplication")
             } finally {
                 _initCompleted.value = true
             }

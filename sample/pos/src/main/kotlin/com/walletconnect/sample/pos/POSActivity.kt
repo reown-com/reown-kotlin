@@ -27,6 +27,7 @@ class POSActivity : AppCompatActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         UsdkServiceHelper.bind(this)
+        NfcManager.registerReconnectHandler()
         enableEdgeToEdge()
         setContent {
             val themeMode by viewModel.selectedThemeMode.collectAsState()

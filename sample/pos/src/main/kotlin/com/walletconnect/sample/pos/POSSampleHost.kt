@@ -20,6 +20,7 @@ import androidx.navigation.navArgument
 import com.walletconnect.sample.pos.ui.theme.WCTheme
 import com.walletconnect.sample.pos.screens.AmountScreen
 import com.walletconnect.sample.pos.screens.ErrorScreen
+import com.walletconnect.sample.pos.screens.LogsScreen
 import com.walletconnect.sample.pos.screens.PaymentScreen
 import com.walletconnect.sample.pos.screens.PaymentSuccessScreen
 import com.walletconnect.sample.pos.screens.SettingsScreen
@@ -48,6 +49,7 @@ sealed class Screen(val route: String, val label: String) {
     }
     object TransactionHistoryScreen : Screen("history", "History")
     object SettingsScreen : Screen("settings", "Settings")
+    object LogsScreen : Screen("logs", "Logs")
 }
 
 @Composable
@@ -191,6 +193,19 @@ fun POSSampleHost(
             composable(Screen.SettingsScreen.route) {
                 SettingsScreen(
                     viewModel = viewModel,
+                    onClose = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToLogs = {
+                        navController.navigate(Screen.LogsScreen.route) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            composable(Screen.LogsScreen.route) {
+                LogsScreen(
                     onClose = {
                         navController.popBackStack()
                     }

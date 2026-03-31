@@ -8,10 +8,13 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Binder
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import com.usdk.apiservice.aidl.DeviceServiceData
 import com.usdk.apiservice.aidl.ModuleName
 import com.usdk.apiservice.aidl.UDeviceService
+import com.walletconnect.sample.pos.log.PosLogStore
 import com.usdk.apiservice.aidl.constants.RFDeviceName
 import com.usdk.apiservice.aidl.rfreader.UNFCTag
 import com.usdk.apiservice.aidl.rfreader.URFReader
@@ -29,6 +32,7 @@ internal object UsdkServiceHelper {
     private const val USDK_SERVICE_PACKAGE = "com.usdk.apiservice"
     private const val MAX_RETRIES = 3
     private const val RETRY_INTERVAL_MS = 3000L
+    private const val RECONNECT_DELAY_MS = 2000L
 
     @Volatile
     private var deviceService: UDeviceService? = null
@@ -42,18 +46,50 @@ internal object UsdkServiceHelper {
         private set
 
     private var retryCount = 0
+    @Volatile
+    private var wasDisconnected = false
     private lateinit var appContext: Context
+    private val handler = Handler(Looper.getMainLooper())
+
+    /** Callback invoked when the USDK service reconnects after a disconnect. */
+    var onServiceReconnected: (() -> Unit)? = null
 
     /** Binder token for USDK registration — must be kept alive to prevent GC deregistration. */
     private val binderToken = Binder()
+
+    /** Detects USDK service process death and triggers reconnection. */
+    private val deathRecipient = object : IBinder.DeathRecipient {
+        override fun binderDied() {
+            Timber.w("USDK: Binder death detected — service process crashed")
+            PosLogStore.error("USDK service process crashed — reconnecting", source = "UsdkService")
+            deviceService = null
+            isServiceBound = false
+            isRegistered = false
+            wasDisconnected = true
+            scheduleReconnect()
+        }
+    }
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val svc = UDeviceService.Stub.asInterface(service)
             deviceService = svc
             isServiceBound = true
+            val isReconnect = wasDisconnected
+            wasDisconnected = false
             retryCount = 0
             Timber.d("USDK: Service connected")
+            PosLogStore.info(
+                if (isReconnect) "USDK service reconnected" else "USDK service connected",
+                source = "UsdkService"
+            )
+
+            // Monitor the binder for unexpected process death
+            try {
+                service?.linkToDeath(deathRecipient, 0)
+            } catch (e: Exception) {
+                Timber.w(e, "USDK: Failed to link death recipient")
+            }
 
             enableDebugLog(svc)
 
@@ -64,11 +100,13 @@ internal object UsdkServiceHelper {
                     override fun onSuccess() {
                         Timber.d("USDK: DeviceServiceLimited bind success")
                         register(svc)
+                        if (isReconnect) notifyReconnected()
                     }
 
                     override fun onFail() {
                         Timber.e("USDK: DeviceServiceLimited bind failed — registering anyway")
                         register(svc)
+                        if (isReconnect) notifyReconnected()
                     }
                 }
             )
@@ -77,7 +115,11 @@ internal object UsdkServiceHelper {
         override fun onServiceDisconnected(name: ComponentName?) {
             deviceService = null
             isServiceBound = false
-            Timber.w("USDK: Service disconnected")
+            isRegistered = false
+            wasDisconnected = true
+            Timber.w("USDK: Service disconnected — scheduling reconnect")
+            PosLogStore.error("USDK service disconnected — scheduling reconnect", source = "UsdkService")
+            scheduleReconnect()
         }
     }
 
@@ -92,6 +134,22 @@ internal object UsdkServiceHelper {
         appContext = context.applicationContext
         retryCount = 0
         attemptBind(context)
+    }
+
+    private fun scheduleReconnect() {
+        if (!::appContext.isInitialized) return
+        handler.postDelayed({
+            if (!isServiceBound) {
+                Timber.d("USDK: Attempting reconnect")
+                retryCount = 0
+                attemptBind(appContext)
+            }
+        }, RECONNECT_DELAY_MS)
+    }
+
+    private fun notifyReconnected() {
+        Timber.d("USDK: Service reconnected — notifying listeners")
+        onServiceReconnected?.invoke()
     }
 
     private fun attemptBind(context: Context) {
@@ -120,6 +178,7 @@ internal object UsdkServiceHelper {
      * Unbinds from the USDK service.
      */
     fun unbind(context: Context) {
+        handler.removeCallbacksAndMessages(null)
         if (!isServiceBound) return
         if (isRegistered) {
             try {
@@ -130,6 +189,9 @@ internal object UsdkServiceHelper {
                 Timber.w(e, "USDK: Error unregistering from device service")
             }
         }
+        try {
+            deviceService?.asBinder()?.unlinkToDeath(deathRecipient, 0)
+        } catch (_: Exception) { /* already unlinked */ }
         try {
             DeviceServiceLimited.unbind(context)
         } catch (e: Exception) {
@@ -142,6 +204,7 @@ internal object UsdkServiceHelper {
         }
         deviceService = null
         isServiceBound = false
+        onServiceReconnected = null
         Timber.d("USDK: Service unbound")
     }
 

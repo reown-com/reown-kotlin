@@ -62,6 +62,7 @@ private enum class ActiveSheet { WALLET_THEME, THEME, CURRENCY, MERCHANT_ID, API
 fun SettingsScreen(
     viewModel: POSViewModel,
     onClose: () -> Unit,
+    onNavigateToLogs: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val selectedCurrency by viewModel.selectedCurrency.collectAsState()
@@ -229,6 +230,17 @@ fun SettingsScreen(
             SettingsItem(
                 label = "SDK Version",
                 value = BuildConfig.BOM_VERSION,
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+
+            // Logs
+            SettingsItem(
+                label = "Logs",
+                value = "",
+                showCaret = true,
+                onClick = onNavigateToLogs,
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
 
