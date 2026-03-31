@@ -10,7 +10,8 @@ enum class Chain(val id: String) {
     STACKS_TESTNET("stacks:2147483648"),
     SUI("sui:mainnet"),
     SUI_TESTNET("sui:testnet"),
-    TRON("tron:0x2b6653dc")
+    TRON("tron:0x2b6653dc"),
+    CELO("eip155:42220")
 }
 
 interface Token
@@ -46,6 +47,9 @@ object TokenAddresses {
         ),
         Chain.SOLANA to mapOf(
             StableCoin.USDC to "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        ),
+        Chain.CELO to mapOf(
+            StableCoin.USDC to "0xcebA9300f2b948710d2653dD7B07f33A8B32118C"
         )
     )
 
