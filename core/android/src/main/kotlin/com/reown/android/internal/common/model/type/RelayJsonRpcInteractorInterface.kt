@@ -16,6 +16,8 @@ interface RelayJsonRpcInteractorInterface : JsonRpcInteractorInterface {
     val onResubscribe: Flow<Any?>
     fun checkNetworkConnectivity()
 
+    fun getSubscriptionTopics(): Set<String> = emptySet()
+
     fun subscribe(topic: Topic, onSuccess: (Topic) -> Unit = {}, onFailure: (Throwable) -> Unit = {})
 
     fun batchSubscribe(topics: List<String>, onSuccess: (List<String>) -> Unit = {}, onFailure: (Throwable) -> Unit = {})

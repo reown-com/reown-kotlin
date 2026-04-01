@@ -22,6 +22,7 @@ import com.reown.android.pulse.model.properties.Props
 import com.reown.android.push.notifications.DecryptMessageUseCaseInterface
 import com.reown.android.relay.WSSConnectionState
 import com.reown.android.verify.model.VerifyContext
+import com.reown.foundation.common.model.Topic
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.engine.model.EngineDO
@@ -45,6 +46,7 @@ import com.reown.sign.engine.use_case.calls.GetVerifyContextByIdUseCaseInterface
 import com.reown.sign.engine.use_case.calls.PairUseCaseInterface
 import com.reown.sign.engine.use_case.calls.PingUseCaseInterface
 import com.reown.sign.engine.use_case.calls.ProposeSessionUseCaseInterface
+import com.reown.sign.engine.use_case.calls.ReconcileOrphanSubscriptionsUseCase
 import com.reown.sign.engine.use_case.calls.RejectSessionAuthenticateUseCaseInterface
 import com.reown.sign.engine.use_case.calls.RejectSessionUseCaseInterface
 import com.reown.sign.engine.use_case.calls.RespondSessionRequestUseCaseInterface
@@ -71,6 +73,7 @@ import com.reown.sign.json_rpc.domain.GetPendingSessionRequestByTopicUseCaseInte
 import com.reown.sign.json_rpc.domain.GetPendingSessionRequests
 import com.reown.sign.json_rpc.model.JsonRpcMethod
 import com.reown.sign.storage.authenticate.AuthenticateResponseTopicRepository
+import com.reown.sign.storage.pending_session.PendingSessionTopicRepository
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import com.reown.utils.Empty
@@ -99,6 +102,7 @@ internal class SignEngine(
     private val deleteRequestByIdUseCase: DeleteRequestByIdUseCase,
     private val crypto: KeyManagementRepository,
     private val authenticateResponseTopicRepository: AuthenticateResponseTopicRepository,
+    private val pendingSessionTopicRepository: PendingSessionTopicRepository,
     private val proposalStorageRepository: ProposalStorageRepository,
     private val sessionStorageRepository: SessionStorageRepository,
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
@@ -139,6 +143,7 @@ internal class SignEngine(
     private val onSessionSettleResponseUseCase: OnSessionSettleResponseUseCase,
     private val onSessionUpdateResponseUseCase: OnSessionUpdateResponseUseCase,
     private val onSessionRequestResponseUseCase: OnSessionRequestResponseUseCase,
+    private val reconcileOrphanSubscriptionsUseCase: ReconcileOrphanSubscriptionsUseCase,
     private val insertEventUseCase: InsertTelemetryEventUseCase,
     private val linkModeJsonRpcInteractor: LinkModeJsonRpcInteractorInterface,
     private val logger: Logger
@@ -222,6 +227,7 @@ internal class SignEngine(
                         launch(Dispatchers.IO) {
                             resubscribeToSession()
                             resubscribeToPendingAuthenticateTopics()
+                            reconcileOrphanSubscriptions()
                         }
                     }
 
@@ -344,26 +350,26 @@ internal class SignEngine(
         }
     }
 
-    private fun resubscribeToPendingAuthenticateTopics() {
-        scope.launch {
-            try {
-                val responseTopics = authenticateResponseTopicRepository.getResponseTopics().map { responseTopic -> responseTopic }
-                jsonRpcInteractor.batchSubscribe(responseTopics) { error -> scope.launch { _engineEvent.emit(SDKError(error)) } }
-            } catch (e: Exception) {
-                scope.launch { _engineEvent.emit(SDKError(e)) }
-            }
+    private suspend fun resubscribeToPendingAuthenticateTopics() {
+        try {
+            val responseTopics = authenticateResponseTopicRepository.getResponseTopics()
+            jsonRpcInteractor.batchSubscribe(responseTopics) { error -> scope.launch { _engineEvent.emit(SDKError(error)) } }
+        } catch (e: Exception) {
+            scope.launch { _engineEvent.emit(SDKError(e)) }
         }
+    }
+
+    private suspend fun reconcileOrphanSubscriptions() {
+        reconcileOrphanSubscriptionsUseCase.reconcile()
     }
 
     private fun setupSequenceExpiration() {
         try {
             sessionStorageRepository.onSessionExpired = { sessionTopic ->
-                jsonRpcInteractor.unsubscribe(sessionTopic, onSuccess = {
-                    runCatching {
-                        sessionStorageRepository.deleteSession(sessionTopic)
-                        crypto.removeKeys(sessionTopic.value)
-                    }.onFailure { logger.error(it) }
-                })
+                runCatching { crypto.removeKeys(sessionTopic.value) }.onFailure { logger.error(it) }
+                jsonRpcInteractor.unsubscribe(sessionTopic,
+                    onFailure = { logger.error("Failed to unsubscribe expired session topic: $it") }
+                )
             }
         } catch (e: Exception) {
             scope.launch { _engineEvent.emit(SDKError(e)) }
@@ -420,6 +426,13 @@ internal class SignEngine(
                         .onEach { proposal ->
                             proposal.expiry?.let {
                                 if (it.isExpired()) {
+                                    val pendingSessionTopic = pendingSessionTopicRepository.getAndRemove(proposal.proposerPublicKey)
+                                    if (pendingSessionTopic != null) {
+                                        runCatching { crypto.removeKeys(pendingSessionTopic) }.onFailure { logger.error(it) }
+                                        jsonRpcInteractor.unsubscribe(Topic(pendingSessionTopic),
+                                            onFailure = { logger.error("Failed to unsubscribe pending session topic: $it") }
+                                        )
+                                    }
                                     proposalStorageRepository.deleteProposal(proposal.proposerPublicKey)
                                     deleteRequestByIdUseCase(proposal.requestId)
                                     _engineEvent.emit(proposal.toExpiredProposal())

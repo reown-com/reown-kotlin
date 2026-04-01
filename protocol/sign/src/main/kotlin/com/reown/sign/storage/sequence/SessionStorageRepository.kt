@@ -39,9 +39,7 @@ internal class SessionStorageRepository(
 
         return if (hasTopic) {
             sessionDaoQueries.getExpiry(topic.value).executeAsOneOrNull()?.let { sessionExpiry ->
-                verifyExpiry(sessionExpiry, topic) {
-                    sessionDaoQueries.deleteSession(topic.value)
-                }
+                verifyExpiry(sessionExpiry, topic)
             } ?: false
         } else {
             false
@@ -201,11 +199,11 @@ internal class SessionStorageRepository(
         }
     }
 
-    private fun verifyExpiry(expiry: Long, topic: Topic, deleteSequence: () -> Unit): Boolean {
+    private fun verifyExpiry(expiry: Long, topic: Topic): Boolean {
         return if (Expiry(expiry).isSequenceValid()) {
             true
         } else {
-            deleteSequence()
+            deleteSession(topic)
             onSessionExpired(topic)
             false
         }
