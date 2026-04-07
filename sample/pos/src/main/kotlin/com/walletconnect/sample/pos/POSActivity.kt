@@ -1,6 +1,7 @@
 package com.walletconnect.sample.pos
 
 import android.os.Bundle
+import android.security.KeyChain
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -11,20 +12,28 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.compositeOver
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.walletconnect.sample.pos.ui.theme.LocalWCColors
-import com.walletconnect.sample.pos.ui.theme.WCSampleAppTheme
-import com.walletconnect.sample.pos.ui.theme.WCTheme
+import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
 import com.walletconnect.sample.pos.model.LocalPosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
+import com.walletconnect.sample.pos.ui.theme.LocalWCColors
+import com.walletconnect.sample.pos.ui.theme.WCSampleAppTheme
+import com.walletconnect.sample.pos.ui.theme.WCTheme
+import timber.log.Timber
 
 class POSActivity : AppCompatActivity() {
     private val viewModel: POSViewModel by viewModels()
+    private var keyChainGrantRequested = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        if (POSApplication.isIngenicoDevice && !keyChainGrantRequested) {
+            requestKeyChainAccess()
+        }
+
         setContent {
             val themeMode by viewModel.selectedThemeMode.collectAsState()
             val variant by viewModel.selectedVariant.collectAsState()
@@ -56,6 +65,28 @@ class POSActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun requestKeyChainAccess() {
+        keyChainGrantRequested = true
+        KeyChain.choosePrivateKeyAlias(
+            this,
+            { alias ->
+                val app = application as POSApplication
+                if (alias != null) {
+                    Timber.d("KeyChain access granted for alias: $alias")
+                    app.initSdk(Pos.MtlsConfig.DeviceKeyChain(applicationContext))
+                } else {
+                    Timber.w("No KeyChain alias selected, falling back to Default mTLS")
+                    app.initSdk(Pos.MtlsConfig.Default)
+                }
+            },
+            null,   // key types
+            null,   // issuers
+            null,   // host
+            -1,     // port
+            "SSL"   // pre-selected alias hint
+        )
     }
 
     override fun onStart() {

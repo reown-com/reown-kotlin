@@ -179,10 +179,10 @@ object Pos {
      */
     sealed interface MtlsConfig {
         /** Use the bundled test certificate (for development/testing). */
-        data object Default : MtlsConfig
+        data object Default : MtlsConfig //TODO: Remove before the release and use Disable as default
 
-        /** Load certificate from separate PEM .crt and .key file paths on the device. */
-        data class FromPemFiles(val certPath: String, val keyPath: String) : MtlsConfig
+        /** Load the client certificate from the device's Android KeyChain (alias "SSL"). */
+        data class DeviceKeyChain(val context: android.content.Context) : MtlsConfig
 
         /** Disable mTLS — use plain TLS only. */
         data object Disabled : MtlsConfig

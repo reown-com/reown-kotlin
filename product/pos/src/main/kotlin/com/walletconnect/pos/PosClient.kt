@@ -20,7 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import java.io.FileInputStream
+
 
 /**
  * POS (Point of Sale) client for handling payment transactions.
@@ -68,10 +68,7 @@ object PosClient {
                     TestClientCertificate.certInputStream(),
                     TestClientCertificate.keyInputStream()
                 )
-                is Pos.MtlsConfig.FromPemFiles -> createMtlsHttpClientFromPem(
-                    FileInputStream(mtlsConfig.certPath),
-                    FileInputStream(mtlsConfig.keyPath)
-                )
+                is Pos.MtlsConfig.DeviceKeyChain -> createMtlsHttpClientFromDeviceKeyChain(mtlsConfig.context)
                 is Pos.MtlsConfig.Disabled -> baseHttpClient
             }
             payHttpClient = mtlsClient
@@ -319,6 +316,11 @@ object PosClient {
         keyStream: java.io.InputStream
     ): OkHttpClient {
         val (sslSocketFactory, trustManager) = MtlsConfig.createSslConfigFromPem(certStream, keyStream)
+        return buildMtlsOkHttpClient(sslSocketFactory, trustManager)
+    }
+
+    private fun createMtlsHttpClientFromDeviceKeyChain(context: android.content.Context): OkHttpClient {
+        val (sslSocketFactory, trustManager) = MtlsConfig.createSslConfigFromDeviceKeyChain(context)
         return buildMtlsOkHttpClient(sslSocketFactory, trustManager)
     }
 
