@@ -25,6 +25,10 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
 
         val isIngenicoDevice: Boolean
             get() = Build.MANUFACTURER.equals("Ingenico", ignoreCase = true)
+
+        @Volatile
+        var grantedMtlsConfig: Pos.MtlsConfig = Pos.MtlsConfig.Disabled
+            private set
     }
 
     override fun onCreate() {
@@ -43,6 +47,7 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
     }
 
     fun initSdk(mtlsConfig: Pos.MtlsConfig) {
+        grantedMtlsConfig = mtlsConfig
         val credentialsManager = MerchantCredentialsManager(this)
         val deviceId = "sample_pos_device_${Build.MODEL}_${Build.SERIAL}"
         Executors.newSingleThreadExecutor().execute {

@@ -46,6 +46,8 @@ object PosClient {
      * @param apiKey Your WalletConnect Pay merchant API key
      * @param merchantId Your merchant identifier
      * @param deviceId Unique identifier for this POS device
+     * @param mtlsConfig mTLS configuration. When using [Pos.MtlsConfig.DeviceKeyChain],
+     *   this method must be called from a background thread.
      */
     @Throws(IllegalStateException::class)
     fun init(
@@ -320,7 +322,7 @@ object PosClient {
             .apply {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(HttpLoggingInterceptor().apply {
-                        level = HttpLoggingInterceptor.Level.BODY
+                        level = HttpLoggingInterceptor.Level.HEADERS
                         redactHeader("Api-Key")
                         redactHeader("Merchant-Id")
                     })

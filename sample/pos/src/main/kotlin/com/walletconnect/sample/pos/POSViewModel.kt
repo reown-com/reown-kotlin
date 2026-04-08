@@ -220,12 +220,7 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         val deviceId = "sample_pos_device_${Build.MODEL}_${Build.SERIAL}"
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val mtls = if (POSApplication.isIngenicoDevice) {
-                    Pos.MtlsConfig.DeviceKeyChain(getApplication())
-                } else {
-                    Pos.MtlsConfig.Disabled
-                }
-                PosClient.init(apiKey = apiKey, merchantId = merchantId, deviceId = deviceId, mtlsConfig = mtls)
+                PosClient.init(apiKey = apiKey, merchantId = merchantId, deviceId = deviceId, mtlsConfig = POSApplication.grantedMtlsConfig)
                 PosClient.setDelegate(PosSampleDelegate)
                 Timber.d("PosClient re-initialized with updated credentials")
             } catch (e: Exception) {

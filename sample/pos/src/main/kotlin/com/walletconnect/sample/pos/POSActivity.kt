@@ -23,14 +23,13 @@ import timber.log.Timber
 
 class POSActivity : AppCompatActivity() {
     private val viewModel: POSViewModel by viewModels()
-    private var keyChainGrantRequested = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        if (POSApplication.isIngenicoDevice && !keyChainGrantRequested) {
+        if (POSApplication.isIngenicoDevice && savedInstanceState == null) {
             requestKeyChainAccess()
         }
 
@@ -68,7 +67,6 @@ class POSActivity : AppCompatActivity() {
     }
 
     private fun requestKeyChainAccess() {
-        keyChainGrantRequested = true
         KeyChain.choosePrivateKeyAlias(
             this,
             { alias ->

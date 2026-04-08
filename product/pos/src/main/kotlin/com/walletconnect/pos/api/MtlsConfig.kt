@@ -37,9 +37,9 @@ internal object MtlsConfig {
         }
         val trustManager = trustManagerFactory.trustManagers
             .filterIsInstance<X509TrustManager>()
-            .first()
+            .firstOrNull() ?: error("No X509TrustManager found in default TrustManagerFactory")
 
-        val sslContext = SSLContext.getInstance("TLS").apply {
+        val sslContext = SSLContext.getInstance("TLSv1.2").apply {
             init(arrayOf(keyManager), trustManagerFactory.trustManagers, null)
         }
 
