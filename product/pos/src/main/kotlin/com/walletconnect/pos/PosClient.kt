@@ -63,7 +63,7 @@ object PosClient {
             sharedHttpClient = baseHttpClient
 
             val mtlsClient = when (mtlsConfig) {
-                is Pos.MtlsConfig.DeviceKeyChain -> createMtlsHttpClientFromDeviceKeyChain(mtlsConfig.context)
+                is Pos.MtlsConfig.DeviceKeyChain -> createMtlsHttpClientFromDeviceKeyChain(mtlsConfig.context, mtlsConfig.alias)
                 is Pos.MtlsConfig.Disabled -> baseHttpClient
             }
             payHttpClient = mtlsClient
@@ -306,8 +306,8 @@ object PosClient {
             .build()
     }
 
-    private fun createMtlsHttpClientFromDeviceKeyChain(context: android.content.Context): OkHttpClient {
-        val (sslSocketFactory, trustManager) = MtlsConfig.createSslConfigFromDeviceKeyChain(context)
+    private fun createMtlsHttpClientFromDeviceKeyChain(context: android.content.Context, alias: String): OkHttpClient {
+        val (sslSocketFactory, trustManager) = MtlsConfig.createSslConfigFromDeviceKeyChain(context, alias)
         return buildMtlsOkHttpClient(sslSocketFactory, trustManager)
     }
 

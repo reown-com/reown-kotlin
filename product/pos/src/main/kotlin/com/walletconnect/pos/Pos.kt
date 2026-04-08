@@ -178,8 +178,11 @@ object Pos {
      * between the device and server, ensuring recently completed transactions are included.
      */
     sealed interface MtlsConfig {
-        /** Load the client certificate from the device's Android KeyChain (alias "SSL"). */
-        data class DeviceKeyChain(val context: android.content.Context) : MtlsConfig
+        /** Load the client certificate from the device's Android KeyChain. */
+        data class DeviceKeyChain(
+            val context: android.content.Context,
+            val alias: String = "SSL"
+        ) : MtlsConfig
 
         /** Disable mTLS — use plain TLS only. */
         data object Disabled : MtlsConfig

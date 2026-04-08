@@ -75,7 +75,7 @@ class POSActivity : AppCompatActivity() {
                 val app = application as POSApplication
                 if (alias != null) {
                     Timber.d("KeyChain access granted for alias: $alias")
-                    app.initSdk(Pos.MtlsConfig.DeviceKeyChain(applicationContext))
+                    app.initSdk(Pos.MtlsConfig.DeviceKeyChain(applicationContext, alias))
                 } else {
                     Timber.w("No KeyChain alias selected, falling back to Disabled mTLS")
                     app.initSdk(Pos.MtlsConfig.Disabled)
