@@ -2,6 +2,7 @@ package com.reown.sample.wallet.ui.routes.dialog_routes.payment
 
 import android.content.Intent
 import android.graphics.Bitmap
+import com.reown.sample.wallet.BuildConfig
 import android.net.Uri
 import android.util.Log
 import android.net.http.SslError
@@ -1193,8 +1194,8 @@ private fun WebViewDataCollectionContent(
                                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT
                             )
 
-                            // Enable WebView debugging - inspect via chrome://inspect on desktop
-                            WebView.setWebContentsDebuggingEnabled(true)
+                            // Enable WebView debugging in debug builds only - inspect via chrome://inspect on desktop
+                            WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
 
                             // Set dark background to match the web content theme
                             setBackgroundColor(0xFF141414.toInt())
