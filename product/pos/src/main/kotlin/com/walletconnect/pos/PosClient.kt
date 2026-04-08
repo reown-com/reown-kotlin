@@ -1,5 +1,6 @@
 package com.walletconnect.pos
 
+import androidx.annotation.WorkerThread
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.walletconnect.pos.api.ApiClient
@@ -49,6 +50,7 @@ object PosClient {
      * @param mtlsConfig mTLS configuration. When using [Pos.MtlsConfig.DeviceKeyChain],
      *   this method must be called from a background thread.
      */
+    @WorkerThread
     @Throws(IllegalStateException::class)
     fun init(
         apiKey: String,
@@ -299,7 +301,7 @@ object PosClient {
             .apply {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(HttpLoggingInterceptor().apply {
-                        level = HttpLoggingInterceptor.Level.BODY
+                        level = HttpLoggingInterceptor.Level.HEADERS
                         redactHeader("Api-Key")
                         redactHeader("Merchant-Id")
                     })

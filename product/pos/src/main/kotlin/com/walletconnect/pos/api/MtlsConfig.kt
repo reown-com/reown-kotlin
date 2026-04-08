@@ -4,6 +4,7 @@ package com.walletconnect.pos.api
 
 import android.content.Context
 import android.security.KeyChain
+import androidx.annotation.WorkerThread
 import java.net.Socket
 import java.security.KeyStore
 import java.security.Principal
@@ -17,6 +18,7 @@ import javax.net.ssl.X509TrustManager
 
 internal object MtlsConfig {
 
+    @WorkerThread
     fun createSslConfigFromDeviceKeyChain(context: Context, alias: String): Pair<SSLSocketFactory, X509TrustManager> {
         val privateKey = KeyChain.getPrivateKey(context, alias)
             ?: error("No private key found for alias '$alias' in KeyChain")

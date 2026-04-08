@@ -49,7 +49,7 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
     fun initSdk(mtlsConfig: Pos.MtlsConfig) {
         grantedMtlsConfig = mtlsConfig
         val credentialsManager = MerchantCredentialsManager(this)
-        val deviceId = "sample_pos_device_${Build.MODEL}_${Build.SERIAL}"
+        val deviceId = credentialsManager.getDeviceId()
         Executors.newSingleThreadExecutor().execute {
             try {
                 PosClient.init(

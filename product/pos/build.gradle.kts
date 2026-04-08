@@ -69,6 +69,7 @@ dependencies {
     ksp(libs.moshi.ksp)
 
     implementation(libs.coroutines)
+    implementation("androidx.annotation:annotation:1.9.1")
 
     testImplementation(libs.jUnit)
     testImplementation(libs.mockk)
