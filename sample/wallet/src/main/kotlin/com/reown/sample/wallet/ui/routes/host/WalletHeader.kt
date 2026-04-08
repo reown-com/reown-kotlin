@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -67,7 +68,8 @@ fun WalletHeader(navController: NavController) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(bounded = true),
                     onClick = { navController.navigate(Route.ScannerOptions.path) }
-                ),
+                )
+                .testTag("button-scan"),
             contentAlignment = Alignment.Center
         ) {
             Icon(

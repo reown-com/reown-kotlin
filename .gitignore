@@ -100,3 +100,9 @@ protocol/sign/property 'buildDir'
 product/pos/property 'buildDir'
 .idea/codeStyles
 .DS_Store
+
+# Maestro Pay test flows (downloaded from WalletConnect/actions)
+.maestro/pay_*.yaml
+.maestro/flows/pay_*.yaml
+.maestro/scripts/
+.env.maestro

@@ -1,0 +1,204 @@
+name: E2E Pay Tests with Maestro
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - edited
+  workflow_dispatch:
+
+jobs:
+  build_wallet_internal:
+    name: Build Wallet Internal APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          architecture: x86_64
+          cache: 'gradle'
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Setup Required files to build samples
+        with:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          FIREBASE_SERVICE_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS }}
+          SECRETS_PROPERTIES: ${{ secrets.SECRETS_PROPERTIES }}
+          ENCODED_STRING_DEBUG: ${{ secrets.WC_KOTLIN_DEBUG_KEYSTORE }}
+          SIGNING_KEY_STORE_PATH_DEBUG: ${{ secrets.WC_KOTLIN_DEBUG_KEYSTORE_PATH }}
+          ENCODED_STRING_INTERNAL: ${{ secrets.WC_KOTLIN_INTERNAL_KEYSTORE }}
+          SIGNING_KEY_STORE_PATH_INTERNAL: ${{ secrets.WC_KOTLIN_INTERNAL_KEYSTORE_PATH }}
+          ENCODED_STRING_UPLOAD: ${{ secrets.WC_KOTLIN_UPLOAD_KEYSTORE }}
+          SIGNING_KEY_STORE_PATH_UPLOAD: ${{ secrets.WC_KOTLIN_UPLOAD_KEYSTORE_PATH }}
+        uses: ./.github/actions/ci_setup
+
+      - name: Build wallet sample - Internal
+        env:
+          WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
+          NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
+          MIX_PANEL: ${{ secrets.MIX_PANEL }}
+          TEST_WALLET_PRIVATE_KEY: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
+          ENABLE_TEST_MODE: "true"
+        run: |
+          ./gradlew :sample:wallet:assembleInternal
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v5
+        with:
+          name: wallet-apk
+          path: sample/wallet/build/outputs/apk/internal/*.apk
+          retention-days: 1
+
+  run_pay_e2e_tests:
+    name: Run Pay E2E Tests
+    timeout-minutes: 30
+    runs-on: ubuntu-16core
+    needs: build_wallet_internal
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Download wallet APK
+        uses: actions/download-artifact@v6
+        with:
+          name: wallet-apk
+          path: apks
+
+      - name: List APKs
+        run: |
+          echo "Available APKs:"
+          find apks -name "*.apk" | xargs ls -la
+
+      - name: Copy Maestro Pay test flows
+        uses: WalletConnect/actions/maestro/pay-tests@main
+
+      - name: Install Maestro
+        uses: WalletConnect/actions/maestro/setup@main
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Start Android Emulator and Run Pay Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          ram-size: 4096M
+          heap-size: 576M
+          emulator-boot-timeout: 900
+          profile: pixel_6
+          avd-name: test_device
+          force-avd-creation: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot-save -no-snapshot-load
+          script: |
+            # Setup debug directory
+            mkdir -p debug-artifacts
+
+            # Wait for emulator to be fully ready
+            echo "Waiting for emulator to be ready..."
+            adb wait-for-device
+
+            # Wait for boot completion
+            echo "Waiting for boot completion..."
+            adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
+            echo "Boot completed!"
+
+            adb devices
+
+            # Clear logcat before we start
+            adb logcat -c
+
+            # Start logcat capture in background
+            adb logcat > debug-artifacts/full-logcat.txt &
+            LOGCAT_PID=$!
+
+            # Install wallet APK
+            echo "Installing wallet APK:"
+            find apks -name "*.apk" -exec echo "Installing: {}" \; -exec adb install -r {} \;
+
+            # Verify installation
+            echo "Verifying installed app:"
+            adb shell pm list packages | grep -E "com.reown.sample.wallet" || (echo "ERROR: App not installed correctly" && exit 1)
+
+            # Grant runtime permissions
+            echo "Granting permissions..."
+            adb shell pm grant com.reown.sample.wallet.internal android.permission.INTERNET || true
+            adb shell pm grant com.reown.sample.wallet.internal android.permission.ACCESS_NETWORK_STATE || true
+            adb shell pm grant com.reown.sample.wallet.internal android.permission.CAMERA || true
+
+            # Wait for system to settle
+            sleep 10
+
+            # Force stop before Maestro tests
+            adb shell am force-stop com.reown.sample.wallet.internal
+            sleep 5
+
+            echo "Running Maestro Pay E2E tests:"
+            $HOME/.maestro/bin/maestro test \
+              --env APP_ID=com.reown.sample.wallet.internal \
+              --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" \
+              --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" \
+              --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" \
+              --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" \
+              --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" \
+              --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" \
+              --include-tags pay \
+              --test-output-dir debug-artifacts/maestro-output \
+              --debug-output debug-artifacts/maestro-debug \
+              .maestro/
+
+            # Extract error logs for easier debugging
+            echo "Extracting error logs..."
+            grep -E "AndroidRuntime|FATAL|ActivityManager.*Error|PaymentWebView|PaymentViewModel" debug-artifacts/full-logcat.txt > debug-artifacts/emulator-errors.log 2>/dev/null || true
+
+            # Stop logcat capture
+            kill $LOGCAT_PID 2>/dev/null || true
+
+      - name: Upload debug artifacts
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: pay-e2e-debug-artifacts
+          path: debug-artifacts/
+          if-no-files-found: warn
+
+      - name: Upload Maestro artifacts
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: pay-e2e-maestro-artifacts
+          path: |
+            .maestro/
+            videos/
+            *.mp4
+            *.mov
+          if-no-files-found: warn

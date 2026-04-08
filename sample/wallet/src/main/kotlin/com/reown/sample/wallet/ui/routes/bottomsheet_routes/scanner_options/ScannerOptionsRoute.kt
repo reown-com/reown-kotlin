@@ -14,22 +14,38 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.reown.sample.common.ui.theme.WCTheme
+import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.Route
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ScannerOptionsRoute(
     navController: NavController,
@@ -37,10 +53,12 @@ fun ScannerOptionsRoute(
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .semantics { testTagsAsResourceId = true }
             .background(
                 color = WCTheme.colors.bgPrimary,
                 shape = RoundedCornerShape(topStart = WCTheme.borderRadius.radius8, topEnd = WCTheme.borderRadius.radius8)
@@ -83,6 +101,66 @@ fun ScannerOptionsRoute(
                 }
             }
         )
+
+        // Test mode: manual URL input for Maestro E2E tests (enabled via ENABLE_TEST_MODE env var)
+        if (BuildConfig.ENABLE_TEST_MODE) {
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
+
+            var urlText by remember { mutableStateOf("") }
+
+            TextField(
+                value = urlText,
+                onValueChange = { urlText = it },
+                placeholder = {
+                    Text(
+                        text = "Paste URL here...",
+                        style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("input-paste-url"),
+                colors = TextFieldDefaults.textFieldColors(
+                    backgroundColor = WCTheme.colors.foregroundPrimary,
+                    textColor = WCTheme.colors.textPrimary,
+                    cursorColor = WCTheme.colors.bgAccentPrimary,
+                    focusedIndicatorColor = WCTheme.colors.bgAccentPrimary,
+                    unfocusedIndicatorColor = WCTheme.colors.borderPrimary
+                ),
+                textStyle = WCTheme.typography.bodyLgRegular,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                    }
+                )
+            )
+
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(WCTheme.borderRadius.shapeLarge)
+                    .background(WCTheme.colors.bgAccentPrimary)
+                    .clickable {
+                        val text = urlText.trim()
+                        if (text.isNotEmpty()) {
+                            navController.popBackStack()
+                            onPair(text)
+                        }
+                    }
+                    .testTag("button-submit-url"),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Submit URL",
+                    style = WCTheme.typography.bodyLgRegular.copy(color = androidx.compose.ui.graphics.Color.White)
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing5))
     }

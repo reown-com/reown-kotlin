@@ -67,6 +67,19 @@ class PaymentViewModel : ViewModel() {
         storedPaymentInfo = response.info
         storedPaymentOptions = response.options
 
+        // Check payment status from info before showing options
+        when (response.info?.status) {
+            Wallet.Model.PaymentStatus.EXPIRED -> {
+                _uiState.value = PaymentUiState.Error("Payment expired", PaymentErrorType.EXPIRED)
+                return
+            }
+            Wallet.Model.PaymentStatus.CANCELLED -> {
+                _uiState.value = PaymentUiState.Error("Payment was cancelled", PaymentErrorType.CANCELLED)
+                return
+            }
+            else -> { /* proceed normally */ }
+        }
+
         if (response.options.isEmpty()) {
             _uiState.value = PaymentUiState.Error("No payment options available", PaymentErrorType.INSUFFICIENT_FUNDS)
         } else if (response.options.size == 1 && response.options[0].collectData == null) {
@@ -110,7 +123,7 @@ class PaymentViewModel : ViewModel() {
                 onFailure = { error ->
                     _uiState.value = PaymentUiState.Error(
                         error.message ?: "Failed to load payment options",
-                        PaymentErrorType.GENERIC
+                        categorizeError(error.message)
                     )
                 }
             )
@@ -139,8 +152,11 @@ class PaymentViewModel : ViewModel() {
                 paymentInfo = storedPaymentInfo
             )
         } else {
-            // No IC required, proceed to payment
-            processPayment(optionId)
+            // No IC required, show review/summary screen
+            _uiState.value = PaymentUiState.Summary(
+                paymentInfo = storedPaymentInfo,
+                selectedOption = option
+            )
         }
     }
 
@@ -159,35 +175,18 @@ class PaymentViewModel : ViewModel() {
 
     /**
      * Build the prefill query parameter for IC WebView URL.
-     * Creates Base64-encoded JSON with available user data.
-     * Only includes fields that are in the schema's required array.
+     * Creates Base64-encoded JSON with all available user data.
+     * Sends all known fields unconditionally — the webview will use what it needs.
      */
     private fun buildPrefillParam(schema: String?): String? {
         if (schema == null) return null
 
         return try {
-            // Parse schema to get required fields
-            val schemaJson = JSONObject(schema)
-            val requiredArray = schemaJson.optJSONArray("required") ?: return null
-            val requiredFields = (0 until requiredArray.length()).map { requiredArray.getString(it) }
-
-            // Build prefill JSON with available user data
-            val prefillData = JSONObject()
-
-            if ("fullName" in requiredFields) {
-                prefillData.put("fullName", EthAccountDelegate.PREFILL_FULL_NAME)
+            val prefillData = JSONObject().apply {
+                put("fullName", EthAccountDelegate.PREFILL_FULL_NAME)
+                put("dob", EthAccountDelegate.PREFILL_DOB)
+                put("pobAddress", EthAccountDelegate.PREFILL_POB_ADDRESS)
             }
-
-            if ("dob" in requiredFields) {
-                prefillData.put("dob", EthAccountDelegate.PREFILL_DOB)
-            }
-
-            if ("pobAddress" in requiredFields) {
-                prefillData.put("pobAddress", EthAccountDelegate.PREFILL_POB_ADDRESS)
-            }
-
-            // Only return if we have data to prefill
-            if (prefillData.length() == 0) return null
 
             // Base64 encode the JSON (NO_WRAP avoids newlines, URL_SAFE for URL compatibility)
             val encoded = Base64.encodeToString(
