@@ -77,8 +77,8 @@ class POSActivity : AppCompatActivity() {
                     Timber.d("KeyChain access granted for alias: $alias")
                     app.initSdk(Pos.MtlsConfig.DeviceKeyChain(applicationContext))
                 } else {
-                    Timber.w("No KeyChain alias selected, falling back to Default mTLS")
-                    app.initSdk(Pos.MtlsConfig.Default)
+                    Timber.w("No KeyChain alias selected, falling back to Disabled mTLS")
+                    app.initSdk(Pos.MtlsConfig.Disabled)
                 }
             },
             null,   // key types

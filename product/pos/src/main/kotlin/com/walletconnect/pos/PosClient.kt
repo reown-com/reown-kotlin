@@ -7,7 +7,6 @@ import com.walletconnect.pos.api.ApiResult
 import com.walletconnect.pos.api.ErrorTracker
 import com.walletconnect.pos.api.EventTracker
 import com.walletconnect.pos.api.MtlsConfig
-import com.walletconnect.pos.api.TestClientCertificate
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import com.walletconnect.pos.api.toTransaction
@@ -53,7 +52,7 @@ object PosClient {
         apiKey: String,
         merchantId: String,
         deviceId: String,
-        mtlsConfig: Pos.MtlsConfig = Pos.MtlsConfig.Default
+        mtlsConfig: Pos.MtlsConfig = Pos.MtlsConfig.Disabled
     ) {
         check(apiKey.isNotBlank()) { "apiKey cannot be blank" }
         check(merchantId.isNotBlank()) { "merchantId cannot be blank" }
@@ -64,10 +63,6 @@ object PosClient {
             sharedHttpClient = baseHttpClient
 
             val mtlsClient = when (mtlsConfig) {
-                is Pos.MtlsConfig.Default -> createMtlsHttpClientFromPem(
-                    TestClientCertificate.certInputStream(),
-                    TestClientCertificate.keyInputStream()
-                )
                 is Pos.MtlsConfig.DeviceKeyChain -> createMtlsHttpClientFromDeviceKeyChain(mtlsConfig.context)
                 is Pos.MtlsConfig.Disabled -> baseHttpClient
             }
@@ -309,14 +304,6 @@ object PosClient {
                 }
             }
             .build()
-    }
-
-    private fun createMtlsHttpClientFromPem(
-        certStream: java.io.InputStream,
-        keyStream: java.io.InputStream
-    ): OkHttpClient {
-        val (sslSocketFactory, trustManager) = MtlsConfig.createSslConfigFromPem(certStream, keyStream)
-        return buildMtlsOkHttpClient(sslSocketFactory, trustManager)
     }
 
     private fun createMtlsHttpClientFromDeviceKeyChain(context: android.content.Context): OkHttpClient {

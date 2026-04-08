@@ -2,7 +2,7 @@ package com.walletconnect.sample.pos
 
 import android.app.Application
 import android.os.Build
-import android.security.KeyChain
+
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.svg.SvgDecoder
@@ -38,7 +38,7 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
             // On Ingenico, defer SDK init until Activity grants KeyChain access
             Timber.d("Ingenico device detected, deferring SDK init until KeyChain access is granted")
         } else {
-            initSdk(Pos.MtlsConfig.Default)
+            initSdk(Pos.MtlsConfig.Disabled)
         }
     }
 

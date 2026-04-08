@@ -178,9 +178,6 @@ object Pos {
      * between the device and server, ensuring recently completed transactions are included.
      */
     sealed interface MtlsConfig {
-        /** Use the bundled test certificate (for development/testing). */
-        data object Default : MtlsConfig //TODO: Remove before the release and use Disable as default
-
         /** Load the client certificate from the device's Android KeyChain (alias "SSL"). */
         data class DeviceKeyChain(val context: android.content.Context) : MtlsConfig
 

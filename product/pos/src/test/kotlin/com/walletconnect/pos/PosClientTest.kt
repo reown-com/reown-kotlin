@@ -33,7 +33,7 @@ class PosClientTest {
     @Test
     fun `init - throws on blank apiKey`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "", merchantId = "test-merchant", deviceId = "test-device")
+            PosClient.init(apiKey = "", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("apiKey") == true)
     }
@@ -41,7 +41,7 @@ class PosClientTest {
     @Test
     fun `init - throws on whitespace only apiKey`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "   ", merchantId = "test-merchant", deviceId = "test-device")
+            PosClient.init(apiKey = "   ", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("apiKey") == true)
     }
@@ -49,7 +49,7 @@ class PosClientTest {
     @Test
     fun `init - throws on blank merchantId`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "test-api-key", merchantId = "", deviceId = "test-device")
+            PosClient.init(apiKey = "test-api-key", merchantId = "", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("merchantId") == true)
     }
@@ -57,7 +57,7 @@ class PosClientTest {
     @Test
     fun `init - throws on whitespace only merchantId`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "test-api-key", merchantId = "   ", deviceId = "test-device")
+            PosClient.init(apiKey = "test-api-key", merchantId = "   ", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("merchantId") == true)
     }
@@ -65,7 +65,7 @@ class PosClientTest {
     @Test
     fun `init - throws on blank deviceId`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "")
+            PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("deviceId") == true)
     }
@@ -73,7 +73,7 @@ class PosClientTest {
     @Test
     fun `init - throws on whitespace only deviceId`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "   ")
+            PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "   ", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("deviceId") == true)
     }
