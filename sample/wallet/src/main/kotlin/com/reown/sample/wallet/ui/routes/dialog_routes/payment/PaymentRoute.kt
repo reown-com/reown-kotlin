@@ -1007,7 +1007,7 @@ private fun ErrorContent(
 @Composable
 private fun ModalCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(38.dp)
             .clip(RoundedCornerShape(WCTheme.borderRadius.radius3))
             .border(
@@ -1015,8 +1015,7 @@ private fun ModalCloseButton(onClick: () -> Unit, modifier: Modifier = Modifier)
                 color = WCTheme.colors.borderSecondary,
                 shape = RoundedCornerShape(WCTheme.borderRadius.radius3)
             )
-            .clickable(onClick = onClick)
-            .then(modifier),
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -1037,7 +1036,7 @@ private fun ModalIconButton(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(38.dp)
             .clip(RoundedCornerShape(WCTheme.borderRadius.radius3))
             .then(
@@ -1047,8 +1046,7 @@ private fun ModalIconButton(
                     shape = RoundedCornerShape(WCTheme.borderRadius.radius3)
                 ) else Modifier
             )
-            .clickable(onClick = onClick)
-            .then(modifier),
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
