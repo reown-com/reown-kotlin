@@ -1,11 +1,13 @@
 package com.walletconnect.pos
 
+import androidx.annotation.WorkerThread
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.walletconnect.pos.api.ApiClient
 import com.walletconnect.pos.api.ApiResult
 import com.walletconnect.pos.api.ErrorTracker
 import com.walletconnect.pos.api.EventTracker
+import com.walletconnect.pos.api.MtlsConfig
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import com.walletconnect.pos.api.toTransaction
@@ -18,6 +20,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+
 
 /**
  * POS (Point of Sale) client for handling payment transactions.
@@ -32,6 +35,7 @@ object PosClient {
     @Volatile private var scope: CoroutineScope? = null
     @Volatile private var currentPollingJob: Job? = null
     @Volatile private var sharedHttpClient: OkHttpClient? = null
+    @Volatile private var payHttpClient: OkHttpClient? = null
 
     private val sharedMoshi: Moshi by lazy {
         Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
@@ -43,9 +47,17 @@ object PosClient {
      * @param apiKey Your WalletConnect Pay merchant API key
      * @param merchantId Your merchant identifier
      * @param deviceId Unique identifier for this POS device
+     * @param mtlsConfig mTLS configuration. When using [Pos.MtlsConfig.DeviceKeyChain],
+     *   this method must be called from a background thread.
      */
+    @WorkerThread
     @Throws(IllegalStateException::class)
-    fun init(apiKey: String, merchantId: String, deviceId: String) {
+    fun init(
+        apiKey: String,
+        merchantId: String,
+        deviceId: String,
+        mtlsConfig: Pos.MtlsConfig = Pos.MtlsConfig.Disabled
+    ) {
         check(apiKey.isNotBlank()) { "apiKey cannot be blank" }
         check(merchantId.isNotBlank()) { "merchantId cannot be blank" }
         check(deviceId.isNotBlank()) { "deviceId cannot be blank" }
@@ -53,11 +65,18 @@ object PosClient {
             cleanup()
             val baseHttpClient = createBaseHttpClient()
             sharedHttpClient = baseHttpClient
+
+            val (mtlsClient, apiBaseUrl) = when (mtlsConfig) {
+                is Pos.MtlsConfig.DeviceKeyChain -> createMtlsHttpClientFromDeviceKeyChain(mtlsConfig.context, mtlsConfig.alias) to BuildConfig.MTLS_API_BASE_URL
+                is Pos.MtlsConfig.Disabled -> baseHttpClient to BuildConfig.CORE_API_BASE_URL
+            }
+            payHttpClient = mtlsClient
+
             val newScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
             scope = newScope
             eventTracker = EventTracker(merchantId, newScope, sharedMoshi, baseHttpClient)
             errorTracker = ErrorTracker(newScope, sharedMoshi, baseHttpClient)
-            apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!, sharedMoshi, baseHttpClient)
+            apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!, sharedMoshi, mtlsClient, apiBaseUrl)
         }
     }
 
@@ -263,6 +282,13 @@ object PosClient {
         apiClient = null
         eventTracker = null
         errorTracker = null
+        payHttpClient?.let { client ->
+            if (client !== sharedHttpClient) {
+                client.dispatcher.executorService.shutdown()
+                client.connectionPool.evictAll()
+            }
+        }
+        payHttpClient = null
         sharedHttpClient?.let { client ->
             client.dispatcher.executorService.shutdown()
             client.connectionPool.evictAll()
@@ -275,7 +301,30 @@ object PosClient {
             .apply {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(HttpLoggingInterceptor().apply {
-                        level = HttpLoggingInterceptor.Level.BODY
+                        level = HttpLoggingInterceptor.Level.HEADERS
+                        redactHeader("Api-Key")
+                        redactHeader("Merchant-Id")
+                    })
+                }
+            }
+            .build()
+    }
+
+    private fun createMtlsHttpClientFromDeviceKeyChain(context: android.content.Context, alias: String): OkHttpClient {
+        val (sslSocketFactory, trustManager) = MtlsConfig.createSslConfigFromDeviceKeyChain(context, alias)
+        return buildMtlsOkHttpClient(sslSocketFactory, trustManager)
+    }
+
+    private fun buildMtlsOkHttpClient(
+        sslSocketFactory: javax.net.ssl.SSLSocketFactory,
+        trustManager: javax.net.ssl.X509TrustManager
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .sslSocketFactory(sslSocketFactory, trustManager)
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.HEADERS
                         redactHeader("Api-Key")
                         redactHeader("Merchant-Id")
                     })

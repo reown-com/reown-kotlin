@@ -2,7 +2,7 @@ package com.walletconnect.sample.pos
 
 import android.app.Application
 import android.content.Context
-import android.os.Build
+
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
@@ -217,10 +217,10 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         val merchantId = credentialsManager.getMerchantId()
         if (apiKey.isBlank() || merchantId.isBlank()) return
 
-        val deviceId = "sample_pos_device_${Build.MODEL}_${Build.SERIAL}"
+        val deviceId = credentialsManager.getDeviceId()
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                PosClient.init(apiKey = apiKey, merchantId = merchantId, deviceId = deviceId)
+                PosClient.init(apiKey = apiKey, merchantId = merchantId, deviceId = deviceId, mtlsConfig = POSApplication.grantedMtlsConfig)
                 PosClient.setDelegate(PosSampleDelegate)
                 Timber.d("PosClient re-initialized with updated credentials")
             } catch (e: Exception) {

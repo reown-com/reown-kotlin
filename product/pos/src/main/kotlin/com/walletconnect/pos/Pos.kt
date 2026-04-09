@@ -177,6 +177,17 @@ object Pos {
      * Note: End times include a 2-minute buffer to account for potential clock skew
      * between the device and server, ensuring recently completed transactions are included.
      */
+    sealed interface MtlsConfig {
+        /** Load the client certificate from the device's Android KeyChain. */
+        data class DeviceKeyChain(
+            val context: android.content.Context,
+            val alias: String = "SSL"
+        ) : MtlsConfig
+
+        /** Disable mTLS — use plain TLS only. */
+        data object Disabled : MtlsConfig
+    }
+
     object DateRanges {
         // Buffer to account for clock skew between device and server
         private const val CLOCK_SKEW_BUFFER_SECONDS = 120L
