@@ -59,6 +59,12 @@ internal class MerchantCredentialsManager(context: Context) {
         encryptedPrefs.edit().putString(KEY_API_KEY, value).apply()
     }
 
+    fun getDeviceId(): String {
+        return plainPrefs.getString(KEY_DEVICE_ID, null) ?: java.util.UUID.randomUUID().toString().also {
+            plainPrefs.edit().putString(KEY_DEVICE_ID, it).apply()
+        }
+    }
+
     fun hasApiKey(): Boolean {
         val stored = encryptedPrefs.getString(KEY_API_KEY, null)
         return !stored.isNullOrBlank() || BuildConfig.MERCHANT_API_KEY.isNotBlank()
@@ -96,6 +102,7 @@ internal class MerchantCredentialsManager(context: Context) {
         private const val SECURE_PREFS_NAME = "pos_secure_settings"
         private const val KEY_MERCHANT_ID = "merchant_id"
         private const val KEY_API_KEY = "api_key"
+        private const val KEY_DEVICE_ID = "device_id"
         private const val KEY_PIN_HASH = "pin_hash"
         private const val KEY_PIN_SALT = "pin_salt"
     }

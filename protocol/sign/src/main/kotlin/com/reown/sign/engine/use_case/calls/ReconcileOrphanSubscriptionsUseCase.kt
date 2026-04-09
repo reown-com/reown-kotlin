@@ -34,9 +34,7 @@ internal class ReconcileOrphanSubscriptionsUseCase(
 
             knownTopics.addAll(pendingSessionTopicRepository.getAllSessionTopics())
 
-            runCatching {
-                knownTopics.addAll(getPairingsUseCase.getListOfSettledPairings().map { it.topic.value })
-            }.onFailure { logger.error(it) }
+            knownTopics.addAll(getPairingsUseCase.getListOfSettledPairings().map { it.topic.value })
 
             val orphanTopics = subscribedTopics - knownTopics
             orphanTopics.forEach { topic ->

@@ -106,3 +106,6 @@ product/pos/property 'buildDir'
 .maestro/flows/pay_*.yaml
 .maestro/scripts/
 .env.maestro
+
+product/pos/scripts/certs/
+product/pos/scripts/
