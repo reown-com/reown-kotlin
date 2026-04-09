@@ -120,10 +120,6 @@ jobs:
             echo "Verifying installed app:"
             adb shell pm list packages | grep -E "com.reown.sample.wallet" || (echo "ERROR: App not installed correctly" && exit 1)
 
-            # Grant runtime permissions
-            echo "Granting permissions..."
-            adb shell pm grant com.reown.sample.wallet.internal android.permission.CAMERA || true
-
             # Wait for system to settle
             sleep 10
 
