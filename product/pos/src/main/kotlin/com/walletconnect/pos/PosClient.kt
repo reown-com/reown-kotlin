@@ -66,9 +66,9 @@ object PosClient {
             val baseHttpClient = createBaseHttpClient()
             sharedHttpClient = baseHttpClient
 
-            val mtlsClient = when (mtlsConfig) {
-                is Pos.MtlsConfig.DeviceKeyChain -> createMtlsHttpClientFromDeviceKeyChain(mtlsConfig.context, mtlsConfig.alias)
-                is Pos.MtlsConfig.Disabled -> baseHttpClient
+            val (mtlsClient, apiBaseUrl) = when (mtlsConfig) {
+                is Pos.MtlsConfig.DeviceKeyChain -> createMtlsHttpClientFromDeviceKeyChain(mtlsConfig.context, mtlsConfig.alias) to BuildConfig.MTLS_API_BASE_URL
+                is Pos.MtlsConfig.Disabled -> baseHttpClient to BuildConfig.CORE_API_BASE_URL
             }
             payHttpClient = mtlsClient
 
@@ -76,7 +76,7 @@ object PosClient {
             scope = newScope
             eventTracker = EventTracker(merchantId, newScope, sharedMoshi, baseHttpClient)
             errorTracker = ErrorTracker(newScope, sharedMoshi, baseHttpClient)
-            apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!, sharedMoshi, mtlsClient)
+            apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!, sharedMoshi, mtlsClient, apiBaseUrl)
         }
     }
 
