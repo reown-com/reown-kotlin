@@ -439,19 +439,25 @@ internal class PairingEngine(
         } ?: onFailure(IllegalStateException("Pairing for topic $topic does not exist"))
     }
 
-    private fun Pairing.isNotExpired(): Boolean = (expiry.seconds > currentTimeInSeconds).also { isValid ->
+    private fun Pairing.isNotExpired(): Boolean {
+        val isValid = expiry.seconds > currentTimeInSeconds
         if (!isValid) {
-            scope.launch {
-                try {
-                    jsonRpcInteractor.unsubscribe(topic = this@isNotExpired.topic)
-                    pairingRepository.deletePairing(this@isNotExpired.topic)
-                    metadataRepository.deleteMetaData(this@isNotExpired.topic)
-                    crypto.removeKeys(this@isNotExpired.topic.value)
-                } catch (e: Exception) {
-                    logger.error("Error when deleting pairing: $e")
-                }
-            }
+            deleteExpiredPairing(this)
         }
+        return isValid
+    }
+
+    private fun deleteExpiredPairing(pairing: Pairing) {
+        try {
+            pairingRepository.deletePairing(pairing.topic)
+            metadataRepository.deleteMetaData(pairing.topic)
+            runCatching { crypto.removeKeys(pairing.topic.value) }.onFailure { logger.error(it) }
+        } catch (e: Exception) {
+            logger.error("Error when deleting expired pairing: $e")
+        }
+        jsonRpcInteractor.unsubscribe(topic = pairing.topic,
+            onFailure = { logger.error("Failed to unsubscribe expired pairing: $it") }
+        )
     }
 
     @Deprecated(message = "This method has been deprecated. It will be removed soon.")

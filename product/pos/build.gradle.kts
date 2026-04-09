@@ -26,6 +26,7 @@ android {
 
         buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
         buildConfigField(type = "String", name = "CORE_API_BASE_URL", value = "\"https://api.pay.walletconnect.com\"")
+        buildConfigField(type = "String", name = "MTLS_API_BASE_URL", value = "\"https://mtls.api.pay.walletconnect.com\"")
         buildConfigField(type = "String", name = "PULSE_BASE_URL", value = "\"https://pulse.walletconnect.org\"")
         buildConfigField(type = "String", name = "POS_PROJECT_ID", value = "\"${System.getenv("POS_PROJECT_ID") ?: ""}\"")
         buildConfigField(type = "String", name = "INGEST_BASE_URL", value = "\"https://ingest.walletconnect.org/\"")
@@ -69,6 +70,7 @@ dependencies {
     ksp(libs.moshi.ksp)
 
     implementation(libs.coroutines)
+    implementation("androidx.annotation:annotation:1.9.1")
 
     testImplementation(libs.jUnit)
     testImplementation(libs.mockk)

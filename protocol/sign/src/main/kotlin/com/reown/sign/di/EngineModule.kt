@@ -10,6 +10,7 @@ import com.reown.sign.engine.domain.wallet_service.WalletServiceRequester
 import com.reown.sign.engine.model.tvf.TNV
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCase
 import com.reown.sign.engine.use_case.calls.GetPendingAuthenticateRequestUseCaseInterface
+import com.reown.sign.engine.use_case.calls.ReconcileOrphanSubscriptionsUseCase
 import com.reown.sign.json_rpc.domain.DeleteRequestByIdUseCase
 import com.reown.sign.json_rpc.domain.GetPendingJsonRpcHistoryEntryByIdUseCase
 import com.reown.sign.json_rpc.domain.GetPendingSessionAuthenticateRequest
@@ -47,6 +48,18 @@ internal fun engineModule() = module {
     single { WalletServiceFinder(logger = get(named(AndroidCommonDITags.LOGGER))) }
 
     single {
+        ReconcileOrphanSubscriptionsUseCase(
+            jsonRpcInteractor = get(),
+            sessionStorageRepository = get(),
+            authenticateResponseTopicRepository = get(),
+            pendingSessionTopicRepository = get(),
+            getPairingsUseCase = get(),
+            crypto = get(),
+            logger = get(named(AndroidCommonDITags.LOGGER))
+        )
+    }
+
+    single {
         WalletServiceRequester(
             okHttpClient = OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
@@ -62,6 +75,7 @@ internal fun engineModule() = module {
             jsonRpcInteractor = get(),
             crypto = get(),
             authenticateResponseTopicRepository = get(),
+            pendingSessionTopicRepository = get(),
             proposalStorageRepository = get(),
             authenticateSessionUseCase = get(),
             sessionStorageRepository = get(),
@@ -106,6 +120,7 @@ internal fun engineModule() = module {
             formatAuthenticateMessageUseCase = get(),
             deleteRequestByIdUseCase = get(),
             getPendingAuthenticateRequestUseCase = get(),
+            reconcileOrphanSubscriptionsUseCase = get(),
             insertEventUseCase = get(),
             linkModeJsonRpcInteractor = get(),
             logger = get(named(AndroidCommonDITags.LOGGER))

@@ -26,14 +26,14 @@ class PosClientTest {
 
     @Test
     fun `init - succeeds with valid parameters`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         // No exception means success
     }
 
     @Test
     fun `init - throws on blank apiKey`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "", merchantId = "test-merchant", deviceId = "test-device")
+            PosClient.init(apiKey = "", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("apiKey") == true)
     }
@@ -41,7 +41,7 @@ class PosClientTest {
     @Test
     fun `init - throws on whitespace only apiKey`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "   ", merchantId = "test-merchant", deviceId = "test-device")
+            PosClient.init(apiKey = "   ", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("apiKey") == true)
     }
@@ -49,7 +49,7 @@ class PosClientTest {
     @Test
     fun `init - throws on blank merchantId`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "test-api-key", merchantId = "", deviceId = "test-device")
+            PosClient.init(apiKey = "test-api-key", merchantId = "", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("merchantId") == true)
     }
@@ -57,7 +57,7 @@ class PosClientTest {
     @Test
     fun `init - throws on whitespace only merchantId`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "test-api-key", merchantId = "   ", deviceId = "test-device")
+            PosClient.init(apiKey = "test-api-key", merchantId = "   ", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("merchantId") == true)
     }
@@ -65,7 +65,7 @@ class PosClientTest {
     @Test
     fun `init - throws on blank deviceId`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "")
+            PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("deviceId") == true)
     }
@@ -73,23 +73,23 @@ class PosClientTest {
     @Test
     fun `init - throws on whitespace only deviceId`() {
         val exception = assertThrows(IllegalStateException::class.java) {
-            PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "   ")
+            PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "   ", mtlsConfig = Pos.MtlsConfig.Disabled)
         }
         assertTrue(exception.message?.contains("deviceId") == true)
     }
 
     @Test
     fun `init - can reinitialize after shutdown`() {
-        PosClient.init(apiKey = "first-key", merchantId = "first-merchant", deviceId = "first-device")
+        PosClient.init(apiKey = "first-key", merchantId = "first-merchant", deviceId = "first-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.shutdown()
-        PosClient.init(apiKey = "second-key", merchantId = "second-merchant", deviceId = "second-device")
+        PosClient.init(apiKey = "second-key", merchantId = "second-merchant", deviceId = "second-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         // No exception means success
     }
 
     @Test
     fun `init - can reinitialize without shutdown`() {
-        PosClient.init(apiKey = "first-key", merchantId = "first-merchant", deviceId = "first-device")
-        PosClient.init(apiKey = "second-key", merchantId = "second-merchant", deviceId = "second-device")
+        PosClient.init(apiKey = "first-key", merchantId = "first-merchant", deviceId = "first-device", mtlsConfig = Pos.MtlsConfig.Disabled)
+        PosClient.init(apiKey = "second-key", merchantId = "second-merchant", deviceId = "second-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         // No exception means success - init cleans up previous state
     }
 
@@ -106,7 +106,7 @@ class PosClientTest {
 
     @Test
     fun `createPaymentIntent - succeeds when initialized`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         var eventReceived = false
         PosClient.setDelegate(object : POSDelegate {
@@ -129,7 +129,7 @@ class PosClientTest {
 
     @Test
     fun `createPaymentIntent - accepts various currency units`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
         })
@@ -150,7 +150,7 @@ class PosClientTest {
 
     @Test
     fun `createPaymentIntent - cancels previous payment when called again`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         val events = mutableListOf<Pos.PaymentEvent>()
         PosClient.setDelegate(object : POSDelegate {
@@ -188,7 +188,7 @@ class PosClientTest {
 
     @Test
     fun `checkPaymentStatus - returns error event for invalid payment`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         // This will make a real network call and likely fail
         val result = PosClient.checkPaymentStatus("invalid_payment_id")
@@ -207,7 +207,7 @@ class PosClientTest {
 
     @Test
     fun `setDelegate - can change delegate after init`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
@@ -221,7 +221,7 @@ class PosClientTest {
 
     @Test
     fun `delegate - receives events from createPaymentIntent`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         val latch = CountDownLatch(1)
         var receivedEvent: Pos.PaymentEvent? = null
@@ -248,14 +248,14 @@ class PosClientTest {
 
     @Test
     fun `cancelPayment - safe to call when not polling`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.cancelPayment()
         // No exception means success
     }
 
     @Test
     fun `cancelPayment - safe to call multiple times`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.cancelPayment()
         PosClient.cancelPayment()
         PosClient.cancelPayment()
@@ -270,7 +270,7 @@ class PosClientTest {
 
     @Test
     fun `cancelPayment - stops ongoing payment polling`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         val events = mutableListOf<Pos.PaymentEvent>()
         PosClient.setDelegate(object : POSDelegate {
@@ -295,7 +295,7 @@ class PosClientTest {
 
     @Test
     fun `shutdown - safe to call multiple times`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.shutdown()
         PosClient.shutdown()
         PosClient.shutdown()
@@ -310,7 +310,7 @@ class PosClientTest {
 
     @Test
     fun `shutdown - requires reinit after`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.shutdown()
 
         val exception = assertThrows(IllegalStateException::class.java) {
@@ -324,7 +324,7 @@ class PosClientTest {
 
     @Test
     fun `shutdown - checkPaymentStatus throws after shutdown`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.shutdown()
 
         assertThrows(IllegalStateException::class.java) {
@@ -336,7 +336,7 @@ class PosClientTest {
 
     @Test
     fun `shutdown - cancels ongoing polling`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         val events = mutableListOf<Pos.PaymentEvent>()
         PosClient.setDelegate(object : POSDelegate {
@@ -373,7 +373,7 @@ class PosClientTest {
 
     @Test
     fun `referenceId - can be empty string`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
         })
@@ -394,7 +394,7 @@ class PosClientTest {
 
     @Test
     fun `pause - safe to call when not polling`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.pause()
         // No exception means success
     }
@@ -407,14 +407,14 @@ class PosClientTest {
 
     @Test
     fun `resume - safe to call when not polling`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.resume()
         // No exception means success - no active polling state
     }
 
     @Test
     fun `pause and resume - does not resume after cancelPayment`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
         })
@@ -433,7 +433,7 @@ class PosClientTest {
 
     @Test
     fun `referenceId - accepts special characters`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
         })
@@ -447,7 +447,7 @@ class PosClientTest {
 
     @Test
     fun `createPaymentIntent - throws on non-numeric amount value`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         assertThrows(IllegalArgumentException::class.java) {
             PosClient.createPaymentIntent(
@@ -459,7 +459,7 @@ class PosClientTest {
 
     @Test
     fun `createPaymentIntent - throws on decimal amount value`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         assertThrows(IllegalArgumentException::class.java) {
             PosClient.createPaymentIntent(
@@ -471,7 +471,7 @@ class PosClientTest {
 
     @Test
     fun `createPaymentIntent - throws on negative amount value`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         assertThrows(IllegalArgumentException::class.java) {
             PosClient.createPaymentIntent(
@@ -483,7 +483,7 @@ class PosClientTest {
 
     @Test
     fun `createPaymentIntent - accepts zero amount`() { runBlocking {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         PosClient.setDelegate(object : POSDelegate {
             override fun onEvent(event: Pos.PaymentEvent) {}
         })
@@ -497,7 +497,7 @@ class PosClientTest {
 
     @Test
     fun `getTransactionHistory - throws on invalid limit`() {
-        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device")
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
 
         assertThrows(IllegalArgumentException::class.java) {
             runBlocking {

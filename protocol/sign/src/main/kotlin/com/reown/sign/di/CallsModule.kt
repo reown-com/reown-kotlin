@@ -190,7 +190,7 @@ internal fun callsModule() = module {
 
     single<ExtendSessionUseCaseInterface> { ExtendSessionUseCase(jsonRpcInteractor = get(), sessionStorageRepository = get(), logger = get(named(AndroidCommonDITags.LOGGER))) }
 
-    single<DisconnectSessionUseCaseInterface> { DisconnectSessionUseCase(jsonRpcInteractor = get(), sessionStorageRepository = get(), logger = get(named(AndroidCommonDITags.LOGGER))) }
+    single<DisconnectSessionUseCaseInterface> { DisconnectSessionUseCase(jsonRpcInteractor = get(), sessionStorageRepository = get(), crypto = get(), logger = get(named(AndroidCommonDITags.LOGGER))) }
 
     single<GetSessionsUseCaseInterface> { GetSessionsUseCase(sessionStorageRepository = get(), metadataStorageRepository = get(), selfAppMetaData = get()) }
 

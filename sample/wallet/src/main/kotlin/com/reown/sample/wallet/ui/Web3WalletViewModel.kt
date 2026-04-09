@@ -9,26 +9,20 @@ import com.reown.android.Core
 import com.reown.android.internal.common.exception.InvalidProjectIdException
 import com.reown.android.internal.common.exception.ProjectIdDoesNotExistException
 import com.reown.sample.wallet.domain.WalletKitDelegate
-import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.PairingEvent
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
 
 class Web3WalletViewModel : ViewModel() {
     private val connectivityStateFlow: MutableStateFlow<ConnectionState> = MutableStateFlow(ConnectionState.Idle)
@@ -46,27 +40,12 @@ class Web3WalletViewModel : ViewModel() {
     private val _isRequestLoadingFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val isRequestLoadingFlow = _isRequestLoadingFlow.asSharedFlow()
 
-    private val _timerFlow: MutableStateFlow<String> = MutableStateFlow("0")
-    val timerFlow = _timerFlow.asStateFlow()
-
     private val _sessionRequestStateFlow: MutableSharedFlow<SignEvent.SessionRequest> = MutableSharedFlow()
     val sessionRequestStateFlow = _sessionRequestStateFlow.asSharedFlow()
 
     init {
         WalletKitDelegate.coreEvents.onEach { coreEvent ->
             _isLoadingFlow.value = (coreEvent as? Core.Model.PairingState)?.isPairingState ?: false
-        }.launchIn(viewModelScope)
-
-        flow {
-            while (true) {
-                emit(Unit)
-                delay(1000)
-            }
-        }.onEach {
-            val timestamp = System.currentTimeMillis()
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-            _timerFlow.value = dateFormat.format(timestamp)
         }.launchIn(viewModelScope)
 
         WalletKitDelegate.connectionState.onEach {

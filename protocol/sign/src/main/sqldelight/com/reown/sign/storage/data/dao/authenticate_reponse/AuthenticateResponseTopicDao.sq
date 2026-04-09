@@ -12,6 +12,9 @@ getListOfTopics:
 SELECT ard.pairingTopic, ard.responseTopic
 FROM AuthenticateResponseTopicDao ard;
 
+getByPairingTopic:
+SELECT responseTopic FROM AuthenticateResponseTopicDao WHERE pairingTopic = ?;
+
 deleteByPairingTopic:
 DELETE FROM AuthenticateResponseTopicDao
 WHERE pairingTopic = ?;

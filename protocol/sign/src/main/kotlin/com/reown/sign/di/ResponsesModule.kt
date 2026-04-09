@@ -19,6 +19,7 @@ internal fun responsesModule() = module {
             crypto = get(),
             pairingController = get(),
             proposalStorageRepository = get(),
+            pendingSessionTopicRepository = get(),
             logger = get(named(AndroidCommonDITags.LOGGER))
         )
     }
@@ -29,6 +30,7 @@ internal fun responsesModule() = module {
             jsonRpcInteractor = get(),
             sessionStorageRepository = get(),
             metadataStorageRepository = get(),
+            pendingSessionTopicRepository = get(),
             logger = get(named(AndroidCommonDITags.LOGGER))
         )
     }

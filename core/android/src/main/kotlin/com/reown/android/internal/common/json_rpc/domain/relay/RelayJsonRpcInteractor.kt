@@ -262,6 +262,8 @@ internal class RelayJsonRpcInteractor(
         }
     }
 
+    override fun getSubscriptionTopics(): Set<String> = subscriptions.keys.toSet()
+
     override fun subscribe(topic: Topic, onSuccess: (Topic) -> Unit, onFailure: (Throwable) -> Unit) {
         try {
             checkNetworkConnectivity()
