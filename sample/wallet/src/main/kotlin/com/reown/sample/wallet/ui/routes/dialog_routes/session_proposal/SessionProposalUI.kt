@@ -81,7 +81,7 @@ fun walletMetaData(): WalletMetaData {
         ),
         namespaces = mapOf(
             "eip155" to Wallet.Model.Namespace.Session(
-                chains = listOf("eip155:1", "eip155:137", "eip155:56", "eip155:42161", "eip155:8453", "eip155:10", "eip155:11155111"),
+                chains = listOf("eip155:1", "eip155:137", "eip155:56", "eip155:42161", "eip155:8453", "eip155:10", "eip155:11155111", "eip155:42220", "eip155:143"),
                 methods = listOf(
                     "eth_sendTransaction",
                     "personal_sign",
@@ -109,6 +109,8 @@ fun walletMetaData(): WalletMetaData {
                     "eip155:8453:$eip155Address",
                     "eip155:10:$eip155Address",
                     "eip155:11155111:$eip155Address",
+                    "eip155:42220:$eip155Address",
+                    "eip155:143:$eip155Address",
                 )
             ),
             "cosmos" to Wallet.Model.Namespace.Session(

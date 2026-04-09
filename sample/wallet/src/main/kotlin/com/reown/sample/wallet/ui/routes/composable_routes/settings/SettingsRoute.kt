@@ -8,13 +8,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
@@ -27,13 +27,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.BuildConfig
-import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.ThemeManager
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.ui.routes.CopyableItem
@@ -102,21 +101,16 @@ private fun NavigationCard(title: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 76.dp)
             .clip(RoundedCornerShape(borderRadius.radius4))
-            .background(color = colors.foregroundSecondary)
+            .background(color = colors.foregroundPrimary)
             .clickable { onClick() }
             .padding(horizontal = spacing.spacing4, vertical = spacing.spacing4),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = title,
-            style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
-        )
-        Icon(
-            painter = painterResource(id = R.drawable.ic_chevron_right),
-            contentDescription = null,
-            tint = colors.iconDefault
+            style = WCTheme.typography.bodyLgRegular.copy(color = colors.textPrimary)
         )
     }
 }
@@ -135,14 +129,15 @@ private fun DeviceSectionCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 76.dp)
             .clip(RoundedCornerShape(borderRadius.radius4))
-            .background(color = colors.foregroundSecondary)
+            .background(color = colors.foregroundPrimary)
             .padding(spacing.spacing4),
         verticalArrangement = Arrangement.spacedBy(spacing.spacing3)
     ) {
         Text(
             text = "Device",
-            style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
+            style = WCTheme.typography.bodyLgRegular.copy(color = colors.textPrimary)
         )
 
         CopyableItem(key = "Client ID", value = clientId, onCopy = onCopy)
@@ -161,20 +156,21 @@ private fun ThemeToggleCard() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 76.dp)
             .clip(RoundedCornerShape(borderRadius.radius4))
-            .background(color = colors.foregroundSecondary)
+            .background(color = colors.foregroundPrimary)
             .padding(spacing.spacing4)
     ) {
         Text(
             text = "Theme",
-            style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
+            style = WCTheme.typography.bodyLgRegular.copy(color = colors.textPrimary)
         )
         Spacer(modifier = Modifier.height(spacing.spacing3))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(borderRadius.radius3))
-                .background(color = colors.foregroundPrimary)
+                .background(color = colors.foregroundSecondary)
                 .padding(spacing.spacing1),
             horizontalArrangement = Arrangement.spacedBy(spacing.spacing1)
         ) {
@@ -219,15 +215,16 @@ private fun SmartAccountToggleCard() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 76.dp)
             .clip(RoundedCornerShape(borderRadius.radius4))
-            .background(color = colors.foregroundSecondary)
+            .background(color = colors.foregroundPrimary)
             .padding(horizontal = spacing.spacing4, vertical = spacing.spacing3),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = "Safe Smart Account",
-            style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
+            style = WCTheme.typography.bodyLgRegular.copy(color = colors.textPrimary)
         )
         Switch(
             checked = isSafeEnabled,

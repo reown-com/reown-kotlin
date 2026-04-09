@@ -80,8 +80,15 @@ internal class OnSessionAuthenticateResponseUseCase(
                     return@supervisorScope
                 }
             }
+            val responseTopic = runCatching { authenticateResponseTopicRepository.getResponseTopicByPairingTopic(pairingTopic.value) }.getOrNull()
             runCatching { authenticateResponseTopicRepository.delete(pairingTopic.value) }.onFailure {
                 logger.error("Received session authenticate response - failed to delete authenticate response topic: ${wcResponse.topic}")
+            }
+            if (responseTopic != null) {
+                runCatching { crypto.removeKeys(responseTopic) }.onFailure { logger.error(it) }
+                jsonRpcInteractor.unsubscribe(Topic(responseTopic),
+                    onFailure = { logger.error("Failed to unsubscribe auth response topic: $it") }
+                )
             }
 
             when (val response = wcResponse.response) {

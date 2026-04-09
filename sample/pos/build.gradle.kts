@@ -31,18 +31,27 @@ android {
 
     buildTypes {
         getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             manifestPlaceholders["pathPrefix"] = "/dapp_release"
             buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_release\"")
             resValue("string", "app_name", "POS (Ingenico)")
         }
 
         getByName("internal") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             manifestPlaceholders["pathPrefix"] = "/dapp_internal"
             buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_internal\"")
             resValue("string", "app_name", "POS Internal (Ingenico)")
         }
 
         getByName("debug") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             manifestPlaceholders["pathPrefix"] = "/dapp_debug"
             buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_debug\"")
             resValue("string", "app_name", "POS Debug (Ingenico)")
@@ -79,8 +88,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":sample:common"))
-
     debugImplementation(project(":product:pos"))
     internalImplementation(project(":product:pos"))
     releaseImplementation("com.walletconnect:pos:$POS_VERSION")
@@ -91,6 +98,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material)
     implementation(libs.androidx.compose.navigation)
     implementation(libs.androidx.compose.lifecycle)
 
@@ -103,6 +111,9 @@ dependencies {
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.material)
     implementation(libs.androidx.splashscreen)
+
+    // Secure storage
+    implementation(libs.androidx.security)
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")

@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.ui.theme.WCTheme
 import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.components.BigAmountDisplay
 import com.walletconnect.sample.pos.components.NumericKeyboard
@@ -90,6 +90,8 @@ fun AmountScreen(
         NumericKeyboard(
             modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5),
             onDigit = { digit ->
+                // Prevent leading zeros in integer part (e.g. "00", "007")
+                if (!amountDisplay.contains(".") && amountDisplay == "0") return@NumericKeyboard
                 val newAmount = amountDisplay + digit
                 // Limit decimal places to 2
                 val parts = newAmount.split(".")

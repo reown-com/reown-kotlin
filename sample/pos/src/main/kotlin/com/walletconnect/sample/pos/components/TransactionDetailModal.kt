@@ -31,8 +31,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.reown.sample.common.ui.theme.WCBorderRadius
-import com.reown.sample.common.ui.theme.WCTheme
+import com.walletconnect.sample.pos.ui.theme.WCBorderRadius
+import com.walletconnect.sample.pos.ui.theme.WCTheme
 import com.walletconnect.pos.Pos
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

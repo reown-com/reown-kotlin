@@ -11,6 +11,7 @@ import com.reown.android.internal.common.storage.metadata.MetadataStorageReposit
 import com.reown.foundation.util.Logger
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toEngineDO
+import com.reown.sign.storage.pending_session.PendingSessionTopicRepository
 import com.reown.sign.storage.sequence.SessionStorageRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -22,6 +23,7 @@ internal class OnSessionSettleResponseUseCase(
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val metadataStorageRepository: MetadataStorageRepositoryInterface,
     private val crypto: KeyManagementRepository,
+    private val pendingSessionTopicRepository: PendingSessionTopicRepository,
     private val logger: Logger
 ) {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
@@ -43,18 +45,23 @@ internal class OnSessionSettleResponseUseCase(
             when (wcResponse.response) {
                 is JsonRpcResponse.JsonRpcResult -> {
                     logger.log("Session settle success received")
+                    pendingSessionTopicRepository.getAndRemove(session.selfPublicKey.keyAsHex)
                     sessionStorageRepository.acknowledgeSession(sessionTopic)
                     _events.emit(EngineDO.SettledSessionResponse.Result(session.toEngineDO()))
                 }
 
                 is JsonRpcResponse.JsonRpcError -> {
-                    logger.error("Peer failed to settle session: ${(wcResponse.response as JsonRpcResponse.JsonRpcError).errorMessage}")
-                    jsonRpcInteractor.unsubscribe(sessionTopic, onSuccess = {
-                        runCatching {
-                            sessionStorageRepository.deleteSession(sessionTopic)
-                            crypto.removeKeys(sessionTopic.value)
-                        }.onFailure { logger.error(it) }
-                    })
+                    val errorMessage = (wcResponse.response as JsonRpcResponse.JsonRpcError).errorMessage
+                    logger.error("Peer failed to settle session: $errorMessage")
+                    pendingSessionTopicRepository.getAndRemove(session.selfPublicKey.keyAsHex)
+                    runCatching {
+                        sessionStorageRepository.deleteSession(sessionTopic)
+                        crypto.removeKeys(sessionTopic.value)
+                    }.onFailure { logger.error(it) }
+                    jsonRpcInteractor.unsubscribe(sessionTopic,
+                        onFailure = { logger.error("Failed to unsubscribe settled session topic: $it") }
+                    )
+                    _events.emit(EngineDO.SettledSessionResponse.Error(errorMessage))
                 }
             }
         } catch (e: Exception) {

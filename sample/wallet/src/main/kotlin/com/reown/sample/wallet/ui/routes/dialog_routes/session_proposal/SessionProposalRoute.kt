@@ -163,7 +163,7 @@ private fun SessionProposalContent(
                     Text(
                         text = "Network",
                         style = WCTheme.typography.bodyLgRegular.copy(
-                            color = WCTheme.colors.textSecondary
+                            color = WCTheme.colors.textTertiary
                         )
                     )
                 },

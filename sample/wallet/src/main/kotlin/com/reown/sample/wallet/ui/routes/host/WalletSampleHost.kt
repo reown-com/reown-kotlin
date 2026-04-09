@@ -165,7 +165,6 @@ fun WalletSampleHost(
                         Loader(initMessage = "Awaiting a request...", updateMessage = "It is taking longer than usual..")
                     }
 
-                    Timer(web3walletViewModel)
                 }
             }
 
@@ -178,20 +177,6 @@ fun WalletSampleHost(
             }
         }
     }
-}
-
-@Composable
-private fun BoxScope.Timer(web3walletViewModel: Web3WalletViewModel) {
-    val timer by web3walletViewModel.timerFlow.collectAsState()
-    Text(
-        modifier = Modifier
-            .align(Alignment.BottomStart),
-        text = timer,
-        maxLines = 1,
-        style = WCTheme.typography.bodySmMedium.copy(
-            color = WCTheme.colors.textTertiary
-        ),
-    )
 }
 
 @Composable

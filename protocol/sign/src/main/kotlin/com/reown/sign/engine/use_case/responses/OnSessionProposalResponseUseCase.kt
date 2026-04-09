@@ -14,6 +14,7 @@ import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.util.Logger
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
 import com.reown.sign.engine.model.EngineDO
+import com.reown.sign.storage.pending_session.PendingSessionTopicRepository
 import com.reown.sign.storage.proposal.ProposalStorageRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -26,6 +27,7 @@ internal class OnSessionProposalResponseUseCase(
     private val pairingController: PairingControllerInterface,
     private val crypto: KeyManagementRepository,
     private val proposalStorageRepository: ProposalStorageRepository,
+    private val pendingSessionTopicRepository: PendingSessionTopicRepository,
     private val logger: Logger
 ) {
     private val _events: MutableSharedFlow<EngineEvent> = MutableSharedFlow()
@@ -44,6 +46,7 @@ internal class OnSessionProposalResponseUseCase(
                     val responderPublicKey = PublicKey(approveParams.responderPublicKey)
                     val sessionTopic = crypto.generateTopicFromKeyAgreement(selfPublicKey, responderPublicKey)
 
+                    pendingSessionTopicRepository.insert(params.proposer.publicKey, sessionTopic.value)
                     jsonRpcInteractor.subscribe(sessionTopic,
                         onSuccess = { logger.log("Session proposal approval subscribed on session topic: $sessionTopic") },
                         onFailure = { error ->

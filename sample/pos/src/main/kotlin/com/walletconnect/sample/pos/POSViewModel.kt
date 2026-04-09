@@ -2,14 +2,18 @@ package com.walletconnect.sample.pos
 
 import android.app.Application
 import android.content.Context
+
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import com.walletconnect.sample.pos.components.TransactionFilter
+import com.walletconnect.sample.pos.credentials.MerchantCredentialsManager
 import com.walletconnect.sample.pos.model.Currency
+import com.walletconnect.sample.pos.model.PosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
 import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.net.URI
 
 sealed interface PosNavEvent {
@@ -55,9 +60,22 @@ sealed interface TransactionHistoryUiState {
     data class Error(val message: String) : TransactionHistoryUiState
 }
 
+sealed interface PinFlowState {
+    data object Hidden : PinFlowState
+    data class SetNew(val firstPin: String? = null, val pendingAction: PendingCredentialSave) : PinFlowState
+    data class Verify(val pendingAction: PendingCredentialSave) : PinFlowState
+    data class Error(val message: String, val previousState: PinFlowState) : PinFlowState
+}
+
+data class PendingCredentialSave(
+    val merchantId: String? = null,
+    val apiKey: String? = null
+)
+
 class POSViewModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    internal val credentialsManager = MerchantCredentialsManager(application)
 
     private val _posNavEventsFlow: MutableSharedFlow<PosNavEvent> = MutableSharedFlow()
     val posNavEventsFlow = _posNavEventsFlow.asSharedFlow()
@@ -99,6 +117,116 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     fun setThemeMode(mode: ThemeMode) {
         _selectedThemeMode.value = mode
         prefs.edit().putString(KEY_THEME, mode.name).apply()
+    }
+
+    // Selected variant (persisted)
+    private val _selectedVariant = MutableStateFlow(
+        prefs.getString(KEY_VARIANT, null)?.let { name ->
+            PosVariant.entries.find { it.name == name }
+        } ?: PosVariant.DEFAULT
+    )
+    val selectedVariant = _selectedVariant.asStateFlow()
+
+    fun setVariant(variant: PosVariant) {
+        _selectedVariant.value = variant
+        prefs.edit().putString(KEY_VARIANT, variant.name).apply()
+        variant.defaultTheme?.let { setThemeMode(it) }
+    }
+
+    // Merchant credentials (persisted securely)
+    private val _merchantId = MutableStateFlow(credentialsManager.getMerchantId())
+    val merchantId = _merchantId.asStateFlow()
+
+    private val _hasApiKey = MutableStateFlow(credentialsManager.hasApiKey())
+    val hasApiKey = _hasApiKey.asStateFlow()
+
+    // PIN flow state
+    private val _pinFlowState = MutableStateFlow<PinFlowState>(PinFlowState.Hidden)
+    val pinFlowState = _pinFlowState.asStateFlow()
+
+    fun requestSaveMerchantId(value: String) {
+        val pending = PendingCredentialSave(merchantId = value)
+        if (credentialsManager.isPinSet()) {
+            _pinFlowState.value = PinFlowState.Verify(pending)
+        } else {
+            _pinFlowState.value = PinFlowState.SetNew(pendingAction = pending)
+        }
+    }
+
+    fun requestSaveApiKey(value: String) {
+        val pending = PendingCredentialSave(apiKey = value)
+        if (credentialsManager.isPinSet()) {
+            _pinFlowState.value = PinFlowState.Verify(pending)
+        } else {
+            _pinFlowState.value = PinFlowState.SetNew(pendingAction = pending)
+        }
+    }
+
+    fun onPinEntered(pin: String) {
+        when (val state = _pinFlowState.value) {
+            is PinFlowState.SetNew -> {
+                if (state.firstPin == null) {
+                    // First entry — move to confirm step
+                    _pinFlowState.value = state.copy(firstPin = pin)
+                } else {
+                    // Confirm step
+                    if (pin == state.firstPin) {
+                        credentialsManager.setPin(pin)
+                        executePendingSave(state.pendingAction)
+                        _pinFlowState.value = PinFlowState.Hidden
+                    } else {
+                        _pinFlowState.value = PinFlowState.Error("PINs don't match", state.copy(firstPin = null))
+                    }
+                }
+            }
+            is PinFlowState.Verify -> {
+                if (credentialsManager.verifyPin(pin)) {
+                    executePendingSave(state.pendingAction)
+                    _pinFlowState.value = PinFlowState.Hidden
+                } else {
+                    _pinFlowState.value = PinFlowState.Error("Incorrect PIN", state)
+                }
+            }
+            is PinFlowState.Error -> {
+                // Re-process with the underlying state
+                _pinFlowState.value = state.previousState
+                onPinEntered(pin)
+            }
+            is PinFlowState.Hidden -> { /* no-op */ }
+        }
+    }
+
+    fun cancelPinFlow() {
+        _pinFlowState.value = PinFlowState.Hidden
+    }
+
+    private fun executePendingSave(pending: PendingCredentialSave) {
+        pending.merchantId?.let {
+            credentialsManager.saveMerchantId(it)
+            _merchantId.value = it
+        }
+        pending.apiKey?.let {
+            credentialsManager.saveApiKey(it)
+            _hasApiKey.value = true
+        }
+        reinitializePosClient()
+    }
+
+    private fun reinitializePosClient() {
+        val apiKey = credentialsManager.getApiKey()
+        val merchantId = credentialsManager.getMerchantId()
+        if (apiKey.isBlank() || merchantId.isBlank()) return
+
+        val deviceId = credentialsManager.getDeviceId()
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                PosClient.init(apiKey = apiKey, merchantId = merchantId, deviceId = deviceId, mtlsConfig = POSApplication.grantedMtlsConfig)
+                PosClient.setDelegate(PosSampleDelegate)
+                Timber.d("PosClient re-initialized with updated credentials")
+            } catch (e: Exception) {
+                Timber.e(e, "PosClient re-initialization failed")
+            }
+        }
     }
 
     // Loading state for "Start Payment" button
@@ -340,5 +468,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         private const val PREFS_NAME = "pos_settings"
         private const val KEY_CURRENCY = "currency"
         private const val KEY_THEME = "theme"
+        private const val KEY_VARIANT = "variant"
     }
 }

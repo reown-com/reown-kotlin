@@ -122,7 +122,7 @@ fun SessionRequestRoute(navController: NavHostController, sessionRequestViewMode
                                 Text(
                                     text = "Network",
                                     style = WCTheme.typography.bodyLgRegular.copy(
-                                        color = WCTheme.colors.textSecondary
+                                        color = WCTheme.colors.textTertiary
                                     )
                                 )
                             },
