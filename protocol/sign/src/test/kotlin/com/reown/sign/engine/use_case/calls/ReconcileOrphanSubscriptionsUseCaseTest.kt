@@ -106,6 +106,17 @@ class ReconcileOrphanSubscriptionsUseCaseTest {
     }
 
     @Test
+    fun `should abort reconciliation when getPairings fails`() = runTest {
+        every { jsonRpcInteractor.getSubscriptionTopics() } returns setOf("pairing1", "orphan1")
+        coEvery { getPairingsUseCase.getListOfSettledPairings() } throws RuntimeException("DB error")
+
+        useCase.reconcile()
+
+        verify(exactly = 0) { jsonRpcInteractor.unsubscribe(any(), any(), any()) }
+        verify(exactly = 0) { crypto.removeKeys(any()) }
+    }
+
+    @Test
     fun `should do nothing when no subscriptions exist`() = runTest {
         every { jsonRpcInteractor.getSubscriptionTopics() } returns emptySet()
 
