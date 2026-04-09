@@ -4,6 +4,7 @@ import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import com.reown.sample.wallet.domain.account.CantonAccountDelegate
 import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.ui.common.peer.PeerContextUI
@@ -151,6 +152,23 @@ fun walletMetaData(): WalletMetaData {
                 methods = listOf("tron_signMessage", "tron_signTransaction"),
                 events = listOf(),
                 accounts = listOf(TronAccountDelegate.caip10MainnetAddress)
+            ),
+            "canton" to Wallet.Model.Namespace.Session(
+                chains = listOf(CantonAccountDelegate.mainnet, CantonAccountDelegate.devnet),
+                methods = listOf(
+                    "canton_prepareSignExecute",
+                    "canton_listAccounts",
+                    "canton_getPrimaryAccount",
+                    "canton_getActiveNetwork",
+                    "canton_status",
+                    "canton_ledgerApi",
+                    "canton_signMessage"
+                ),
+                events = listOf("accountsChanged", "statusChanged", "chainChanged"),
+                accounts = listOf(
+                    CantonAccountDelegate.caip10MainnetAddress,
+                    CantonAccountDelegate.caip10DevnetAddress
+                )
             )
         )
     )
