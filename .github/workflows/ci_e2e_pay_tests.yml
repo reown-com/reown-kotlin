@@ -128,19 +128,7 @@ jobs:
             sleep 5
 
             echo "Running Maestro Pay E2E tests:"
-            MAESTRO_CMD="$HOME/.maestro/bin/maestro test"
-            MAESTRO_CMD="$MAESTRO_CMD --env APP_ID=com.reown.sample.wallet.internal"
-            MAESTRO_CMD="$MAESTRO_CMD --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC=${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}"
-            MAESTRO_CMD="$MAESTRO_CMD --env WPAY_MERCHANT_ID_SINGLE_NOKYC=${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}"
-            MAESTRO_CMD="$MAESTRO_CMD --env WPAY_CUSTOMER_KEY_MULTI_NOKYC=${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}"
-            MAESTRO_CMD="$MAESTRO_CMD --env WPAY_MERCHANT_ID_MULTI_NOKYC=${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}"
-            MAESTRO_CMD="$MAESTRO_CMD --env WPAY_CUSTOMER_KEY_MULTI_KYC=${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}"
-            MAESTRO_CMD="$MAESTRO_CMD --env WPAY_MERCHANT_ID_MULTI_KYC=${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}"
-            MAESTRO_CMD="$MAESTRO_CMD --include-tags pay"
-            MAESTRO_CMD="$MAESTRO_CMD --test-output-dir debug-artifacts/maestro-output"
-            MAESTRO_CMD="$MAESTRO_CMD --debug-output debug-artifacts/maestro-debug"
-            MAESTRO_CMD="$MAESTRO_CMD .maestro/"
-            eval $MAESTRO_CMD
+            $HOME/.maestro/bin/maestro test --env APP_ID=com.reown.sample.wallet.internal --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" --include-tags pay --test-output-dir debug-artifacts/maestro-output --debug-output debug-artifacts/maestro-debug .maestro/
 
             # Extract error logs for easier debugging
             echo "Extracting error logs..."
