@@ -361,6 +361,11 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         _isLoading.value = false
     }
 
+    fun stopPolling(): String? {
+        _isLoading.value = false
+        return PosClient.stopPolling()
+    }
+
     fun printReceipt() {
         // TODO: Implement receipt printing via POS terminal SDK
     }

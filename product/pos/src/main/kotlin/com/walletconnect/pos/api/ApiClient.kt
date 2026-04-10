@@ -57,7 +57,6 @@ internal class ApiClient(
 
     internal data class ActivePollingState(
         val paymentId: String,
-        val expiresAt: Long,
         val context: PaymentContext
     )
 
@@ -99,7 +98,7 @@ internal class ApiClient(
                 onEvent(paymentCreatedEvent)
 
                 if (!data.isFinal) {
-                    startPolling(data.paymentId, data.expiresAt, context, onEvent)
+                    startPolling(data.paymentId, context, onEvent)
                 }
             } else {
                 val error = parseErrorResponse(response)
@@ -136,28 +135,20 @@ internal class ApiClient(
 
     suspend fun resumePolling(onEvent: (Pos.PaymentEvent) -> Unit) {
         val state = activePollingState ?: return
-        startPolling(state.paymentId, state.expiresAt, state.context, onEvent)
+        startPolling(state.paymentId, state.context, onEvent)
     }
 
     private suspend fun startPolling(
         paymentId: String,
-        expiresAt: Long,
         context: PaymentContext,
         onEvent: (Pos.PaymentEvent) -> Unit
     ) {
-        activePollingState = ActivePollingState(paymentId, expiresAt, context)
+        activePollingState = ActivePollingState(paymentId, context)
         var lastEmittedStatus: String? = null
         var consecutiveTransientErrors = 0
 
         try {
             while (true) {
-                if (System.currentTimeMillis() / 1000 >= expiresAt) {
-                    val expiredError = Pos.PaymentEvent.PaymentError.PaymentExpired("Payment has expired")
-                    eventTracker.trackPaymentFailed(paymentId, context, expiredError)
-                    onEvent(expiredError)
-                    break
-                }
-
                 when (val result = getPaymentStatus(paymentId)) {
                     is ApiResult.Success -> {
                         val data = result.data
