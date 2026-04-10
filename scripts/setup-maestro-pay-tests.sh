@@ -1,62 +1,57 @@
 #!/bin/bash
-# Downloads Maestro Pay test flows from WalletConnect/actions repository.
-# Usage: ./scripts/setup-maestro-pay-tests.sh [branch]
+# Downloads shared WalletConnect Pay Maestro test flows from WalletConnect/actions repo.
+# Usage: ./scripts/setup-maestro-pay-tests.sh [ref]
+#   ref: actions repo branch/tag/commit to pull from (default: master)
 
 set -euo pipefail
 
-BRANCH="${1:-main}"
+REF="${1:-master}"
 REPO="WalletConnect/actions"
-BASE_URL="https://raw.githubusercontent.com/$REPO/$BRANCH/maestro/pay-tests/.maestro"
 
-MAESTRO_DIR=".maestro"
-FLOWS_DIR="$MAESTRO_DIR/flows"
-SCRIPTS_DIR="$MAESTRO_DIR/scripts"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+TARGET_DIR="$ROOT_DIR/.maestro"
 
-mkdir -p "$FLOWS_DIR" "$SCRIPTS_DIR"
+TMP_DIR="$(mktemp -d)"
+cleanup() {
+  rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT
 
-echo "Downloading Maestro Pay test flows from $REPO@$BRANCH..."
+count_matches() {
+  local dir="$1"
+  local pattern="$2"
+  find "$dir" -maxdepth 1 -type f -name "$pattern" | wc -l | tr -d ' '
+}
 
-# Main test flows
-FLOWS=(
-  "pay_single_option_nokyc.yaml"
-  "pay_single_option_nokyc_deeplink.yaml"
-  "pay_multiple_options_nokyc.yaml"
-  "pay_multiple_options_kyc.yaml"
-  "pay_cancel_from_review.yaml"
-  "pay_cancel_from_kyc.yaml"
-  "pay_kyc_back_navigation.yaml"
-  "pay_insufficient_funds.yaml"
-  "pay_double_scan.yaml"
-  "pay_expired_link.yaml"
-  "pay_cancelled.yaml"
-)
+echo "Downloading Maestro Pay test flows from $REPO@$REF..."
 
-for flow in "${FLOWS[@]}"; do
-  echo "  Downloading $flow..."
-  curl -sSfL "$BASE_URL/$flow" -o "$MAESTRO_DIR/$flow"
-done
+mkdir -p "$TARGET_DIR" "$TARGET_DIR/flows" "$TARGET_DIR/scripts"
 
-# Sub-flows
-SUB_FLOWS=(
-  "flows/pay_open_and_paste_url.yaml"
-  "flows/pay_confirm_and_verify.yaml"
-  "flows/pay_open_via_deeplink.yaml"
-)
+# Remove only managed Pay flow files so unrelated local Maestro files survive.
+find "$TARGET_DIR" -maxdepth 1 -type f -name 'pay_*.yaml' -delete
+find "$TARGET_DIR/flows" -maxdepth 1 -type f -name 'pay_*.yaml' -delete
+find "$TARGET_DIR/scripts" -maxdepth 1 -type f -name '*.js' -delete
 
-for flow in "${SUB_FLOWS[@]}"; do
-  echo "  Downloading $flow..."
-  curl -sSfL "$BASE_URL/$flow" -o "$MAESTRO_DIR/$flow"
-done
+# Download and extract the archive. codeload accepts branches, tags, and commit SHAs.
+curl -fsSL "https://codeload.github.com/$REPO/tar.gz/$REF" | tar -xz -C "$TMP_DIR"
 
-# Scripts
-SCRIPTS=(
-  "scripts/create-payment.js"
-  "scripts/cancel-payment.js"
-)
+SRC_DIR="$(find "$TMP_DIR" -type d -path '*/maestro/pay-tests/.maestro' | head -1)"
 
-for script in "${SCRIPTS[@]}"; do
-  echo "  Downloading $script..."
-  curl -sSfL "$BASE_URL/$script" -o "$MAESTRO_DIR/$script"
-done
+if [ -z "$SRC_DIR" ]; then
+  echo "ERROR: Could not find maestro/pay-tests/.maestro in the archive"
+  exit 1
+fi
 
-echo "Done! Maestro Pay test flows downloaded to $MAESTRO_DIR/"
+cp "$SRC_DIR"/pay_*.yaml "$TARGET_DIR/"
+
+mkdir -p "$TARGET_DIR/flows"
+cp "$SRC_DIR"/flows/pay_*.yaml "$TARGET_DIR/flows/"
+
+mkdir -p "$TARGET_DIR/scripts"
+cp "$SRC_DIR"/scripts/*.js "$TARGET_DIR/scripts/"
+
+echo "Pay test flows copied to $TARGET_DIR/"
+echo "  $(count_matches "$TARGET_DIR" 'pay_*.yaml') root flows"
+echo "  $(count_matches "$TARGET_DIR/flows" 'pay_*.yaml') sub-flows"
+echo "  $(count_matches "$TARGET_DIR/scripts" '*.js') scripts"
