@@ -3,6 +3,7 @@ package com.reown.sample.wallet.domain.signer
 import com.reown.sample.common.Chains
 import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.WalletKitDelegate
+import com.reown.sample.wallet.domain.account.CantonAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
@@ -218,6 +219,47 @@ object Signer {
                 val rawDataHex = transaction.getString("raw_data_hex")
                 val signedTx = tronSignTransaction(rawDataHex, TronAccountDelegate.keypair)
                 """{"signature":["${signedTx.signature}"],"txID":"${signedTx.txId}","raw_data_hex":"$rawDataHex"}"""
+            }
+
+            // Canton methods
+            sessionRequest.method == "canton_listAccounts" -> {
+                val networkId = sessionRequest.chain ?: "canton:devnet"
+                """[{"primary":true,"partyId":"${CantonAccountDelegate.PARTY_ID}","status":"allocated","hint":"operator","publicKey":"${CantonAccountDelegate.PUBLIC_KEY_BASE64}","namespace":"${CantonAccountDelegate.NAMESPACE}","networkId":"$networkId","signingProviderId":"participant","disabled":false}]"""
+            }
+
+            sessionRequest.method == "canton_getPrimaryAccount" -> {
+                val networkId = sessionRequest.chain ?: "canton:devnet"
+                """{"primary":true,"partyId":"${CantonAccountDelegate.PARTY_ID}","status":"allocated","hint":"operator","publicKey":"${CantonAccountDelegate.PUBLIC_KEY_BASE64}","namespace":"${CantonAccountDelegate.NAMESPACE}","networkId":"$networkId","signingProviderId":"participant"}"""
+            }
+
+            sessionRequest.method == "canton_getActiveNetwork" -> {
+                val networkId = sessionRequest.chain ?: "canton:devnet"
+                """{"networkId":"$networkId","ledgerApi":"http://127.0.0.1:5003"}"""
+            }
+
+            sessionRequest.method == "canton_status" -> {
+                val networkId = sessionRequest.chain ?: "canton:devnet"
+                """{"provider":{"id":"remote-da","version":"3.4.0","providerType":"remote"},"connection":{"isConnected":true,"isNetworkConnected":true},"network":{"networkId":"$networkId","ledgerApi":"http://127.0.0.1:5003"}}"""
+            }
+
+            sessionRequest.method == "canton_ledgerApi" -> {
+                val params = try { JSONObject(sessionRequest.param) } catch (_: Exception) { JSONObject() }
+                val resource = try { params.getString("resource") } catch (_: Exception) { "/unknown" }
+                if (resource == "/v2/version") {
+                    """{"response":"{\"version\":\"3.4.0\",\"features\":{}}"}"""
+                } else {
+                    """{"response":"{\"mock\":true,\"resource\":\"$resource\"}"}"""
+                }
+            }
+
+            sessionRequest.method == "canton_signMessage" -> {
+                """{"signature":"${CantonAccountDelegate.PUBLIC_KEY_BASE64}","publicKey":"${CantonAccountDelegate.PUBLIC_KEY_BASE64}"}"""
+            }
+
+            sessionRequest.method == "canton_prepareSignExecute" -> {
+                val params = try { JSONObject(sessionRequest.param) } catch (_: Exception) { JSONObject() }
+                val commandId = try { params.getString("commandId") } catch (_: Exception) { "mock-command-id-${System.currentTimeMillis()}" }
+                """{"status":"executed","commandId":"$commandId","payload":{"updateId":"mock-tx-update-id","completionOffset":42}}"""
             }
 
             //Note: Only for testing purposes - it will always fail on Dapp side
