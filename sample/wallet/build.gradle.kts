@@ -26,7 +26,8 @@ android {
         buildConfigField("String", "PIMLICO_API_KEY", "\"${System.getenv("PIMLICO_API_KEY") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
         buildConfigField("String", "TEST_WALLET_PRIVATE_KEY", "\"${System.getenv("TEST_WALLET_PRIVATE_KEY") ?: ""}\"")
-        buildConfigField("boolean", "ENABLE_TEST_MODE", "${System.getenv("ENABLE_TEST_MODE") ?: "false"}")
+        val enableTestMode = System.getenv("ENABLE_TEST_MODE")?.trim()?.lowercase() == "true"
+        buildConfigField("boolean", "ENABLE_TEST_MODE", "$enableTestMode")
 
         ndk.abiFilters += listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
     }

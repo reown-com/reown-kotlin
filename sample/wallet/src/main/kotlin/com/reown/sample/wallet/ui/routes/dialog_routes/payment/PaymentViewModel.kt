@@ -142,11 +142,10 @@ class PaymentViewModel : ViewModel() {
 
         val collectData = option.collectData
         val url = collectData?.url
-        val schema = collectData?.schema
 
         if (url != null) {
             // WebView-based IC with per-option URL
-            val urlWithPrefill = buildUrlWithPrefill(url, schema)
+            val urlWithPrefill = buildUrlWithPrefill(url)
             _uiState.value = PaymentUiState.WebViewDataCollection(
                 url = urlWithPrefill,
                 paymentInfo = storedPaymentInfo
@@ -163,8 +162,8 @@ class PaymentViewModel : ViewModel() {
     /**
      * Append prefill query parameter to IC URL if user data is available.
      */
-    private fun buildUrlWithPrefill(baseUrl: String, schema: String?): String {
-        val prefill = buildPrefillParam(schema) ?: return baseUrl
+    private fun buildUrlWithPrefill(baseUrl: String): String {
+        val prefill = buildPrefillParam() ?: return baseUrl
 
         val uri = Uri.parse(baseUrl)
         return uri.buildUpon()
@@ -178,9 +177,7 @@ class PaymentViewModel : ViewModel() {
      * Creates Base64-encoded JSON with all available user data.
      * Sends all known fields unconditionally — the webview will use what it needs.
      */
-    private fun buildPrefillParam(schema: String?): String? {
-        if (schema == null) return null
-
+    private fun buildPrefillParam(): String? {
         return try {
             val prefillData = JSONObject().apply {
                 put("fullName", EthAccountDelegate.PREFILL_FULL_NAME)
