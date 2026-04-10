@@ -57,6 +57,7 @@ jobs:
         uses: ./.github/actions/ci_setup
 
       - name: Build wallet sample - Internal
+        id: build
         env:
           WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
@@ -78,6 +79,7 @@ jobs:
         uses: android-actions/setup-android@v2
 
       - name: Start Android Emulator and Run Pay Tests
+        id: maestro
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -145,4 +147,53 @@ jobs:
           name: pay-e2e-debug-artifacts
           path: debug-artifacts/
           if-no-files-found: warn
+
+      - name: Send Slack notification
+        if: failure()
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "E2E Test Report - Android - WalletKit",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "🧪 E2E Test Report - Android (pay)" }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Project:*\n`WalletKit Kotlin`" },
+                    { "type": "mrkdwn", "text": "*Platform:*\n`Android`" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.ref_name }}`" },
+                    { "type": "mrkdwn", "text": "*Trigger:*\n`${{ github.event_name }}`" }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Build:*\n`${{ steps.build.outcome == 'success' && '✅ Success' || '❌ Failed' }}`" },
+                    { "type": "mrkdwn", "text": "*Maestro Tests:*\n`${{ steps.maestro.outcome == 'success' && '✅ Passed' || '❌ Failed' }}`" },
+                    { "type": "mrkdwn", "text": "*Overall Status:*\n`${{ job.status == 'success' && '✅ Success' || '❌ Failed' }}`" }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Workflow Run" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    },
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "Download Artifacts" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"
+                    }
+                  ]
+                }
+              ]
+            }
 
