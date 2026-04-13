@@ -12,7 +12,12 @@ permissions:
   contents: read
 
 jobs:
+  check-balance:
+    uses: ./.github/workflows/e2e_balance_check.yml
+    secrets: inherit
+
   build_and_run_pay_e2e_tests:
+    needs: check-balance
     name: Build & Run Pay E2E Tests
     timeout-minutes: 45
     runs-on: ubuntu-16core
