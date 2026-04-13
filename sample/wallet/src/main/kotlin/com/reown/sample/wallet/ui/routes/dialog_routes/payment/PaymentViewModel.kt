@@ -142,10 +142,11 @@ class PaymentViewModel : ViewModel() {
 
         val collectData = option.collectData
         val url = collectData?.url
+        val schema = collectData?.schema
 
         if (url != null) {
             // WebView-based IC with per-option URL
-            val urlWithPrefill = buildUrlWithPrefill(url)
+            val urlWithPrefill = buildUrlWithPrefill(url, schema)
             _uiState.value = PaymentUiState.WebViewDataCollection(
                 url = urlWithPrefill,
                 paymentInfo = storedPaymentInfo
@@ -162,8 +163,8 @@ class PaymentViewModel : ViewModel() {
     /**
      * Append prefill query parameter to IC URL if user data is available.
      */
-    private fun buildUrlWithPrefill(baseUrl: String): String {
-        val prefill = buildPrefillParam() ?: return baseUrl
+    private fun buildUrlWithPrefill(baseUrl: String, schema: String?): String {
+        val prefill = buildPrefillParam(schema) ?: return baseUrl
 
         val uri = Uri.parse(baseUrl)
         return uri.buildUpon()
@@ -174,24 +175,62 @@ class PaymentViewModel : ViewModel() {
 
     /**
      * Build the prefill query parameter for IC WebView URL.
-     * Creates Base64-encoded JSON with all available user data.
-     * Sends all known fields unconditionally — the webview will use what it needs.
+     * Parses the schema to find all required fields (top-level + anyOf conditions)
+     * and only includes fields that are required.
      */
-    private fun buildPrefillParam(): String? {
+    private fun buildPrefillParam(schema: String?): String? {
+        if (schema == null) return null
+
         return try {
-            val prefillData = JSONObject().apply {
-                put("fullName", EthAccountDelegate.PREFILL_FULL_NAME)
-                put("dob", EthAccountDelegate.PREFILL_DOB)
-                put("pobAddress", EthAccountDelegate.PREFILL_POB_ADDRESS)
+            val schemaJson = JSONObject(schema)
+
+            // Collect required fields from top-level "required" array
+            val requiredFields = mutableSetOf<String>()
+            val topRequired = schemaJson.optJSONArray("required")
+            if (topRequired != null) {
+                for (i in 0 until topRequired.length()) {
+                    requiredFields.add(topRequired.getString(i))
+                }
             }
 
-            // Base64 encode the JSON (NO_WRAP avoids newlines, URL_SAFE for URL compatibility)
+            // Collect required fields from "anyOf" conditional groups
+            val anyOfArray = schemaJson.optJSONArray("anyOf")
+            if (anyOfArray != null) {
+                for (i in 0 until anyOfArray.length()) {
+                    val group = anyOfArray.getJSONObject(i)
+                    val groupRequired = group.optJSONArray("required")
+                    if (groupRequired != null) {
+                        for (j in 0 until groupRequired.length()) {
+                            requiredFields.add(groupRequired.getString(j))
+                        }
+                    }
+                }
+            }
+
+            // Map of field id -> prefill value
+            val fieldValues = mapOf(
+                "fullName" to EthAccountDelegate.PREFILL_FULL_NAME,
+                "dob" to EthAccountDelegate.PREFILL_DOB,
+                "pobAddress" to EthAccountDelegate.PREFILL_POB_ADDRESS,
+                "pobCountry" to EthAccountDelegate.PREFILL_POB_COUNTRY,
+                "porAddress" to EthAccountDelegate.PREFILL_POR_ADDRESS,
+                "porCountry" to EthAccountDelegate.PREFILL_POR_COUNTRY
+            )
+
+            // Build prefill JSON with only required fields
+            val prefillData = JSONObject()
+            for (fieldId in requiredFields) {
+                fieldValues[fieldId]?.let { prefillData.put(fieldId, it) }
+            }
+
+            if (prefillData.length() == 0) return null
+
             val encoded = Base64.encodeToString(
                 prefillData.toString().toByteArray(Charsets.UTF_8),
                 Base64.NO_WRAP or Base64.URL_SAFE
             )
 
-            Log.d("PaymentViewModel", "Built prefill param: $prefillData -> $encoded")
+            Log.d("PaymentViewModel", "Built prefill param (required=$requiredFields): $prefillData -> $encoded")
             encoded
         } catch (e: Exception) {
             Log.e("PaymentViewModel", "Failed to build prefill param", e)

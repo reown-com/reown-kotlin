@@ -17,7 +17,10 @@ object EthAccountDelegate {
     // Hardcoded test user data for IC form prefill (PoC)
     const val PREFILL_FULL_NAME = "Test User"
     const val PREFILL_DOB = "1990-01-15"
-    const val PREFILL_POB_ADDRESS = "New York"
+    const val PREFILL_POB_ADDRESS = "New York, NY"
+    const val PREFILL_POB_COUNTRY = "US"
+    const val PREFILL_POR_ADDRESS = "New York, NY"
+    const val PREFILL_POR_COUNTRY = "US"
     private val sharedPreferences: SharedPreferences by lazy { application.getSharedPreferences("Wallet_Sample_Shared_Prefs", Context.MODE_PRIVATE) }
     private const val ACCOUNT_TAG = "self_account_tag"
     private const val PRIVATE_KEY_TAG = "self_private_key"
