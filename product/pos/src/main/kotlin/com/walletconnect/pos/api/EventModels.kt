@@ -22,6 +22,7 @@ internal data class IngestEventRequest(
 
 @JsonClass(generateAdapter = true)
 internal data class EventPayload(
+    @param:Json(name = "device_id") val deviceId: String? = null,
     // Payment context fields (for non-error events)
     @param:Json(name = "payment_url") val paymentUrl: String? = null,
     @param:Json(name = "amount") val amount: PaymentAmountPayload? = null,

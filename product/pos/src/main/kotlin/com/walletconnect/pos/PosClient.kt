@@ -74,7 +74,7 @@ object PosClient {
 
             val newScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
             scope = newScope
-            eventTracker = EventTracker(merchantId, newScope, sharedMoshi, baseHttpClient)
+            eventTracker = EventTracker(merchantId, deviceId, newScope, sharedMoshi, baseHttpClient)
             errorTracker = ErrorTracker(newScope, sharedMoshi, baseHttpClient)
             apiClient = ApiClient(apiKey, merchantId, eventTracker!!, errorTracker!!, sharedMoshi, mtlsClient, apiBaseUrl)
         }
