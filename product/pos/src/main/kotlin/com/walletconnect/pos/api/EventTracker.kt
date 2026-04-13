@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit
 
 internal class EventTracker(
     private val merchantId: String,
+    private val deviceId: String,
     private val scope: CoroutineScope,
     moshi: Moshi,
     baseHttpClient: OkHttpClient,
@@ -101,7 +102,7 @@ internal class EventTracker(
                 sdkName = "pos-kotlin",
                 sdkVersion = BuildConfig.SDK_VERSION,
                 merchantId = merchantId,
-                payload = payload
+                payload = (payload ?: EventPayload()).copy(deviceId = deviceId)
             )
 
             // Fire-and-forget: launch on IO dispatcher with silent exception handling
