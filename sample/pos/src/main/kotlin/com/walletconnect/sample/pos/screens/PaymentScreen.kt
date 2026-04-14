@@ -94,6 +94,7 @@ fun PaymentScreen(
             val remaining = expiresAt - now
             if (remaining <= 0) {
                 if (uiState is PaymentUiState.WaitingForScan) {
+                    viewModel.stopPolling()
                     navigateToErrorScreen("expired")
                 }
                 break
