@@ -191,6 +191,27 @@ object PosClient {
     }
 
     /**
+     * Stops polling for payment status without cancelling the payment.
+     *
+     * Use this to unblock the POS UI while the payment may still complete
+     * on the server. Unlike [pause], the polling state is cleared and
+     * [resume] will have no effect after this call. Unlike [cancelPayment],
+     * no cancel request is sent to the server.
+     *
+     * @return The paymentId of the stopped payment, or null if no payment
+     *         was being polled. Use this with [checkPaymentStatus] later.
+     */
+    fun stopPolling(): String? {
+        synchronized(lock) {
+            val paymentId = apiClient?.activePollingState?.paymentId
+            currentPollingJob?.cancel()
+            currentPollingJob = null
+            apiClient?.clearActivePollingState()
+            return paymentId
+        }
+    }
+
+    /**
      * Fetches transaction history for the merchant.
      *
      * @param limit Number of transactions to fetch per page (default 20, max 200)
