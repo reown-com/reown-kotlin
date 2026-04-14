@@ -59,6 +59,9 @@ private val chainRegistry: Map<String, ChainInfo> = mapOf(
     // TRON
     "tron:0x2b6653dc" to ChainInfo("Tron", R.drawable.ic_tron, Color(0xFFFF0013), "Tr"),
     "tron:0xcd8690dc" to ChainInfo("Tron Testnet", R.drawable.ic_tron, Color(0xFFFF0013), "Tr"),
+    // Canton
+    "canton:mainnet" to ChainInfo("Canton Mainnet", null, Color(0xFF4A90D9), "Ca"),
+    "canton:devnet" to ChainInfo("Canton Devnet", null, Color(0xFF4A90D9), "Ca"),
 )
 
 fun chainInfo(chainId: String): Pair<Color, String> {

@@ -10,6 +10,7 @@ import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.StacksAccountDelegate.wallet
 import com.reown.android.BuildConfig as AndroidBuildConfig
 import com.reown.sample.wallet.domain.WalletKitDelegate
+import com.reown.sample.wallet.domain.account.CantonAccountDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
@@ -120,6 +121,16 @@ class SessionProposalViewModel : ViewModel() {
                                 )
                             }
 
+                            chainId.contains("canton") -> {
+                                val issuer = "did:pkh:$chainId:${CantonAccountDelegate.PARTY_ID_URL_ENCODED}"
+                                Pair(
+                                    Wallet.Model.Cacao.Signature(
+                                        t = "canton",
+                                        s = CantonAccountDelegate.PUBLIC_KEY_BASE64
+                                    ), issuer
+                                )
+                            }
+
                             else -> Pair(
                                 Wallet.Model.Cacao.Signature(
                                     t = "",
@@ -224,6 +235,7 @@ class SessionProposalViewModel : ViewModel() {
                     chainId.contains("stacks") -> Stacks.getAddress(wallet, Stacks.Version.mainnetP2PKH)
                     chainId.contains("sui") -> SuiAccountDelegate.address
                     chainId.contains("tron") -> TronAccountDelegate.address
+                    chainId.contains("canton") -> CantonAccountDelegate.PARTY_ID_URL_ENCODED
                     else -> EthAccountDelegate.address
                 }
                 val issuer = "did:pkh:$chainId:$address"
