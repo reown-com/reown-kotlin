@@ -51,7 +51,15 @@ object EthAccountDelegate {
         get() = "eip155:11155111:$address"
 
     val address: String
-        get() = if (isInitialized) sharedPreferences.getString(ACCOUNT_TAG, null)!! else initializeAccount().third
+        get() {
+            if (BuildConfig.ENABLE_TEST_MODE) {
+                val tk = testPrivateKey
+                if (tk != null && sharedPreferences.getString(PRIVATE_KEY_TAG, null) != tk) {
+                    return storeAccount(tk).third
+                }
+            }
+            return if (isInitialized) sharedPreferences.getString(ACCOUNT_TAG, null)!! else initializeAccount().third
+        }
 
     val mnemonic: String?
         get() = sharedPreferences.getString(MNEMONIC_TAG, null)

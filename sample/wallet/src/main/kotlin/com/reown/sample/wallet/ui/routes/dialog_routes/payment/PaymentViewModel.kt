@@ -230,7 +230,7 @@ class PaymentViewModel : ViewModel() {
                 Base64.NO_WRAP or Base64.URL_SAFE
             )
 
-            Log.d("PaymentViewModel", "Built prefill param (required=$requiredFields): $prefillData -> $encoded")
+            Log.d("PaymentViewModel", "Built prefill param for ${requiredFields.size} required field(s)")
             encoded
         } catch (e: Exception) {
             Log.e("PaymentViewModel", "Failed to build prefill param", e)

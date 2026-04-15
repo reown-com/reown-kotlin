@@ -18,6 +18,7 @@ jobs:
 
   build_and_run_pay_e2e_tests:
     needs: check-balance
+    if: always()
     name: Build & Run Pay E2E Tests
     timeout-minutes: 45
     runs-on: ubuntu-16core
