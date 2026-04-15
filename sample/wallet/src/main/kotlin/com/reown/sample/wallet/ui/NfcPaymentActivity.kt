@@ -3,13 +3,11 @@ package com.reown.sample.wallet.ui
 import android.content.Intent
 import android.net.Uri
 import android.nfc.NdefMessage
-import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.reown.sample.wallet.nfc.PaymentHceService
 import timber.log.Timber
 
 /**
@@ -17,11 +15,16 @@ import timber.log.Timber
  * to WalletKitActivity where the user can pick a payment option.
  *
  * Entry points:
- * - **App Links**: Browser redirects `pay.walletconnect.com` URLs here (primary NFC flow)
- * - **HCE**: PaymentHceService delivers payment URLs via custom APDU protocol
- * - **NDEF/TECH**: Fallback for foreground dispatch when wallet is already open
+ * - **App Links**: Browser redirects `pay.walletconnect.com` URLs here
+ * - **NDEF**: POS terminal emits payment URI as an NDEF tag
+ * - **TECH**: Fallback for ISO-DEP / NFC-A/B tag dispatch
  */
 class NfcPaymentActivity : AppCompatActivity() {
+
+    companion object {
+        const val ACTION_PAYMENT_URL_RECEIVED = "com.reown.wallet.NFC_PAYMENT_URL"
+        const val EXTRA_PAYMENT_URL = "payment_url"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,8 +49,8 @@ class NfcPaymentActivity : AppCompatActivity() {
 
     private fun openPaymentModal(paymentUrl: String) {
         val intent = Intent(this, WalletKitActivity::class.java).apply {
-            action = PaymentHceService.ACTION_PAYMENT_URL_RECEIVED
-            putExtra(PaymentHceService.EXTRA_PAYMENT_URL, paymentUrl)
+            action = ACTION_PAYMENT_URL_RECEIVED
+            putExtra(EXTRA_PAYMENT_URL, paymentUrl)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         startActivity(intent)
@@ -59,14 +62,8 @@ class NfcPaymentActivity : AppCompatActivity() {
         Timber.d("NFC Payment: action=%s, data=%s", intent.action, intent.data)
 
         return when (intent.action) {
-            // App Links or direct URL
             Intent.ACTION_VIEW -> intent.data?.let { unwrapPaymentUrl(it.toString()) }
-            // HCE delivery
-            PaymentHceService.ACTION_PAYMENT_URL_RECEIVED ->
-                intent.getStringExtra(PaymentHceService.EXTRA_PAYMENT_URL)
-            // NDEF tag dispatch
             NfcAdapter.ACTION_NDEF_DISCOVERED -> extractFromNdefExtras(intent)
-            // TECH fallback (foreground dispatch)
             NfcAdapter.ACTION_TECH_DISCOVERED ->
                 extractFromTag(intent) ?: extractFromNdefExtras(intent)
             else -> null

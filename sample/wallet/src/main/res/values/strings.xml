@@ -1,5 +1,3 @@
 <resources>
     <string name="app_name">Wallet</string>
-    <string name="nfc_payment_service_description">Reown Pay NFC</string>
-    <string name="nfc_payment_aid_description">Reown Pay</string>
 </resources>
