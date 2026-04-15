@@ -9,6 +9,7 @@ import app.cash.sqldelight.ColumnAdapter
 import com.reown.sign.SignDatabase
 import com.reown.sign.storage.authenticate.AuthenticateResponseTopicRepository
 import com.reown.sign.storage.data.dao.namespace.NamespaceDao
+import com.reown.sign.storage.pending_session.PendingSessionTopicRepository
 import com.reown.sign.storage.data.dao.optionalnamespaces.OptionalNamespaceDao
 import com.reown.sign.storage.data.dao.proposal.ProposalDao
 import com.reown.sign.storage.data.dao.proposalnamespace.ProposalNamespaceDao
@@ -152,4 +153,6 @@ internal fun storageModule(dbName: String): Module = module {
     single {
         LinkModeStorageRepository(linkModeDaoQueries = get())
     }
+
+    single { PendingSessionTopicRepository() }
 }

@@ -27,8 +27,8 @@ class AppKitApp : Application() {
             url = "https://appkit-lab.reown.com",
             icons = listOf("https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media"),
             redirect = "kotlin-modal-wc://request",
-            linkMode = true,
-            appLink = BuildConfig.LAB_APP_LINK
+            linkMode = false,
+            appLink = ""
         )
 
         CoreClient.initialize(

@@ -11,7 +11,9 @@ enum class Chain(val id: String) {
     SUI("sui:mainnet"),
     SUI_TESTNET("sui:testnet"),
     TRON("tron:0x2b6653dc"),
-    CELO("eip155:42220")
+    CELO("eip155:42220"),
+    CANTON_MAINNET("canton:mainnet"),
+    CANTON_DEVNET("canton:devnet"),
 }
 
 interface Token

@@ -1,5 +1,6 @@
 package com.reown.sign.engine.use_case.calls
 
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
 import com.reown.android.internal.common.exception.Reason
 import com.reown.android.internal.common.model.IrnParams
@@ -18,6 +19,7 @@ import kotlinx.coroutines.supervisorScope
 internal class DisconnectSessionUseCase(
     private val jsonRpcInteractor: RelayJsonRpcInteractorInterface,
     private val sessionStorageRepository: SessionStorageRepository,
+    private val crypto: KeyManagementRepository,
     private val logger: Logger,
 ) : DisconnectSessionUseCaseInterface {
     override suspend fun disconnect(topic: String, onSuccess: () -> Unit, onFailure: (Throwable) -> Unit) = supervisorScope {
@@ -35,7 +37,10 @@ internal class DisconnectSessionUseCase(
             onSuccess = {
                 logger.log("Disconnect sent successfully on topic: $topic")
                 sessionStorageRepository.deleteSession(Topic(topic))
-                jsonRpcInteractor.unsubscribe(Topic(topic))
+                runCatching { crypto.removeKeys(topic) }.onFailure { logger.error(it) }
+                jsonRpcInteractor.unsubscribe(Topic(topic),
+                    onFailure = { logger.error("Failed to unsubscribe after disconnect: $it") }
+                )
                 onSuccess()
             },
             onFailure = { error ->

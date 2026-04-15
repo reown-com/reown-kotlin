@@ -200,5 +200,19 @@ enum class Chains(
             override val defaultEvents: List<String> = listOf()
             override val defaultMethods: List<String> = listOf("solana_signMessage", "solana_signTransaction", "solana_signAndSendTransaction", "solana_signAllTransactions")
         }
+
+        object Canton : Info() {
+            override val chain = "canton"
+            override val defaultEvents: List<String> = listOf("accountsChanged", "statusChanged", "chainChanged")
+            override val defaultMethods: List<String> = listOf(
+                "canton_prepareSignExecute",
+                "canton_listAccounts",
+                "canton_getPrimaryAccount",
+                "canton_getActiveNetwork",
+                "canton_status",
+                "canton_ledgerApi",
+                "canton_signMessage"
+            )
+        }
     }
 }

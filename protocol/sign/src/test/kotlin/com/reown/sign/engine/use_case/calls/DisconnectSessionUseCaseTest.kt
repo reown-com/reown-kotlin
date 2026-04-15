@@ -1,5 +1,6 @@
 package com.reown.sign.engine.use_case.calls
 
+import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.exception.CannotFindSequenceForTopic
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
 import com.reown.foundation.util.Logger
@@ -14,8 +15,9 @@ import org.junit.Test
 class DisconnectSessionUseCaseTest {
     private val jsonRpcInteractor = mockk<RelayJsonRpcInteractorInterface>()
     private val sessionStorageRepository = mockk<SessionStorageRepository>()
+    private val crypto = mockk<KeyManagementRepository>()
     private val logger = mockk<Logger>()
-    private val disconnectSessionUseCase = DisconnectSessionUseCase(jsonRpcInteractor, sessionStorageRepository, logger)
+    private val disconnectSessionUseCase = DisconnectSessionUseCase(jsonRpcInteractor, sessionStorageRepository, crypto, logger)
 
     @Before
     fun setUp() {
