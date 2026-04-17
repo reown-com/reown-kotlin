@@ -93,6 +93,41 @@ reown-kotlin/
 ./gradlew connectedAndroidTest
 ```
 
+### E2E Tests (Maestro)
+
+The wallet sample has Maestro-based E2E tests for the WalletConnect Pay flow.
+
+**Prerequisites:**
+- [Maestro CLI](https://maestro.mobile.dev/) installed
+- Android emulator running
+- Wallet app built with `ENABLE_TEST_MODE=true` (enables the URL input field for test automation)
+
+**Setup:**
+
+```bash
+# 1. Download test flows from WalletConnect/actions repo
+./scripts/setup-maestro-pay-tests.sh
+
+# 2. Create .env.maestro from the example and fill in merchant credentials
+cp .env.maestro.example .env.maestro
+
+# 3. Build and install the wallet app with test mode enabled
+ENABLE_TEST_MODE=true ./gradlew :sample:wallet:assembleDebug
+adb install sample/wallet/build/outputs/apk/debug/*.apk
+```
+
+**Running tests:**
+
+```bash
+# Run all Pay E2E tests
+APP_ID=com.reown.sample.wallet.debug ./scripts/run-maestro-pay-tests.sh
+
+# Run a specific test file
+maestro test --env APP_ID=com.reown.sample.wallet.debug .maestro/pay_single_option_nokyc.yaml
+```
+
+**`ENABLE_TEST_MODE`:** This env var controls whether the manual URL input field is shown in the scanner screen. It defaults to `false` so the field is hidden in all builds (debug, internal, release). Only CI E2E builds and local test runs should set it to `true`.
+
 ### Code Quality
 
 ```bash
