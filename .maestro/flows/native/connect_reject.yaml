@@ -9,6 +9,12 @@ name: Kotlin Dapp to Kotlin Wallet Connection Rejected
     appId: "com.reown.sample.dapp.internal"
     permissions:
       all: allow
+# Press NOT NOW in case the Enabling testing features modal appear
+- runFlow:
+    when:
+      visible: "NOT NOW"
+    commands:
+      - tapOn: "NOT NOW"
 - extendedWaitUntil:
     visible:
       text: "Chain selection"
@@ -31,9 +37,10 @@ name: Kotlin Dapp to Kotlin Wallet Connection Rejected
 - tapOn: "Android Sample Internal"
 - extendedWaitUntil:
     visible:
-      text: "Cancel"
+      id: "wallet-request-reject"
     timeout: 30000
-- tapOn: "Cancel"
+- tapOn:
+    id: "wallet-request-reject"
 - extendedWaitUntil:
     visible:
       text: "Connection declined"

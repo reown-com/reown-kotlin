@@ -6,6 +6,12 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
     permissions:
       all: allow
 - startRecording: "Native Connection Confirmed"
+# Press NOT NOW in case the Enabling testing features modal appear
+- runFlow:
+    when:
+      visible: "NOT NOW"
+    commands:
+      - tapOn: "NOT NOW"
 - extendedWaitUntil:
     visible:
       text: "Chain selection"
@@ -28,9 +34,10 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
 - tapOn: "Android Sample Internal"
 - extendedWaitUntil:
     visible:
-      text: "Connect"
+      id: "wallet-request-approve"
     timeout: 30000
-- tapOn: "Connect"
+- tapOn:
+    id: "wallet-request-approve"
 - extendedWaitUntil:
     visible:
       text: "Ethereum_main"

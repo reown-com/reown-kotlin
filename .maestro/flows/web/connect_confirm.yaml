@@ -9,9 +9,10 @@ name: AppKit Web to Kotlin Wallet Connection Confirmed
 - tapOn: "Kotlin Sample Wallet Kotlin Sample Wallet"
 - extendedWaitUntil:
     visible:
-      text: "Connect"
+      id: "wallet-request-approve"
     timeout: 30000
-- tapOn: "Connect"
+- tapOn:
+    id: "wallet-request-approve"
 - back
 - back
 - assertVisible: "AppKit Interactions"

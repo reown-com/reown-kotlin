@@ -13,9 +13,10 @@ name: Kotlin Dapp to Kotlin Wallet personal_sign Confirmed
 - tapOn: "personal_sign"
 - extendedWaitUntil:
     visible:
-      text: "Sign"
+      id: "wallet-request-approve"
     timeout: 30000
-- tapOn: "Sign"
+- tapOn:
+    id: "wallet-request-approve"
 - extendedWaitUntil:
     visible:
       text: "result_message"

@@ -13,9 +13,10 @@ name: Kotlin Dapp to Kotlin Wallet personal_sign Rejected
 - tapOn: "personal_sign"
 - extendedWaitUntil:
     visible:
-      text: "Cancel"
+      id: "wallet-request-reject"
     timeout: 30000
-- tapOn: "Cancel"
+- tapOn:
+    id: "wallet-request-reject"
 - extendedWaitUntil:
     visible:
       text: "result_error"
