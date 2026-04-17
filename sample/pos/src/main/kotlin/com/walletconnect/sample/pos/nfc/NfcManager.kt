@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import timber.log.Timber
+import java.lang.ref.WeakReference
 
 /**
  * Manages NFC payment link delivery for the POS payment flow.
@@ -45,7 +46,7 @@ internal object NfcManager {
     private var isEnabled: Boolean = false
 
     private var appContext: Context? = null
-    private var foregroundActivity: Activity? = null
+    private var foregroundActivityRef: WeakReference<Activity>? = null
 
     /**
      * Whether HCE NFC tag emulation is available on this device.
@@ -70,8 +71,8 @@ internal object NfcManager {
      * Call with the activity from onResume(), and null from onPause().
      */
     fun setActivity(activity: Activity?) {
-        val previousActivity = foregroundActivity
-        foregroundActivity = activity
+        val previousActivity = foregroundActivityRef?.get()
+        foregroundActivityRef = activity?.let { WeakReference(it) }
         val ctx = appContext ?: return
         val adapter = NfcAdapter.getDefaultAdapter(ctx) ?: return
         val cardEmulation = CardEmulation.getInstance(adapter)

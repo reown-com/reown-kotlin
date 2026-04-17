@@ -21,6 +21,7 @@ internal class NdefHostApduService : HostApduService() {
 
     private var selectedFile = SelectedFile.NONE
     private var hasNotifiedRead = false
+    private var sessionNdefFile: ByteArray? = null
 
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray {
         if (commandApdu.size < 4) return SW_UNKNOWN
@@ -68,6 +69,13 @@ internal class NdefHostApduService : HostApduService() {
                 FILE_ID_NDEF -> {
                     selectedFile = SelectedFile.NDEF
                     hasNotifiedRead = false
+                    val ndefBytes = currentNdefBytes
+                    sessionNdefFile = if (ndefBytes != null) {
+                        val len = ndefBytes.size
+                        byteArrayOf((len shr 8).toByte(), (len and 0xFF).toByte()) + ndefBytes
+                    } else {
+                        byteArrayOf(0x00, 0x00)
+                    }
                     SW_OK
                 }
                 else -> SW_FILE_NOT_FOUND
@@ -91,15 +99,9 @@ internal class NdefHostApduService : HostApduService() {
         return when (selectedFile) {
             SelectedFile.CC -> readFromFile(CAPABILITY_CONTAINER, offset, le)
             SelectedFile.NDEF -> {
-                val ndefBytes = currentNdefBytes
-                val ndefFile = if (ndefBytes != null) {
-                    val len = ndefBytes.size
-                    byteArrayOf((len shr 8).toByte(), (len and 0xFF).toByte()) + ndefBytes
-                } else {
-                    byteArrayOf(0x00, 0x00)
-                }
+                val ndefFile = sessionNdefFile ?: byteArrayOf(0x00, 0x00)
 
-                if (offset == 0 && !hasNotifiedRead && ndefBytes != null) {
+                if (offset == 0 && !hasNotifiedRead && ndefFile.size > 2) {
                     hasNotifiedRead = true
                     onBeingReadCallback?.invoke()
                 }

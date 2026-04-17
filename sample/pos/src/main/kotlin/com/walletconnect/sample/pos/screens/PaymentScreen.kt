@@ -1,6 +1,5 @@
 package com.walletconnect.sample.pos.screens
 
-import android.nfc.NfcAdapter
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -36,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -158,10 +156,8 @@ private fun ScanContent(
     remainingSeconds: Long,
     onCancel: () -> Unit
 ) {
-    val context = LocalContext.current
     val hasNfc by produceState(initialValue = false) {
-        val nfcAdapter = NfcAdapter.getDefaultAdapter(context)
-        value = nfcAdapter != null && nfcAdapter.isEnabled
+        value = NfcManager.isAvailable
     }
 
     // NFC tap animation state — incremented on tap, reset to 0 after animation

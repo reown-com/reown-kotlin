@@ -90,7 +90,7 @@ class WalletKitActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        nfcPaymentReader = NfcPaymentReader(this) { paymentUrl ->
+        nfcPaymentReader = NfcPaymentReader(this, lifecycleScope) { paymentUrl ->
             Timber.d("NFC: Payment URL read from tag: %s", paymentUrl)
             web3walletViewModel.pair(paymentUrl)
         }

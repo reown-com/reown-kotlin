@@ -6,11 +6,11 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.Uri
-import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
-import android.nfc.Tag
 import android.nfc.tech.Ndef
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -21,6 +21,7 @@ import timber.log.Timber
  */
 internal class NfcPaymentReader(
     private val activity: Activity,
+    private val scope: CoroutineScope,
     private val onPaymentUrl: (String) -> Unit,
 ) {
 
@@ -64,50 +65,23 @@ internal class NfcPaymentReader(
 
         Timber.d("NFC Reader: action=%s, data=%s", action, intent.data)
 
-        val url = extractFromNdefExtras(intent) ?: extractFromTag(intent)
+        val url = NfcPaymentUrlExtractor.extractFromNdefExtras(intent)
         if (url != null) {
             Timber.d("NFC Reader: Payment URL found: %s", url)
             onPaymentUrl(url)
             return true
         }
 
-        Timber.d("NFC Reader: No payment URL in NFC intent")
-        return false
-    }
-
-    private fun extractFromNdefExtras(intent: Intent): String? {
-        val messages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
-            ?: return null
-        for (msg in messages) {
-            val ndefMessage = msg as? NdefMessage ?: continue
-            for (record in ndefMessage.records) {
-                val uri = record.toUri()?.toString() ?: continue
-                if (isPaymentUrl(uri)) return unwrapPaymentUrl(uri)
+        // Tag I/O is blocking RF — dispatch off the main thread
+        scope.launch(Dispatchers.IO) {
+            val tagUrl = NfcPaymentUrlExtractor.extractFromTag(intent)
+            if (tagUrl != null) {
+                Timber.d("NFC Reader: Payment URL found from tag: %s", tagUrl)
+                onPaymentUrl(tagUrl)
+            } else {
+                Timber.d("NFC Reader: No payment URL in NFC intent")
             }
         }
-        return null
+        return true
     }
-
-    private fun extractFromTag(intent: Intent): String? {
-        val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG) ?: return null
-        val ndef = Ndef.get(tag) ?: return null
-        return try {
-            ndef.connect()
-            val ndefMessage = ndef.ndefMessage ?: return null
-            ndefMessage.records.firstNotNullOfOrNull { record ->
-                record.toUri()?.toString()?.takeIf { isPaymentUrl(it) }?.let { unwrapPaymentUrl(it) }
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "NFC Reader: Error reading NDEF from tag")
-            null
-        } finally {
-            try { ndef.close() } catch (_: Exception) {}
-        }
-    }
-
-    private fun isPaymentUrl(url: String): Boolean =
-        url.contains("pay.walletconnect.com")
-
-    private fun unwrapPaymentUrl(url: String): String =
-        try { Uri.parse(url).getQueryParameter("payUrl") ?: url } catch (_: Exception) { url }
 }
