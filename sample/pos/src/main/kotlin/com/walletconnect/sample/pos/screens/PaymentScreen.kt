@@ -51,7 +51,6 @@ import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.StyledQrCode
 import com.walletconnect.sample.pos.components.PosHeader
 import com.walletconnect.sample.pos.components.WalletConnectLoader
-import com.walletconnect.sample.pos.nfc.IngenicoNfcTagEmulator
 import com.walletconnect.sample.pos.nfc.NfcManager
 import com.walletconnect.sample.pos.sound.TapSoundPlayer
 import kotlinx.coroutines.delay
@@ -160,22 +159,9 @@ private fun ScanContent(
     onCancel: () -> Unit
 ) {
     val context = LocalContext.current
-    // Check both standard Android NFC and Ingenico USDK NFC tag emulation.
-    // USDK service binds asynchronously, so poll briefly until it becomes available.
     val hasNfc by produceState(initialValue = false) {
         val nfcAdapter = NfcAdapter.getDefaultAdapter(context)
-        if (nfcAdapter != null && nfcAdapter.isEnabled) {
-            value = true
-            return@produceState
-        }
-        // Poll for Ingenico USDK NFC availability (service binds async)
-        repeat(10) {
-            if (IngenicoNfcTagEmulator.isAvailable) {
-                value = true
-                return@produceState
-            }
-            delay(500)
-        }
+        value = nfcAdapter != null && nfcAdapter.isEnabled
     }
 
     // NFC tap animation state — incremented on tap, reset to 0 after animation

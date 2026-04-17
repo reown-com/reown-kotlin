@@ -32,3 +32,8 @@
 
 # Keep Kotlin metadata for reflection
 -keep class kotlin.Metadata { *; }
+
+# HCE service for NFC tag emulation — keep the service and its companion object fields
+# which are accessed cross-class (set by NfcManager, read by the service)
+-keep class com.walletconnect.sample.pos.nfc.NdefHostApduService { *; }
+-keep class com.walletconnect.sample.pos.nfc.NdefHostApduService$Companion { *; }

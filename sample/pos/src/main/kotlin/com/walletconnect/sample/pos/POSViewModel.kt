@@ -9,7 +9,6 @@ import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
 import com.walletconnect.sample.pos.log.PosLogStore
 import com.walletconnect.sample.pos.nfc.NfcManager
-import com.walletconnect.sample.pos.receipt.ReceiptPrinter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -107,17 +106,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     fun setCurrency(currency: Currency) {
         _selectedCurrency.value = currency
         prefs.edit().putString(KEY_CURRENCY, currency.code).apply()
-    }
-
-    // Print receipt toggle (persisted)
-    private val _printReceiptEnabled = MutableStateFlow<Boolean>(
-        prefs.getBoolean(KEY_PRINT_RECEIPT, false)
-    )
-    val printReceiptEnabled = _printReceiptEnabled.asStateFlow()
-
-    fun setPrintReceiptEnabled(enabled: Boolean) {
-        _printReceiptEnabled.value = enabled
-        prefs.edit().putBoolean(KEY_PRINT_RECEIPT, enabled).apply()
     }
 
     // Selected theme mode (persisted)
@@ -234,7 +222,7 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         val deviceId = credentialsManager.getDeviceId()
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                PosClient.init(apiKey = apiKey, merchantId = merchantId, deviceId = deviceId, mtlsConfig = POSApplication.grantedMtlsConfig)
+                PosClient.init(apiKey = apiKey, merchantId = merchantId, deviceId = deviceId, mtlsConfig = Pos.MtlsConfig.Disabled)
                 PosClient.setDelegate(PosSampleDelegate)
                 Timber.d("PosClient re-initialized with updated credentials")
             } catch (e: Exception) {
@@ -328,13 +316,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
                 _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info, _currentAmount.value))
-                if (_printReceiptEnabled.value && ReceiptPrinter.isAvailable) {
-                    ReceiptPrinter.printPaymentReceipt(
-                        context = getApplication(),
-                        paymentInfo = paymentEvent.info,
-                        fiatAmount = _currentAmount.value?.format()
-                    )
-                }
             }
 
             is Pos.PaymentEvent.PaymentError -> {
@@ -418,10 +399,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     fun stopPolling(): String? {
         _isLoading.value = false
         return PosClient.stopPolling()
-    }
-
-    fun printReceipt() {
-        // TODO: Implement receipt printing via POS terminal SDK
     }
 
     fun resetForNewPayment() {
@@ -529,7 +506,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         private const val PREFS_NAME = "pos_settings"
         private const val KEY_CURRENCY = "currency"
         private const val KEY_THEME = "theme"
-        private const val KEY_PRINT_RECEIPT = "print_receipt"
         private const val KEY_VARIANT = "variant"
     }
 }

@@ -67,7 +67,6 @@ fun SettingsScreen(
 ) {
     val selectedCurrency by viewModel.selectedCurrency.collectAsState()
     val selectedThemeMode by viewModel.selectedThemeMode.collectAsState()
-    val printReceiptEnabled by viewModel.printReceiptEnabled.collectAsState()
     val selectedVariant by viewModel.selectedVariant.collectAsState()
     val merchantId by viewModel.merchantId.collectAsState()
     val hasApiKey by viewModel.hasApiKey.collectAsState()
@@ -211,16 +210,6 @@ fun SettingsScreen(
                     activeSheet = ActiveSheet.API_KEY
                     scope.launch { sheetState.show() }
                 },
-                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
-            )
-
-            Spacer(Modifier.height(WCTheme.spacing.spacing2))
-
-            // Print receipt toggle
-            SettingsToggleItem(
-                label = "Print Receipt",
-                checked = printReceiptEnabled,
-                onCheckedChange = { viewModel.setPrintReceiptEnabled(it) },
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
 

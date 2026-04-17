@@ -1,7 +1,6 @@
 package com.walletconnect.sample.pos
 
 import android.app.Application
-import android.os.Build
 
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
@@ -23,13 +22,6 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
 
         private val _initCompleted = MutableStateFlow(false)
         val initCompleted = _initCompleted.asStateFlow()
-
-        val isIngenicoDevice: Boolean
-            get() = Build.MANUFACTURER.equals("Ingenico", ignoreCase = true)
-
-        @Volatile
-        var grantedMtlsConfig: Pos.MtlsConfig = Pos.MtlsConfig.Disabled
-            private set
     }
 
     override fun onCreate() {
@@ -39,16 +31,10 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
             Timber.plant(Timber.DebugTree())
         }
 
-        if (isIngenicoDevice) {
-            // On Ingenico, defer SDK init until Activity grants KeyChain access
-            Timber.d("Ingenico device detected, deferring SDK init until KeyChain access is granted")
-        } else {
-            initSdk(Pos.MtlsConfig.Disabled)
-        }
+        initSdk()
     }
 
-    fun initSdk(mtlsConfig: Pos.MtlsConfig) {
-        grantedMtlsConfig = mtlsConfig
+    private fun initSdk() {
         val credentialsManager = MerchantCredentialsManager(this)
         val deviceId = credentialsManager.getDeviceId()
         Executors.newSingleThreadExecutor().execute {
@@ -57,10 +43,9 @@ class POSApplication : Application(), SingletonImageLoader.Factory {
                     apiKey = credentialsManager.getApiKey(),
                     merchantId = credentialsManager.getMerchantId(),
                     deviceId = deviceId,
-                    mtlsConfig = mtlsConfig
+                    mtlsConfig = Pos.MtlsConfig.Disabled
                 )
                 PosClient.setDelegate(PosSampleDelegate)
-                Timber.d("POSClient initialized successfully with ${mtlsConfig::class.simpleName}")
                 Timber.d("POSClient initialized successfully")
                 PosLogStore.info("POS SDK initialized", source = "POSApplication")
             } catch (e: IllegalStateException) {

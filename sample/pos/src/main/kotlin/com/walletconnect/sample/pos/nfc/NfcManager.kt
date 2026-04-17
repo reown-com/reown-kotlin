@@ -2,8 +2,14 @@
 
 package com.walletconnect.sample.pos.nfc
 
+import android.app.Activity
+import android.content.ComponentName
+import android.content.Context
+import android.content.pm.PackageManager
 import android.nfc.NdefMessage
 import android.nfc.NdefRecord
+import android.nfc.NfcAdapter
+import android.nfc.cardemulation.CardEmulation
 import com.walletconnect.sample.pos.log.PosLogStore
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -13,8 +19,9 @@ import timber.log.Timber
 /**
  * Manages NFC payment link delivery for the POS payment flow.
  *
- * Uses Ingenico USDK NFC tag emulation — the POS acts as an NDEF tag
- * that both Android and iOS wallets can read by tapping the terminal.
+ * Uses Android Host Card Emulation (HCE) to emulate an NFC Forum Type 4 Tag.
+ * The POS acts as an NDEF tag that both Android and iOS wallets can read
+ * by tapping the device.
  *
  * The raw payment URL (e.g. https://pay.walletconnect.com/pay_abc123)
  * is emitted directly in the NDEF message. Wallets register for the
@@ -25,10 +32,6 @@ import timber.log.Timber
  *   when multiple wallets are installed.
  *
  * The NDEF message contains a single URI record with the payment URL.
- * Android opens the URL via the browser, which auto-redirects to the
- * wallet via verified App Links (if installed) or loads the payment
- * page directly (if not). No system "New tag scanned" dialog.
- * iOS Background Tag Reading uses the URI record for Universal Links.
  */
 internal object NfcManager {
 
@@ -41,20 +44,42 @@ internal object NfcManager {
     @Volatile
     private var isEnabled: Boolean = false
 
+    private var appContext: Context? = null
+    private var foregroundActivity: Activity? = null
+
     /**
-     * Registers a reconnect listener so NFC auto-recovers after USDK service restarts.
-     * Call once during app initialization (e.g. in Activity.onCreate after UsdkServiceHelper.bind).
+     * Whether HCE NFC tag emulation is available on this device.
      */
-    fun registerReconnectHandler() {
-        UsdkServiceHelper.onServiceReconnected = {
-            Timber.d("NFC: USDK service reconnected — re-enabling emulation")
-            PosLogStore.info("USDK service reconnected — re-enabling NFC", source = "NfcManager")
-            if (isEnabled) {
-                val uri = currentUri
-                if (uri != null) {
-                    emitNdef(uri)
-                }
-            }
+    val isAvailable: Boolean
+        get() {
+            val ctx = appContext ?: return false
+            val adapter = NfcAdapter.getDefaultAdapter(ctx) ?: return false
+            return adapter.isEnabled &&
+                ctx.packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
+        }
+
+    /**
+     * Initializes the NFC manager. Call once during Activity.onCreate().
+     */
+    fun init(context: Context) {
+        appContext = context.applicationContext
+    }
+
+    /**
+     * Sets the foreground activity for HCE preferred service routing.
+     * Call with the activity from onResume(), and null from onPause().
+     */
+    fun setActivity(activity: Activity?) {
+        val previousActivity = foregroundActivity
+        foregroundActivity = activity
+        val ctx = appContext ?: return
+        val adapter = NfcAdapter.getDefaultAdapter(ctx) ?: return
+        val cardEmulation = CardEmulation.getInstance(adapter)
+        val component = ComponentName(ctx, NdefHostApduService::class.java)
+        if (activity != null) {
+            cardEmulation.setPreferredService(activity, component)
+        } else {
+            previousActivity?.let { cardEmulation.unsetPreferredService(it) }
         }
     }
 
@@ -75,7 +100,8 @@ internal object NfcManager {
      */
     fun clearPaymentUri() {
         currentUri = null
-        Timber.d("NFC: Payment URI cleared")
+        NdefHostApduService.currentNdefBytes = null
+        NdefHostApduService.onBeingReadCallback = null
     }
 
     /**
@@ -92,29 +118,24 @@ internal object NfcManager {
      */
     fun disable() {
         isEnabled = false
-        IngenicoNfcTagEmulator.disable()
+        NdefHostApduService.currentNdefBytes = null
+        NdefHostApduService.onBeingReadCallback = null
     }
 
-    // TODO: Remove staging rewrite once production AASA is deployed
-    private fun rewriteForStaging(uri: String): String =
-        uri.replace("pay.walletconnect.com", "staging.pay.walletconnect.com")
-
     private fun emitNdef(paymentUri: String) {
-//        val stagingUri = rewriteForStaging(paymentUri)
-        Timber.d("NFC: Emitting payment URI: %s (staging: %s)", paymentUri, paymentUri)
         val ndefMessage = NdefMessage(
             arrayOf(
                 NdefRecord.createUri(paymentUri)
             )
         )
-        Timber.d("NFC: NDEF message size: %d bytes", ndefMessage.toByteArray().size)
+        val ndefBytes = ndefMessage.toByteArray()
         PosLogStore.info(
             "NFC emulation enabled",
             source = "NfcManager",
-            data = "uri: $paymentUri\nNDEF size: ${ndefMessage.toByteArray().size} bytes"
+            data = "uri: $paymentUri\nNDEF size: ${ndefBytes.size} bytes"
         )
-        IngenicoNfcTagEmulator.enable(ndefMessage.toByteArray(), timeoutSeconds = 30) {
-            Timber.d("NFC: Tag being read")
+        NdefHostApduService.currentNdefBytes = ndefBytes
+        NdefHostApduService.onBeingReadCallback = {
             PosLogStore.info("NFC tag read by external device", source = "NfcManager")
             _tapEventFlow.tryEmit(Unit)
         }
