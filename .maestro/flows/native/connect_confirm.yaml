@@ -6,7 +6,7 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
     permissions:
       all: allow
 - startRecording: "Native Connection Confirmed"
-# Press NOT NOW in case the Enabling testing features modal appear
+# Press NOT NOW in case the Enabling testing features modal appears
 - runFlow:
     when:
       visible: "NOT NOW"

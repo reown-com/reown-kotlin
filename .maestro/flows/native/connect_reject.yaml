@@ -9,7 +9,7 @@ name: Kotlin Dapp to Kotlin Wallet Connection Rejected
     appId: "com.reown.sample.dapp.internal"
     permissions:
       all: allow
-# Press NOT NOW in case the Enabling testing features modal appear
+# Press NOT NOW in case the Enabling testing features modal appears
 - runFlow:
     when:
       visible: "NOT NOW"

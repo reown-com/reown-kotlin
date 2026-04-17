@@ -29,8 +29,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
@@ -217,7 +215,6 @@ private fun ModalFooter(
                 .then(
                     if (!buttonsDisabled) Modifier.clickable { onReject() } else Modifier
                 )
-                .semantics { testTagsAsResourceId = true }
                 .testTag("wallet-request-reject"),
             contentAlignment = Alignment.Center
         ) {
@@ -254,7 +251,6 @@ private fun ModalFooter(
                         Modifier
                     }
                 )
-                .semantics { testTagsAsResourceId = true }
                 .testTag("wallet-request-approve"),
             contentAlignment = Alignment.Center
         ) {
