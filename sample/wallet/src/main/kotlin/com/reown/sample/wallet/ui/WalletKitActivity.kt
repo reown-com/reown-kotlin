@@ -20,6 +20,10 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
@@ -132,12 +136,14 @@ class WalletKitActivity : AppCompatActivity() {
                 1 -> true
                 else -> isSystemInDarkTheme()
             }
+            @OptIn(ExperimentalComposeUiApi::class)
             WCSampleAppTheme(darkTheme = isDarkTheme) {
                 WalletSampleHost(
-                    bottomSheetNavigator,
-                    navController,
-                    web3walletViewModel,
-                    connectionsViewModel,
+                    modifier = Modifier.semantics { testTagsAsResourceId = true },
+                    bottomSheetNavigator = bottomSheetNavigator,
+                    navController = navController,
+                    web3walletViewModel = web3walletViewModel,
+                    connectionsViewModel = connectionsViewModel,
                 )
             }
         }

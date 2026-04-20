@@ -69,6 +69,7 @@ fun WalletSampleHost(
     navController: NavHostController,
     web3walletViewModel: Web3WalletViewModel,
     connectionsViewModel: ConnectionsViewModel,
+    modifier: Modifier = Modifier,
 ) {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     val connectionState by web3walletViewModel.connectionState.collectAsState()
@@ -115,7 +116,7 @@ fun WalletSampleHost(
     }
 
     ModalBottomSheetLayout(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         bottomSheetNavigator = bottomSheetNavigator,
         sheetShape = RoundedCornerShape(topStart = WCTheme.borderRadius.radius6, topEnd = WCTheme.borderRadius.radius6),
         sheetBackgroundColor = Color.Transparent,
