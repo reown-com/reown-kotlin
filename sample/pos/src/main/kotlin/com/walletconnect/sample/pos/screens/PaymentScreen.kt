@@ -1,9 +1,12 @@
 package com.walletconnect.sample.pos.screens
 
-import android.nfc.NfcAdapter
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -24,11 +28,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -43,8 +49,11 @@ import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.StyledQrCode
 import com.walletconnect.sample.pos.components.PosHeader
 import com.walletconnect.sample.pos.components.WalletConnectLoader
+import com.walletconnect.sample.pos.nfc.NfcManager
+import com.walletconnect.sample.pos.sound.TapSoundPlayer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 private sealed interface PaymentUiState {
     data object WaitingForScan : PaymentUiState
@@ -147,10 +156,20 @@ private fun ScanContent(
     remainingSeconds: Long,
     onCancel: () -> Unit
 ) {
-    val context = LocalContext.current
-    val hasNfc = remember {
-        val nfcAdapter = NfcAdapter.getDefaultAdapter(context)
-        nfcAdapter != null && nfcAdapter.isEnabled
+    val hasNfc by produceState(initialValue = false) {
+        value = NfcManager.isAvailable
+    }
+
+    // NFC tap animation state — incremented on tap, reset to 0 after animation
+    var tapAnimationTrigger by remember { mutableStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        NfcManager.tapEventFlow.collectLatest {
+            TapSoundPlayer.playTapSound()
+            tapAnimationTrigger++
+            delay(1500)
+            tapAnimationTrigger = 0
+        }
     }
 
     Column(
@@ -167,19 +186,28 @@ private fun ScanContent(
 
         if (hasNfc) {
 
-            // NFC contactless icon
-            Image(
-                painter = painterResource(R.drawable.ic_nfc_contactless),
-                contentDescription = "NFC contactless",
-                modifier = Modifier.size(60.dp)
-            )
+            // NFC contactless icon with tap ripple animation
+            Box(contentAlignment = Alignment.Center) {
+                // Animated ripple ring on tap
+                if (tapAnimationTrigger > 0) {
+                    key(tapAnimationTrigger) {
+                        TapRipple()
+                    }
+                }
+
+                Image(
+                    painter = painterResource(R.drawable.ic_nfc_contactless),
+                    contentDescription = "NFC contactless",
+                    modifier = Modifier.size(60.dp)
+                )
+            }
 
             Spacer(Modifier.height(WCTheme.spacing.spacing5))
 
             Text(
-                text = "Open your wallet app and tap",
+                text = if (tapAnimationTrigger > 0) "Confirm in your wallet app" else "Open your wallet app and tap",
                 style = WCTheme.typography.bodyXlRegular,
-                color = WCTheme.colors.textSecondary
+                color = if (tapAnimationTrigger > 0) WCTheme.colors.textAccentPrimary else WCTheme.colors.textSecondary
             )
 
             Spacer(Modifier.height(WCTheme.spacing.spacing5))
@@ -208,7 +236,7 @@ private fun ScanContent(
         // QR Code
         StyledQrCode(data = qrUrl, size = 320.dp)
 
-        Spacer(Modifier.height(WCTheme.spacing.spacing4))
+        Spacer(Modifier.height(WCTheme.spacing.spacing5))
 
         // Expiration countdown
         if (remainingSeconds > 0) {
@@ -297,5 +325,23 @@ private fun ProcessingContent(onCancel: () -> Unit) {
 
         Spacer(Modifier.height(WCTheme.spacing.spacing5))
     }
+}
+
+@Composable
+private fun TapRipple() {
+    val scale = remember { Animatable(1f) }
+    val alpha = remember { Animatable(1f) }
+
+    LaunchedEffect(Unit) {
+        launch { scale.animateTo(2.5f, tween(600)) }
+        launch { alpha.animateTo(0f, tween(600)) }
+    }
+
+    Box(
+        modifier = Modifier
+            .size(60.dp)
+            .graphicsLayer(scaleX = scale.value, scaleY = scale.value, alpha = alpha.value)
+            .border(2.dp, WCTheme.colors.iconAccentPrimary, CircleShape)
+    )
 }
 

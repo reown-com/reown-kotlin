@@ -21,6 +21,8 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -60,6 +62,7 @@ private enum class ActiveSheet { WALLET_THEME, THEME, CURRENCY, MERCHANT_ID, API
 fun SettingsScreen(
     viewModel: POSViewModel,
     onClose: () -> Unit,
+    onNavigateToLogs: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val selectedCurrency by viewModel.selectedCurrency.collectAsState()
@@ -216,6 +219,17 @@ fun SettingsScreen(
             SettingsItem(
                 label = "SDK Version",
                 value = BuildConfig.BOM_VERSION,
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+
+            // Logs
+            SettingsItem(
+                label = "Logs",
+                value = "",
+                showCaret = true,
+                onClick = onNavigateToLogs,
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
 
@@ -402,5 +416,40 @@ private fun SettingsItem(
                 modifier = Modifier.size(20.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun SettingsToggleItem(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(68.dp)
+            .clip(WCTheme.borderRadius.shapeMedium)
+            .background(WCTheme.colors.foregroundPrimary)
+            .padding(horizontal = WCTheme.spacing.spacing5),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = WCTheme.typography.bodyLgRegular,
+            color = WCTheme.colors.textPrimary,
+            modifier = Modifier.weight(1f)
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = WCTheme.colors.iconAccentPrimary,
+                checkedTrackColor = WCTheme.colors.iconAccentPrimary.copy(alpha = 0.5f),
+                uncheckedThumbColor = WCTheme.colors.iconDefault,
+                uncheckedTrackColor = WCTheme.colors.iconDefault.copy(alpha = 0.3f)
+            )
+        )
     }
 }

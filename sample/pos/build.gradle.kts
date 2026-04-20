@@ -36,7 +36,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             manifestPlaceholders["pathPrefix"] = "/dapp_release"
             buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_release\"")
-            resValue("string", "app_name", "POS (Ingenico)")
+            resValue("string", "app_name", "POS")
         }
 
         getByName("internal") {
@@ -45,7 +45,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             manifestPlaceholders["pathPrefix"] = "/dapp_internal"
             buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_internal\"")
-            resValue("string", "app_name", "POS Internal (Ingenico)")
+            resValue("string", "app_name", "POS Internal")
         }
 
         getByName("debug") {
@@ -54,7 +54,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             manifestPlaceholders["pathPrefix"] = "/dapp_debug"
             buildConfigField("String", "DAPP_APP_LINK", "\"https://appkit-lab.reown.com/dapp_debug\"")
-            resValue("string", "app_name", "POS Debug (Ingenico)")
+            resValue("string", "app_name", "POS Debug")
         }
 
         System.getenv("FIREBASE_APP_ID")?.takeIf { it.isNotBlank() }?.let { id ->

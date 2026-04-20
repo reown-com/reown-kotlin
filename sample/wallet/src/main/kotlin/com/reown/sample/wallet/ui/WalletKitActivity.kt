@@ -60,6 +60,8 @@ import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.ThemeManager
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
+//import com.reown.sample.wallet.domain.SolanaAccountDelegate
+import com.reown.sample.wallet.nfc.NfcPaymentReader
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
@@ -79,6 +81,7 @@ class WalletKitActivity : AppCompatActivity() {
     private val navControllerFlow = MutableStateFlow<NavHostController?>(null)
     private val web3walletViewModel = Web3WalletViewModel()
     private val connectionsViewModel = ConnectionsViewModel()
+    private lateinit var nfcPaymentReader: NfcPaymentReader
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -91,6 +94,10 @@ class WalletKitActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        nfcPaymentReader = NfcPaymentReader(this, lifecycleScope) { paymentUrl ->
+            Timber.d("NFC: Payment URL read from tag: %s", paymentUrl)
+            web3walletViewModel.pair(paymentUrl)
+        }
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
         askNotificationPermission()
@@ -100,6 +107,15 @@ class WalletKitActivity : AppCompatActivity() {
         setBeagle()
     }
 
+    override fun onResume() {
+        super.onResume()
+        nfcPaymentReader.enable()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        nfcPaymentReader.disable()
+    }
 
     @OptIn(ExperimentalMaterialNavigationApi::class)
     private fun setContent(
@@ -208,6 +224,22 @@ class WalletKitActivity : AppCompatActivity() {
     }
 
     private fun handleAppLink(intent: Intent?) {
+        // Handle payment URL received via NFC tap from POS terminal
+        if (intent?.action == NfcPaymentActivity.ACTION_PAYMENT_URL_RECEIVED) {
+            val paymentUrl = intent.getStringExtra(NfcPaymentActivity.EXTRA_PAYMENT_URL)
+            if (paymentUrl != null) {
+                Timber.d("NFC: Payment URL received via NFC: %s", paymentUrl)
+                // Use pair() which detects payment links, fetches payment options,
+                // and emits to paymentEventFlow (which triggers navigation)
+                lifecycleScope.launch {
+                    navigateWhenReady {
+                        web3walletViewModel.pair(paymentUrl)
+                    }
+                }
+                return
+            }
+        }
+
         val dataString = intent?.dataString
         // Check for WalletConnect Pay URL - pass the full link (URL encoded)
         if (dataString != null && isPaymentUrl(dataString)) {
@@ -357,6 +389,9 @@ class WalletKitActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+
+        // NFC foreground dispatch: handle tags when wallet is in the foreground
+        if (nfcPaymentReader.handleIntent(intent)) return
 
         handleAppLink(intent)
     }

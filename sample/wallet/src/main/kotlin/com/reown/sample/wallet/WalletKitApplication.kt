@@ -1,7 +1,6 @@
 package com.reown.sample.wallet
 
 import android.app.Application
-import com.google.firebase.appdistribution.FirebaseAppDistribution
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging

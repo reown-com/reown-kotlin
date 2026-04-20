@@ -13,6 +13,19 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
+    <!-- Translucent overlay theme for NFC quick-pay (Google Pay-like sheet) -->
+    <style name="Theme.Wallet.Translucent" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="colorPrimary">#FF3396ff</item>
+        <item name="colorOnPrimary">@color/white</item>
+    </style>
+
     <style name="Theme.Wallet.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">#202020</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/walletconnect_splash_icon</item>
