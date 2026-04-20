@@ -8,6 +8,7 @@ import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.Ndef
+import com.reown.walletkit.client.WalletKit
 import timber.log.Timber
 
 /**
@@ -54,7 +55,7 @@ internal object NfcPaymentUrlExtractor {
     }
 
     fun isPaymentUrl(url: String): Boolean =
-        url.contains("pay.walletconnect.com")
+        WalletKit.Pay.isPaymentLink(url)
 
     fun unwrapPaymentUrl(url: String): String =
         try { Uri.parse(url).getQueryParameter("payUrl") ?: url } catch (_: Exception) { url }
