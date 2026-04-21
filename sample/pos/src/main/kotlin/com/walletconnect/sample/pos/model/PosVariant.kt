@@ -18,20 +18,10 @@ enum class PosVariant(
     val defaultTheme: ThemeMode?
 ) {
     DEFAULT(
-        displayName = "Default",
+        displayName = "None",
         partnerLogoRes = null,
         partnerLogoWidthDp = 0,
         partnerLogoHeightDp = 0,
-        accentColor = null,
-        textInvertOverride = null,
-        successTextColor = Color.White,
-        defaultTheme = null
-    ),
-    INGENICO(
-        displayName = "Ingenico",
-        partnerLogoRes = R.drawable.ic_ingenico_logo,
-        partnerLogoWidthDp = 78,
-        partnerLogoHeightDp = 22,
         accentColor = null,
         textInvertOverride = null,
         successTextColor = Color.White,
