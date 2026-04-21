@@ -9,9 +9,10 @@ name: AppKit Web to Kotlin Wallet Connection Rejected
 - tapOn: "Kotlin Sample Wallet Kotlin Sample Wallet"
 - extendedWaitUntil:
     visible:
-      text: "Cancel"
+      id: "wallet-request-reject"
     timeout: 30000
-- tapOn: "Cancel"
+- tapOn:
+    id: "wallet-request-reject"
 - back
 - back
 - assertVisible: "Connection declined"

@@ -10,15 +10,27 @@ import android.util.Base64
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.walletconnect.sample.pos.BuildConfig
+import timber.log.Timber
+import java.security.KeyStore
 import java.security.MessageDigest
 import java.security.SecureRandom
 
-internal class MerchantCredentialsManager(context: Context) {
+internal class MerchantCredentialsManager(private val context: Context) {
 
     private val plainPrefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val encryptedPrefs: SharedPreferences by lazy {
+        try {
+            createEncryptedPrefs()
+        } catch (e: Exception) {
+            Timber.w(e, "EncryptedSharedPreferences corrupted — resetting")
+            resetEncryptedPrefs()
+            createEncryptedPrefs()
+        }
+    }
+
+    private fun createEncryptedPrefs(): SharedPreferences {
         val spec = KeyGenParameterSpec.Builder(
             MasterKey.DEFAULT_MASTER_KEY_ALIAS,
             KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
@@ -32,13 +44,24 @@ internal class MerchantCredentialsManager(context: Context) {
             .setKeyGenParameterSpec(spec)
             .build()
 
-        EncryptedSharedPreferences.create(
+        return EncryptedSharedPreferences.create(
             context,
             SECURE_PREFS_NAME,
             masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
+    }
+
+    private fun resetEncryptedPrefs() {
+        context.getSharedPreferences(SECURE_PREFS_NAME, Context.MODE_PRIVATE).edit().clear().commit()
+        try {
+            val keyStore = KeyStore.getInstance("AndroidKeyStore")
+            keyStore.load(null)
+            keyStore.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to delete master key from KeyStore")
+        }
     }
 
     fun getMerchantId(): String {

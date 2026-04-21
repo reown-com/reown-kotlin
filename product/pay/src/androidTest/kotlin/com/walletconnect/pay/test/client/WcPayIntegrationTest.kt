@@ -231,17 +231,40 @@ class WcPayIntegrationTest {
 
     /**
      * Parse schema to build collected data for confirmPayment.
-     * Uses the 'required' array and 'properties' to determine what fields to fill.
+     * Collects required fields from both top-level 'required' and 'anyOf' conditional groups.
      */
     private fun buildCollectedDataFromSchema(schema: String): List<Pay.CollectDataFieldResult> {
         val schemaJson = JSONObject(schema)
         val properties = schemaJson.optJSONObject("properties") ?: return emptyList()
-        val requiredArray = schemaJson.optJSONArray("required") ?: return emptyList()
+
+        // Collect required fields from top-level "required" array
+        val requiredFields = mutableSetOf<String>()
+        val topRequired = schemaJson.optJSONArray("required")
+        if (topRequired != null) {
+            for (i in 0 until topRequired.length()) {
+                requiredFields.add(topRequired.getString(i))
+            }
+        }
+
+        // Collect required fields from "anyOf" conditional groups
+        val anyOfArray = schemaJson.optJSONArray("anyOf")
+        if (anyOfArray != null) {
+            for (i in 0 until anyOfArray.length()) {
+                val group = anyOfArray.getJSONObject(i)
+                val groupRequired = group.optJSONArray("required")
+                if (groupRequired != null) {
+                    for (j in 0 until groupRequired.length()) {
+                        requiredFields.add(groupRequired.getString(j))
+                    }
+                }
+            }
+        }
+
+        if (requiredFields.isEmpty()) return emptyList()
 
         val collectedData = mutableListOf<Pay.CollectDataFieldResult>()
 
-        for (i in 0 until requiredArray.length()) {
-            val fieldId = requiredArray.getString(i)
+        for (fieldId in requiredFields) {
             val fieldProps = properties.optJSONObject(fieldId) ?: continue
             val fieldType = fieldProps.optString("type")
             val fieldFormat = fieldProps.optString("format")
@@ -252,9 +275,9 @@ class WcPayIntegrationTest {
                 // Date fields
                 fieldFormat == "date" || fieldId == "dob" -> "1990-01-15"
                 // Country code fields (pattern: ^[A-Z]{2}$)
-                fieldId == "pobCountry" -> "US"
+                fieldId.endsWith("Country") -> "US"
                 // Address fields
-                fieldId == "pobAddress" -> "New York, NY"
+                fieldId.endsWith("Address") -> "New York, NY"
                 // Name fields
                 fieldId == "fullName" -> "Test User"
                 // Default text fields

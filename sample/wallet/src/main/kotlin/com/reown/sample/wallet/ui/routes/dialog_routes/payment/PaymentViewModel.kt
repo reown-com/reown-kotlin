@@ -4,9 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
-import com.reown.sample.wallet.domain.signer.EthSigner
-import com.reown.util.bytesToHex
-import com.reown.util.hexToBytes
+import com.reown.sample.wallet.nfc.PaymentSigner
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,9 +19,6 @@ import android.util.Log
 import com.reown.sample.wallet.ui.routes.dialog_routes.payment.PaymentUiState.*
 import org.json.JSONArray
 import org.json.JSONObject
-import org.web3j.crypto.ECKeyPair
-import org.web3j.crypto.Sign
-import org.web3j.crypto.StructuredDataEncoder
 
 /**
  * ViewModel for handling the payment flow.
@@ -66,6 +61,19 @@ class PaymentViewModel : ViewModel() {
         // Store payment options for later use
         storedPaymentInfo = response.info
         storedPaymentOptions = response.options
+
+        // Check payment status from info before showing options
+        when (response.info?.status) {
+            Wallet.Model.PaymentStatus.EXPIRED -> {
+                _uiState.value = PaymentUiState.Error("Payment expired", PaymentErrorType.EXPIRED)
+                return
+            }
+            Wallet.Model.PaymentStatus.CANCELLED -> {
+                _uiState.value = PaymentUiState.Error("Payment was cancelled", PaymentErrorType.CANCELLED)
+                return
+            }
+            else -> { /* proceed normally */ }
+        }
 
         if (response.options.isEmpty()) {
             _uiState.value = PaymentUiState.Error("No payment options available", PaymentErrorType.INSUFFICIENT_FUNDS)
@@ -110,7 +118,7 @@ class PaymentViewModel : ViewModel() {
                 onFailure = { error ->
                     _uiState.value = PaymentUiState.Error(
                         error.message ?: "Failed to load payment options",
-                        PaymentErrorType.GENERIC
+                        categorizeError(error.message)
                     )
                 }
             )
@@ -139,8 +147,11 @@ class PaymentViewModel : ViewModel() {
                 paymentInfo = storedPaymentInfo
             )
         } else {
-            // No IC required, proceed to payment
-            processPayment(optionId)
+            // No IC required, show review/summary screen
+            _uiState.value = PaymentUiState.Summary(
+                paymentInfo = storedPaymentInfo,
+                selectedOption = option
+            )
         }
     }
 
@@ -159,43 +170,62 @@ class PaymentViewModel : ViewModel() {
 
     /**
      * Build the prefill query parameter for IC WebView URL.
-     * Creates Base64-encoded JSON with available user data.
-     * Only includes fields that are in the schema's required array.
+     * Parses the schema to find all required fields (top-level + anyOf conditions)
+     * and only includes fields that are required.
      */
     private fun buildPrefillParam(schema: String?): String? {
         if (schema == null) return null
 
         return try {
-            // Parse schema to get required fields
             val schemaJson = JSONObject(schema)
-            val requiredArray = schemaJson.optJSONArray("required") ?: return null
-            val requiredFields = (0 until requiredArray.length()).map { requiredArray.getString(it) }
 
-            // Build prefill JSON with available user data
+            // Collect required fields from top-level "required" array
+            val requiredFields = mutableSetOf<String>()
+            val topRequired = schemaJson.optJSONArray("required")
+            if (topRequired != null) {
+                for (i in 0 until topRequired.length()) {
+                    requiredFields.add(topRequired.getString(i))
+                }
+            }
+
+            // Collect required fields from "anyOf" conditional groups
+            val anyOfArray = schemaJson.optJSONArray("anyOf")
+            if (anyOfArray != null) {
+                for (i in 0 until anyOfArray.length()) {
+                    val group = anyOfArray.getJSONObject(i)
+                    val groupRequired = group.optJSONArray("required")
+                    if (groupRequired != null) {
+                        for (j in 0 until groupRequired.length()) {
+                            requiredFields.add(groupRequired.getString(j))
+                        }
+                    }
+                }
+            }
+
+            // Map of field id -> prefill value
+            val fieldValues = mapOf(
+                "fullName" to EthAccountDelegate.PREFILL_FULL_NAME,
+                "dob" to EthAccountDelegate.PREFILL_DOB,
+                "pobAddress" to EthAccountDelegate.PREFILL_POB_ADDRESS,
+                "pobCountry" to EthAccountDelegate.PREFILL_POB_COUNTRY,
+                "porAddress" to EthAccountDelegate.PREFILL_POR_ADDRESS,
+                "porCountry" to EthAccountDelegate.PREFILL_POR_COUNTRY
+            )
+
+            // Build prefill JSON with only required fields
             val prefillData = JSONObject()
-
-            if ("fullName" in requiredFields) {
-                prefillData.put("fullName", EthAccountDelegate.PREFILL_FULL_NAME)
+            for (fieldId in requiredFields) {
+                fieldValues[fieldId]?.let { prefillData.put(fieldId, it) }
             }
 
-            if ("dob" in requiredFields) {
-                prefillData.put("dob", EthAccountDelegate.PREFILL_DOB)
-            }
-
-            if ("pobAddress" in requiredFields) {
-                prefillData.put("pobAddress", EthAccountDelegate.PREFILL_POB_ADDRESS)
-            }
-
-            // Only return if we have data to prefill
             if (prefillData.length() == 0) return null
 
-            // Base64 encode the JSON (NO_WRAP avoids newlines, URL_SAFE for URL compatibility)
             val encoded = Base64.encodeToString(
                 prefillData.toString().toByteArray(Charsets.UTF_8),
                 Base64.NO_WRAP or Base64.URL_SAFE
             )
 
-            Log.d("PaymentViewModel", "Built prefill param: $prefillData -> $encoded")
+            Log.d("PaymentViewModel", "Built prefill param for ${requiredFields.size} required field(s)")
             encoded
         } catch (e: Exception) {
             Log.e("PaymentViewModel", "Failed to build prefill param", e)
@@ -391,43 +421,10 @@ class PaymentViewModel : ViewModel() {
 
     /**
      * Sign a wallet RPC action and return the signature string.
+     * Delegates to shared PaymentSigner utility.
      */
-    private fun signWalletRpcAction(action: Wallet.Model.WalletRpcAction): String {
-        return when (action.method) {
-            "eth_signTypedData_v4" -> signTypedDataV4(action.params)
-            "personal_sign" -> EthSigner.personalSign(action.params)
-            else -> throw UnsupportedOperationException("Unsupported signing method: ${action.method}")
-        }
-    }
-
-    /**
-     * Sign EIP-712 typed data using proper StructuredDataEncoder.
-     */
-    private fun signTypedDataV4(params: String): String {
-        // params is a JSON array: [address, typedData]
-        val paramsArray = JSONArray(params)
-        val requestedAddress = paramsArray.getString(0)
-        val typedData = paramsArray.getString(1)
-
-        // Verify the requested address matches our wallet address
-        if (!requestedAddress.equals(EthAccountDelegate.address, ignoreCase = true)) {
-            throw IllegalArgumentException("Requested address does not match wallet address")
-        }
-
-        // Use StructuredDataEncoder for proper EIP-712 hashing
-        val encoder = StructuredDataEncoder(typedData)
-        val hash = encoder.hashStructuredData()
-
-        val keyPair = ECKeyPair.create(EthAccountDelegate.privateKey.hexToBytes())
-        val signatureData = Sign.signMessage(hash, keyPair, false)
-
-        val rHex = signatureData.r.bytesToHex()
-        val sHex = signatureData.s.bytesToHex()
-        val v = signatureData.v[0].toInt() and 0xff
-        val vHex = v.toString(16).padStart(2, '0')
-
-        return "0x$rHex$sHex$vHex".lowercase()
-    }
+    private fun signWalletRpcAction(action: Wallet.Model.WalletRpcAction): String =
+        PaymentSigner.signWalletRpcAction(action)
 
     /**
      * Categorize an error message into a PaymentErrorType.
