@@ -46,6 +46,16 @@ enum class PosVariant(
         textInvertOverride = Color(0xFF1F1F1F),
         successTextColor = Color(0xFF1F1F1F),
         defaultTheme = ThemeMode.LIGHT
+    ),
+    IMIN(
+        displayName = "iMin",
+        partnerLogoRes = R.drawable.ic_imin_brand,
+        partnerLogoWidthDp = 58,
+        partnerLogoHeightDp = 18,
+        accentColor = Color(0xFF000000),
+        textInvertOverride = null,
+        successTextColor = Color.White,
+        defaultTheme = ThemeMode.LIGHT
     )
 }
 
