@@ -145,6 +145,9 @@ fun PaymentRoute(
                 SummaryContent(
                     paymentInfo = state.paymentInfo,
                     selectedOption = state.selectedOption,
+                    requiresApproval = state.requiresApproval,
+                    approvalGasEstimate = state.approvalGasEstimate,
+                    isEstimatingApprovalGas = state.isEstimatingApprovalGas,
                     onConfirm = { viewModel.confirmFromSummary() },
                     onClose = {
                         viewModel.cancel()
@@ -352,25 +355,21 @@ private fun PaymentOptionCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Asset icon with network badge
-                option.amount.display?.iconUrl?.let { iconUrl ->
-                    val networkBadgeStrokeColor = if (isSelected) {
-                        WCTheme.colors.foregroundAccentPrimary10Solid
-                    } else {
-                        WCTheme.colors.foregroundPrimary
-                    }
-
-                    TokenIconWithNetwork(
-                        tokenIconUrl = iconUrl,
-                        networkIconUrl = option.amount.display?.networkIconUrl,
-                        tokenIconSize = 40.dp,
-                        networkIconSize = 16.dp,
-                        networkIconBorderWidth = 2.dp,
-                        networkIconBorderColor = networkBadgeStrokeColor,
-                        useExternalNetworkBorder = true
-                    )
-                    Spacer(modifier = Modifier.width(WCTheme.spacing.spacing3))
+                val networkBadgeStrokeColor = if (isSelected) {
+                    WCTheme.colors.foregroundAccentPrimary10Solid
+                } else {
+                    WCTheme.colors.foregroundPrimary
                 }
+
+                PaymentAssetIcon(
+                    display = option.amount.display,
+                    tokenIconSize = 40.dp,
+                    networkIconSize = 16.dp,
+                    networkIconBorderWidth = 2.dp,
+                    networkIconBorderColor = networkBadgeStrokeColor,
+                    useExternalNetworkBorder = true
+                )
+                Spacer(modifier = Modifier.width(WCTheme.spacing.spacing3))
 
                 // Token amount
                 val display = option.amount.display
@@ -412,6 +411,57 @@ private fun PaymentOptionCard(
 /**
  * Displays a token icon with a network icon badge in the bottom-right corner.
  */
+/**
+ * Renders the token icon with optional network badge. Falls back to:
+ *  - the network icon (if the token icon is missing), or
+ *  - a circle with the symbol's first letter (if both are missing).
+ * Native assets often come without an explicit token iconUrl.
+ */
+@Composable
+private fun PaymentAssetIcon(
+    display: Wallet.Model.PaymentAmountDisplay?,
+    tokenIconSize: Dp,
+    networkIconSize: Dp,
+    networkIconBorderWidth: Dp = 2.dp,
+    networkIconBorderColor: Color = Color.White,
+    useExternalNetworkBorder: Boolean = false
+) {
+    val tokenIconUrl = display?.iconUrl?.takeIf { it.isNotBlank() }
+    val networkIconUrl = display?.networkIconUrl?.takeIf { it.isNotBlank() }
+    val symbol = display?.assetSymbol ?: "?"
+
+    when {
+        tokenIconUrl != null -> TokenIconWithNetwork(
+            tokenIconUrl = tokenIconUrl,
+            networkIconUrl = networkIconUrl,
+            tokenIconSize = tokenIconSize,
+            networkIconSize = networkIconSize,
+            networkIconBorderWidth = networkIconBorderWidth,
+            networkIconBorderColor = networkIconBorderColor,
+            useExternalNetworkBorder = useExternalNetworkBorder
+        )
+        networkIconUrl != null -> AsyncImage(
+            model = networkIconUrl,
+            contentDescription = null,
+            modifier = Modifier
+                .size(tokenIconSize)
+                .clip(CircleShape)
+        )
+        else -> Box(
+            modifier = Modifier
+                .size(tokenIconSize)
+                .clip(CircleShape)
+                .background(WCTheme.colors.foregroundTertiary),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = symbol.take(1).uppercase(),
+                style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textPrimary)
+            )
+        }
+    }
+}
+
 @Composable
 private fun TokenIconWithNetwork(
     tokenIconUrl: String,
@@ -520,6 +570,9 @@ private fun PaymentTitle(paymentInfo: Wallet.Model.PaymentInfo?) {
 private fun SummaryContent(
     paymentInfo: Wallet.Model.PaymentInfo?,
     selectedOption: Wallet.Model.PaymentOption,
+    requiresApproval: Boolean,
+    approvalGasEstimate: String?,
+    isEstimatingApprovalGas: Boolean,
     onConfirm: () -> Unit,
     onClose: () -> Unit
 ) {
@@ -586,16 +639,44 @@ private fun SummaryContent(
 
                 Spacer(modifier = Modifier.width(WCTheme.spacing.spacing2))
 
-                display?.iconUrl?.let { iconUrl ->
-                    TokenIconWithNetwork(
-                        tokenIconUrl = iconUrl,
-                        networkIconUrl = display.networkIconUrl,
-                        tokenIconSize = 32.dp,
-                        networkIconSize = 16.dp,
-                        networkIconBorderWidth = 2.dp,
-                        networkIconBorderColor = WCTheme.colors.foregroundPrimary
-                    )
-                }
+                PaymentAssetIcon(
+                    display = display,
+                    tokenIconSize = 32.dp,
+                    networkIconSize = 16.dp,
+                    networkIconBorderWidth = 2.dp,
+                    networkIconBorderColor = WCTheme.colors.foregroundPrimary
+                )
+            }
+        }
+
+        if (requiresApproval) {
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
+
+            val feeText = when {
+                isEstimatingApprovalGas -> "Loading..."
+                approvalGasEstimate != null -> approvalGasEstimate
+                else -> "Network fee set by wallet"
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(68.dp)
+                    .clip(WCTheme.borderRadius.shapeLarge)
+                    .background(WCTheme.colors.foregroundPrimary)
+                    .testTag("pay-review-one-time-fee")
+                    .padding(horizontal = WCTheme.spacing.spacing4),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "One-time fee",
+                    style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary)
+                )
+                Text(
+                    text = feeText,
+                    style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textPrimary)
+                )
             }
         }
 
@@ -735,10 +816,15 @@ private fun formatTokenAmount(value: String, decimals: Int, symbol: String): Str
         val rawValue = BigDecimal(value)
         val safeDecimals = decimals.coerceIn(0, 18)
         val divisor = BigDecimal.TEN.pow(safeDecimals)
-        val formattedValue = rawValue.divide(divisor, 4, RoundingMode.HALF_UP)
-            .stripTrailingZeros()
-            .toPlainString()
-        val formatted = java.text.NumberFormat.getNumberInstance(Locale.US).format(BigDecimal(formattedValue))
+        val tokenValue = rawValue.divide(divisor, safeDecimals, RoundingMode.HALF_UP)
+        if (tokenValue.signum() == 0) return "0 $symbol"
+
+        // Non-zero values that would round to 0.0000 at 4 decimals (e.g. 0.0000123 ETH)
+        // get a "<0.0001" treatment so the user sees the amount is non-trivial.
+        val rounded = tokenValue.setScale(4, RoundingMode.HALF_UP).stripTrailingZeros()
+        if (rounded.signum() == 0) return "<0.0001 $symbol"
+
+        val formatted = java.text.NumberFormat.getNumberInstance(Locale.US).format(rounded)
         "$formatted $symbol"
     } catch (e: Exception) {
         "$value $symbol"
@@ -784,7 +870,7 @@ private fun ProcessingContent(
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
         Text(
-            text = "Confirming your payment...",
+            text = message,
             style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
             textAlign = TextAlign.Center,
             modifier = Modifier.testTag("pay-loading-message")
