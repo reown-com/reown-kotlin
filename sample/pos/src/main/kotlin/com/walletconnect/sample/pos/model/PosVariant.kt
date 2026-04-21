@@ -27,6 +27,56 @@ enum class PosVariant(
         successTextColor = Color.White,
         defaultTheme = null
     ),
+    INGENICO(
+        displayName = "Ingenico",
+        partnerLogoRes = R.drawable.ic_ingenico_logo,
+        partnerLogoWidthDp = 78,
+        partnerLogoHeightDp = 22,
+        accentColor = null,
+        textInvertOverride = null,
+        successTextColor = Color.White,
+        defaultTheme = null
+    ),
+    SOLFLARE(
+        displayName = "Solflare",
+        partnerLogoRes = R.drawable.ic_solflare_brand,
+        partnerLogoWidthDp = 76,
+        partnerLogoHeightDp = 18,
+        accentColor = Color(0xFFFFEF46),
+        textInvertOverride = Color(0xFF202020),
+        successTextColor = Color(0xFF202020),
+        defaultTheme = ThemeMode.DARK
+    ),
+    BINANCE(
+        displayName = "Binance",
+        partnerLogoRes = R.drawable.ic_binance_brand,
+        partnerLogoWidthDp = 129,
+        partnerLogoHeightDp = 26,
+        accentColor = Color(0xFFFCD533),
+        textInvertOverride = Color(0xFF202020),
+        successTextColor = Color(0xFF202020),
+        defaultTheme = ThemeMode.LIGHT
+    ),
+    PHANTOM(
+        displayName = "Phantom",
+        partnerLogoRes = R.drawable.ic_phantom_brand,
+        partnerLogoWidthDp = 143,
+        partnerLogoHeightDp = 28,
+        accentColor = Color(0xFFAB9FF2),
+        textInvertOverride = null,
+        successTextColor = Color.White,
+        defaultTheme = ThemeMode.LIGHT
+    ),
+    SOLANA(
+        displayName = "Solana",
+        partnerLogoRes = R.drawable.ic_solana_brand,
+        partnerLogoWidthDp = 125,
+        partnerLogoHeightDp = 22,
+        accentColor = Color(0xFF9945FF),
+        textInvertOverride = Color.White,
+        successTextColor = Color.White,
+        defaultTheme = ThemeMode.DARK
+    ),
     LEDGER(
         displayName = "Ledger",
         partnerLogoRes = R.drawable.ic_ledger_brand,
