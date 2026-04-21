@@ -408,15 +408,6 @@ private fun PaymentOptionCard(
     }
 }
 
-/**
- * Displays a token icon with a network icon badge in the bottom-right corner.
- */
-/**
- * Renders the token icon with optional network badge. Falls back to:
- *  - the network icon (if the token icon is missing), or
- *  - a circle with the symbol's first letter (if both are missing).
- * Native assets often come without an explicit token iconUrl.
- */
 @Composable
 private fun PaymentAssetIcon(
     display: Wallet.Model.PaymentAmountDisplay?,
@@ -455,7 +446,7 @@ private fun PaymentAssetIcon(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = symbol.take(1).uppercase(),
+                text = symbol.take(1).uppercase(Locale.ROOT),
                 style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textPrimary)
             )
         }

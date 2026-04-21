@@ -32,7 +32,10 @@ internal object PaymentTransactionUtil {
     private const val TX_CONFIRMATION_TIMEOUT_MS = 120_000L
     private const val TX_RECEIPT_POLL_INTERVAL_MS = 3_000L
     private const val GAS_ESTIMATION_RPC_TIMEOUT_MS = 15_000L
+    private const val RPC_CALL_TIMEOUT_MS = 30_000L
     private const val POLYGON_CHAIN_ID = "eip155:137"
+    private val GAS_BUFFER_PERCENT = BigInteger.valueOf(120)
+    private val GAS_BUFFER_DIVISOR = BigInteger.valueOf(100)
 
     private val NATIVE_SYMBOL_BY_CHAIN_ID = mapOf(
         "eip155:1" to "ETH",
@@ -93,6 +96,7 @@ internal object PaymentTransactionUtil {
             }
 
             val gasLimit = gasLimitDeferred.await()
+                .multiply(GAS_BUFFER_PERCENT).divide(GAS_BUFFER_DIVISOR)
             val feeData = feeDataDeferred.await()
             val fresh = applyFreshFees(action.chainId, tx, feeData)
             val feePerGas = fresh.maxFeePerGas
@@ -112,36 +116,41 @@ internal object PaymentTransactionUtil {
         val tx = parseTxParam(action.params) ?: error("Invalid eth_sendTransaction params")
         val from = tx.optString("from").ifBlank { EthAccountDelegate.address }
 
-        val feeData = runCatching { fetchFeeData(action.chainId) }
+        val feeData = runCatching { withTimeout(RPC_CALL_TIMEOUT_MS) { fetchFeeData(action.chainId) } }
             .onFailure { Log.w(TAG, "Failed to fetch fresh fees for ${action.chainId}: ${it.message}") }
             .getOrNull()
 
         val baseFresh = if (feeData != null) {
             applyFreshFees(action.chainId, tx, feeData)
         } else {
-            // Fall back to whatever the merchant supplied in the action.
+            // Fresh-fee fetch failed — only proceed if the merchant supplied valid EIP-1559 fees.
+            val merchantMaxFee = parseHexBigInteger(tx.optString("maxFeePerGas"), default = BigInteger.ZERO)
+            val merchantPriorityFee = parseHexBigInteger(tx.optString("maxPriorityFeePerGas"), default = BigInteger.ZERO)
+            if (merchantMaxFee <= BigInteger.ZERO || merchantPriorityFee <= BigInteger.ZERO) {
+                error(
+                    "Failed to fetch fresh fees for ${action.chainId} and transaction is missing valid " +
+                        "maxFeePerGas/maxPriorityFeePerGas"
+                )
+            }
             FreshTx(
                 chainId = action.chainId,
                 to = tx.getString("to"),
                 data = tx.optString("data", "0x").ifBlank { "0x" },
                 value = parseHexBigInteger(tx.optString("value"), default = BigInteger.ZERO),
                 gasLimit = parseTxGasLimit(tx),
-                maxFeePerGas = parseHexBigInteger(tx.optString("maxFeePerGas"), default = BigInteger.ZERO),
-                maxPriorityFeePerGas = parseHexBigInteger(tx.optString("maxPriorityFeePerGas"), default = BigInteger.ZERO),
+                maxFeePerGas = merchantMaxFee,
+                maxPriorityFeePerGas = merchantPriorityFee,
             )
         }
 
-        // Merchants commonly omit gas/gasLimit — estimate it ourselves and add a
-        // 20% buffer so the tx can't fail with `intrinsic gas too low`.
         val fresh = if (baseFresh.gasLimit <= BigInteger.ZERO) {
-            val estimated = rpcEstimateGas(action.chainId, tx, from)
-            val withBuffer = estimated.multiply(BigInteger.valueOf(120)).divide(BigInteger.valueOf(100))
-            baseFresh.copy(gasLimit = withBuffer)
+            val estimated = withTimeout(RPC_CALL_TIMEOUT_MS) { rpcEstimateGas(action.chainId, tx, from) }
+            baseFresh.copy(gasLimit = estimated.multiply(GAS_BUFFER_PERCENT).divide(GAS_BUFFER_DIVISOR))
         } else {
             baseFresh
         }
 
-        val nonce = rpcGetTransactionCount(action.chainId, from)
+        val nonce = withTimeout(RPC_CALL_TIMEOUT_MS) { rpcGetTransactionCount(action.chainId, from) }
 
         val numericChainId = action.chainId.substringAfter(":").toLong()
         val rawTx = RawTransaction.createTransaction(
@@ -158,7 +167,7 @@ internal object PaymentTransactionUtil {
             TransactionEncoder.signMessage(rawTx, Credentials.create(EthAccountDelegate.privateKey))
         )
 
-        return rpcSendRawTransaction(action.chainId, signed)
+        return withTimeout(RPC_CALL_TIMEOUT_MS) { rpcSendRawTransaction(action.chainId, signed) }
     }
 
     /**
@@ -206,14 +215,20 @@ internal object PaymentTransactionUtil {
             val resp = service.sendJsonRpcRequest(
                 JsonRpcRequest(method = "eth_gasPrice", params = emptyList(), id = randomId())
             )
-            (resp.result as? String)?.let { parseHexBigInteger(it, default = BigInteger.ZERO) }
+            if (resp.error != null) error("eth_gasPrice failed: ${resp.error.message}")
+            val gasPriceHex = resp.result as? String
+                ?: error("eth_gasPrice returned null or invalid result")
+            parseHexBigInteger(gasPriceHex, default = BigInteger.ZERO)
         }
         val blockDeferred = async {
             val resp = service.sendJsonRpcRequest(
                 JsonRpcRequest(method = "eth_getBlockByNumber", params = listOf("latest", false), id = randomId())
             )
+            if (resp.error != null) error("eth_getBlockByNumber failed: ${resp.error.message}")
             @Suppress("UNCHECKED_CAST")
-            (resp.result as? Map<String, Any?>)?.get("baseFeePerGas") as? String
+            val block = resp.result as? Map<String, Any?>
+                ?: error("eth_getBlockByNumber returned null or invalid result")
+            block["baseFeePerGas"] as? String
         }
 
         val gasPrice = gasPriceDeferred.await()
@@ -268,7 +283,7 @@ internal object PaymentTransactionUtil {
             .maxOrNull() ?: DEFAULT_PRIORITY_FEE_WEI
 
         val maxFee = listOfNotNull(
-            feeData.baseFeePerGas?.multiply(BigInteger.TWO)?.add(priorityFee),
+            feeData.baseFeePerGas?.multiply(BigInteger.valueOf(2))?.add(priorityFee),
             feeData.gasPrice,
             originalMaxFee.takeIf { it > BigInteger.ZERO },
             priorityFee,
