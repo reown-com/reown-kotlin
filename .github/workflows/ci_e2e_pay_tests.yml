@@ -154,7 +154,16 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: pay-e2e-debug-artifacts
-          path: debug-artifacts/
+          path: |
+            debug-artifacts/maestro-output/**/*.png
+            debug-artifacts/maestro-output/**/*.jpg
+            debug-artifacts/maestro-output/**/*.jpeg
+            debug-artifacts/maestro-output/**/*.mp4
+            debug-artifacts/maestro-output/**/*.mov
+            debug-artifacts/maestro-output/**/*.webm
+            debug-artifacts/maestro-output/**/*.gif
+            debug-artifacts/full-logcat.txt
+            debug-artifacts/emulator-errors.log
           if-no-files-found: warn
 
       - name: Send Slack notification
