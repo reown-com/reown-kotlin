@@ -9,7 +9,7 @@ import com.walletconnect.sample.pos.R
 
 enum class PosVariant(
     val displayName: String,
-    @param:DrawableRes val partnerLogoRes: Int,
+    @param:DrawableRes val partnerLogoRes: Int?,
     val partnerLogoWidthDp: Int,
     val partnerLogoHeightDp: Int,
     val accentColor: Color?,
@@ -19,6 +19,16 @@ enum class PosVariant(
 ) {
     DEFAULT(
         displayName = "Default",
+        partnerLogoRes = null,
+        partnerLogoWidthDp = 0,
+        partnerLogoHeightDp = 0,
+        accentColor = null,
+        textInvertOverride = null,
+        successTextColor = Color.White,
+        defaultTheme = null
+    ),
+    INGENICO(
+        displayName = "Ingenico",
         partnerLogoRes = R.drawable.ic_ingenico_logo,
         partnerLogoWidthDp = 78,
         partnerLogoHeightDp = 22,

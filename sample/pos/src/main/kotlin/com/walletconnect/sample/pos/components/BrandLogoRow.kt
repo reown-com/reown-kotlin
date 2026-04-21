@@ -38,22 +38,24 @@ fun BrandLogoRow(
             contentScale = ContentScale.Fit,
             colorFilter = colorFilter
         )
-        Spacer(Modifier.width(WCTheme.spacing.spacing2))
-        Image(
-            painter = painterResource(R.drawable.ic_plus_header),
-            contentDescription = "+",
-            modifier = Modifier.size(20.dp),
-            colorFilter = colorFilter
-        )
-        Spacer(Modifier.width(WCTheme.spacing.spacing2))
-        Image(
-            painter = painterResource(variant.partnerLogoRes),
-            contentDescription = variant.displayName,
-            modifier = Modifier
-                .width(variant.partnerLogoWidthDp.dp)
-                .height(variant.partnerLogoHeightDp.dp),
-            contentScale = ContentScale.Fit,
-            colorFilter = colorFilter
-        )
+        variant.partnerLogoRes?.let { logoRes ->
+            Spacer(Modifier.width(WCTheme.spacing.spacing2))
+            Image(
+                painter = painterResource(R.drawable.ic_plus_header),
+                contentDescription = "+",
+                modifier = Modifier.size(20.dp),
+                colorFilter = colorFilter
+            )
+            Spacer(Modifier.width(WCTheme.spacing.spacing2))
+            Image(
+                painter = painterResource(logoRes),
+                contentDescription = variant.displayName,
+                modifier = Modifier
+                    .width(variant.partnerLogoWidthDp.dp)
+                    .height(variant.partnerLogoHeightDp.dp),
+                contentScale = ContentScale.Fit,
+                colorFilter = colorFilter
+            )
+        }
     }
 }

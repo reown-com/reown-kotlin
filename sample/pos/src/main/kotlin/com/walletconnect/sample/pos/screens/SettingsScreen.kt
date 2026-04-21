@@ -74,7 +74,7 @@ fun SettingsScreen(
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
     var activeSheet by remember { mutableStateOf(ActiveSheet.CURRENCY) }
-    val isThemeDisabled = selectedVariant != PosVariant.DEFAULT
+    val isThemeDisabled = selectedVariant.defaultTheme != null
 
     ModalBottomSheetLayout(
         sheetState = sheetState,
