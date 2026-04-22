@@ -76,10 +76,10 @@ jobs:
           ./gradlew :sample:wallet:assembleInternal
 
       - name: Copy Maestro Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@f9522878950f7bd904a628b2c4d486b93034a4fe
+        uses: WalletConnect/actions/maestro/pay-tests@0c9875ae33fe85fa6a4110dc46c82876d91a551d
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@f9522878950f7bd904a628b2c4d486b93034a4fe
+        uses: WalletConnect/actions/maestro/setup@0c9875ae33fe85fa6a4110dc46c82876d91a551d
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
@@ -138,7 +138,7 @@ jobs:
 
             echo "Running Maestro Pay E2E tests:"
             MAESTRO_EXIT=0
-            $HOME/.maestro/bin/maestro test --env APP_ID=com.reown.sample.wallet.internal --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" --include-tags pay --test-output-dir debug-artifacts/maestro-output --debug-output debug-artifacts/maestro-debug .maestro/ || MAESTRO_EXIT=$?
+            $HOME/.maestro/bin/maestro test --env APP_ID=com.reown.sample.wallet.internal --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" --include-tags pay --test-output-dir debug-artifacts/maestro-output .maestro/ || MAESTRO_EXIT=$?
 
             # Extract error logs for easier debugging
             echo "Extracting error logs..."
@@ -154,7 +154,16 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: pay-e2e-debug-artifacts
-          path: debug-artifacts/
+          path: |
+            debug-artifacts/maestro-output/**/*.png
+            debug-artifacts/maestro-output/**/*.jpg
+            debug-artifacts/maestro-output/**/*.jpeg
+            debug-artifacts/maestro-output/**/*.mp4
+            debug-artifacts/maestro-output/**/*.mov
+            debug-artifacts/maestro-output/**/*.webm
+            debug-artifacts/maestro-output/**/*.gif
+            debug-artifacts/full-logcat.txt
+            debug-artifacts/emulator-errors.log
           if-no-files-found: warn
 
       - name: Send Slack notification
