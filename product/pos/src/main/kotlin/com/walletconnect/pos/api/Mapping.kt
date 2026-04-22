@@ -4,16 +4,20 @@ import com.walletconnect.pos.Pos
 
 internal fun mapErrorCodeToPaymentError(code: String, message: String): Pos.PaymentEvent.PaymentError {
     return when (code) {
+        ErrorCodes.SANCTIONED_USER -> Pos.PaymentEvent.PaymentError.SanctionedUser
         ErrorCodes.PAYMENT_NOT_FOUND -> Pos.PaymentEvent.PaymentError.PaymentNotFound(message)
         ErrorCodes.PAYMENT_EXPIRED -> Pos.PaymentEvent.PaymentError.PaymentExpired(message)
-        ErrorCodes.INVALID_REQUEST -> Pos.PaymentEvent.PaymentError.InvalidPaymentRequest(message)
+        ErrorCodes.INVALID_PARAMS,
+        ErrorCodes.PARAMS_VALIDATION -> Pos.PaymentEvent.PaymentError.InvalidPaymentRequest(message)
         else -> Pos.PaymentEvent.PaymentError.Undefined(message)
     }
 }
 
 internal fun mapCreatePaymentError(code: String, message: String): Pos.PaymentEvent.PaymentError {
     return when (code) {
-        ErrorCodes.INVALID_REQUEST -> Pos.PaymentEvent.PaymentError.InvalidPaymentRequest(message)
+        ErrorCodes.SANCTIONED_USER -> Pos.PaymentEvent.PaymentError.SanctionedUser
+        ErrorCodes.INVALID_PARAMS,
+        ErrorCodes.PARAMS_VALIDATION -> Pos.PaymentEvent.PaymentError.InvalidPaymentRequest(message)
         else -> Pos.PaymentEvent.PaymentError.CreatePaymentFailed(message)
     }
 }

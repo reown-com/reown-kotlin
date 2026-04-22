@@ -124,7 +124,7 @@ class ApiClientTest {
     @Test
     fun `getPaymentStatus - returns error when payment not found`() = runTest {
         val mockApi = mockk<PayApi>()
-        val errorBody = """{"status":"error","error":{"code":"PAYMENT_NOT_FOUND","message":"Payment not found"}}"""
+        val errorBody = """{"status":"error","error":{"code":"payment_not_found","message":"Payment not found"}}"""
             .toResponseBody("application/json".toMediaType())
 
         coEvery { mockApi.getPaymentStatus("invalid_id") } returns Response.error(404, errorBody)
@@ -216,10 +216,11 @@ class ApiClientTest {
 
     @Test
     fun `ErrorCodes constants have correct values`() {
-        assertEquals("PAYMENT_NOT_FOUND", ErrorCodes.PAYMENT_NOT_FOUND)
-        assertEquals("PAYMENT_EXPIRED", ErrorCodes.PAYMENT_EXPIRED)
-        assertEquals("INVALID_REQUEST", ErrorCodes.INVALID_REQUEST)
-        assertEquals("COMPLIANCE_FAILED", ErrorCodes.COMPLIANCE_FAILED)
+        assertEquals("payment_not_found", ErrorCodes.PAYMENT_NOT_FOUND)
+        assertEquals("payment_expired", ErrorCodes.PAYMENT_EXPIRED)
+        assertEquals("invalid_params", ErrorCodes.INVALID_PARAMS)
+        assertEquals("params_validation", ErrorCodes.PARAMS_VALIDATION)
+        assertEquals("sanctioned_user", ErrorCodes.SANCTIONED_USER)
         assertEquals("NETWORK_ERROR", ErrorCodes.NETWORK_ERROR)
         assertEquals("PARSE_ERROR", ErrorCodes.PARSE_ERROR)
     }

@@ -83,10 +83,14 @@ internal object PaymentStatus {
 }
 
 internal object ErrorCodes {
-    const val PAYMENT_NOT_FOUND = "PAYMENT_NOT_FOUND"
-    const val PAYMENT_EXPIRED = "PAYMENT_EXPIRED"
-    const val INVALID_REQUEST = "INVALID_REQUEST"
-    const val COMPLIANCE_FAILED = "COMPLIANCE_FAILED"
+    // API-origin codes — values match the server's ErrorCode enum (lowercase snake_case).
+    const val PAYMENT_NOT_FOUND = "payment_not_found"
+    const val PAYMENT_EXPIRED = "payment_expired"
+    const val INVALID_PARAMS = "invalid_params"
+    const val PARAMS_VALIDATION = "params_validation"
+    const val SANCTIONED_USER = "sanctioned_user"
+
+    // Internal sentinels — generated client-side, never received from the API.
     const val NETWORK_ERROR = "NETWORK_ERROR"
     const val PARSE_ERROR = "PARSE_ERROR"
 }

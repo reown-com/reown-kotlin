@@ -6,6 +6,7 @@ import com.walletconnect.pos.api.mapCreatePaymentError
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -83,10 +84,23 @@ class MappingTest {
     }
 
     @Test
-    fun `mapErrorCodeToPaymentError - INVALID_REQUEST returns InvalidPaymentRequest`() {
-        val result = mapErrorCodeToPaymentError(ErrorCodes.INVALID_REQUEST, "Invalid")
+    fun `mapErrorCodeToPaymentError - INVALID_PARAMS returns InvalidPaymentRequest`() {
+        val result = mapErrorCodeToPaymentError(ErrorCodes.INVALID_PARAMS, "Invalid")
         assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
         assertEquals("Invalid", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
+    }
+
+    @Test
+    fun `mapErrorCodeToPaymentError - PARAMS_VALIDATION returns InvalidPaymentRequest`() {
+        val result = mapErrorCodeToPaymentError(ErrorCodes.PARAMS_VALIDATION, "Validation failed")
+        assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
+        assertEquals("Validation failed", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
+    }
+
+    @Test
+    fun `mapErrorCodeToPaymentError - sanctioned_user returns SanctionedUser singleton`() {
+        val result = mapErrorCodeToPaymentError(ErrorCodes.SANCTIONED_USER, "any server message")
+        assertSame(Pos.PaymentEvent.PaymentError.SanctionedUser, result)
     }
 
     @Test
@@ -111,10 +125,23 @@ class MappingTest {
     }
 
     @Test
-    fun `mapCreatePaymentError - INVALID_REQUEST returns InvalidPaymentRequest`() {
-        val result = mapCreatePaymentError(ErrorCodes.INVALID_REQUEST, "Invalid amount")
+    fun `mapCreatePaymentError - INVALID_PARAMS returns InvalidPaymentRequest`() {
+        val result = mapCreatePaymentError(ErrorCodes.INVALID_PARAMS, "Invalid amount")
         assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
         assertEquals("Invalid amount", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
+    }
+
+    @Test
+    fun `mapCreatePaymentError - PARAMS_VALIDATION returns InvalidPaymentRequest`() {
+        val result = mapCreatePaymentError(ErrorCodes.PARAMS_VALIDATION, "Validation failed")
+        assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
+        assertEquals("Validation failed", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
+    }
+
+    @Test
+    fun `mapCreatePaymentError - sanctioned_user returns SanctionedUser singleton`() {
+        val result = mapCreatePaymentError(ErrorCodes.SANCTIONED_USER, "any server message")
+        assertSame(Pos.PaymentEvent.PaymentError.SanctionedUser, result)
     }
 
     @Test
@@ -203,9 +230,10 @@ class MappingTest {
 
     @Test
     fun `ErrorCodes constants have correct values`() {
-        assertEquals("PAYMENT_NOT_FOUND", ErrorCodes.PAYMENT_NOT_FOUND)
-        assertEquals("PAYMENT_EXPIRED", ErrorCodes.PAYMENT_EXPIRED)
-        assertEquals("INVALID_REQUEST", ErrorCodes.INVALID_REQUEST)
-        assertEquals("COMPLIANCE_FAILED", ErrorCodes.COMPLIANCE_FAILED)
+        assertEquals("payment_not_found", ErrorCodes.PAYMENT_NOT_FOUND)
+        assertEquals("payment_expired", ErrorCodes.PAYMENT_EXPIRED)
+        assertEquals("invalid_params", ErrorCodes.INVALID_PARAMS)
+        assertEquals("params_validation", ErrorCodes.PARAMS_VALIDATION)
+        assertEquals("sanctioned_user", ErrorCodes.SANCTIONED_USER)
     }
 }
