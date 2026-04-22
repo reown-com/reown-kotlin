@@ -5,8 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.nfc.PaymentSigner
+import com.reown.sample.wallet.payment.PaymentTransactionUtil
+import com.reown.sample.wallet.payment.PaymentUtil
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +20,6 @@ import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import com.reown.sample.wallet.ui.routes.dialog_routes.payment.PaymentUiState.*
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -39,7 +41,12 @@ class PaymentViewModel : ViewModel() {
 
     // Information Capture state
     private var pendingWalletRpcActions: List<Wallet.Model.RequiredAction.WalletRpc> = emptyList()
+    private var pendingWalletRpcActionsKey: RequiredActionsKey? = null
     private val collectedValues: MutableMap<String, String> = mutableMapOf()
+
+    // Race-safe sequencing for background action fetch + gas estimate
+    private var paymentActionsRequestSeq: Long = 0
+    private var pendingActionsJob: Job? = null
 
     init {
         // Collect payment options event (has replay=1 to ensure we receive it even if emitted before collecting)
@@ -55,6 +62,7 @@ class PaymentViewModel : ViewModel() {
     private fun processPaymentOptionsResponse(response: Wallet.Model.PaymentOptionsResponse) {
         // Clear replay cache immediately after consuming to prevent stale data leaking to other ViewModel instances
         WalletKitDelegate.clearPaymentOptions()
+        invalidateRequiredActionsState()
         currentPaymentId = response.paymentId
         collectedValues.clear()
 
@@ -85,6 +93,7 @@ class PaymentViewModel : ViewModel() {
                 paymentInfo = storedPaymentInfo,
                 selectedOption = option
             )
+            fetchPaymentActionsInBackground(option)
         } else {
             _uiState.value = PaymentUiState.Options(
                 paymentLink = currentPaymentLink ?: "",
@@ -99,6 +108,7 @@ class PaymentViewModel : ViewModel() {
      */
     fun setPaymentLink(paymentLink: String) {
         if (currentPaymentLink == paymentLink) return
+        invalidateRequiredActionsState()
         currentPaymentLink = paymentLink
         _uiState.value = PaymentUiState.Loading
         fetchPaymentOptions(paymentLink)
@@ -140,6 +150,7 @@ class PaymentViewModel : ViewModel() {
         val schema = collectData?.schema
 
         if (url != null) {
+            clearRequiredActionsCache()
             // WebView-based IC with per-option URL
             val urlWithPrefill = buildUrlWithPrefill(url, schema)
             _uiState.value = PaymentUiState.WebViewDataCollection(
@@ -147,12 +158,73 @@ class PaymentViewModel : ViewModel() {
                 paymentInfo = storedPaymentInfo
             )
         } else {
-            // No IC required, show review/summary screen
+            // No IC required — render Summary immediately, fetch actions in background
             _uiState.value = PaymentUiState.Summary(
                 paymentInfo = storedPaymentInfo,
                 selectedOption = option
             )
+            fetchPaymentActionsInBackground(option)
         }
+    }
+
+    /**
+     * Fetch required payment actions asynchronously and, if an approval action is
+     * present, kick off a gas estimate so the Summary screen can show the
+     * one-time fee. A request sequence + Job cancellation guard prevents stale
+     * results from leaking into a different option selection.
+     */
+    private fun fetchPaymentActionsInBackground(option: Wallet.Model.PaymentOption) {
+        pendingActionsJob?.cancel()
+        val seq = ++paymentActionsRequestSeq
+        val paymentId = currentPaymentId ?: return
+        val requestKey = RequiredActionsKey(paymentId, option.id)
+        clearRequiredActionsCache()
+        pendingActionsJob = viewModelScope.launch {
+            val result = WalletKit.Pay.getRequiredPaymentActions(
+                Wallet.Params.RequiredPaymentActions(
+                    paymentId = paymentId,
+                    optionId = option.id
+                )
+            )
+            if (!isCurrentRequest(seq, option.id)) return@launch
+            result.fold(
+                onSuccess = { actions ->
+                    pendingWalletRpcActions = actions.filterIsInstance<Wallet.Model.RequiredAction.WalletRpc>()
+                    pendingWalletRpcActionsKey = requestKey
+                    val ctx = PaymentUtil.getPaymentContext(actions)
+                    updateSummary { it.copy(requiresApproval = ctx.requiresApproval) }
+
+                    if (ctx.approvalAction != null) {
+                        updateSummary { it.copy(isEstimatingApprovalGas = true) }
+                        val estimate = runCatching {
+                            PaymentTransactionUtil.estimateApprovalFee(ctx.approvalAction.action)
+                        }.getOrNull()
+                        if (isCurrentRequest(seq, option.id)) {
+                            updateSummary {
+                                it.copy(
+                                    approvalGasEstimate = estimate,
+                                    isEstimatingApprovalGas = false
+                                )
+                            }
+                        }
+                    }
+                },
+                onFailure = { error ->
+                    clearRequiredActionsCache()
+                    Log.w("PaymentViewModel", "Background action fetch failed: ${error.message}")
+                    // Don't surface the error yet — confirmFromSummary will retry and
+                    // show an Error state if the fetch still fails at confirmation time.
+                }
+            )
+        }
+    }
+
+    private fun isCurrentRequest(seq: Long, optionId: String): Boolean =
+        seq == paymentActionsRequestSeq && selectedOptionId == optionId
+
+    private inline fun updateSummary(transform: (PaymentUiState.Summary) -> PaymentUiState.Summary) {
+        val current = _uiState.value as? PaymentUiState.Summary ?: return
+        _uiState.value = transform(current)
     }
 
     /**
@@ -234,16 +306,29 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Process payment with the selected option.
-     * Uses WalletKit.Pay for getting required actions.
+     * Process payment with the selected option. If a background action fetch was
+     * already kicked off (from `onOptionSelected` / `onICWebViewComplete`), we
+     * wait for it to finish so the Summary's gas estimate and `pendingWalletRpcActions`
+     * are already populated. Otherwise we fetch actions synchronously here.
      */
     fun processPayment(optionId: String) {
         val paymentId = currentPaymentId ?: return
+        val requestKey = RequiredActionsKey(paymentId, optionId)
         selectedOptionId = optionId
-        _uiState.value = PaymentUiState.Processing("Getting required actions...")
+        _uiState.value = PaymentUiState.Processing(
+            message = "Getting required actions...",
+            paymentInfo = storedPaymentInfo
+        )
 
         viewModelScope.launch {
-            // Get required payment actions using WalletKit.Pay
+            // If a background fetch is in flight, wait for it before executing.
+            pendingActionsJob?.join()
+
+            if (pendingWalletRpcActionsKey == requestKey) {
+                executePayment()
+                return@launch
+            }
+
             val actionsResult = WalletKit.Pay.getRequiredPaymentActions(
                 Wallet.Params.RequiredPaymentActions(
                     paymentId = paymentId,
@@ -252,9 +337,12 @@ class PaymentViewModel : ViewModel() {
             )
             actionsResult.fold(
                 onSuccess = { actions ->
-                    processActions(paymentId, optionId, actions)
+                    pendingWalletRpcActions = actions.filterIsInstance<Wallet.Model.RequiredAction.WalletRpc>()
+                    pendingWalletRpcActionsKey = requestKey
+                    executePayment()
                 },
                 onFailure = { error ->
+                    clearRequiredActionsCache()
                     _uiState.value = PaymentUiState.Error(
                         error.message ?: "Failed to get payment actions",
                         categorizeError(error.message)
@@ -262,18 +350,6 @@ class PaymentViewModel : ViewModel() {
                 }
             )
         }
-    }
-
-    private suspend fun processActions(
-        paymentId: String,
-        optionId: String,
-        actions: List<Wallet.Model.RequiredAction>
-    ) {
-        // Store WalletRpc actions for signing
-        pendingWalletRpcActions = actions.filterIsInstance<Wallet.Model.RequiredAction.WalletRpc>()
-
-        // Information capture already done before options, proceed directly to payment
-        executePayment()
     }
 
     /**
@@ -298,6 +374,7 @@ class PaymentViewModel : ViewModel() {
             paymentInfo = storedPaymentInfo,
             selectedOption = option
         )
+        fetchPaymentActionsInBackground(option)
     }
 
     /**
@@ -308,11 +385,22 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Confirm payment from the Summary screen.
+     * Confirm payment from the Summary screen. Runs a local expiry guard with a
+     * 10s safety margin so we don't racily submit an effectively-expired payment.
      */
     fun confirmFromSummary() {
         val optionId = selectedOptionId ?: return
+        if (isPaymentExpiredLocally()) {
+            _uiState.value = PaymentUiState.Error("Payment expired", PaymentErrorType.EXPIRED)
+            return
+        }
         processPayment(optionId)
+    }
+
+    private fun isPaymentExpiredLocally(): Boolean {
+        val expiresAtSeconds = storedPaymentInfo?.expiresAt ?: return false
+        val expiresAtMs = expiresAtSeconds * 1000L
+        return expiresAtMs <= System.currentTimeMillis() + PAY_EXPIRY_GUARD_MS
     }
 
     /**
@@ -333,11 +421,18 @@ class PaymentViewModel : ViewModel() {
 
     /**
      * Execute the payment with collected data and signatures.
-     * Uses WalletKit.Pay for confirming payment.
+     *
+     * Iterates `pendingWalletRpcActions` in order and dispatches each one:
+     *  - `eth_sendTransaction` → broadcast via `PaymentTransactionUtil` with fresh
+     *    gas fees, then wait for confirmation. Not added to `signatures`.
+     *  - `eth_signTypedData_*` / `personal_sign` → signed via `PaymentSigner`
+     *    and appended to `signatures`.
+     * Only typed-data signatures are passed to `confirmPayment`.
      */
     private suspend fun executePayment() {
         val paymentId = currentPaymentId ?: return
         val optionId = selectedOptionId ?: return
+        val symbol = storedPaymentOptions.find { it.id == optionId }?.amount?.display?.assetSymbol ?: "token"
 
         _uiState.value = PaymentUiState.Processing(
             message = "Confirming your payment...",
@@ -345,9 +440,26 @@ class PaymentViewModel : ViewModel() {
         )
 
         try {
-            // Sign all WalletRpc actions and collect signatures
-            val signatures = pendingWalletRpcActions.map { action ->
-                signWalletRpcAction(action.action)
+            val signatures = mutableListOf<String>()
+            for (action in pendingWalletRpcActions) {
+                when (action.action.method) {
+                    ETH_SEND_TRANSACTION -> {
+                        _uiState.value = PaymentUiState.Processing(
+                            message = "Setting up $symbol for the first time...",
+                            paymentInfo = storedPaymentInfo
+                        )
+                        val txHash = PaymentTransactionUtil.sendTransactionWithFreshFees(action.action)
+                        Log.d("PaymentViewModel", "Approval tx broadcast: $txHash")
+                        PaymentTransactionUtil.waitForTransactionConfirmation(action.action.chainId, txHash)
+                        _uiState.value = PaymentUiState.Processing(
+                            message = "Finalizing your payment...",
+                            paymentInfo = storedPaymentInfo
+                        )
+                    }
+                    else -> {
+                        signatures.add(PaymentSigner.signWalletRpcAction(action.action))
+                    }
+                }
             }
 
             // Convert collected data to field results
@@ -420,13 +532,6 @@ class PaymentViewModel : ViewModel() {
     }
 
     /**
-     * Sign a wallet RPC action and return the signature string.
-     * Delegates to shared PaymentSigner utility.
-     */
-    private fun signWalletRpcAction(action: Wallet.Model.WalletRpcAction): String =
-        PaymentSigner.signWalletRpcAction(action)
-
-    /**
      * Categorize an error message into a PaymentErrorType.
      */
     private fun categorizeError(message: String?): PaymentErrorType {
@@ -444,17 +549,39 @@ class PaymentViewModel : ViewModel() {
      * Cancel and reset the payment flow.
      */
     fun cancel() {
+        invalidateRequiredActionsState()
         currentPaymentLink = null
         currentPaymentId = null
         selectedOptionId = null
         storedPaymentInfo = null
         storedPaymentOptions = emptyList()
-        pendingWalletRpcActions = emptyList()
         collectedValues.clear()
         // Don't set state to Loading here - we're navigating away anyway
         // and it causes a brief flash of the loading screen
         // Clear replay cache to prevent stale data on next payment
         WalletKitDelegate.clearPaymentOptions()
+    }
+
+    private companion object {
+        private const val PAY_EXPIRY_GUARD_MS = 10_000L
+        private const val ETH_SEND_TRANSACTION = "eth_sendTransaction"
+    }
+
+    private data class RequiredActionsKey(
+        val paymentId: String,
+        val optionId: String,
+    )
+
+    private fun invalidateRequiredActionsState() {
+        pendingActionsJob?.cancel()
+        pendingActionsJob = null
+        paymentActionsRequestSeq++
+        clearRequiredActionsCache()
+    }
+
+    private fun clearRequiredActionsCache() {
+        pendingWalletRpcActions = emptyList()
+        pendingWalletRpcActionsKey = null
     }
 }
 
@@ -484,7 +611,10 @@ sealed class PaymentUiState {
      */
     data class Summary(
         val paymentInfo: Wallet.Model.PaymentInfo?,
-        val selectedOption: Wallet.Model.PaymentOption
+        val selectedOption: Wallet.Model.PaymentOption,
+        val requiresApproval: Boolean = false,
+        val approvalGasEstimate: String? = null,
+        val isEstimatingApprovalGas: Boolean = false
     ) : PaymentUiState()
 
     /**
