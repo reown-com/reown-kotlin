@@ -22,6 +22,7 @@ import org.web3j.utils.Numeric
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.util.concurrent.atomic.AtomicInteger
 
 internal object PaymentTransactionUtil {
 
@@ -247,7 +248,7 @@ internal object PaymentTransactionUtil {
         val maxPriorityFeePerGas = listOfNotNull(
             networkPriorityFee,
             DEFAULT_PRIORITY_FEE_WEI,
-        ).max()
+        ).maxOrNull() ?: DEFAULT_PRIORITY_FEE_WEI
 
         FeeData(
             gasPrice = gasPrice,
@@ -356,6 +357,6 @@ internal object PaymentTransactionUtil {
         return result
     }
 
-    private val rpcIdCounter = java.util.concurrent.atomic.AtomicInteger(1)
+    private val rpcIdCounter = AtomicInteger(1)
     private fun nextRpcId(): Int = rpcIdCounter.getAndIncrement()
 }
