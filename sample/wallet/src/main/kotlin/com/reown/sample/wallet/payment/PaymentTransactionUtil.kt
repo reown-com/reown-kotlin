@@ -203,7 +203,7 @@ internal object PaymentTransactionUtil {
         }
         val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
         val response = service.sendJsonRpcRequest(
-            JsonRpcRequest(method = "eth_estimateGas", params = listOf(callObject.toMap()), id = randomId())
+            JsonRpcRequest(method = "eth_estimateGas", params = listOf(callObject.toMap()), id = nextRpcId())
         )
         if (response.error != null) error("eth_estimateGas failed: ${response.error.message}")
         return parseHexBigInteger(response.result as? String, default = BigInteger.ZERO)
@@ -213,7 +213,7 @@ internal object PaymentTransactionUtil {
         val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
         val gasPriceDeferred = async {
             val resp = service.sendJsonRpcRequest(
-                JsonRpcRequest(method = "eth_gasPrice", params = emptyList(), id = randomId())
+                JsonRpcRequest(method = "eth_gasPrice", params = emptyList(), id = nextRpcId())
             )
             if (resp.error != null) error("eth_gasPrice failed: ${resp.error.message}")
             val gasPriceHex = resp.result as? String
@@ -222,7 +222,7 @@ internal object PaymentTransactionUtil {
         }
         val blockDeferred = async {
             val resp = service.sendJsonRpcRequest(
-                JsonRpcRequest(method = "eth_getBlockByNumber", params = listOf("latest", false), id = randomId())
+                JsonRpcRequest(method = "eth_getBlockByNumber", params = listOf("latest", false), id = nextRpcId())
             )
             if (resp.error != null) error("eth_getBlockByNumber failed: ${resp.error.message}")
             @Suppress("UNCHECKED_CAST")
@@ -230,14 +230,29 @@ internal object PaymentTransactionUtil {
                 ?: error("eth_getBlockByNumber returned null or invalid result")
             block["baseFeePerGas"] as? String
         }
+        // Some RPCs don't implement eth_maxPriorityFeePerGas — soft-fall back to the default floor.
+        val priorityFeeDeferred = async {
+            runCatching {
+                val resp = service.sendJsonRpcRequest(
+                    JsonRpcRequest(method = "eth_maxPriorityFeePerGas", params = emptyList(), id = nextRpcId())
+                )
+                if (resp.error != null) return@runCatching null
+                (resp.result as? String)?.let { parseHexBigInteger(it, default = BigInteger.ZERO) }
+            }.getOrNull()
+        }
 
         val gasPrice = gasPriceDeferred.await()
         val baseFee = blockDeferred.await()?.let { parseHexBigInteger(it, default = BigInteger.ZERO) }
+        val networkPriorityFee = priorityFeeDeferred.await()
+        val maxPriorityFeePerGas = listOfNotNull(
+            networkPriorityFee,
+            DEFAULT_PRIORITY_FEE_WEI,
+        ).max()
 
         FeeData(
             gasPrice = gasPrice,
             baseFeePerGas = baseFee,
-            maxPriorityFeePerGas = DEFAULT_PRIORITY_FEE_WEI,
+            maxPriorityFeePerGas = maxPriorityFeePerGas,
             maxFeePerGas = null,
         )
     }
@@ -245,7 +260,7 @@ internal object PaymentTransactionUtil {
     private suspend fun rpcGetTransactionCount(chainId: String, from: String): BigInteger {
         val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
         val response = service.sendJsonRpcRequest(
-            JsonRpcRequest(method = "eth_getTransactionCount", params = listOf(from, "pending"), id = randomId())
+            JsonRpcRequest(method = "eth_getTransactionCount", params = listOf(from, "pending"), id = nextRpcId())
         )
         if (response.error != null) error("eth_getTransactionCount failed: ${response.error.message}")
         return parseHexBigInteger(response.result as? String, default = BigInteger.ZERO)
@@ -254,7 +269,7 @@ internal object PaymentTransactionUtil {
     private suspend fun rpcSendRawTransaction(chainId: String, signedTx: String): String {
         val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
         val response = service.sendJsonRpcRequest(
-            JsonRpcRequest(method = "eth_sendRawTransaction", params = listOf(signedTx), id = randomId())
+            JsonRpcRequest(method = "eth_sendRawTransaction", params = listOf(signedTx), id = nextRpcId())
         )
         if (response.error != null) error("eth_sendRawTransaction failed: ${response.error.message}")
         return response.result as? String ?: error("eth_sendRawTransaction returned no result")
@@ -263,7 +278,7 @@ internal object PaymentTransactionUtil {
     private suspend fun rpcGetTransactionReceipt(chainId: String, txHash: String): JSONObject? {
         val service = createBlockChainApiService(BuildConfig.PROJECT_ID, chainId)
         val response = service.sendJsonRpcRequest(
-            JsonRpcRequest(method = "eth_getTransactionReceipt", params = listOf(txHash), id = randomId())
+            JsonRpcRequest(method = "eth_getTransactionReceipt", params = listOf(txHash), id = nextRpcId())
         )
         if (response.error != null) error("eth_getTransactionReceipt failed: ${response.error.message}")
         @Suppress("UNCHECKED_CAST")
@@ -341,5 +356,6 @@ internal object PaymentTransactionUtil {
         return result
     }
 
-    private fun randomId(): Int = (100..9_999).random()
+    private val rpcIdCounter = java.util.concurrent.atomic.AtomicInteger(1)
+    private fun nextRpcId(): Int = rpcIdCounter.getAndIncrement()
 }
