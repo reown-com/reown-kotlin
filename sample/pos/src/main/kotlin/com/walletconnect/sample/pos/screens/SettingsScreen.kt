@@ -215,6 +215,17 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
+            // Test printer
+            SettingsItem(
+                label = "Test printer",
+                value = "",
+                showCaret = true,
+                onClick = { viewModel.printTestReceipt() },
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+
             // SDK Version
             SettingsItem(
                 label = "SDK Version",

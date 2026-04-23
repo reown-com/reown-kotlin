@@ -117,5 +117,10 @@ dependencies {
 
     // Logging
     implementation("com.jakewharton.timber:timber:5.0.1")
+
+    // Receipt printing — generic ESC/POS over Bluetooth (works with any paired thermal printer,
+    // including iMin's built-in head once paired internally).
+    implementation("com.github.DantSu:ESCPOS-ThermalPrinter-Android:3.3.0")
+
     testImplementation(libs.jUnit)
 }
