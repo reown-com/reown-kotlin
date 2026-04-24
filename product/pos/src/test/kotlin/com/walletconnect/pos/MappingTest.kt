@@ -1,11 +1,13 @@
 package com.walletconnect.pos
 
 import com.walletconnect.pos.api.ErrorCodes
+import com.walletconnect.pos.api.FailureCodes
 import com.walletconnect.pos.api.PaymentStatus
 import com.walletconnect.pos.api.mapCreatePaymentError
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -50,6 +52,26 @@ class MappingTest {
     }
 
     @Test
+    fun `mapStatusToPaymentEvent - failed with declined_user failureCode returns DeclinedUser`() {
+        val result = mapStatusToPaymentEvent(
+            status = PaymentStatus.FAILED,
+            paymentId = "pay_123",
+            failureCode = FailureCodes.DECLINED_USER
+        )
+        assertSame(Pos.PaymentEvent.PaymentError.DeclinedUser, result)
+    }
+
+    @Test
+    fun `mapStatusToPaymentEvent - failed with unknown failureCode falls back to PaymentFailed`() {
+        val result = mapStatusToPaymentEvent(
+            status = PaymentStatus.FAILED,
+            paymentId = "pay_123",
+            failureCode = "some_future_code"
+        )
+        assertTrue(result is Pos.PaymentEvent.PaymentError.PaymentFailed)
+    }
+
+    @Test
     fun `mapStatusToPaymentEvent - unknown status returns PaymentError Undefined`() {
         val result = mapStatusToPaymentEvent("unknown_status", "pay_123")
         assertTrue(result is Pos.PaymentEvent.PaymentError.Undefined)
@@ -83,10 +105,17 @@ class MappingTest {
     }
 
     @Test
-    fun `mapErrorCodeToPaymentError - INVALID_REQUEST returns InvalidPaymentRequest`() {
-        val result = mapErrorCodeToPaymentError(ErrorCodes.INVALID_REQUEST, "Invalid")
+    fun `mapErrorCodeToPaymentError - INVALID_PARAMS returns InvalidPaymentRequest`() {
+        val result = mapErrorCodeToPaymentError(ErrorCodes.INVALID_PARAMS, "Invalid")
         assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
         assertEquals("Invalid", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
+    }
+
+    @Test
+    fun `mapErrorCodeToPaymentError - PARAMS_VALIDATION returns InvalidPaymentRequest`() {
+        val result = mapErrorCodeToPaymentError(ErrorCodes.PARAMS_VALIDATION, "Validation failed")
+        assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
+        assertEquals("Validation failed", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
     }
 
     @Test
@@ -111,10 +140,17 @@ class MappingTest {
     }
 
     @Test
-    fun `mapCreatePaymentError - INVALID_REQUEST returns InvalidPaymentRequest`() {
-        val result = mapCreatePaymentError(ErrorCodes.INVALID_REQUEST, "Invalid amount")
+    fun `mapCreatePaymentError - INVALID_PARAMS returns InvalidPaymentRequest`() {
+        val result = mapCreatePaymentError(ErrorCodes.INVALID_PARAMS, "Invalid amount")
         assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
         assertEquals("Invalid amount", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
+    }
+
+    @Test
+    fun `mapCreatePaymentError - PARAMS_VALIDATION returns InvalidPaymentRequest`() {
+        val result = mapCreatePaymentError(ErrorCodes.PARAMS_VALIDATION, "Validation failed")
+        assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
+        assertEquals("Validation failed", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
     }
 
     @Test
@@ -203,9 +239,14 @@ class MappingTest {
 
     @Test
     fun `ErrorCodes constants have correct values`() {
-        assertEquals("PAYMENT_NOT_FOUND", ErrorCodes.PAYMENT_NOT_FOUND)
-        assertEquals("PAYMENT_EXPIRED", ErrorCodes.PAYMENT_EXPIRED)
-        assertEquals("INVALID_REQUEST", ErrorCodes.INVALID_REQUEST)
-        assertEquals("COMPLIANCE_FAILED", ErrorCodes.COMPLIANCE_FAILED)
+        assertEquals("payment_not_found", ErrorCodes.PAYMENT_NOT_FOUND)
+        assertEquals("payment_expired", ErrorCodes.PAYMENT_EXPIRED)
+        assertEquals("invalid_params", ErrorCodes.INVALID_PARAMS)
+        assertEquals("params_validation", ErrorCodes.PARAMS_VALIDATION)
+    }
+
+    @Test
+    fun `FailureCodes constants have correct values`() {
+        assertEquals("declined_user", FailureCodes.DECLINED_USER)
     }
 }

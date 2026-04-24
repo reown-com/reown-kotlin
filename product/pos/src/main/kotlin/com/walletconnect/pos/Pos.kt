@@ -60,6 +60,7 @@ object Pos {
             data class PaymentNotFound(val message: String) : PaymentError
             data class PaymentExpired(val message: String) : PaymentError
             data class InvalidPaymentRequest(val message: String) : PaymentError
+            data object DeclinedUser : PaymentError
             data class Undefined(val message: String) : PaymentError
         }
     }

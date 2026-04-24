@@ -128,6 +128,7 @@ private fun getErrorMessages(errorCode: String): Pair<String, String> {
         "create_failed" -> "Payment can't be completed" to "We're unable to complete this payment at this time. Please generate a new payment and try again."
         "not_found" -> "Payment not found" to "The payment could not be found. Please try creating a new one."
         "invalid_request" -> "Invalid request" to "The payment request was invalid. Please try again with a valid amount."
+        "declined_user" -> "Payment declined" to "This account can't be used for this payment. Please try a different account."
         ErrorCodes.INIT_FAILED -> "Initialization failed" to "POS SDK could not be initialized. Check that MERCHANT_API_KEY and MERCHANT_ID are configured correctly."
         else -> "Payment can't be completed" to "We're unable to complete this payment at this time. Please generate a new payment and try again."
     }
