@@ -9,8 +9,9 @@ name: AppKit Web to Kotlin Wallet Sign Request Confirmed
 - tapOn: "Sign Message"
 - extendedWaitUntil:
     visible:
-      text: "Sign"
+      id: "wallet-request-approve"
     timeout: 30000
-- tapOn: "Sign"
+- tapOn:
+    id: "wallet-request-approve"
 - back
 - assertVisible: "Signing Succeeded"

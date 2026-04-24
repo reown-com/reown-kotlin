@@ -1,2 +1,5 @@
 <resources>
+    <string name="app_name">POS</string>
+    <string name="nfc_service_desc">NFC payment tag emulation</string>
+    <string name="nfc_aid_group_desc">NDEF Tag Application</string>
 </resources>

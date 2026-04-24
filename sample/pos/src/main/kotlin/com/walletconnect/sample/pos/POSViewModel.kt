@@ -7,6 +7,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.walletconnect.pos.Pos
 import com.walletconnect.pos.PosClient
+import com.walletconnect.sample.pos.log.PosLogStore
+import com.walletconnect.sample.pos.nfc.NfcManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -220,7 +222,7 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         val deviceId = credentialsManager.getDeviceId()
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                PosClient.init(apiKey = apiKey, merchantId = merchantId, deviceId = deviceId, mtlsConfig = POSApplication.grantedMtlsConfig)
+                PosClient.init(apiKey = apiKey, merchantId = merchantId, deviceId = deviceId, mtlsConfig = Pos.MtlsConfig.Disabled)
                 PosClient.setDelegate(PosSampleDelegate)
                 Timber.d("PosClient re-initialized with updated credentials")
             } catch (e: Exception) {
@@ -279,6 +281,12 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                 _isLoading.value = false
                 _currentAmount.value = paymentEvent.amount
                 currentPaymentId = paymentEvent.paymentId
+                NfcManager.updatePaymentUri(paymentEvent.uri.toString())
+                PosLogStore.info(
+                    "Payment created",
+                    source = "handlePaymentEvent",
+                    data = "paymentId: ${paymentEvent.paymentId}\namount: ${paymentEvent.amount.value} ${paymentEvent.amount.unit}\ngatewayUrl: ${paymentEvent.uri}"
+                )
                 _posNavEventsFlow.emit(
                     PosNavEvent.QrReady(
                         uri = paymentEvent.uri,
@@ -290,19 +298,28 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             is Pos.PaymentEvent.PaymentRequested -> {
+                PosLogStore.info("Payment requested by wallet", source = "handlePaymentEvent")
                 _posEventsFlow.emit(PosEvent.PaymentRequested)
             }
 
             is Pos.PaymentEvent.PaymentProcessing -> {
+                PosLogStore.info("Payment processing", source = "handlePaymentEvent")
                 _posEventsFlow.emit(PosEvent.PaymentProcessing)
             }
 
             is Pos.PaymentEvent.PaymentSuccess -> {
+                PosClient.cancelPayment()
+                PosLogStore.info(
+                    "Payment success",
+                    source = "handlePaymentEvent",
+                    data = "paymentId: ${paymentEvent.paymentId}"
+                )
                 _posEventsFlow.emit(PosEvent.PaymentSuccess(paymentEvent.paymentId, paymentEvent.info))
                 _posNavEventsFlow.emit(PosNavEvent.PaymentSuccessScreen(paymentEvent.paymentId, paymentEvent.info, _currentAmount.value))
             }
 
             is Pos.PaymentEvent.PaymentError -> {
+                PosClient.cancelPayment()
                 _isLoading.value = false
                 val errorCode = when (paymentEvent) {
                     is Pos.PaymentEvent.PaymentError.PaymentExpired -> "expired"
@@ -311,8 +328,14 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                     is Pos.PaymentEvent.PaymentError.PaymentCancelled -> "cancelled"
                     is Pos.PaymentEvent.PaymentError.PaymentNotFound -> "not_found"
                     is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest -> "invalid_request"
+                    is Pos.PaymentEvent.PaymentError.DeclinedUser -> "declined_user"
                     is Pos.PaymentEvent.PaymentError.Undefined -> "unknown"
                 }
+                PosLogStore.error(
+                    "Payment error: $errorCode",
+                    source = "handlePaymentEvent",
+                    data = paymentEvent.toString()
+                )
                 _posEventsFlow.emit(PosEvent.PaymentError(errorCode))
                 _posNavEventsFlow.emit(PosNavEvent.ToErrorScreen(error = errorCode))
             }
@@ -339,6 +362,12 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
             val referenceId = "ORDER-${System.currentTimeMillis()}"
             _isLoading.value = true
 
+            PosLogStore.info(
+                "Creating payment",
+                source = "createPayment",
+                data = "amount: $amountValue ${currency.unit}\nreferenceId: $referenceId"
+            )
+
             PosClient.createPaymentIntent(
                 amount = Pos.Amount(
                     unit = currency.unit,
@@ -348,6 +377,11 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
             )
         } catch (e: Exception) {
             _isLoading.value = false
+            PosLogStore.error(
+                "Create payment failed",
+                source = "createPayment",
+                data = e.message
+            )
             viewModelScope.launch {
                 _posNavEventsFlow.emit(
                     PosNavEvent.ToErrorScreen(error = e.message ?: "Create payment error")
@@ -357,6 +391,8 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun cancelPayment() {
+        PosLogStore.info("Payment cancelled", source = "cancelPayment")
+        NfcManager.clearPaymentUri()
         PosClient.cancelPayment()
         _isLoading.value = false
     }
@@ -366,11 +402,9 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         return PosClient.stopPolling()
     }
 
-    fun printReceipt() {
-        // TODO: Implement receipt printing via POS terminal SDK
-    }
-
     fun resetForNewPayment() {
+        NfcManager.clearPaymentUri()
+        PosClient.cancelPayment()
         _currentAmount.value = null
         currentPaymentId = null
         _isLoading.value = false

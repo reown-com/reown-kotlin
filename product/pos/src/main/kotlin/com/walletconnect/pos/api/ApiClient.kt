@@ -156,7 +156,7 @@ internal class ApiClient(
 
                         if (data.status != lastEmittedStatus) {
                             lastEmittedStatus = data.status
-                            val event = mapStatusToPaymentEvent(data.status, paymentId, data.info)
+                            val event = mapStatusToPaymentEvent(data.status, paymentId, data.info, data.failureCode)
                             trackPaymentStatusEvent(paymentId, context, data.status, event)
                             onEvent(event)
                         }

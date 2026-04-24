@@ -9,8 +9,9 @@ name: AppKit Web to Kotlin Wallet Sign Request Rejected
 - tapOn: "Sign Message"
 - extendedWaitUntil:
     visible:
-      text: "Cancel"
+      id: "wallet-request-reject"
     timeout: 30000
-- tapOn: "Cancel"
+- tapOn:
+    id: "wallet-request-reject"
 - back
 - assertVisible: "Signing Failed"

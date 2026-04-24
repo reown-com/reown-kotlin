@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.reown.sample.wallet.BuildConfig
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.web3j.crypto.ECKeyPair
 import org.web3j.crypto.Keys
@@ -16,12 +17,18 @@ object EthAccountDelegate {
     // Hardcoded test user data for IC form prefill (PoC)
     const val PREFILL_FULL_NAME = "Test User"
     const val PREFILL_DOB = "1990-01-15"
-    const val PREFILL_POB_ADDRESS = "123 Main Street, New York, NY 10001"
+    const val PREFILL_POB_ADDRESS = "New York, NY"
+    const val PREFILL_POB_COUNTRY = "US"
+    const val PREFILL_POR_ADDRESS = "New York, NY"
+    const val PREFILL_POR_COUNTRY = "US"
     private val sharedPreferences: SharedPreferences by lazy { application.getSharedPreferences("Wallet_Sample_Shared_Prefs", Context.MODE_PRIVATE) }
     private const val ACCOUNT_TAG = "self_account_tag"
     private const val PRIVATE_KEY_TAG = "self_private_key"
     private const val PUBLIC_KEY_TAG = "self_public_key"
     private const val MNEMONIC_TAG = "self_mnemonic"
+
+    private val testPrivateKey: String?
+        get() = BuildConfig.TEST_WALLET_PRIVATE_KEY.ifEmpty { null }
 
     private val isInitialized
         get() = (sharedPreferences.getString(ACCOUNT_TAG, null) != null) && (sharedPreferences.getString(PRIVATE_KEY_TAG, null) != null) && (sharedPreferences.getString(
@@ -35,6 +42,8 @@ object EthAccountDelegate {
         }
     }
 
+    private fun initializeAccount(): Triple<String, String, String> = storeAccount(testPrivateKey)
+
     val ethAccount: String
         get() = "eip155:1:$address"
 
@@ -42,7 +51,15 @@ object EthAccountDelegate {
         get() = "eip155:11155111:$address"
 
     val address: String
-        get() = if (isInitialized) sharedPreferences.getString(ACCOUNT_TAG, null)!! else storeAccount().third
+        get() {
+            if (BuildConfig.ENABLE_TEST_MODE) {
+                val tk = testPrivateKey
+                if (tk != null && sharedPreferences.getString(PRIVATE_KEY_TAG, null) != tk) {
+                    return storeAccount(tk).third
+                }
+            }
+            return if (isInitialized) sharedPreferences.getString(ACCOUNT_TAG, null)!! else initializeAccount().third
+        }
 
     val mnemonic: String?
         get() = sharedPreferences.getString(MNEMONIC_TAG, null)
@@ -58,7 +75,7 @@ object EthAccountDelegate {
             if (isInitialized) {
                 sharedPreferences.getString(PRIVATE_KEY_TAG, null)!!
             } else {
-                storeAccount().second
+                initializeAccount().second
             }
         )
         set(value) {
@@ -67,7 +84,7 @@ object EthAccountDelegate {
         }
 
     val publicKey: String
-        get() = (if (isInitialized) sharedPreferences.getString(PUBLIC_KEY_TAG, null)!! else storeAccount().first).run {
+        get() = (if (isInitialized) sharedPreferences.getString(PUBLIC_KEY_TAG, null)!! else initializeAccount().first).run {
             if (this.length > 128) {
                 this.removePrefix("00")
             } else {

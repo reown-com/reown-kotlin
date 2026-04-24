@@ -1,0 +1,217 @@
+name: E2E Pay Tests with Maestro
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - edited
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-balance:
+    uses: ./.github/workflows/e2e_balance_check.yml
+    secrets: inherit
+
+  build_and_run_pay_e2e_tests:
+    needs: check-balance
+    if: always()
+    name: Build & Run Pay E2E Tests
+    timeout-minutes: 45
+    runs-on: ubuntu-16core
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          architecture: x86_64
+          cache: 'gradle'
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Setup Required files to build samples
+        with:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          FIREBASE_SERVICE_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS }}
+          SECRETS_PROPERTIES: ${{ secrets.SECRETS_PROPERTIES }}
+          ENCODED_STRING_DEBUG: ${{ secrets.WC_KOTLIN_DEBUG_KEYSTORE }}
+          SIGNING_KEY_STORE_PATH_DEBUG: ${{ secrets.WC_KOTLIN_DEBUG_KEYSTORE_PATH }}
+          ENCODED_STRING_INTERNAL: ${{ secrets.WC_KOTLIN_INTERNAL_KEYSTORE }}
+          SIGNING_KEY_STORE_PATH_INTERNAL: ${{ secrets.WC_KOTLIN_INTERNAL_KEYSTORE_PATH }}
+          ENCODED_STRING_UPLOAD: ${{ secrets.WC_KOTLIN_UPLOAD_KEYSTORE }}
+          SIGNING_KEY_STORE_PATH_UPLOAD: ${{ secrets.WC_KOTLIN_UPLOAD_KEYSTORE_PATH }}
+        uses: ./.github/actions/ci_setup
+
+      - name: Build wallet sample - Internal
+        id: build
+        env:
+          WC_CLOUD_PROJECT_ID: ${{ secrets.WC_CLOUD_PROJECT_ID }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
+          NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
+          MIX_PANEL: ${{ secrets.MIX_PANEL }}
+          TEST_WALLET_PRIVATE_KEY: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
+          ENABLE_TEST_MODE: "true"
+        run: |
+          ./gradlew :sample:wallet:assembleInternal
+
+      - name: Copy Maestro Pay test flows
+        uses: WalletConnect/actions/maestro/pay-tests@0c9875ae33fe85fa6a4110dc46c82876d91a551d
+
+      - name: Install Maestro
+        uses: WalletConnect/actions/maestro/setup@0c9875ae33fe85fa6a4110dc46c82876d91a551d
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Start Android Emulator and Run Pay Tests
+        id: maestro
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: default
+          arch: x86_64
+          ram-size: 4096M
+          disk-size: 4096M
+          heap-size: 576M
+          emulator-boot-timeout: 900
+          avd-name: test_device
+          force-avd-creation: false
+          disable-animations: true
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot-load
+          script: |
+            # Setup debug directory
+            mkdir -p debug-artifacts
+
+            # Wait for emulator to be fully ready
+            echo "Waiting for emulator to be ready..."
+            adb wait-for-device
+
+            # Wait for boot completion
+            echo "Waiting for boot completion..."
+            adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
+            echo "Boot completed!"
+
+            adb devices
+
+            # Clear logcat before we start
+            adb logcat -c
+
+            # Start logcat capture in background
+            adb logcat > debug-artifacts/full-logcat.txt &
+            LOGCAT_PID=$!
+
+            # Install wallet APK
+            echo "Installing wallet APK:"
+            find sample/wallet/build/outputs/apk/internal -name "*.apk" -exec echo "Installing: {}" \; -exec adb install -r {} \;
+
+            # Verify installation
+            echo "Verifying installed app:"
+            adb shell pm list packages | grep -E "com.reown.sample.wallet" || (echo "ERROR: App not installed correctly" && exit 1)
+
+            # Wait for system to settle
+            sleep 10
+
+            # Force stop before Maestro tests
+            adb shell am force-stop com.reown.sample.wallet.internal
+            sleep 5
+
+            echo "Running Maestro Pay E2E tests:"
+            MAESTRO_EXIT=0
+            $HOME/.maestro/bin/maestro test --env APP_ID=com.reown.sample.wallet.internal --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" --include-tags pay --test-output-dir debug-artifacts/maestro-output .maestro/ || MAESTRO_EXIT=$?
+
+            # Extract error logs for easier debugging
+            echo "Extracting error logs..."
+            grep -E "AndroidRuntime|FATAL|ActivityManager.*Error|PaymentWebView|PaymentViewModel" debug-artifacts/full-logcat.txt > debug-artifacts/emulator-errors.log 2>/dev/null || true
+
+            # Stop logcat capture
+            kill $LOGCAT_PID 2>/dev/null || true
+
+            exit $MAESTRO_EXIT
+
+      - name: Upload debug artifacts
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: pay-e2e-debug-artifacts
+          path: |
+            debug-artifacts/maestro-output/**/*.png
+            debug-artifacts/maestro-output/**/*.jpg
+            debug-artifacts/maestro-output/**/*.jpeg
+            debug-artifacts/maestro-output/**/*.mp4
+            debug-artifacts/maestro-output/**/*.mov
+            debug-artifacts/maestro-output/**/*.webm
+            debug-artifacts/maestro-output/**/*.gif
+            debug-artifacts/full-logcat.txt
+            debug-artifacts/emulator-errors.log
+          if-no-files-found: warn
+
+      - name: Send Slack notification
+        if: failure()
+        uses: slackapi/slack-github-action@b0fa283ad8fea605de13dc3f449259339835fc52 # v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "E2E Test Report - Android - WalletKit",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "🧪 E2E Test Report - Android (pay)" }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Project:*\n`WalletKit Kotlin`" },
+                    { "type": "mrkdwn", "text": "*Platform:*\n`Android`" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.ref_name }}`" },
+                    { "type": "mrkdwn", "text": "*Trigger:*\n`${{ github.event_name }}`" }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Build:*\n`${{ steps.build.outcome == 'success' && '✅ Success' || '❌ Failed' }}`" },
+                    { "type": "mrkdwn", "text": "*Maestro Tests:*\n`${{ steps.maestro.outcome == 'success' && '✅ Passed' || '❌ Failed' }}`" },
+                    { "type": "mrkdwn", "text": "*Overall Status:*\n`${{ job.status == 'success' && '✅ Success' || '❌ Failed' }}`" }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Workflow Run" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    },
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "Download Artifacts" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts"
+                    }
+                  ]
+                }
+              ]
+            }
+
