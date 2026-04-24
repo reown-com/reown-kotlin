@@ -25,14 +25,18 @@ internal fun mapCreatePaymentError(code: String, message: String): Pos.PaymentEv
 internal fun mapStatusToPaymentEvent(
     status: String,
     paymentId: String,
-    info: PaymentInfoDto? = null
+    info: PaymentInfoDto? = null,
+    failureCode: String? = null
 ): Pos.PaymentEvent {
     return when (status) {
         PaymentStatus.REQUIRES_ACTION -> Pos.PaymentEvent.PaymentRequested
         PaymentStatus.PROCESSING -> Pos.PaymentEvent.PaymentProcessing
         PaymentStatus.SUCCEEDED -> Pos.PaymentEvent.PaymentSuccess(paymentId, info?.toPaymentInfo())
         PaymentStatus.EXPIRED -> Pos.PaymentEvent.PaymentError.PaymentExpired("Payment has expired")
-        PaymentStatus.FAILED -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment failed") //TODO: add error message?
+        PaymentStatus.FAILED -> when (failureCode) {
+            FailureCodes.DECLINED_USER -> Pos.PaymentEvent.PaymentError.SanctionedUser
+            else -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment failed")
+        }
         PaymentStatus.CANCELLED -> Pos.PaymentEvent.PaymentError.PaymentCancelled("Payment cancelled")
         else -> Pos.PaymentEvent.PaymentError.Undefined("Unknown payment status: $status")
     }

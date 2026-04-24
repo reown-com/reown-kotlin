@@ -1,6 +1,7 @@
 package com.walletconnect.pos
 
 import com.walletconnect.pos.api.ErrorCodes
+import com.walletconnect.pos.api.FailureCodes
 import com.walletconnect.pos.api.PaymentStatus
 import com.walletconnect.pos.api.mapCreatePaymentError
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
@@ -47,6 +48,26 @@ class MappingTest {
     @Test
     fun `mapStatusToPaymentEvent - failed returns PaymentError PaymentFailed`() {
         val result = mapStatusToPaymentEvent(PaymentStatus.FAILED, "pay_123")
+        assertTrue(result is Pos.PaymentEvent.PaymentError.PaymentFailed)
+    }
+
+    @Test
+    fun `mapStatusToPaymentEvent - failed with declined_user failureCode returns SanctionedUser`() {
+        val result = mapStatusToPaymentEvent(
+            status = PaymentStatus.FAILED,
+            paymentId = "pay_123",
+            failureCode = FailureCodes.DECLINED_USER
+        )
+        assertSame(Pos.PaymentEvent.PaymentError.SanctionedUser, result)
+    }
+
+    @Test
+    fun `mapStatusToPaymentEvent - failed with unknown failureCode falls back to PaymentFailed`() {
+        val result = mapStatusToPaymentEvent(
+            status = PaymentStatus.FAILED,
+            paymentId = "pay_123",
+            failureCode = "some_future_code"
+        )
         assertTrue(result is Pos.PaymentEvent.PaymentError.PaymentFailed)
     }
 
@@ -235,5 +256,10 @@ class MappingTest {
         assertEquals("invalid_params", ErrorCodes.INVALID_PARAMS)
         assertEquals("params_validation", ErrorCodes.PARAMS_VALIDATION)
         assertEquals("sanctioned_user", ErrorCodes.SANCTIONED_USER)
+    }
+
+    @Test
+    fun `FailureCodes constants have correct values`() {
+        assertEquals("declined_user", FailureCodes.DECLINED_USER)
     }
 }

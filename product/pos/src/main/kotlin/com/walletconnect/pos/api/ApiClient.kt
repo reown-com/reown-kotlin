@@ -158,9 +158,9 @@ internal class ApiClient(
                         consecutiveTransientErrors = 0
 
                         if (data.status != lastEmittedStatus) {
-                            Log.d(TAG, "Status transition paymentId=$paymentId status=${data.status} isFinal=${data.isFinal} info=${data.info}")
+                            Log.d(TAG, "Status transition paymentId=$paymentId status=${data.status} isFinal=${data.isFinal} info=${data.info} failureCode=${data.failureCode}")
                             lastEmittedStatus = data.status
-                            val event = mapStatusToPaymentEvent(data.status, paymentId, data.info)
+                            val event = mapStatusToPaymentEvent(data.status, paymentId, data.info, data.failureCode)
                             trackPaymentStatusEvent(paymentId, context, data.status, event)
                             onEvent(event)
                         }

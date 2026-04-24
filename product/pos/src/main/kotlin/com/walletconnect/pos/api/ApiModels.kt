@@ -30,7 +30,8 @@ internal data class GetPaymentStatusResponse(
     @param:Json(name = "status") val status: String,
     @param:Json(name = "pollInMs") val pollInMs: Long?,
     @param:Json(name = "isFinal") val isFinal: Boolean,
-    @param:Json(name = "info") val info: PaymentInfoDto?
+    @param:Json(name = "info") val info: PaymentInfoDto?,
+    @param:Json(name = "failureCode") val failureCode: String? = null
 )
 
 @JsonClass(generateAdapter = true)
@@ -93,6 +94,11 @@ internal object ErrorCodes {
     // Internal sentinels — generated client-side, never received from the API.
     const val NETWORK_ERROR = "NETWORK_ERROR"
     const val PARSE_ERROR = "PARSE_ERROR"
+}
+
+internal object FailureCodes {
+    // Wire values of GetPaymentStatusResponse.failureCode when status == "failed".
+    const val DECLINED_USER = "declined_user"
 }
 
 // Transaction History Models
