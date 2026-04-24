@@ -4,7 +4,6 @@ import com.walletconnect.pos.Pos
 
 internal fun mapErrorCodeToPaymentError(code: String, message: String): Pos.PaymentEvent.PaymentError {
     return when (code) {
-        ErrorCodes.SANCTIONED_USER -> Pos.PaymentEvent.PaymentError.DeclinedUser
         ErrorCodes.PAYMENT_NOT_FOUND -> Pos.PaymentEvent.PaymentError.PaymentNotFound(message)
         ErrorCodes.PAYMENT_EXPIRED -> Pos.PaymentEvent.PaymentError.PaymentExpired(message)
         ErrorCodes.INVALID_PARAMS,
@@ -15,7 +14,6 @@ internal fun mapErrorCodeToPaymentError(code: String, message: String): Pos.Paym
 
 internal fun mapCreatePaymentError(code: String, message: String): Pos.PaymentEvent.PaymentError {
     return when (code) {
-        ErrorCodes.SANCTIONED_USER -> Pos.PaymentEvent.PaymentError.DeclinedUser
         ErrorCodes.INVALID_PARAMS,
         ErrorCodes.PARAMS_VALIDATION -> Pos.PaymentEvent.PaymentError.InvalidPaymentRequest(message)
         else -> Pos.PaymentEvent.PaymentError.CreatePaymentFailed(message)

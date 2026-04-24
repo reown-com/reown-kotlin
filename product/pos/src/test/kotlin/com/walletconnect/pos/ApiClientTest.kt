@@ -220,7 +220,6 @@ class ApiClientTest {
         assertEquals("payment_expired", ErrorCodes.PAYMENT_EXPIRED)
         assertEquals("invalid_params", ErrorCodes.INVALID_PARAMS)
         assertEquals("params_validation", ErrorCodes.PARAMS_VALIDATION)
-        assertEquals("sanctioned_user", ErrorCodes.SANCTIONED_USER)
         assertEquals("NETWORK_ERROR", ErrorCodes.NETWORK_ERROR)
         assertEquals("PARSE_ERROR", ErrorCodes.PARSE_ERROR)
     }

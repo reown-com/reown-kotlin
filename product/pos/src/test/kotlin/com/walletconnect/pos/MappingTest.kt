@@ -119,12 +119,6 @@ class MappingTest {
     }
 
     @Test
-    fun `mapErrorCodeToPaymentError - sanctioned_user returns DeclinedUser singleton`() {
-        val result = mapErrorCodeToPaymentError(ErrorCodes.SANCTIONED_USER, "any server message")
-        assertSame(Pos.PaymentEvent.PaymentError.DeclinedUser, result)
-    }
-
-    @Test
     fun `mapErrorCodeToPaymentError - unknown code returns Undefined`() {
         val result = mapErrorCodeToPaymentError("UNKNOWN_CODE", "Unknown error")
         assertTrue(result is Pos.PaymentEvent.PaymentError.Undefined)
@@ -157,12 +151,6 @@ class MappingTest {
         val result = mapCreatePaymentError(ErrorCodes.PARAMS_VALIDATION, "Validation failed")
         assertTrue(result is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest)
         assertEquals("Validation failed", (result as Pos.PaymentEvent.PaymentError.InvalidPaymentRequest).message)
-    }
-
-    @Test
-    fun `mapCreatePaymentError - sanctioned_user returns DeclinedUser singleton`() {
-        val result = mapCreatePaymentError(ErrorCodes.SANCTIONED_USER, "any server message")
-        assertSame(Pos.PaymentEvent.PaymentError.DeclinedUser, result)
     }
 
     @Test
@@ -255,7 +243,6 @@ class MappingTest {
         assertEquals("payment_expired", ErrorCodes.PAYMENT_EXPIRED)
         assertEquals("invalid_params", ErrorCodes.INVALID_PARAMS)
         assertEquals("params_validation", ErrorCodes.PARAMS_VALIDATION)
-        assertEquals("sanctioned_user", ErrorCodes.SANCTIONED_USER)
     }
 
     @Test

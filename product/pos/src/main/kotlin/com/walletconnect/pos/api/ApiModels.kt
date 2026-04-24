@@ -89,7 +89,6 @@ internal object ErrorCodes {
     const val PAYMENT_EXPIRED = "payment_expired"
     const val INVALID_PARAMS = "invalid_params"
     const val PARAMS_VALIDATION = "params_validation"
-    const val SANCTIONED_USER = "sanctioned_user"
 
     // Internal sentinels — generated client-side, never received from the API.
     const val NETWORK_ERROR = "NETWORK_ERROR"
