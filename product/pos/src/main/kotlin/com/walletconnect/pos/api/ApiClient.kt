@@ -1,6 +1,5 @@
 package com.walletconnect.pos.api
 
-import android.util.Log
 import com.squareup.moshi.Moshi
 import com.walletconnect.pos.BuildConfig
 import com.walletconnect.pos.Pos
@@ -16,8 +15,6 @@ import java.net.URI
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
-
-private const val TAG = "PosApiClient"
 
 internal class ApiClient(
     private val apiKey: String,
@@ -158,7 +155,6 @@ internal class ApiClient(
                         consecutiveTransientErrors = 0
 
                         if (data.status != lastEmittedStatus) {
-                            Log.d(TAG, "Status transition paymentId=$paymentId status=${data.status} isFinal=${data.isFinal} info=${data.info} failureCode=${data.failureCode}")
                             lastEmittedStatus = data.status
                             val event = mapStatusToPaymentEvent(data.status, paymentId, data.info, data.failureCode)
                             trackPaymentStatusEvent(paymentId, context, data.status, event)
@@ -179,7 +175,6 @@ internal class ApiClient(
                         } else {
                             activePollingState = null
                             val paymentError = mapErrorCodeToPaymentError(result.code, result.message)
-                            Log.w(TAG, "Polling terminal error paymentId=$paymentId code=${result.code} message=${result.message} mapped=${paymentError::class.simpleName}")
                             eventTracker.trackPaymentFailed(paymentId, context, paymentError)
                             onEvent(paymentError)
                             break
@@ -254,8 +249,7 @@ internal class ApiClient(
 
     private fun <T> parseErrorResponse(response: Response<T>): ApiErrorDetails {
         val errorBody = response.errorBody()?.string()
-        Log.w(TAG, "API error http=${response.code()} url=${response.raw().request.url} body=$errorBody")
-        val details = if (errorBody != null) {
+        return if (errorBody != null) {
             try {
                 errorAdapter.fromJson(errorBody)?.error ?: ApiErrorDetails(
                     code = "HTTP_${response.code()}",
@@ -274,8 +268,6 @@ internal class ApiClient(
                 message = response.message()
             )
         }
-        Log.w(TAG, "API error parsed: code=${details.code} message=${details.message}")
-        return details
     }
 
     private fun isSdkError(code: String): Boolean {
