@@ -328,7 +328,7 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                     is Pos.PaymentEvent.PaymentError.PaymentCancelled -> "cancelled"
                     is Pos.PaymentEvent.PaymentError.PaymentNotFound -> "not_found"
                     is Pos.PaymentEvent.PaymentError.InvalidPaymentRequest -> "invalid_request"
-                    is Pos.PaymentEvent.PaymentError.SanctionedUser -> "sanctioned_user"
+                    is Pos.PaymentEvent.PaymentError.DeclinedUser -> "declined_user"
                     is Pos.PaymentEvent.PaymentError.Undefined -> "unknown"
                 }
                 PosLogStore.error(

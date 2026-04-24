@@ -52,13 +52,13 @@ class MappingTest {
     }
 
     @Test
-    fun `mapStatusToPaymentEvent - failed with declined_user failureCode returns SanctionedUser`() {
+    fun `mapStatusToPaymentEvent - failed with declined_user failureCode returns DeclinedUser`() {
         val result = mapStatusToPaymentEvent(
             status = PaymentStatus.FAILED,
             paymentId = "pay_123",
             failureCode = FailureCodes.DECLINED_USER
         )
-        assertSame(Pos.PaymentEvent.PaymentError.SanctionedUser, result)
+        assertSame(Pos.PaymentEvent.PaymentError.DeclinedUser, result)
     }
 
     @Test
@@ -119,9 +119,9 @@ class MappingTest {
     }
 
     @Test
-    fun `mapErrorCodeToPaymentError - sanctioned_user returns SanctionedUser singleton`() {
+    fun `mapErrorCodeToPaymentError - sanctioned_user returns DeclinedUser singleton`() {
         val result = mapErrorCodeToPaymentError(ErrorCodes.SANCTIONED_USER, "any server message")
-        assertSame(Pos.PaymentEvent.PaymentError.SanctionedUser, result)
+        assertSame(Pos.PaymentEvent.PaymentError.DeclinedUser, result)
     }
 
     @Test
@@ -160,9 +160,9 @@ class MappingTest {
     }
 
     @Test
-    fun `mapCreatePaymentError - sanctioned_user returns SanctionedUser singleton`() {
+    fun `mapCreatePaymentError - sanctioned_user returns DeclinedUser singleton`() {
         val result = mapCreatePaymentError(ErrorCodes.SANCTIONED_USER, "any server message")
-        assertSame(Pos.PaymentEvent.PaymentError.SanctionedUser, result)
+        assertSame(Pos.PaymentEvent.PaymentError.DeclinedUser, result)
     }
 
     @Test

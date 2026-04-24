@@ -104,7 +104,7 @@ internal object ErrorCode {
     const val PAYMENT_EXPIRED = "PAYMENT_EXPIRED"
     const val INVALID_PAYMENT_REQUEST = "INVALID_PAYMENT_REQUEST"
     const val PAYMENT_CANCELLED = "PAYMENT_CANCELLED"
-    const val SANCTIONED_USER = "SANCTIONED_USER"
+    const val DECLINED_USER = "DECLINED_USER"
     const val UNDEFINED_ERROR = "UNDEFINED_ERROR"
 }
 
@@ -140,9 +140,9 @@ internal fun Pos.PaymentEvent.PaymentError.toErrorFields(): ErrorFields {
             code = ErrorCode.INVALID_PAYMENT_REQUEST,
             message = message
         )
-        is Pos.PaymentEvent.PaymentError.SanctionedUser -> ErrorFields(
+        is Pos.PaymentEvent.PaymentError.DeclinedUser -> ErrorFields(
             category = ErrorCategory.API,
-            code = ErrorCode.SANCTIONED_USER,
+            code = ErrorCode.DECLINED_USER,
             message = ""
         )
         is Pos.PaymentEvent.PaymentError.Undefined -> ErrorFields(
