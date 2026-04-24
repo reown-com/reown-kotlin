@@ -1,9 +1,8 @@
 package com.walletconnect.sample.pos.printer
 
 import com.walletconnect.pos.Pos
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 internal data class ReceiptData(
     val txId: String,
@@ -15,7 +14,7 @@ internal data class ReceiptData(
     val footerOverride: String? = null
 ) {
     companion object {
-        private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        private val DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
         fun from(displayFiat: String, info: Pos.PaymentInfo?): ReceiptData {
             val tokenAmount = info?.let { paymentInfo ->
@@ -32,7 +31,7 @@ internal data class ReceiptData(
             }
             return ReceiptData(
                 txId = info?.txHash ?: "",
-                date = DATE_FORMAT.format(Date()),
+                date = DATE_FORMAT.format(LocalDateTime.now()),
                 displayFiat = displayFiat,
                 tokenSymbol = info?.assetSymbol,
                 tokenAmountFormatted = tokenAmount,
@@ -42,7 +41,7 @@ internal data class ReceiptData(
 
         fun sample() = ReceiptData(
             txId = "0xTEST0000000000000000000000000000000000000000",
-            date = DATE_FORMAT.format(Date()),
+            date = DATE_FORMAT.format(LocalDateTime.now()),
             displayFiat = "$1.00 USD",
             tokenSymbol = "USDC",
             tokenAmountFormatted = "1.00",

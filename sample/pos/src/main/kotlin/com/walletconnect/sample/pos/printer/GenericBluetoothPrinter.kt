@@ -17,7 +17,7 @@ internal class GenericBluetoothPrinter(private val context: Context) : Printer {
     override suspend fun isAvailable(): Boolean = withContext(Dispatchers.IO) {
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
         val adapter: BluetoothAdapter? = manager?.adapter
-        adapter?.isEnabled == true && firstPairedConnection() != null
+        adapter?.isEnabled == true && runCatching { firstPairedConnection() }.getOrNull() != null
     }
 
     override suspend fun print(receipt: ReceiptData, logo: Bitmap): Result<Unit> = withContext(Dispatchers.IO) {
@@ -38,7 +38,7 @@ internal class GenericBluetoothPrinter(private val context: Context) : Printer {
     private fun firstPairedConnection(): BluetoothConnection? = try {
         BluetoothPrintersConnections.selectFirstPaired()
     } catch (e: SecurityException) {
-        null
+        throw SecurityException("Bluetooth permission denied. Grant Bluetooth permissions in system settings.", e)
     }
 
     companion object {

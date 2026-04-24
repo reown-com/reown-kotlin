@@ -4,18 +4,19 @@
 
     <uses-permission android:name="android.permission.NFC" />
 
-    <!-- Bluetooth permissions for the generic ESC/POS receipt printer driver. -->
+    <!-- Bluetooth permissions for the generic ESC/POS receipt printer driver.
+         We only connect to already-paired devices, never derive location from scans. -->
     <uses-permission
         android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
     <uses-permission
         android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
-    <uses-permission
-        android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
 
     <uses-feature
         android:name="android.hardware.nfc"

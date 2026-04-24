@@ -143,30 +143,26 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
 
     fun printReceipt(displayAmount: String, info: Pos.PaymentInfo?) {
         viewModelScope.launch(Dispatchers.IO) {
-            executePrint(ReceiptData.from(displayAmount, info), isTest = false)
+            executePrint(ReceiptData.from(displayAmount, info), isTest = false, source = "printReceipt")
         }
     }
 
     fun printTestReceipt() {
         viewModelScope.launch(Dispatchers.IO) {
-            executePrint(ReceiptData.sample(), isTest = true)
+            executePrint(ReceiptData.sample(), isTest = true, source = "printTestReceipt")
         }
     }
 
-    private suspend fun executePrint(receipt: ReceiptData, isTest: Boolean) {
-        PosLogStore.info(
-            "Print receipt requested",
-            source = "printReceipt",
-            data = "isTest: $isTest"
-        )
+    private suspend fun executePrint(receipt: ReceiptData, isTest: Boolean, source: String) {
+        PosLogStore.info("Print receipt requested", source = source)
         printerManager.print(receipt).fold(
             onSuccess = {
-                PosLogStore.info("Receipt printed", source = "printReceipt")
+                PosLogStore.info("Receipt printed", source = source)
                 _posEventsFlow.emit(PosEvent.PrintSuccess(isTest))
             },
             onFailure = { error ->
                 val msg = error.message ?: "Failed to print receipt"
-                PosLogStore.error("Print failed: $msg", source = "printReceipt")
+                PosLogStore.error("Print failed: $msg", source = source)
                 _posEventsFlow.emit(PosEvent.PrintError(msg))
             }
         )
