@@ -1,6 +1,7 @@
 package com.walletconnect.sample.pos
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
@@ -9,6 +10,7 @@ import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.navigation.NavHostController
@@ -59,7 +61,22 @@ fun POSSampleHost(
     navController: NavHostController = rememberNavController(),
 ) {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
+    val context = LocalContext.current
     val initError = POSApplication.initError
+
+    LaunchedEffect(Unit) {
+        viewModel.posEventsFlow.collect { event ->
+            when (event) {
+                is PosEvent.PrintSuccess -> Toast.makeText(
+                    context,
+                    if (event.isTest) "Test sent to printer" else "Receipt sent to printer",
+                    Toast.LENGTH_SHORT
+                ).show()
+                is PosEvent.PrintError -> Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                else -> Unit
+            }
+        }
+    }
     val startDestination = if (initError != null) {
         Screen.ErrorScreen.routeWith(ErrorCodes.INIT_FAILED)
     } else {
@@ -177,6 +194,9 @@ fun POSSampleHost(
                             launchSingleTop = true
                         }
                         navController.navigate(Screen.AmountScreen.route)
+                    },
+                    onPrintReceipt = {
+                        viewModel.printReceipt(amount.orEmpty(), viewModel.lastPaymentInfo)
                     },
                 )
             }

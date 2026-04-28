@@ -74,7 +74,7 @@ fun SettingsScreen(
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
     var activeSheet by remember { mutableStateOf(ActiveSheet.CURRENCY) }
-    val isThemeDisabled = selectedVariant != PosVariant.DEFAULT
+    val isThemeDisabled = selectedVariant.defaultTheme != null
 
     ModalBottomSheetLayout(
         sheetState = sheetState,
@@ -210,6 +210,17 @@ fun SettingsScreen(
                     activeSheet = ActiveSheet.API_KEY
                     scope.launch { sheetState.show() }
                 },
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+
+            // Test printer
+            SettingsItem(
+                label = "Test printer",
+                value = "",
+                showCaret = true,
+                onClick = { viewModel.printTestReceipt() },
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
 
