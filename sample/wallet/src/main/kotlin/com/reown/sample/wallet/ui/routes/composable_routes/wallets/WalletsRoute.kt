@@ -3,7 +3,9 @@ package com.reown.sample.wallet.ui.routes.composable_routes.wallets
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
@@ -28,6 +31,9 @@ import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,10 +64,18 @@ fun WalletsRoute(
     navController: NavController,
     connectionsViewModel: ConnectionsViewModel,
 ) {
-    val usdcBalances by connectionsViewModel.usdcBalances.collectAsState()
-    val eurocBalances by connectionsViewModel.eurocBalances.collectAsState()
+    val balances by connectionsViewModel.balances.collectAsState()
     val isLoadingBalances by connectionsViewModel.isLoadingBalances.collectAsState()
-    val allBalances = usdcBalances + eurocBalances
+    var selectedSymbols by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    val symbolsWithIcons = remember(balances) {
+        balances
+            .groupBy { it.symbol }
+            .toSortedMap()
+            .map { (symbol, group) -> symbol to group.firstOrNull { !it.iconUrl.isNullOrBlank() }?.iconUrl }
+    }
+    val filteredBalances = if (selectedSymbols.isEmpty()) balances
+    else balances.filter { it.symbol in selectedSymbols }
 
     val pullRefreshState = rememberPullRefreshState(
         refreshing = isLoadingBalances,
@@ -79,7 +93,7 @@ fun WalletsRoute(
                 .fillMaxSize()
                 .pullRefresh(pullRefreshState)
         ) {
-            if (allBalances.isEmpty() && !isLoadingBalances) {
+            if (balances.isEmpty() && !isLoadingBalances) {
                 EmptyWallets()
             } else {
                 LazyColumn(
@@ -89,7 +103,20 @@ fun WalletsRoute(
                     verticalArrangement = Arrangement.spacedBy(spacing.spacing2)
                 ) {
                     item { Spacer(modifier = Modifier.height(spacing.spacing1)) }
-                    items(allBalances) { balance ->
+                    if (symbolsWithIcons.isNotEmpty()) {
+                        item {
+                            TokenFilterChips(
+                                symbolsWithIcons = symbolsWithIcons,
+                                selectedSymbols = selectedSymbols,
+                                onToggle = { symbol ->
+                                    selectedSymbols = if (symbol in selectedSymbols) selectedSymbols - symbol
+                                    else selectedSymbols + symbol
+                                },
+                                onSelectAll = { selectedSymbols = emptySet() }
+                            )
+                        }
+                    }
+                    items(filteredBalances) { balance ->
                         WalletBalanceItem(balance)
                     }
                     item { Spacer(modifier = Modifier.height(spacing.spacing2)) }
@@ -215,6 +242,85 @@ fun WalletBalanceItem(balance: TokenBalance) {
                     Toast.makeText(context, "$chainName address copied", Toast.LENGTH_SHORT).show()
                 },
             tint = colors.iconDefault
+        )
+    }
+}
+
+@Composable
+private fun TokenFilterChips(
+    symbolsWithIcons: List<Pair<String, String?>>,
+    selectedSymbols: Set<String>,
+    onToggle: (String) -> Unit,
+    onSelectAll: () -> Unit,
+) {
+    val spacing = WCTheme.spacing
+    val isAllSelected = selectedSymbols.isEmpty()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(spacing.spacing2),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        FilterChipItem(
+            label = "All",
+            iconUrl = null,
+            selected = isAllSelected,
+            onClick = onSelectAll
+        )
+        symbolsWithIcons.forEach { (symbol, iconUrl) ->
+            FilterChipItem(
+                label = symbol,
+                iconUrl = iconUrl,
+                selected = selectedSymbols.contains(symbol),
+                onClick = { onToggle(symbol) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun FilterChipItem(
+    label: String,
+    iconUrl: String?,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+
+    Row(
+        modifier = Modifier
+            .clip(borderRadius.shapeXLarge)
+            .background(if (selected) colors.bgAccentPrimary.copy(alpha = 0.2f) else colors.foregroundSecondary)
+            .border(
+                width = 1.dp,
+                color = if (selected) colors.borderAccentPrimary else colors.borderSecondary,
+                shape = borderRadius.shapeXLarge
+            )
+            .clickable { onClick() }
+            .padding(horizontal = spacing.spacing3, vertical = spacing.spacing2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(spacing.spacing1)
+    ) {
+        if (!iconUrl.isNullOrBlank()) {
+            val painter = rememberAsyncImagePainter(model = iconUrl)
+            Image(
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(spacing.spacing4)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Fit
+            )
+        }
+        Text(
+            text = label,
+            style = WCTheme.typography.bodyMdMedium.copy(
+                color = if (selected) colors.textAccentPrimary else colors.textPrimary
+            )
         )
     }
 }
