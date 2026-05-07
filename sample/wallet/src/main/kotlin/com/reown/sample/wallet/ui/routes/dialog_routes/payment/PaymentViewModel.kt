@@ -451,6 +451,7 @@ class PaymentViewModel : ViewModel() {
                         val txHash = PaymentTransactionUtil.sendTransactionWithFreshFees(action.action)
                         Log.d("PaymentViewModel", "Approval tx broadcast: $txHash")
                         PaymentTransactionUtil.waitForTransactionConfirmation(action.action.chainId, txHash)
+                        signatures.add(txHash)
                         _uiState.value = PaymentUiState.Processing(
                             message = "Finalizing your payment...",
                             paymentInfo = storedPaymentInfo
