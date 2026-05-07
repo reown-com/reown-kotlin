@@ -424,10 +424,11 @@ class PaymentViewModel : ViewModel() {
      *
      * Iterates `pendingWalletRpcActions` in order and dispatches each one:
      *  - `eth_sendTransaction` → broadcast via `PaymentTransactionUtil` with fresh
-     *    gas fees, then wait for confirmation. Not added to `signatures`.
+     *    gas fees, wait for confirmation, then append the tx hash to `signatures`.
      *  - `eth_signTypedData_*` / `personal_sign` → signed via `PaymentSigner`
      *    and appended to `signatures`.
-     * Only typed-data signatures are passed to `confirmPayment`.
+     * `signatures` is passed to `confirmPayment` with one entry per required action,
+     * preserving order.
      */
     private suspend fun executePayment() {
         val paymentId = currentPaymentId ?: return
