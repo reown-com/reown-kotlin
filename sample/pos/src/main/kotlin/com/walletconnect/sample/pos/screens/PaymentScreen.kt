@@ -91,6 +91,8 @@ fun PaymentScreen(
                 is PosEvent.PaymentError -> {
                     navigateToErrorScreen(event.error)
                 }
+                is PosEvent.PrintSuccess,
+                is PosEvent.PrintError -> Unit
             }
         }
     }

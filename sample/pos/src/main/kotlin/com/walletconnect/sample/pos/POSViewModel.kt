@@ -18,6 +18,8 @@ import com.walletconnect.sample.pos.model.Currency
 import com.walletconnect.sample.pos.model.PosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
 import com.walletconnect.sample.pos.model.formatAmountWithSymbol
+import com.walletconnect.sample.pos.printer.PrinterManager
+import com.walletconnect.sample.pos.printer.ReceiptData
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -45,6 +47,8 @@ sealed interface PosEvent {
     data object PaymentProcessing : PosEvent
     data class PaymentSuccess(val paymentId: String, val info: Pos.PaymentInfo?) : PosEvent
     data class PaymentError(val error: String) : PosEvent
+    data class PrintSuccess(val isTest: Boolean) : PosEvent
+    data class PrintError(val message: String) : PosEvent
 }
 
 sealed interface TransactionHistoryUiState {
@@ -133,6 +137,35 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         _selectedVariant.value = variant
         prefs.edit().putString(KEY_VARIANT, variant.name).apply()
         variant.defaultTheme?.let { setThemeMode(it) }
+    }
+
+    private val printerManager = PrinterManager(application)
+
+    fun printReceipt(displayAmount: String, info: Pos.PaymentInfo?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            executePrint(ReceiptData.from(displayAmount, info), isTest = false, source = "printReceipt")
+        }
+    }
+
+    fun printTestReceipt() {
+        viewModelScope.launch(Dispatchers.IO) {
+            executePrint(ReceiptData.sample(), isTest = true, source = "printTestReceipt")
+        }
+    }
+
+    private suspend fun executePrint(receipt: ReceiptData, isTest: Boolean, source: String) {
+        PosLogStore.info("Print receipt requested", source = source)
+        printerManager.print(receipt).fold(
+            onSuccess = {
+                PosLogStore.info("Receipt printed", source = source)
+                _posEventsFlow.emit(PosEvent.PrintSuccess(isTest))
+            },
+            onFailure = { error ->
+                val msg = error.message ?: "Failed to print receipt"
+                PosLogStore.error("Print failed: $msg", source = source)
+                _posEventsFlow.emit(PosEvent.PrintError(msg))
+            }
+        )
     }
 
     // Merchant credentials (persisted securely)
