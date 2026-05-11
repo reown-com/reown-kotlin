@@ -543,7 +543,12 @@ internal class RelayJsonRpcInteractor(
         ) {
             serializer.deserialize(clientJsonRpc.method, subscription.decryptedMessage)?.let { params ->
                 _clientSyncJsonRpc.emit(subscription.toWCRequest(clientJsonRpc, params, TransportType.RELAY))
-            } ?: handleError("JsonRpcInteractor: Unknown request params")
+            } ?: handleError(
+                "JsonRpcInteractor: Unknown request params" +
+                    " | method=${clientJsonRpc.method}" +
+                    " | topic=${subscription.topic.value}" +
+                    " | body=${subscription.decryptedMessage}"
+            )
         }
     }
 

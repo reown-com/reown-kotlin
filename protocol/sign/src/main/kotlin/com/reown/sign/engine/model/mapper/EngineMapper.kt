@@ -25,6 +25,7 @@ import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
 import com.reown.sign.common.model.vo.clientsync.common.ProposalRequestsResponses
 import com.reown.sign.common.model.vo.clientsync.common.Requester
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
+import com.reown.sign.common.model.vo.clientsync.session.params.toScopedPropertiesStringMap
 import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.engine.model.EngineDO
@@ -62,7 +63,7 @@ internal fun SignParams.SessionProposeParams.toEngineDO(topic: Topic): EngineDO.
         proposerPublicKey = proposer.publicKey,
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
-        scopedProperties = scopedProperties,
+        scopedProperties = scopedProperties.toScopedPropertiesStringMap(),
         requests = if (requests != null) {
             EngineDO.ProposalRequests(authentication = requests.authentication?.map { it.toEngineDO() })
         } else null
@@ -85,7 +86,7 @@ internal fun SignParams.SessionProposeParams.toVO(topic: Topic, requestId: Long)
         relayProtocol = relays.first().protocol,
         relayData = relays.first().data,
         expiry = if (expiryTimestamp != null) Expiry(expiryTimestamp) else null,
-        scopedProperties = scopedProperties,
+        scopedProperties = scopedProperties.toScopedPropertiesStringMap(),
         requests = ProposalRequests(authentication = requests?.authentication ?: emptyList())
     )
 

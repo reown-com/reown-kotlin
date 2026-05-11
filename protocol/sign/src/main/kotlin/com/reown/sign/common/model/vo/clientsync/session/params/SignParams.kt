@@ -4,10 +4,14 @@ package com.reown.sign.common.model.vo.clientsync.session.params
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
+import org.koin.core.qualifier.named
+import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.model.Namespace
 import com.reown.android.internal.common.model.RelayProtocolOptions
 import com.reown.android.internal.common.model.SessionProposer
 import com.reown.android.internal.common.model.params.CoreSignParams
+import com.reown.android.internal.common.wcKoinApp
 import com.reown.sign.common.model.vo.clientsync.common.PayloadParams
 import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
 import com.reown.sign.common.model.vo.clientsync.common.ProposalRequestsResponses
@@ -16,6 +20,21 @@ import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionEventVO
 import com.reown.sign.common.model.vo.clientsync.session.payload.SessionRequestVO
 import com.reown.utils.DefaultId
+
+/**
+ * `scopedProperties` is declared as Map<String, Any>? to tolerate wallets (e.g. Uniswap Wallet)
+ * that send non-string nested JSON values like `{"eip155:56": {"atomic": {"status": "ready"}}}`.
+ * Downstream storage / VO layers still expect Map<String, String>?, so call this helper to flatten
+ * non-string values to their JSON representation before passing on.
+ */
+@JvmSynthetic
+internal fun Map<String, Any>?.toScopedPropertiesStringMap(): Map<String, String>? =
+    this?.mapValues { (_, v) ->
+        if (v is String) v else runCatching {
+            val moshi = wcKoinApp.koin.get<Moshi.Builder>(named(AndroidCommonDITags.MOSHI)).build()
+            moshi.adapter(Any::class.java).toJson(v)
+        }.getOrElse { v.toString() }
+    }
 
 internal sealed class SignParams : CoreSignParams() {
 
@@ -32,7 +51,7 @@ internal sealed class SignParams : CoreSignParams() {
         @param:Json(name = "sessionProperties")
         val properties: Map<String, String>?,
         @param:Json(name = "scopedProperties")
-        val scopedProperties: Map<String, String>?,
+        val scopedProperties: Map<String, Any>?,
         @param:Json(name = "expiryTimestamp")
         val expiryTimestamp: Long?,
         @param:Json(name = "requests")
@@ -66,7 +85,7 @@ internal sealed class SignParams : CoreSignParams() {
         @param:Json(name = "sessionProperties")
         val properties: Map<String, String>?,
         @param:Json(name = "scopedProperties")
-        val scopedProperties: Map<String, String>?,
+        val scopedProperties: Map<String, Any>?,
         @param:Json(name = "proposalRequestsResponses")
         val proposalRequestsResponses: ProposalRequestsResponses?,
     ) : SignParams()
