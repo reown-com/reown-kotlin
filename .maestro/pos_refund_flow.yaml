@@ -1,0 +1,58 @@
+appId: ${APP_ID}
+name: POS Refund Flow
+tags:
+  - pos
+# Pre-requisites
+#   - POS sample app installed (com.reown.sample.pos.debug)
+#   - Merchant credentials configured in Settings
+#   - At least one SUCCEEDED payment exists for the configured merchant
+#     (run a payment flow first or pre-seed an existing reference ID)
+# Optional env vars
+#   - REFERENCE_ID: substring of a real successful payment's reference id used to find it via search
+---
+- launchApp:
+    permissions:
+      all: allow
+
+- assertVisible: "Activity"
+- tapOn: "Activity"
+
+# Search bar should be visible on the Activity screen
+- extendedWaitUntil:
+    visible:
+      text: "Search by reference ID"
+    timeout: 5000
+
+# Type a partial reference ID to test the search
+- tapOn:
+    text: "Search by reference ID"
+- inputText: "${REFERENCE_ID}"
+
+# Wait for debounced search results
+- waitForAnimationToEnd
+
+# Tap the first transaction in the result list to open the detail sheet
+- tapOn:
+    index: 0
+    text: ".*USD.*"  # Match any amount-formatted row
+
+# Confirm the Refund button is visible for a SUCCEEDED, non-refunded payment
+- extendedWaitUntil:
+    visible:
+      text: "Refund"
+    timeout: 5000
+
+- tapOn: "Refund"
+
+# Confirmation sheet should appear
+- assertVisible: "Refund this payment?"
+- assertVisible: "Confirm refund"
+
+# Confirm the refund
+- tapOn: "Confirm refund"
+
+# Either success path (toast + refunded badge) OR
+# already_refunded path (soft banner toast); both are acceptable outcomes.
+- extendedWaitUntil:
+    visible: "Refunded"
+    timeout: 10000

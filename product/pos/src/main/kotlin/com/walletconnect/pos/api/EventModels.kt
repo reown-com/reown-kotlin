@@ -88,6 +88,9 @@ internal object EventType {
     const val PAYMENT_PROCESSING = "payment_processing"
     const val PAYMENT_COMPLETED = "payment_completed"
     const val PAYMENT_FAILED = "payment_failed"
+    const val REFUND_INITIATED = "refund_initiated"
+    const val REFUND_SUCCEEDED = "refund_succeeded"
+    const val REFUND_FAILED = "refund_failed"
 }
 
 internal object ErrorCategory {

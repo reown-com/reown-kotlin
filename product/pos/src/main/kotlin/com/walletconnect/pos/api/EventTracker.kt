@@ -87,6 +87,25 @@ internal class EventTracker(
         sendEvent(paymentId, EventType.PAYMENT_FAILED, payload)
     }
 
+    fun trackRefundInitiated(paymentId: String) {
+        sendEvent(paymentId, EventType.REFUND_INITIATED, EventPayload())
+    }
+
+    fun trackRefundSucceeded(paymentId: String) {
+        sendEvent(paymentId, EventType.REFUND_SUCCEEDED, EventPayload())
+    }
+
+    fun trackRefundFailed(paymentId: String, errorCode: String) {
+        sendEvent(
+            paymentId,
+            EventType.REFUND_FAILED,
+            EventPayload(
+                errorCategory = ErrorCategory.API,
+                errorCode = errorCode
+            )
+        )
+    }
+
     private fun sendEvent(
         paymentId: String,
         eventType: String,

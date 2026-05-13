@@ -9,6 +9,7 @@ import com.walletconnect.pos.api.ErrorTracker
 import com.walletconnect.pos.api.EventTracker
 import com.walletconnect.pos.api.MtlsConfig
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
+import com.walletconnect.pos.api.mapRefundErrorCode
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import com.walletconnect.pos.api.toTransaction
 import com.walletconnect.pos.api.toTransactionStats
@@ -27,6 +28,7 @@ import okhttp3.logging.HttpLoggingInterceptor
  */
 object PosClient {
     private val lock = Any()
+    private val REFERENCE_ID_PATTERN = Regex("[A-Za-z0-9 /\\-:.,+]+")
 
     @Volatile private var delegate: POSDelegate? = null
     @Volatile private var apiClient: ApiClient? = null
@@ -260,6 +262,95 @@ object PosClient {
             }
             is ApiResult.Error -> {
                 Result.failure(Exception("${result.code}: ${result.message}"))
+            }
+        }
+    }
+
+    /**
+     * Searches payment history by reference ID (substring match).
+     *
+     * Uses the `GET /v1/payments` endpoint introduced in API version 2026-02-18.
+     *
+     * @param referenceId Substring to search for. Must be 3..35 characters, ASCII letters,
+     *                    digits, space, or any of `/-:.,+`.
+     * @param limit Page size (1..200, default 20).
+     * @param cursor Pagination cursor from the previous response, if any.
+     * @param statuses Optional status filter.
+     * @param dateRange Optional date range filter.
+     * @return Result containing matching transactions or error.
+     * @throws IllegalStateException if SDK is not initialized.
+     * @throws IllegalArgumentException if [referenceId] or [limit] is invalid.
+     */
+    @Throws(IllegalStateException::class, IllegalArgumentException::class)
+    suspend fun searchPaymentsByReference(
+        referenceId: String,
+        limit: Int = 20,
+        cursor: String? = null,
+        statuses: List<Pos.TransactionStatus>? = null,
+        dateRange: Pos.DateRange? = null
+    ): Result<Pos.TransactionHistoryResult> {
+        require(referenceId.length in 3..35) { "referenceId must be 3..35 chars, got ${referenceId.length}" }
+        require(REFERENCE_ID_PATTERN.matches(referenceId)) { "referenceId contains unsupported characters" }
+        require(limit in 1..200) { "limit must be between 1 and 200" }
+
+        val client = synchronized(lock) {
+            checkInitialized()
+            apiClient!!
+        }
+
+        val statusFilter = statuses?.map { it.apiValue }
+
+        return when (val result = client.searchPayments(
+            referenceId = referenceId,
+            limit = limit,
+            cursor = cursor,
+            status = statusFilter,
+            startTs = dateRange?.startTime,
+            endTs = dateRange?.endTime
+        )) {
+            is ApiResult.Success -> {
+                val data = result.data
+                Result.success(
+                    Pos.TransactionHistoryResult(
+                        transactions = data.data.map { it.toTransaction() },
+                        hasMore = data.nextCursor != null,
+                        nextCursor = data.nextCursor,
+                        stats = data.stats.toTransactionStats()
+                    )
+                )
+            }
+            is ApiResult.Error -> Result.failure(Exception("${result.code}: ${result.message}"))
+        }
+    }
+
+    /**
+     * Requests a full refund for the given payment.
+     *
+     * Phase 0: marks the payment as refunded on the merchant API; no on-chain execution.
+     * Calling twice with the same paymentId returns [Pos.RefundError.AlreadyRefunded].
+     *
+     * @param paymentId The payment ID to refund (must match `^pay_[A-Za-z0-9]+$`).
+     * @return [Result.success] with [Pos.RefundResult] on success, or [Result.failure] wrapping
+     *         a [Pos.RefundException] whose `error` is the typed [Pos.RefundError].
+     * @throws IllegalStateException if SDK is not initialized.
+     */
+    @Throws(IllegalStateException::class)
+    suspend fun refundPayment(paymentId: String): Result<Pos.RefundResult> {
+        val client = synchronized(lock) {
+            checkInitialized()
+            apiClient!!
+        }
+
+        eventTracker?.trackRefundInitiated(paymentId)
+
+        return when (val result = client.refundPayment(paymentId)) {
+            is ApiResult.Success -> {
+                eventTracker?.trackRefundSucceeded(paymentId)
+                Result.success(Pos.RefundResult(result.data.paymentId))
+            }
+            is ApiResult.Error -> {
+                eventTracker?.trackRefundFailed(paymentId, result.code)
+                Result.failure(Pos.RefundException(mapRefundErrorCode(result.code, result.message)))
             }
         }
     }

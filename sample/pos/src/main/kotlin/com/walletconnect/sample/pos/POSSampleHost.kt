@@ -73,6 +73,21 @@ fun POSSampleHost(
                     Toast.LENGTH_SHORT
                 ).show()
                 is PosEvent.PrintError -> Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                is PosEvent.RefundSuccess -> Toast.makeText(
+                    context,
+                    "Refund recorded",
+                    Toast.LENGTH_SHORT
+                ).show()
+                is PosEvent.RefundAlreadyRefunded -> Toast.makeText(
+                    context,
+                    "Payment was already refunded",
+                    Toast.LENGTH_SHORT
+                ).show()
+                is PosEvent.RefundError -> Toast.makeText(
+                    context,
+                    "Refund failed: ${event.message}",
+                    Toast.LENGTH_LONG
+                ).show()
                 else -> Unit
             }
         }

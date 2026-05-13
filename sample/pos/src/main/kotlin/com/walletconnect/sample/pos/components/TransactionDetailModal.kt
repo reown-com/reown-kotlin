@@ -18,6 +18,8 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.res.painterResource
+import com.walletconnect.sample.pos.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +45,8 @@ private val CloseButtonShape = RoundedCornerShape(WCBorderRadius.radius3)
 @Composable
 internal fun TransactionDetailContent(
     transaction: Pos.Transaction,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onRefund: ((Pos.Transaction) -> Unit)? = null,
 ) {
     val clipboardManager = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
@@ -86,8 +89,8 @@ internal fun TransactionDetailContent(
                 DetailCard("Date", formatFullDate(it))
             }
 
-            // Status
-            DetailCardWithBadge("Status", transaction.status)
+            // Status (shows Refunded when transaction.isRefunded)
+            DetailCardWithBadge("Status", transaction)
 
             // Amount
             transaction.formatFiatAmount()?.let {
@@ -120,6 +123,44 @@ internal fun TransactionDetailContent(
         }
 
         Spacer(Modifier.height(WCTheme.spacing.spacing5))
+
+        val canRefund = onRefund != null &&
+            transaction.status == Pos.TransactionStatus.SUCCEEDED &&
+            !transaction.isRefunded
+        if (canRefund) {
+            RefundActionButton(
+                onClick = { onRefund(transaction) }
+            )
+            Spacer(Modifier.height(WCTheme.spacing.spacing5))
+        }
+    }
+}
+
+@Composable
+private fun RefundActionButton(onClick: () -> Unit) {
+    val shape = RoundedCornerShape(WCBorderRadius.radius4)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(WCTheme.colors.bgAccentPrimary)
+            .clickable(onClick = onClick)
+            .padding(vertical = WCTheme.spacing.spacing4),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_refund),
+            contentDescription = null,
+            tint = WCTheme.colors.textInvert,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(WCTheme.spacing.spacing2))
+        Text(
+            text = "Refund",
+            style = WCTheme.typography.bodyLgMedium,
+            color = WCTheme.colors.textInvert
+        )
     }
 }
 
@@ -147,7 +188,7 @@ private fun DetailCard(label: String, value: String) {
 }
 
 @Composable
-private fun DetailCardWithBadge(label: String, status: Pos.TransactionStatus) {
+private fun DetailCardWithBadge(label: String, transaction: Pos.Transaction) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -161,7 +202,7 @@ private fun DetailCardWithBadge(label: String, status: Pos.TransactionStatus) {
             color = WCTheme.colors.textSecondary,
             modifier = Modifier.weight(1f)
         )
-        StatusBadge(status = status)
+        TransactionBadge(transaction = transaction)
     }
 }
 

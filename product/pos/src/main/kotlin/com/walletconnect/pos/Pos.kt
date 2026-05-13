@@ -67,6 +67,11 @@ object Pos {
 
     /**
      * Represents a single transaction/payment record from history.
+     *
+     * Refund fields (`isRefunded`, `refundedAt`) are populated optimistically by the host app
+     * after a successful refund request. Once the backend surfaces a "refunded" substatus on
+     * the payment object the mapper will fill them from the wire — the field shape is
+     * forward-compatible.
      */
     data class Transaction(
         val paymentId: String,
@@ -83,7 +88,9 @@ object Pos {
         val chainId: String?,
         val walletName: String,
         val createdAt: String?,
-        val confirmedAt: String?
+        val confirmedAt: String?,
+        val isRefunded: Boolean = false,
+        val refundedAt: String? = null,
     ) {
         /**
          * Formats the fiat amount for display (e.g., "$10.00 USD").
@@ -138,6 +145,32 @@ object Pos {
         val totalCustomers: Int,
         val totalRevenue: TotalRevenue?
     )
+
+    /**
+     * Result of a successful refund request.
+     */
+    data class RefundResult(val paymentId: String)
+
+    /**
+     * Typed refund failures. Wrapped in [RefundException] inside the [Result.failure]
+     * returned by [com.walletconnect.pos.PosClient.refundPayment].
+     */
+    sealed interface RefundError {
+        val message: String
+
+        data class PaymentNotFound(override val message: String) : RefundError
+        data class AlreadyRefunded(override val message: String) : RefundError
+        data class PaymentNotSucceeded(override val message: String) : RefundError
+        data class InvalidParams(override val message: String) : RefundError
+        data class Unauthorized(override val message: String) : RefundError
+        data class Network(override val message: String) : RefundError
+        data class Unknown(val code: String, override val message: String) : RefundError
+    }
+
+    /**
+     * Exception wrapper surfacing a [RefundError] inside [Result.failure].
+     */
+    class RefundException(val error: RefundError) : Exception(error.message)
 
     /**
      * Total revenue information.

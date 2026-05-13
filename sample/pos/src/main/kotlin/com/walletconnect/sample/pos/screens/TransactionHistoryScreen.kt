@@ -56,12 +56,16 @@ import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 import com.walletconnect.sample.pos.components.BottomSheetHeader
 import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.PosHeader
+import com.walletconnect.sample.pos.components.RefundConfirmSheetContent
+import com.walletconnect.sample.pos.components.SearchBar
 import com.walletconnect.sample.pos.components.SelectableOptionItem
 import com.walletconnect.sample.pos.components.TransactionCard
 import com.walletconnect.sample.pos.components.TransactionFilter
+import com.walletconnect.sample.pos.RefundUiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private enum class ActivitySheet { STATUS, DATE_RANGE, TRANSACTION_DETAIL }
+private enum class ActivitySheet { STATUS, DATE_RANGE, TRANSACTION_DETAIL, REFUND_CONFIRM }
 
 private val dateRangeOptions = listOf("All Time", "Today", "7 Days", "This Week", "This Month")
 
@@ -78,6 +82,8 @@ fun TransactionHistoryScreen(
     val uiState by viewModel.transactionHistoryState.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
     val selectedDateRangeOptionIndex by viewModel.selectedDateRangeOptionIndex.collectAsState()
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val refundUiState by viewModel.refundUiState.collectAsState()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
@@ -87,6 +93,31 @@ fun TransactionHistoryScreen(
         initialValue = ModalBottomSheetValue.Hidden,
         skipHalfExpanded = true
     )
+
+    // Debounced reload when the search query changes
+    LaunchedEffect(searchQuery) {
+        val q = searchQuery.trim()
+        if (q.isEmpty() || q.length in 3..35) {
+            delay(300)
+            viewModel.refreshTransactionHistory()
+        }
+    }
+
+    // Drive the bottom sheet from the refund state machine.
+    LaunchedEffect(refundUiState) {
+        when (refundUiState) {
+            is RefundUiState.Confirming -> {
+                activeSheet = ActivitySheet.REFUND_CONFIRM
+                sheetState.show()
+            }
+            RefundUiState.Idle -> {
+                if (activeSheet == ActivitySheet.REFUND_CONFIRM) {
+                    sheetState.hide()
+                }
+            }
+            else -> Unit // Submitting/Error keep the sheet open
+        }
+    }
 
     // Load more when reaching end of list
     val shouldLoadMore = remember {
@@ -131,7 +162,33 @@ fun TransactionHistoryScreen(
                     if (selectedTransaction != null) {
                         com.walletconnect.sample.pos.components.TransactionDetailContent(
                             transaction = selectedTransaction!!,
-                            onClose = { scope.launch { sheetState.hide() } }
+                            onClose = { scope.launch { sheetState.hide() } },
+                            onRefund = { tx ->
+                                viewModel.startRefund(tx)
+                            }
+                        )
+                    } else {
+                        Spacer(Modifier.height(1.dp))
+                    }
+                }
+
+                ActivitySheet.REFUND_CONFIRM -> {
+                    val refundState = refundUiState
+                    val tx = when (refundState) {
+                        is RefundUiState.Confirming -> refundState.transaction
+                        is RefundUiState.Submitting -> refundState.transaction
+                        is RefundUiState.Error -> refundState.transaction
+                        RefundUiState.Idle -> selectedTransaction
+                    }
+                    if (tx != null) {
+                        RefundConfirmSheetContent(
+                            transaction = tx,
+                            state = refundState,
+                            onConfirm = { viewModel.confirmRefund() },
+                            onCancel = {
+                                viewModel.cancelRefund()
+                                scope.launch { sheetState.hide() }
+                            }
                         )
                     } else {
                         Spacer(Modifier.height(1.dp))
@@ -151,35 +208,58 @@ fun TransactionHistoryScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
-            // Filter buttons
-            Row(
-                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5),
-                horizontalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
-            ) {
-                FilterButton(
-                    label = if (selectedFilter == TransactionFilter.ALL) "Status" else selectedFilter.label,
-                    onClick = {
-                        activeSheet = ActivitySheet.STATUS
-                        scope.launch { sheetState.show() }
-                    }
-                )
-                FilterButton(
-                    label = if (selectedDateRangeOptionIndex == 0) "Date range" else dateRangeOptions[selectedDateRangeOptionIndex],
-                    onClick = {
-                        activeSheet = ActivitySheet.DATE_RANGE
-                        scope.launch { sheetState.show() }
-                    }
+            // Search bar
+            SearchBar(
+                value = searchQuery,
+                onValueChange = { viewModel.setSearchQuery(it) },
+                placeholder = "Search by reference ID",
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+            )
+
+            val isSearching = searchQuery.trim().isNotEmpty()
+
+            if (isSearching && searchQuery.trim().length < 3) {
+                Spacer(Modifier.height(WCTheme.spacing.spacing2))
+                Text(
+                    text = "Type at least 3 characters",
+                    style = WCTheme.typography.bodySmRegular,
+                    color = WCTheme.colors.textSecondary,
+                    modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
                 )
             }
 
-            // Total amount summary
+            if (!isSearching) {
+                Spacer(Modifier.height(WCTheme.spacing.spacing2))
+                // Filter buttons
+                Row(
+                    modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5),
+                    horizontalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
+                ) {
+                    FilterButton(
+                        label = if (selectedFilter == TransactionFilter.ALL) "Status" else selectedFilter.label,
+                        onClick = {
+                            activeSheet = ActivitySheet.STATUS
+                            scope.launch { sheetState.show() }
+                        }
+                    )
+                    FilterButton(
+                        label = if (selectedDateRangeOptionIndex == 0) "Date range" else dateRangeOptions[selectedDateRangeOptionIndex],
+                        onClick = {
+                            activeSheet = ActivitySheet.DATE_RANGE
+                            scope.launch { sheetState.show() }
+                        }
+                    )
+                }
+            }
+
+            // Total amount summary (hidden while searching)
             val currentState = uiState
             val stats = when (currentState) {
                 is TransactionHistoryUiState.Success -> currentState.stats
                 is TransactionHistoryUiState.LoadingMore -> currentState.stats
                 else -> null
             }
-            if (stats != null) {
+            if (!isSearching && stats != null) {
                 TotalAmountSummary(stats = stats)
             } else {
                 Spacer(Modifier.height(WCTheme.spacing.spacing3))

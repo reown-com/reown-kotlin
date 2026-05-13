@@ -49,6 +49,16 @@ sealed interface PosEvent {
     data class PaymentError(val error: String) : PosEvent
     data class PrintSuccess(val isTest: Boolean) : PosEvent
     data class PrintError(val message: String) : PosEvent
+    data class RefundSuccess(val paymentId: String) : PosEvent
+    data class RefundAlreadyRefunded(val paymentId: String) : PosEvent
+    data class RefundError(val message: String) : PosEvent
+}
+
+sealed interface RefundUiState {
+    data object Idle : RefundUiState
+    data class Confirming(val transaction: Pos.Transaction) : RefundUiState
+    data class Submitting(val transaction: Pos.Transaction) : RefundUiState
+    data class Error(val transaction: Pos.Transaction, val refundError: Pos.RefundError) : RefundUiState
 }
 
 sealed interface TransactionHistoryUiState {
@@ -285,6 +295,86 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     private var currentStats: Pos.TransactionStats? = null
     private var transactionLoadingJob: Job? = null
 
+    // Search state — when non-blank, history calls go through PosClient.searchPaymentsByReference.
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
+
+    fun setSearchQuery(value: String) {
+        _searchQuery.value = value
+    }
+
+    // Refund flow state
+    private val _refundUiState = MutableStateFlow<RefundUiState>(RefundUiState.Idle)
+    val refundUiState = _refundUiState.asStateFlow()
+
+    fun startRefund(transaction: Pos.Transaction) {
+        _refundUiState.value = RefundUiState.Confirming(transaction)
+    }
+
+    fun cancelRefund() {
+        _refundUiState.value = RefundUiState.Idle
+    }
+
+    fun confirmRefund() {
+        val confirming = _refundUiState.value as? RefundUiState.Confirming ?: return
+        val transaction = confirming.transaction
+        _refundUiState.value = RefundUiState.Submitting(transaction)
+
+        viewModelScope.launch {
+            PosLogStore.info(
+                "Refund requested",
+                source = "confirmRefund",
+                data = "paymentId: ${transaction.paymentId}"
+            )
+            val result = PosClient.refundPayment(transaction.paymentId)
+            result.fold(
+                onSuccess = {
+                    markTransactionRefunded(transaction.paymentId)
+                    _refundUiState.value = RefundUiState.Idle
+                    _posEventsFlow.emit(PosEvent.RefundSuccess(transaction.paymentId))
+                    PosLogStore.info("Refund recorded", source = "confirmRefund", data = "paymentId: ${transaction.paymentId}")
+                },
+                onFailure = { throwable ->
+                    val refundError = (throwable as? Pos.RefundException)?.error
+                        ?: Pos.RefundError.Unknown("unknown", throwable.message ?: "Refund failed")
+                    if (refundError is Pos.RefundError.AlreadyRefunded) {
+                        markTransactionRefunded(transaction.paymentId)
+                        _refundUiState.value = RefundUiState.Idle
+                        _posEventsFlow.emit(PosEvent.RefundAlreadyRefunded(transaction.paymentId))
+                    } else {
+                        _refundUiState.value = RefundUiState.Error(transaction, refundError)
+                        _posEventsFlow.emit(PosEvent.RefundError(refundError.message))
+                    }
+                    PosLogStore.error(
+                        "Refund failed",
+                        source = "confirmRefund",
+                        data = "paymentId: ${transaction.paymentId}\nerror: $refundError"
+                    )
+                }
+            )
+        }
+    }
+
+    /**
+     * Marks a transaction as refunded in the local cache. Optimistic UI — the server
+     * will surface this as a substatus once that work ships.
+     */
+    private fun markTransactionRefunded(paymentId: String) {
+        val updated = loadedTransactions.mapIndexed { index, tx ->
+            if (tx.paymentId == paymentId) tx.copy(isRefunded = true) else tx
+        }
+        loadedTransactions.clear()
+        loadedTransactions.addAll(updated)
+
+        when (val state = _transactionHistoryState.value) {
+            is TransactionHistoryUiState.Success ->
+                _transactionHistoryState.value = state.copy(transactions = updated)
+            is TransactionHistoryUiState.LoadingMore ->
+                _transactionHistoryState.value = state.copy(transactions = updated)
+            else -> Unit
+        }
+    }
+
     /**
      * Computes the DateRange from the selected option index.
      * Index mapping: 0=All Time, 1=Today, 2=Last 7 Days, 3=This Week, 4=This Month
@@ -475,12 +565,21 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
 
-            val result = PosClient.getTransactionHistory(
-                limit = 20,
-                cursor = currentCursor,
-                statuses = _selectedFilter.value.statuses,
-                dateRange = getDateRangeForOptionIndex(_selectedDateRangeOptionIndex.value)
-            )
+            val query = _searchQuery.value.trim()
+            val result = if (query.length in 3..35) {
+                PosClient.searchPaymentsByReference(
+                    referenceId = query,
+                    limit = 20,
+                    cursor = currentCursor,
+                )
+            } else {
+                PosClient.getTransactionHistory(
+                    limit = 20,
+                    cursor = currentCursor,
+                    statuses = _selectedFilter.value.statuses,
+                    dateRange = getDateRangeForOptionIndex(_selectedDateRangeOptionIndex.value)
+                )
+            }
 
             result.fold(
                 onSuccess = { historyResult ->

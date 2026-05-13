@@ -519,6 +519,73 @@ class PosClientTest {
     }
 
     @Test
+    fun `searchPaymentsByReference - throws when not initialized`() {
+        assertThrows(IllegalStateException::class.java) {
+            runBlocking { PosClient.searchPaymentsByReference("REF-123") }
+        }
+    }
+
+    @Test
+    fun `searchPaymentsByReference - throws on too-short referenceId`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { PosClient.searchPaymentsByReference("AB") }
+        }
+    }
+
+    @Test
+    fun `searchPaymentsByReference - throws on too-long referenceId`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
+        val tooLong = "A".repeat(36)
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { PosClient.searchPaymentsByReference(tooLong) }
+        }
+    }
+
+    @Test
+    fun `searchPaymentsByReference - throws on invalid characters`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { PosClient.searchPaymentsByReference("ORDER?123") }
+        }
+    }
+
+    @Test
+    fun `searchPaymentsByReference - throws on invalid limit`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { PosClient.searchPaymentsByReference("ORDER-123", limit = 0) }
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { PosClient.searchPaymentsByReference("ORDER-123", limit = 201) }
+        }
+    }
+
+    @Test
+    fun `searchPaymentsByReference - accepts spec-allowed characters`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
+        // No exception thrown by validation; network call may fail but that's a different result path.
+        runBlocking {
+            PosClient.searchPaymentsByReference("ORDER-123/2026:abc.+,")
+        }
+    }
+
+    @Test
+    fun `refundPayment - throws when not initialized`() {
+        assertThrows(IllegalStateException::class.java) {
+            runBlocking { PosClient.refundPayment("pay_abc123") }
+        }
+    }
+
+    @Test
+    fun `RefundException carries typed error`() {
+        val err = Pos.RefundError.AlreadyRefunded("dup")
+        val ex = Pos.RefundException(err)
+        assertEquals(err, ex.error)
+        assertEquals("dup", ex.message)
+    }
+
+    @Test
     fun `formatTokenAmount - uses exact token decimals`() {
         val tx = Pos.Transaction(
             paymentId = "pay_1",

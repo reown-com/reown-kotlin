@@ -5,6 +5,7 @@ import com.walletconnect.pos.api.FailureCodes
 import com.walletconnect.pos.api.PaymentStatus
 import com.walletconnect.pos.api.mapCreatePaymentError
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
+import com.walletconnect.pos.api.mapRefundErrorCode
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -248,5 +249,76 @@ class MappingTest {
     @Test
     fun `FailureCodes constants have correct values`() {
         assertEquals("declined_user", FailureCodes.DECLINED_USER)
+    }
+
+    @Test
+    fun `mapRefundErrorCode - not_found returns PaymentNotFound`() {
+        val result = mapRefundErrorCode(ErrorCodes.NOT_FOUND, "Not Found")
+        assertTrue(result is Pos.RefundError.PaymentNotFound)
+        assertEquals("Not Found", result.message)
+    }
+
+    @Test
+    fun `mapRefundErrorCode - payment_not_found returns PaymentNotFound`() {
+        val result = mapRefundErrorCode(ErrorCodes.PAYMENT_NOT_FOUND, "Payment not found")
+        assertTrue(result is Pos.RefundError.PaymentNotFound)
+    }
+
+    @Test
+    fun `mapRefundErrorCode - already_refunded returns AlreadyRefunded`() {
+        val result = mapRefundErrorCode(ErrorCodes.ALREADY_REFUNDED, "Payment is already refunded")
+        assertTrue(result is Pos.RefundError.AlreadyRefunded)
+        assertEquals("Payment is already refunded", result.message)
+    }
+
+    @Test
+    fun `mapRefundErrorCode - payment_not_succeeded returns PaymentNotSucceeded`() {
+        val result = mapRefundErrorCode(ErrorCodes.PAYMENT_NOT_SUCCEEDED, "Not refundable")
+        assertTrue(result is Pos.RefundError.PaymentNotSucceeded)
+    }
+
+    @Test
+    fun `mapRefundErrorCode - params_validation returns InvalidParams`() {
+        val result = mapRefundErrorCode(ErrorCodes.PARAMS_VALIDATION, "Validation failed")
+        assertTrue(result is Pos.RefundError.InvalidParams)
+    }
+
+    @Test
+    fun `mapRefundErrorCode - invalid_params returns InvalidParams`() {
+        val result = mapRefundErrorCode(ErrorCodes.INVALID_PARAMS, "Bad input")
+        assertTrue(result is Pos.RefundError.InvalidParams)
+    }
+
+    @Test
+    fun `mapRefundErrorCode - auth codes return Unauthorized`() {
+        assertTrue(mapRefundErrorCode(ErrorCodes.MISSING_API_KEY, "x") is Pos.RefundError.Unauthorized)
+        assertTrue(mapRefundErrorCode(ErrorCodes.INVALID_API_KEY, "x") is Pos.RefundError.Unauthorized)
+        assertTrue(mapRefundErrorCode(ErrorCodes.MISSING_MERCHANT_ID, "x") is Pos.RefundError.Unauthorized)
+    }
+
+    @Test
+    fun `mapRefundErrorCode - NETWORK_ERROR returns Network`() {
+        val result = mapRefundErrorCode(ErrorCodes.NETWORK_ERROR, "Timed out")
+        assertTrue(result is Pos.RefundError.Network)
+        assertEquals("Timed out", result.message)
+    }
+
+    @Test
+    fun `mapRefundErrorCode - unknown code returns Unknown with original code`() {
+        val result = mapRefundErrorCode("bad_gateway", "Bad Gateway")
+        assertTrue(result is Pos.RefundError.Unknown)
+        val unknown = result as Pos.RefundError.Unknown
+        assertEquals("bad_gateway", unknown.code)
+        assertEquals("Bad Gateway", unknown.message)
+    }
+
+    @Test
+    fun `Refund ErrorCodes constants have correct values`() {
+        assertEquals("not_found", ErrorCodes.NOT_FOUND)
+        assertEquals("already_refunded", ErrorCodes.ALREADY_REFUNDED)
+        assertEquals("payment_not_succeeded", ErrorCodes.PAYMENT_NOT_SUCCEEDED)
+        assertEquals("missing_api_key", ErrorCodes.MISSING_API_KEY)
+        assertEquals("invalid_api_key", ErrorCodes.INVALID_API_KEY)
+        assertEquals("missing_merchant_id", ErrorCodes.MISSING_MERCHANT_ID)
     }
 }

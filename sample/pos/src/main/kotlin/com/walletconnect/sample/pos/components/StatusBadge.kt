@@ -30,6 +30,30 @@ fun StatusBadge(status: Pos.TransactionStatus, modifier: Modifier = Modifier) {
             Triple("Unknown", WCTheme.colors.foregroundTertiary, WCTheme.colors.textPrimary)
     }
 
+    BadgePill(label = label, bgColor = bgColor, textColor = textColor, modifier = modifier)
+}
+
+@Composable
+fun TransactionBadge(transaction: Pos.Transaction, modifier: Modifier = Modifier) {
+    if (transaction.isRefunded) {
+        BadgePill(
+            label = "Refunded",
+            bgColor = WCTheme.colors.foregroundSecondary,
+            textColor = WCTheme.colors.textSecondary,
+            modifier = modifier
+        )
+    } else {
+        StatusBadge(status = transaction.status, modifier = modifier)
+    }
+}
+
+@Composable
+private fun BadgePill(
+    label: String,
+    bgColor: Color,
+    textColor: Color,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
             .background(bgColor, BadgeShape)

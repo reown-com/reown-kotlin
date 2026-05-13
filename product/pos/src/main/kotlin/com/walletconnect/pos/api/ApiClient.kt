@@ -33,21 +33,33 @@ internal class ApiClient(
     }
 
     private val errorAdapter by lazy { moshi.adapter(ApiErrorWrapper::class.java) }
+    private val flatErrorAdapter by lazy { moshi.adapter(ApiErrorFlat::class.java) }
 
-    private val payApi: PayApi by lazy {
-        val httpClient = baseHttpClient.newBuilder()
+    private val sharedHttpClient: OkHttpClient by lazy {
+        baseHttpClient.newBuilder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(createHeadersInterceptor())
             .build()
+    }
 
+    private val payApi: PayApi by lazy {
         Retrofit.Builder()
             .baseUrl(baseUrl.ensureTrailingSlash())
-            .client(httpClient)
+            .client(sharedHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(PayApi::class.java)
+    }
+
+    private val merchantApi: MerchantApi by lazy {
+        Retrofit.Builder()
+            .baseUrl(BuildConfig.MERCHANT_API_BASE_URL.ensureTrailingSlash())
+            .client(sharedHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(MerchantApi::class.java)
     }
 
     // Active polling state for pause/resume
@@ -249,25 +261,31 @@ internal class ApiClient(
 
     private fun <T> parseErrorResponse(response: Response<T>): ApiErrorDetails {
         val errorBody = response.errorBody()?.string()
-        return if (errorBody != null) {
-            try {
-                errorAdapter.fromJson(errorBody)?.error ?: ApiErrorDetails(
-                    code = "HTTP_${response.code()}",
-                    message = response.message()
-                )
-            } catch (e: Exception) {
-                errorTracker.trackError(PulseErrorType.PARSE_ERROR, e.message ?: "Failed to parse error response", "parseErrorResponse")
-                ApiErrorDetails(
-                    code = "HTTP_${response.code()}",
-                    message = response.message()
-                )
-            }
-        } else {
-            ApiErrorDetails(
+        if (errorBody.isNullOrBlank()) {
+            return ApiErrorDetails(
                 code = "HTTP_${response.code()}",
                 message = response.message()
             )
         }
+        // Wrapped shape: { "status": "error", "error": { "code": "...", "message": "..." } }
+        runCatching { errorAdapter.fromJson(errorBody)?.error }
+            .getOrNull()
+            ?.let { return it }
+        // Flat shape: { "code": "...", "message": "..." } — used by /v1/payments and /v1/refunds.
+        runCatching { flatErrorAdapter.fromJson(errorBody) }
+            .getOrNull()
+            ?.takeIf { !it.code.isNullOrBlank() }
+            ?.let {
+                return ApiErrorDetails(
+                    code = it.code!!,
+                    message = it.message ?: response.message()
+                )
+            }
+        errorTracker.trackError(PulseErrorType.PARSE_ERROR, "Unrecognized error body", "parseErrorResponse")
+        return ApiErrorDetails(
+            code = "HTTP_${response.code()}",
+            message = response.message()
+        )
     }
 
     private fun isSdkError(code: String): Boolean {
@@ -310,6 +328,74 @@ internal class ApiClient(
             ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
         } catch (e: Exception) {
             errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "getTransactionHistory")
+            ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
+        }
+    }
+
+    suspend fun searchPayments(
+        referenceId: String,
+        limit: Int = 20,
+        cursor: String? = null,
+        status: List<String>? = null,
+        startTs: Instant? = null,
+        endTs: Instant? = null
+    ): ApiResult<TransactionHistoryResponse> {
+        return try {
+            val response = merchantApi.searchPayments(
+                referenceId = referenceId,
+                limit = limit,
+                cursor = cursor,
+                status = status,
+                sortBy = "date",
+                sortDir = "desc",
+                startTs = startTs?.toIso8601(),
+                endTs = endTs?.toIso8601()
+            )
+
+            if (response.isSuccessful) {
+                val data = response.body()
+                if (data == null) {
+                    ApiResult.Error(ErrorCodes.PARSE_ERROR, "Empty response body")
+                } else {
+                    ApiResult.Success(data)
+                }
+            } else {
+                val error = parseErrorResponse(response)
+                ApiResult.Error(error.code, error.message)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "searchPayments")
+            ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
+        } catch (e: Exception) {
+            errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "searchPayments")
+            ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
+        }
+    }
+
+    suspend fun refundPayment(paymentId: String): ApiResult<RefundResponse> {
+        return try {
+            val response = merchantApi.refundPayment(RefundRequest(paymentId))
+
+            if (response.isSuccessful) {
+                val data = response.body()
+                if (data == null) {
+                    ApiResult.Error(ErrorCodes.PARSE_ERROR, "Empty response body")
+                } else {
+                    ApiResult.Success(data)
+                }
+            } else {
+                val error = parseErrorResponse(response)
+                ApiResult.Error(error.code, error.message)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "refundPayment")
+            ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
+        } catch (e: Exception) {
+            errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "refundPayment")
             ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
         }
     }

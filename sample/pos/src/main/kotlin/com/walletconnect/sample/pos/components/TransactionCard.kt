@@ -61,8 +61,8 @@ fun TransactionCard(
 
         Spacer(Modifier.width(WCTheme.spacing.spacing4))
 
-        // Status badge
-        StatusBadge(status = transaction.status)
+        // Status badge (or Refunded badge when isRefunded)
+        TransactionBadge(transaction = transaction)
     }
 }
 

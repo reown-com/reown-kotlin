@@ -3,8 +3,12 @@ package com.walletconnect.pos
 import com.walletconnect.pos.api.ApiResult
 import com.walletconnect.pos.api.ErrorCodes
 import com.walletconnect.pos.api.GetPaymentStatusResponse
+import com.walletconnect.pos.api.MerchantApi
 import com.walletconnect.pos.api.PayApi
 import com.walletconnect.pos.api.PaymentStatus
+import com.walletconnect.pos.api.RefundRequest
+import com.walletconnect.pos.api.RefundResponse
+import com.walletconnect.pos.api.TransactionHistoryResponse
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -222,6 +226,52 @@ class ApiClientTest {
         assertEquals("params_validation", ErrorCodes.PARAMS_VALIDATION)
         assertEquals("NETWORK_ERROR", ErrorCodes.NETWORK_ERROR)
         assertEquals("PARSE_ERROR", ErrorCodes.PARSE_ERROR)
+    }
+
+    @Test
+    fun `searchPayments - returns success with empty data`() = runTest {
+        val mockApi = mockk<MerchantApi>()
+        val expected = TransactionHistoryResponse(data = emptyList(), stats = null, nextCursor = null)
+        coEvery {
+            mockApi.searchPayments(
+                referenceId = "ORDER-1",
+                limit = any(),
+                cursor = any(),
+                status = any(),
+                sortBy = any(),
+                sortDir = any(),
+                startTs = any(),
+                endTs = any()
+            )
+        } returns Response.success(expected)
+
+        val response = mockApi.searchPayments("ORDER-1")
+        assertTrue(response.isSuccessful)
+        assertEquals(0, response.body()?.data?.size)
+    }
+
+    @Test
+    fun `refundPayment - returns success with paymentId`() = runTest {
+        val mockApi = mockk<MerchantApi>()
+        val expected = RefundResponse(paymentId = "pay_ABC123")
+        coEvery { mockApi.refundPayment(RefundRequest("pay_ABC123")) } returns Response.success(expected)
+
+        val response = mockApi.refundPayment(RefundRequest("pay_ABC123"))
+        assertTrue(response.isSuccessful)
+        assertEquals("pay_ABC123", response.body()?.paymentId)
+    }
+
+    @Test
+    fun `refundPayment - returns 409 already_refunded error body`() = runTest {
+        val mockApi = mockk<MerchantApi>()
+        val errorBody = """{"code":"already_refunded","message":"Payment is already refunded"}"""
+            .toResponseBody("application/json".toMediaType())
+        coEvery { mockApi.refundPayment(RefundRequest("pay_ABC123")) } returns Response.error(409, errorBody)
+
+        val response = mockApi.refundPayment(RefundRequest("pay_ABC123"))
+        assertEquals(409, response.code())
+        val body = response.errorBody()?.string()
+        assertTrue(body?.contains("already_refunded") == true)
     }
 
     private suspend fun callGetPaymentStatus(

@@ -69,6 +69,13 @@ internal data class ApiErrorDetails(
     @param:Json(name = "message") val message: String
 )
 
+// Flat error shape used by /v1/payments and /v1/refunds (2026-02-18).
+@JsonClass(generateAdapter = true)
+internal data class ApiErrorFlat(
+    @param:Json(name = "code") val code: String?,
+    @param:Json(name = "message") val message: String?
+)
+
 internal sealed class ApiResult<out T> {
     data class Success<T>(val data: T) : ApiResult<T>()
     data class Error(val code: String, val message: String) : ApiResult<Nothing>()
@@ -89,6 +96,16 @@ internal object ErrorCodes {
     const val PAYMENT_EXPIRED = "payment_expired"
     const val INVALID_PARAMS = "invalid_params"
     const val PARAMS_VALIDATION = "params_validation"
+
+    // Refund-specific codes from POST /v1/refunds (2026-02-18).
+    const val NOT_FOUND = "not_found"
+    const val ALREADY_REFUNDED = "already_refunded"
+    const val PAYMENT_NOT_SUCCEEDED = "payment_not_succeeded"
+
+    // Auth family (shared by partner API surfaces).
+    const val MISSING_API_KEY = "missing_api_key"
+    const val INVALID_API_KEY = "invalid_api_key"
+    const val MISSING_MERCHANT_ID = "missing_merchant_id"
 
     // Internal sentinels — generated client-side, never received from the API.
     const val NETWORK_ERROR = "NETWORK_ERROR"
@@ -164,4 +181,16 @@ internal data class TransactionStatsDto(
 internal data class TotalRevenueDto(
     @param:Json(name = "amount") val amount: Double,
     @param:Json(name = "currency") val currency: String
+)
+
+// Refunds
+
+@JsonClass(generateAdapter = true)
+internal data class RefundRequest(
+    @param:Json(name = "paymentId") val paymentId: String
+)
+
+@JsonClass(generateAdapter = true)
+internal data class RefundResponse(
+    @param:Json(name = "paymentId") val paymentId: String
 )

@@ -32,3 +32,25 @@ internal interface PayApi {
         @Query("endTs") endTs: String? = null
     ): Response<TransactionHistoryResponse>
 }
+
+/**
+ * Merchant data API endpoints, hosted at `api.merchant.pay.walletconnect.com`.
+ * Distinct from [PayApi] which targets `api.pay.walletconnect.com`.
+ */
+internal interface MerchantApi {
+
+    @GET("v1/payments")
+    suspend fun searchPayments(
+        @Query("referenceId") referenceId: String,
+        @Query("limit") limit: Int? = null,
+        @Query("cursor") cursor: String? = null,
+        @Query("status") status: List<String>? = null,
+        @Query("sortBy") sortBy: String? = null,
+        @Query("sortDir") sortDir: String? = null,
+        @Query("startTs") startTs: String? = null,
+        @Query("endTs") endTs: String? = null
+    ): Response<TransactionHistoryResponse>
+
+    @POST("v1/refunds")
+    suspend fun refundPayment(@Body request: RefundRequest): Response<RefundResponse>
+}
