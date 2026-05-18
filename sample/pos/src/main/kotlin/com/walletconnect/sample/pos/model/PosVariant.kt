@@ -116,6 +116,16 @@ enum class PosVariant(
         textInvertOverride = null,
         successTextColor = Color.White,
         defaultTheme = ThemeMode.DARK
+    ),
+    XMONEY(
+        displayName = "xMoney",
+        partnerLogoRes = R.drawable.ic_xmoney_logo,
+        partnerLogoWidthDp = 91,
+        partnerLogoHeightDp = 28,
+        accentColor = null,
+        textInvertOverride = null,
+        successTextColor = Color.White,
+        defaultTheme = ThemeMode.DARK
     )
 }
 
