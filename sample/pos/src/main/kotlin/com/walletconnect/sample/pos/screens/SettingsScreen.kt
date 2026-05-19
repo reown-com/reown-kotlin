@@ -48,7 +48,6 @@ import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.PinFlowState
 import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.components.BottomSheetHeader
-import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.EditSettingBottomSheet
 import com.walletconnect.sample.pos.components.PinDialog
 import com.walletconnect.sample.pos.components.PosHeader
@@ -271,12 +270,6 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
             }
-
-            Spacer(Modifier.height(WCTheme.spacing.spacing3))
-
-            CloseButton(onClick = onClose)
-
-            Spacer(Modifier.height(WCTheme.spacing.spacing5))
         }
     }
 
