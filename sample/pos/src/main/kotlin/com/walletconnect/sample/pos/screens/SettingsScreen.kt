@@ -151,6 +151,13 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing3))
 
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             // Theme setting (disabled when a wallet theme variant is active)
             SettingsItem(
                 label = "Theme",
@@ -263,8 +270,9 @@ fun SettingsScreen(
                 onClick = onNavigateToLogs,
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
+            }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(WCTheme.spacing.spacing3))
 
             CloseButton(onClick = onClose)
 
