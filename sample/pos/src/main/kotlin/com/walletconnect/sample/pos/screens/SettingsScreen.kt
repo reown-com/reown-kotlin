@@ -226,6 +226,8 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
 
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+
             // Test printer
             SettingsItem(
                 label = "Test printer",
@@ -234,10 +236,6 @@ fun SettingsScreen(
                 onClick = { viewModel.printTestReceipt() },
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
-
-            Spacer(Modifier.height(WCTheme.spacing.spacing2))
-
-
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
