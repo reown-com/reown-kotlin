@@ -169,7 +169,8 @@ private fun ScanContent(
     // NFC tap animation state — incremented on tap, reset to 0 after animation
     var tapAnimationTrigger by remember { mutableStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(hasNfc) {
+        if (!hasNfc) return@LaunchedEffect
         NfcManager.tapEventFlow.collectLatest {
             TapSoundPlayer.playTapSound()
             tapAnimationTrigger++
