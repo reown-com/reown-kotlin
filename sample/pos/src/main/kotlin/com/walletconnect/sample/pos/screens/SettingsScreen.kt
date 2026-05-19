@@ -73,6 +73,7 @@ fun SettingsScreen(
     val merchantId by viewModel.merchantId.collectAsState()
     val hasApiKey by viewModel.hasApiKey.collectAsState()
     val pinFlowState by viewModel.pinFlowState.collectAsState()
+    val isNfcUiEnabled by viewModel.isNfcUiEnabled.collectAsState()
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
     var activeSheet by remember { mutableStateOf(ActiveSheet.CURRENCY) }
@@ -217,6 +218,14 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
+            // show NFC UI toggle
+            SettingsToggleItem(
+                label = "Show NFC UI",
+                checked = isNfcUiEnabled,
+                onCheckedChange = viewModel::setNfcUiEnabled,
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+            )
+
             // Test printer
             SettingsItem(
                 label = "Test printer",
@@ -225,6 +234,10 @@ fun SettingsScreen(
                 onClick = { viewModel.printTestReceipt() },
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+
+
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
