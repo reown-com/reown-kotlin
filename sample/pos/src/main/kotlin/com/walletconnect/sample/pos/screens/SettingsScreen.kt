@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -52,6 +53,7 @@ import com.walletconnect.sample.pos.components.EditSettingBottomSheet
 import com.walletconnect.sample.pos.components.PinDialog
 import com.walletconnect.sample.pos.components.PosHeader
 import com.walletconnect.sample.pos.components.SelectableOptionItem
+import com.walletconnect.sample.pos.nfc.NfcManager
 import com.walletconnect.sample.pos.model.Currency
 import com.walletconnect.sample.pos.model.PosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
@@ -74,6 +76,9 @@ fun SettingsScreen(
     val hasApiKey by viewModel.hasApiKey.collectAsState()
     val pinFlowState by viewModel.pinFlowState.collectAsState()
     val isNfcUiEnabled by viewModel.isNfcUiEnabled.collectAsState()
+    val nfcAvailable by produceState(initialValue = false) {
+        value = NfcManager.isAvailable
+    }
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
     var activeSheet by remember { mutableStateOf(ActiveSheet.CURRENCY) }
@@ -218,15 +223,17 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
-            // show NFC UI toggle
-            SettingsToggleItem(
-                label = "Show NFC UI",
-                checked = isNfcUiEnabled,
-                onCheckedChange = viewModel::setNfcUiEnabled,
-                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
-            )
+            // Show NFC UI toggle (only on devices with an NFC sensor)
+            if (nfcAvailable) {
+                SettingsToggleItem(
+                    label = "Show NFC UI",
+                    checked = isNfcUiEnabled,
+                    onCheckedChange = viewModel::setNfcUiEnabled,
+                    modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+                )
 
-            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+                Spacer(Modifier.height(WCTheme.spacing.spacing2))
+            }
 
             // Test printer
             SettingsItem(
