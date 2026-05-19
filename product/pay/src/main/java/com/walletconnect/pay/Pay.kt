@@ -38,6 +38,7 @@ object Pay {
         val amount: Amount,
         val account: String,
         val estimatedTxs: Int?,
+        val actions: List<RequiredAction> = emptyList(),
         val collectData: CollectDataAction? = null
     )
 
@@ -149,4 +150,3 @@ object Pay {
         data class UnsupportedMethod(override val message: String) : ConfirmPaymentError()
     }
 }
-

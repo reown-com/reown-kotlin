@@ -528,6 +528,7 @@ object Wallet {
             val amount: PaymentAmount,
             val account: String,
             val estimatedTxs: Int?,
+            val actions: List<RequiredAction> = emptyList(),
             val collectData: CollectDataAction? = null
         ) : Model()
 

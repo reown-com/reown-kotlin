@@ -8,16 +8,17 @@ internal object PaymentUtil {
 
     private const val ETH_SEND_TRANSACTION = "eth_sendTransaction"
 
-    data class PaymentContext(
-        val approvalAction: Wallet.Model.RequiredAction.WalletRpc?,
-    ) {
-        val requiresApproval: Boolean get() = approvalAction != null
-    }
-
-    fun getPaymentContext(actions: List<Wallet.Model.RequiredAction>?): PaymentContext {
-        val approval = actions
+    fun getApprovalAction(actions: List<Wallet.Model.RequiredAction>?): Wallet.Model.RequiredAction.WalletRpc? {
+        return actions
             ?.filterIsInstance<Wallet.Model.RequiredAction.WalletRpc>()
             ?.firstOrNull { it.action.method == ETH_SEND_TRANSACTION }
-        return PaymentContext(approvalAction = approval)
+    }
+
+    fun requiresApproval(actions: List<Wallet.Model.RequiredAction>?): Boolean {
+        return getApprovalAction(actions) != null
+    }
+
+    fun shouldShowSetupLoader(actions: List<Wallet.Model.RequiredAction>?): Boolean {
+        return (actions?.size ?: 0) > 1 && requiresApproval(actions)
     }
 }

@@ -17,6 +17,7 @@ import com.reown.sample.wallet.domain.client.Keypair
 import com.reown.sample.wallet.domain.client.Stacks
 import com.reown.sample.wallet.domain.client.SuiUtils
 import com.reown.sample.wallet.domain.client.TONClient
+import com.reown.sample.wallet.payment.PaymentTokenPreferenceStore
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import java.math.BigInteger
@@ -88,6 +89,7 @@ internal class ImportWalletViewModel : ViewModel() {
                     ImportWalletChain.TRON -> importTron(input)
                     ImportWalletChain.STACKS -> importStacks(input)
                 }
+                PaymentTokenPreferenceStore.clearLastPaidTokenUnit()
                 disconnectAllSessions()
                 ImportResult.Success(address)
             } catch (e: Exception) {
