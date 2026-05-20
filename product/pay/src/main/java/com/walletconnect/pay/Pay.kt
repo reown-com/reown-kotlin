@@ -38,8 +38,8 @@ object Pay {
         val amount: Amount,
         val account: String,
         val estimatedTxs: Int?,
-        val actions: List<RequiredAction> = emptyList(),
-        val collectData: CollectDataAction? = null
+        val collectData: CollectDataAction? = null,
+        val actions: List<RequiredAction> = emptyList()
     )
 
     data class MerchantInfo(

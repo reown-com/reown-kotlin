@@ -6,7 +6,9 @@ import android.util.Log
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.blockchain.FungiblePriceRequest
 import com.reown.sample.wallet.blockchain.createFungiblePriceApiService
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.ConcurrentHashMap
 
@@ -56,9 +58,9 @@ internal object NativeTokenPriceService {
         val previous = inFlightRequests.putIfAbsent(cacheKey, deferred)
         if (previous != null) return previous.await()
 
-        return try {
+        try {
             val nativeAddress = "$chainId:$NATIVE_TOKEN_ADDRESS"
-            val price = runCatching {
+            val price = try {
                 withTimeout(REQUEST_TIMEOUT_MS) {
                     val response = service.getFungiblePrice(
                         FungiblePriceRequest(
@@ -77,8 +79,14 @@ internal object NativeTokenPriceService {
                             ?.takeIf { it.isFinite() && it > 0.0 }
                     }
                 }
-            }.getOrElse { error ->
-                Log.w(TAG, "Native token price fetch failed for $chainId: ${error.message}")
+            } catch (e: TimeoutCancellationException) {
+                Log.w(TAG, "Native token price fetch timed out for $chainId")
+                null
+            } catch (e: CancellationException) {
+                deferred.completeExceptionally(e)
+                throw e
+            } catch (e: Throwable) {
+                Log.w(TAG, "Native token price fetch failed for $chainId: ${e.message}")
                 null
             }
 
@@ -87,7 +95,7 @@ internal object NativeTokenPriceService {
                 priceCache[cacheKey] = CachedPrice(price, System.currentTimeMillis() + CACHE_TTL_MS)
             }
             deferred.complete(result)
-            result
+            return result
         } finally {
             inFlightRequests.remove(cacheKey, deferred)
         }
