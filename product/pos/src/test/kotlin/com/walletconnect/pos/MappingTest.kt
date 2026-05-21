@@ -268,13 +268,6 @@ class MappingTest {
     }
 
     @Test
-    fun `mapRefundErrorCode - already_refunded returns AlreadyRefunded`() {
-        val result = mapRefundErrorCode(ErrorCodes.ALREADY_REFUNDED, "Payment is already refunded")
-        assertTrue(result is Pos.RefundError.AlreadyRefunded)
-        assertEquals("Payment is already refunded", result.message)
-    }
-
-    @Test
     fun `mapRefundErrorCode - payment_not_succeeded returns PaymentNotSucceeded`() {
         val result = mapRefundErrorCode(ErrorCodes.PAYMENT_NOT_SUCCEEDED, "Not refundable")
         assertTrue(result is Pos.RefundError.PaymentNotSucceeded)

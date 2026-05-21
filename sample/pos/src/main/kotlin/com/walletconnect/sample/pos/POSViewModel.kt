@@ -326,25 +326,28 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                 source = "confirmRefund",
                 data = "paymentId: ${transaction.paymentId}"
             )
-            val result = PosClient.refundPayment(transaction.paymentId)
+            val result = PosClient.refundPayment(transaction)
             result.fold(
-                onSuccess = {
-                    markTransactionRefunded(transaction.paymentId)
+                onSuccess = { refundResult ->
+                    replaceTransaction(refundResult.transaction)
                     _refundUiState.value = RefundUiState.Idle
-                    _posEventsFlow.emit(PosEvent.RefundSuccess(transaction.paymentId))
-                    PosLogStore.info("Refund recorded", source = "confirmRefund", data = "paymentId: ${transaction.paymentId}")
+                    val event = if (refundResult.wasAlreadyRefunded) {
+                        PosEvent.RefundAlreadyRefunded(refundResult.transaction.paymentId)
+                    } else {
+                        PosEvent.RefundSuccess(refundResult.transaction.paymentId)
+                    }
+                    _posEventsFlow.emit(event)
+                    PosLogStore.info(
+                        "Refund recorded",
+                        source = "confirmRefund",
+                        data = "paymentId: ${refundResult.transaction.paymentId}\nwasAlreadyRefunded: ${refundResult.wasAlreadyRefunded}\nrefundedAt: ${refundResult.transaction.refundedAt}"
+                    )
                 },
                 onFailure = { throwable ->
                     val refundError = (throwable as? Pos.RefundException)?.error
                         ?: Pos.RefundError.Unknown("unknown", throwable.message ?: "Refund failed")
-                    if (refundError is Pos.RefundError.AlreadyRefunded) {
-                        markTransactionRefunded(transaction.paymentId)
-                        _refundUiState.value = RefundUiState.Idle
-                        _posEventsFlow.emit(PosEvent.RefundAlreadyRefunded(transaction.paymentId))
-                    } else {
-                        _refundUiState.value = RefundUiState.Error(transaction, refundError)
-                        _posEventsFlow.emit(PosEvent.RefundError(refundError.message))
-                    }
+                    _refundUiState.value = RefundUiState.Error(transaction, refundError)
+                    _posEventsFlow.emit(PosEvent.RefundError(refundError.message))
                     PosLogStore.error(
                         "Refund failed",
                         source = "confirmRefund",
@@ -356,21 +359,20 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Marks a transaction as refunded in the local cache. Optimistic UI — the server
-     * will surface this as a substatus once that work ships.
+     * Replaces the matching transaction in the local cache with the SDK-returned record.
+     * The SDK is the source of truth for whether the payment is refunded — this function
+     * just reflects what came back.
      */
-    private fun markTransactionRefunded(paymentId: String) {
-        val updated = loadedTransactions.mapIndexed { index, tx ->
-            if (tx.paymentId == paymentId) tx.copy(isRefunded = true) else tx
-        }
+    private fun replaceTransaction(updated: Pos.Transaction) {
+        val newList = loadedTransactions.map { if (it.paymentId == updated.paymentId) updated else it }
         loadedTransactions.clear()
-        loadedTransactions.addAll(updated)
+        loadedTransactions.addAll(newList)
 
         when (val state = _transactionHistoryState.value) {
             is TransactionHistoryUiState.Success ->
-                _transactionHistoryState.value = state.copy(transactions = updated)
+                _transactionHistoryState.value = state.copy(transactions = newList)
             is TransactionHistoryUiState.LoadingMore ->
-                _transactionHistoryState.value = state.copy(transactions = updated)
+                _transactionHistoryState.value = state.copy(transactions = newList)
             else -> Unit
         }
     }

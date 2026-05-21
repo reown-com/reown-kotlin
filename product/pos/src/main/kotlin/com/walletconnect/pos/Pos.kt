@@ -147,8 +147,19 @@ object Pos {
 
     /**
      * Result of a successful refund request.
+     *
+     * @property transaction Refreshed payment record. When the merchant API returns the
+     *   `refund` substatus on a subsequent `GET /v1/merchants/payments` call this carries
+     *   the server's `fullyRefundedAt`; otherwise it falls back to the locally-updated
+     *   transaction (the API's 200/409 response is itself a server confirmation of the
+     *   refunded state).
+     * @property wasAlreadyRefunded `true` when the server returned 409 — the payment was
+     *   already marked as refunded before this call (no-op on the backend).
      */
-    data class RefundResult(val paymentId: String)
+    data class RefundResult(
+        val transaction: Transaction,
+        val wasAlreadyRefunded: Boolean = false,
+    )
 
     /**
      * Typed refund failures. Wrapped in [RefundException] inside the [Result.failure]
@@ -158,7 +169,6 @@ object Pos {
         val message: String
 
         data class PaymentNotFound(override val message: String) : RefundError
-        data class AlreadyRefunded(override val message: String) : RefundError
         data class PaymentNotSucceeded(override val message: String) : RefundError
         data class InvalidParams(override val message: String) : RefundError
         data class Unauthorized(override val message: String) : RefundError

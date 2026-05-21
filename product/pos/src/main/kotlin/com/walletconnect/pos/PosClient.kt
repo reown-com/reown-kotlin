@@ -5,6 +5,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.walletconnect.pos.api.ApiClient
 import com.walletconnect.pos.api.ApiResult
+import com.walletconnect.pos.api.ErrorCodes
 import com.walletconnect.pos.api.ErrorTracker
 import com.walletconnect.pos.api.EventTracker
 import com.walletconnect.pos.api.MtlsConfig
@@ -324,35 +325,79 @@ object PosClient {
     }
 
     /**
-     * Requests a full refund for the given payment.
+     * Requests a full refund for the given transaction and returns the server-confirmed
+     * refunded state.
      *
-     * Phase 0: marks the payment as refunded on the merchant API; no on-chain execution.
-     * Calling twice with the same paymentId returns [Pos.RefundError.AlreadyRefunded].
+     * Phase 0 semantics: marks the payment as refunded on the merchant API; no on-chain
+     * execution. Internally:
      *
-     * @param paymentId The payment ID to refund (must match `^pay_[A-Za-z0-9]+$`).
-     * @return [Result.success] with [Pos.RefundResult] on success, or [Result.failure] wrapping
-     *         a [Pos.RefundException] whose `error` is the typed [Pos.RefundError].
+     *  1. Calls `POST /v1/refunds`.
+     *  2. On `200` (newly refunded) or `409 already_refunded` (already refunded), refetches
+     *     the payment via `GET /v1/merchants/payments?referenceId=…` to surface the server's
+     *     `refund` substatus (including `fullyRefundedAt`).
+     *  3. If refetch fails or the transaction has no `referenceId`, falls back to the
+     *     locally-updated transaction (`isRefunded = true`) — the API's 200/409 already
+     *     confirmed the refund on the server side.
+     *
+     * The returned [Pos.RefundResult.transaction] is the authoritative payment view to
+     * render in the UI. The caller should not patch `isRefunded` itself.
+     *
      * @throws IllegalStateException if SDK is not initialized.
      */
     @Throws(IllegalStateException::class)
-    suspend fun refundPayment(paymentId: String): Result<Pos.RefundResult> {
+    suspend fun refundPayment(transaction: Pos.Transaction): Result<Pos.RefundResult> {
         val client = synchronized(lock) {
             checkInitialized()
             apiClient!!
         }
 
-        eventTracker?.trackRefundInitiated(paymentId)
+        eventTracker?.trackRefundInitiated(transaction.paymentId)
 
-        return when (val result = client.refundPayment(paymentId)) {
+        return when (val result = client.refundPayment(transaction.paymentId)) {
             is ApiResult.Success -> {
-                eventTracker?.trackRefundSucceeded(paymentId)
-                Result.success(Pos.RefundResult(result.data.paymentId))
+                eventTracker?.trackRefundSucceeded(transaction.paymentId)
+                Result.success(
+                    Pos.RefundResult(
+                        transaction = fetchRefreshedTransaction(client, transaction),
+                        wasAlreadyRefunded = false,
+                    )
+                )
             }
             is ApiResult.Error -> {
-                eventTracker?.trackRefundFailed(paymentId, result.code)
-                Result.failure(Pos.RefundException(mapRefundErrorCode(result.code, result.message)))
+                if (result.code == ErrorCodes.ALREADY_REFUNDED) {
+                    eventTracker?.trackRefundSucceeded(transaction.paymentId)
+                    Result.success(
+                        Pos.RefundResult(
+                            transaction = fetchRefreshedTransaction(client, transaction),
+                            wasAlreadyRefunded = true,
+                        )
+                    )
+                } else {
+                    eventTracker?.trackRefundFailed(transaction.paymentId, result.code)
+                    Result.failure(Pos.RefundException(mapRefundErrorCode(result.code, result.message)))
+                }
             }
         }
+    }
+
+    /**
+     * Refetches a refunded transaction via the merchant API to surface server-side
+     * `refund.fullyRefundedAt`. Falls back to a locally-updated copy when the refetch
+     * cannot complete — the server has already confirmed the refund via the POST.
+     */
+    private suspend fun fetchRefreshedTransaction(
+        client: ApiClient,
+        original: Pos.Transaction,
+    ): Pos.Transaction {
+        val referenceId = original.referenceId
+        if (referenceId != null && referenceId.length in 3..35 && REFERENCE_ID_PATTERN.matches(referenceId)) {
+            val resp = client.getTransactionHistory(referenceId = referenceId, limit = 50)
+            if (resp is ApiResult.Success) {
+                resp.data.data.firstOrNull { it.paymentId == original.paymentId }
+                    ?.let { return it.toTransaction() }
+            }
+        }
+        return original.copy(isRefunded = true)
     }
 
     /**

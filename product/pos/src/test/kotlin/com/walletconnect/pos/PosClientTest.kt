@@ -572,18 +572,37 @@ class PosClientTest {
 
     @Test
     fun `refundPayment - throws when not initialized`() {
+        val tx = sampleTransaction()
         assertThrows(IllegalStateException::class.java) {
-            runBlocking { PosClient.refundPayment("pay_abc123") }
+            runBlocking { PosClient.refundPayment(tx) }
         }
     }
 
     @Test
     fun `RefundException carries typed error`() {
-        val err = Pos.RefundError.AlreadyRefunded("dup")
+        val err = Pos.RefundError.PaymentNotFound("nope")
         val ex = Pos.RefundException(err)
         assertEquals(err, ex.error)
-        assertEquals("dup", ex.message)
+        assertEquals("nope", ex.message)
     }
+
+    private fun sampleTransaction(): Pos.Transaction = Pos.Transaction(
+        paymentId = "pay_abc123",
+        referenceId = "ORDER-123",
+        status = Pos.TransactionStatus.SUCCEEDED,
+        txHash = null,
+        fiatAmount = null,
+        fiatCurrency = null,
+        tokenAmount = null,
+        tokenSymbol = null,
+        tokenDecimals = null,
+        tokenLogo = null,
+        network = null,
+        chainId = null,
+        walletName = "Test",
+        createdAt = null,
+        confirmedAt = null,
+    )
 
     @Test
     fun `formatTokenAmount - uses exact token decimals`() {
