@@ -339,7 +339,7 @@ class MappingTest {
     private fun paymentRecordFixture(refund: PaymentRefundDto?): PaymentRecord =
         PaymentRecord(
             paymentId = "pay_ABC123",
-            merchantId = "acme-store-1",
+            merchant = null,
             referenceId = "ORDER-123",
             status = PaymentStatus.SUCCEEDED,
             isTerminal = true,

@@ -107,6 +107,15 @@ internal object ErrorCodes {
     const val INVALID_API_KEY = "invalid_api_key"
     const val MISSING_MERCHANT_ID = "missing_merchant_id"
 
+    // API-version validation (returned by 2026-02-18 POST /v1/refunds).
+    const val INVALID_API_VERSION = "invalid_api_version"
+    const val UNKNOWN_API_VERSION = "unknown_api_version"
+    const val API_VERSION_DOWNGRADE = "api_version_downgrade"
+
+    // Server family.
+    const val INTERNAL_ERROR = "internal_error"
+    const val BAD_GATEWAY = "bad_gateway"
+
     // Internal sentinels — generated client-side, never received from the API.
     const val NETWORK_ERROR = "NETWORK_ERROR"
     const val PARSE_ERROR = "PARSE_ERROR"
@@ -129,7 +138,7 @@ internal data class TransactionHistoryResponse(
 @JsonClass(generateAdapter = true)
 internal data class PaymentRecord(
     @param:Json(name = "paymentId") val paymentId: String,
-    @param:Json(name = "merchantId") val merchantId: String?,
+    @param:Json(name = "merchant") val merchant: MerchantDto?,
     @param:Json(name = "referenceId") val referenceId: String?,
     @param:Json(name = "status") val status: String,
     @param:Json(name = "isTerminal") val isTerminal: Boolean,
@@ -142,6 +151,13 @@ internal data class PaymentRecord(
     @param:Json(name = "createdAt") val createdAt: String?,
     @param:Json(name = "lastUpdatedAt") val lastUpdatedAt: String?,
     @param:Json(name = "settledAt") val settledAt: String?
+)
+
+@JsonClass(generateAdapter = true)
+internal data class MerchantDto(
+    @param:Json(name = "id") val id: String,
+    @param:Json(name = "name") val name: String?,
+    @param:Json(name = "iconUrl") val iconUrl: String?,
 )
 
 @JsonClass(generateAdapter = true)
@@ -173,8 +189,9 @@ internal data class TransactionInfoDto(
 
 @JsonClass(generateAdapter = true)
 internal data class SettlementDto(
-    @param:Json(name = "status") val status: String?,
-    @param:Json(name = "txHash") val txHash: String?
+    @param:Json(name = "settled") val settled: Boolean,
+    @param:Json(name = "txHash") val txHash: String?,
+    @param:Json(name = "amount") val amount: AmountWithDisplayDto?,
 )
 
 @JsonClass(generateAdapter = true)

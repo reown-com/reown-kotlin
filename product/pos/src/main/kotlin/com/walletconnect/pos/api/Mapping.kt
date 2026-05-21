@@ -22,15 +22,24 @@ internal fun mapCreatePaymentError(code: String, message: String): Pos.PaymentEv
 
 internal fun mapRefundErrorCode(code: String, message: String): Pos.RefundError {
     return when (code) {
+        // 404
         ErrorCodes.NOT_FOUND,
         ErrorCodes.PAYMENT_NOT_FOUND -> Pos.RefundError.PaymentNotFound(message)
+        // 400 payment_not_succeeded
         ErrorCodes.PAYMENT_NOT_SUCCEEDED -> Pos.RefundError.PaymentNotSucceeded(message)
+        // 400 params_validation + API-version validation family
         ErrorCodes.INVALID_PARAMS,
-        ErrorCodes.PARAMS_VALIDATION -> Pos.RefundError.InvalidParams(message)
+        ErrorCodes.PARAMS_VALIDATION,
+        ErrorCodes.INVALID_API_VERSION,
+        ErrorCodes.UNKNOWN_API_VERSION,
+        ErrorCodes.API_VERSION_DOWNGRADE -> Pos.RefundError.InvalidParams(message)
+        // 401
         ErrorCodes.MISSING_API_KEY,
         ErrorCodes.INVALID_API_KEY,
         ErrorCodes.MISSING_MERCHANT_ID -> Pos.RefundError.Unauthorized(message)
+        // Client-side network
         ErrorCodes.NETWORK_ERROR -> Pos.RefundError.Network(message)
+        // 500 / 502 / anything else
         else -> Pos.RefundError.Unknown(code, message)
     }
 }

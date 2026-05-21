@@ -318,15 +318,23 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     fun confirmRefund() {
         val confirming = _refundUiState.value as? RefundUiState.Confirming ?: return
         val transaction = confirming.transaction
+        val referenceId = transaction.referenceId
+        if (referenceId.isNullOrBlank()) {
+            _refundUiState.value = RefundUiState.Error(
+                transaction,
+                Pos.RefundError.InvalidParams("This payment has no reference ID and cannot be refunded via the SDK"),
+            )
+            return
+        }
         _refundUiState.value = RefundUiState.Submitting(transaction)
 
         viewModelScope.launch {
             PosLogStore.info(
                 "Refund requested",
                 source = "confirmRefund",
-                data = "paymentId: ${transaction.paymentId}"
+                data = "referenceId: $referenceId\npaymentId: ${transaction.paymentId}"
             )
-            val result = PosClient.refundPayment(transaction)
+            val result = PosClient.refundPayment(referenceId)
             result.fold(
                 onSuccess = { refundResult ->
                     replaceTransaction(refundResult.transaction)

@@ -572,9 +572,24 @@ class PosClientTest {
 
     @Test
     fun `refundPayment - throws when not initialized`() {
-        val tx = sampleTransaction()
         assertThrows(IllegalStateException::class.java) {
-            runBlocking { PosClient.refundPayment(tx) }
+            runBlocking { PosClient.refundPayment("ORDER-123") }
+        }
+    }
+
+    @Test
+    fun `refundPayment - throws on too-short referenceId`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { PosClient.refundPayment("AB") }
+        }
+    }
+
+    @Test
+    fun `refundPayment - throws on invalid characters`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { PosClient.refundPayment("ORDER?123") }
         }
     }
 
@@ -585,24 +600,6 @@ class PosClientTest {
         assertEquals(err, ex.error)
         assertEquals("nope", ex.message)
     }
-
-    private fun sampleTransaction(): Pos.Transaction = Pos.Transaction(
-        paymentId = "pay_abc123",
-        referenceId = "ORDER-123",
-        status = Pos.TransactionStatus.SUCCEEDED,
-        txHash = null,
-        fiatAmount = null,
-        fiatCurrency = null,
-        tokenAmount = null,
-        tokenSymbol = null,
-        tokenDecimals = null,
-        tokenLogo = null,
-        network = null,
-        chainId = null,
-        walletName = "Test",
-        createdAt = null,
-        confirmedAt = null,
-    )
 
     @Test
     fun `formatTokenAmount - uses exact token decimals`() {
