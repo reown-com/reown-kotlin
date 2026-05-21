@@ -68,8 +68,8 @@ internal fun Pay.PaymentOption.toWallet(): Wallet.Model.PaymentOption =
         amount = amount.toWallet(),
         account = account,
         estimatedTxs = estimatedTxs,
-        actions = actions.map { it.toWallet() },
-        collectData = collectData?.toWallet()
+        collectData = collectData?.toWallet(),
+        actions = actions.map { it.toWallet() }
     )
 
 @JvmSynthetic
