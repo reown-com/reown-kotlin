@@ -88,7 +88,9 @@ internal fun PaymentRecord.toTransaction(): Pos.Transaction {
         chainId = transaction?.networkId,
         walletName = buyer?.accountProviderName ?: "Unknown",
         createdAt = createdAt,
-        confirmedAt = settledAt
+        confirmedAt = settledAt,
+        isRefunded = refund != null,
+        refundedAt = refund?.fullyRefundedAt
     )
 }
 

@@ -68,10 +68,9 @@ object Pos {
     /**
      * Represents a single transaction/payment record from history.
      *
-     * Refund fields (`isRefunded`, `refundedAt`) are populated optimistically by the host app
-     * after a successful refund request. Once the backend surfaces a "refunded" substatus on
-     * the payment object the mapper will fill them from the wire — the field shape is
-     * forward-compatible.
+     * `isRefunded` / `refundedAt` are populated from the server's `refund` substatus on
+     * the payment record. The host app may also flip `isRefunded` optimistically right
+     * after a successful refund request — both sources converge on the next reload.
      */
     data class Transaction(
         val paymentId: String,

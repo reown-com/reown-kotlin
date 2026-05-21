@@ -2,11 +2,14 @@ package com.walletconnect.pos
 
 import com.walletconnect.pos.api.ErrorCodes
 import com.walletconnect.pos.api.FailureCodes
+import com.walletconnect.pos.api.PaymentRecord
+import com.walletconnect.pos.api.PaymentRefundDto
 import com.walletconnect.pos.api.PaymentStatus
 import com.walletconnect.pos.api.mapCreatePaymentError
 import com.walletconnect.pos.api.mapErrorCodeToPaymentError
 import com.walletconnect.pos.api.mapRefundErrorCode
 import com.walletconnect.pos.api.mapStatusToPaymentEvent
+import com.walletconnect.pos.api.toTransaction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -311,6 +314,52 @@ class MappingTest {
         assertEquals("bad_gateway", unknown.code)
         assertEquals("Bad Gateway", unknown.message)
     }
+
+    @Test
+    fun `toTransaction - refund field maps to isRefunded and refundedAt`() {
+        val record = paymentRecordFixture(
+            refund = PaymentRefundDto(status = "fully_refunded", fullyRefundedAt = "2026-05-20T10:11:12Z")
+        )
+        val tx = record.toTransaction()
+        assertTrue(tx.isRefunded)
+        assertEquals("2026-05-20T10:11:12Z", tx.refundedAt)
+    }
+
+    @Test
+    fun `toTransaction - missing refund field leaves isRefunded false`() {
+        val tx = paymentRecordFixture(refund = null).toTransaction()
+        assertEquals(false, tx.isRefunded)
+        assertEquals(null, tx.refundedAt)
+    }
+
+    @Test
+    fun `toTransaction - refund presence wins even without timestamp`() {
+        // Spec marks `fullyRefundedAt` optional. Presence of the refund object alone
+        // is enough to consider the payment refunded.
+        val tx = paymentRecordFixture(
+            refund = PaymentRefundDto(status = "fully_refunded", fullyRefundedAt = null)
+        ).toTransaction()
+        assertTrue(tx.isRefunded)
+        assertEquals(null, tx.refundedAt)
+    }
+
+    private fun paymentRecordFixture(refund: PaymentRefundDto?): PaymentRecord =
+        PaymentRecord(
+            paymentId = "pay_ABC123",
+            merchantId = "acme-store-1",
+            referenceId = "ORDER-123",
+            status = PaymentStatus.SUCCEEDED,
+            isTerminal = true,
+            fiatAmount = null,
+            tokenAmount = null,
+            buyer = null,
+            transaction = null,
+            settlement = null,
+            refund = refund,
+            createdAt = "2026-05-20T09:00:00Z",
+            lastUpdatedAt = "2026-05-20T09:01:00Z",
+            settledAt = "2026-05-20T09:01:00Z",
+        )
 
     @Test
     fun `Refund ErrorCodes constants have correct values`() {

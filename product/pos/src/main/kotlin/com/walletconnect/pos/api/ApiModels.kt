@@ -138,9 +138,16 @@ internal data class PaymentRecord(
     @param:Json(name = "buyer") val buyer: BuyerDto?,
     @param:Json(name = "transaction") val transaction: TransactionInfoDto?,
     @param:Json(name = "settlement") val settlement: SettlementDto?,
+    @param:Json(name = "refund") val refund: PaymentRefundDto?,
     @param:Json(name = "createdAt") val createdAt: String?,
     @param:Json(name = "lastUpdatedAt") val lastUpdatedAt: String?,
     @param:Json(name = "settledAt") val settledAt: String?
+)
+
+@JsonClass(generateAdapter = true)
+internal data class PaymentRefundDto(
+    @param:Json(name = "status") val status: String,
+    @param:Json(name = "fullyRefundedAt") val fullyRefundedAt: String?
 )
 
 @JsonClass(generateAdapter = true)
