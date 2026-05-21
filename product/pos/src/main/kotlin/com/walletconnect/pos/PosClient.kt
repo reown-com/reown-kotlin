@@ -300,7 +300,7 @@ object PosClient {
 
         val statusFilter = statuses?.map { it.apiValue }
 
-        return when (val result = client.searchPayments(
+        return when (val result = client.getTransactionHistory(
             referenceId = referenceId,
             limit = limit,
             cursor = cursor,

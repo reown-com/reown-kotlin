@@ -293,6 +293,7 @@ internal class ApiClient(
     }
 
     suspend fun getTransactionHistory(
+        referenceId: String? = null,
         limit: Int = 20,
         cursor: String? = null,
         status: List<String>? = null,
@@ -301,6 +302,7 @@ internal class ApiClient(
     ): ApiResult<TransactionHistoryResponse> {
         return try {
             val response = payApi.getTransactionHistory(
+                referenceId = referenceId,
                 limit = limit,
                 cursor = cursor,
                 status = status,
@@ -328,48 +330,6 @@ internal class ApiClient(
             ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
         } catch (e: Exception) {
             errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "getTransactionHistory")
-            ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
-        }
-    }
-
-    suspend fun searchPayments(
-        referenceId: String,
-        limit: Int = 20,
-        cursor: String? = null,
-        status: List<String>? = null,
-        startTs: Instant? = null,
-        endTs: Instant? = null
-    ): ApiResult<TransactionHistoryResponse> {
-        return try {
-            val response = merchantApi.searchPayments(
-                referenceId = referenceId,
-                limit = limit,
-                cursor = cursor,
-                status = status,
-                sortBy = "date",
-                sortDir = "desc",
-                startTs = startTs?.toIso8601(),
-                endTs = endTs?.toIso8601()
-            )
-
-            if (response.isSuccessful) {
-                val data = response.body()
-                if (data == null) {
-                    ApiResult.Error(ErrorCodes.PARSE_ERROR, "Empty response body")
-                } else {
-                    ApiResult.Success(data)
-                }
-            } else {
-                val error = parseErrorResponse(response)
-                ApiResult.Error(error.code, error.message)
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: IOException) {
-            errorTracker.trackError(PulseErrorType.NETWORK_ERROR, e.message ?: "Network error", "searchPayments")
-            ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
-        } catch (e: Exception) {
-            errorTracker.trackError(PulseErrorType.SDK_ERROR, e.message ?: "Unexpected error", "searchPayments")
             ApiResult.Error(ErrorCodes.PARSE_ERROR, e.message ?: "Unexpected error")
         }
     }

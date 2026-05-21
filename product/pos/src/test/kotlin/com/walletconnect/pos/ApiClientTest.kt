@@ -5,6 +5,7 @@ import com.walletconnect.pos.api.ErrorCodes
 import com.walletconnect.pos.api.GetPaymentStatusResponse
 import com.walletconnect.pos.api.MerchantApi
 import com.walletconnect.pos.api.PayApi
+
 import com.walletconnect.pos.api.PaymentStatus
 import com.walletconnect.pos.api.RefundRequest
 import com.walletconnect.pos.api.RefundResponse
@@ -229,11 +230,11 @@ class ApiClientTest {
     }
 
     @Test
-    fun `searchPayments - returns success with empty data`() = runTest {
-        val mockApi = mockk<MerchantApi>()
+    fun `getTransactionHistory - accepts referenceId filter`() = runTest {
+        val mockApi = mockk<PayApi>()
         val expected = TransactionHistoryResponse(data = emptyList(), stats = null, nextCursor = null)
         coEvery {
-            mockApi.searchPayments(
+            mockApi.getTransactionHistory(
                 referenceId = "ORDER-1",
                 limit = any(),
                 cursor = any(),
@@ -245,7 +246,7 @@ class ApiClientTest {
             )
         } returns Response.success(expected)
 
-        val response = mockApi.searchPayments("ORDER-1")
+        val response = mockApi.getTransactionHistory(referenceId = "ORDER-1")
         assertTrue(response.isSuccessful)
         assertEquals(0, response.body()?.data?.size)
     }
