@@ -318,38 +318,31 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     fun confirmRefund() {
         val confirming = _refundUiState.value as? RefundUiState.Confirming ?: return
         val transaction = confirming.transaction
-        val referenceId = transaction.referenceId
-        if (referenceId.isNullOrBlank()) {
-            _refundUiState.value = RefundUiState.Error(
-                transaction,
-                Pos.RefundError.InvalidParams("This payment has no reference ID and cannot be refunded via the SDK"),
-            )
-            return
-        }
         _refundUiState.value = RefundUiState.Submitting(transaction)
 
         viewModelScope.launch {
             PosLogStore.info(
                 "Refund requested",
                 source = "confirmRefund",
-                data = "referenceId: $referenceId\npaymentId: ${transaction.paymentId}"
+                data = "paymentId: ${transaction.paymentId}"
             )
-            val result = PosClient.refundPayment(referenceId)
+            val result = PosClient.refundPayment(transaction.paymentId)
             result.fold(
                 onSuccess = { refundResult ->
-                    replaceTransaction(refundResult.transaction)
                     _refundUiState.value = RefundUiState.Idle
                     val event = if (refundResult.wasAlreadyRefunded) {
-                        PosEvent.RefundAlreadyRefunded(refundResult.transaction.paymentId)
+                        PosEvent.RefundAlreadyRefunded(refundResult.paymentId)
                     } else {
-                        PosEvent.RefundSuccess(refundResult.transaction.paymentId)
+                        PosEvent.RefundSuccess(refundResult.paymentId)
                     }
                     _posEventsFlow.emit(event)
                     PosLogStore.info(
                         "Refund recorded",
                         source = "confirmRefund",
-                        data = "paymentId: ${refundResult.transaction.paymentId}\nwasAlreadyRefunded: ${refundResult.wasAlreadyRefunded}\nrefundedAt: ${refundResult.transaction.refundedAt}"
+                        data = "paymentId: ${refundResult.paymentId}\nwasAlreadyRefunded: ${refundResult.wasAlreadyRefunded}"
                     )
+                    // Reload so the server-side refund substatus surfaces on the refunded row.
+                    loadTransactionHistory(refresh = true)
                 },
                 onFailure = { throwable ->
                     val refundError = (throwable as? Pos.RefundException)?.error
@@ -363,25 +356,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
             )
-        }
-    }
-
-    /**
-     * Replaces the matching transaction in the local cache with the SDK-returned record.
-     * The SDK is the source of truth for whether the payment is refunded — this function
-     * just reflects what came back.
-     */
-    private fun replaceTransaction(updated: Pos.Transaction) {
-        val newList = loadedTransactions.map { if (it.paymentId == updated.paymentId) updated else it }
-        loadedTransactions.clear()
-        loadedTransactions.addAll(newList)
-
-        when (val state = _transactionHistoryState.value) {
-            is TransactionHistoryUiState.Success ->
-                _transactionHistoryState.value = state.copy(transactions = newList)
-            is TransactionHistoryUiState.LoadingMore ->
-                _transactionHistoryState.value = state.copy(transactions = newList)
-            else -> Unit
         }
     }
 

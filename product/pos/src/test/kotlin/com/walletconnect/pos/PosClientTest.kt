@@ -573,23 +573,32 @@ class PosClientTest {
     @Test
     fun `refundPayment - throws when not initialized`() {
         assertThrows(IllegalStateException::class.java) {
-            runBlocking { PosClient.refundPayment("ORDER-123") }
+            runBlocking { PosClient.refundPayment("pay_ABC123") }
         }
     }
 
     @Test
-    fun `refundPayment - throws on too-short referenceId`() {
+    fun `refundPayment - throws on missing pay_ prefix`() {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { PosClient.refundPayment("AB") }
+            runBlocking { PosClient.refundPayment("ABC123") }
         }
     }
 
     @Test
-    fun `refundPayment - throws on invalid characters`() {
+    fun `refundPayment - throws on non-alphanumeric body`() {
         PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
         assertThrows(IllegalArgumentException::class.java) {
-            runBlocking { PosClient.refundPayment("ORDER?123") }
+            runBlocking { PosClient.refundPayment("pay_abc-123") }
+        }
+    }
+
+    @Test
+    fun `refundPayment - throws on too long paymentId`() {
+        PosClient.init(apiKey = "test-api-key", merchantId = "test-merchant", deviceId = "test-device", mtlsConfig = Pos.MtlsConfig.Disabled)
+        val tooLong = "pay_" + "A".repeat(61) // 65 chars total
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { PosClient.refundPayment(tooLong) }
         }
     }
 

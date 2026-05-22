@@ -146,18 +146,22 @@ object Pos {
     )
 
     /**
-     * Result of a successful refund request.
+     * Outcome of a refund request.
      *
-     * @property transaction Refreshed payment record. When the merchant API returns the
-     *   `refund` substatus on a subsequent `GET /v1/merchants/payments` call this carries
-     *   the server's `fullyRefundedAt`; otherwise it falls back to the locally-updated
-     *   transaction (the API's 200/409 response is itself a server confirmation of the
-     *   refunded state).
-     * @property wasAlreadyRefunded `true` when the server returned 409 — the payment was
-     *   already marked as refunded before this call (no-op on the backend).
+     * The merchant API's `POST /v1/refunds` response itself is the server confirmation
+     * of the refunded state — the caller's job is to reload payment history (via
+     * [com.walletconnect.pos.PosClient.getTransactionHistory] or
+     * [com.walletconnect.pos.PosClient.searchPaymentsByReference]) to surface the
+     * server's `refund.fullyRefundedAt` timestamp on the refunded row.
+     *
+     * @property paymentId Payment ID echoed back from the server (matches the value passed
+     *   into [com.walletconnect.pos.PosClient.refundPayment]).
+     * @property wasAlreadyRefunded `true` when the server returned `409 already_refunded`
+     *   — the payment was already marked as refunded before this call (no-op on the
+     *   backend). `false` for a newly-recorded refund (200).
      */
     data class RefundResult(
-        val transaction: Transaction,
+        val paymentId: String,
         val wasAlreadyRefunded: Boolean = false,
     )
 

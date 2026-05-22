@@ -30,6 +30,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 object PosClient {
     private val lock = Any()
     private val REFERENCE_ID_PATTERN = Regex("[A-Za-z0-9 /\\-:.,+]+")
+    private val PAYMENT_ID_PATTERN = Regex("^pay_[A-Za-z0-9]+$")
 
     @Volatile private var delegate: POSDelegate? = null
     @Volatile private var apiClient: ApiClient? = null
@@ -270,8 +271,6 @@ object PosClient {
     /**
      * Searches payment history by reference ID (substring match).
      *
-     * Uses the `GET /v1/payments` endpoint introduced in API version 2026-02-18.
-     *
      * @param referenceId Substring to search for. Must be 3..35 characters, ASCII letters,
      *                    digits, space, or any of `/-:.,+`.
      * @param limit Page size (1..200, default 20).
@@ -325,105 +324,54 @@ object PosClient {
     }
 
     /**
-     * Requests a full refund for the payment identified by the merchant-provided
-     * `referenceId`, and returns the server-confirmed refunded state.
+     * Requests a full refund for the given payment.
      *
      * Phase 0 semantics per the `2026-02-18` merchant API: marks the payment as refunded;
-     * no on-chain execution. The flow follows the spec for `POST /v1/refunds`:
+     * no on-chain execution. Maps directly onto `POST /v1/refunds`:
      *
-     *  1. Resolve the WalletConnect Pay `paymentId` (matches `^pay_[A-Za-z0-9]+$`) by
-     *     querying `GET /v1/merchants/payments?referenceId=…` and filtering the result to
-     *     the row whose `referenceId` matches *exactly* (the API does a substring search).
-     *  2. `POST /v1/refunds` with `{ "paymentId": <resolved> }`.
-     *     - `200` → newly refunded.
-     *     - `409 already_refunded` → server already considered it refunded (idempotent
-     *        no-op). Surfaced as success with [Pos.RefundResult.wasAlreadyRefunded] true.
-     *     - `400 payment_not_succeeded` → [Pos.RefundError.PaymentNotSucceeded].
-     *     - `400 params_validation` / `invalid_api_version` / `unknown_api_version` /
-     *        `api_version_downgrade` → [Pos.RefundError.InvalidParams].
-     *     - `404 not_found` → [Pos.RefundError.PaymentNotFound].
-     *     - `401 missing_api_key` / `invalid_api_key` / `missing_merchant_id` →
-     *        [Pos.RefundError.Unauthorized].
-     *     - `500` / `502` / anything else → [Pos.RefundError.Unknown].
-     *  3. Refetch the row from `GET /v1/merchants/payments?referenceId=…` so the returned
-     *     `Pos.Transaction` carries the server's `refund.fullyRefundedAt`. Falls back to
-     *     the pre-refund row with `isRefunded = true` only when the refetch cannot
-     *     complete; the `200`/`409` itself is a server-side confirmation of the refund.
+     *  - `200` → success, newly refunded.
+     *  - `409 already_refunded` → success with [Pos.RefundResult.wasAlreadyRefunded] true
+     *    (idempotent no-op on the backend).
+     *  - `400 payment_not_succeeded` → [Pos.RefundError.PaymentNotSucceeded].
+     *  - `400 params_validation` / `invalid_api_version` / `unknown_api_version` /
+     *    `api_version_downgrade` → [Pos.RefundError.InvalidParams].
+     *  - `404 not_found` → [Pos.RefundError.PaymentNotFound].
+     *  - `401 missing_api_key` / `invalid_api_key` / `missing_merchant_id` →
+     *    [Pos.RefundError.Unauthorized].
+     *  - `500` / `502` / anything else → [Pos.RefundError.Unknown].
      *
-     * @param referenceId Merchant-provided reference. Must be 3..35 chars; ASCII letters,
-     *   digits, space, or any of ``/-:.,+``. Must resolve to exactly one payment;
-     *   ambiguous references fail with [Pos.RefundError.InvalidParams].
+     * Caller is expected to reload payment history afterwards to surface the server's
+     * `refund.fullyRefundedAt` on the refunded row (the mapper fills
+     * [Pos.Transaction.isRefunded] / `refundedAt` automatically).
+     *
+     * @param paymentId WalletConnect Pay payment ID. Must match `^pay_[A-Za-z0-9]+$`, 1..64 chars.
      * @throws IllegalStateException if SDK is not initialized.
-     * @throws IllegalArgumentException if [referenceId] is malformed.
+     * @throws IllegalArgumentException if [paymentId] is malformed.
      */
     @Throws(IllegalStateException::class, IllegalArgumentException::class)
-    suspend fun refundPayment(referenceId: String): Result<Pos.RefundResult> {
-        require(referenceId.length in 3..35) { "referenceId must be 3..35 chars, got ${referenceId.length}" }
-        require(REFERENCE_ID_PATTERN.matches(referenceId)) { "referenceId contains unsupported characters" }
+    suspend fun refundPayment(paymentId: String): Result<Pos.RefundResult> {
+        require(paymentId.length in 1..64) { "paymentId must be 1..64 chars, got ${paymentId.length}" }
+        require(PAYMENT_ID_PATTERN.matches(paymentId)) { "paymentId must match pattern ^pay_[A-Za-z0-9]+\$" }
 
         val client = synchronized(lock) {
             checkInitialized()
             apiClient!!
         }
 
-        // 1. Resolve the WalletConnect Pay paymentId from the merchant referenceId.
-        val record = when (val lookup = client.getTransactionHistory(referenceId = referenceId, limit = 50)) {
-            is ApiResult.Success -> {
-                val matches = lookup.data.data.filter { it.referenceId == referenceId }
-                when {
-                    matches.isEmpty() -> return Result.failure(
-                        Pos.RefundException(Pos.RefundError.PaymentNotFound("No payment found for referenceId=$referenceId"))
-                    )
-                    matches.size > 1 -> return Result.failure(
-                        Pos.RefundException(Pos.RefundError.InvalidParams("Multiple payments match referenceId=$referenceId — reference must be unique"))
-                    )
-                    else -> matches.first()
-                }
-            }
-            is ApiResult.Error -> return Result.failure(
-                Pos.RefundException(mapRefundErrorCode(lookup.code, lookup.message))
-            )
-        }
-        val paymentId = record.paymentId
-
-        // 2. POST /v1/refunds — handle 200 / 409 as success outcomes; everything else as a
-        //    typed RefundError.
         eventTracker?.trackRefundInitiated(paymentId)
-        val wasAlreadyRefunded = when (val refund = client.refundPayment(paymentId)) {
-            is ApiResult.Success -> false
+        return when (val refund = client.refundPayment(paymentId)) {
+            is ApiResult.Success -> {
+                eventTracker?.trackRefundSucceeded(paymentId)
+                Result.success(Pos.RefundResult(paymentId = paymentId, wasAlreadyRefunded = false))
+            }
             is ApiResult.Error -> if (refund.code == ErrorCodes.ALREADY_REFUNDED) {
-                true
+                eventTracker?.trackRefundSucceeded(paymentId)
+                Result.success(Pos.RefundResult(paymentId = paymentId, wasAlreadyRefunded = true))
             } else {
                 eventTracker?.trackRefundFailed(paymentId, refund.code)
-                return Result.failure(Pos.RefundException(mapRefundErrorCode(refund.code, refund.message)))
+                Result.failure(Pos.RefundException(mapRefundErrorCode(refund.code, refund.message)))
             }
         }
-        eventTracker?.trackRefundSucceeded(paymentId)
-
-        // 3. Refetch so the caller sees the server's refund.fullyRefundedAt.
-        val refreshed = fetchRefreshedTransaction(client, referenceId, paymentId)
-            ?: record.toTransaction().copy(isRefunded = true)
-        return Result.success(Pos.RefundResult(transaction = refreshed, wasAlreadyRefunded = wasAlreadyRefunded))
-    }
-
-    /**
-     * Refetches the post-refund row from `GET /v1/merchants/payments?referenceId=…`.
-     * Returns `null` when the call fails or the row is no longer present; the caller
-     * falls back to the pre-refund record (the `POST /v1/refunds` 200/409 is itself a
-     * server-side confirmation of the refunded state).
-     */
-    private suspend fun fetchRefreshedTransaction(
-        client: ApiClient,
-        referenceId: String,
-        paymentId: String,
-    ): Pos.Transaction? {
-        val resp = client.getTransactionHistory(referenceId = referenceId, limit = 50)
-        if (resp is ApiResult.Success) {
-            return resp.data.data
-                .firstOrNull { it.referenceId == referenceId && it.paymentId == paymentId }
-                ?.toTransaction()
-        }
-        return null
     }
 
     /**
