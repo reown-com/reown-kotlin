@@ -564,11 +564,27 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         // Cancel any in-flight request when starting a new one
         transactionLoadingJob?.cancel()
         transactionLoadingJob = viewModelScope.launch {
+            // Capture optimistic refund marks before swapping any state so they survive
+            // a refresh that lands before the server has propagated the refund substatus.
+            val locallyRefundedIds: Set<String> =
+                if (refresh) loadedTransactions.filter { it.isRefunded }.map { it.paymentId }.toSet()
+                else emptySet()
+
             if (refresh) {
                 currentCursor = null
-                loadedTransactions.clear()
-                currentStats = null
-                _transactionHistoryState.value = TransactionHistoryUiState.Loading
+                // Cold start vs warm refresh: only show the centered spinner on cold start.
+                // While a refresh is in flight on an already-populated list, keep the rows
+                // visible (LoadingMore) so optimistic UI doesn't blink off and the user
+                // doesn't lose the row they just refunded.
+                if (loadedTransactions.isEmpty()) {
+                    currentStats = null
+                    _transactionHistoryState.value = TransactionHistoryUiState.Loading
+                } else {
+                    _transactionHistoryState.value = TransactionHistoryUiState.LoadingMore(
+                        transactions = loadedTransactions.toList(),
+                        stats = currentStats
+                    )
+                }
             } else {
                 _transactionHistoryState.value = TransactionHistoryUiState.LoadingMore(
                     transactions = loadedTransactions.toList(),
@@ -596,7 +612,13 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                 onSuccess = { historyResult ->
                     // Build updated list immutably to avoid race conditions
                     val updatedList = if (refresh) {
-                        historyResult.transactions
+                        // Preserve optimistic refund marks until the server's `refund`
+                        // substatus catches up — once it does, this merge becomes a no-op.
+                        historyResult.transactions.map { tx ->
+                            if (tx.paymentId in locallyRefundedIds && !tx.isRefunded) {
+                                tx.copy(isRefunded = true)
+                            } else tx
+                        }
                     } else {
                         loadedTransactions + historyResult.transactions
                     }
