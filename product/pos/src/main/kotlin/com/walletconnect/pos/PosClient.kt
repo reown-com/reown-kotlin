@@ -328,18 +328,6 @@ object PosClient {
      *
      * Phase 0 semantics per the `2026-02-18` merchant API: marks the payment as refunded;
      * no on-chain execution. Maps directly onto `POST /v1/refunds`:
-     *
-     *  - `200` → success, newly refunded.
-     *  - `409 already_refunded` → success with [Pos.RefundResult.wasAlreadyRefunded] true
-     *    (idempotent no-op on the backend).
-     *  - `400 payment_not_succeeded` → [Pos.RefundError.PaymentNotSucceeded].
-     *  - `400 params_validation` / `invalid_api_version` / `unknown_api_version` /
-     *    `api_version_downgrade` → [Pos.RefundError.InvalidParams].
-     *  - `404 not_found` → [Pos.RefundError.PaymentNotFound].
-     *  - `401 missing_api_key` / `invalid_api_key` / `missing_merchant_id` →
-     *    [Pos.RefundError.Unauthorized].
-     *  - `500` / `502` / anything else → [Pos.RefundError.Unknown].
-     *
      * Caller is expected to reload payment history afterwards to surface the server's
      * `refund.fullyRefundedAt` on the refunded row (the mapper fills
      * [Pos.Transaction.isRefunded] / `refundedAt` automatically).

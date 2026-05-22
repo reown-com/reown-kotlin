@@ -315,6 +315,27 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         _refundUiState.value = RefundUiState.Idle
     }
 
+    /**
+     * Flips `isRefunded` on the matching cached transaction so the Refunded badge appears
+     * the moment [PosClient.refundPayment] returns success — the SDK's outcome is the
+     * source of truth. The subsequent [loadTransactionHistory] call reconciles with the
+     * server's `refund.fullyRefundedAt`.
+     */
+    private fun applyLocalRefundMark(paymentId: String) {
+        val updated = loadedTransactions.map {
+            if (it.paymentId == paymentId) it.copy(isRefunded = true) else it
+        }
+        loadedTransactions.clear()
+        loadedTransactions.addAll(updated)
+        when (val state = _transactionHistoryState.value) {
+            is TransactionHistoryUiState.Success ->
+                _transactionHistoryState.value = state.copy(transactions = updated)
+            is TransactionHistoryUiState.LoadingMore ->
+                _transactionHistoryState.value = state.copy(transactions = updated)
+            else -> Unit
+        }
+    }
+
     fun confirmRefund() {
         val confirming = _refundUiState.value as? RefundUiState.Confirming ?: return
         val transaction = confirming.transaction
@@ -341,7 +362,10 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                         source = "confirmRefund",
                         data = "paymentId: ${refundResult.paymentId}\nwasAlreadyRefunded: ${refundResult.wasAlreadyRefunded}"
                     )
-                    // Reload so the server-side refund substatus surfaces on the refunded row.
+                    // Reflect the SDK's success outcome on the visible row right away — the
+                    // server's POST /v1/refunds 200/409 is itself the refunded confirmation
+                    // — then reload so refund.fullyRefundedAt arrives from the server.
+                    applyLocalRefundMark(refundResult.paymentId)
                     loadTransactionHistory(refresh = true)
                 },
                 onFailure = { throwable ->
@@ -529,6 +553,9 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
     // Transaction History Methods
 
     fun navigateToTransactionHistory() {
+        // Reset the search field every time staff opens the Activity screen so it doesn't
+        // surface a previous query (which would also constrain the initial history load).
+        _searchQuery.value = ""
         viewModelScope.launch { _posNavEventsFlow.emit(PosNavEvent.ToTransactionHistory) }
         loadTransactionHistory(refresh = true)
     }
