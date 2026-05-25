@@ -38,7 +38,8 @@ object Pay {
         val amount: Amount,
         val account: String,
         val estimatedTxs: Int?,
-        val collectData: CollectDataAction? = null
+        val collectData: CollectDataAction? = null,
+        val actions: List<RequiredAction> = emptyList()
     )
 
     data class MerchantInfo(
@@ -149,4 +150,3 @@ object Pay {
         data class UnsupportedMethod(override val message: String) : ConfirmPaymentError()
     }
 }
-
