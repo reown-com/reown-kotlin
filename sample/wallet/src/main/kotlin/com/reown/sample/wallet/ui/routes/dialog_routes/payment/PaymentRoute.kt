@@ -75,10 +75,15 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
+import com.reown.sample.wallet.payment.PaymentReviewFormatter
+import com.reown.sample.wallet.payment.PaymentTransactionUtil
+import com.reown.sample.wallet.payment.PaymentUtil
+import com.reown.sample.wallet.payment.TransactionFeeEstimate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.walletkit.client.Wallet
 import org.json.JSONObject
 import java.math.BigDecimal
+import com.reown.sample.wallet.ui.common.Shimmer
 import com.reown.sample.wallet.ui.common.WalletConnectLoader
 import java.math.RoundingMode
 import java.text.SimpleDateFormat
@@ -131,6 +136,9 @@ fun PaymentRoute(
                 PaymentOptionsContent(
                     paymentInfo = state.paymentInfo,
                     options = state.options,
+                    selectedOptionId = state.selectedOptionId,
+                    gasEstimates = state.gasEstimates,
+                    estimatingOptionIds = state.estimatingOptionIds,
                     onOptionSelected = { optionId ->
                         viewModel.onOptionSelected(optionId)
                     },
@@ -148,7 +156,10 @@ fun PaymentRoute(
                     requiresApproval = state.requiresApproval,
                     approvalGasEstimate = state.approvalGasEstimate,
                     isEstimatingApprovalGas = state.isEstimatingApprovalGas,
+                    canChangeOption = state.canChangeOption,
                     onConfirm = { viewModel.confirmFromSummary() },
+                    onChangeOption = { viewModel.goBackToOptions() },
+                    onGasFeeInfo = { viewModel.showGasFeeInfo() },
                     onClose = {
                         viewModel.cancel()
                         dismissPaymentDialog(navController)
@@ -164,9 +175,21 @@ fun PaymentRoute(
                     }
                 )
             }
+            is PaymentUiState.GasFeeInfo -> {
+                GasFeeInfoContent(
+                    selectedOption = state.selectedOption,
+                    approvalGasEstimate = state.approvalGasEstimate,
+                    onBack = { viewModel.dismissGasFeeInfo() },
+                    onClose = {
+                        viewModel.cancel()
+                        dismissPaymentDialog(navController)
+                    }
+                )
+            }
             is PaymentUiState.Processing -> {
                 ProcessingContent(
-                    message = state.message
+                    message = state.message,
+                    note = state.note,
                 )
             }
             is PaymentUiState.Success -> {
@@ -232,178 +255,178 @@ private fun LoadingContent() {
 private fun PaymentOptionsContent(
     paymentInfo: Wallet.Model.PaymentInfo?,
     options: List<Wallet.Model.PaymentOption>,
+    selectedOptionId: String?,
+    gasEstimates: Map<String, TransactionFeeEstimate?>,
+    estimatingOptionIds: Set<String>,
     onOptionSelected: (String) -> Unit,
     onWhyInfoRequired: () -> Unit,
     onClose: () -> Unit
 ) {
-    var selectedOptionId by remember { mutableStateOf<String?>(options.firstOrNull()?.id) }
-    val anyOptionHasCollectData = options.any { it.collectData != null }
-    val selectedOption = options.find { it.id == selectedOptionId }
-    val selectedHasCollectData = selectedOption?.collectData != null
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(WCTheme.colors.bgPrimary)
             .padding(WCTheme.spacing.spacing5)
     ) {
-        // Header: "?" icon button (left) + X close (right)
+        // Header: spacer (left) + X close (right)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (anyOptionHasCollectData) {
-                ModalIconButton(
-                    iconRes = R.drawable.ic_question_mark,
-                    contentDescription = "Why info needed",
-                    onClick = onWhyInfoRequired,
-                    modifier = Modifier.testTag("pay-button-info")
-                )
-            } else {
-                Spacer(modifier = Modifier.size(38.dp))
-            }
-
+            Spacer(modifier = Modifier.size(38.dp))
             ModalCloseButton(onClick = onClose, modifier = Modifier.testTag("pay-button-close"))
         }
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
-        // Merchant icon and payment title
+        // Top header: SelectToken icon + headline
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("pay-merchant-info"),
+                .testTag("pay-select-option-header"),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            MerchantIcon(paymentInfo = paymentInfo, size = 64.dp)
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.ic_select_token),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(58.dp)
+            )
 
             Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
-            PaymentTitle(paymentInfo = paymentInfo)
+            Text(
+                text = "Select a token to pay with",
+                style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary)
+            )
         }
 
-        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
-        // Flat list of option cards
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing2)
         ) {
             options.forEachIndexed { index, option ->
-                PaymentOptionCard(
+                val hasCollectData = option.collectData?.url != null
+                PaymentOptionRow(
                     option = option,
-                    index = index,
-                    isSelected = selectedOptionId == option.id,
-                    onClick = { selectedOptionId = option.id }
+                    feeEstimate = gasEstimates[option.id],
+                    isEstimatingFee = estimatingOptionIds.contains(option.id),
+                    onClick = { onOptionSelected(option.id) },
+                    testTag = "pay-option-$index",
+                    trailing = if (hasCollectData) {
+                        {
+                            BorderedIconButton(
+                                iconRes = R.drawable.ic_info,
+                                contentDescription = "Why info needed",
+                                onClick = onWhyInfoRequired,
+                                modifier = Modifier.testTag("pay-info-required-badge")
+                            )
+                        }
+                    } else null,
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing5))
 
-        // Bottom button: always "Continue" — review screen handles "Pay"
-        val buttonText = "Continue"
-
-        val isEnabled = selectedOptionId != null
-        val actionButtonTag = "pay-button-continue"
-        PrimaryActionButton(
-            text = buttonText,
-            enabled = isEnabled,
-            onClick = { selectedOptionId?.let { onOptionSelected(it) } },
-            modifier = Modifier.testTag(actionButtonTag)
-        )
+        // Bottom merchant footer
+        MerchantFooter(paymentInfo = paymentInfo)
     }
 }
 
 @Composable
-private fun PaymentOptionCard(
-    option: Wallet.Model.PaymentOption,
-    index: Int,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val animatedBg by animateColorAsState(
-        targetValue = if (isSelected) WCTheme.colors.foregroundAccentPrimary10 else WCTheme.colors.foregroundPrimary,
-        label = "optionBg"
+private fun MerchantFooter(paymentInfo: Wallet.Model.PaymentInfo?) {
+    if (paymentInfo == null) return
+    val merchantName = paymentInfo.merchant.name
+    val amount = PaymentReviewFormatter.formatDisplayAmount(
+        value = paymentInfo.amount.value,
+        decimals = paymentInfo.amount.display?.decimals ?: 2,
+        currencyCode = paymentInfo.amount.display?.assetSymbol ?: paymentInfo.amount.unit,
     )
-    val borderColor = if (isSelected) WCTheme.colors.borderAccentPrimary else Color.Transparent
-    val borderWidth = 1.dp
-    val optionTag = if (isSelected) "pay-option-$index-selected" else "pay-option-$index"
-    val networkName = option.amount.display?.networkName?.lowercase() ?: "unknown"
 
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(68.dp)
+            .testTag("pay-merchant-info"),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Main option row — clearAndSetSemantics so copyTextFrom returns just the network name
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(WCTheme.borderRadius.shapeLarge)
-                .border(borderWidth, borderColor, WCTheme.borderRadius.shapeLarge)
-                .background(animatedBg)
-                .clickable { onClick() }
-                .clearAndSetSemantics {
-                    testTag = optionTag
-                    text = AnnotatedString(networkName)
-                    role = Role.Button
-                }
-                .padding(horizontal = WCTheme.spacing.spacing4),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val networkBadgeStrokeColor = if (isSelected) {
-                    WCTheme.colors.foregroundAccentPrimary10Solid
-                } else {
-                    WCTheme.colors.foregroundPrimary
-                }
+        Text(
+            text = "Pay $amount to $merchantName",
+            style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary)
+        )
+        Spacer(modifier = Modifier.width(WCTheme.spacing.spacing2))
+        MerchantIcon(paymentInfo = paymentInfo, size = 20.dp)
+    }
+}
 
-                PaymentAssetIcon(
-                    display = option.amount.display,
-                    tokenIconSize = 40.dp,
-                    networkIconSize = 16.dp,
-                    networkIconBorderWidth = 2.dp,
-                    networkIconBorderColor = networkBadgeStrokeColor,
-                    useExternalNetworkBorder = true
-                )
-                Spacer(modifier = Modifier.width(WCTheme.spacing.spacing3))
+@Composable
+private fun PaymentOptionRow(
+    option: Wallet.Model.PaymentOption,
+    feeEstimate: TransactionFeeEstimate?,
+    isEstimatingFee: Boolean,
+    testTag: String,
+    onClick: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    val networkName = option.amount.display?.networkName?.lowercase() ?: "unknown"
+    val requiresApproval = PaymentUtil.requiresApproval(option.actions)
 
-                // Token amount
-                val display = option.amount.display
-                val tokenAmount = formatTokenAmount(
-                    value = option.amount.value,
-                    decimals = display?.decimals ?: 18,
-                    symbol = display?.assetSymbol ?: "Token"
-                )
+    val baseModifier = Modifier
+        .fillMaxWidth()
+        .height(72.dp)
+        .clip(WCTheme.borderRadius.shapeLarge)
+        .background(WCTheme.colors.foregroundPrimary)
 
-                Text(
-                    text = tokenAmount,
-                    style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textPrimary)
-                )
-            }
+    val rowModifier = (if (onClick != null) baseModifier.clickable(onClick = onClick) else baseModifier)
+        .clearAndSetSemantics {
+            this.testTag = testTag
+            text = AnnotatedString(networkName)
+            if (onClick != null) role = Role.Button
+        }
+        .padding(horizontal = WCTheme.spacing.spacing4)
+
+    Row(
+        modifier = rowModifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            PaymentAssetIcon(
+                display = option.amount.display,
+                tokenIconSize = 32.dp,
+                networkIconSize = 18.dp,
+                networkIconBorderWidth = 1.dp,
+                networkIconBorderColor = WCTheme.colors.foregroundPrimary,
+                useExternalNetworkBorder = true
+            )
+            Spacer(modifier = Modifier.width(WCTheme.spacing.spacing3))
+
+            val display = option.amount.display
+            val tokenAmount = formatTokenAmount(
+                value = option.amount.value,
+                decimals = display?.decimals ?: 18,
+                symbol = display?.assetSymbol ?: "Token"
+            )
+
+            Text(
+                text = tokenAmount,
+                style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textPrimary)
+            )
         }
 
-        // "Info required" badge — placed as sibling overlay so it's not hidden by clearAndSetSemantics
-        if (option.collectData != null) {
-            val pillBg = if (isSelected) WCTheme.colors.bgAccentPrimary.copy(alpha = 0.9f) else WCTheme.colors.foregroundTertiary
-            val pillText = if (isSelected) Color.White else WCTheme.colors.textPrimary
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = WCTheme.spacing.spacing4)
-                    .clip(RoundedCornerShape(WCTheme.borderRadius.radius2))
-                    .background(pillBg)
-                    .testTag("pay-info-required-badge")
-                    .padding(horizontal = WCTheme.spacing.spacing2, vertical = 6.dp)
-            ) {
-                Text(
-                    text = "Info required",
-                    style = WCTheme.typography.bodyMdMedium.copy(color = pillText)
-                )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing4)
+        ) {
+            when {
+                feeEstimate != null && requiresApproval -> OptionGasEstimate(feeEstimate.display)
+                isEstimatingFee && requiresApproval -> Shimmer(width = 70.dp, height = 16.dp)
             }
+            if (trailing != null) trailing()
         }
     }
 }
@@ -463,6 +486,8 @@ private fun TokenIconWithNetwork(
     networkIconBorderColor: Color = Color.White,
     useExternalNetworkBorder: Boolean = false
 ) {
+    // Badge overhangs the token's right/bottom edges to match Figma.
+    val overhang = 2.dp
     Box(modifier = Modifier.size(tokenIconSize)) {
         AsyncImage(
             model = tokenIconUrl,
@@ -474,14 +499,11 @@ private fun TokenIconWithNetwork(
         networkIconUrl?.let { networkUrl ->
             if (useExternalNetworkBorder && networkIconBorderWidth > 0.dp) {
                 val badgeSize = networkIconSize + (networkIconBorderWidth * 2)
-                val badgeOffset = tokenIconSize - badgeSize
+                val badgeOffset = tokenIconSize - badgeSize + overhang
                 Box(
                     modifier = Modifier
                         .size(badgeSize)
-                        .offset(
-                            x = badgeOffset,
-                            y = badgeOffset
-                        )
+                        .offset(x = badgeOffset, y = badgeOffset)
                         .clip(CircleShape)
                         .background(networkIconBorderColor)
                         .padding(networkIconBorderWidth)
@@ -495,15 +517,13 @@ private fun TokenIconWithNetwork(
                     )
                 }
             } else {
+                val badgeOffset = tokenIconSize - networkIconSize + overhang
                 AsyncImage(
                     model = networkUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .size(networkIconSize)
-                        .offset(
-                            x = tokenIconSize - networkIconSize,
-                            y = tokenIconSize - networkIconSize
-                        )
+                        .offset(x = badgeOffset, y = badgeOffset)
                         .clip(CircleShape)
                         .border(networkIconBorderWidth, networkIconBorderColor, CircleShape)
                 )
@@ -562,9 +582,12 @@ private fun SummaryContent(
     paymentInfo: Wallet.Model.PaymentInfo?,
     selectedOption: Wallet.Model.PaymentOption,
     requiresApproval: Boolean,
-    approvalGasEstimate: String?,
+    approvalGasEstimate: TransactionFeeEstimate?,
     isEstimatingApprovalGas: Boolean,
+    canChangeOption: Boolean,
     onConfirm: () -> Unit,
+    onChangeOption: () -> Unit,
+    onGasFeeInfo: () -> Unit,
     onClose: () -> Unit
 ) {
     Column(
@@ -573,7 +596,6 @@ private fun SummaryContent(
             .background(WCTheme.colors.bgPrimary)
             .padding(WCTheme.spacing.spacing5)
     ) {
-        // Close button at top right
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = Alignment.TopEnd
@@ -583,7 +605,6 @@ private fun SummaryContent(
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
-        // Merchant icon and payment title
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -595,97 +616,151 @@ private fun SummaryContent(
             PaymentTitle(paymentInfo = paymentInfo)
         }
 
-        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing5))
 
-        // "Pay with" row
         val networkName = selectedOption.amount.display?.networkName?.lowercase() ?: "unknown"
+        PaymentOptionRow(
+            option = selectedOption,
+            feeEstimate = approvalGasEstimate,
+            isEstimatingFee = isEstimatingApprovalGas,
+            testTag = "pay-review-token-$networkName",
+            trailing = if (canChangeOption) {
+                {
+                    BorderedIconButton(
+                        iconRes = R.drawable.ic_pencil,
+                        contentDescription = "Change token",
+                        onClick = onChangeOption,
+                        iconSize = 18.dp,
+                    )
+                }
+            } else null,
+        )
+
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing5))
+
+        val payLabel = PaymentReviewFormatter.payButtonLabel(paymentInfo, approvalGasEstimate)
+
+        PrimaryActionButton(
+            primaryText = "Pay ${payLabel.total}",
+            secondaryText = if (payLabel.includesGasFee) " (incl. gas fee)" else null,
+            onClick = onConfirm,
+            modifier = Modifier.testTag("pay-button-pay")
+        )
+
+        if (requiresApproval) {
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing3))
+            Text(
+                text = "Why does ${(selectedOption.amount.display?.assetSymbol ?: "this token").uppercase(Locale.ROOT)} require a gas fee?",
+                style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary),
+                textAlign = TextAlign.Center,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onGasFeeInfo() }
+            )
+        }
+    }
+}
+
+@Composable
+private fun GasFeeInfoContent(
+    selectedOption: Wallet.Model.PaymentOption,
+    approvalGasEstimate: TransactionFeeEstimate?,
+    onBack: () -> Unit,
+    onClose: () -> Unit
+) {
+    val tokenSymbol = selectedOption.amount.display?.assetSymbol?.uppercase(Locale.ROOT) ?: "THIS TOKEN"
+    val gasText = approvalGasEstimate?.display ?: "Network fee set by wallet"
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(WCTheme.colors.bgPrimary)
+            .padding(WCTheme.spacing.spacing5),
+    ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(68.dp)
-                .clip(WCTheme.borderRadius.shapeLarge)
-                .background(WCTheme.colors.foregroundPrimary)
-                .testTag("pay-review-token-$networkName")
-                .padding(horizontal = WCTheme.spacing.spacing4),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Pay with",
-                style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary)
+            ModalIconButton(
+                iconRes = R.drawable.ic_arrow_left,
+                contentDescription = "Back",
+                onClick = onBack,
+                showBorder = false,
+                modifier = Modifier.testTag("pay-button-back")
             )
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val display = selectedOption.amount.display
-                val tokenAmount = formatTokenAmount(
-                    value = selectedOption.amount.value,
-                    decimals = display?.decimals ?: 18,
-                    symbol = display?.assetSymbol ?: "Token"
-                )
-
-                Text(
-                    text = tokenAmount,
-                    style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textPrimary)
-                )
-
-                Spacer(modifier = Modifier.width(WCTheme.spacing.spacing2))
-
-                PaymentAssetIcon(
-                    display = display,
-                    tokenIconSize = 32.dp,
-                    networkIconSize = 16.dp,
-                    networkIconBorderWidth = 2.dp,
-                    networkIconBorderColor = WCTheme.colors.foregroundPrimary
-                )
-            }
-        }
-
-        if (requiresApproval) {
-            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
-
-            val feeText = when {
-                isEstimatingApprovalGas -> "Loading..."
-                approvalGasEstimate != null -> approvalGasEstimate
-                else -> "Network fee set by wallet"
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(68.dp)
-                    .clip(WCTheme.borderRadius.shapeLarge)
-                    .background(WCTheme.colors.foregroundPrimary)
-                    .testTag("pay-review-one-time-fee")
-                    .padding(horizontal = WCTheme.spacing.spacing4),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "One-time fee",
-                    style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textTertiary)
-                )
-                Text(
-                    text = feeText,
-                    style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textPrimary)
-                )
-            }
+            ModalCloseButton(onClick = onClose, modifier = Modifier.testTag("pay-button-close"))
         }
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
 
-        // Confirm button
-        val buttonAmount = paymentInfo?.let {
-            formatDisplayAmount(
-                value = it.amount.value,
-                decimals = it.amount.display?.decimals ?: 2,
-                symbol = it.amount.display?.assetSymbol ?: it.amount.unit
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            PaymentAssetIcon(
+                display = selectedOption.amount.display,
+                tokenIconSize = 48.dp,
+                networkIconSize = 18.dp,
+                networkIconBorderWidth = 2.dp,
+                networkIconBorderColor = WCTheme.colors.bgPrimary,
             )
-        } ?: ""
+
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
+
+            Text(
+                text = "Why does $tokenSymbol require a gas fee?",
+                style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
+
+            Text(
+                text = "The gas fee covers a one-time setup that lets your wallet pay with $tokenSymbol.",
+                style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary),
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = "You only pay it once. Future $tokenSymbol payments from this wallet skip this step.",
+                style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary),
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .clip(WCTheme.borderRadius.shapeLarge)
+                .background(WCTheme.colors.foregroundPrimary)
+                .padding(horizontal = WCTheme.spacing.spacing4, vertical = WCTheme.spacing.spacing3),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.ic_gas_pump),
+                contentDescription = null,
+                tint = WCTheme.colors.iconDefault,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(WCTheme.spacing.spacing2))
+            Text(
+                text = "Gas fee: $gasText",
+                style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
 
         PrimaryActionButton(
-            text = "Pay $buttonAmount",
-            onClick = onConfirm,
-            modifier = Modifier.testTag("pay-button-pay")
+            text = "Got it!",
+            onClick = onBack
         )
     }
 }
@@ -845,7 +920,8 @@ private fun formatExpiration(expiresAt: Long): String {
 
 @Composable
 private fun ProcessingContent(
-    message: String
+    message: String,
+    note: String?,
 ) {
     Column(
         modifier = Modifier
@@ -866,6 +942,15 @@ private fun ProcessingContent(
             textAlign = TextAlign.Center,
             modifier = Modifier.testTag("pay-loading-message")
         )
+
+        note?.let {
+            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
+            Text(
+                text = it,
+                style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary),
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -919,48 +1004,6 @@ private fun SuccessContent(
             style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
             textAlign = TextAlign.Center
         )
-
-        // Transaction details from result info
-        if (resultInfo != null) {
-            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
-
-            val clipboardManager = LocalClipboardManager.current
-            val context = LocalContext.current
-
-            val resultAmount = resultInfo.optionAmount.let {
-                formatDisplayAmount(
-                    value = it.value,
-                    decimals = it.display?.decimals ?: 2,
-                    symbol = it.display?.assetSymbol ?: it.unit
-                )
-            }
-
-            Text(
-                text = "Amount: $resultAmount",
-                style = WCTheme.typography.bodyLgMedium.copy(color = WCTheme.colors.textSecondary),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(WCTheme.spacing.spacing2))
-
-            Text(
-                text = "Tx: ${resultInfo.txId.take(6)}...${resultInfo.txId.takeLast(4)}",
-                style = WCTheme.typography.bodyLgMedium.copy(
-                    color = WCTheme.colors.textSecondary,
-                    textDecoration = TextDecoration.Underline
-                ),
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .clickable {
-                        clipboardManager.setText(AnnotatedString(resultInfo.txId))
-                        Toast.makeText(context, "Transaction ID copied", Toast.LENGTH_SHORT).show()
-                    }
-                    .semantics {
-                        role = Role.Button
-                        contentDescription = "Copy transaction ID"
-                    }
-            )
-        }
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
 
@@ -1136,11 +1179,96 @@ private fun ModalIconButton(
 }
 
 @Composable
+private fun InlineIconButton(
+    iconRes: Int,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(34.dp)
+            .clip(WCTheme.borderRadius.shapeMedium)
+            .background(WCTheme.colors.bgPrimary)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(id = iconRes),
+            contentDescription = contentDescription,
+            modifier = Modifier.size(18.dp),
+            tint = WCTheme.colors.textPrimary
+        )
+    }
+}
+
+@Composable
+private fun OptionGasEstimate(displayValue: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = "+$displayValue ",
+            style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary)
+        )
+        Icon(
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_gas_pump),
+            contentDescription = null,
+            tint = WCTheme.colors.iconDefault,
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+@Composable
+private fun BorderedIconButton(
+    iconRes: Int,
+    contentDescription: String,
+    onClick: () -> Unit,
+    iconSize: Dp = 20.dp,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(38.dp)
+            .clip(RoundedCornerShape(WCTheme.borderRadius.radius3))
+            .border(
+                width = 1.dp,
+                color = WCTheme.colors.borderSecondary,
+                shape = RoundedCornerShape(WCTheme.borderRadius.radius3)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(id = iconRes),
+            contentDescription = contentDescription,
+            modifier = Modifier.size(iconSize),
+            tint = WCTheme.colors.textPrimary
+        )
+    }
+}
+
+@Composable
 private fun PrimaryActionButton(
     text: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
     modifier: Modifier = Modifier
+) {
+    PrimaryActionButton(
+        primaryText = text,
+        secondaryText = null,
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun PrimaryActionButton(
+    primaryText: String,
+    secondaryText: String?,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = Modifier
@@ -1157,10 +1285,18 @@ private fun PrimaryActionButton(
             .then(modifier),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = text,
-            style = WCTheme.typography.bodyLgRegular.copy(color = Color.White)
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = primaryText,
+                style = WCTheme.typography.bodyLgRegular.copy(color = Color.White)
+            )
+            if (secondaryText != null) {
+                Text(
+                    text = secondaryText,
+                    style = WCTheme.typography.bodyMdRegular.copy(color = Color.White)
+                )
+            }
+        }
     }
 }
 

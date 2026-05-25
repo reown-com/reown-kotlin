@@ -36,6 +36,23 @@ fun createBalanceApiService(): BalanceApiService {
     return retrofit.create(BalanceApiService::class.java)
 }
 
+fun createFungiblePriceApiService(): FungiblePriceApiService {
+    val httpClient = OkHttpClient.Builder()
+
+    val logging = HttpLoggingInterceptor()
+    logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+    httpClient.addInterceptor(logging)
+
+    val retrofit = Retrofit.Builder()
+        .baseUrl("https://rpc.walletconnect.org")
+        .client(httpClient.build())
+        .addConverterFactory(GsonConverterFactory.create())
+        .addCallAdapterFactory(CoroutineCallAdapterFactory())
+        .build()
+
+    return retrofit.create(FungiblePriceApiService::class.java)
+}
+
 fun createBlockChainApiService(projectId: String, chainId: String, rpcUrl: String = "https://rpc.walletconnect.com"): BlockChainApiService {
     val httpClient = OkHttpClient.Builder()
 
