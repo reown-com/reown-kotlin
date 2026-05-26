@@ -149,6 +149,15 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         variant.defaultTheme?.let { setThemeMode(it) }
     }
 
+    // NFC UI enabled (persisted, default true)
+    private val _isNfcUiEnabled = MutableStateFlow(prefs.getBoolean(KEY_ENABLE_NFC_UI, true))
+    val isNfcUiEnabled = _isNfcUiEnabled.asStateFlow()
+
+    fun setNfcUiEnabled(enabled: Boolean) {
+        _isNfcUiEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_ENABLE_NFC_UI, enabled).apply()
+    }
+
     private val printerManager = PrinterManager(application)
 
     fun printReceipt(displayAmount: String, info: Pos.PaymentInfo?) {
@@ -673,5 +682,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         private const val KEY_CURRENCY = "currency"
         private const val KEY_THEME = "theme"
         private const val KEY_VARIANT = "variant"
+        private const val KEY_ENABLE_NFC_UI = "enable_nfc_ui"
     }
 }

@@ -75,7 +75,13 @@ internal object NfcManager {
         foregroundActivityRef = activity?.let { WeakReference(it) }
         val ctx = appContext ?: return
         val adapter = NfcAdapter.getDefaultAdapter(ctx) ?: return
-        val cardEmulation = CardEmulation.getInstance(adapter)
+        if (!ctx.packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) return
+        val cardEmulation = try {
+            CardEmulation.getInstance(adapter)
+        } catch (e: UnsupportedOperationException) {
+            Timber.w(e, "NFC: HCE not supported on this device")
+            return
+        }
         val component = ComponentName(ctx, NdefHostApduService::class.java)
         if (activity != null) {
             cardEmulation.setPreferredService(activity, component)

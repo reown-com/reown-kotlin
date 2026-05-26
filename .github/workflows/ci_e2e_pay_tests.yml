@@ -76,10 +76,10 @@ jobs:
           ./gradlew :sample:wallet:assembleInternal
 
       - name: Copy Maestro Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@0c9875ae33fe85fa6a4110dc46c82876d91a551d
+        uses: WalletConnect/actions/maestro/pay-tests@afc741fbe638ca13cfc10de2ed59b064c2b59436
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@0c9875ae33fe85fa6a4110dc46c82876d91a551d
+        uses: WalletConnect/actions/maestro/setup@afc741fbe638ca13cfc10de2ed59b064c2b59436
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2

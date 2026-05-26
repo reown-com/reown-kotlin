@@ -156,6 +156,8 @@ dependencies {
     // MixPanel
     implementation("com.mixpanel.android:mixpanel-android:7.3.1")
 
+    testImplementation(libs.jUnit)
+
     // WalletConnect
     debugImplementation(project(":core:android")) {
         exclude(group = "com.github.reown-com", module = "yttrium")

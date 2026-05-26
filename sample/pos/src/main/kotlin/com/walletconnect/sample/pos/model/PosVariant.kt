@@ -106,6 +106,26 @@ enum class PosVariant(
         textInvertOverride = null,
         successTextColor = Color.White,
         defaultTheme = ThemeMode.LIGHT
+    ),
+    MONEY2020(
+        displayName = "Money 20/20",
+        partnerLogoRes = R.drawable.ic_money2020_logo,
+        partnerLogoWidthDp = 67,
+        partnerLogoHeightDp = 28,
+        accentColor = null,
+        textInvertOverride = null,
+        successTextColor = Color.White,
+        defaultTheme = ThemeMode.DARK
+    ),
+    XMONEY(
+        displayName = "xMoney",
+        partnerLogoRes = R.drawable.ic_xmoney_logo,
+        partnerLogoWidthDp = 91,
+        partnerLogoHeightDp = 28,
+        accentColor = null,
+        textInvertOverride = null,
+        successTextColor = Color.White,
+        defaultTheme = ThemeMode.DARK
     )
 }
 
