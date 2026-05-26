@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.nfc.PaymentSigner
+import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.sample.wallet.payment.InitialPaymentDestination
 import com.reown.sample.wallet.payment.PaymentSelectionResolver
 import com.reown.sample.wallet.payment.PaymentTokenPreferenceStore
@@ -109,7 +111,8 @@ class PaymentViewModel : ViewModel() {
                 "eip155:1:${EthAccountDelegate.address}",
                 "eip155:137:${EthAccountDelegate.address}",
                 "eip155:8453:${EthAccountDelegate.address}",
-                "eip155:10:${EthAccountDelegate.address}"
+                "eip155:10:${EthAccountDelegate.address}",
+                "${Chain.SOLANA.id}:${SolanaAccountDelegate.getSolanaPubKeyForKeyPair()}",
             )
 
             WalletKit.Pay.getPaymentOptions(paymentLink, accounts).fold(
@@ -342,7 +345,7 @@ class PaymentViewModel : ViewModel() {
             message = if (showSetupLoader) {
                 "Setting up $symbol"
             } else {
-                "Getting required actions..."
+                "Processing your payment..."
             },
             note = if (showSetupLoader) "This usually takes a few seconds. Future $symbol payments will skip this step." else null,
             paymentInfo = storedPaymentInfo,
@@ -381,7 +384,7 @@ class PaymentViewModel : ViewModel() {
 
         if (!showSetupLoader) {
             _uiState.value = PaymentUiState.Processing(
-                message = "Confirming your payment...",
+                message = "Processing your payment...",
                 paymentInfo = storedPaymentInfo,
             )
         }

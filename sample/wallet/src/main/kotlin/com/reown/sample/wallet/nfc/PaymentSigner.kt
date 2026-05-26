@@ -3,14 +3,17 @@
 package com.reown.sample.wallet.nfc
 
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.signer.EthSigner
 import com.reown.util.bytesToHex
 import com.reown.util.hexToBytes
 import com.reown.walletkit.client.Wallet
 import org.json.JSONArray
+import org.json.JSONObject
 import org.web3j.crypto.ECKeyPair
 import org.web3j.crypto.Sign
 import org.web3j.crypto.StructuredDataEncoder
+import uniffi.yttrium_utils.solanaSignTransaction
 
 /**
  * Shared signing logic for payment RPC actions.
@@ -22,7 +25,22 @@ internal object PaymentSigner {
         return when (action.method) {
             "eth_signTypedData_v4" -> signTypedDataV4(action.params)
             "personal_sign" -> EthSigner.personalSign(action.params)
+            "solana_signTransaction" -> signSolanaTransaction(action.params)
             else -> throw UnsupportedOperationException("Unsupported signing method: ${action.method}")
+        }
+    }
+
+    private fun signSolanaTransaction(params: String): String {
+        val txObject = parseSolanaTxParams(params)
+        val base64Tx = txObject.getString("transaction")
+        return solanaSignTransaction(SolanaAccountDelegate.keyPair, base64Tx).transaction
+    }
+
+    private fun parseSolanaTxParams(params: String): JSONObject {
+        return if (params.trimStart().startsWith("[")) {
+            JSONArray(params).getJSONObject(0)
+        } else {
+            JSONObject(params)
         }
     }
 
