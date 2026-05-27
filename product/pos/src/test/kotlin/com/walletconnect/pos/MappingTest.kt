@@ -326,13 +326,24 @@ class MappingTest {
     }
 
     @Test
-    fun `toTransaction - refund presence wins even without timestamp`() {
-        // Spec marks `fullyRefundedAt` optional. Presence of the refund object alone
-        // is enough to consider the payment refunded.
+    fun `toTransaction - fully_refunded status without timestamp still marks refunded`() {
+        // Spec marks `fullyRefundedAt` optional; the terminal `fully_refunded` status alone
+        // is sufficient to mark the payment refunded.
         val tx = paymentRecordFixture(
             refund = PaymentRefundDto(status = "fully_refunded", fullyRefundedAt = null)
         ).toTransaction()
         assertTrue(tx.isRefunded)
+        assertEquals(null, tx.refundedAt)
+    }
+
+    @Test
+    fun `toTransaction - non-terminal refund status does not mark refunded`() {
+        // Guard against future intermediate values (e.g. "pending") incorrectly flipping
+        // the badge before the refund settles.
+        val tx = paymentRecordFixture(
+            refund = PaymentRefundDto(status = "pending", fullyRefundedAt = null)
+        ).toTransaction()
+        assertEquals(false, tx.isRefunded)
         assertEquals(null, tx.refundedAt)
     }
 

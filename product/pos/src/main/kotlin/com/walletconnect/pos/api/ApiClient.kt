@@ -35,19 +35,28 @@ internal class ApiClient(
     private val errorAdapter by lazy { moshi.adapter(ApiErrorWrapper::class.java) }
     private val flatErrorAdapter by lazy { moshi.adapter(ApiErrorFlat::class.java) }
 
-    private val sharedHttpClient: OkHttpClient by lazy {
+    private val payHttpClient: OkHttpClient by lazy {
         baseHttpClient.newBuilder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-            .addInterceptor(createHeadersInterceptor())
+            .addInterceptor(createHeadersInterceptor(includeWcpVersion = true))
+            .build()
+    }
+
+    private val merchantHttpClient: OkHttpClient by lazy {
+        baseHttpClient.newBuilder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(createHeadersInterceptor(includeWcpVersion = false))
             .build()
     }
 
     private val payApi: PayApi by lazy {
         Retrofit.Builder()
             .baseUrl(baseUrl.ensureTrailingSlash())
-            .client(sharedHttpClient)
+            .client(payHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(PayApi::class.java)
@@ -56,7 +65,7 @@ internal class ApiClient(
     private val merchantApi: MerchantApi by lazy {
         Retrofit.Builder()
             .baseUrl(BuildConfig.MERCHANT_API_BASE_URL.ensureTrailingSlash())
-            .client(sharedHttpClient)
+            .client(merchantHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(MerchantApi::class.java)
@@ -244,18 +253,19 @@ internal class ApiClient(
         }
     }
 
-    private fun createHeadersInterceptor(): Interceptor {
+    private fun createHeadersInterceptor(includeWcpVersion: Boolean): Interceptor {
         return Interceptor { chain ->
-            val request = chain.request().newBuilder()
+            val builder = chain.request().newBuilder()
                 .addHeader("Api-Key", apiKey)
                 .addHeader("Merchant-Id", merchantId)
                 .addHeader("Sdk-Name", "pos-kotlin")
                 .addHeader("Sdk-Version", BuildConfig.SDK_VERSION)
                 .addHeader("Sdk-Platform", "android")
-                .addHeader("WCP-Version", WCP_VERSION)
                 .addHeader("Content-Type", "application/json")
-                .build()
-            chain.proceed(request)
+            if (includeWcpVersion) {
+                builder.addHeader("WCP-Version", WCP_VERSION)
+            }
+            chain.proceed(builder.build())
         }
     }
 

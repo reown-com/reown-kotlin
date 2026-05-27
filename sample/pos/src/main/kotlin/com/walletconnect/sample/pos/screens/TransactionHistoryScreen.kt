@@ -94,13 +94,12 @@ fun TransactionHistoryScreen(
         skipHalfExpanded = true
     )
 
-    // Debounced reload when the search query changes
+    // Debounced reload when the search query changes. We always trigger a reload — the VM
+    // routes short queries (<3 chars) back to the unfiltered history endpoint, so the list
+    // stays in sync with the input even when the user backspaces below the search threshold.
     LaunchedEffect(searchQuery) {
-        val q = searchQuery.trim()
-        if (q.isEmpty() || q.length in 3..35) {
-            delay(300)
-            viewModel.refreshTransactionHistory()
-        }
+        delay(300)
+        viewModel.refreshTransactionHistory()
     }
 
     // Drive the bottom sheet from the refund state machine.

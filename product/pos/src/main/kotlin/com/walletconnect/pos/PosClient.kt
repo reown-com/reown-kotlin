@@ -333,13 +333,19 @@ object PosClient {
      * [Pos.Transaction.isRefunded] / `refundedAt` automatically).
      *
      * @param paymentId WalletConnect Pay payment ID. Must match `^pay_[A-Za-z0-9]+$`, 1..64 chars.
+     *   A malformed ID is surfaced via [Result.failure] wrapping an [IllegalArgumentException]
+     *   so callers can handle it through the same channel as API errors — the suspend body
+     *   does not throw on validation.
      * @throws IllegalStateException if SDK is not initialized.
-     * @throws IllegalArgumentException if [paymentId] is malformed.
      */
-    @Throws(IllegalStateException::class, IllegalArgumentException::class)
+    @Throws(IllegalStateException::class)
     suspend fun refundPayment(paymentId: String): Result<Pos.RefundResult> {
-        require(paymentId.length in 1..64) { "paymentId must be 1..64 chars, got ${paymentId.length}" }
-        require(PAYMENT_ID_PATTERN.matches(paymentId)) { "paymentId must match pattern ^pay_[A-Za-z0-9]+\$" }
+        if (paymentId.length !in 1..64) {
+            return Result.failure(IllegalArgumentException("paymentId must be 1..64 chars, got ${paymentId.length}"))
+        }
+        if (!PAYMENT_ID_PATTERN.matches(paymentId)) {
+            return Result.failure(IllegalArgumentException("paymentId must match pattern ^pay_[A-Za-z0-9]+\$"))
+        }
 
         val client = synchronized(lock) {
             checkInitialized()

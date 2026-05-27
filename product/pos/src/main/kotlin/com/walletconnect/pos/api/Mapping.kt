@@ -97,7 +97,7 @@ internal fun PaymentRecord.toTransaction(): Pos.Transaction {
         walletName = buyer?.accountProviderName ?: "Unknown",
         createdAt = createdAt,
         confirmedAt = settledAt,
-        isRefunded = refund != null,
+        isRefunded = refund?.status == RefundStatus.FULLY_REFUNDED,
         refundedAt = refund?.fullyRefundedAt
     )
 }

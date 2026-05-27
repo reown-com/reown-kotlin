@@ -126,6 +126,10 @@ internal object FailureCodes {
     const val DECLINED_USER = "declined_user"
 }
 
+internal object RefundStatus {
+    const val FULLY_REFUNDED = "fully_refunded"
+}
+
 // Transaction History Models
 
 @JsonClass(generateAdapter = true)
