@@ -112,7 +112,7 @@ class PaymentViewModel : ViewModel() {
                 "eip155:137:${EthAccountDelegate.address}",
                 "eip155:8453:${EthAccountDelegate.address}",
                 "eip155:10:${EthAccountDelegate.address}",
-                "${Chain.SOLANA.id}:${SolanaAccountDelegate.getSolanaPubKeyForKeyPair()}",
+                "${Chain.SOLANA.id}:${SolanaAccountDelegate.getSolanaPubKeyForKeyPair(SolanaAccountDelegate.keyPair)}",
             )
 
             WalletKit.Pay.getPaymentOptions(paymentLink, accounts).fold(
