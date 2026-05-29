@@ -64,7 +64,7 @@ fun BottomBar(navController: NavController, state: BottomBarState, screens: Arra
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = WCTheme.spacing.spacing3),
+                .padding(vertical = WCTheme.spacing.spacing2),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
