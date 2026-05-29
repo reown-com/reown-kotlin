@@ -60,7 +60,12 @@ internal class PrinterManager(private val context: Context) {
             xDp += element.widthDp + GAP_DP
         }
 
-        return thresholdToMonochrome(bitmap)
+        // thresholdToMonochrome returns a fresh bitmap; recycle this intermediate canvas bitmap.
+        return try {
+            thresholdToMonochrome(bitmap)
+        } finally {
+            bitmap.recycle()
+        }
     }
 
     private fun loadBlackTinted(drawableRes: Int): Drawable {
