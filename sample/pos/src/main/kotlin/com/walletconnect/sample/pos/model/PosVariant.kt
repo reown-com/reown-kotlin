@@ -15,7 +15,11 @@ enum class PosVariant(
     val accentColor: Color?,
     val textInvertOverride: Color?,
     val successTextColor: Color,
-    val defaultTheme: ThemeMode?
+    val defaultTheme: ThemeMode?,
+    // When false, the variant's theme is locked and the Theme selector is disabled in Settings.
+    // When true, devs can still switch the theme manually (defaultTheme is only the initial value).
+    // Mirrors the `allowThemeToggle` flag in the React Native POS.
+    val allowThemeToggle: Boolean = true
 ) {
     DEFAULT(
         displayName = "None",
@@ -45,7 +49,8 @@ enum class PosVariant(
         accentColor = Color(0xFFFFEF46),
         textInvertOverride = Color(0xFF202020),
         successTextColor = Color(0xFF202020),
-        defaultTheme = ThemeMode.DARK
+        defaultTheme = ThemeMode.DARK,
+        allowThemeToggle = false
     ),
     BINANCE(
         displayName = "Binance",
@@ -55,7 +60,8 @@ enum class PosVariant(
         accentColor = Color(0xFFFCD533),
         textInvertOverride = Color(0xFF202020),
         successTextColor = Color(0xFF202020),
-        defaultTheme = ThemeMode.LIGHT
+        defaultTheme = ThemeMode.LIGHT,
+        allowThemeToggle = false
     ),
     PHANTOM(
         displayName = "Phantom",
@@ -65,7 +71,8 @@ enum class PosVariant(
         accentColor = Color(0xFFAB9FF2),
         textInvertOverride = null,
         successTextColor = Color.White,
-        defaultTheme = ThemeMode.LIGHT
+        defaultTheme = ThemeMode.LIGHT,
+        allowThemeToggle = false
     ),
     SOLANA(
         displayName = "Solana",
@@ -75,7 +82,8 @@ enum class PosVariant(
         accentColor = Color(0xFF9945FF),
         textInvertOverride = Color.White,
         successTextColor = Color.White,
-        defaultTheme = ThemeMode.DARK
+        defaultTheme = ThemeMode.DARK,
+        allowThemeToggle = false
     ),
     LEDGER(
         displayName = "Ledger",
@@ -85,7 +93,8 @@ enum class PosVariant(
         accentColor = Color(0xFF000000),
         textInvertOverride = null,
         successTextColor = Color.White,
-        defaultTheme = ThemeMode.LIGHT
+        defaultTheme = ThemeMode.LIGHT,
+        allowThemeToggle = false
     ),
     TREZOR(
         displayName = "Trezor",
@@ -95,7 +104,8 @@ enum class PosVariant(
         accentColor = Color(0xFF60E198),
         textInvertOverride = Color(0xFF1F1F1F),
         successTextColor = Color(0xFF1F1F1F),
-        defaultTheme = ThemeMode.LIGHT
+        defaultTheme = ThemeMode.LIGHT,
+        allowThemeToggle = false
     ),
     IMIN(
         displayName = "iMin",
@@ -105,7 +115,8 @@ enum class PosVariant(
         accentColor = Color(0xFF000000),
         textInvertOverride = null,
         successTextColor = Color.White,
-        defaultTheme = ThemeMode.LIGHT
+        defaultTheme = ThemeMode.LIGHT,
+        allowThemeToggle = false
     ),
     MONEY2020(
         displayName = "Money 20/20",
@@ -115,7 +126,7 @@ enum class PosVariant(
         accentColor = null,
         textInvertOverride = null,
         successTextColor = Color.White,
-        defaultTheme = ThemeMode.DARK
+        defaultTheme = ThemeMode.LIGHT
     ),
     XMONEY(
         displayName = "xMoney",
@@ -125,7 +136,7 @@ enum class PosVariant(
         accentColor = null,
         textInvertOverride = null,
         successTextColor = Color.White,
-        defaultTheme = ThemeMode.DARK
+        defaultTheme = ThemeMode.LIGHT
     )
 }
 
