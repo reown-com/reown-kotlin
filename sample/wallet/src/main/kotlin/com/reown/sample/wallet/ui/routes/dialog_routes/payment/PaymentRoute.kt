@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -113,6 +114,14 @@ fun PaymentRoute(
         transitionSpec = { fadeIn() togetherWith fadeOut() },
         label = "paymentState"
     ) { state ->
+        // Paint the sheet background (the sheet itself is transparent) so it fills
+        // behind the system nav bar, then inset content above it to avoid overlap.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(WCTheme.colors.bgPrimary)
+                .navigationBarsPadding()
+        ) {
         when (state) {
             is PaymentUiState.WebViewDataCollection -> {
                 WebViewDataCollectionContent(
@@ -220,6 +229,7 @@ fun PaymentRoute(
                     }
                 )
             }
+        }
         }
     }
 }
