@@ -3,11 +3,11 @@ run-name: >-
   ${{
     github.event_name == 'push' && format('All Samples - Internal ({0})', github.ref_name) ||
     github.event_name == 'release' && format('All Samples - Release ({0})', github.ref_name) ||
-    format('{0}{1}{2}{3} - {4}',
-      inputs.wallet == 'true' && 'Wallet ' || '',
-      inputs.dapp == 'true' && 'dApp ' || '',
-      inputs.modal == 'true' && 'Modal ' || '',
-      inputs.pos == 'true' && 'POS ' || '',
+    format('{0}{1}{2}{3}- {4}',
+      inputs.wallet && 'Wallet ' || '',
+      inputs.dapp && 'dApp ' || '',
+      inputs.modal && 'Modal ' || '',
+      inputs.pos && 'POS ' || '',
       inputs.build_type)
   }}
 
