@@ -49,6 +49,7 @@ sealed interface PosEvent {
     data class PaymentError(val error: String) : PosEvent
     data class PrintSuccess(val isTest: Boolean) : PosEvent
     data class PrintError(val message: String) : PosEvent
+    data object PinResetSuccess : PosEvent
 }
 
 sealed interface TransactionHistoryUiState {
@@ -70,6 +71,8 @@ sealed interface PinFlowState {
     data object Hidden : PinFlowState
     data class SetNew(val firstPin: String? = null, val pendingAction: PendingCredentialSave) : PinFlowState
     data class Verify(val pendingAction: PendingCredentialSave) : PinFlowState
+    // Reset/change PIN flow (not tied to a credential save; no current-PIN check — test app)
+    data class SetNewForReset(val firstPin: String? = null) : PinFlowState
     data class Error(val message: String, val previousState: PinFlowState) : PinFlowState
 }
 
@@ -206,6 +209,11 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun requestResetPin() {
+        // Test app: allow re-keying the PIN without knowing the current one.
+        _pinFlowState.value = PinFlowState.SetNewForReset()
+    }
+
     fun onPinEntered(pin: String) {
         when (val state = _pinFlowState.value) {
             is PinFlowState.SetNew -> {
@@ -229,6 +237,21 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                     _pinFlowState.value = PinFlowState.Hidden
                 } else {
                     _pinFlowState.value = PinFlowState.Error("Incorrect PIN", state)
+                }
+            }
+            is PinFlowState.SetNewForReset -> {
+                if (state.firstPin == null) {
+                    // First entry — move to confirm step
+                    _pinFlowState.value = state.copy(firstPin = pin)
+                } else {
+                    // Confirm step
+                    if (pin == state.firstPin) {
+                        credentialsManager.setPin(pin)
+                        _pinFlowState.value = PinFlowState.Hidden
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PinResetSuccess) }
+                    } else {
+                        _pinFlowState.value = PinFlowState.Error("PINs don't match", state.copy(firstPin = null))
+                    }
                 }
             }
             is PinFlowState.Error -> {
