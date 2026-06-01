@@ -52,7 +52,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.blockchain.TokenBalance
-import com.reown.sample.wallet.domain.account.EthAccountDelegate
+import com.reown.sample.wallet.blockchain.formatTokenAmount
 import com.reown.sample.wallet.ui.common.getChainIcon
 import com.reown.sample.wallet.ui.common.getChainName
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
@@ -117,7 +117,7 @@ fun WalletsRoute(
                         }
                     }
                     items(filteredBalances) { balance ->
-                        WalletBalanceItem(balance)
+                        WalletBalanceItem(balance, connectionsViewModel.addressFor(balance.chainId))
                     }
                     item { Spacer(modifier = Modifier.height(spacing.spacing2)) }
                 }
@@ -135,12 +135,11 @@ fun WalletsRoute(
 }
 
 @Composable
-fun WalletBalanceItem(balance: TokenBalance) {
+fun WalletBalanceItem(balance: TokenBalance, address: String) {
     val colors = WCTheme.colors
     val spacing = WCTheme.spacing
     val borderRadius = WCTheme.borderRadius
     val chainName = getChainName(balance.chainId)
-    val address = EthAccountDelegate.address
     val shortAddress = "${address.take(6)}...${address.takeLast(4)}"
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
@@ -219,7 +218,7 @@ fun WalletBalanceItem(balance: TokenBalance) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "${balance.quantity.numeric} ${balance.symbol}",
+                text = "${formatTokenAmount(balance.quantity.numeric)} ${balance.symbol}",
                 style = WCTheme.typography.bodyLgRegular.copy(
                     color = colors.textPrimary
                 )
