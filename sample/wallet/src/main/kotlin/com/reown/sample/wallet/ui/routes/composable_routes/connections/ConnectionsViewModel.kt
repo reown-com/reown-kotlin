@@ -20,6 +20,7 @@ import com.reown.sample.wallet.domain.account.TONAccountDelegate
 import com.reown.sample.wallet.domain.account.TronAccountDelegate
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.walletkit.client.WalletKit
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -53,11 +54,22 @@ class ConnectionsViewModel : ViewModel() {
 
     private val balanceApiService = createBalanceApiService()
 
-    // Non-EVM addresses (Solana/Sui/TON/Tron) derived once, keyed by CAIP-2
-    // namespace. Deriving them is crypto/FFI work that must not run per render or
-    // per refresh; the underlying keys only change on wallet import, which
-    // recreates this view model.
-    private val nonEvmAddresses: Map<String, String> = buildMap {
+    // Non-EVM addresses (Solana/Sui/TON/Tron) keyed by CAIP-2 namespace, derived
+    // off the main thread (it's crypto/FFI work — TON even spins up a client) and
+    // cached. The underlying keys only change on wallet import, which recreates
+    // this view model. @Volatile so addressFor() reads the populated map from the
+    // main thread once the IO derivation completes.
+    @Volatile
+    private var nonEvmAddresses: Map<String, String> = emptyMap()
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            nonEvmAddresses = deriveNonEvmAddresses()
+            fetchBalances()
+        }
+    }
+
+    private fun deriveNonEvmAddresses(): Map<String, String> = buildMap {
         runCatching { SolanaAccountDelegate.getSolanaPubKeyForKeyPair() }.getOrNull()
             ?.takeIf { it.isNotBlank() }?.let { put("solana", it) }
         runCatching { SuiAccountDelegate.address }.getOrNull()
@@ -66,10 +78,6 @@ class ConnectionsViewModel : ViewModel() {
             ?.takeIf { it.isNotBlank() }?.let { put("ton", it) }
         runCatching { TronAccountDelegate.address }.getOrNull()
             ?.takeIf { it.isNotBlank() }?.let { put("tron", it) }
-    }
-
-    init {
-        fetchBalances()
     }
 
     /** Address shown and copied for a balance row, by the token's CAIP-2 namespace. */
@@ -128,12 +136,15 @@ class ConnectionsViewModel : ViewModel() {
             )
             if (response.isSuccessful) {
                 val balances = response.body()?.balances ?: emptyList()
-                Log.d("Web3Wallet", "Balances for ${chainId ?: "evm"} ($address): ${balances.size}")
+                val maskedAddress = "${address.take(6)}…${address.takeLast(4)}"
+                Log.d("Web3Wallet", "Balances for ${chainId ?: "evm"} ($maskedAddress): ${balances.size}")
                 balances
             } else {
                 Log.e("Web3Wallet", "Failed to fetch balances for ${chainId ?: "evm"}: ${response.code()}")
                 null
             }
+        }.onFailure {
+            if (it is CancellationException) throw it
         }.getOrElse {
             Log.e("Web3Wallet", "Error fetching balances for ${chainId ?: "evm"}", it)
             null
