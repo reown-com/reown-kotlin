@@ -164,7 +164,7 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun executePrint(receipt: ReceiptData, isTest: Boolean, source: String) {
         PosLogStore.info("Print receipt requested", source = source)
-        printerManager.print(receipt).fold(
+        printerManager.print(receipt, _selectedVariant.value).fold(
             onSuccess = {
                 PosLogStore.info("Receipt printed", source = source)
                 _posEventsFlow.emit(PosEvent.PrintSuccess(isTest))
