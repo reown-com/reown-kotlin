@@ -21,6 +21,7 @@ import com.reown.sample.wallet.domain.client.SuiUtils
 import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.ui.common.peer.PeerUI
 import com.reown.sample.wallet.ui.common.peer.toPeerUI
+import com.reown.util.bytesToHex
 import com.reown.util.hexToBytes
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
@@ -102,10 +103,12 @@ class SessionProposalViewModel : ViewModel() {
                             chainId.contains("solana") -> {
                                 val issuer = "did:pkh:$chainId:${SolanaAccountDelegate.keys.second}"
                                 val message = WalletKit.formatAuthMessage(Wallet.Params.FormatAuthMessage(authRequest, issuer))
+                                // yttrium-utils ≥0.10.54 expects `message` as alloy_primitives::Bytes (hex string).
+                                val messageHex = message.toByteArray(Charsets.UTF_8).bytesToHex()
                                 Pair(
                                     Wallet.Model.Cacao.Signature(
                                         t = "solana",
-                                        s = solanaSignPrehash(SolanaAccountDelegate.keyPair, message)
+                                        s = solanaSignPrehash(SolanaAccountDelegate.keyPair, messageHex)
                                     ), issuer
                                 )
                             }

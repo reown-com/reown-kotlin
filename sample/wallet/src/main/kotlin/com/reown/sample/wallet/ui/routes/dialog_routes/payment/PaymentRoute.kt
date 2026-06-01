@@ -12,10 +12,11 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
@@ -29,6 +30,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -51,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -99,7 +103,6 @@ fun PaymentRoute(
     viewModel: PaymentViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
 
     LaunchedEffect(paymentLink) {
         viewModel.setPaymentLink(paymentLink)
@@ -111,6 +114,14 @@ fun PaymentRoute(
         transitionSpec = { fadeIn() togetherWith fadeOut() },
         label = "paymentState"
     ) { state ->
+        // Paint the sheet background (the sheet itself is transparent) so it fills
+        // behind the system nav bar, then inset content above it to avoid overlap.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(WCTheme.colors.bgPrimary)
+                .navigationBarsPadding()
+        ) {
         when (state) {
             is PaymentUiState.WebViewDataCollection -> {
                 WebViewDataCollectionContent(
@@ -200,7 +211,6 @@ fun PaymentRoute(
                         viewModel.cancel()
                         onPaymentSuccess()
                         dismissPaymentDialog(navController)
-                        Toast.makeText(context, "Payment successful!", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -219,6 +229,7 @@ fun PaymentRoute(
                     }
                 )
             }
+        }
         }
     }
 }
@@ -262,10 +273,13 @@ private fun PaymentOptionsContent(
     onWhyInfoRequired: () -> Unit,
     onClose: () -> Unit
 ) {
+    val maxSheetHeight = (LocalConfiguration.current.screenHeightDp * 0.85f).dp
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(WCTheme.colors.bgPrimary)
+            .heightIn(max = maxSheetHeight)
+            .verticalScroll(rememberScrollState())
             .padding(WCTheme.spacing.spacing5)
     ) {
         // Header: spacer (left) + X close (right)
@@ -885,12 +899,19 @@ private fun formatTokenAmount(value: String, decimals: Int, symbol: String): Str
         val tokenValue = rawValue.divide(divisor, safeDecimals, RoundingMode.HALF_UP)
         if (tokenValue.signum() == 0) return "0 $symbol"
 
-        // Non-zero values that would round to 0.0000 at 4 decimals (e.g. 0.0000123 ETH)
-        // get a "<0.0001" treatment so the user sees the amount is non-trivial.
-        val rounded = tokenValue.setScale(4, RoundingMode.HALF_UP).stripTrailingZeros()
-        if (rounded.signum() == 0) return "<0.0001 $symbol"
-
-        val formatted = java.text.NumberFormat.getNumberInstance(Locale.US).format(rounded)
+        // Start at 2 decimals; if the value rounds to 0 there, grow the scale until
+        // a non-zero digit appears (capped at the token's natural precision).
+        var scale = 2
+        while (scale < safeDecimals &&
+            tokenValue.setScale(scale, RoundingMode.HALF_UP).signum() == 0
+        ) {
+            scale++
+        }
+        val numberFormat = java.text.NumberFormat.getNumberInstance(Locale.US).apply {
+            minimumFractionDigits = 0
+            maximumFractionDigits = scale
+        }
+        val formatted = numberFormat.format(tokenValue)
         "$formatted $symbol"
     } catch (e: Exception) {
         "$value $symbol"
