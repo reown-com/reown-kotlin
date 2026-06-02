@@ -73,6 +73,7 @@ fun POSSampleHost(
                     Toast.LENGTH_SHORT
                 ).show()
                 is PosEvent.PrintError -> Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                is PosEvent.PinResetSuccess -> Toast.makeText(context, "PIN updated", Toast.LENGTH_SHORT).show()
                 else -> Unit
             }
         }

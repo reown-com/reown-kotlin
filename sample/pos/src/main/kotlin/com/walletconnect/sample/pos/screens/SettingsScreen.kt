@@ -231,6 +231,19 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
+            // Reset PIN — re-keys the PIN that protects merchant settings.
+            // Value reflects current state and refreshes whenever the PIN flow returns to Hidden.
+            val isPinSet = remember(pinFlowState) { viewModel.credentialsManager.isPinSet() }
+            SettingsItem(
+                label = "Reset PIN",
+                value = if (isPinSet) "Configured" else "Not set",
+                showCaret = true,
+                onClick = { viewModel.requestResetPin() },
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+
             // Show NFC UI toggle (only on devices with an NFC sensor)
             if (nfcAvailable) {
                 SettingsToggleItem(
@@ -284,6 +297,10 @@ fun SettingsScreen(
                 else "Confirm PIN" to "Re-enter your PIN to confirm"
             }
             is PinFlowState.Verify -> "Enter PIN" to "Enter your PIN to save merchant settings"
+            is PinFlowState.SetNewForReset -> {
+                if (currentPinState.firstPin == null) "New PIN" to "Choose a new 4-digit PIN"
+                else "Confirm New PIN" to "Re-enter your new PIN to confirm"
+            }
             is PinFlowState.Error -> {
                 when (val prev = currentPinState.previousState) {
                     is PinFlowState.SetNew -> {
@@ -291,6 +308,10 @@ fun SettingsScreen(
                         else "Confirm PIN" to "Re-enter your PIN to confirm"
                     }
                     is PinFlowState.Verify -> "Enter PIN" to "Enter your PIN to save merchant settings"
+                    is PinFlowState.SetNewForReset -> {
+                        if (prev.firstPin == null) "New PIN" to "Choose a new 4-digit PIN"
+                        else "Confirm New PIN" to "Re-enter your new PIN to confirm"
+                    }
                     else -> "Enter PIN" to ""
                 }
             }

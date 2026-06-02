@@ -8,12 +8,22 @@ import androidx.lifecycle.viewModelScope
 import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.blockchain.TokenBalance
 import com.reown.sample.wallet.blockchain.createBalanceApiService
+import com.reown.sample.wallet.blockchain.isSpam
+import com.reown.sample.wallet.blockchain.processBalances
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.ACCOUNTS_1_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.account.ACCOUNTS_2_EIP155_ADDRESS
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
+import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
+import com.reown.sample.wallet.domain.account.SuiAccountDelegate
+import com.reown.sample.wallet.domain.account.TONAccountDelegate
+import com.reown.sample.wallet.domain.account.TronAccountDelegate
+import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
 import com.reown.walletkit.client.WalletKit
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,31 +54,69 @@ class ConnectionsViewModel : ViewModel() {
 
     private val balanceApiService = createBalanceApiService()
 
+    // Non-EVM addresses (Solana/Sui/TON/Tron) keyed by CAIP-2 namespace, derived
+    // off the main thread (it's crypto/FFI work — TON even spins up a client) and
+    // cached. The underlying keys only change on wallet import, which recreates
+    // this view model. @Volatile so addressFor() reads the populated map from the
+    // main thread once the IO derivation completes.
+    @Volatile
+    private var nonEvmAddresses: Map<String, String> = emptyMap()
+
     init {
-        fetchBalances()
+        viewModelScope.launch(Dispatchers.IO) {
+            nonEvmAddresses = deriveNonEvmAddresses()
+            fetchBalances()
+        }
     }
+
+    private fun deriveNonEvmAddresses(): Map<String, String> = buildMap {
+        runCatching { SolanaAccountDelegate.getSolanaPubKeyForKeyPair() }.getOrNull()
+            ?.takeIf { it.isNotBlank() }?.let { put("solana", it) }
+        runCatching { SuiAccountDelegate.address }.getOrNull()
+            ?.takeIf { it.isNotBlank() }?.let { put("sui", it) }
+        runCatching { TONAccountDelegate.addressFriendly }.getOrNull()
+            ?.takeIf { it.isNotBlank() }?.let { put("ton", it) }
+        runCatching { TronAccountDelegate.address }.getOrNull()
+            ?.takeIf { it.isNotBlank() }?.let { put("tron", it) }
+    }
+
+    /** Address shown and copied for a balance row, by the token's CAIP-2 namespace. */
+    fun addressFor(chainId: String): String =
+        nonEvmAddresses[chainId.substringBefore(":")] ?: EthAccountDelegate.address
 
     fun fetchBalances() {
         viewModelScope.launch(Dispatchers.IO) {
             _isLoadingBalances.value = true
             try {
-                val address = EthAccountDelegate.address
-                Log.d("Web3Wallet", "Fetching balances for address: $address")
-                val response = balanceApiService.getBalance(
-                    address = address,
-                    projectId = BuildConfig.PROJECT_ID
-                )
-                Log.d("Web3Wallet", "Balance API response code: ${response.code()}")
-                if (response.isSuccessful) {
-                    val balances = response.body()?.balances ?: emptyList()
-                    Log.d("Web3Wallet", "All balances received: ${balances.size} items")
-                    balances.forEach { balance ->
-                        Log.d("Web3Wallet", "Balance: ${balance.symbol} on ${balance.chainId} = ${balance.quantity.numeric}")
-                    }
-                    _balances.value = balances.sortedByDescending { it.value }
-                } else {
-                    Log.e("Web3Wallet", "Failed to fetch balances: ${response.code()} - ${response.errorBody()?.string()}")
+                val evmAddress = EthAccountDelegate.address
+                // EVM with no chainId returns all EVM tokens; each non-EVM chain
+                // is fetched with its own address + chainId.
+                val nonEvmTargets = buildList {
+                    nonEvmAddresses["solana"]?.let { add(it to Chain.SOLANA.id) }
+                    nonEvmAddresses["sui"]?.let { add(it to Chain.SUI.id) }
+                    nonEvmAddresses["ton"]?.let { add(it to TONAccountDelegate.mainnet) }
+                    nonEvmAddresses["tron"]?.let { add(it to TronAccountDelegate.mainnet) }
                 }
+
+                val deferred = buildList {
+                    add(async { fetchChainBalances(evmAddress, null) })
+                    nonEvmTargets.forEach { (address, chainId) ->
+                        add(async { fetchChainBalances(address, chainId) })
+                    }
+                }
+                val results = deferred.awaitAll()
+
+                if (results.all { it == null }) {
+                    Log.e("Web3Wallet", "All balance fetches failed; keeping current balances")
+                    return@launch
+                }
+
+                val apiBalances = results.filterNotNull().flatten().filterNot { isSpam(it) }
+                val availableNativeChainIds = buildSet {
+                    add("eip155:1")
+                    nonEvmTargets.forEach { (_, chainId) -> add(chainId) }
+                }
+                _balances.value = processBalances(apiBalances, availableNativeChainIds)
             } catch (e: Exception) {
                 Log.e("Web3Wallet", "Error fetching balances", e)
             } finally {
@@ -76,6 +124,31 @@ class ConnectionsViewModel : ViewModel() {
             }
         }
     }
+
+    // Returns the balances for a single call, or null if the request failed (so
+    // one chain's failure doesn't drop the others).
+    private suspend fun fetchChainBalances(address: String, chainId: String?): List<TokenBalance>? =
+        runCatching {
+            val response = balanceApiService.getBalance(
+                address = address,
+                projectId = BuildConfig.PROJECT_ID,
+                chainId = chainId
+            )
+            if (response.isSuccessful) {
+                val balances = response.body()?.balances ?: emptyList()
+                val maskedAddress = "${address.take(6)}…${address.takeLast(4)}"
+                Log.d("Web3Wallet", "Balances for ${chainId ?: "evm"} ($maskedAddress): ${balances.size}")
+                balances
+            } else {
+                Log.e("Web3Wallet", "Failed to fetch balances for ${chainId ?: "evm"}: ${response.code()}")
+                null
+            }
+        }.onFailure {
+            if (it is CancellationException) throw it
+        }.getOrElse {
+            Log.e("Web3Wallet", "Error fetching balances for ${chainId ?: "evm"}", it)
+            null
+        }
 
     var currentConnectionId: Int? = null
         set(value) {

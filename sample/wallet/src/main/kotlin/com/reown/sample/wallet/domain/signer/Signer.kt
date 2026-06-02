@@ -14,13 +14,17 @@ import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.domain.model.Transaction
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_request.request.SessionRequestUI
 import com.reown.sample.wallet.ui.routes.dialog_routes.transaction.Chain
+import com.reown.util.bytesToHex
 import com.reown.util.hexToBytes
+import io.ipfs.multibase.Base58
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
 import org.json.JSONArray
 import org.json.JSONObject
 import uniffi.yttrium_utils.SendTxMessage
+import uniffi.yttrium_utils.solanaSignAllTransactions
 import uniffi.yttrium_utils.solanaSignPrehash
+import uniffi.yttrium_utils.solanaSignTransaction
 import uniffi.yttrium_utils.tronSignMessage
 import uniffi.yttrium_utils.tronSignTransaction
 import kotlin.io.encoding.Base64
@@ -269,19 +273,32 @@ object Signer {
             sessionRequest.chain?.contains(Chains.Info.Cosmos.chain, true) == true ->
                 """{"signature":"pBvp1bMiX6GiWmfYmkFmfcZdekJc19GbZQanqaGa\/kLPWjoYjaJWYttvm17WoDMyn4oROas4JLu5oKQVRIj911==","pub_key":{"value":"psclI0DNfWq6cOlGrKD9wNXPxbUsng6Fei77XjwdkPSt","type":"tendermint\/PubKeySecp256k1"}}"""
 
-            sessionRequest.method == "solana_signAndSendTransaction" ||
-                    sessionRequest.method == "solana_signTransaction" -> {
+            sessionRequest.method == "solana_signTransaction" -> {
+                val transaction = JSONObject(sessionRequest.param).getString("transaction")
+                val signed = solanaSignTransaction(SolanaAccountDelegate.keyPair, transaction)
+                """{"signature":"${signed.signature}","transaction":"${signed.transaction}"}"""
+            }
+
+            sessionRequest.method == "solana_signAndSendTransaction" -> {
+                // Sample wallet has no Solana RPC client to broadcast — return a canned response.
                 """{"signature":"2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"}"""
             }
 
             sessionRequest.method == "solana_signAllTransactions" -> {
-                """{"transactions":["2Lb1KQHWfbV3pWMqXZveFWqneSyhH95YsgCENRWnArSkLydjN1M42oB82zSd6BBdGkM9pE6sQLQf1gyBh8KWM2c4"]}"""
+                val txsArray = JSONObject(sessionRequest.param).getJSONArray("transactions")
+                val transactions = List(txsArray.length()) { i -> txsArray.getString(i) }
+                val signed = solanaSignAllTransactions(SolanaAccountDelegate.keyPair, transactions)
+                val signedArray = JSONArray().apply { signed.forEach { put(it.transaction) } }
+                """{"transactions":$signedArray}"""
             }
 
             sessionRequest.method == "solana_signMessage" -> {
                 val jsonObject = JSONObject(sessionRequest.param)
                 val message = jsonObject.getString("message")
-                val result = solanaSignPrehash(SolanaAccountDelegate.keyPair, message)
+                // yttrium-utils ≥0.10.54 expects `message` as alloy_primitives::Bytes (hex string).
+                // Per the Solana wallet-adapter spec, `message` arrives base58-encoded.
+                val messageHex = Base58.decode(message).bytesToHex()
+                val result = solanaSignPrehash(SolanaAccountDelegate.keyPair, messageHex)
                 """{"signature":"$result"}"""
             }
             //Note: Only for testing purposes - it will always fail on Dapp side
