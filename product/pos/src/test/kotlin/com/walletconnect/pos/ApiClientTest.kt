@@ -1,22 +1,28 @@
 package com.walletconnect.pos
 
+import com.squareup.moshi.Moshi
+import com.walletconnect.pos.api.ApiErrorDetails
 import com.walletconnect.pos.api.ApiResult
 import com.walletconnect.pos.api.ErrorCodes
 import com.walletconnect.pos.api.GetPaymentStatusResponse
 import com.walletconnect.pos.api.PayApi
 import com.walletconnect.pos.api.PaymentStatus
+import com.walletconnect.pos.api.parseApiErrorBody
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.Response
 import java.io.IOException
 
 class ApiClientTest {
+
+    private val moshi = Moshi.Builder().build()
 
     @Test
     fun `getPaymentStatus - returns success with requires_action status`() = runTest {
@@ -178,6 +184,69 @@ class ApiClientTest {
     }
 
     @Test
+    fun `getPaymentStatus - parses flat 401 error body without wrapper`() = runTest {
+        val mockApi = mockk<PayApi>()
+        // 401 invalid_api_key bodies are flat: {"code":"...","message":"..."} (no "error" wrapper)
+        val errorBody = """{"code":"invalid_api_key","message":"Invalid API key"}"""
+            .toResponseBody("application/json".toMediaType())
+
+        coEvery { mockApi.getPaymentStatus("pay_401") } returns Response.error(401, errorBody)
+
+        val result = callGetPaymentStatus(mockApi, "pay_401")
+
+        assertTrue(result is ApiResult.Error)
+        val error = result as ApiResult.Error
+        assertEquals("invalid_api_key", error.code)
+        assertEquals("Invalid API key", error.message)
+    }
+
+    @Test
+    fun `getPaymentStatus - synthesizes message when reason-phrase is empty under HTTP2`() = runTest {
+        val mockApi = mockk<PayApi>()
+        // Simulate a real HTTP/2 response: empty body AND empty reason-phrase.
+        val rawResponse = okhttp3.Response.Builder()
+            .code(401)
+            .message("") // HTTP/2 does not transmit a reason-phrase
+            .protocol(okhttp3.Protocol.HTTP_2)
+            .request(okhttp3.Request.Builder().url("https://api.pay.walletconnect.com/v1/payments").build())
+            .build()
+        val emptyBody = "".toResponseBody("application/json".toMediaType())
+
+        coEvery { mockApi.getPaymentStatus("pay_401") } returns Response.error(emptyBody, rawResponse)
+
+        val result = callGetPaymentStatus(mockApi, "pay_401")
+
+        assertTrue(result is ApiResult.Error)
+        val error = result as ApiResult.Error
+        assertEquals("HTTP_401", error.code)
+        assertTrue(error.message.isNotBlank())
+        assertEquals("HTTP 401 error", error.message)
+    }
+
+    @Test
+    fun `parseApiErrorBody - parses wrapped error envelope`() {
+        val body = """{"status":"error","error":{"code":"payment_not_found","message":"Payment not found"}}"""
+        val details = parseApiErrorBody(moshi, body)
+        assertEquals("payment_not_found", details?.code)
+        assertEquals("Payment not found", details?.message)
+    }
+
+    @Test
+    fun `parseApiErrorBody - parses flat error body`() {
+        val body = """{"code":"invalid_api_key","message":"Invalid API key"}"""
+        val details = parseApiErrorBody(moshi, body)
+        assertEquals("invalid_api_key", details?.code)
+        assertEquals("Invalid API key", details?.message)
+    }
+
+    @Test
+    fun `parseApiErrorBody - returns null for blank or unparseable body`() {
+        assertNull(parseApiErrorBody(moshi, null))
+        assertNull(parseApiErrorBody(moshi, ""))
+        assertNull(parseApiErrorBody(moshi, "not json"))
+    }
+
+    @Test
     fun `polling - terminates when isFinal is true`() = runTest {
         val mockApi = mockk<PayApi>()
         var callCount = 0
@@ -238,17 +307,15 @@ class ApiClientTest {
                     ApiResult.Success(data)
                 }
             } else {
+                // Mirror ApiClient.parseErrorResponse: parse the body, else fall back to the
+                // HTTP status line (synthesizing a message when the reason-phrase is blank).
                 val errorBody = response.errorBody()?.string()
-                if (errorBody != null && errorBody.contains("error")) {
-                    // Parse nested error structure: {"status":"error","error":{"code":"...","message":"..."}}
-                    val codeMatch = Regex(""""error"\s*:\s*\{[^}]*"code"\s*:\s*"([^"]+)"""").find(errorBody)
-                    val messageMatch = Regex(""""error"\s*:\s*\{[^}]*"message"\s*:\s*"([^"]+)"""").find(errorBody)
-                    val code = codeMatch?.groupValues?.get(1) ?: "HTTP_${response.code()}"
-                    val message = messageMatch?.groupValues?.get(1) ?: response.message()
-                    ApiResult.Error(code, message)
-                } else {
-                    ApiResult.Error("HTTP_${response.code()}", response.message())
-                }
+                val details = parseApiErrorBody(moshi, errorBody)
+                    ?: ApiErrorDetails(
+                        code = "HTTP_${response.code()}",
+                        message = response.message().ifBlank { "HTTP ${response.code()} error" }
+                    )
+                ApiResult.Error(details.code, details.message)
             }
         } catch (e: IOException) {
             ApiResult.Error(ErrorCodes.NETWORK_ERROR, e.message ?: "Network error")
