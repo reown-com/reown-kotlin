@@ -26,7 +26,7 @@ class EventsRepository(
     }
 
     @Throws(SQLiteException::class)
-    suspend fun insertOrAbort(props: Props) = withContext(dispatcher) {
+    suspend fun insertOrAbort(props: Props): Unit = withContext(dispatcher) {
         with(Event(bundleId = bundleId, props = props)) {
             eventQueries.insertOrAbort(
                 eventId,

@@ -1,6 +1,5 @@
 @file:OptIn(
     ExperimentalMaterialApi::class,
-    ExperimentalMaterialNavigationApi::class,
     ExperimentalAnimationApi::class
 )
 
@@ -30,9 +29,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import com.google.accompanist.navigation.material.BottomSheetNavigator
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.material.navigation.BottomSheetNavigator
 import com.pandulapeter.beagle.Beagle
 import com.pandulapeter.beagle.modules.DividerModule
 import com.pandulapeter.beagle.modules.HeaderModule
@@ -117,7 +115,6 @@ class WalletKitActivity : AppCompatActivity() {
         nfcPaymentReader.disable()
     }
 
-    @OptIn(ExperimentalMaterialNavigationApi::class)
     private fun setContent(
         web3walletViewModel: Web3WalletViewModel,
         connectionsViewModel: ConnectionsViewModel,
@@ -128,7 +125,7 @@ class WalletKitActivity : AppCompatActivity() {
                 skipHalfExpanded = true
             )
             val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
-            val navController = rememberAnimatedNavController(bottomSheetNavigator)
+            val navController = rememberNavController(bottomSheetNavigator)
             LaunchedEffect(navController) { navControllerFlow.value = navController }
             val themeMode by ThemeManager.themeMode.collectAsState()
             val isDarkTheme = when (themeMode) {

@@ -1,7 +1,7 @@
 package com.reown.sign.storage.link_mode
 
 import android.database.sqlite.SQLiteException
-import com.reown.sign.storage.data.dao.linkmode.LinkModeDaoQueries
+import com.reown.sign.storage.data.dao.link_mode.LinkModeDaoQueries
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

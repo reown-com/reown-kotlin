@@ -9,8 +9,10 @@ import com.reown.foundation.util.Logger
 class VerifyContextStorageRepository(private val verifyContextQueries: VerifyContextQueries, private val logger: Logger) {
 
     @Throws(SQLiteException::class)
-    suspend fun insertOrAbort(verifyContext: VerifyContext) = with(verifyContext) {
-        verifyContextQueries.insertOrAbortVerifyContext(id, origin, validation, verifyUrl, isScam)
+    suspend fun insertOrAbort(verifyContext: VerifyContext) {
+        with(verifyContext) {
+            verifyContextQueries.insertOrAbortVerifyContext(id, origin, validation, verifyUrl, isScam)
+        }
     }
 
     suspend fun get(id: Long): VerifyContext? {

@@ -55,10 +55,6 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = listOf("-Xcontext-receivers")
-    }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -80,14 +76,14 @@ android {
 dependencies {
     implementation(project(":sample:common"))
 
-    implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
-    implementation("androidx.activity:activity-compose:1.6.1")
+    implementation("androidx.core:core-ktx:1.17.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.3")
+    implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.palette:palette:1.0.0")
 
-    implementation("io.insert-koin:koin-androidx-compose:3.4.3")
-    implementation("io.coil-kt:coil-compose:2.3.0")
+    implementation("io.insert-koin:koin-androidx-compose:4.1.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("androidx.compose.material:material-icons-core:1.7.1")
 
     implementation(libs.qrCodeGenerator)
@@ -99,10 +95,12 @@ dependencies {
     implementation(libs.androidx.compose.lifecycle)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit)
     androidTestImplementation(libs.androidx.compose.navigation.testing)
 
     implementation(libs.bundles.accompanist)
+    implementation(libs.androidx.compose.material.navigation)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)

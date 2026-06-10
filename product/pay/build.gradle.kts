@@ -72,9 +72,6 @@ android {
         jniLibs.pickFirsts.add("lib/armeabi-v7a/libuniffi_yttrium_wcpay.so")
         jniLibs.pickFirsts.add("lib/x86_64/libuniffi_yttrium_wcpay.so")
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
 }
 
 dependencies {

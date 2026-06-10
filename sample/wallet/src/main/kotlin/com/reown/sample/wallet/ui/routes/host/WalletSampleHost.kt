@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalMaterialNavigationApi::class)
 
 package com.reown.sample.wallet.ui.routes.host
 
@@ -47,9 +46,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.material.BottomSheetNavigator
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.ModalBottomSheetLayout
+import androidx.compose.material.navigation.BottomSheetNavigator
+import androidx.compose.material.navigation.ModalBottomSheetLayout
 import com.pandulapeter.beagle.DebugMenuView
 import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.theme.WCTheme
@@ -62,7 +60,6 @@ import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.PairingEvent
 import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterialNavigationApi::class)
 @Composable
 fun WalletSampleHost(
     bottomSheetNavigator: BottomSheetNavigator,

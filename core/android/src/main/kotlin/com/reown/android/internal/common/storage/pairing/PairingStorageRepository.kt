@@ -47,7 +47,9 @@ class PairingStorageRepository(private val pairingQueries: PairingQueries) : Pai
     }
 
     @Throws(SQLiteException::class)
-    override fun updateExpiry(topic: Topic, expiry: Expiry): Unit = pairingQueries.updateOrAbortExpiry(expiry = expiry.seconds, topic = topic.value)
+    override fun updateExpiry(topic: Topic, expiry: Expiry) {
+        pairingQueries.updateOrAbortExpiry(expiry = expiry.seconds, topic = topic.value)
+    }
 
     @Throws(SQLiteException::class)
     override fun getPairingOrNullByTopic(topic: Topic): Pairing? = pairingQueries.getPairingByTopic(topic = topic.value, mapper = this::toPairing).executeAsOneOrNull()
