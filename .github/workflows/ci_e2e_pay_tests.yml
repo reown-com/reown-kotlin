@@ -6,6 +6,8 @@ on:
       - opened
       - synchronize
       - edited
+  schedule:
+    - cron: '0 6 * * *' # Runs every day at 06:00 UTC
   workflow_dispatch:
 
 permissions:
