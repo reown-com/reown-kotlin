@@ -97,11 +97,11 @@ dependencies {
     implementation("org.web3j:core:4.9.8-hotfix")
 
     // Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
     // Converter for JSON parsing using Gson
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
     // OkHttp logging interceptor (optional, for debugging)
-    implementation("com.squareup.okhttp3:logging-interceptor:5.1.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:5.4.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2")
 
     implementation(platform(libs.firebase.bom))
@@ -110,8 +110,7 @@ dependencies {
     implementation(libs.bundles.androidxAppCompat)
 
     implementation("androidx.core:core-ktx:1.17.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.3")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.3")
+    implementation(libs.androidx.lifecycleRuntime)
 
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.palette:palette:1.0.0")
@@ -129,7 +128,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material)
-    implementation("androidx.compose.material:material-icons-core:1.7.1")
+    implementation("androidx.compose.material:material-icons-core")
     implementation(libs.androidx.compose.navigation)
     implementation(libs.androidx.compose.lifecycle)
     debugImplementation(libs.androidx.compose.ui.tooling)
@@ -141,7 +140,7 @@ dependencies {
     implementation(libs.coil)
 
     implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1")
-    implementation("androidx.lifecycle:lifecycle-process:2.9.3")
+    implementation("androidx.lifecycle:lifecycle-process:2.10.0")
     implementation("androidx.constraintlayout:constraintlayout-compose:1.1.1")
 
     // CameraX
