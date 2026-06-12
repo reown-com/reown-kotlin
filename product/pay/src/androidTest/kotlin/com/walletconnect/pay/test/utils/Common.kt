@@ -12,15 +12,21 @@ internal object Common {
         InstrumentationRegistry.getArguments().getString("MERCHANT_API_KEY")
             ?: error("MERCHANT_API_KEY environment variable not set")
     }
-    const val TEST_ADDRESS = "0xEb52dc9cCE17f1F0Ab0606d846dce183B449033C"
     const val BASE_CHAIN = "eip155:8453"
     const val POLYGON_CHAIN = "eip155:137"
     const val PAY_API_BASE_URL = "https://api.pay.walletconnect.com/"
 
-    val testAccounts = listOf(
-        "$BASE_CHAIN:$TEST_ADDRESS",
-        "$POLYGON_CHAIN:$TEST_ADDRESS"
-    )
+    // The test wallet address is derived from TEST_WALLET_PRIVATE_KEY (via the signer),
+    // so it always matches whatever wallet that key points to — single source of truth,
+    // nothing to keep in sync. Accessed at test time, after TestClient has initialized.
+    val testAddress: String
+        get() = TestClient.signer.address
+
+    val testAccounts: List<String>
+        get() = listOf(
+            "$BASE_CHAIN:$testAddress",
+            "$POLYGON_CHAIN:$testAddress"
+        )
 }
 
 internal fun globalOnError(error: Throwable) {
