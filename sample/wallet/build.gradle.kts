@@ -61,10 +61,6 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = listOf("-Xcontext-receivers")
-    }
 
     buildFeatures {
         compose = true
@@ -89,7 +85,7 @@ android {
 
 dependencies {
     implementation(project(":sample:common"))
-    implementation("androidx.compose.material3:material3:1.0.0-alpha08")
+    implementation("androidx.compose.material3:material3:1.2.1")
     implementation(libs.androidx.splashscreen)
 
     // local .m2 build
@@ -98,63 +94,64 @@ dependencies {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
     implementation("net.java.dev.jna:jna:5.17.0@aar")
-    implementation("org.web3j:core:4.9.4")
+    implementation("org.web3j:core:4.9.8-hotfix")
 
     // Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
     // Converter for JSON parsing using Gson
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
     // OkHttp logging interceptor (optional, for debugging)
-    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3")
-    implementation("com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2")
+    implementation("com.squareup.okhttp3:logging-interceptor:5.4.0")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)
 
     implementation(libs.bundles.androidxAppCompat)
 
-    implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
+    implementation("androidx.core:core-ktx:1.17.0")
+    implementation(libs.androidx.lifecycleRuntime)
 
-    implementation("androidx.activity:activity-compose:1.6.1")
+    implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.palette:palette:1.0.0")
 
     // Glide
     implementation("com.github.skydoves:landscapist-glide:2.1.0")
-    implementation("io.coil-kt:coil-svg:2.4.0")
+    implementation("io.coil-kt:coil-svg:2.6.0")
 
     // Accompanist
     implementation(libs.bundles.accompanist)
+    implementation(libs.androidx.compose.material.navigation)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material)
+    implementation("androidx.compose.material:material-icons-core")
     implementation(libs.androidx.compose.navigation)
     implementation(libs.androidx.compose.lifecycle)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit)
     androidTestImplementation(libs.androidx.compose.navigation.testing)
 
     implementation(libs.coil)
 
-    implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.1.0")
-    implementation("androidx.lifecycle:lifecycle-process:2.5.1")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
+    implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1")
+    implementation("androidx.lifecycle:lifecycle-process:2.10.0")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.1.1")
 
     // CameraX
-    implementation("androidx.camera:camera-camera2:1.2.0")
-    implementation("androidx.camera:camera-lifecycle:1.2.0")
-    implementation("androidx.camera:camera-view:1.0.0-alpha31")
+    implementation("androidx.camera:camera-camera2:1.6.1")
+    implementation("androidx.camera:camera-lifecycle:1.6.1")
+    implementation("androidx.camera:camera-view:1.6.1")
 
     // Zxing
-    implementation("com.google.zxing:core:3.5.0")
+    implementation("com.google.zxing:core:3.5.4")
 
     // MixPanel
-    implementation("com.mixpanel.android:mixpanel-android:7.3.1")
+    implementation("com.mixpanel.android:mixpanel-android:8.8.0")
 
     testImplementation(libs.jUnit)
 

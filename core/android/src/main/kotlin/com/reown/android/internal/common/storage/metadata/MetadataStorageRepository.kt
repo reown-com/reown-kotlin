@@ -12,13 +12,17 @@ import com.reown.foundation.common.model.Topic
 internal class MetadataStorageRepository(private val metaDataQueries: MetaDataQueries) : MetadataStorageRepositoryInterface {
 
     @Throws(SQLiteException::class)
-    override fun insertOrAbortMetadata(topic: Topic, appMetaData: AppMetaData, appMetaDataType: AppMetaDataType) = with(appMetaData) {
-        metaDataQueries.insertOrAbortMetaData(topic.value, name, description, url, icons, redirect?.native, appMetaDataType, redirect?.universal, redirect?.linkMode)
+    override fun insertOrAbortMetadata(topic: Topic, appMetaData: AppMetaData, appMetaDataType: AppMetaDataType) {
+        with(appMetaData) {
+            metaDataQueries.insertOrAbortMetaData(topic.value, name, description, url, icons, redirect?.native, appMetaDataType, redirect?.universal, redirect?.linkMode)
+        }
     }
 
     @Throws(SQLiteException::class)
-    override fun updateMetaData(topic: Topic, appMetaData: AppMetaData, appMetaDataType: AppMetaDataType) = with(appMetaData) {
-        metaDataQueries.updateMetaData(name, description, url, icons, redirect?.native, appMetaDataType, redirect?.universal, redirect?.linkMode, topic.value)
+    override fun updateMetaData(topic: Topic, appMetaData: AppMetaData, appMetaDataType: AppMetaDataType) {
+        with(appMetaData) {
+            metaDataQueries.updateMetaData(name, description, url, icons, redirect?.native, appMetaDataType, redirect?.universal, redirect?.linkMode, topic.value)
+        }
     }
 
     @Throws(SQLiteException::class)
@@ -36,7 +40,9 @@ internal class MetadataStorageRepository(private val metaDataQueries: MetaDataQu
         }
     }
 
-    override fun deleteMetaData(topic: Topic): Unit = metaDataQueries.deleteMetaDataFromTopic(topic.value)
+    override fun deleteMetaData(topic: Topic) {
+        metaDataQueries.deleteMetaDataFromTopic(topic.value)
+    }
 
     override fun existsByTopicAndType(topic: Topic, type: AppMetaDataType): Boolean = metaDataQueries.getIdByTopicAndType(topic.value, type).executeAsOneOrNull() != null
 

@@ -74,10 +74,6 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = listOf("-Xcontext-receivers")
-    }
     buildFeatures {
         compose = true
         buildConfig = true

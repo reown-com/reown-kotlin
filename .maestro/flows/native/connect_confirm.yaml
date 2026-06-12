@@ -38,9 +38,12 @@ name: Kotlin Dapp to Kotlin Wallet Connection Confirmed
     timeout: 30000
 - tapOn:
     id: "wallet-request-approve"
+# Establishing the first session requires a full relay round-trip (wallet approve
+# -> relay -> dapp settles the session -> navigates to the connected chain). This
+# is the slowest step in the flow and noticeably slower on CI emulators, so allow
+# generous time before asserting the connected chain is shown.
 - extendedWaitUntil:
     visible:
       text: "Ethereum_main"
-    timeout: 15000
-- assertVisible: "Ethereum_main"
+    timeout: 60000
 - stopRecording

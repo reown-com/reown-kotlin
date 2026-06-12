@@ -13,11 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.google.accompanist.navigation.animation.AnimatedNavHost
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.google.accompanist.navigation.material.BottomSheetNavigator
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.bottomSheet
+import androidx.compose.material.navigation.BottomSheetNavigator
+import androidx.compose.material.navigation.bottomSheet
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.import_wallet.ImportWalletRoute
@@ -39,7 +38,6 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.payment.PaymentRoute
 
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("RestrictedApi")
-@ExperimentalMaterialNavigationApi
 @Composable
 fun Web3WalletNavGraph(
     bottomSheetNavigator: BottomSheetNavigator,
@@ -58,7 +56,7 @@ fun Web3WalletNavGraph(
 
     val sheetState = remember { bottomSheetNavigator.navigatorSheetState }
 
-    AnimatedNavHost(
+    NavHost(
         navController = navController,
         modifier = modifier,
         startDestination = startDestination,

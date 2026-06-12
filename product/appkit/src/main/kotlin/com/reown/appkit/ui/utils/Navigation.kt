@@ -21,8 +21,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 
 @Composable
 internal fun AnimatedNavGraph(
@@ -33,7 +33,7 @@ internal fun AnimatedNavGraph(
     val stiffnessAnimSpec = spring(stiffness = Spring.StiffnessLow, visibilityThreshold = IntOffset.VisibilityThreshold)
     val tweenAnimSpec = tween<Float>(durationMillis = 400)
 
-    AnimatedNavHost(
+    NavHost(
         navController = navController,
         startDestination = startDestination,
         contentAlignment = Alignment.BottomCenter,

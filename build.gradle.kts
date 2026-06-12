@@ -23,6 +23,7 @@ allprojects {
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             jvmTarget.set(JvmTarget.fromTarget(jvmVersion.toString()))
+            freeCompilerArgs.addAll("-Xcontext-receivers", "-opt-in=kotlin.time.ExperimentalTime")
         }
     }
 

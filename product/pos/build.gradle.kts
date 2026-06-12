@@ -51,9 +51,6 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-    }
 
     buildFeatures {
         buildConfig = true

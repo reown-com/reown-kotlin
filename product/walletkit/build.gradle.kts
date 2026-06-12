@@ -45,10 +45,6 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.time.ExperimentalTime"
-    }
 
     buildFeatures {
         buildConfig = true

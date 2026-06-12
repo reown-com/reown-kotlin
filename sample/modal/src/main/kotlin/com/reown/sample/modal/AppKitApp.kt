@@ -2,8 +2,8 @@ package com.reown.sample.modal
 
 import android.app.Application
 import com.google.firebase.appdistribution.FirebaseAppDistribution
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.crashlytics.crashlytics
+import com.google.firebase.Firebase
 import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.android.relay.ConnectionType

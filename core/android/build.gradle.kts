@@ -52,10 +52,6 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = listOf("-Xcontext-receivers")
-    }
 
     sourceSets {
         getByName("test").resources.srcDirs("src/test/resources")
