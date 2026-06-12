@@ -324,23 +324,34 @@ private fun PaymentOptionsContent(
         ) {
             options.forEachIndexed { index, option ->
                 val hasCollectData = option.collectData?.url != null
-                PaymentOptionRow(
-                    option = option,
-                    feeEstimate = gasEstimates[option.id],
-                    isEstimatingFee = estimatingOptionIds.contains(option.id),
-                    onClick = { onOptionSelected(option.id) },
-                    testTag = "pay-option-$index",
-                    trailing = if (hasCollectData) {
-                        {
-                            BorderedIconButton(
-                                iconRes = R.drawable.ic_info,
-                                contentDescription = "Why info needed",
-                                onClick = onWhyInfoRequired,
-                                modifier = Modifier.testTag("pay-info-required-badge")
-                            )
-                        }
-                    } else null,
-                )
+                // Stable, network+token-keyed testTag for deterministic selection
+                // (e.g. `pay-option-usdt-polygon`), additive to the order-dependent
+                // `pay-option-$index`. Lets a test pick a specific asset+network when
+                // several options share a token symbol across networks.
+                val display = option.amount.display
+                val stableTag = "pay-option-" + listOfNotNull(display?.assetSymbol, display?.networkName)
+                    .joinToString("-")
+                    .lowercase()
+                    .replace(Regex("\\s+"), "-")
+                Box(modifier = Modifier.testTag(stableTag)) {
+                    PaymentOptionRow(
+                        option = option,
+                        feeEstimate = gasEstimates[option.id],
+                        isEstimatingFee = estimatingOptionIds.contains(option.id),
+                        onClick = { onOptionSelected(option.id) },
+                        testTag = "pay-option-$index",
+                        trailing = if (hasCollectData) {
+                            {
+                                BorderedIconButton(
+                                    iconRes = R.drawable.ic_info,
+                                    contentDescription = "Why info needed",
+                                    onClick = onWhyInfoRequired,
+                                    modifier = Modifier.testTag("pay-info-required-badge")
+                                )
+                            }
+                        } else null,
+                    )
+                }
             }
         }
 
@@ -970,6 +981,10 @@ private fun ProcessingContent(
                 text = it,
                 style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary),
                 textAlign = TextAlign.Center,
+                // Secondary line shown only while setting up a token for the first time
+                // (e.g. the USDT Permit2 approve step). Lets pay_usdt_polygon observe the
+                // approve step by id instead of matching a copy string.
+                modifier = Modifier.testTag("pay-loading-setup-note")
             )
         }
     }
