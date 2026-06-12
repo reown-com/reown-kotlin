@@ -77,13 +77,11 @@ jobs:
         run: |
           ./gradlew :sample:wallet:assembleInternal
 
-      # TEMP: pinned to the WalletConnect/actions PR #97 head (adds pay_usdt_polygon
-      # + the permit2-reset action). Re-pin to the squash-merge commit on master once #97 lands.
       - name: Copy Maestro Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@d07c1f8a83dde5c52b7c8649a6814f98ba716b6b
+        uses: WalletConnect/actions/maestro/pay-tests@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@3a145abaa0dcf9f609fabe17f6e6722e0db49535
+        uses: WalletConnect/actions/maestro/setup@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
@@ -180,11 +178,10 @@ jobs:
       # so a mid-flow failure doesn't leave the allowance set. Uses the shared
       # permit2-reset action (the private key goes via env, never the CLI).
       # continue-on-error so a reset hiccup can't fail an otherwise-green run.
-      # TEMP: pinned to WalletConnect/actions PR #97 head; re-pin with pay-tests once #97 lands.
       - name: Reset USDT Permit2 allowance (Polygon)
         if: always()
         continue-on-error: true
-        uses: WalletConnect/actions/maestro/permit2-reset@d07c1f8a83dde5c52b7c8649a6814f98ba716b6b
+        uses: WalletConnect/actions/maestro/permit2-reset@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
         with:
           chain-id: eip155:137
           # polygon-rpc.com is gated (HTTP 401 "tenant disabled") in CI; use publicnode.
