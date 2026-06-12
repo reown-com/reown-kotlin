@@ -330,9 +330,20 @@ private fun PaymentOptionsContent(
                 // `pay-option-$index`. Lets a test pick a specific asset+network when
                 // several options share a token symbol across networks.
                 val display = option.amount.display
-                val stableTag = "pay-option-" + listOfNotNull(display?.assetSymbol, display?.networkName)
-                    .joinToString("-")
-                    .lowercase()
+                // Build from asset+network when available; fall back to the option's
+                // unique id so the tag never collapses to a bare "pay-option-" (which
+                // would collide across rows with missing display data). Locale.ROOT
+                // keeps the tag identical regardless of device locale.
+                val stableTagParts = listOfNotNull(display?.assetSymbol, display?.networkName)
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+                val stableTagSuffix = if (stableTagParts.isEmpty()) {
+                    option.id
+                } else {
+                    stableTagParts.joinToString("-")
+                }
+                val stableTag = "pay-option-" + stableTagSuffix
+                    .lowercase(Locale.ROOT)
                     .replace(Regex("\\s+"), "-")
                 Box(modifier = Modifier.testTag(stableTag)) {
                     PaymentOptionRow(
