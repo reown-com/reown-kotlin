@@ -1,17 +1,15 @@
 plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
-    alias(libs.plugins.google.ksp)
+    alias(libs.plugins.moshix)
     id("publish-module-android")
     id("jacoco-report")
 }
 
-project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = POS
-    extra[KEY_PUBLISH_VERSION] = POS_VERSION
-    extra[KEY_PUBLISH_GROUP] = "com.walletconnect"
-    extra[KEY_SDK_NAME] = "pos"
-}
+extra[KEY_PUBLISH_ARTIFACT_ID] = POS
+extra[KEY_PUBLISH_VERSION] = POS_VERSION
+extra[KEY_PUBLISH_GROUP] = "com.walletconnect"
+extra[KEY_SDK_NAME] = "pos"
 
 android {
     namespace = "com.walletconnect.pos"
@@ -24,7 +22,7 @@ android {
             minCompileSdk = 29
         }
 
-        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
+        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(project.extra.get(KEY_PUBLISH_VERSION))}\"")
         buildConfigField(type = "String", name = "CORE_API_BASE_URL", value = "\"https://api.pay.walletconnect.com\"")
         buildConfigField(type = "String", name = "MTLS_API_BASE_URL", value = "\"https://mtls.api.pay.walletconnect.com\"")
         buildConfigField(type = "String", name = "PULSE_BASE_URL", value = "\"https://pulse.walletconnect.org\"")
@@ -64,7 +62,6 @@ dependencies {
     implementation(libs.bundles.retrofit)
 
     implementation(libs.moshi.kotlin)
-    ksp(libs.moshi.ksp)
 
     implementation(libs.coroutines)
     implementation("androidx.annotation:annotation:1.9.1")

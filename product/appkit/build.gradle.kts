@@ -1,18 +1,16 @@
 plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
-    alias(libs.plugins.google.ksp)
+    alias(libs.plugins.moshix)
     alias(libs.plugins.paparazzi)
     id("publish-module-android")
     id("jacoco-report")
     alias(libs.plugins.compose.compiler)
 }
 
-project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = APPKIT
-    extra[KEY_PUBLISH_VERSION] = APPKIT_VERSION
-    extra[KEY_SDK_NAME] = "appkit"
-}
+extra[KEY_PUBLISH_ARTIFACT_ID] = APPKIT
+extra[KEY_PUBLISH_VERSION] = APPKIT_VERSION
+extra[KEY_SDK_NAME] = "appkit"
 
 android {
     namespace = "com.reown.appkit"
@@ -25,7 +23,7 @@ android {
             minCompileSdk = MIN_SDK
         }
 
-        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
+        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(project.extra.get(KEY_PUBLISH_VERSION))}\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         File("${rootDir.path}/gradle/consumer-rules").listFiles()?.let { proguardFiles ->
@@ -83,7 +81,6 @@ dependencies {
 
     implementation(libs.androidx.datastore)
     implementation(libs.bundles.androidxLifecycle)
-    ksp(libs.moshi.ksp)
     api(libs.bundles.androidxNavigation)
     implementation(libs.qrCodeGenerator)
     implementation(libs.coinbaseWallet)

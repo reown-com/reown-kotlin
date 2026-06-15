@@ -1,16 +1,13 @@
 plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
-    alias(libs.plugins.google.ksp)
     id("publish-module-android")
     alias(libs.plugins.compose.compiler)
 }
 
-project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = MODAL_CORE
-    extra[KEY_PUBLISH_VERSION] = MODAL_CORE_VERSION
-    extra[KEY_SDK_NAME] = "Modal Core"
-}
+extra[KEY_PUBLISH_ARTIFACT_ID] = MODAL_CORE
+extra[KEY_PUBLISH_VERSION] = MODAL_CORE_VERSION
+extra[KEY_SDK_NAME] = "Modal Core"
 
 android {
     namespace = "com.reown.modalcore"
@@ -23,7 +20,7 @@ android {
             minCompileSdk = MIN_SDK
         }
 
-        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
+        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(project.extra.get(KEY_PUBLISH_VERSION))}\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

@@ -107,5 +107,8 @@ product/pos/property 'buildDir'
 .maestro/scripts/
 .env.maestro
 
+# Kotlin compiler build session artifacts
+.kotlin/
+
 product/pos/scripts/certs/
 product/pos/scripts/

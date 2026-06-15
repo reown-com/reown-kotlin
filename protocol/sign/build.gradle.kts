@@ -2,16 +2,14 @@ plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
     alias(libs.plugins.sqlDelight)
-    alias(libs.plugins.google.ksp)
+    alias(libs.plugins.moshix)
     id("publish-module-android")
     id("jacoco-report")
 }
 
-project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = SIGN
-    extra[KEY_PUBLISH_VERSION] = SIGN_VERSION
-    extra[KEY_SDK_NAME] = "Sign"
-}
+extra[KEY_PUBLISH_ARTIFACT_ID] = SIGN
+extra[KEY_PUBLISH_VERSION] = SIGN_VERSION
+extra[KEY_SDK_NAME] = "Sign"
 
 android {
     namespace = "com.reown.sign"
@@ -27,7 +25,7 @@ android {
         buildConfigField(
             type = "String",
             name = "SDK_VERSION",
-            value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\""
+            value = "\"${requireNotNull(project.extra.get(KEY_PUBLISH_VERSION))}\""
         )
         buildConfigField(
             "String",
@@ -100,7 +98,6 @@ dependencies {
 
     implementation("org.msgpack:msgpack-core:0.9.11")
 
-    ksp(libs.moshi.ksp)
     implementation(libs.bundles.sqlDelight)
 
     testImplementation(libs.bundles.androidxTest)
