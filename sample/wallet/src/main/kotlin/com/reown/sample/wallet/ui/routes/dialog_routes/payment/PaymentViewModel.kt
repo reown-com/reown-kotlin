@@ -70,6 +70,16 @@ class PaymentViewModel : ViewModel() {
                 return
             }
 
+            // Non-payable statuses (e.g. re-scanning an already-completed payment). These come
+            // back with an empty options list; without handling them here they would fall through
+            // to the empty-options branch below and be mislabelled as INSUFFICIENT_FUNDS.
+            Wallet.Model.PaymentStatus.SUCCEEDED,
+            Wallet.Model.PaymentStatus.PROCESSING,
+            Wallet.Model.PaymentStatus.FAILED -> {
+                _uiState.value = PaymentUiState.Error("This payment has already been processed", PaymentErrorType.GENERIC)
+                return
+            }
+
             else -> Unit
         }
 

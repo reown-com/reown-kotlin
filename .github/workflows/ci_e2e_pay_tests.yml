@@ -78,10 +78,10 @@ jobs:
           ./gradlew :sample:wallet:assembleInternal
 
       - name: Copy Maestro Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@3a145abaa0dcf9f609fabe17f6e6722e0db49535
+        uses: WalletConnect/actions/maestro/pay-tests@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@3a145abaa0dcf9f609fabe17f6e6722e0db49535
+        uses: WalletConnect/actions/maestro/setup@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
@@ -139,8 +139,12 @@ jobs:
             sleep 5
 
             echo "Running Maestro Pay E2E tests:"
-            MAESTRO_EXIT=0
-            $HOME/.maestro/bin/maestro test --env APP_ID=com.reown.sample.wallet.internal --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" --include-tags pay --test-output-dir debug-artifacts/maestro-output .maestro/ || MAESTRO_EXIT=$?
+            # android-emulator-runner runs each script line in its own `sh -c`, so a
+            # shell variable can't carry Maestro's exit code to the final `exit` line.
+            # Persist it to a file and re-exit with it, otherwise a flow failure is
+            # masked and the job goes green. (The `; echo $?` keeps this line itself
+            # exit-0 so the error-log extraction below still runs.)
+            $HOME/.maestro/bin/maestro test --env APP_ID=com.reown.sample.wallet.internal --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" --include-tags pay --test-output-dir debug-artifacts/maestro-output .maestro/ ; echo "$?" > debug-artifacts/maestro-exit-code
 
             # Extract error logs for easier debugging
             echo "Extracting error logs..."
@@ -149,7 +153,8 @@ jobs:
             # Stop logcat capture
             kill $LOGCAT_PID 2>/dev/null || true
 
-            exit $MAESTRO_EXIT
+            # Propagate Maestro's real exit code so the step fails when any flow failed.
+            exit "$(cat debug-artifacts/maestro-exit-code)"
 
       - name: Upload debug artifacts
         if: always()
@@ -167,6 +172,22 @@ jobs:
             debug-artifacts/full-logcat.txt
             debug-artifacts/emulator-errors.log
           if-no-files-found: warn
+
+      # Reset the USDT Permit2 allowance back to 0 so the next pay_usdt_polygon run
+      # re-exercises the approve step. Runs even when the suite failed (if: always())
+      # so a mid-flow failure doesn't leave the allowance set. Uses the shared
+      # permit2-reset action (the private key goes via env, never the CLI).
+      # continue-on-error so a reset hiccup can't fail an otherwise-green run.
+      - name: Reset USDT Permit2 allowance (Polygon)
+        if: always()
+        continue-on-error: true
+        uses: WalletConnect/actions/maestro/permit2-reset@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
+        with:
+          chain-id: eip155:137
+          # polygon-rpc.com is gated (HTTP 401 "tenant disabled") in CI; use publicnode.
+          rpc-url: https://polygon-bor-rpc.publicnode.com
+          token-address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
+          private-key: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
 
       - name: Send Slack notification
         if: failure()

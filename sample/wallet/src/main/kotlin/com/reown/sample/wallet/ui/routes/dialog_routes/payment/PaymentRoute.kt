@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -324,23 +325,45 @@ private fun PaymentOptionsContent(
         ) {
             options.forEachIndexed { index, option ->
                 val hasCollectData = option.collectData?.url != null
-                PaymentOptionRow(
-                    option = option,
-                    feeEstimate = gasEstimates[option.id],
-                    isEstimatingFee = estimatingOptionIds.contains(option.id),
-                    onClick = { onOptionSelected(option.id) },
-                    testTag = "pay-option-$index",
-                    trailing = if (hasCollectData) {
-                        {
-                            BorderedIconButton(
-                                iconRes = R.drawable.ic_info,
-                                contentDescription = "Why info needed",
-                                onClick = onWhyInfoRequired,
-                                modifier = Modifier.testTag("pay-info-required-badge")
-                            )
-                        }
-                    } else null,
-                )
+                // Stable, network+token-keyed testTag for deterministic selection
+                // (e.g. `pay-option-usdt-polygon`), additive to the order-dependent
+                // `pay-option-$index`. Lets a test pick a specific asset+network when
+                // several options share a token symbol across networks.
+                val display = option.amount.display
+                // Build from asset+network when available; fall back to the option's
+                // unique id so the tag never collapses to a bare "pay-option-" (which
+                // would collide across rows with missing display data). Locale.ROOT
+                // keeps the tag identical regardless of device locale.
+                val stableTagParts = listOfNotNull(display?.assetSymbol, display?.networkName)
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+                val stableTagSuffix = if (stableTagParts.isEmpty()) {
+                    option.id
+                } else {
+                    stableTagParts.joinToString("-")
+                }
+                val stableTag = "pay-option-" + stableTagSuffix
+                    .lowercase(Locale.ROOT)
+                    .replace(Regex("\\s+"), "-")
+                Box(modifier = Modifier.testTag(stableTag)) {
+                    PaymentOptionRow(
+                        option = option,
+                        feeEstimate = gasEstimates[option.id],
+                        isEstimatingFee = estimatingOptionIds.contains(option.id),
+                        onClick = { onOptionSelected(option.id) },
+                        testTag = "pay-option-$index",
+                        trailing = if (hasCollectData) {
+                            {
+                                BorderedIconButton(
+                                    iconRes = R.drawable.ic_info,
+                                    contentDescription = "Why info needed",
+                                    onClick = onWhyInfoRequired,
+                                    modifier = Modifier.testTag("pay-option-info-required")
+                                )
+                            }
+                        } else null,
+                    )
+                }
             }
         }
 
@@ -389,26 +412,35 @@ private fun PaymentOptionRow(
     val networkName = option.amount.display?.networkName?.lowercase() ?: "unknown"
     val requiresApproval = PaymentUtil.requiresApproval(option.actions)
 
-    val baseModifier = Modifier
+    val containerModifier = Modifier
         .fillMaxWidth()
         .height(72.dp)
         .clip(WCTheme.borderRadius.shapeLarge)
         .background(WCTheme.colors.foregroundPrimary)
-
-    val rowModifier = (if (onClick != null) baseModifier.clickable(onClick = onClick) else baseModifier)
-        .clearAndSetSemantics {
-            this.testTag = testTag
-            text = AnnotatedString(networkName)
-            if (onClick != null) role = Role.Button
-        }
         .padding(horizontal = WCTheme.spacing.spacing4)
 
     Row(
-        modifier = rowModifier,
+        modifier = containerModifier,
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // Clickable main content. clearAndSetSemantics collapses this subtree into a single node
+        // (testTag + networkName text + Button role) so `copyTextFrom`/`tapOn` resolve cleanly.
+        // It is scoped to the main content only — a `trailing` marker keeps its own testTag and
+        // stays discoverable (e.g. the KYC `pay-option-info-required` badge).
+        val mainModifier = (if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .weight(1f)
+            .fillMaxHeight()
+            .clearAndSetSemantics {
+                this.testTag = testTag
+                text = AnnotatedString(networkName)
+                if (onClick != null) role = Role.Button
+            }
+
+        Row(
+            modifier = mainModifier,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             PaymentAssetIcon(
                 display = option.amount.display,
                 tokenIconSize = 32.dp,
@@ -970,6 +1002,10 @@ private fun ProcessingContent(
                 text = it,
                 style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary),
                 textAlign = TextAlign.Center,
+                // Secondary line shown only while setting up a token for the first time
+                // (e.g. the USDT Permit2 approve step). Lets pay_usdt_polygon observe the
+                // approve step by id instead of matching a copy string.
+                modifier = Modifier.testTag("pay-loading-setup-note")
             )
         }
     }
