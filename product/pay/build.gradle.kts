@@ -1,20 +1,17 @@
 plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
-    alias(libs.plugins.google.ksp)
     id("publish-module-android")
 }
 
-project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = PAY
-    extra[KEY_PUBLISH_VERSION] = PAY_VERSION
-    extra[KEY_PUBLISH_GROUP] = "com.walletconnect"
-    extra[KEY_SDK_NAME] = "pay"
-}
+extra[KEY_PUBLISH_ARTIFACT_ID] = PAY
+extra[KEY_PUBLISH_VERSION] = PAY_VERSION
+extra[KEY_PUBLISH_GROUP] = "com.walletconnect"
+extra[KEY_SDK_NAME] = "pay"
 
 android {
     namespace = "com.walletconnect.pay"
-    compileSdk = 36
+    compileSdk = COMPILE_SDK
 
     buildFeatures {
         buildConfig = true
@@ -41,7 +38,7 @@ android {
             testInstrumentationRunnerArguments["WC_CLOUD_PROJECT_ID"] = projectId
         }
 
-        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
+        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(project.extra.get(KEY_PUBLISH_VERSION))}\"")
         buildConfigField(
             "String",
             "PROJECT_ID",

@@ -1,7 +1,6 @@
 plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
-    id(libs.plugins.kotlin.kapt.get().pluginId)
     alias(libs.plugins.compose.compiler)
 }
 
@@ -37,6 +36,7 @@ android {
         compose = true
         viewBinding = true
         buildConfig = true
+        resValues = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()

@@ -33,12 +33,12 @@ afterEvaluate {
                 }
 
                 groupId = extra.properties[KEY_PUBLISH_GROUP]?.toString() ?: DEFAULT_PUBLISH_GROUP
-                artifactId = requireNotNull(extra.get(KEY_PUBLISH_ARTIFACT_ID)).toString()
-                version = requireNotNull(extra.get(KEY_PUBLISH_VERSION)).toString()
+                artifactId = requireNotNull(project.extra.get(KEY_PUBLISH_ARTIFACT_ID)).toString()
+                version = requireNotNull(project.extra.get(KEY_PUBLISH_VERSION)).toString()
 
                 pom {
-                    name.set("Reown ${requireNotNull(extra.get(KEY_SDK_NAME))}")
-                    description.set("${requireNotNull(extra.get(KEY_SDK_NAME))} SDK for Reown")
+                    name.set("Reown ${requireNotNull(project.extra.get(KEY_SDK_NAME))}")
+                    description.set("${requireNotNull(project.extra.get(KEY_SDK_NAME))} SDK for Reown")
                     url.set("https://github.com/reown-com/reown-kotlin")
 
                     licenses {
