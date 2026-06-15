@@ -128,6 +128,10 @@ maestro test --env APP_ID=com.reown.sample.wallet.debug .maestro/pay_single_opti
 
 **`ENABLE_TEST_MODE`:** This env var controls whether the manual URL input field is shown in the scanner screen. It defaults to `false` so the field is hidden in all builds (debug, internal, release). Only CI E2E builds and local test runs should set it to `true`.
 
+**USDT-on-Polygon Permit2 flow (`pay_usdt_polygon`):** USDT on Polygon is a plain ERC-20 (no EIP-3009/2612), so WC Pay uses the [Permit2](https://github.com/Uniswap/permit2) path — the wallet sends an `approve` (allowance) tx **and then** the payment tx. The flow best-effort observes the approve step via the `pay-loading-setup-note` testID, then asserts the success screen. It selects the option by its stable `pay-option-{assetSymbol}-{networkName}` testID (e.g. `pay-option-usdt-polygon`), which is additive to the order-dependent `pay-option-{index}`. (USDT on Arbitrum is EIP-3009 / signature-based and never needs an on-chain approve — Polygon is used precisely because it does.)
+
+After the suite, `ci_e2e_pay_tests.yml` calls the shared `WalletConnect/actions/maestro/permit2-reset` action to reset the USDT Permit2 allowance back to 0 so each run re-exercises `approve` (it signs a tx, so it's a Node step, not a Maestro `runScript`; the key goes via env, never the CLI). `e2e_balance_check.yml` also monitors USDT + POL (gas) on Polygon and pings the faucet bot on Slack when low. The test wallet must hold USDT **and** a little POL (gas) on Polygon.
+
 ### Code Quality
 
 ```bash

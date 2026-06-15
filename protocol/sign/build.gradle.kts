@@ -65,10 +65,6 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.time.ExperimentalTime"
-    }
 
     testOptions {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"

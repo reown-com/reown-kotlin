@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterialApi::class, ExperimentalMaterialNavigationApi::class)
+@file:OptIn(ExperimentalMaterialApi::class)
 
 package com.reown.sample.dapp.ui.routes.host
 
@@ -32,8 +32,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.google.accompanist.navigation.material.BottomSheetNavigator
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import androidx.compose.material.navigation.BottomSheetNavigator
 import com.reown.appkit.client.AppKit
 import com.reown.sample.dapp.R
 import com.reown.sample.dapp.ui.DappSampleEvents

@@ -50,10 +50,6 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.time.ExperimentalTime"
-    }
 
     testOptions {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
@@ -87,7 +83,7 @@ dependencies {
     debugImplementation(project(":core:android"))
     releaseImplementation("com.reown:android-core:$CORE_VERSION")
 
-    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
+    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
     ksp(libs.moshi.ksp)
     implementation(libs.bundles.sqlDelight)
 

@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalMaterialNavigationApi::class)
 
 package com.reown.sample.dapp.ui
 
@@ -13,9 +12,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.google.accompanist.navigation.material.BottomSheetNavigator
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.ModalBottomSheetLayout
+import androidx.compose.material.navigation.BottomSheetNavigator
+import androidx.compose.material.navigation.ModalBottomSheetLayout
 import com.reown.sample.dapp.ui.routes.Route
 import com.reown.sample.dapp.ui.routes.composable_routes.account.AccountRoute
 import com.reown.sample.dapp.ui.routes.composable_routes.chain_selection.ChainSelectionRoute

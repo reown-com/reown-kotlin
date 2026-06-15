@@ -14,6 +14,7 @@ import com.reown.android.utils.cacao.CacaoSignerInterface
 import com.reown.android.utils.cacao.sign
 import com.reown.foundation.common.model.PrivateKey
 import com.reown.foundation.util.jwt.encodeEd25519DidKey
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import timber.log.Timber
@@ -27,6 +28,7 @@ class KeyserverInstrumentedAndroidTest {
     private val statement = "dummyStatement"
     private val domain = "domain.dummy"
 
+    @Ignore("keys.walletconnect.org is deprecated")
     @Test
     fun registerIdentityForEthereumByPrimaryClient() {
         Timber.d("registerIdentityByPrimaryClient: start")
@@ -90,6 +92,7 @@ class KeyserverInstrumentedAndroidTest {
         }
     }
 
+    @Ignore("keys.walletconnect.org is deprecated")
     @Test
     fun registerIdentityForBNBByPrimaryClient() {
         Timber.d("registerIdentityByPrimaryClient: start")

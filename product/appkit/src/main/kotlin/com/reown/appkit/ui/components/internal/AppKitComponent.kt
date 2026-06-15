@@ -19,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.rememberNavController
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.domain.delegate.AppKitDelegate
@@ -41,7 +41,7 @@ fun AppKitComponent(
     closeModal: () -> Unit
 ) {
     AppKitComponent(
-        navController = rememberAnimatedNavController(),
+        navController = rememberNavController(),
         shouldOpenChooseNetwork = shouldOpenChooseNetwork,
         closeModal = closeModal
     )
@@ -51,7 +51,7 @@ fun AppKitComponent(
 @Composable
 internal fun AppKitComponent(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberAnimatedNavController(),
+    navController: NavHostController = rememberNavController(),
     shouldOpenChooseNetwork: Boolean,
     closeModal: () -> Unit
 ) {

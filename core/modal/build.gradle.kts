@@ -43,10 +43,6 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.time.ExperimentalTime"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -68,6 +64,7 @@ dependencies {
     implementation(libs.androidx.compose.lifecycle)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit)
     androidTestImplementation(libs.androidx.compose.navigation.testing)
 

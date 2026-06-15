@@ -1,8 +1,8 @@
 package com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal
 
 import androidx.lifecycle.ViewModel
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.crashlytics.crashlytics
+import com.google.firebase.Firebase
 import com.reown.android.cacao.signature.SignatureType
 import com.reown.android.utils.cacao.sign
 import com.reown.sample.wallet.BuildConfig

@@ -1,8 +1,8 @@
 package com.reown.sample.wallet
 
 import android.app.Application
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.messaging.FirebaseMessaging
 import com.mixpanel.android.mpmetrics.MixpanelAPI
 import com.pandulapeter.beagle.Beagle

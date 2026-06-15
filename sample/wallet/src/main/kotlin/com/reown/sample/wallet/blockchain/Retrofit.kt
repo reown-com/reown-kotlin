@@ -1,6 +1,5 @@
 package com.reown.sample.wallet.blockchain
 
-import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import com.reown.sample.wallet.BuildConfig
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -30,7 +29,6 @@ fun createBalanceApiService(): BalanceApiService {
         .baseUrl("https://rpc.walletconnect.org")
         .client(httpClient.build())
         .addConverterFactory(GsonConverterFactory.create())
-        .addCallAdapterFactory(CoroutineCallAdapterFactory())
         .build()
 
     return retrofit.create(BalanceApiService::class.java)
@@ -47,7 +45,6 @@ fun createFungiblePriceApiService(): FungiblePriceApiService {
         .baseUrl("https://rpc.walletconnect.org")
         .client(httpClient.build())
         .addConverterFactory(GsonConverterFactory.create())
-        .addCallAdapterFactory(CoroutineCallAdapterFactory())
         .build()
 
     return retrofit.create(FungiblePriceApiService::class.java)
@@ -84,7 +81,6 @@ fun createBlockChainApiService(projectId: String, chainId: String, rpcUrl: Strin
         .baseUrl(rpcUrl)
         .client(httpClient.build())
         .addConverterFactory(GsonConverterFactory.create())
-        .addCallAdapterFactory(CoroutineCallAdapterFactory())
         .build()
 
     return retrofit.create(BlockChainApiService::class.java)

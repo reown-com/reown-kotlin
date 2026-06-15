@@ -1,7 +1,7 @@
 package com.reown.sign.storage.authenticate
 
 import android.database.sqlite.SQLiteException
-import com.reown.sign.storage.data.dao.authenticatereponse.AuthenticateResponseTopicDaoQueries
+import com.reown.sign.storage.data.dao.authenticate_reponse.AuthenticateResponseTopicDaoQueries
 
 internal class AuthenticateResponseTopicRepository(private val authenticateResponseTopicDaoQueries: AuthenticateResponseTopicDaoQueries) {
     @JvmSynthetic

@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalMaterialApi::class)
+@file:OptIn(ExperimentalMaterialApi::class)
 
 package com.reown.sample.modal.compose
 
@@ -24,9 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.accompanist.navigation.material.BottomSheetNavigator
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.ModalBottomSheetLayout
+import androidx.compose.material.navigation.BottomSheetNavigator
+import androidx.compose.material.navigation.ModalBottomSheetLayout
 import com.reown.sample.modal.common.Route
 import com.reown.sample.modal.ui.theme.WalletConnectTheme
 import com.reown.appkit.ui.appKitGraph

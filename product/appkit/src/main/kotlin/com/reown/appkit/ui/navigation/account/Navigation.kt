@@ -5,7 +5,7 @@ package com.reown.appkit.ui.navigation.account
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.reown.util.Empty
 import com.reown.appkit.client.Modal

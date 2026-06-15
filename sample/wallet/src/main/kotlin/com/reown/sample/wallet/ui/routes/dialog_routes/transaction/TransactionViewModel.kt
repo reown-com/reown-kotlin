@@ -2,8 +2,8 @@
 //
 //import androidx.lifecycle.ViewModel
 //import androidx.lifecycle.viewModelScope
-//import com.google.firebase.crashlytics.ktx.crashlytics
-//import com.google.firebase.ktx.Firebase
+//import com.google.firebase.crashlytics.crashlytics
+//import com.google.firebase.Firebase
 //import com.reown.android.Core
 //import com.reown.sample.wallet.BuildConfig
 //import com.reown.sample.wallet.domain.account.EthAccountDelegate

@@ -6,7 +6,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import com.reown.android.internal.common.modal.data.model.Wallet
 import com.reown.util.Empty
 import com.reown.appkit.ui.navigation.Route
