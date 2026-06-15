@@ -87,13 +87,6 @@ class PayErrorsTest {
     }
 
     @Test
-    fun `GetPaymentOptionsError ComplianceFailed should hold correct message`() {
-        val error = Pay.GetPaymentOptionsError.ComplianceFailed("Compliance check failed")
-
-        assertEquals("Compliance check failed", error.message)
-    }
-
-    @Test
     fun `GetPaymentOptionsError Http should hold correct message`() {
         val error = Pay.GetPaymentOptionsError.Http("Server error 500")
 

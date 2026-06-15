@@ -125,7 +125,6 @@ object Pay {
         data class OptionNotFound(override val message: String) : GetPaymentOptionsError()
         data class PaymentNotReady(override val message: String) : GetPaymentOptionsError()
         data class InvalidAccount(override val message: String) : GetPaymentOptionsError()
-        data class ComplianceFailed(override val message: String) : GetPaymentOptionsError()
         data class Http(override val message: String) : GetPaymentOptionsError()
         data class InternalError(override val message: String) : GetPaymentOptionsError()
     }

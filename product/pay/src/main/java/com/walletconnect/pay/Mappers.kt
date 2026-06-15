@@ -171,9 +171,6 @@ internal object Mappers {
             is YttriumGetPaymentOptionsError.InvalidAccount ->
                 Pay.GetPaymentOptionsError.InvalidAccount(error.v1)
 
-            is YttriumGetPaymentOptionsError.ComplianceFailed ->
-                ComplianceFailed(error.v1)
-
             is YttriumGetPaymentOptionsError.Http ->
                 Pay.GetPaymentOptionsError.Http(error.v1)
 
