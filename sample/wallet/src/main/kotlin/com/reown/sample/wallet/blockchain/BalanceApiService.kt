@@ -10,7 +10,8 @@ interface BalanceApiService {
     suspend fun getBalance(
         @Path("address") address: String,
         @Query("projectId") projectId: String,
-        @Query("currency") currency: String = "usd"
+        @Query("currency") currency: String = "usd",
+        @Query("chainId") chainId: String? = null
     ): Response<BalanceResponse>
 }
 

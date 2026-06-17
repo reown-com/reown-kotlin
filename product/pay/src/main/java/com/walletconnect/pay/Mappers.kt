@@ -57,7 +57,8 @@ internal object Mappers {
             amount = mapAmount(option.amount),
             estimatedTxs = option.etaS.coerceAtMost(Int.MAX_VALUE.toULong().toLong()).toInt(),
             account = option.account,
-            collectData = option.collectData?.let { mapCollectDataAction(it) }
+            collectData = option.collectData?.let { mapCollectDataAction(it) },
+            actions = option.actions.map(::mapRequiredAction)
         )
     }
 
@@ -170,9 +171,6 @@ internal object Mappers {
             is YttriumGetPaymentOptionsError.InvalidAccount ->
                 Pay.GetPaymentOptionsError.InvalidAccount(error.v1)
 
-            is YttriumGetPaymentOptionsError.ComplianceFailed ->
-                ComplianceFailed(error.v1)
-
             is YttriumGetPaymentOptionsError.Http ->
                 Pay.GetPaymentOptionsError.Http(error.v1)
 
@@ -258,4 +256,3 @@ internal object Mappers {
         }
     }
 }
-

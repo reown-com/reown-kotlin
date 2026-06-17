@@ -2,16 +2,14 @@ plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
     alias(libs.plugins.sqlDelight)
-    alias(libs.plugins.google.ksp)
+    alias(libs.plugins.moshix)
     id("publish-module-android")
     id("jacoco-report")
 }
 
-project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = NOTIFY
-    extra[KEY_PUBLISH_VERSION] = NOTIFY_VERSION
-    extra[KEY_SDK_NAME] = "Notify"
-}
+extra[KEY_PUBLISH_ARTIFACT_ID] = NOTIFY
+extra[KEY_PUBLISH_VERSION] = NOTIFY_VERSION
+extra[KEY_SDK_NAME] = "Notify"
 
 android {
     namespace = "com.reown.notify"
@@ -24,7 +22,7 @@ android {
             minCompileSdk = MIN_SDK
         }
 
-        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
+        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(project.extra.get(KEY_PUBLISH_VERSION))}\"")
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
         buildConfigField("String", "NOTIFY_INTEGRATION_TESTS_PROJECT_ID", "\"${System.getenv("NOTIFY_INTEGRATION_TESTS_PROJECT_ID") ?: ""}\"")
         buildConfigField("String", "NOTIFY_INTEGRATION_TESTS_SECRET", "\"${System.getenv("NOTIFY_INTEGRATION_TESTS_SECRET") ?: ""}\"")
@@ -49,10 +47,6 @@ android {
     compileOptions {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
-    }
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.time.ExperimentalTime"
     }
 
     testOptions {
@@ -87,8 +81,7 @@ dependencies {
     debugImplementation(project(":core:android"))
     releaseImplementation("com.reown:android-core:$CORE_VERSION")
 
-    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
-    ksp(libs.moshi.ksp)
+    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
     implementation(libs.bundles.sqlDelight)
 
     implementation(platform(libs.firebase.bom))

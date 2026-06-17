@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalMaterialApi::class, ExperimentalMaterialNavigationApi::class)
+@file:OptIn(ExperimentalMaterialApi::class)
 
 package com.reown.sample.wallet.ui.routes.bottomsheet_routes.scan_uri
 
@@ -55,8 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import com.google.accompanist.navigation.material.BottomSheetNavigatorSheetState
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
+import androidx.compose.material.navigation.BottomSheetNavigatorSheetState
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.common.generated.CloseButton
 import kotlinx.coroutines.Dispatchers

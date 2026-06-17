@@ -2,8 +2,8 @@ package com.reown.sample.dapp.ui.routes.composable_routes.chain_selection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.crashlytics.crashlytics
+import com.google.firebase.Firebase
 import com.reown.android.Core
 import com.reown.android.CoreClient
 import com.reown.sample.common.Chains

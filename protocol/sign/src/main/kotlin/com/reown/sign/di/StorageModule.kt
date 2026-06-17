@@ -10,9 +10,9 @@ import com.reown.sign.SignDatabase
 import com.reown.sign.storage.authenticate.AuthenticateResponseTopicRepository
 import com.reown.sign.storage.data.dao.namespace.NamespaceDao
 import com.reown.sign.storage.pending_session.PendingSessionTopicRepository
-import com.reown.sign.storage.data.dao.optionalnamespaces.OptionalNamespaceDao
+import com.reown.sign.storage.data.dao.optional_namespaces.OptionalNamespaceDao
 import com.reown.sign.storage.data.dao.proposal.ProposalDao
-import com.reown.sign.storage.data.dao.proposalnamespace.ProposalNamespaceDao
+import com.reown.sign.storage.data.dao.proposal_namespace.ProposalNamespaceDao
 import com.reown.sign.storage.data.dao.session.SessionDao
 import com.reown.sign.storage.data.dao.temp.TempNamespaceDao
 import com.reown.sign.storage.link_mode.LinkModeStorageRepository

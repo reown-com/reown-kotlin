@@ -1,6 +1,30 @@
 package com.walletconnect.pos.api
 
+import com.squareup.moshi.Moshi
 import com.walletconnect.pos.Pos
+
+/**
+ * Parses an HTTP error response body into [ApiErrorDetails].
+ *
+ * The API returns error bodies in one of two shapes:
+ *  - wrapped: `{"status":"error","error":{"code":"...","message":"..."}}`
+ *  - flat:    `{"code":"...","message":"..."}` (e.g. the 401 `invalid_api_key` response)
+ *
+ * Both are attempted. Returns `null` when the body is blank or matches neither shape,
+ * letting the caller fall back to the HTTP status line. This is important because the
+ * HTTP reason-phrase is empty under HTTP/2, so the body is the only source of a message.
+ */
+internal fun parseApiErrorBody(moshi: Moshi, errorBody: String?): ApiErrorDetails? {
+    if (errorBody.isNullOrBlank()) return null
+
+    runCatching { moshi.adapter(ApiErrorWrapper::class.java).fromJson(errorBody)?.error }
+        .getOrNull()?.let { return it }
+
+    runCatching { moshi.adapter(ApiErrorDetails::class.java).fromJson(errorBody) }
+        .getOrNull()?.let { if (it.message.isNotBlank()) return it }
+
+    return null
+}
 
 internal fun mapErrorCodeToPaymentError(code: String, message: String): Pos.PaymentEvent.PaymentError {
     return when (code) {

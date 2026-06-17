@@ -18,6 +18,8 @@ import com.walletconnect.sample.pos.model.Currency
 import com.walletconnect.sample.pos.model.PosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
 import com.walletconnect.sample.pos.model.formatAmountWithSymbol
+import com.walletconnect.sample.pos.printer.PrinterManager
+import com.walletconnect.sample.pos.printer.ReceiptData
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -45,6 +47,9 @@ sealed interface PosEvent {
     data object PaymentProcessing : PosEvent
     data class PaymentSuccess(val paymentId: String, val info: Pos.PaymentInfo?) : PosEvent
     data class PaymentError(val error: String) : PosEvent
+    data class PrintSuccess(val isTest: Boolean) : PosEvent
+    data class PrintError(val message: String) : PosEvent
+    data object PinResetSuccess : PosEvent
 }
 
 sealed interface TransactionHistoryUiState {
@@ -66,6 +71,8 @@ sealed interface PinFlowState {
     data object Hidden : PinFlowState
     data class SetNew(val firstPin: String? = null, val pendingAction: PendingCredentialSave) : PinFlowState
     data class Verify(val pendingAction: PendingCredentialSave) : PinFlowState
+    // Reset/change PIN flow (not tied to a credential save; no current-PIN check — test app)
+    data class SetNewForReset(val firstPin: String? = null) : PinFlowState
     data class Error(val message: String, val previousState: PinFlowState) : PinFlowState
 }
 
@@ -135,6 +142,44 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         variant.defaultTheme?.let { setThemeMode(it) }
     }
 
+    // NFC UI enabled (persisted, default true)
+    private val _isNfcUiEnabled = MutableStateFlow(prefs.getBoolean(KEY_ENABLE_NFC_UI, true))
+    val isNfcUiEnabled = _isNfcUiEnabled.asStateFlow()
+
+    fun setNfcUiEnabled(enabled: Boolean) {
+        _isNfcUiEnabled.value = enabled
+        prefs.edit().putBoolean(KEY_ENABLE_NFC_UI, enabled).apply()
+    }
+
+    private val printerManager = PrinterManager(application)
+
+    fun printReceipt(displayAmount: String, info: Pos.PaymentInfo?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            executePrint(ReceiptData.from(displayAmount, info), isTest = false, source = "printReceipt")
+        }
+    }
+
+    fun printTestReceipt() {
+        viewModelScope.launch(Dispatchers.IO) {
+            executePrint(ReceiptData.sample(), isTest = true, source = "printTestReceipt")
+        }
+    }
+
+    private suspend fun executePrint(receipt: ReceiptData, isTest: Boolean, source: String) {
+        PosLogStore.info("Print receipt requested", source = source)
+        printerManager.print(receipt, _selectedVariant.value).fold(
+            onSuccess = {
+                PosLogStore.info("Receipt printed", source = source)
+                _posEventsFlow.emit(PosEvent.PrintSuccess(isTest))
+            },
+            onFailure = { error ->
+                val msg = error.message ?: "Failed to print receipt"
+                PosLogStore.error("Print failed: $msg", source = source)
+                _posEventsFlow.emit(PosEvent.PrintError(msg))
+            }
+        )
+    }
+
     // Merchant credentials (persisted securely)
     private val _merchantId = MutableStateFlow(credentialsManager.getMerchantId())
     val merchantId = _merchantId.asStateFlow()
@@ -164,6 +209,11 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun requestResetPin() {
+        // Test app: allow re-keying the PIN without knowing the current one.
+        _pinFlowState.value = PinFlowState.SetNewForReset()
+    }
+
     fun onPinEntered(pin: String) {
         when (val state = _pinFlowState.value) {
             is PinFlowState.SetNew -> {
@@ -187,6 +237,21 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
                     _pinFlowState.value = PinFlowState.Hidden
                 } else {
                     _pinFlowState.value = PinFlowState.Error("Incorrect PIN", state)
+                }
+            }
+            is PinFlowState.SetNewForReset -> {
+                if (state.firstPin == null) {
+                    // First entry — move to confirm step
+                    _pinFlowState.value = state.copy(firstPin = pin)
+                } else {
+                    // Confirm step
+                    if (pin == state.firstPin) {
+                        credentialsManager.setPin(pin)
+                        _pinFlowState.value = PinFlowState.Hidden
+                        viewModelScope.launch { _posEventsFlow.emit(PosEvent.PinResetSuccess) }
+                    } else {
+                        _pinFlowState.value = PinFlowState.Error("PINs don't match", state.copy(firstPin = null))
+                    }
                 }
             }
             is PinFlowState.Error -> {
@@ -508,5 +573,6 @@ class POSViewModel(application: Application) : AndroidViewModel(application) {
         private const val KEY_CURRENCY = "currency"
         private const val KEY_THEME = "theme"
         private const val KEY_VARIANT = "variant"
+        private const val KEY_ENABLE_NFC_UI = "enable_nfc_ui"
     }
 }

@@ -23,6 +23,23 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 
+/**
+ * Structured fee estimate for a payment action.
+ *
+ * `display` is the fiat-formatted string when a price lookup succeeds and matches
+ * the requested currency; otherwise it falls back to `nativeDisplay`.
+ *
+ * Top-level so it can be exposed via the (public) `PaymentViewModel`'s UI state.
+ */
+data class TransactionFeeEstimate(
+    val display: String,
+    val nativeDisplay: String,
+    val fiatValue: Double?,
+    val fiatCurrency: String?,
+    val chainId: String,
+    val nativeSymbol: String,
+)
+
 internal object PaymentTransactionUtil {
 
     private const val TAG = "PaymentTransactionUtil"
@@ -80,10 +97,16 @@ internal object PaymentTransactionUtil {
     )
 
     /**
-     * Estimate the fee for the given approval action, returning a human-readable
-     * string like `~0.0012 POL` or null if estimation fails.
+     * Estimate the fee for the given approval action.
+     *
+     * The estimate combines on-chain gas math with an optional native-token fiat
+     * price lookup so callers can render `+0.012€` (fiat) when available, or
+     * `0.0012 POL` (native) otherwise. Returns null if gas estimation fails.
      */
-    suspend fun estimateApprovalFee(action: Wallet.Model.WalletRpcAction): String? = runCatching {
+    suspend fun estimateApprovalFee(
+        action: Wallet.Model.WalletRpcAction,
+        currency: String? = null,
+    ): TransactionFeeEstimate? = runCatching {
         val tx = parseTxParam(action.params) ?: return null
         val from = tx.optString("from").ifBlank { EthAccountDelegate.address }
 
@@ -94,14 +117,19 @@ internal object PaymentTransactionUtil {
             val feeDataDeferred = async {
                 withTimeout(GAS_ESTIMATION_RPC_TIMEOUT_MS) { fetchFeeData(action.chainId) }
             }
+            val priceDeferred = async {
+                NativeTokenPriceService.fetchNativeTokenPrice(action.chainId, currency)
+            }
 
             val gasLimit = gasLimitDeferred.await()
                 .multiply(GAS_BUFFER_PERCENT).divide(GAS_BUFFER_DIVISOR)
             val feeData = feeDataDeferred.await()
             val fresh = applyFreshFees(action.chainId, tx, feeData)
             val feePerGas = fresh.maxFeePerGas
+            val totalFeeWei = gasLimit.multiply(feePerGas)
+            val nativePrice = priceDeferred.await()
 
-            formatGasEstimate(gasLimit.multiply(feePerGas), action.chainId)
+            buildFeeEstimate(totalFeeWei, action.chainId, nativePrice)
         }
     }.getOrElse { error ->
         Log.w(TAG, "estimateApprovalFee failed for ${action.chainId}: ${error.message}")
@@ -300,13 +328,52 @@ internal object PaymentTransactionUtil {
         )
     }
 
-    private fun formatGasEstimate(totalFeeWei: BigInteger, chainId: String): String {
-        val symbol = NATIVE_SYMBOL_BY_CHAIN_ID[chainId] ?: "ETH"
+    private fun buildFeeEstimate(
+        totalFeeWei: BigInteger,
+        chainId: String,
+        nativePrice: NativeTokenPrice?,
+    ): TransactionFeeEstimate {
+        val nativeSymbol = NATIVE_SYMBOL_BY_CHAIN_ID[chainId] ?: "ETH"
+        val nativeDisplay = formatNativeGasEstimate(totalFeeWei, nativeSymbol)
+        val nativeValue = Convert.fromWei(BigDecimal(totalFeeWei), Convert.Unit.ETHER).toDouble()
+
+        val fiatValue = if (nativePrice != null && nativeValue.isFinite() && nativeValue > 0.0) {
+            nativeValue * nativePrice.price
+        } else null
+        val fiatCurrency = nativePrice?.currency
+
+        val display = if (fiatValue != null) {
+            formatFiatGasEstimate(fiatValue, fiatCurrency ?: "USD")
+        } else {
+            nativeDisplay
+        }
+
+        return TransactionFeeEstimate(
+            display = display,
+            nativeDisplay = nativeDisplay,
+            fiatValue = fiatValue,
+            fiatCurrency = fiatCurrency,
+            chainId = chainId,
+            nativeSymbol = nativeSymbol,
+        )
+    }
+
+    private fun formatNativeGasEstimate(totalFeeWei: BigInteger, symbol: String): String {
         val ether = Convert.fromWei(BigDecimal(totalFeeWei), Convert.Unit.ETHER)
-        if (ether <= BigDecimal.ZERO) return "~$ether $symbol"
+        if (ether <= BigDecimal.ZERO) return "0 $symbol"
         val scale = if (ether >= BigDecimal("0.01")) 4 else 6
         val rounded = ether.setScale(scale, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
-        return "~$rounded $symbol"
+        return "$rounded $symbol"
+    }
+
+    private fun formatFiatGasEstimate(fiatValue: Double, currency: String): String {
+        val symbol = when (currency.uppercase()) {
+            "EUR" -> "€"
+            else -> "$"
+        }
+        if (!fiatValue.isFinite() || fiatValue <= 0.0) return "${symbol}0.00"
+        if (fiatValue < 0.01) return "<${symbol}0.01"
+        return "$symbol${"%.2f".format(fiatValue)}"
     }
 
     // ---- Parsing helpers ----------------------------------------------------

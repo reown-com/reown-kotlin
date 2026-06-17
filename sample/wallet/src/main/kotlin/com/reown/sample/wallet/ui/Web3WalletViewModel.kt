@@ -3,8 +3,8 @@ package com.reown.sample.wallet.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.crashlytics.crashlytics
+import com.google.firebase.Firebase
 import com.reown.android.Core
 import com.reown.android.internal.common.exception.InvalidProjectIdException
 import com.reown.android.internal.common.exception.ProjectIdDoesNotExistException

@@ -74,6 +74,7 @@ fun PaymentScreen(
     var uiState by remember { mutableStateOf<PaymentUiState>(PaymentUiState.WaitingForScan) }
     var remainingSeconds by remember { mutableLongStateOf(0L) }
     val displayAmount by viewModel.displayAmount.collectAsState()
+    val isNfcUiEnabled by viewModel.isNfcUiEnabled.collectAsState()
 
     // Listen for payment events
     LaunchedEffect(Unit) {
@@ -91,6 +92,9 @@ fun PaymentScreen(
                 is PosEvent.PaymentError -> {
                     navigateToErrorScreen(event.error)
                 }
+                is PosEvent.PrintSuccess,
+                is PosEvent.PrintError,
+                PosEvent.PinResetSuccess -> Unit
             }
         }
     }
@@ -137,6 +141,7 @@ fun PaymentScreen(
                     qrUrl = qrUrl,
                     displayAmount = displayAmount,
                     remainingSeconds = remainingSeconds,
+                    isNfcUiEnabled = isNfcUiEnabled,
                     onCancel = onCancel
                 )
             }
@@ -154,16 +159,19 @@ private fun ScanContent(
     qrUrl: String,
     displayAmount: String,
     remainingSeconds: Long,
+    isNfcUiEnabled: Boolean,
     onCancel: () -> Unit
 ) {
-    val hasNfc by produceState(initialValue = false) {
+    val nfcAvailable by produceState(initialValue = false) {
         value = NfcManager.isAvailable
     }
+    val hasNfc = nfcAvailable && isNfcUiEnabled
 
     // NFC tap animation state — incremented on tap, reset to 0 after animation
     var tapAnimationTrigger by remember { mutableStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(hasNfc) {
+        if (!hasNfc) return@LaunchedEffect
         NfcManager.tapEventFlow.collectLatest {
             TapSoundPlayer.playTapSound()
             tapAnimationTrigger++

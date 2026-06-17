@@ -46,7 +46,7 @@ class EventsRepositoryTest {
     @Test
     fun `insertOrAbort should insert event when telemetry is enabled`() = runTest(testDispatcher) {
         val props = Props(event = "testEvent", type = "testType")
-        every { eventQueries.insertOrAbort(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
+        every { eventQueries.insertOrAbort(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns app.cash.sqldelight.db.QueryResult.Value(0L)
 
         repository.insertOrAbortTelemetry(props)
 
@@ -70,7 +70,7 @@ class EventsRepositoryTest {
     @Test
     fun `insertOrAbort should insert event `() = runTest(testDispatcher) {
         val props = Props(event = "testEvent", type = "testType")
-        every { eventQueries.insertOrAbort(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
+        every { eventQueries.insertOrAbort(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns app.cash.sqldelight.db.QueryResult.Value(0L)
 
         repository.insertOrAbort(props)
 
@@ -115,7 +115,7 @@ class EventsRepositoryTest {
 
     @Test
     fun `deleteAll should delete all events`() = runTest(testDispatcher) {
-        coEvery { eventQueries.deleteAllTelemetry() } just Runs
+        coEvery { eventQueries.deleteAllTelemetry() } returns app.cash.sqldelight.db.QueryResult.Value(0L)
 
         repository.deleteAllTelemetry()
 
@@ -125,7 +125,7 @@ class EventsRepositoryTest {
     @Test
     fun `deleteByIds should delete events by ids`() = runTest(testDispatcher) {
         val eventIds = listOf(1L, 2L, 3L)
-        coEvery { eventQueries.deleteByIds(eventIds) } just Runs
+        coEvery { eventQueries.deleteByIds(eventIds) } returns app.cash.sqldelight.db.QueryResult.Value(0L)
 
         repository.deleteByIds(eventIds)
 

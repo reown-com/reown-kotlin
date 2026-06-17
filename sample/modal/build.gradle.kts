@@ -1,7 +1,6 @@
 plugins {
     id(libs.plugins.android.application.get().pluginId)
     id(libs.plugins.kotlin.android.get().pluginId)
-    id(libs.plugins.kotlin.kapt.get().pluginId)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
     id("signing-config")
@@ -54,10 +53,6 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = listOf("-Xcontext-receivers")
-    }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -92,10 +87,12 @@ dependencies {
     implementation(libs.androidx.compose.lifecycle)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit)
     androidTestImplementation(libs.androidx.compose.navigation.testing)
 
     implementation(libs.bundles.accompanist)
+    implementation(libs.androidx.compose.material.navigation)
     implementation(libs.bundles.androidxAppCompat)
     implementation(libs.bundles.androidxLifecycle)
     api(libs.bundles.androidxNavigation)

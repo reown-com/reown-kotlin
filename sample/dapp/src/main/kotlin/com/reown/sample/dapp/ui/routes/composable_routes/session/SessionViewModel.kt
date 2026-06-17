@@ -2,8 +2,8 @@ package com.reown.sample.dapp.ui.routes.composable_routes.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.crashlytics.crashlytics
+import com.google.firebase.Firebase
 import com.reown.appkit.client.AppKit
 import com.reown.appkit.client.Modal
 import com.reown.appkit.client.models.Session

@@ -5,7 +5,7 @@ import org.gradle.kotlin.dsl.invoke
 
 fun TestOptions.registerManagedDevices() {
     managedDevices {
-        devices {
+        allDevices {
             val _deviceName = "Pixel 5"
             val _apiLevel = 32
             val _systemImageSource = "google"
