@@ -52,9 +52,9 @@ fun SecretKeysRoute(navController: NavHostController) {
     val spacing = WCTheme.spacing
     val colors = WCTheme.colors
     val borderRadius = WCTheme.borderRadius
-    val onCopy: (String) -> Unit = { value ->
+    val onCopy: (value: String, label: String) -> Unit = { value, label ->
         clipboardManager.setText(AnnotatedString(value))
-        Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "$label copied", Toast.LENGTH_SHORT).show()
     }
 
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -75,7 +75,7 @@ fun SecretKeysRoute(navController: NavHostController) {
                 )
             }
             Text(
-                text = "Secret Keys & Phrases",
+                text = "Secret keys & phrases",
                 style = WCTheme.typography.h6Medium.copy(color = colors.textPrimary)
             )
         }
@@ -105,7 +105,7 @@ fun SecretKeysRoute(navController: NavHostController) {
 
             item {
                 SecretSectionCard(
-                    title = "TON Account",
+                    title = "Ton Account",
                     items = listOf(
                         "Friendly address" to TONAccountDelegate.addressFriendly,
                         "Secret key" to TONAccountDelegate.secretKey,
@@ -140,7 +140,7 @@ fun SecretKeysRoute(navController: NavHostController) {
 
             item {
                 SecretSectionCard(
-                    title = "SUI Account",
+                    title = "Sui Account",
                     items = listOf(
                         "Address" to SuiAccountDelegate.address,
                         "Key pair" to SuiAccountDelegate.keypair,
@@ -169,7 +169,7 @@ fun SecretKeysRoute(navController: NavHostController) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun EvmSecretSection(onCopy: (String) -> Unit) {
+private fun EvmSecretSection(onCopy: (value: String, label: String) -> Unit) {
     val mnemonic = EthAccountDelegate.mnemonic
     val colors = WCTheme.colors
     val spacing = WCTheme.spacing
@@ -184,7 +184,7 @@ private fun EvmSecretSection(onCopy: (String) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(spacing.spacing3)
     ) {
         Text(
-            text = "EIP155 Account",
+            text = "Ethereum Account",
             style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
         )
 
@@ -226,7 +226,7 @@ private fun EvmSecretSection(onCopy: (String) -> Unit) {
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(borderRadius.radius3))
                     .background(color = colors.foregroundPrimary)
-                    .clickable { onCopy(mnemonic) }
+                    .clickable { onCopy(mnemonic, "Recovery phrase") }
                     .padding(spacing.spacing3),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -251,7 +251,7 @@ private fun EvmSecretSection(onCopy: (String) -> Unit) {
                     .padding(spacing.spacing3)
             ) {
                 Text(
-                    text = "Imported via private key - no recovery phrase",
+                    text = "Imported via private key. No recovery phrase.",
                     style = WCTheme.typography.bodySmRegular.copy(color = colors.textSecondary)
                 )
             }
@@ -266,7 +266,7 @@ private fun EvmSecretSection(onCopy: (String) -> Unit) {
 private fun SecretSectionCard(
     title: String,
     items: List<Pair<String, String>>,
-    onCopy: (String) -> Unit,
+    onCopy: (value: String, label: String) -> Unit,
 ) {
     val colors = WCTheme.colors
     val spacing = WCTheme.spacing
