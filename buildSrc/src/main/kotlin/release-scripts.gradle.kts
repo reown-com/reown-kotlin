@@ -1,6 +1,10 @@
 import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.process.ExecOperations
+import org.gradle.kotlin.dsl.support.serviceOf
 import java.util.Locale
 import kotlin.reflect.full.safeCast
+
+val execOps = serviceOf<ExecOperations>()
 
 // Example ./gradlew releaseAllSDKs -Ptype=local
 // Example ./gradlew releaseAllSDKs -Ptype=sonatype
@@ -14,7 +18,7 @@ tasks.register("releaseAllSDKs") {
             }?.let { releaseType ->
                 generateListOfModuleTasks(releaseType).forEach { task ->
                     println("Executing Task: $task")
-                    exec {
+                    execOps.exec {
                         val gradleCommand = if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                             "gradlew.bat"
                         } else {

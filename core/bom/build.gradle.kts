@@ -3,11 +3,9 @@ plugins {
     id("publish-module-java")
 }
 
-project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = ANDROID_BOM
-    extra[KEY_PUBLISH_VERSION] = BOM_VERSION
-    extra[KEY_SDK_NAME] = "Android BOM"
-}
+extra[KEY_PUBLISH_ARTIFACT_ID] = ANDROID_BOM
+extra[KEY_PUBLISH_VERSION] = BOM_VERSION
+extra[KEY_SDK_NAME] = "Android BOM"
 
 dependencies {
     constraints {

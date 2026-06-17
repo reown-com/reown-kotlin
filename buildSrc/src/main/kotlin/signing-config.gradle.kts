@@ -1,5 +1,5 @@
 import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
-import com.android.build.gradle.BaseExtension
+import com.android.build.api.dsl.ApplicationExtension
 import java.util.Properties
 
 plugins {
@@ -38,7 +38,8 @@ private val Project.secrets: Properties
         return extra["wc.secrets"] as Properties
     }
 
-project.extensions.configure(BaseExtension::class.java) {
+project.extensions.configure(ApplicationExtension::class.java) {
+    val android = this
     signingConfigs {
         create("upload") {
             storeFile = File(rootDir, secrets.getProperty("WC_FILENAME_UPLOAD"))
@@ -69,10 +70,10 @@ project.extensions.configure(BaseExtension::class.java) {
         getByName("release") {
             isMinifyEnabled = true
             isDebuggable = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("upload")
+            proguardFiles(android.getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = android.signingConfigs.getByName("upload")
             versionNameSuffix = System.getenv("GITHUB_RUN_NUMBER")?.let { ".$it" } ?: ""
-            defaultConfig.versionCode = "$SAMPLE_VERSION_CODE${System.getenv("GITHUB_RUN_NUMBER") ?: ""}".toInt()
+            android.defaultConfig.versionCode = "$SAMPLE_VERSION_CODE${System.getenv("GITHUB_RUN_NUMBER") ?: ""}".toInt()
             firebaseAppDistribution {
                 artifactType = "AAB"
                 serviceCredentialsFile = File(rootDir, "credentials.json").path
@@ -84,12 +85,12 @@ project.extensions.configure(BaseExtension::class.java) {
         create("internal") {
             isMinifyEnabled = true
             isDebuggable = true
-            applicationIdSuffix(".internal")
+            applicationIdSuffix = ".internal"
             matchingFallbacks += listOf("debug")
-            signingConfig = signingConfigs.getByName("internal_release")
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = android.signingConfigs.getByName("internal_release")
+            proguardFiles(android.getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             versionNameSuffix = "${System.getenv("GITHUB_RUN_NUMBER")?.let { ".$it" } ?: ""}-internal"
-            defaultConfig.versionCode = "$SAMPLE_VERSION_CODE${System.getenv("GITHUB_RUN_NUMBER") ?: ""}".toInt()
+            android.defaultConfig.versionCode = "$SAMPLE_VERSION_CODE${System.getenv("GITHUB_RUN_NUMBER") ?: ""}".toInt()
             firebaseAppDistribution {
                 artifactType = "APK"
                 serviceCredentialsFile = File(rootDir, "credentials.json").path
@@ -98,10 +99,10 @@ project.extensions.configure(BaseExtension::class.java) {
         }
 
         getByName("debug") {
-            applicationIdSuffix(".debug")
-            signingConfig = signingConfigs.getByName("debug")
+            applicationIdSuffix = ".debug"
+            signingConfig = android.signingConfigs.getByName("debug")
             versionNameSuffix = "${System.getenv("GITHUB_RUN_NUMBER")?.let { ".$it" } ?: ""}-debug"
-            defaultConfig.versionCode = "$SAMPLE_VERSION_CODE${System.getenv("GITHUB_RUN_NUMBER") ?: ""}".toInt()
+            android.defaultConfig.versionCode = "$SAMPLE_VERSION_CODE${System.getenv("GITHUB_RUN_NUMBER") ?: ""}".toInt()
             firebaseAppDistribution {
                 artifactType = "APK"
                 serviceCredentialsFile = File(rootDir, "credentials.json").path

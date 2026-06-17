@@ -473,7 +473,6 @@ sealed class GetPaymentOptionsError : Exception() {
     data class OptionNotFound(override val message: String)
     data class PaymentNotReady(override val message: String)
     data class InvalidAccount(override val message: String)
-    data class ComplianceFailed(override val message: String)
     data class Http(override val message: String)
     data class InternalError(override val message: String)
 }
@@ -535,9 +534,6 @@ result.onFailure { error ->
         }
         is Pay.GetPaymentOptionsError.InvalidAccount -> {
             showError("Invalid account address")
-        }
-        is Pay.GetPaymentOptionsError.ComplianceFailed -> {
-            showError("Compliance check failed")
         }
         is Pay.GetPaymentOptionsError.Http -> {
             showError("Network error: ${error.message}")

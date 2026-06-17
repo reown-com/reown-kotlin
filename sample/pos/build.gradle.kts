@@ -4,7 +4,6 @@ plugins {
     id(libs.plugins.android.application.get().pluginId)
     id(libs.plugins.kotlin.android.get().pluginId)
     id(libs.plugins.kotlin.parcelize.get().pluginId)
-    id(libs.plugins.kotlin.kapt.get().pluginId)
     id("signing-config")
     alias(libs.plugins.compose.compiler)
 }
@@ -77,6 +76,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        resValues = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()

@@ -35,6 +35,6 @@ const val PAY = "pay"
 val jvmVersion = JavaVersion.VERSION_11
 const val MIN_SDK: Int = 23
 const val TARGET_SDK: Int = 35
-const val COMPILE_SDK: Int = 36
+const val COMPILE_SDK: Int = 37
 val SAMPLE_VERSION_CODE = BOM_VERSION.replace(".", "").toInt()
 const val SAMPLE_VERSION_NAME = BOM_VERSION
