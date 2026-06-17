@@ -130,15 +130,14 @@ jobs:
             # Launch smoke check: fail fast if the APK is broken (e.g. dex missing the
             # Application class -> ClassNotFoundException on startup). Without this, a
             # bad build surfaces as every Maestro flow failing, which is hard to diagnose.
+            # NOTE: android-emulator-runner runs each script line in its own `sh -c`,
+            # so the check must be a single line - a multi-line `if/fi` block would be
+            # split across shells and fail with "end of file unexpected".
             echo "Smoke-checking app launch:"
             adb logcat -c
             adb shell monkey -p com.reown.sample.wallet.internal -c android.intent.category.LAUNCHER 1 || true
             sleep 8
-            if adb logcat -d | grep -qE "FATAL EXCEPTION|ClassNotFoundException|Unable to instantiate application"; then
-              echo "ERROR: App crashed on launch - APK is broken, not running Maestro."
-              adb logcat -d | grep -E "FATAL EXCEPTION|ClassNotFoundException|Unable to instantiate application|AndroidRuntime" | head -40
-              exit 1
-            fi
+            adb logcat -d | grep -qE "FATAL EXCEPTION|ClassNotFoundException|Unable to instantiate application" && { echo "ERROR: App crashed on launch - APK is broken, not running Maestro."; adb logcat -d | grep -E "FATAL EXCEPTION|ClassNotFoundException|Unable to instantiate application|AndroidRuntime" | head -40; exit 1; } || echo "App launched cleanly."
 
             # Force stop before Maestro tests
             adb shell am force-stop com.reown.sample.wallet.internal
