@@ -41,16 +41,6 @@ jobs:
           architecture: x86_64
           cache: 'gradle'
 
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
       - name: Setup Required files to build samples
         with:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
@@ -75,7 +65,10 @@ jobs:
           TEST_WALLET_PRIVATE_KEY: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
           ENABLE_TEST_MODE: "true"
         run: |
-          ./gradlew :sample:wallet:assembleInternal
+          # clean + --no-build-cache so a restored Gradle cache (PRs can restore the
+          # base branch's cache, which may predate dependency bumps in this PR) can't
+          # produce an inconsistent incremental APK whose dex is missing classes.
+          ./gradlew clean :sample:wallet:assembleInternal --no-build-cache
 
       - name: Copy Maestro Pay test flows
         uses: WalletConnect/actions/maestro/pay-tests@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
@@ -133,6 +126,19 @@ jobs:
 
             # Wait for system to settle
             sleep 10
+
+            # Launch smoke check: fail fast if the APK is broken (e.g. dex missing the
+            # Application class -> ClassNotFoundException on startup). Without this, a
+            # bad build surfaces as every Maestro flow failing, which is hard to diagnose.
+            echo "Smoke-checking app launch:"
+            adb logcat -c
+            adb shell monkey -p com.reown.sample.wallet.internal -c android.intent.category.LAUNCHER 1 || true
+            sleep 8
+            if adb logcat -d | grep -qE "FATAL EXCEPTION|ClassNotFoundException|Unable to instantiate application"; then
+              echo "ERROR: App crashed on launch - APK is broken, not running Maestro."
+              adb logcat -d | grep -E "FATAL EXCEPTION|ClassNotFoundException|Unable to instantiate application|AndroidRuntime" | head -40
+              exit 1
+            fi
 
             # Force stop before Maestro tests
             adb shell am force-stop com.reown.sample.wallet.internal
