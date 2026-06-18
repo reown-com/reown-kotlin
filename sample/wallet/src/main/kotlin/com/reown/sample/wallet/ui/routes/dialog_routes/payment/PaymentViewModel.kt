@@ -445,7 +445,6 @@ class PaymentViewModel : ViewModel() {
                             Log.d("PaymentViewModel", "Payment SUCCEEDED")
                             PaymentTokenPreferenceStore.saveLastPaidTokenUnit(option.amount.unit)
                             _uiState.value = PaymentUiState.Success(
-                                message = "Payment completed successfully!",
                                 paymentInfo = storedPaymentInfo,
                                 resultInfo = response.info,
                             )
@@ -454,7 +453,6 @@ class PaymentViewModel : ViewModel() {
                         Wallet.Model.PaymentStatus.PROCESSING -> {
                             Log.d("PaymentViewModel", "Payment PROCESSING")
                             _uiState.value = PaymentUiState.Success(
-                                message = "Payment is being processed...",
                                 paymentInfo = storedPaymentInfo,
                                 resultInfo = response.info,
                             )
@@ -584,7 +582,6 @@ sealed class PaymentUiState {
     ) : PaymentUiState()
 
     data class Success(
-        val message: String,
         val paymentInfo: Wallet.Model.PaymentInfo? = null,
         val resultInfo: Wallet.Model.PaymentResultInfo? = null,
     ) : PaymentUiState()
