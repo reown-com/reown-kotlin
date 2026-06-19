@@ -352,12 +352,8 @@ class PaymentViewModel : ViewModel() {
         val showSetupLoader = PaymentUtil.shouldShowSetupLoader(option.actions)
 
         _uiState.value = PaymentUiState.Processing(
-            message = if (showSetupLoader) {
-                "Setting up $symbol"
-            } else {
-                "Processing your payment..."
-            },
-            note = if (showSetupLoader) "This usually takes a few seconds. Future $symbol payments will skip this step." else null,
+            step = LoadingStep.CONFIRMING,
+            setupTokenSymbol = if (showSetupLoader) symbol else null,
             paymentInfo = storedPaymentInfo,
         )
 
@@ -394,7 +390,7 @@ class PaymentViewModel : ViewModel() {
 
         if (!showSetupLoader) {
             _uiState.value = PaymentUiState.Processing(
-                message = "Processing your payment...",
+                step = LoadingStep.CONFIRMING,
                 paymentInfo = storedPaymentInfo,
             )
         }
@@ -405,8 +401,8 @@ class PaymentViewModel : ViewModel() {
                 when (action.action.method) {
                     ETH_SEND_TRANSACTION -> {
                         _uiState.value = PaymentUiState.Processing(
-                            message = "Setting up $symbol",
-                            note = "This usually takes a few seconds. Future $symbol payments will skip this step.",
+                            step = LoadingStep.CONFIRMING,
+                            setupTokenSymbol = symbol,
                             paymentInfo = storedPaymentInfo,
                         )
 
@@ -416,8 +412,10 @@ class PaymentViewModel : ViewModel() {
                         signatures.add(txHash)
 
                         if (showSetupLoader && action == approvalAction) {
+                            // Token setup done — drop the setup copy and fall back to the
+                            // generic confirming message while the payment finalizes.
                             _uiState.value = PaymentUiState.Processing(
-                                message = "Finalizing your payment...",
+                                step = LoadingStep.CONFIRMING,
                                 paymentInfo = storedPaymentInfo,
                             )
                         }
@@ -447,7 +445,6 @@ class PaymentViewModel : ViewModel() {
                             Log.d("PaymentViewModel", "Payment SUCCEEDED")
                             PaymentTokenPreferenceStore.saveLastPaidTokenUnit(option.amount.unit)
                             _uiState.value = PaymentUiState.Success(
-                                message = "Payment completed successfully!",
                                 paymentInfo = storedPaymentInfo,
                                 resultInfo = response.info,
                             )
@@ -456,7 +453,6 @@ class PaymentViewModel : ViewModel() {
                         Wallet.Model.PaymentStatus.PROCESSING -> {
                             Log.d("PaymentViewModel", "Payment PROCESSING")
                             _uiState.value = PaymentUiState.Success(
-                                message = "Payment is being processed...",
                                 paymentInfo = storedPaymentInfo,
                                 resultInfo = response.info,
                             )
@@ -580,13 +576,12 @@ sealed class PaymentUiState {
     ) : PaymentUiState()
 
     data class Processing(
-        val message: String,
-        val note: String? = null,
+        val step: LoadingStep,
+        val setupTokenSymbol: String? = null,
         val paymentInfo: Wallet.Model.PaymentInfo? = null,
     ) : PaymentUiState()
 
     data class Success(
-        val message: String,
         val paymentInfo: Wallet.Model.PaymentInfo? = null,
         val resultInfo: Wallet.Model.PaymentResultInfo? = null,
     ) : PaymentUiState()
