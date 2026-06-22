@@ -71,10 +71,10 @@ jobs:
           ./gradlew clean :sample:wallet:assembleInternal --no-build-cache
 
       - name: Copy Maestro Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
+        uses: WalletConnect/actions/maestro/pay-tests@ab2551783866d32b3668c1c69ee7678b39532f15
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
+        uses: WalletConnect/actions/maestro/setup@ab2551783866d32b3668c1c69ee7678b39532f15
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
@@ -186,7 +186,7 @@ jobs:
       - name: Reset USDT Permit2 allowance (Polygon)
         if: always()
         continue-on-error: true
-        uses: WalletConnect/actions/maestro/permit2-reset@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
+        uses: WalletConnect/actions/maestro/permit2-reset@ab2551783866d32b3668c1c69ee7678b39532f15
         with:
           chain-id: eip155:137
           # polygon-rpc.com is gated (HTTP 401 "tenant disabled") in CI; use publicnode.
