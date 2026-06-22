@@ -54,6 +54,16 @@ internal object PaymentTransactionUtil {
     private val GAS_BUFFER_PERCENT = BigInteger.valueOf(120)
     private val GAS_BUFFER_DIVISOR = BigInteger.valueOf(100)
 
+    // Broadcasting against a load-balanced public RPC (e.g. polygon-bor-rpc.publicnode.com)
+    // can fail when a same-nonce tx is still pending in the mempool: the node rejects the
+    // resend as "replacement transaction underpriced" / "already known" because equal fees
+    // don't clear the ≥10% replacement threshold. Retry with re-fetched nonce and bumped
+    // fees so we out-bid (replace) the stuck tx instead of failing the payment outright.
+    private const val SEND_TX_MAX_ATTEMPTS = 3
+    private const val SEND_TX_RETRY_DELAY_MS = 1_500L
+    private val FEE_BUMP_PERCENT = BigInteger.valueOf(130)  // +30% per retry (clears the 10% replacement floor with margin)
+    private val FEE_BUMP_DIVISOR = BigInteger.valueOf(100)
+
     private val NATIVE_SYMBOL_BY_CHAIN_ID = mapOf(
         "eip155:1" to "ETH",
         "eip155:10" to "ETH",
@@ -178,24 +188,59 @@ internal object PaymentTransactionUtil {
             baseFresh
         }
 
-        val nonce = withTimeout(RPC_CALL_TIMEOUT_MS) { rpcGetTransactionCount(action.chainId, from) }
-
         val numericChainId = action.chainId.substringAfter(":").toLong()
-        val rawTx = RawTransaction.createTransaction(
-            numericChainId,
-            nonce,
-            fresh.gasLimit,
-            fresh.to,
-            fresh.value,
-            fresh.data,
-            fresh.maxPriorityFeePerGas,
-            fresh.maxFeePerGas,
-        )
-        val signed = Numeric.toHexString(
-            TransactionEncoder.signMessage(rawTx, Credentials.create(EthAccountDelegate.privateKey))
-        )
+        val credentials = Credentials.create(EthAccountDelegate.privateKey)
 
-        return withTimeout(RPC_CALL_TIMEOUT_MS) { rpcSendRawTransaction(action.chainId, signed) }
+        var maxPriorityFeePerGas = fresh.maxPriorityFeePerGas
+        var maxFeePerGas = fresh.maxFeePerGas
+        var attempt = 0
+
+        while (true) {
+            // Re-fetch the nonce every attempt: a stuck same-nonce tx may have mined between
+            // tries (nonce advances), or a load-balanced node may now report it consistently.
+            val nonce = withTimeout(RPC_CALL_TIMEOUT_MS) { rpcGetTransactionCount(action.chainId, from) }
+            val rawTx = RawTransaction.createTransaction(
+                numericChainId,
+                nonce,
+                fresh.gasLimit,
+                fresh.to,
+                fresh.value,
+                fresh.data,
+                maxPriorityFeePerGas,
+                maxFeePerGas,
+            )
+            val signed = Numeric.toHexString(TransactionEncoder.signMessage(rawTx, credentials))
+
+            try {
+                return withTimeout(RPC_CALL_TIMEOUT_MS) { rpcSendRawTransaction(action.chainId, signed) }
+            } catch (e: Exception) {
+                attempt++
+                if (attempt >= SEND_TX_MAX_ATTEMPTS || !isRetryableSendError(e)) throw e
+                // Out-bid the stuck pending tx so the resend replaces it instead of being
+                // rejected as underpriced / already-known.
+                maxPriorityFeePerGas = maxPriorityFeePerGas.multiply(FEE_BUMP_PERCENT).divide(FEE_BUMP_DIVISOR)
+                maxFeePerGas = maxFeePerGas.multiply(FEE_BUMP_PERCENT).divide(FEE_BUMP_DIVISOR)
+                Log.w(
+                    TAG,
+                    "sendRawTransaction attempt $attempt for ${action.chainId} failed (${e.message}); " +
+                        "retrying with bumped fees (maxPriorityFee=$maxPriorityFeePerGas, maxFee=$maxFeePerGas)",
+                )
+                delay(SEND_TX_RETRY_DELAY_MS)
+            }
+        }
+    }
+
+    /**
+     * Recoverable `eth_sendRawTransaction` errors that a fee bump + nonce refresh can clear.
+     * These arise when a same-nonce tx is already pending in the mempool — common when
+     * broadcasting through a shared/load-balanced public RPC.
+     */
+    private fun isRetryableSendError(error: Throwable): Boolean {
+        val message = error.message?.lowercase() ?: return false
+        return message.contains("replacement transaction underpriced") ||
+            message.contains("transaction underpriced") ||
+            message.contains("already known") ||
+            message.contains("nonce too low")
     }
 
     /**
