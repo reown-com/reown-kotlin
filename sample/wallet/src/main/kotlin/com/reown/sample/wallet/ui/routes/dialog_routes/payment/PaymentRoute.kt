@@ -199,9 +199,10 @@ fun PaymentRoute(
                 )
             }
             is PaymentUiState.Processing -> {
+                val loading = getLoadingContent(state.step, state.setupTokenSymbol)
                 ProcessingContent(
-                    message = state.message,
-                    note = state.note,
+                    message = loading.message,
+                    note = loading.note,
                 )
             }
             is PaymentUiState.Success -> {
@@ -255,7 +256,7 @@ private fun LoadingContent() {
         WalletConnectLoader(size = 120.dp)
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
         Text(
-            text = "Preparing your payment...",
+            text = getLoadingContent(LoadingStep.PREPARING).message,
             style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
             textAlign = TextAlign.Center,
             modifier = Modifier.testTag("pay-loading-message")
@@ -312,7 +313,7 @@ private fun PaymentOptionsContent(
             Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
             Text(
-                text = "Select a token to pay with",
+                text = "Choose the asset you want to pay with",
                 style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary)
             )
         }
@@ -688,7 +689,7 @@ private fun SummaryContent(
 
         PrimaryActionButton(
             primaryText = "Pay ${payLabel.total}",
-            secondaryText = if (payLabel.includesGasFee) " (incl. gas fee)" else null,
+            secondaryText = if (payLabel.includesGasFee) " (includes network fee)" else null,
             onClick = onConfirm,
             modifier = Modifier.testTag("pay-button-pay")
         )
@@ -696,7 +697,7 @@ private fun SummaryContent(
         if (requiresApproval) {
             Spacer(modifier = Modifier.height(WCTheme.spacing.spacing3))
             Text(
-                text = "Why does ${(selectedOption.amount.display?.assetSymbol ?: "this token").uppercase(Locale.ROOT)} require a gas fee?",
+                text = "Why does ${(selectedOption.amount.display?.assetSymbol ?: "this token").uppercase(Locale.ROOT)} need a network fee?",
                 style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary),
                 textAlign = TextAlign.Center,
                 textDecoration = TextDecoration.Underline,
@@ -757,7 +758,7 @@ private fun GasFeeInfoContent(
             Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
             Text(
-                text = "Why does $tokenSymbol require a gas fee?",
+                text = "Why does $tokenSymbol need a network fee?",
                 style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
                 textAlign = TextAlign.Center
             )
@@ -765,7 +766,7 @@ private fun GasFeeInfoContent(
             Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
             Text(
-                text = "The gas fee covers a one-time setup that lets your wallet pay with $tokenSymbol.",
+                text = "The network fee covers a one-time setup so your wallet can pay with $tokenSymbol.",
                 style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary),
                 textAlign = TextAlign.Center
             )
@@ -797,7 +798,7 @@ private fun GasFeeInfoContent(
             )
             Spacer(modifier = Modifier.width(WCTheme.spacing.spacing2))
             Text(
-                text = "Gas fee: $gasText",
+                text = "Network fee: $gasText",
                 style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary)
             )
         }
@@ -805,7 +806,7 @@ private fun GasFeeInfoContent(
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
 
         PrimaryActionButton(
-            text = "Got it!",
+            text = "Got it",
             onClick = onBack
         )
     }
@@ -842,21 +843,21 @@ private fun WhyInfoRequiredContent(
         Spacer(modifier = Modifier.height(28.dp))
 
         Text(
-            text = "Why do we collect personal details?",
+            text = "Why we collect personal details",
             style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary)
         )
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing4))
 
         Text(
-            text = "To meet compliance requirements, some basic information is collected from WalletConnect Pay users.\n\nThis is typically a one-time step\u2014if you use the same wallet on this network again, you won\u2019t need to provide the info again, unless your information changes.",
+            text = "We collect a few basic details to meet compliance requirements for WalletConnect Pay.\n\nWe only ask once per wallet on this network. You won\u2019t see this again unless your details change.",
             style = WCTheme.typography.bodyLgRegular.copy(color = WCTheme.colors.textSecondary)
         )
 
         Spacer(modifier = Modifier.height(28.dp))
 
         PrimaryActionButton(
-            text = "Got it!",
+            text = "Got it",
             onClick = onBack
         )
     }
@@ -1046,18 +1047,23 @@ private fun SuccessContent(
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing6))
 
-        // Success message with payment details
-        val displayAmount = paymentInfo?.let {
-            formatDisplayAmount(
+        // Success summary with payment details, falling back to the default title.
+        val successSummary = paymentInfo?.let {
+            val displayAmount = formatDisplayAmount(
                 value = it.amount.value,
                 decimals = it.amount.display?.decimals ?: 2,
                 symbol = it.amount.display?.assetSymbol ?: it.amount.unit
             )
-        } ?: ""
-        val merchantName = paymentInfo?.merchant?.name ?: "Merchant"
+            "You've paid $displayAmount to ${it.merchant.name}"
+        }
+        val content = getResultContent(
+            isSuccess = true,
+            errorType = null,
+            successSummary = successSummary,
+        )
 
         Text(
-            text = "You've paid $displayAmount to $merchantName",
+            text = content.title,
             style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textPrimary),
             textAlign = TextAlign.Center
         )
@@ -1065,7 +1071,7 @@ private fun SuccessContent(
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
 
         PrimaryActionButton(
-            text = "Got it!",
+            text = content.actionLabel,
             onClick = onDone,
             modifier = Modifier.testTag("pay-button-result-action-success")
         )
@@ -1079,28 +1085,14 @@ private fun ErrorContent(
     onClose: () -> Unit,
     onScanNewQrCode: () -> Unit = {}
 ) {
-    val title = when (errorType) {
-        PaymentErrorType.INSUFFICIENT_FUNDS -> "Not enough funds"
-        PaymentErrorType.EXPIRED -> "Your payment has expired"
-        PaymentErrorType.CANCELLED -> "This payment was cancelled"
-        PaymentErrorType.NOT_FOUND -> "Payment not found"
-        PaymentErrorType.GENERIC -> "Transaction failed"
-    }
-
-    val subtitle = when (errorType) {
-        PaymentErrorType.INSUFFICIENT_FUNDS -> "This wallet doesn't have enough funds on the supported networks to complete the payment."
-        PaymentErrorType.EXPIRED -> "Please ask the merchant to generate a new payment and try again."
-        PaymentErrorType.CANCELLED -> "Please ask the merchant to generate a new payment and try again."
-        PaymentErrorType.NOT_FOUND -> "This payment link is no longer valid."
-        PaymentErrorType.GENERIC -> message.ifBlank { null }
-    }
-
-    val errorIconTag = when (errorType) {
-        PaymentErrorType.INSUFFICIENT_FUNDS -> "pay-result-insufficient-funds-icon"
-        PaymentErrorType.EXPIRED -> "pay-result-expired-icon"
-        PaymentErrorType.CANCELLED -> "pay-result-cancelled-icon"
-        PaymentErrorType.NOT_FOUND, PaymentErrorType.GENERIC -> "pay-result-error-icon"
-    }
+    val content = getResultContent(
+        isSuccess = false,
+        errorType = errorType,
+        rawErrorMessage = message,
+    )
+    val title = content.title
+    val subtitle = content.description
+    val errorIconTag = content.iconTestId
 
     val errorActionTag = when (errorType) {
         PaymentErrorType.INSUFFICIENT_FUNDS -> "pay-button-result-action-insufficient_funds"
@@ -1153,29 +1145,14 @@ private fun ErrorContent(
 
         Spacer(modifier = Modifier.height(WCTheme.spacing.spacing8))
 
-        when (errorType) {
-            PaymentErrorType.EXPIRED, PaymentErrorType.CANCELLED, PaymentErrorType.NOT_FOUND -> {
-                PrimaryActionButton(
-                    text = "Scan new QR code",
-                    onClick = onScanNewQrCode,
-                    modifier = Modifier.testTag(errorActionTag)
-                )
-            }
-            PaymentErrorType.INSUFFICIENT_FUNDS -> {
-                PrimaryActionButton(
-                    text = "Got it!",
-                    onClick = onClose,
-                    modifier = Modifier.testTag(errorActionTag)
-                )
-            }
-            else -> {
-                PrimaryActionButton(
-                    text = "Close",
-                    onClick = onClose,
-                    modifier = Modifier.testTag(errorActionTag)
-                )
-            }
-        }
+        PrimaryActionButton(
+            text = content.actionLabel,
+            onClick = when (content.actionKind) {
+                ResultActionKind.SCAN_QR -> onScanNewQrCode
+                ResultActionKind.CLOSE -> onClose
+            },
+            modifier = Modifier.testTag(errorActionTag)
+        )
     }
 }
 

@@ -35,10 +35,10 @@ import uniffi.yttrium_utils.suiDeriveKeypairFromMnemonic
 import kotlin.coroutines.resume
 
 internal enum class ImportWalletChain(val label: String, val placeholder: String) {
-    EVM("EVM", "Enter mnemonic phrase or private key (0x...)"),
-    TON("TON", "Enter secret key:public key (colon separated)"),
+    EVM("Ethereum", "Enter mnemonic phrase or private key (0x...)"),
+    TON("Ton", "Enter secret key:public key (colon separated)"),
     SOLANA("Solana", "Enter mnemonic phrase or base58 keypair"),
-    SUI("SUI", "Enter mnemonic phrase or keypair string"),
+    SUI("Sui", "Enter mnemonic phrase or keypair string"),
     TRON("Tron", "Enter mnemonic phrase or private key (64 hex)"),
     STACKS("Stacks", "Enter wallet string"),
 }

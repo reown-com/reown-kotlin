@@ -114,7 +114,7 @@ fun ScanUriRoute(navController: NavController, sheetState: BottomSheetNavigatorS
                 }, onQrCodeScanFailure = {
                     //todo Add Snackbar with error as a route parameter callback: https://stackoverflow.com/questions/68909340/how-to-show-snackbar-with-a-button-onclick-in-jetpack-compose
                     navController.popBackStack()
-                    Toast.makeText(context, "QR Scan failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Couldn't read the QR code. Try again.", Toast.LENGTH_SHORT).show()
                 })
             )
             try {
@@ -169,7 +169,7 @@ fun ScanView(navController: NavController, hasCamPermission: Boolean, previewVie
                     painter = qrFocusPainter, contentDescription = null
                 )
                 Text(
-                    text = "Scan the code", style = TextStyle(
+                    text = "Scan a WalletConnect QR code", style = TextStyle(
                         color = Color(0xffffffff), textAlign = TextAlign.Center, fontSize = 20.sp, fontWeight = FontWeight.SemiBold
                     ),
                     modifier = Modifier

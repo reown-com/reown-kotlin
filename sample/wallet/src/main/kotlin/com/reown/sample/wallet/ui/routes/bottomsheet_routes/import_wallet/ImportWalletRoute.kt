@@ -57,7 +57,7 @@ fun ImportWalletRoute(navController: NavController, onImportSuccess: () -> Unit 
     LaunchedEffect(importResult) {
         when (val result = importResult) {
             is ImportResult.Success -> {
-                Toast.makeText(context, "${selectedChain.label} wallet imported: ${result.address.take(6)}...${result.address.takeLast(4)}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${selectedChain.label} wallet added: ${result.address.take(6)}...${result.address.takeLast(4)}", Toast.LENGTH_SHORT).show()
                 onImportSuccess()
                 navController.popBackStack()
             }
@@ -108,7 +108,7 @@ fun ImportWalletRoute(navController: NavController, onImportSuccess: () -> Unit 
         Spacer(modifier = Modifier.height(spacing.spacing4))
 
         Text(
-            text = "Import Wallet",
+            text = "Import wallet",
             style = WCTheme.typography.h6Medium.copy(color = colors.textPrimary),
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
