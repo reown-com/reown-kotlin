@@ -35,6 +35,7 @@ object ThemeManager {
         0 -> false
         1 -> true
         else -> {
+            if (!::appContext.isInitialized) return false // safe default before init()
             val uiMode = appContext.resources.configuration.uiMode and
                 Configuration.UI_MODE_NIGHT_MASK
             uiMode == Configuration.UI_MODE_NIGHT_YES
