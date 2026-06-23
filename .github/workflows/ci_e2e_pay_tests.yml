@@ -39,7 +39,15 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
           architecture: x86_64
-          cache: 'gradle'
+          # Intentionally NOT caching Gradle for this E2E build. `clean` and
+          # `--no-build-cache` wipe the module build dir and task-output cache,
+          # but NOT ~/.gradle/caches/transforms-* (artifact-transform / dexing
+          # state). On PR runs setup-java restores that from the base branch, and
+          # a stale/incompatible transform intermittently produces an APK whose
+          # primary dex is missing classes (WalletKitApplication,
+          # androidx.core.app.CoreComponentFactory) -> ClassNotFoundException on
+          # launch (caught by the smoke check below). Building from a clean Gradle
+          # home makes the APK deterministic.
 
       - name: Setup Required files to build samples
         with:
