@@ -51,14 +51,25 @@ class RelayTest {
 
     @ExperimentalTime
     @Test
-    fun `Connect with empty packageName when some packageName is already configured in Cloud - successful connection`() {
+    fun `Connect with empty packageName when some packageName is already configured in Cloud - connection rejected`() {
+        // Relay rejects an empty packageName query param with 403 (the empty value resolves to an empty
+        // origin instead of None, which then fails Cerberus validation). This test asserts that rejection.
         val testState = MutableStateFlow<TestState>(TestState.Idle)
         val (clientA: RelayInterface, clientB: RelayInterface) = initTwoClients(packageName = "")
 
-        //Await connection
-        val connectionTime = measureTime { awaitConnection(clientA, clientB) }.inWholeMilliseconds
-        println("Connection time: $connectionTime ms")
-        testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+        clientA.eventsFlow.onEach { event ->
+            when (event) {
+                is Relay.Model.Event.OnConnectionFailed -> testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+                else -> {}
+            }
+        }.launchIn(testScope)
+
+        clientB.eventsFlow.onEach { event ->
+            when (event) {
+                is Relay.Model.Event.OnConnectionFailed -> testState.compareAndSet(expect = TestState.Idle, update = TestState.Success)
+                else -> {}
+            }
+        }.launchIn(testScope)
 
         //Lock until is finished or timed out
         runBlocking {
@@ -68,11 +79,11 @@ class RelayTest {
                 delay(10)
             }
 
-            // Success or fail or idle
+            // Success (connection was rejected as expected) or fail or idle
             when (testState.value) {
                 is TestState.Success -> return@runBlocking
                 is TestState.Error -> fail((testState.value as TestState.Error).message)
-                is TestState.Idle -> fail("Test timeout")
+                is TestState.Idle -> fail("Test timeout - expected connection to be rejected")
             }
         }
     }
