@@ -388,11 +388,11 @@ class RelayTest {
 
         //Lock until is finished or timed out
         val start = System.currentTimeMillis()
-        while (!areBothReady.value && !didTimeout(start, 10000L)) {
+        while (!areBothReady.value && !didTimeout(start, 50000L)) {
             delay(10)
         }
 
-        if (didTimeout(start, 50000L)) {
+        if (!areBothReady.value) {
             throw Exception("Unable to establish socket connection")
         }
 
