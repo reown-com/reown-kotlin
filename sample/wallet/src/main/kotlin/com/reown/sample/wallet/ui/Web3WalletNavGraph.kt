@@ -26,6 +26,7 @@ import com.reown.sample.wallet.ui.routes.composable_routes.connection_details.Co
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.composable_routes.secret_keys.SecretKeysRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.settings.SettingsRoute
+import com.reown.sample.wallet.ui.routes.composable_routes.theme_variables.ThemeVariablesRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.wallets.WalletsRoute
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scanner_options.ScannerOptionsRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_authenticate.SessionAuthenticateRoute
@@ -91,6 +92,9 @@ fun Web3WalletNavGraph(
         }
         composable(Route.SecretKeysAndPhrases.path) {
             SecretKeysRoute(navController)
+        }
+        composable(Route.ThemeVariables.path) {
+            ThemeVariablesRoute(navController)
         }
         bottomSheet(Route.ImportWallet.path) {
             ImportWalletRoute(

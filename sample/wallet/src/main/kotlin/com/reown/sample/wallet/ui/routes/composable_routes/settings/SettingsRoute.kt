@@ -76,6 +76,13 @@ fun SettingsRoute(navController: NavHostController) {
             }
 
             item {
+                NavigationCard(
+                    title = "Pay form customization",
+                    onClick = { navController.navigate(Route.ThemeVariables.path) }
+                )
+            }
+
+            item {
                 DeviceSectionCard(
                     clientId = viewModel.clientId,
                     deviceToken = deviceToken,
