@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -126,52 +128,71 @@ fun ThemeVariablesRoute(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(spacing.spacing2)
             ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(spacing.spacing11)
-                        .clip(RoundedCornerShape(borderRadius.radius4))
-                        .background(colors.bgPrimary)
-                        .border(
-                            width = spacing.spacing05,
-                            color = colors.borderSecondary,
-                            shape = RoundedCornerShape(borderRadius.radius4)
-                        )
-                        .clickable {
-                            ThemeVariablesStore.clear()
-                            input = ""
-                            Toast.makeText(context, "Theme variables cleared", Toast.LENGTH_SHORT).show()
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Clear",
-                        style = WCTheme.typography.bodyLgRegular.copy(color = colors.textPrimary)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(spacing.spacing11)
-                        .clip(RoundedCornerShape(borderRadius.radius4))
-                        .background(colors.bgAccentPrimary)
-                        .clickable {
-                            ThemeVariablesStore.save(input)
-                            Toast.makeText(context, "Theme variables saved", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack()
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Save",
-                        style = WCTheme.typography.bodyLgRegular.copy(color = colors.textInvert)
-                    )
-                }
+                ActionButton(
+                    text = "Clear",
+                    textColor = colors.textPrimary,
+                    backgroundColor = colors.bgPrimary,
+                    bordered = true,
+                    onClick = {
+                        ThemeVariablesStore.clear()
+                        input = ""
+                        Toast.makeText(context, "Theme variables cleared", Toast.LENGTH_SHORT).show()
+                    }
+                )
+                ActionButton(
+                    text = "Save",
+                    textColor = colors.textInvert,
+                    backgroundColor = colors.bgAccentPrimary,
+                    bordered = false,
+                    onClick = {
+                        ThemeVariablesStore.save(input)
+                        Toast.makeText(context, "Theme variables saved", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(spacing.spacing3))
         }
+    }
+}
+
+@Composable
+private fun RowScope.ActionButton(
+    text: String,
+    textColor: Color,
+    backgroundColor: Color,
+    bordered: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = WCTheme.colors
+    val spacing = WCTheme.spacing
+    val borderRadius = WCTheme.borderRadius
+
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .height(spacing.spacing11)
+            .clip(RoundedCornerShape(borderRadius.radius4))
+            .background(backgroundColor)
+            .then(
+                if (bordered) {
+                    Modifier.border(
+                        width = spacing.spacing05,
+                        color = colors.borderSecondary,
+                        shape = RoundedCornerShape(borderRadius.radius4)
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = WCTheme.typography.bodyLgRegular.copy(color = textColor)
+        )
     }
 }
 
@@ -205,14 +226,18 @@ private fun DecodedPreview(input: String) {
     }
 }
 
-private fun decodeThemeVariables(input: String): String? = try {
+private fun decodeThemeVariables(input: String): String? {
     val value = ThemeVariablesStore.parseInput(input)
-    if (value.isBlank()) {
-        null
-    } else {
-        val bytes = Base64.decode(value, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
-        JSONObject(String(bytes)).toString(2)
+    if (value.isBlank()) return null
+    // Try URL-safe base64 first (the dashboard export format), then fall back to
+    // standard base64. Decode bytes as UTF-8 explicitly to stay device-independent.
+    val flags = listOf(
+        Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP,
+        Base64.DEFAULT
+    )
+    return flags.firstNotNullOfOrNull { flag ->
+        runCatching {
+            JSONObject(String(Base64.decode(value, flag), Charsets.UTF_8)).toString(2)
+        }.getOrNull()
     }
-} catch (e: Exception) {
-    null
 }
