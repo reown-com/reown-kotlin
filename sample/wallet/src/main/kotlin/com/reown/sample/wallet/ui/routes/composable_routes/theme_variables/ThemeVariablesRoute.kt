@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -109,7 +110,7 @@ fun ThemeVariablesRoute(navController: NavHostController) {
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(spacing.spacing2 * 15),
+                    .heightIn(min = spacing.spacing13),
                 textStyle = WCTheme.typography.bodyMdRegular.copy(color = colors.textPrimary),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
                     backgroundColor = colors.foregroundPrimary,
