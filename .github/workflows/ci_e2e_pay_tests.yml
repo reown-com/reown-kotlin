@@ -10,6 +10,7 @@ on:
       - opened
       - synchronize
       - edited
+      - ready_for_review # so E2E fires immediately when a draft is marked ready
   schedule:
     - cron: '0 5 * * *' # Runs every day at 05:00 UTC
   workflow_dispatch:
