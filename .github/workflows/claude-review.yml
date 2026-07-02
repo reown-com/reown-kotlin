@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Claude Review
-        uses: WalletConnect/actions/claude/auto-review@master
+        uses: WalletConnect/actions/claude/auto-review@d385e7a80fb4a3d378ee685021f3f7e24ccdf291
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           project_context: |
