@@ -1,11 +1,11 @@
 #!/bin/bash
 # Downloads shared WalletConnect Pay Maestro test flows from WalletConnect/actions repo.
 # Usage: ./scripts/setup-maestro-pay-tests.sh [ref]
-#   ref: actions repo branch/tag/commit to pull from (default: master)
+#   ref: actions repo branch/tag/commit to pull from (default: d385e7a80fb4a3d378ee685021f3f7e24ccdf291)
 
 set -euo pipefail
 
-REF="${1:-master}"
+REF="${1:-d385e7a80fb4a3d378ee685021f3f7e24ccdf291}"
 REPO="WalletConnect/actions"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
