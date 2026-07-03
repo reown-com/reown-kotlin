@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reown.sample.wallet.domain.ThemeManager
+import com.reown.sample.wallet.domain.ThemeVariablesStore
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
@@ -289,7 +290,9 @@ class PaymentViewModel : ViewModel() {
         val theme = if (ThemeManager.isDarkTheme()) "dark" else "light"
         val builder = Uri.parse(baseUrl).buildUpon()
             .appendQueryParameter("theme", theme)
-            .appendQueryParameter("themeVariables", THEME_VARIABLES)
+        ThemeVariablesStore.themeVariables.value
+            .takeIf { it.isNotBlank() }
+            ?.let { builder.appendQueryParameter("themeVariables", it) }
         buildPrefillParam(schema)?.let { builder.appendQueryParameter("prefill", it) }
         return builder.build().toString()
     }
@@ -537,10 +540,6 @@ class PaymentViewModel : ViewModel() {
     private companion object {
         private const val PAY_EXPIRY_GUARD_MS = 10_000L
         private const val ETH_SEND_TRANSACTION = "eth_sendTransaction"
-
-        // base64url of {"fontFamily":"dm-sans","inputRadius":8,"buttonRadius":8}
-        private const val THEME_VARIABLES =
-            "eyJmb250RmFtaWx5IjoiZG0tc2FucyIsImlucHV0UmFkaXVzIjo4LCJidXR0b25SYWRpdXMiOjh9"
     }
 }
 

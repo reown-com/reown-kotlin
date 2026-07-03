@@ -1,4 +1,6 @@
 name: E2E Pay Tests with Maestro
+# "(skip-metrics)" tells the E2E KPI job (WalletConnect/actions) to drop this run.
+run-name: ${{ ((github.event_name == 'pull_request' && github.event.pull_request.draft) || (github.event_name == 'workflow_dispatch' && github.ref_name != 'develop')) && format('{0} (skip-metrics)', github.event.pull_request.title || github.ref_name) || '' }}
 
 on:
   pull_request:
@@ -6,6 +8,7 @@ on:
       - opened
       - synchronize
       - edited
+      - ready_for_review
   schedule:
     - cron: '0 5 * * *' # Runs every day at 05:00 UTC
   workflow_dispatch:
@@ -15,12 +18,13 @@ permissions:
 
 jobs:
   check-balance:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     uses: ./.github/workflows/e2e_balance_check.yml
     secrets: inherit
 
   build_and_run_pay_e2e_tests:
     needs: check-balance
-    if: always()
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     name: Build & Run Pay E2E Tests
     timeout-minutes: 45
     runs-on: ubuntu-16core
