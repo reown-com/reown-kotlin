@@ -82,11 +82,13 @@ jobs:
           # produce an inconsistent incremental APK whose dex is missing classes.
           ./gradlew clean :sample:wallet:assembleInternal --no-build-cache
 
+      # Pinned to WalletConnect/actions #109 (28181b5 = removal of the Universal Link
+      # / deeplink pay flow), so pay_single_option_nokyc_deeplink is no longer copied.
       - name: Copy Maestro Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@ddc7c0f9acd8b1576e9a78f0ef67f4b8fbb36db2
+        uses: WalletConnect/actions/maestro/pay-tests@28181b5f133836380d2d9bb8ff06af5c3234fb9d
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@ddc7c0f9acd8b1576e9a78f0ef67f4b8fbb36db2
+        uses: WalletConnect/actions/maestro/setup@28181b5f133836380d2d9bb8ff06af5c3234fb9d
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
@@ -198,7 +200,7 @@ jobs:
       - name: Reset USDT Permit2 allowance (Polygon)
         if: always()
         continue-on-error: true
-        uses: WalletConnect/actions/maestro/permit2-reset@ddc7c0f9acd8b1576e9a78f0ef67f4b8fbb36db2
+        uses: WalletConnect/actions/maestro/permit2-reset@28181b5f133836380d2d9bb8ff06af5c3234fb9d
         with:
           chain-id: eip155:137
           # polygon-rpc.com is gated (HTTP 401 "tenant disabled") in CI; use publicnode.

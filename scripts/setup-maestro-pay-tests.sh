@@ -1,11 +1,13 @@
 #!/bin/bash
 # Downloads shared WalletConnect Pay Maestro test flows from WalletConnect/actions repo.
 # Usage: ./scripts/setup-maestro-pay-tests.sh [ref]
-#   ref: actions repo branch/tag/commit to pull from (default: d385e7a80fb4a3d378ee685021f3f7e24ccdf291)
+#   ref: actions repo branch/tag/commit to pull from (default: 28181b5f133836380d2d9bb8ff06af5c3234fb9d)
 
 set -euo pipefail
 
-REF="${1:-d385e7a80fb4a3d378ee685021f3f7e24ccdf291}"
+# Pinned to WalletConnect/actions #109 (28181b5 = removal of the Universal Link
+# / deeplink pay flow), so pay_single_option_nokyc_deeplink is no longer downloaded.
+REF="${1:-28181b5f133836380d2d9bb8ff06af5c3234fb9d}"
 REPO="WalletConnect/actions"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
