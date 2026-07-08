@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.res.getColorOrThrow
 import androidx.core.content.res.use
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.rememberNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.reown.modal.utils.theme.toComposeColor
@@ -78,7 +78,7 @@ class AppKitSheet : BottomSheetDialogFragment() {
     private fun AppKitComposeView(
         shouldOpenChooseNetwork: Boolean
     ) {
-        val navController = rememberAnimatedNavController()
+        val navController = rememberNavController()
         dialog?.setupDialog(navController)
 
         Surface(shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp)) {

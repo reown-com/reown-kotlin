@@ -38,7 +38,8 @@ object Pay {
         val amount: Amount,
         val account: String,
         val estimatedTxs: Int?,
-        val collectData: CollectDataAction? = null
+        val collectData: CollectDataAction? = null,
+        val actions: List<RequiredAction> = emptyList()
     )
 
     data class MerchantInfo(
@@ -124,7 +125,6 @@ object Pay {
         data class OptionNotFound(override val message: String) : GetPaymentOptionsError()
         data class PaymentNotReady(override val message: String) : GetPaymentOptionsError()
         data class InvalidAccount(override val message: String) : GetPaymentOptionsError()
-        data class ComplianceFailed(override val message: String) : GetPaymentOptionsError()
         data class Http(override val message: String) : GetPaymentOptionsError()
         data class InternalError(override val message: String) : GetPaymentOptionsError()
     }
@@ -149,4 +149,3 @@ object Pay {
         data class UnsupportedMethod(override val message: String) : ConfirmPaymentError()
     }
 }
-

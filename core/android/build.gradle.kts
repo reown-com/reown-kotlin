@@ -2,16 +2,14 @@ plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
     alias(libs.plugins.sqlDelight)
-    alias(libs.plugins.google.ksp)
+    alias(libs.plugins.moshix)
     id("publish-module-android")
     id("jacoco-report")
 }
 
-project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = ANDROID_CORE
-    extra[KEY_PUBLISH_VERSION] = CORE_VERSION
-    extra[KEY_SDK_NAME] = "Android Core"
-}
+extra[KEY_PUBLISH_ARTIFACT_ID] = ANDROID_CORE
+extra[KEY_PUBLISH_VERSION] = CORE_VERSION
+extra[KEY_SDK_NAME] = "Android Core"
 
 android {
     namespace = "com.reown.android"
@@ -20,7 +18,7 @@ android {
     defaultConfig {
         minSdk = MIN_SDK
 
-        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
+        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(project.extra.get(KEY_PUBLISH_VERSION))}\"")
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
         buildConfigField("Integer", "TEST_TIMEOUT_SECONDS", "${System.getenv("TEST_TIMEOUT_SECONDS") ?: 30}")
 
@@ -52,10 +50,6 @@ android {
         targetCompatibility = jvmVersion
     }
 
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = listOf("-Xcontext-receivers")
-    }
 
     sourceSets {
         getByName("test").resources.srcDirs("src/test/resources")
@@ -101,7 +95,6 @@ dependencies {
     api(libs.androidx.security)
     api(libs.koin.android)
     api(libs.timber)
-    ksp(libs.moshi.ksp)
     api(libs.web3jCrypto)
     api(libs.bundles.kethereum)
     api(libs.bundles.retrofit)

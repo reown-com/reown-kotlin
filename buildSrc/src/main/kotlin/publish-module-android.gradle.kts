@@ -1,6 +1,4 @@
-import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
+import com.android.build.api.dsl.LibraryExtension
 
 plugins {
     `maven-publish`
@@ -14,18 +12,14 @@ tasks {
         archiveClassifier.set("javadoc")
         from("${layout.buildDirectory}/dokka/html")
     }
-
-    register("sourcesJar", Jar::class) {
-        archiveClassifier.set("sources")
-        from(
-            (project.extensions.getByType<BaseExtension>().sourceSets.getByName("main").kotlin.srcDirs("kotlin") as DefaultAndroidSourceDirectorySet).srcDirs,
-            (project.extensions.getByType<BaseExtension>().sourceSets.getByName("release").kotlin.srcDirs("kotlin") as DefaultAndroidSourceDirectorySet).srcDirs
-        )
-    }
 }
 
-(project as ExtensionAware).extensions.configure<LibraryExtension>("android") {
-    publishing.singleVariant("release")
+extensions.configure<LibraryExtension>("android") {
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 afterEvaluate {
@@ -34,15 +28,14 @@ afterEvaluate {
             register<MavenPublication>("release") {
                 afterEvaluate { from(components["release"]) }
                 artifact(tasks.getByName("javadocJar"))
-                artifact(tasks.getByName("sourcesJar"))
 
                 groupId = project.extra.properties[KEY_PUBLISH_GROUP]?.toString() ?: DEFAULT_PUBLISH_GROUP
                 artifactId = requireNotNull(project.extra[KEY_PUBLISH_ARTIFACT_ID]).toString()
                 version = requireNotNull(project.extra[KEY_PUBLISH_VERSION]).toString()
 
                 pom {
-                    name.set("Reown ${requireNotNull(extra.get(KEY_SDK_NAME))}")
-                    description.set("${requireNotNull(extra.get(KEY_SDK_NAME))} SDK for Reown")
+                    name.set("Reown ${requireNotNull(project.extra.get(KEY_SDK_NAME))}")
+                    description.set("${requireNotNull(project.extra.get(KEY_SDK_NAME))} SDK for Reown")
                     url.set("https://github.com/reown-com/reown-kotlin")
                     licenses {
                         license {

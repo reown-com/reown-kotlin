@@ -25,7 +25,7 @@ import com.reown.sample.wallet.R
 fun CopyableItem(
     key: String,
     value: String,
-    onCopy: (String) -> Unit,
+    onCopy: (value: String, label: String) -> Unit,
 ) {
     val colors = WCTheme.colors
     val spacing = WCTheme.spacing
@@ -36,7 +36,7 @@ fun CopyableItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(borderRadius.radius3))
             .background(color = colors.foregroundSecondary)
-            .clickable { onCopy(value) }
+            .clickable { onCopy(value, key) }
             .padding(spacing.spacing3)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

@@ -20,6 +20,7 @@ sealed class Route(val path: String) {
     data object PaymentResult : Route("payment_result")
     data object SecretKeysAndPhrases : Route("secret_keys_and_phrases")
     data object ImportWallet : Route("import_wallet")
+    data object ThemeVariables : Route("theme_variables")
 }
 
 fun NavController.showSnackbar(message: String) {

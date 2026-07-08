@@ -93,7 +93,7 @@ object EthAccountDelegate {
         }
 }
 
-context(EthAccountDelegate)
+context(_: EthAccountDelegate)
 fun generateKeys(privateKey: String? = null): Triple<String, String, String> {
     Security.getProviders().forEach { provider ->
         if (provider.name == "BC") {

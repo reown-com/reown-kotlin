@@ -95,17 +95,26 @@ class PayModelsTest {
             unit = "USDC",
             display = null
         )
+        val action = Pay.RequiredAction.WalletRpc(
+            Pay.WalletRpcAction(
+                chainId = "eip155:1",
+                method = "eth_signTypedData_v4",
+                params = "{}"
+            )
+        )
 
         val option = Pay.PaymentOption(
             id = "option-123",
             amount = amount,
             estimatedTxs = 2,
-            account = ""
+            account = "",
+            actions = listOf(action)
         )
 
         assertEquals("option-123", option.id)
         assertEquals("100", option.amount.value)
         assertEquals(2, option.estimatedTxs)
+        assertEquals(1, option.actions.size)
     }
 
     @Test

@@ -1,19 +1,45 @@
 package com.walletconnect.pos.api
 
+import com.squareup.moshi.Moshi
 import com.walletconnect.pos.Pos
+
+/**
+ * Parses an HTTP error response body into [ApiErrorDetails].
+ *
+ * The API returns error bodies in one of two shapes:
+ *  - wrapped: `{"status":"error","error":{"code":"...","message":"..."}}`
+ *  - flat:    `{"code":"...","message":"..."}` (e.g. the 401 `invalid_api_key` response)
+ *
+ * Both are attempted. Returns `null` when the body is blank or matches neither shape,
+ * letting the caller fall back to the HTTP status line. This is important because the
+ * HTTP reason-phrase is empty under HTTP/2, so the body is the only source of a message.
+ */
+internal fun parseApiErrorBody(moshi: Moshi, errorBody: String?): ApiErrorDetails? {
+    if (errorBody.isNullOrBlank()) return null
+
+    runCatching { moshi.adapter(ApiErrorWrapper::class.java).fromJson(errorBody)?.error }
+        .getOrNull()?.let { return it }
+
+    runCatching { moshi.adapter(ApiErrorDetails::class.java).fromJson(errorBody) }
+        .getOrNull()?.let { if (it.message.isNotBlank()) return it }
+
+    return null
+}
 
 internal fun mapErrorCodeToPaymentError(code: String, message: String): Pos.PaymentEvent.PaymentError {
     return when (code) {
         ErrorCodes.PAYMENT_NOT_FOUND -> Pos.PaymentEvent.PaymentError.PaymentNotFound(message)
         ErrorCodes.PAYMENT_EXPIRED -> Pos.PaymentEvent.PaymentError.PaymentExpired(message)
-        ErrorCodes.INVALID_REQUEST -> Pos.PaymentEvent.PaymentError.InvalidPaymentRequest(message)
+        ErrorCodes.INVALID_PARAMS,
+        ErrorCodes.PARAMS_VALIDATION -> Pos.PaymentEvent.PaymentError.InvalidPaymentRequest(message)
         else -> Pos.PaymentEvent.PaymentError.Undefined(message)
     }
 }
 
 internal fun mapCreatePaymentError(code: String, message: String): Pos.PaymentEvent.PaymentError {
     return when (code) {
-        ErrorCodes.INVALID_REQUEST -> Pos.PaymentEvent.PaymentError.InvalidPaymentRequest(message)
+        ErrorCodes.INVALID_PARAMS,
+        ErrorCodes.PARAMS_VALIDATION -> Pos.PaymentEvent.PaymentError.InvalidPaymentRequest(message)
         else -> Pos.PaymentEvent.PaymentError.CreatePaymentFailed(message)
     }
 }
@@ -21,14 +47,18 @@ internal fun mapCreatePaymentError(code: String, message: String): Pos.PaymentEv
 internal fun mapStatusToPaymentEvent(
     status: String,
     paymentId: String,
-    info: PaymentInfoDto? = null
+    info: PaymentInfoDto? = null,
+    failureCode: String? = null
 ): Pos.PaymentEvent {
     return when (status) {
         PaymentStatus.REQUIRES_ACTION -> Pos.PaymentEvent.PaymentRequested
         PaymentStatus.PROCESSING -> Pos.PaymentEvent.PaymentProcessing
         PaymentStatus.SUCCEEDED -> Pos.PaymentEvent.PaymentSuccess(paymentId, info?.toPaymentInfo())
         PaymentStatus.EXPIRED -> Pos.PaymentEvent.PaymentError.PaymentExpired("Payment has expired")
-        PaymentStatus.FAILED -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment failed") //TODO: add error message?
+        PaymentStatus.FAILED -> when (failureCode) {
+            FailureCodes.DECLINED_USER -> Pos.PaymentEvent.PaymentError.DeclinedUser
+            else -> Pos.PaymentEvent.PaymentError.PaymentFailed("Payment failed")
+        }
         PaymentStatus.CANCELLED -> Pos.PaymentEvent.PaymentError.PaymentCancelled("Payment cancelled")
         else -> Pos.PaymentEvent.PaymentError.Undefined("Unknown payment status: $status")
     }

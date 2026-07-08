@@ -1,8 +1,12 @@
 package com.walletconnect.sample.pos
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -10,6 +14,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.compositeOver
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.walletconnect.sample.pos.ui.theme.LocalWCColors
 import com.walletconnect.sample.pos.ui.theme.WCSampleAppTheme
@@ -22,11 +27,16 @@ import com.walletconnect.sample.pos.ui.theme.WCTheme
 class POSActivity : AppCompatActivity() {
     private val viewModel: POSViewModel by viewModels()
 
+    private val bluetoothPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { /* result ignored — driver surfaces a clear error if permission is still missing */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         NfcManager.init(this)
         enableEdgeToEdge()
+        requestBluetoothPermissionsIfNeeded()
 
         setContent {
             val themeMode by viewModel.selectedThemeMode.collectAsState()
@@ -85,5 +95,12 @@ class POSActivity : AppCompatActivity() {
         if (POSApplication.initError == null) {
             try { PosClient.pause() } catch (_: IllegalStateException) { /* not yet initialized */ }
         }
+    }
+
+    private fun requestBluetoothPermissionsIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        val needed = listOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN)
+            .filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
+        if (needed.isNotEmpty()) bluetoothPermissionLauncher.launch(needed.toTypedArray())
     }
 }

@@ -2,6 +2,8 @@ package com.walletconnect.sample.pos.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -37,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.walletconnect.sample.pos.ui.theme.WCTheme
@@ -45,11 +50,11 @@ import com.walletconnect.sample.pos.POSViewModel
 import com.walletconnect.sample.pos.PinFlowState
 import com.walletconnect.sample.pos.R
 import com.walletconnect.sample.pos.components.BottomSheetHeader
-import com.walletconnect.sample.pos.components.CloseButton
 import com.walletconnect.sample.pos.components.EditSettingBottomSheet
 import com.walletconnect.sample.pos.components.PinDialog
 import com.walletconnect.sample.pos.components.PosHeader
 import com.walletconnect.sample.pos.components.SelectableOptionItem
+import com.walletconnect.sample.pos.nfc.NfcManager
 import com.walletconnect.sample.pos.model.Currency
 import com.walletconnect.sample.pos.model.PosVariant
 import com.walletconnect.sample.pos.model.ThemeMode
@@ -71,10 +76,14 @@ fun SettingsScreen(
     val merchantId by viewModel.merchantId.collectAsState()
     val hasApiKey by viewModel.hasApiKey.collectAsState()
     val pinFlowState by viewModel.pinFlowState.collectAsState()
+    val isNfcUiEnabled by viewModel.isNfcUiEnabled.collectAsState()
+    val nfcAvailable by produceState(initialValue = false) {
+        value = NfcManager.isAvailable
+    }
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val scope = rememberCoroutineScope()
     var activeSheet by remember { mutableStateOf(ActiveSheet.CURRENCY) }
-    val isThemeDisabled = selectedVariant != PosVariant.DEFAULT
+    val isThemeDisabled = !selectedVariant.allowThemeToggle
 
     ModalBottomSheetLayout(
         sheetState = sheetState,
@@ -143,6 +152,13 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing3))
 
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             // Theme setting (disabled when a wallet theme variant is active)
             SettingsItem(
                 label = "Theme",
@@ -215,6 +231,42 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(WCTheme.spacing.spacing2))
 
+            // Reset PIN — re-keys the PIN that protects merchant settings.
+            // Value reflects current state and refreshes whenever the PIN flow returns to Hidden.
+            val isPinSet = remember(pinFlowState) { viewModel.credentialsManager.isPinSet() }
+            SettingsItem(
+                label = "Reset PIN",
+                value = if (isPinSet) "Configured" else "Not set",
+                showCaret = true,
+                onClick = { viewModel.requestResetPin() },
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+
+            // Show NFC UI toggle (only on devices with an NFC sensor)
+            if (nfcAvailable) {
+                SettingsToggleItem(
+                    label = "Show NFC UI",
+                    checked = isNfcUiEnabled,
+                    onCheckedChange = viewModel::setNfcUiEnabled,
+                    modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+                )
+
+                Spacer(Modifier.height(WCTheme.spacing.spacing2))
+            }
+
+            // Test printer
+            SettingsItem(
+                label = "Test printer",
+                value = "",
+                showCaret = true,
+                onClick = { viewModel.printTestReceipt() },
+                modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
+            )
+
+            Spacer(Modifier.height(WCTheme.spacing.spacing2))
+
             // SDK Version
             SettingsItem(
                 label = "SDK Version",
@@ -232,12 +284,7 @@ fun SettingsScreen(
                 onClick = onNavigateToLogs,
                 modifier = Modifier.padding(horizontal = WCTheme.spacing.spacing5)
             )
-
-            Spacer(Modifier.weight(1f))
-
-            CloseButton(onClick = onClose)
-
-            Spacer(Modifier.height(WCTheme.spacing.spacing5))
+            }
         }
     }
 
@@ -250,6 +297,10 @@ fun SettingsScreen(
                 else "Confirm PIN" to "Re-enter your PIN to confirm"
             }
             is PinFlowState.Verify -> "Enter PIN" to "Enter your PIN to save merchant settings"
+            is PinFlowState.SetNewForReset -> {
+                if (currentPinState.firstPin == null) "New PIN" to "Choose a new 4-digit PIN"
+                else "Confirm New PIN" to "Re-enter your new PIN to confirm"
+            }
             is PinFlowState.Error -> {
                 when (val prev = currentPinState.previousState) {
                     is PinFlowState.SetNew -> {
@@ -257,6 +308,10 @@ fun SettingsScreen(
                         else "Confirm PIN" to "Re-enter your PIN to confirm"
                     }
                     is PinFlowState.Verify -> "Enter PIN" to "Enter your PIN to save merchant settings"
+                    is PinFlowState.SetNewForReset -> {
+                        if (prev.firstPin == null) "New PIN" to "Choose a new 4-digit PIN"
+                        else "Confirm New PIN" to "Re-enter your new PIN to confirm"
+                    }
                     else -> "Enter PIN" to ""
                 }
             }
@@ -278,9 +333,12 @@ private fun WalletThemeBottomSheet(
     onSelect: (PosVariant) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val maxSheetHeight = (LocalConfiguration.current.screenHeightDp * 0.85f).dp
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(max = maxSheetHeight)
+            .verticalScroll(rememberScrollState())
             .padding(WCTheme.spacing.spacing5)
     ) {
         BottomSheetHeader(title = "Wallet theme", onDismiss = onDismiss)

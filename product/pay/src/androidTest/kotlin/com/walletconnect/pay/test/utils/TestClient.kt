@@ -124,12 +124,9 @@ internal object TestClient {
 
             signer = TestWalletSigner(privateKey)
 
-            // Verify address matches expected
-            if (!signer.address.equals(Common.TEST_ADDRESS, ignoreCase = true)) {
-                throw IllegalStateException(
-                    "Signer address ${signer.address} does not match expected ${Common.TEST_ADDRESS}"
-                )
-            }
+            // The signer's address is derived from TEST_WALLET_PRIVATE_KEY and is the
+            // single source of truth for the test wallet (see Common.testAccounts), so
+            // there's no separate hardcoded address to drift out of sync.
             println("TestWalletSigner initialized with address: ${signer.address}")
         } catch (e: Exception) {
             val error = "Failed to initialize TestWalletSigner: ${e.message}"

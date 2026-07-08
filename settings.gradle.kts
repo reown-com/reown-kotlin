@@ -116,7 +116,6 @@ dependencyResolutionManagement {
         maven(url = "https://central.sonatype.com/repository/maven-snapshots/")
         //todo: remove me - https://github.com/rustls/rustls-platform-verifier/issues/115
         maven(url = "/Users/jakub/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustls-platform-verifier-android-0.1.1/maven")
-        jcenter() // Warning: this repository is going to shut down soon
     }
 }
 

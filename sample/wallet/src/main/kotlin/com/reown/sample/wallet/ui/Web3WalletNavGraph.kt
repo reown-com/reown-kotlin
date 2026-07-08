@@ -13,11 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.google.accompanist.navigation.animation.AnimatedNavHost
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.google.accompanist.navigation.material.BottomSheetNavigator
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.bottomSheet
+import androidx.compose.material.navigation.BottomSheetNavigator
+import androidx.compose.material.navigation.bottomSheet
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.import_wallet.ImportWalletRoute
@@ -27,6 +26,7 @@ import com.reown.sample.wallet.ui.routes.composable_routes.connection_details.Co
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.composable_routes.secret_keys.SecretKeysRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.settings.SettingsRoute
+import com.reown.sample.wallet.ui.routes.composable_routes.theme_variables.ThemeVariablesRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.wallets.WalletsRoute
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scanner_options.ScannerOptionsRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_authenticate.SessionAuthenticateRoute
@@ -39,7 +39,6 @@ import com.reown.sample.wallet.ui.routes.dialog_routes.payment.PaymentRoute
 
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("RestrictedApi")
-@ExperimentalMaterialNavigationApi
 @Composable
 fun Web3WalletNavGraph(
     bottomSheetNavigator: BottomSheetNavigator,
@@ -58,7 +57,7 @@ fun Web3WalletNavGraph(
 
     val sheetState = remember { bottomSheetNavigator.navigatorSheetState }
 
-    AnimatedNavHost(
+    NavHost(
         navController = navController,
         modifier = modifier,
         startDestination = startDestination,
@@ -93,6 +92,9 @@ fun Web3WalletNavGraph(
         }
         composable(Route.SecretKeysAndPhrases.path) {
             SecretKeysRoute(navController)
+        }
+        composable(Route.ThemeVariables.path) {
+            ThemeVariablesRoute(navController)
         }
         bottomSheet(Route.ImportWallet.path) {
             ImportWalletRoute(

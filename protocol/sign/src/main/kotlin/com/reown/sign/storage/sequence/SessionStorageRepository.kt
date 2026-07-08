@@ -11,8 +11,8 @@ import com.reown.foundation.common.model.Topic
 import com.reown.sign.common.model.vo.sequence.SessionVO
 import com.reown.sign.engine.sessionRequestEventsQueue
 import com.reown.sign.storage.data.dao.namespace.NamespaceDaoQueries
-import com.reown.sign.storage.data.dao.optionalnamespaces.OptionalNamespaceDaoQueries
-import com.reown.sign.storage.data.dao.proposalnamespace.ProposalNamespaceDaoQueries
+import com.reown.sign.storage.data.dao.optional_namespaces.OptionalNamespaceDaoQueries
+import com.reown.sign.storage.data.dao.proposal_namespace.ProposalNamespaceDaoQueries
 import com.reown.sign.storage.data.dao.session.SessionDaoQueries
 import com.reown.sign.storage.data.dao.temp.TempNamespaceDaoQueries
 import com.reown.utils.Empty

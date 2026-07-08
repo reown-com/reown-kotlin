@@ -11,9 +11,9 @@ import com.reown.foundation.common.model.Topic
 import com.reown.sign.common.model.vo.clientsync.common.PayloadParams
 import com.reown.sign.common.model.vo.clientsync.common.ProposalRequests
 import com.reown.sign.common.model.vo.proposal.ProposalVO
-import com.reown.sign.storage.data.dao.optionalnamespaces.OptionalNamespaceDaoQueries
+import com.reown.sign.storage.data.dao.optional_namespaces.OptionalNamespaceDaoQueries
 import com.reown.sign.storage.data.dao.proposal.ProposalDaoQueries
-import com.reown.sign.storage.data.dao.proposalnamespace.ProposalNamespaceDaoQueries
+import com.reown.sign.storage.data.dao.proposal_namespace.ProposalNamespaceDaoQueries
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

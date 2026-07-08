@@ -1,8 +1,8 @@
 package com.reown.sample.wallet
 
 import android.app.Application
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.crashlytics
 import com.google.firebase.messaging.FirebaseMessaging
 import com.mixpanel.android.mpmetrics.MixpanelAPI
 import com.pandulapeter.beagle.Beagle
@@ -20,6 +20,7 @@ import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.ThemeManager
+import com.reown.sample.wallet.domain.ThemeVariablesStore
 import com.reown.sample.wallet.domain.account.SmartAccountEnabler
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
 import com.reown.sample.wallet.domain.account.TONAccountDelegate
@@ -67,6 +68,7 @@ class WalletKitApplication : Application() {
 
         SmartAccountEnabler.init(this)
         ThemeManager.init(this)
+        ThemeVariablesStore.init(this)
 
         // Note: WalletConnectPay is now initialized automatically by WalletKit
 

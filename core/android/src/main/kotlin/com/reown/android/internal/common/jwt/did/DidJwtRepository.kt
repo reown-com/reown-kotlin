@@ -27,12 +27,10 @@ inline fun <reified C : JwtClaims> extractVerifiedDidJwtClaims(didJwt: String): 
     claims
 }
 
-context(JwtHeader)
 fun JwtHeader.verifyHeader() {
     if (algorithm != JwtHeader.EdDSA.algorithm) throw Throwable("Unsupported header alg: $algorithm")
 }
 
-context(JwtClaims)
 fun JwtClaims.verifyJwt(didJwt: String, signature: String) {
     val isValid = verifySignature(decodeEd25519DidKey(issuer), extractData(didJwt).toByteArray(), signature).getOrThrow()
 

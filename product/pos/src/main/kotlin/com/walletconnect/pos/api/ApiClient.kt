@@ -21,7 +21,7 @@ internal class ApiClient(
     private val merchantId: String,
     private val eventTracker: EventTracker,
     private val errorTracker: ErrorTracker,
-    moshi: Moshi,
+    private val moshi: Moshi,
     baseHttpClient: OkHttpClient,
     baseUrl: String = BuildConfig.CORE_API_BASE_URL
 ) {
@@ -31,8 +31,6 @@ internal class ApiClient(
         private const val MAX_POLL_INTERVAL_MS = 30_000L
         private const val MAX_TRANSIENT_RETRIES = 3
     }
-
-    private val errorAdapter by lazy { moshi.adapter(ApiErrorWrapper::class.java) }
 
     private val payApi: PayApi by lazy {
         val httpClient = baseHttpClient.newBuilder()
@@ -156,7 +154,7 @@ internal class ApiClient(
 
                         if (data.status != lastEmittedStatus) {
                             lastEmittedStatus = data.status
-                            val event = mapStatusToPaymentEvent(data.status, paymentId, data.info)
+                            val event = mapStatusToPaymentEvent(data.status, paymentId, data.info, data.failureCode)
                             trackPaymentStatusEvent(paymentId, context, data.status, event)
                             onEvent(event)
                         }
@@ -249,25 +247,19 @@ internal class ApiClient(
 
     private fun <T> parseErrorResponse(response: Response<T>): ApiErrorDetails {
         val errorBody = response.errorBody()?.string()
-        return if (errorBody != null) {
-            try {
-                errorAdapter.fromJson(errorBody)?.error ?: ApiErrorDetails(
-                    code = "HTTP_${response.code()}",
-                    message = response.message()
-                )
-            } catch (e: Exception) {
-                errorTracker.trackError(PulseErrorType.PARSE_ERROR, e.message ?: "Failed to parse error response", "parseErrorResponse")
-                ApiErrorDetails(
-                    code = "HTTP_${response.code()}",
-                    message = response.message()
-                )
-            }
-        } else {
-            ApiErrorDetails(
-                code = "HTTP_${response.code()}",
-                message = response.message()
-            )
+
+        parseApiErrorBody(moshi, errorBody)?.let { return it }
+
+        // The body was absent or unparseable — track it (when there was something to parse)
+        // and fall back to the HTTP status line. The reason-phrase is empty under HTTP/2,
+        // so synthesize a message from the status code to avoid surfacing a blank error.
+        if (!errorBody.isNullOrBlank()) {
+            errorTracker.trackError(PulseErrorType.PARSE_ERROR, "Failed to parse error response: $errorBody", "parseErrorResponse")
         }
+        return ApiErrorDetails(
+            code = "HTTP_${response.code()}",
+            message = response.message().ifBlank { "HTTP ${response.code()} error" }
+        )
     }
 
     private fun isSdkError(code: String): Boolean {

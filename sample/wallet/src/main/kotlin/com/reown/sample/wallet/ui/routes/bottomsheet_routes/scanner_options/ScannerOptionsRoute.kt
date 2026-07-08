@@ -94,7 +94,7 @@ fun ScannerOptionsRoute(
             onClick = {
                 val text = clipboardManager.getText()?.text?.trim()
                 if (text.isNullOrEmpty()) {
-                    Toast.makeText(context, "No URL found in clipboard", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "No URL in your clipboard. Copy a payment URL, then try again.", Toast.LENGTH_LONG).show()
                 } else {
                     navController.popBackStack()
                     onPair(text)

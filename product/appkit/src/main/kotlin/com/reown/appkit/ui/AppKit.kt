@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalMaterialNavigationApi::class)
 
 package com.reown.appkit.ui
 
@@ -11,8 +10,7 @@ import androidx.navigation.NavOptions
 import androidx.navigation.NavType
 import androidx.navigation.fragment.dialog
 import androidx.navigation.navArgument
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
-import com.google.accompanist.navigation.material.bottomSheet
+import androidx.compose.material.navigation.bottomSheet
 import com.reown.appkit.R
 import com.reown.appkit.ui.components.internal.AppKitComponent
 import com.reown.appkit.ui.navigation.Route

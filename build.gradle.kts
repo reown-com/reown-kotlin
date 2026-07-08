@@ -23,6 +23,7 @@ allprojects {
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             jvmTarget.set(JvmTarget.fromTarget(jvmVersion.toString()))
+            freeCompilerArgs.addAll("-opt-in=kotlin.time.ExperimentalTime")
         }
     }
 
@@ -57,6 +58,7 @@ subprojects {
                     add("testImplementation", libs.mockk)
                     add("testImplementation", libs.jUnit)
                     add("testRuntimeOnly", libs.jUnit.engine)
+                    add("testRuntimeOnly", libs.jUnit.platform.launcher)
                 }
             }
         }
@@ -66,6 +68,7 @@ subprojects {
                 add("testImplementation", libs.mockk)
                 add("testImplementation", libs.jUnit)
                 add("testRuntimeOnly", libs.jUnit.engine)
+                add("testRuntimeOnly", libs.jUnit.platform.launcher)
             }
         }
     }

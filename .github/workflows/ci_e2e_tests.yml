@@ -67,7 +67,10 @@ jobs:
         with:
           name: ${{ matrix.conf.name }}-apk
           path: sample/${{ matrix.conf.name }}/build/outputs/apk/internal/*.apk
-          retention-days: 1
+          # Keep a window large enough that re-running only the failed E2E job
+          # still finds the build artifacts. With retention-days: 1 a re-run a day
+          # later downloads 0 APKs and the job fails on `find apks`.
+          retention-days: 5
 
   run_e2e_tests:
     name: Run E2E Tests
@@ -100,6 +103,13 @@ jobs:
       - name: List APKs
         run: |
           echo "Available APKs:"
+          # Fail fast with an actionable message if the build artifacts are missing
+          # (e.g. re-running only this job after the APK artifacts have expired).
+          if [ ! -d apks ] || [ -z "$(find apks -name '*.apk' -print -quit)" ]; then
+            echo "ERROR: no APKs were downloaded. The *-apk artifacts likely expired."
+            echo "Re-run the whole workflow (not just this job) so the build jobs run again."
+            exit 1
+          fi
           find apks -name "*.apk" | xargs ls -la
 
       - name: Install Maestro

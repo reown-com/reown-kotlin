@@ -1,18 +1,16 @@
 plugins {
     id("com.android.library")
     id(libs.plugins.kotlin.android.get().pluginId)
-    alias(libs.plugins.google.ksp)
+    alias(libs.plugins.moshix)
     alias(libs.plugins.paparazzi)
     id("publish-module-android")
     id("jacoco-report")
     alias(libs.plugins.compose.compiler)
 }
 
-project.apply {
-    extra[KEY_PUBLISH_ARTIFACT_ID] = APPKIT
-    extra[KEY_PUBLISH_VERSION] = APPKIT_VERSION
-    extra[KEY_SDK_NAME] = "appkit"
-}
+extra[KEY_PUBLISH_ARTIFACT_ID] = APPKIT
+extra[KEY_PUBLISH_VERSION] = APPKIT_VERSION
+extra[KEY_SDK_NAME] = "appkit"
 
 android {
     namespace = "com.reown.appkit"
@@ -25,7 +23,7 @@ android {
             minCompileSdk = MIN_SDK
         }
 
-        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(extra.get(KEY_PUBLISH_VERSION))}\"")
+        buildConfigField(type = "String", name = "SDK_VERSION", value = "\"${requireNotNull(project.extra.get(KEY_PUBLISH_VERSION))}\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         File("${rootDir.path}/gradle/consumer-rules").listFiles()?.let { proguardFiles ->
@@ -49,10 +47,6 @@ android {
         sourceCompatibility = jvmVersion
         targetCompatibility = jvmVersion
     }
-    kotlinOptions {
-        jvmTarget = jvmVersion.toString()
-        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.time.ExperimentalTime"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -70,6 +64,7 @@ dependencies {
 
     implementation(libs.bundles.androidxAppCompat)
     implementation(libs.bundles.accompanist)
+    implementation(libs.androidx.compose.material.navigation)
     implementation(libs.coil)
 
     implementation(platform(libs.androidx.compose.bom))
@@ -80,12 +75,12 @@ dependencies {
     implementation(libs.androidx.compose.lifecycle)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit)
     androidTestImplementation(libs.androidx.compose.navigation.testing)
 
     implementation(libs.androidx.datastore)
     implementation(libs.bundles.androidxLifecycle)
-    ksp(libs.moshi.ksp)
     api(libs.bundles.androidxNavigation)
     implementation(libs.qrCodeGenerator)
     implementation(libs.coinbaseWallet)
