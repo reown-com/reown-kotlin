@@ -55,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -91,8 +92,6 @@ import java.math.BigDecimal
 import com.reown.sample.wallet.ui.common.Shimmer
 import com.reown.sample.wallet.ui.common.WalletConnectLoader
 import java.math.RoundingMode
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -864,21 +863,6 @@ private fun WhyInfoRequiredContent(
 }
 
 /**
- * Format amount with proper decimals and symbol.
- */
-private fun formatAmount(value: String, decimals: Int, symbol: String): String {
-    return try {
-        val rawValue = BigDecimal(value)
-        val safeDecimals = decimals.coerceIn(0, 18)
-        val divisor = BigDecimal.TEN.pow(safeDecimals)
-        val formattedValue = rawValue.divide(divisor, safeDecimals.coerceAtMost(2), RoundingMode.HALF_UP)
-        "$formattedValue $symbol"
-    } catch (e: Exception) {
-        "$value $symbol"
-    }
-}
-
-/**
  * Format display amount with the appropriate currency symbol.
  */
 private fun formatDisplayAmount(value: String, decimals: Int, symbol: String): String {
@@ -950,27 +934,6 @@ private fun formatTokenAmount(value: String, decimals: Int, symbol: String): Str
         "$value $symbol"
     }
 }
-
-/**
- * Format expiration timestamp to human-readable text.
- */
-private fun formatExpiration(expiresAt: Long): String {
-    val now = System.currentTimeMillis() / 1000
-    val remainingSeconds = expiresAt - now
-    
-    return if (remainingSeconds <= 0) {
-        "Expired"
-    } else if (remainingSeconds < 60) {
-        "Expires in ${remainingSeconds}s"
-    } else if (remainingSeconds < 3600) {
-        val minutes = remainingSeconds / 60
-        "Expires in ${minutes}m"
-    } else {
-        val dateFormat = SimpleDateFormat("MMM dd, HH:mm", Locale.US)
-        "Expires ${dateFormat.format(Date(expiresAt * 1000))}"
-    }
-}
-
 
 @Composable
 private fun ProcessingContent(
@@ -1347,7 +1310,6 @@ class AndroidWalletJsInterface(
     @JavascriptInterface
     fun onDataCollectionComplete(jsonData: String) {
         Log.d("AndroidWalletJS", "=== WebView -> Wallet Communication ===")
-        Log.d("AndroidWalletJS", "Raw message received: $jsonData")
         try {
             val json = JSONObject(jsonData)
             val type = json.optString("type")
@@ -1391,11 +1353,13 @@ private fun WebViewDataCollectionContent(
 
     val currentOnComplete by rememberUpdatedState(onComplete)
     val currentOnError by rememberUpdatedState(onError)
+    val webViewBackground = WCTheme.colors.bgPrimary
+    val webViewBackgroundArgb = webViewBackground.toArgb()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF141414))
+            .background(webViewBackground)
             .statusBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -1442,8 +1406,8 @@ private fun WebViewDataCollectionContent(
                             // Enable WebView debugging in debug builds only - inspect via chrome://inspect on desktop
                             WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
 
-                            // Set dark background to match the web content theme
-                            setBackgroundColor(0xFF141414.toInt())
+                            // Match the Compose container background so the WebView blends in.
+                            setBackgroundColor(webViewBackgroundArgb)
 
                             // Fix for text input issues in Compose - disable nested scrolling
                             isNestedScrollingEnabled = false
@@ -1542,6 +1506,16 @@ private fun WebViewDataCollectionContent(
                         }
 
                         addView(webView)
+                    }
+                },
+                onRelease = { frameLayout ->
+                    (frameLayout.getChildAt(0) as? WebView)?.apply {
+                        removeJavascriptInterface("AndroidWallet")
+                        stopLoading()
+                        webViewClient = WebViewClient()
+                        loadUrl("about:blank")
+                        (parent as? android.view.ViewGroup)?.removeView(this)
+                        destroy()
                     }
                 },
                 modifier = Modifier
