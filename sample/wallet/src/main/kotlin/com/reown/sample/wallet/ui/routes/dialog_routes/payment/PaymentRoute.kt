@@ -1140,7 +1140,6 @@ class AndroidWalletJsInterface(
     @JavascriptInterface
     fun onDataCollectionComplete(jsonData: String) {
         Log.d("AndroidWalletJS", "=== WebView -> Wallet Communication ===")
-        Log.d("AndroidWalletJS", "Raw message received: $jsonData")
         try {
             val json = JSONObject(jsonData)
             val type = json.optString("type")
