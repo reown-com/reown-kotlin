@@ -238,7 +238,10 @@ class WalletKitActivity : AppCompatActivity() {
         }
 
         val dataString = intent?.dataString
-        // Check for WalletConnect Pay URL - pass the full link (URL encoded)
+        // Check for WalletConnect Pay URL - pass the full link (URL encoded).
+        // Universal-link registration for the pay.walletconnect.* hosts was removed from
+        // the manifest, so on native these URLs now arrive via NFC (handled above) rather
+        // than a tapped App Link; this branch remains for any URL dispatched into the app.
         if (dataString != null && isPaymentUrl(dataString)) {
             lifecycleScope.launch {
                 navigateWhenReady { nav ->

@@ -5,6 +5,8 @@ import android.util.Base64
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.reown.sample.wallet.domain.ThemeManager
+import com.reown.sample.wallet.domain.ThemeVariablesStore
 import com.reown.sample.wallet.domain.WalletKitDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.account.SolanaAccountDelegate
@@ -285,12 +287,14 @@ class PaymentViewModel : ViewModel() {
     }
 
     private fun buildUrlWithPrefill(baseUrl: String, schema: String?): String {
-        val prefill = buildPrefillParam(schema) ?: return baseUrl
-        val uri = Uri.parse(baseUrl)
-        return uri.buildUpon()
-            .appendQueryParameter("prefill", prefill)
-            .build()
-            .toString()
+        val theme = if (ThemeManager.isDarkTheme()) "dark" else "light"
+        val builder = Uri.parse(baseUrl).buildUpon()
+            .appendQueryParameter("theme", theme)
+        ThemeVariablesStore.themeVariables.value
+            .takeIf { it.isNotBlank() }
+            ?.let { builder.appendQueryParameter("themeVariables", it) }
+        buildPrefillParam(schema)?.let { builder.appendQueryParameter("prefill", it) }
+        return builder.build().toString()
     }
 
     private fun buildPrefillParam(schema: String?): String? {
