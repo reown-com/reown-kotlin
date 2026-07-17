@@ -66,7 +66,9 @@ internal fun AppKitComponent(
                 when (event) {
                     is Modal.Model.SIWEAuthenticateResponse.Result, is Modal.Model.SessionAuthenticateResponse.Result -> closeModal()
                     is Modal.Model.ApprovedSession -> {
-                        if (AppKit.authPayloadParams != null) {
+                        val isAuthenticated = (event as? Modal.Model.ApprovedSession.WalletConnectSession)
+                            ?.proposalRequestsResponses?.authentication?.isNotEmpty() == true
+                        if (AppKit.authPayloadParams != null && !isAuthenticated) {
                             navController.navigate(Route.SIWE_FALLBACK.path)
                         } else {
                             closeModal()

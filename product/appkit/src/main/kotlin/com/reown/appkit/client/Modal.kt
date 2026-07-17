@@ -125,6 +125,7 @@ object Modal {
                 val metaData: Core.Model.AppMetaData?,
                 val namespaces: Map<String, Namespace.Session>,
                 val accounts: List<String>,
+                val proposalRequestsResponses: ProposalRequestsResponses? = null,
             ) : ApprovedSession()
 
             data class CoinbaseSession(
@@ -245,6 +246,10 @@ object Modal {
                 val address: String get() = Issuer(iss).address
             }
         }
+
+        data class ProposalRequestsResponses(
+            val authentication: List<Cacao>?
+        ) : Model()
 
         sealed class Ping : Model() {
             data class Success(val topic: String) : Ping()
