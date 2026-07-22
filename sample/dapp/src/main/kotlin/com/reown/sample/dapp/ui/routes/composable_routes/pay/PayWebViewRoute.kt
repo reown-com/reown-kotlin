@@ -1,6 +1,7 @@
 package com.reown.sample.dapp.ui.routes.composable_routes.pay
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Handler
@@ -115,6 +116,11 @@ private fun PayWebViewContent(
     val currentOnSuccess by rememberUpdatedState(onSuccess)
     val currentOnFailure by rememberUpdatedState(onFailure)
 
+    // Hold a direct reference to the WebView so `onRelease` can tear it down deterministically,
+    // rather than fishing it out of the FrameLayout by child index. Remembered so it survives
+    // recompositions (e.g. the `isLoading` toggle) — `onRelease` runs on a later composition.
+    val webViewRef = remember { mutableStateOf<WebView?>(null) }
+
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
@@ -151,25 +157,20 @@ private fun PayWebViewContent(
                         )
 
                         webViewClient = object : WebViewClient() {
+                            // API 24+ overload.
                             override fun shouldOverrideUrlLoading(
                                 view: WebView?,
                                 request: WebResourceRequest?
-                            ): Boolean {
-                                val reqUrl = request?.url?.toString() ?: return false
-                                if (isWalletDeeplink(reqUrl)) {
-                                    try {
-                                        context.startActivity(
-                                            Intent(Intent.ACTION_VIEW, Uri.parse(reqUrl))
-                                        )
-                                    } catch (_: ActivityNotFoundException) {
-                                        // No app can handle the wallet deeplink (wallet not installed).
-                                    }
-                                    return true
-                                }
-                                // Load everything else in-place. Only wallet `wc:` deeplinks are
-                                // forwarded to the OS — other non-https schemes are simply not routed.
-                                return false
-                            }
+                            ): Boolean = handleWalletDeeplink(context, request?.url?.toString())
+
+                            // Deprecated pre-API-24 overload — still the only one called on API 23
+                            // (the repo's minSdk), so without it deeplink interception silently
+                            // no-ops there and `wc:` links would load inside the WebView.
+                            @Suppress("DEPRECATION")
+                            override fun shouldOverrideUrlLoading(
+                                view: WebView?,
+                                url: String?
+                            ): Boolean = handleWalletDeeplink(context, url)
 
                             override fun onPageFinished(view: WebView?, url: String?) {
                                 isLoading = false
@@ -179,11 +180,12 @@ private fun PayWebViewContent(
                         loadUrl(buildPayUrl(gatewayUrl, APP_DEEP_LINK))
                     }
 
+                    webViewRef.value = webView
                     addView(webView)
                 }
             },
-            onRelease = { frameLayout ->
-                (frameLayout.getChildAt(0) as? WebView)?.apply {
+            onRelease = {
+                webViewRef.value?.apply {
                     removeJavascriptInterface("ReactNativeWebView")
                     stopLoading()
                     webViewClient = WebViewClient()
@@ -191,6 +193,7 @@ private fun PayWebViewContent(
                     (parent as? android.view.ViewGroup)?.removeView(this)
                     destroy()
                 }
+                webViewRef.value = null
             }
         )
 
@@ -306,4 +309,23 @@ internal fun isWalletDeeplink(url: String): Boolean = try {
     Uri.parse(url).getQueryParameter("uri")?.startsWith("wc:") == true
 } catch (_: Exception) {
     false
+}
+
+/**
+ * Shared interception logic for both `shouldOverrideUrlLoading` overloads. Forwards `wc:` wallet
+ * deeplinks to the OS and returns `true` (handled); returns `false` for everything else so the
+ * WebView loads it in-place. Only `wc:` links are forwarded — other non-https schemes are never
+ * routed to the OS.
+ */
+private fun handleWalletDeeplink(context: Context, url: String?): Boolean {
+    if (url == null) return false
+    if (isWalletDeeplink(url)) {
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (_: ActivityNotFoundException) {
+            // No app can handle the wallet deeplink (wallet not installed).
+        }
+        return true
+    }
+    return false
 }
