@@ -44,6 +44,7 @@ import androidx.navigation.NavHostController
 import com.reown.sample.common.ui.commons.BlueButton
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.dapp.BuildConfig
+import com.reown.sample.dapp.DAPP_RETURN_DEEP_LINK
 import org.json.JSONObject
 
 /**
@@ -56,7 +57,7 @@ import org.json.JSONObject
  *  - forwards `?uri=wc:` wallet deeplinks to the OS (WebViews can't route them natively),
  *  - listens for `PAY_SUCCESS` / `PAY_FAILURE` bridge messages via `window.ReactNativeWebView`.
  *
- * The app's registered deep link ([APP_DEEP_LINK]) is passed as the return destination so the wallet
+ * The app's registered deep link ([DAPP_RETURN_DEEP_LINK]) is passed as the return destination so the wallet
  * can route the user back after signing. [DappSampleActivity] is `singleTask`, so the return simply
  * foregrounds the existing task — the WebView survives and the checkout resumes.
  */
@@ -177,7 +178,7 @@ private fun PayWebViewContent(
                             }
                         }
 
-                        loadUrl(buildPayUrl(gatewayUrl, APP_DEEP_LINK))
+                        loadUrl(buildPayUrl(gatewayUrl, DAPP_RETURN_DEEP_LINK))
                     }
 
                     webViewRef.value = webView
@@ -290,8 +291,6 @@ private class PayJsBridge(
         }
     }
 }
-
-private const val APP_DEEP_LINK = "kotlin-dapp-wc://request"
 
 /**
  * Appends the two required WebView params to the API-provided gateway URL. Never construct the base

@@ -244,10 +244,11 @@ private fun ChainSelectionScreen(
                 text = "Open Pay checkout",
                 onClick = {
                     val url = payUrl.trim()
-                    if (Uri.parse(url).scheme == "https") {
+                    // URI schemes are case-insensitive, so normalize before comparing.
+                    if (Uri.parse(url).scheme?.equals("https", ignoreCase = true) == true) {
                         onOpenPayUrl(url)
                     } else {
-                        Toast.makeText(context, "Enter a valid https:// Pay URL", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Enter a valid Pay URL starting with https://", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
