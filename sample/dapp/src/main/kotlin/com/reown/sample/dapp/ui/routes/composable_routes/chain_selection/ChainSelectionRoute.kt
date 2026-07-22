@@ -3,6 +3,7 @@ package com.reown.sample.dapp.ui.routes.composable_routes.chain_selection
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,6 +75,7 @@ import com.reown.sample.common.ui.themedColor
 import com.reown.sample.common.ui.toColor
 import com.reown.sample.dapp.BuildConfig
 import com.reown.sample.dapp.ui.DappSampleEvents
+import com.reown.sample.dapp.ui.navigateToPay
 import com.reown.sample.dapp.ui.routes.Route
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -103,7 +106,8 @@ fun ChainSelectionRoute(navController: NavController, dispatcher: CoroutineDispa
         onConnectClick = { onConnectClick(viewModel, navController, context) },
         onAuthenticateClick = {
             onAuthenticate(viewModel, composableScope, dispatcher, context) { uri -> pairingUri = uri }
-        }
+        },
+        onOpenPayUrl = { url -> navController.navigateToPay(url) }
     )
 }
 
@@ -192,7 +196,9 @@ private fun ChainSelectionScreen(
     onChainClick: (Int, Boolean) -> Unit,
     onConnectClick: () -> Unit,
     onAuthenticateClick: () -> Unit,
+    onOpenPayUrl: (String) -> Unit,
 ) {
+    var payUrl by remember { mutableStateOf("") }
     Box {
         Column(modifier = Modifier.fillMaxSize()) {
             WCTopAppBarLegacy(titleText = "Chain selection")
@@ -216,6 +222,35 @@ private fun ChainSelectionScreen(
             BlueButton(
                 text = "1-CA",
                 onClick = onAuthenticateClick,
+                modifier = Modifier
+                    .padding(vertical = 10.dp)
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .padding(horizontal = 16.dp)
+            )
+
+            // WalletConnect Pay: paste a gateway URL to open the hosted checkout in a WebView.
+            OutlinedTextField(
+                value = payUrl,
+                onValueChange = { payUrl = it },
+                label = { Text("WalletConnect Pay URL") },
+                placeholder = { Text("https://pay.walletconnect.com/...") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            )
+            BlueButton(
+                text = "Open Pay checkout",
+                onClick = {
+                    val url = payUrl.trim()
+                    // URI schemes are case-insensitive, so normalize before comparing.
+                    if (Uri.parse(url).scheme?.equals("https", ignoreCase = true) == true) {
+                        onOpenPayUrl(url)
+                    } else {
+                        Toast.makeText(context, "Enter a valid Pay URL starting with https://", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 modifier = Modifier
                     .padding(vertical = 10.dp)
                     .fillMaxWidth()
@@ -512,7 +547,8 @@ private fun ChainSelectionScreenPreview(@PreviewParameter(ChainSelectionStatePro
             onDialogDismiss = {},
             onChainClick = { _, _ -> },
             onConnectClick = {},
-            onAuthenticateClick = {}
+            onAuthenticateClick = {},
+            onOpenPayUrl = {}
         )
     }
 }
