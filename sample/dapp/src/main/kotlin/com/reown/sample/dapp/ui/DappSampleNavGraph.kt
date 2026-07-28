@@ -2,6 +2,7 @@
 package com.reown.sample.dapp.ui
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -17,6 +18,7 @@ import androidx.compose.material.navigation.ModalBottomSheetLayout
 import com.reown.sample.dapp.ui.routes.Route
 import com.reown.sample.dapp.ui.routes.composable_routes.account.AccountRoute
 import com.reown.sample.dapp.ui.routes.composable_routes.chain_selection.ChainSelectionRoute
+import com.reown.sample.dapp.ui.routes.composable_routes.pay.PayWebViewRoute
 import com.reown.sample.dapp.ui.routes.composable_routes.session.SessionRoute
 import com.reown.appkit.ui.appKitGraph
 
@@ -50,6 +52,13 @@ fun DappSampleNavGraph(
             ) {
                 AccountRoute(navController)
             }
+            composable(
+                route = Route.Pay.path + "/{$payUrlArg}",
+                arguments = listOf(navArgument(payUrlArg) { type = NavType.StringType })
+            ) { backStackEntry ->
+                val encoded = backStackEntry.arguments?.getString(payUrlArg).orEmpty()
+                PayWebViewRoute(navController, gatewayUrl = Uri.decode(encoded))
+            }
             appKitGraph(navController)
         }
     }
@@ -58,4 +67,9 @@ fun DappSampleNavGraph(
 const val accountArg = "accountArg"
 fun NavController.navigateToAccount(selectedAccount: String) {
     navigate(Route.Account.path + "/$selectedAccount")
+}
+
+const val payUrlArg = "payUrlArg"
+fun NavController.navigateToPay(gatewayUrl: String) {
+    navigate(Route.Pay.path + "/" + Uri.encode(gatewayUrl))
 }
