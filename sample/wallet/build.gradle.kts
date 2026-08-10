@@ -8,6 +8,9 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+// True only for E2E/test builds (CI sets ENABLE_TEST_MODE=true).
+val enableTestMode = System.getenv("ENABLE_TEST_MODE")?.trim()?.lowercase() == "true"
+
 android {
     namespace = "com.reown.sample.wallet"
     compileSdk = COMPILE_SDK
@@ -26,7 +29,6 @@ android {
         buildConfigField("String", "PIMLICO_API_KEY", "\"${System.getenv("PIMLICO_API_KEY") ?: ""}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
         buildConfigField("String", "TEST_WALLET_PRIVATE_KEY", "\"${System.getenv("TEST_WALLET_PRIVATE_KEY") ?: ""}\"")
-        val enableTestMode = System.getenv("ENABLE_TEST_MODE")?.trim()?.lowercase() == "true"
         buildConfigField("boolean", "ENABLE_TEST_MODE", "$enableTestMode")
 
         ndk.abiFilters += listOf("armeabi-v7a", "x86", "x86_64", "arm64-v8a")
@@ -42,6 +44,11 @@ android {
             manifestPlaceholders["pathPrefix"] = "/wallet_internal"
             buildConfigField("String", "WALLET_APP_LINK", "\"https://appkit-lab.reown.com/wallet_internal\"")
 
+            // Disable R8 for E2E builds only: the optimized dex intermittently fails ART
+            // verification on the CI emulator and crashes on launch. Firebase builds keep R8 on.
+            if (enableTestMode) {
+                isMinifyEnabled = false
+            }
         }
 
         getByName("debug") {
