@@ -16,6 +16,13 @@ import com.reown.appkit.utils.EthUtils
 import timber.log.Timber
 import com.reown.sample.common.BuildConfig as CommonBuildConfig
 
+/**
+ * The dapp's registered return deep link. Wallets route back here after signing, and the Pay
+ * WebView passes it as its `returnUrl`. Must stay in sync with the `kotlin-dapp-wc` scheme +
+ * `request` host intent-filter declared in AndroidManifest.xml.
+ */
+const val DAPP_RETURN_DEEP_LINK = "kotlin-dapp-wc://request"
+
 class DappSampleApp : Application() {
 
     override fun onCreate() {
@@ -26,7 +33,7 @@ class DappSampleApp : Application() {
             description = "Kotlin Dapp Implementation",
             url = "https://appkit-lab.reown.com",
             icons = listOf("https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media"),
-            redirect = "kotlin-dapp-wc://request",
+            redirect = DAPP_RETURN_DEEP_LINK,
             appLink = BuildConfig.DAPP_APP_LINK,
             linkMode = true
         )

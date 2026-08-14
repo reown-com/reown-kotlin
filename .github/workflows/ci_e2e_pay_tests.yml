@@ -1,4 +1,6 @@
 name: E2E Pay Tests with Maestro
+# "(skip-metrics)" tells the E2E KPI job (WalletConnect/actions) to drop this run.
+run-name: ${{ ((github.event_name == 'pull_request' && github.event.pull_request.draft) || (github.event_name == 'workflow_dispatch' && github.ref_name != 'develop')) && format('{0} (skip-metrics)', github.event.pull_request.title || github.ref_name) || '' }}
 
 on:
   pull_request:
@@ -6,8 +8,9 @@ on:
       - opened
       - synchronize
       - edited
+      - ready_for_review
   schedule:
-    - cron: '0 6 * * *' # Runs every day at 06:00 UTC
+    - cron: '0 5 * * *' # Runs every day at 05:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -15,12 +18,13 @@ permissions:
 
 jobs:
   check-balance:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     uses: ./.github/workflows/e2e_balance_check.yml
     secrets: inherit
 
   build_and_run_pay_e2e_tests:
     needs: check-balance
-    if: always()
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     name: Build & Run Pay E2E Tests
     timeout-minutes: 45
     runs-on: ubuntu-16core
@@ -39,7 +43,15 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
           architecture: x86_64
-          cache: 'gradle'
+          # Intentionally NOT caching Gradle for this E2E build. `clean` and
+          # `--no-build-cache` wipe the module build dir and task-output cache,
+          # but NOT ~/.gradle/caches/transforms-* (artifact-transform / dexing
+          # state). On PR runs setup-java restores that from the base branch, and
+          # a stale/incompatible transform intermittently produces an APK whose
+          # primary dex is missing classes (WalletKitApplication,
+          # androidx.core.app.CoreComponentFactory) -> ClassNotFoundException on
+          # launch (caught by the smoke check below). Building from a clean Gradle
+          # home makes the APK deterministic.
 
       - name: Setup Required files to build samples
         with:
@@ -70,11 +82,13 @@ jobs:
           # produce an inconsistent incremental APK whose dex is missing classes.
           ./gradlew clean :sample:wallet:assembleInternal --no-build-cache
 
+      # Pinned to WalletConnect/actions #109 merge (4be7c01 = removal of the Universal
+      # Link / deeplink pay flow), so pay_single_option_nokyc_deeplink is no longer copied.
       - name: Copy Maestro Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
+        uses: WalletConnect/actions/maestro/pay-tests@4be7c0112f9651fc63b18c137650b75d2fc9b200
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
+        uses: WalletConnect/actions/maestro/setup@4be7c0112f9651fc63b18c137650b75d2fc9b200
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
@@ -186,7 +200,7 @@ jobs:
       - name: Reset USDT Permit2 allowance (Polygon)
         if: always()
         continue-on-error: true
-        uses: WalletConnect/actions/maestro/permit2-reset@3fd66ca1de3848a089d8e3c628e6f54bfcfd999f
+        uses: WalletConnect/actions/maestro/permit2-reset@4be7c0112f9651fc63b18c137650b75d2fc9b200
         with:
           chain-id: eip155:137
           # polygon-rpc.com is gated (HTTP 401 "tenant disabled") in CI; use publicnode.

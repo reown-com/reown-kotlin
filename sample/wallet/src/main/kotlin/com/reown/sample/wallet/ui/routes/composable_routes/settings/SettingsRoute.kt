@@ -63,15 +63,22 @@ fun SettingsRoute(navController: NavHostController) {
 
             item {
                 NavigationCard(
-                    title = "Secret Keys & Phrases",
+                    title = "Secret keys & phrases",
                     onClick = { navController.navigate(Route.SecretKeysAndPhrases.path) }
                 )
             }
 
             item {
                 NavigationCard(
-                    title = "Import Wallet",
+                    title = "Import wallet",
                     onClick = { navController.navigate(Route.ImportWallet.path) }
+                )
+            }
+
+            item {
+                NavigationCard(
+                    title = "Pay form customization",
+                    onClick = { navController.navigate(Route.ThemeVariables.path) }
                 )
             }
 
@@ -80,9 +87,9 @@ fun SettingsRoute(navController: NavHostController) {
                     clientId = viewModel.clientId,
                     deviceToken = deviceToken,
                     appVersion = BuildConfig.VERSION_NAME,
-                    onCopy = { value ->
+                    onCopy = { value, label ->
                         clipboardManager.setText(AnnotatedString(value))
-                        Toast.makeText(context, "Copied", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "$label copied", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -120,7 +127,7 @@ private fun DeviceSectionCard(
     clientId: String,
     deviceToken: String,
     appVersion: String,
-    onCopy: (String) -> Unit,
+    onCopy: (value: String, label: String) -> Unit,
 ) {
     val colors = WCTheme.colors
     val spacing = WCTheme.spacing

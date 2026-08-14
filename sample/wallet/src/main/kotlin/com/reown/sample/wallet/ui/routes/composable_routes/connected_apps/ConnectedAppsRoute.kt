@@ -3,6 +3,7 @@ package com.reown.sample.wallet.ui.routes.composable_routes.connected_apps
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.ui.common.AppConnectionRow
@@ -43,7 +47,9 @@ fun ConnectedAppsRoute(
         WalletHeader(navController)
 
         if (connections.isEmpty()) {
-            EmptyConnectedApps()
+            EmptyConnectedApps(
+                onScanQrCode = { navController.navigate(Route.ScannerOptions.path) }
+            )
         } else {
             val spacing = WCTheme.spacing
             LazyColumn(
@@ -102,12 +108,14 @@ internal fun getConnectionChainIds(connectionUI: ConnectionUI): List<String> {
 }
 
 @Composable
-private fun EmptyConnectedApps() {
+private fun EmptyConnectedApps(onScanQrCode: () -> Unit) {
     val colors = WCTheme.colors
     val spacing = WCTheme.spacing
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = spacing.spacing6),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -119,10 +127,26 @@ private fun EmptyConnectedApps() {
         )
         Spacer(modifier = Modifier.height(spacing.spacing1))
         Text(
-            text = "Scan a WalletConnect QR code to get started.",
+            text = "Apps you connect will show up here. Scan a QR code to add your first one.",
             style = WCTheme.typography.bodyLgRegular.copy(
                 color = colors.textSecondary
-            )
+            ),
+            textAlign = TextAlign.Center
         )
+        Spacer(modifier = Modifier.height(spacing.spacing4))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clip(WCTheme.borderRadius.shapeLarge)
+                .background(colors.bgAccentPrimary)
+                .clickable(onClick = onScanQrCode),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Scan QR code",
+                style = WCTheme.typography.bodyLgRegular.copy(color = Color.White)
+            )
+        }
     }
 }
