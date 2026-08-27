@@ -1316,4 +1316,139 @@ class TNVTests {
 
         assertEquals(boc, actual)
     }
+
+    // Stellar test vectors are real transactions fetched from Horizon
+    // (expected hash == the `hash` field of `GET /transactions/{hash}`).
+
+    @Test
+    fun `collectTxHashes should compute the transaction hash for stellar_signXDR on pubnet`() {
+        // Arrange
+        val rpcMethod = "stellar_signXDR"
+        val signedXDR =
+            "AAAAAgAAAACutgsH0wwp9iT1V1zWE8jbQAm7JNeTEx4zdvWD4Jtk8wAAAGQDymekAAAAHAAAAAEAAAAAAAAAAAAAAABqguWuAAAAAAAAAAEAAAAAAAAAAQAAAACutgsH0wwp9iT1V1zWE8jbQAm7JNeTEx4zdvWD4Jtk8wAAAAAAAAAAAJiWgAAAAAAAAAAB4Jtk8wAAAECrfMK7BzVXCay0QnEItO7dJ8Ix2wGaMnFfbWHW1tE6cezMinDXiDtlVBwoK2GjAbrE0h+eGDjDqWWaRS1XDrwE"
+        val rpcResult = """{"signedXDR":"$signedXDR","signerAddress":"stellar:pubnet:GCXLMCYH2MGCT5RE6VLVZVQTZDNUACN3ETLZGEY6GN3PLA7ATNSPGGJH"}"""
+        val rpcParams = """{"xdr":"...","chain":"stellar:pubnet","account":"stellar:pubnet:GCXLMCYH2MGCT5RE6VLVZVQTZDNUACN3ETLZGEY6GN3PLA7ATNSPGGJH"}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult, rpcParams)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(listOf("628ef4f404cba337f757a640260984830728c92101af0a051fb59fc8c79521c6"), result)
+    }
+
+    @Test
+    fun `collectTxHashes should default to pubnet for stellar_signXDR when chain is absent`() {
+        // Arrange
+        val rpcMethod = "stellar_signXDR"
+        val signedXDR =
+            "AAAAAgAAAACutgsH0wwp9iT1V1zWE8jbQAm7JNeTEx4zdvWD4Jtk8wAAAGQDymekAAAAHAAAAAEAAAAAAAAAAAAAAABqguWuAAAAAAAAAAEAAAAAAAAAAQAAAACutgsH0wwp9iT1V1zWE8jbQAm7JNeTEx4zdvWD4Jtk8wAAAAAAAAAAAJiWgAAAAAAAAAAB4Jtk8wAAAECrfMK7BzVXCay0QnEItO7dJ8Ix2wGaMnFfbWHW1tE6cezMinDXiDtlVBwoK2GjAbrE0h+eGDjDqWWaRS1XDrwE"
+        val rpcResult = """{"signedXDR":"$signedXDR"}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(listOf("628ef4f404cba337f757a640260984830728c92101af0a051fb59fc8c79521c6"), result)
+    }
+
+    @Test
+    fun `collectTxHashes should compute the canonical fee-bump hash for a stellar fee-bump envelope`() {
+        // Arrange
+        val rpcMethod = "stellar_signXDR"
+        val signedXDR =
+            "AAAABQAAAAA0mMHF8QGzwsMRBhe9i8PSIqxjNjKyQMyXZODBAdhAUwAAAAAAA5+BAAAAAgAAAAA6Hd6p+AA5GTO2bJqKN/hbBfWcOh2Ow8cnTY3iIFFVPAADnrgDoCvmAAAZVgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAABAAAAADod3qn4ADkZM7Zsmoo3+FsF9Zw6HY7DxydNjeIgUVU8AAAAGAAAAAAAAAAB1/5EvQrxHWArEJHy9KH03yEtRE0DIeoyrbPMHLurCgQAAAAEd29yawAAAAMAAAASAAAAAAAAAAA6Hd6p+AA5GTO2bJqKN/hbBfWcOh2Ow8cnTY3iIFFVPAAAAA0AAAAgAAAAjpSFVoEyx/Ev5d2V/desEr+GEqMyXKvrs5wXFqwAAAAFAAAAAAIrSjwAAAAAAAAAAQAAAAAAAAABAAAAB9ssFCkNSWTjgF8lJ90TKTm6X7P8ysVrML+rj9CRARYnAAAAAwAAAAYAAAAB1/5EvQrxHWArEJHy9KH03yEtRE0DIeoyrbPMHLurCgQAAAAQAAAAAQAAAAIAAAAPAAAABUJsb2NrAAAAAAAAAwACsj8AAAAAAAAABgAAAAHX/kS9CvEdYCsQkfL0ofTfIS1ETQMh6jKts8wcu6sKBAAAABAAAAABAAAAAwAAAA8AAAAEUGFpbAAAABIAAAAAAAAAADod3qn4ADkZM7Zsmoo3+FsF9Zw6HY7DxydNjeIgUVU8AAAAAwACsj8AAAAAAAAABgAAAAHX/kS9CvEdYCsQkfL0ofTfIS1ETQMh6jKts8wcu6sKBAAAABQAAAABABvFygAAAAAAAAXIAAAAAAADnrgAAAABIFFVPAAAAEBbcalx54eMMHwWJz7tzgOoxIVmMl4pexbgwTLzxnyMtAhZ2nZlsF18jIMDBaubSNSNPi4YRHkSajpyOcdZOzsCAAAAAAAAAAEB2EBTAAAAQDOlpIeUB73BImAZJCSAt0cuKZXHlKG+TJ+j+fCeFe9bDc5wHzMlDjU6YlB6geCuxRi7QwTq4RgxrOIJ9HICfg8="
+        val rpcResult = """{"signedXDR":"$signedXDR"}"""
+        val rpcParams = """{"chain":"stellar:pubnet"}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult, rpcParams)
+
+        // Assert — H_fb, the hash explorers index, not the inner tx hash
+        assertNotNull(result)
+        assertEquals(listOf("5906453d5a367b4a8a1af9bbbc934904841718ec1ca1345874904e15f97bf83b"), result)
+    }
+
+    @Test
+    fun `collectTxHashes should compute the transaction hash for stellar_signXDR on testnet`() {
+        // Arrange
+        val rpcMethod = "stellar_signXDR"
+        val signedXDR =
+            "AAAAAgAAAAAJDqKNhO2/XZAvmR1Wynm2lxfIUQwB6TDzqNVOlQgQTgAAm74AJGh0ABKiOwAAAAEAAAAAAAAAAAAAAABqgthtAAAAAAAAAAEAAAAAAAAAGAAAAAAAAAABmtIg9IzJFxPz3yuidCMj3LiE2SB3XYOl8DvtohHRPVAAAAAJc2V0X3ByaWNlAAAAAAAAAwAAABIAAAAAAAAAAAkOoo2E7b9dkC+ZHVbKebaXF8hRDAHpMPOo1U6VCBBOAAAADwAAAAZFVEhVU0QAAAAAAAoAAAAAAAAAAAAAAARomVswAAAAAQAAAAAAAAAAAAAAAZrSIPSMyRcT898ronQjI9y4hNkgd12DpfA77aIR0T1QAAAACXNldF9wcmljZQAAAAAAAAMAAAASAAAAAAAAAAAJDqKNhO2/XZAvmR1Wynm2lxfIUQwB6TDzqNVOlQgQTgAAAA8AAAAGRVRIVVNEAAAAAAAKAAAAAAAAAAAAAAAEaJlbMAAAAAAAAAABAAAAAAAAAAQAAAAGAAAAAcbgeSm1T8h+V5r+/0u+qUVZIopr5hDeGKj1+u37faSgAAAAEAAAAAEAAAADAAAADwAAAAdIYXNSb2xlAAAAABIAAAAAAAAAAAkOoo2E7b9dkC+ZHVbKebaXF8hRDAHpMPOo1U6VCBBOAAAADwAAAAZPUkFDTEUAAAAAAAEAAAAGAAAAAcbgeSm1T8h+V5r+/0u+qUVZIopr5hDeGKj1+u37faSgAAAAFAAAAAEAAAAHve3Sc2JfmD0Hu+w96oFCzEX1XxFR0uE/NeSf2Vqmia8AAAAH4IWMslKp5yCKjCiGPIRV6yV0LdrLOEfRrCRSwjur0G8AAAABAAAABgAAAAGa0iD0jMkXE/PfK6J0IyPcuITZIHddg6XwO+2iEdE9UAAAABQAAAABADikCAAAAAAAAAJUAAAAAAAATa0AAAABlQgQTgAAAEDSMm2vdKNsB2TCk+Pbb6vSYgq6Zd5F0E4H5BfMi4lwWEcYFAq2Mp+e12wr1qU+Ni7+2BTqZUkb+uK7lVM8PqkN"
+        val rpcResult = """{"signedXDR":"$signedXDR"}"""
+        val rpcParams = """{"chain":"stellar:testnet"}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult, rpcParams)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(listOf("c9b2d35ab15c055acb422872a8f1680a84ad6b8ad0d56271cfb74c083edf2007"), result)
+    }
+
+    @Test
+    fun `collectTxHashes should compute the transaction hash for a stellar V0 envelope on pubnet`() {
+        // Arrange — ENVELOPE_TYPE_TX_V0 (discriminant 0); exercises the include-leading-zeros
+        // path. Hash cross-checked against stellar-sdk's Transaction.hash().
+        val rpcMethod = "stellar_signXDR"
+        val signedXDR =
+            "AAAAAG5btGuvFysDlQ/whfTBH8NWx1qRgzGpjtSDnJx3krOBAAAAZAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAsAAAAAAAAAZAAAAAAAAAABd5KzgQAAAEAu0xW2vwIqtuAu4/FFLWHBooGpvqn/N6iHgEX45savBk7SyoFGKIlyhG7ETZQ93tbF1OC/5ym6SdXmwIhIPQUD"
+        val rpcResult = """{"signedXDR":"$signedXDR"}"""
+        val rpcParams = """{"chain":"stellar:pubnet"}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult, rpcParams)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(listOf("5b709eff53cb92c20d2c79e007f6b53ba9be04d6073119d142ffa70d7ea5c7cb"), result)
+    }
+
+    @Test
+    fun `collectTxHashes should compute the correct stellar hash when a signature ends in four zero bytes`() {
+        // Arrange — adversarial: the last 4 bytes of the (structurally valid) signature are
+        // 0x00000000, which an ascending signature-array scan mistakes for a zero-length
+        // signature array. Hash cross-checked against stellar-sdk's Transaction.hash().
+        val rpcMethod = "stellar_signXDR"
+        val signedXDR =
+            "AAAAAgAAAABuW7RrrxcrA5UP8IX0wR/DVsdakYMxqY7Ug5ycd5KzgQAAAGQAAAAASZYC0wAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAAQAAAABuW7RrrxcrA5UP8IX0wR/DVsdakYMxqY7Ug5ycd5KzgQAAAAAAAAAAAJiWgAAAAAAAAAABd5KzgQAAAEDGLpyx0gomLUe6OHNM90dIb/J8FPe2mR/+9m8suCVKNCF3UH6jhJthgRaiYAchg4uS+yAghMuqqTVHvyAAAAAA"
+        val rpcResult = """{"signedXDR":"$signedXDR"}"""
+        val rpcParams = """{"chain":"stellar:pubnet"}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult, rpcParams)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(listOf("17e5f1f36ff6edc099fc190d24da41e48ab9dd9f0b0be6c6d68d9eba028ed8d3"), result)
+    }
+
+    @Test
+    fun `collectTxHashes should extract tx_hash for stellar_signAndSubmitXDR`() {
+        // Arrange
+        val rpcMethod = "stellar_signAndSubmitXDR"
+        val rpcResult =
+            """{"tx_hash":"6da5298ae2b4fd1567fa3f760e66c9fb9014e3ac72bf48af1ad8120f8423b961","signedXDR":"AAAAAg==","successful":true}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(listOf("6da5298ae2b4fd1567fa3f760e66c9fb9014e3ac72bf48af1ad8120f8423b961"), result)
+    }
+
+    @Test
+    fun `collectTxHashes should return null for a malformed stellar envelope`() {
+        // Arrange
+        val rpcMethod = "stellar_signXDR"
+        val rpcResult = """{"signedXDR":"q83vASNFZ4mrze8BI0VniavN7wEjRWeJq83vAQ=="}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertNull(result)
+    }
 }
