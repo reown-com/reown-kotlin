@@ -171,6 +171,24 @@ internal class TNV(private val moshi: Moshi) {
 
                 TON_SEND_MESSAGE -> listOf(rpcResult)
 
+                STELLAR_SIGN_XDR -> {
+                    moshi.adapter(StellarSignXDRResult::class.java)
+                        .fromJson(rpcResult)
+                        ?.let { result ->
+                            val chain = runCatching {
+                                moshi.adapter(StellarSignXDRParams::class.java).fromJson(rpcParams)?.chain
+                            }.getOrNull()
+                            listOf(StellarSignXDR.computeTransactionHash(result.signedXDR, chain))
+                        }
+                }
+
+                STELLAR_SIGN_AND_SUBMIT_XDR -> {
+                    moshi.adapter(StellarSignAndSubmitXDRResult::class.java)
+                        .fromJson(rpcResult)
+                        ?.tx_hash
+                        ?.let { listOf(it) }
+                }
+
                 else -> null
             }
         } catch (e: Exception) {
@@ -201,6 +219,8 @@ internal class TNV(private val moshi: Moshi) {
         private const val STX_TRANSFER = "stx_transferStx"
         private const val SEND_TRANSFER = "sendTransfer"
         private const val TON_SEND_MESSAGE = "ton_sendMessage"
+        private const val STELLAR_SIGN_XDR = "stellar_signXDR"
+        private const val STELLAR_SIGN_AND_SUBMIT_XDR = "stellar_signAndSubmitXDR"
 
         fun toBase58(bytes: ByteArray): String {
             val alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
