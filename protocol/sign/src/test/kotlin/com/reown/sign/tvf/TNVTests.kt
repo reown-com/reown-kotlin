@@ -1388,6 +1388,24 @@ class TNVTests {
     }
 
     @Test
+    fun `collectTxHashes should compute the transaction hash for a stellar V0 envelope on pubnet`() {
+        // Arrange — ENVELOPE_TYPE_TX_V0 (discriminant 0); exercises the include-leading-zeros
+        // path. Hash cross-checked against stellar-sdk's Transaction.hash().
+        val rpcMethod = "stellar_signXDR"
+        val signedXDR =
+            "AAAAAG5btGuvFysDlQ/whfTBH8NWx1qRgzGpjtSDnJx3krOBAAAAZAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAsAAAAAAAAAZAAAAAAAAAABd5KzgQAAAEAu0xW2vwIqtuAu4/FFLWHBooGpvqn/N6iHgEX45savBk7SyoFGKIlyhG7ETZQ93tbF1OC/5ym6SdXmwIhIPQUD"
+        val rpcResult = """{"signedXDR":"$signedXDR"}"""
+        val rpcParams = """{"chain":"stellar:pubnet"}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult, rpcParams)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(listOf("5b709eff53cb92c20d2c79e007f6b53ba9be04d6073119d142ffa70d7ea5c7cb"), result)
+    }
+
+    @Test
     fun `collectTxHashes should extract tx_hash for stellar_signAndSubmitXDR`() {
         // Arrange
         val rpcMethod = "stellar_signAndSubmitXDR"
