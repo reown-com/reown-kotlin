@@ -1406,6 +1406,25 @@ class TNVTests {
     }
 
     @Test
+    fun `collectTxHashes should compute the correct stellar hash when a signature ends in four zero bytes`() {
+        // Arrange — adversarial: the last 4 bytes of the (structurally valid) signature are
+        // 0x00000000, which an ascending signature-array scan mistakes for a zero-length
+        // signature array. Hash cross-checked against stellar-sdk's Transaction.hash().
+        val rpcMethod = "stellar_signXDR"
+        val signedXDR =
+            "AAAAAgAAAABuW7RrrxcrA5UP8IX0wR/DVsdakYMxqY7Ug5ycd5KzgQAAAGQAAAAASZYC0wAAAAEAAAAAAAAAAAAAAABw29iAAAAAAAAAAAEAAAAAAAAAAQAAAABuW7RrrxcrA5UP8IX0wR/DVsdakYMxqY7Ug5ycd5KzgQAAAAAAAAAAAJiWgAAAAAAAAAABd5KzgQAAAEDGLpyx0gomLUe6OHNM90dIb/J8FPe2mR/+9m8suCVKNCF3UH6jhJthgRaiYAchg4uS+yAghMuqqTVHvyAAAAAA"
+        val rpcResult = """{"signedXDR":"$signedXDR"}"""
+        val rpcParams = """{"chain":"stellar:pubnet"}"""
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult, rpcParams)
+
+        // Assert
+        assertNotNull(result)
+        assertEquals(listOf("17e5f1f36ff6edc099fc190d24da41e48ab9dd9f0b0be6c6d68d9eba028ed8d3"), result)
+    }
+
+    @Test
     fun `collectTxHashes should extract tx_hash for stellar_signAndSubmitXDR`() {
         // Arrange
         val rpcMethod = "stellar_signAndSubmitXDR"

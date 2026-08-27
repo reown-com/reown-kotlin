@@ -6,8 +6,8 @@ import org.bouncycastle.util.encoders.Base64
 
 @JsonClass(generateAdapter = true)
 data class StellarSignXDRResult(
-    val signedXDR: String,
-    val signerAddress: String?
+    // signerAddress is intentionally omitted — only signedXDR is needed for hash computation
+    val signedXDR: String
 )
 
 @JsonClass(generateAdapter = true)
@@ -96,9 +96,12 @@ object StellarSignXDR {
      * what the WalletConnect Stellar RPC spec mandates wallets emit.
      */
     private fun findSignatureArrayOffset(bytes: ByteArray): Int {
-        for (signatureCount in 0..MAX_ENVELOPE_SIGNATURES) {
+        // Scan from the maximum count downward: a real multi-signature array must be found
+        // before the vacuously-matching zero count, which would otherwise win whenever a
+        // signature happens to end in four zero bytes.
+        for (signatureCount in MAX_ENVELOPE_SIGNATURES downTo 0) {
             val offset = bytes.size - 4 - DECORATED_SIGNATURE_LENGTH * signatureCount
-            if (offset < 4) break
+            if (offset < 4) continue
             if (readUInt32BE(bytes, offset) != signatureCount) continue
 
             val isValid = (0 until signatureCount).all { i ->
