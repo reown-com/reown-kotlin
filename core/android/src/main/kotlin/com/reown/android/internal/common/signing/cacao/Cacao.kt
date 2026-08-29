@@ -6,6 +6,10 @@ import com.squareup.moshi.JsonClass
 import com.reown.android.cacao.SignatureInterface
 import com.reown.android.internal.common.signing.cacao.Cacao.Payload.Companion.RECAPS_PREFIX
 import com.reown.android.internal.common.signing.signature.Signature
+import com.reown.android.internal.utils.currentTimeInSeconds
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @JsonClass(generateAdapter = true)
 data class Cacao(
@@ -75,6 +79,39 @@ data class Cacao(
 
 @JvmSynthetic
 internal fun Cacao.Signature.toSignature(): Signature = Signature.fromString(s)
+
+private val cacaoIso8601Patterns = arrayOf(
+    "yyyy-MM-dd'T'HH:mm:ssX",
+    "yyyy-MM-dd'T'HH:mm:ss.SSSX",
+    "yyyy-MM-dd'T'HH:mm:ssXXX",
+    "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+    Cacao.Payload.ISO_8601_PATTERN,
+)
+
+internal fun parseCacaoIso8601ToEpochSeconds(value: String): Long? {
+    for (pattern in cacaoIso8601Patterns) {
+        try {
+            val format = SimpleDateFormat(pattern, Locale.US)
+            format.isLenient = false
+            val parsed = format.parse(value) ?: continue
+            return parsed.time / 1000
+        } catch (_: ParseException) {
+        }
+    }
+    return null
+}
+
+fun Cacao.Payload.isWithinValidityWindow(nowSeconds: Long = currentTimeInSeconds): Boolean {
+    exp?.let { raw ->
+        val expSeconds = parseCacaoIso8601ToEpochSeconds(raw) ?: return false
+        if (nowSeconds >= expSeconds) return false
+    }
+    nbf?.let { raw ->
+        val nbfSeconds = parseCacaoIso8601ToEpochSeconds(raw) ?: return false
+        if (nowSeconds < nbfSeconds) return false
+    }
+    return true
+}
 
 fun Cacao.Payload.toCAIP222Message(chainName: String = "Ethereum"): String {
     var message = "$domain wants you to sign in with your ${Issuer(iss).getChainName()} account:\n${Issuer(iss).address}\n\n"

@@ -9,6 +9,10 @@ class CacaoVerifier(private val projectId: ProjectId) {
     fun verify(cacao: Cacao): Boolean = when (cacao.signature.t) {
 
         SignatureType.EIP191.header, SignatureType.EIP1271.header -> {
+            if (!cacao.payload.isWithinValidityWindow()) {
+                return false
+            }
+
             val plainMessage = cacao.payload.toCAIP222Message()
             val hexMessage = Numeric.toHexString(cacao.payload.toCAIP222Message().toByteArray())
             val address = Issuer(cacao.payload.iss).address
