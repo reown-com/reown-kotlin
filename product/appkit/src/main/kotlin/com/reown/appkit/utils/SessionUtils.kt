@@ -11,7 +11,7 @@ import com.reown.appkit.domain.model.Session
 
 internal fun String.toVisibleAddress() = "${take(4)}...${takeLast(4)}"
 
-internal fun List<Modal.Model.Chain>.getSelectedChain(chainId: String?) = find { it.id == chainId } ?: first()
+internal fun List<Modal.Model.Chain>.getSelectedChain(chainId: String?) = find { it.id == chainId } ?: firstOrNull()
 
 internal fun Modal.Model.Session.getAddress(selectedChain: Modal.Model.Chain) = getAccounts().find { it.startsWith(selectedChain.id) }?.split(":")?.last() ?: String.Empty
 
@@ -35,10 +35,17 @@ internal fun String.toChain() = AppKit.chains.find { it.id == this }
 
 private fun Modal.Model.Session.getAccounts() = namespaces.values.toList().flatMap { it.accounts }
 
-private fun Modal.Model.Session.getDefaultChain() = getAccounts()
-    .accountsToChainId()
-    .filter { CoreValidator.isChainIdCAIP2Compliant(it) }
-    .mapNotNull { it.toChain() }
+private fun Modal.Model.Session.getDefaultChain(): List<Modal.Model.Chain> {
+    val chainIds = getAccounts()
+        .accountsToChainId()
+        .filter { CoreValidator.isChainIdCAIP2Compliant(it) }
+    
+    return if (chainIds.isNotEmpty()) {
+        chainIds.mapNotNull { it.toChain() }
+    } else {        
+        emptyList()
+    }
+}
 
 private fun List<String>.accountsToChainId() = map {
     val (chainNamespace, chainReference, _) = it.split(":")
@@ -64,7 +71,11 @@ internal fun Sign.Model.Session.toAccount(session: Session.WalletConnect) = toMo
     Account(address, chain)
 }
 
-internal fun getChain(chainId: String) = AppKit.chains.find { it.id == chainId } ?: AppKit.chains.first()
+internal fun getChain(chainId: String): Modal.Model.Chain {
+    return AppKit.chains.find { it.id == chainId } ?: 
+           AppKit.chains.firstOrNull() ?: 
+           throw IllegalStateException("No chains available in AppKit.chains")
+}
 
 internal fun Session.toConnectorType() = when(this) {
     is Session.Coinbase -> Modal.ConnectorType.WALLET_CONNECT
