@@ -12,6 +12,7 @@ import com.reown.foundation.common.model.PublicKey
 import com.reown.foundation.common.model.Topic
 import com.reown.sign.common.model.vo.clientsync.common.SessionParticipant
 import com.reown.sign.common.model.vo.clientsync.session.params.SignParams
+import com.reown.sign.common.model.vo.clientsync.session.params.toScopedPropertiesStringMap
 import com.reown.sign.common.model.vo.proposal.ProposalVO
 import com.reown.sign.engine.model.EngineDO
 import com.reown.sign.engine.model.mapper.toMapOfNamespacesVOSession
@@ -98,7 +99,7 @@ internal data class SessionVO(
                 requiredNamespaces = requiredNamespaces,
                 optionalNamespaces = optionalNamespaces,
                 properties = settleParams.properties,
-                scopedProperties = settleParams.scopedProperties,
+                scopedProperties = settleParams.scopedProperties.toScopedPropertiesStringMap(),
                 isAcknowledged = true,
                 pairingTopic = pairingTopic,
                 transportType = TransportType.RELAY
