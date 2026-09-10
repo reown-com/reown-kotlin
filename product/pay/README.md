@@ -271,22 +271,38 @@ suspend fun getRequiredPaymentActions(
 
 ##### `confirmPayment(...)`
 
-Submits signatures and finalizes the payment.
+Submits the wallet RPC results and finalizes the payment.
 
 ```kotlin
 suspend fun confirmPayment(
     paymentId: String,
     optionId: String,
-    signatures: List<String>,
-    collectedData: List<Pay.CollectDataFieldResult>? = null
+    signatures: List<String> = emptyList(), // deprecated alias for data
+    collectedData: List<Pay.CollectDataFieldResult>? = null,
+    data: List<String> = signatures
 ): Result<Pay.ConfirmPaymentResponse>
 ```
 
 **Parameters:**
 - `paymentId` - The payment ID
 - `optionId` - The selected payment option ID
-- `signatures` - List of signature strings from wallet RPC actions
+- `signatures` - Deprecated: use `data`. Kept for backward compatibility and ignored when `data` is passed explicitly
 - `collectedData` - Optional list of collected data field results
+- `data` - Wallet RPC results. Each element is either a plain string (signature, tx hash) or a JSON-encoded object/array, which is sent to the gateway as JSON. Chains whose confirm payload is an object (e.g. TRON) pass it JSON-encoded:
+
+```kotlin
+val tronResult = JSONObject().apply {
+    put("raw_data_hex", rawDataHexFromFetch) // exact hex from /fetch, unmodified
+    put("signature", JSONArray().put(signatureHex)) // 130-hex r||s||v
+}
+WalletConnectPay.confirmPayment(
+    paymentId = paymentId,
+    optionId = optionId,
+    data = listOf(tronResult.toString())
+)
+```
+
+Existing integrations passing `signatures = listOf("0x...")` keep working unchanged.
 
 **Returns:** `Result<Pay.ConfirmPaymentResponse>`
 
