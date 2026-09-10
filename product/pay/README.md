@@ -279,7 +279,7 @@ suspend fun confirmPayment(
     optionId: String,
     signatures: List<String> = emptyList(), // deprecated alias for data
     collectedData: List<Pay.CollectDataFieldResult>? = null,
-    data: List<String> = signatures
+    data: List<String>? = null // falls back to signatures when null
 ): Result<Pay.ConfirmPaymentResponse>
 ```
 

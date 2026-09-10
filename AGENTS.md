@@ -379,7 +379,7 @@ object WalletConnectPay {
         optionId: String,
         signatures: List<String> = emptyList(),  // deprecated alias for data
         collectedData: List<Pay.CollectDataFieldResult>? = null,
-        data: List<String> = signatures  // plain strings or JSON-encoded objects (e.g. TRON)
+        data: List<String>? = null  // plain strings or JSON-encoded objects (e.g. TRON); falls back to signatures
     ): Result<Pay.ConfirmPaymentResponse>
 
     fun shutdown()

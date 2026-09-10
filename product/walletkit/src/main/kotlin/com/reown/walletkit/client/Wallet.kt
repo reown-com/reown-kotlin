@@ -78,11 +78,12 @@ object Wallet {
 
         /**
          * @property signatures Deprecated: use [data]. Kept for backward
-         * compatibility; ignored when [data] is passed explicitly
+         * compatibility; ignored when [data] is non-null
          * @property data Wallet RPC results. Each element is either a plain
          * string (signature, tx hash) or a JSON-encoded object/array (e.g.
          * TRON's {"raw_data_hex": ..., "signature": [...]}), which is sent
-         * to the gateway as JSON. Defaults to [signatures]
+         * to the gateway as JSON. When null (the default), [signatures] is
+         * used instead, including after copy(signatures = ...)
          */
         data class ConfirmPayment(
             val paymentId: String,
@@ -90,7 +91,7 @@ object Wallet {
             @Deprecated("Use data instead")
             val signatures: List<String> = emptyList(),
             val collectedData: List<Model.CollectDataFieldResult>? = null,
-            val data: List<String> = signatures
+            val data: List<String>? = null
         ) : Params()
     }
 
