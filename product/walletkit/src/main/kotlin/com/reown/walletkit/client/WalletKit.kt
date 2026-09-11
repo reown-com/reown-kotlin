@@ -489,7 +489,6 @@ object WalletKit {
          * signatures alias), and optional collectedData
          * @return Result containing confirm payment response or an error
          */
-        @Suppress("DEPRECATION") // reads signatures as the legacy fallback for data
         suspend fun confirmPayment(
             params: Wallet.Params.ConfirmPayment
         ): Result<Wallet.Model.ConfirmPaymentResponse> {
