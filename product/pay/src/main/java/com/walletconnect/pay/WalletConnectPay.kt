@@ -106,19 +106,25 @@ object WalletConnectPay {
     }
 
     /**
-     * Confirms a payment with signatures and optional collected data.
+     * Confirms a payment with wallet RPC results and optional collected data.
      *
      * @param paymentId The payment ID
      * @param optionId The selected payment option ID
-     * @param signatures List of signature strings from wallet RPC actions
+     * @param signatures Deprecated: use [data]. Kept for backward compatibility;
+     * ignored when [data] is non-null
      * @param collectedData Optional list of collected data field results
+     * @param data Wallet RPC results. Each element is either a plain string
+     * (signature, tx hash) or a JSON-encoded object/array (e.g. TRON's
+     * {"raw_data_hex": ..., "signature": [...]}), which is sent to the
+     * gateway as JSON. When null (the default), falls back to [signatures]
      * @return Result containing confirm payment response or an error
      */
     suspend fun confirmPayment(
         paymentId: String,
         optionId: String,
-        signatures: List<String>,
-        collectedData: List<Pay.CollectDataFieldResult>? = null
+        signatures: List<String> = emptyList(),
+        collectedData: List<Pay.CollectDataFieldResult>? = null,
+        data: List<String>? = null
     ): Result<Pay.ConfirmPaymentResponse> = withContext(Dispatchers.IO) {
         val yttriumClient = client ?: return@withContext Result.failure(
             IllegalStateException("WalletConnectPay not initialized. Call initialize() first.")
@@ -128,7 +134,7 @@ object WalletConnectPay {
             val response = yttriumClient.confirmPayment(
                 paymentId = paymentId,
                 optionId = optionId,
-                signatures = signatures,
+                data = data ?: signatures,
                 collectedData = yttriumCollectedData,
                 maxPollMs = 60000
             )

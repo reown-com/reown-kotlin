@@ -353,7 +353,7 @@ Version catalog for dependencies: `gradle/libs.versions.toml`
 
 4. Sign each action with wallet's private key
 
-5. confirmPayment(paymentId, optionId, signatures, collectedData)
+5. confirmPayment(paymentId, optionId, data, collectedData)
    → Returns: PaymentStatus (SUCCEEDED, PROCESSING, FAILED, EXPIRED)
 ```
 
@@ -377,8 +377,9 @@ object WalletConnectPay {
     suspend fun confirmPayment(
         paymentId: String,
         optionId: String,
-        signatures: List<String>,
-        collectedData: List<Pay.CollectDataFieldResult>? = null
+        signatures: List<String> = emptyList(),  // deprecated alias for data
+        collectedData: List<Pay.CollectDataFieldResult>? = null,
+        data: List<String>? = null  // plain strings or JSON-encoded objects (e.g. TRON); falls back to signatures
     ): Result<Pay.ConfirmPaymentResponse>
 
     fun shutdown()
