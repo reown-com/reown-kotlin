@@ -483,9 +483,10 @@ object WalletKit {
         }
 
         /**
-         * Confirms a payment with signatures and optional collected data.
+         * Confirms a payment with wallet RPC results and optional collected data.
          *
-         * @param params Contains paymentId, optionId, signatures, and optional collectedData
+         * @param params Contains paymentId, optionId, data (or the deprecated
+         * signatures alias), and optional collectedData
          * @return Result containing confirm payment response or an error
          */
         suspend fun confirmPayment(
@@ -494,7 +495,7 @@ object WalletKit {
             return WalletConnectPay.confirmPayment(
                 paymentId = params.paymentId,
                 optionId = params.optionId,
-                signatures = params.signatures,
+                data = params.data ?: params.signatures,
                 collectedData = params.collectedData?.map { it.toPay() }
             ).map { it.toWallet() }
         }
