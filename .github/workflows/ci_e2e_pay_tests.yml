@@ -91,7 +91,7 @@ jobs:
         uses: WalletConnect/actions/maestro/setup@4be7c0112f9651fc63b18c137650b75d2fc9b200
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+        uses: android-actions/setup-android@v3
 
       - name: Start Android Emulator and Run Pay Tests
         id: maestro
