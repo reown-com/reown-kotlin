@@ -1037,14 +1037,14 @@ class TNVTests {
     }
 
     @Test
-    fun `collectTxHashes should return null for structured results of methods without a dedicated parser`() {
+    fun `collectTxHashes should return structured results as-is for methods without a dedicated parser`() {
         // Arrange
         val objectResult = """{"0x1":{"paymasterService":{"supported":true}}}"""
         val arrayResult = """["0x1234567890abcdef1234567890abcdef12345678"]"""
 
         // Act & Assert
-        assertNull(TNV.collectTxHashes("wallet_getCapabilities", objectResult))
-        assertNull(TNV.collectTxHashes("eth_requestAccounts", arrayResult))
+        assertEquals(listOf(objectResult), TNV.collectTxHashes("wallet_getCapabilities", objectResult))
+        assertEquals(listOf(arrayResult), TNV.collectTxHashes("eth_requestAccounts", arrayResult))
     }
 
     @Test

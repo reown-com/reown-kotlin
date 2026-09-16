@@ -189,7 +189,7 @@ internal class TNV(private val moshi: Moshi) {
                         ?.let { listOf(it) }
                 }
 
-                else -> collectPlainStringResult(rpcResult)
+                else -> collectRawResult(rpcResult)
             }
         } catch (e: Exception) {
             println("Error processing $rpcMethod - $e")
@@ -197,14 +197,10 @@ internal class TNV(private val moshi: Moshi) {
         }
     }
 
-    // Signing methods (eth_signTypedData_v4, personal_sign, ...) return the signature as a plain string.
-    // It is reported as-is so signature volume stays attributable, matching the JS and Flutter SDKs.
-    // Structured results belong to the dedicated parsers above and are skipped here.
-    private fun collectPlainStringResult(rpcResult: String): List<String>? {
-        val result = rpcResult.trim()
-        if (result.isEmpty() || result == "null" || result.startsWith("{") || result.startsWith("[")) return null
-        return listOf(result)
-    }
+    // Methods without a dedicated parser (eth_signTypedData_v4, personal_sign, ...) report their result
+    // as-is so signing volume stays attributable, matching the JS and Flutter SDKs.
+    private fun collectRawResult(rpcResult: String): List<String>? =
+        rpcResult.takeIf { it.isNotBlank() && it != "null" }?.let { listOf(it) }
 
     companion object {
         private const val ETH_SEND_TRANSACTION = "eth_sendTransaction"
