@@ -153,8 +153,9 @@ class RespondSessionRequestUseCaseTest {
         every { sessionStorageRepository.isSessionValid(Topic(topic)) } returns true
         every { getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id) } returns pendingRequest
         every { TNV.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
-        every { TNV.collectTxHashes(any(), any()) } returns listOf("hash")
+        every { TNV.collectTxHashes(any(), any(), any()) } returns listOf("hash")
         every { logger.log(any<String>()) } just Runs
+        coEvery { verifyContextStorageRepository.delete(any()) } just Runs
         every { jsonRpcInteractor.publishJsonRpcResponse(any(), any(), any(), captureLambda(), any(), any(), any()) } answers {
             lambda<() -> Unit>().invoke()
         }
@@ -210,7 +211,7 @@ class RespondSessionRequestUseCaseTest {
         every { sessionStorageRepository.isSessionValid(Topic(topic)) } returns true
         every { getPendingJsonRpcHistoryEntryByIdUseCase(jsonRpcResponse.id) } returns pendingRequest
         every { TNV.collect(any(), any(), any()) } returns Triple(listOf("rpcMethod"), listOf("contractAddress"), "chainId")
-        every { TNV.collectTxHashes(any(), any()) } returns listOf("hash")
+        every { TNV.collectTxHashes(any(), any(), any()) } returns listOf("hash")
         every { logger.log(any<String>()) } just Runs
         every { jsonRpcInteractor.publishJsonRpcResponse(any(), any(), any(), any(), captureLambda(), any(), any()) } answers {
             lambda<(Throwable) -> Unit>().invoke(Throwable("Publish fails"))

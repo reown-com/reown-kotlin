@@ -189,12 +189,21 @@ internal class TNV(private val moshi: Moshi) {
                         ?.let { listOf(it) }
                 }
 
-                else -> null
+                else -> collectPlainStringResult(rpcResult)
             }
         } catch (e: Exception) {
             println("Error processing $rpcMethod - $e")
             null
         }
+    }
+
+    // Signing methods (eth_signTypedData_v4, personal_sign, ...) return the signature as a plain string.
+    // It is reported as-is so signature volume stays attributable, matching the JS and Flutter SDKs.
+    // Structured results belong to the dedicated parsers above and are skipped here.
+    private fun collectPlainStringResult(rpcResult: String): List<String>? {
+        val result = rpcResult.trim()
+        if (result.isEmpty() || result == "null" || result.startsWith("{") || result.startsWith("[")) return null
+        return listOf(result)
     }
 
     companion object {

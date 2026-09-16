@@ -998,7 +998,33 @@ class TNVTests {
     }
 
     @Test
-    fun `collectTxHashes should return null for unsupported methods`() {
+    fun `collectTxHashes should return the signature for eth_signTypedData_v4`() {
+        // Arrange
+        val rpcMethod = "eth_signTypedData_v4"
+        val rpcResult = "0x" + "ab".repeat(65)
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertEquals(listOf(rpcResult), result)
+    }
+
+    @Test
+    fun `collectTxHashes should return the signature for personal_sign`() {
+        // Arrange
+        val rpcMethod = "personal_sign"
+        val rpcResult = "0x" + "cd".repeat(65)
+
+        // Act
+        val result = TNV.collectTxHashes(rpcMethod, rpcResult)
+
+        // Assert
+        assertEquals(listOf(rpcResult), result)
+    }
+
+    @Test
+    fun `collectTxHashes should return plain string results for methods without a dedicated parser`() {
         // Arrange
         val rpcMethod = "unsupported_method"
         val rpcResult = "some_result"
@@ -1007,7 +1033,26 @@ class TNVTests {
         val result = TNV.collectTxHashes(rpcMethod, rpcResult)
 
         // Assert
-        assertNull(result)
+        assertEquals(listOf("some_result"), result)
+    }
+
+    @Test
+    fun `collectTxHashes should return null for structured results of methods without a dedicated parser`() {
+        // Arrange
+        val objectResult = """{"0x1":{"paymasterService":{"supported":true}}}"""
+        val arrayResult = """["0x1234567890abcdef1234567890abcdef12345678"]"""
+
+        // Act & Assert
+        assertNull(TNV.collectTxHashes("wallet_getCapabilities", objectResult))
+        assertNull(TNV.collectTxHashes("eth_requestAccounts", arrayResult))
+    }
+
+    @Test
+    fun `collectTxHashes should return null for empty or null results of methods without a dedicated parser`() {
+        // Act & Assert
+        assertNull(TNV.collectTxHashes("wallet_switchEthereumChain", "null"))
+        assertNull(TNV.collectTxHashes("wallet_switchEthereumChain", ""))
+        assertNull(TNV.collectTxHashes("wallet_switchEthereumChain", "   "))
     }
 
     @Test
