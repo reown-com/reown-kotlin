@@ -198,7 +198,7 @@ internal class TNV(private val moshi: Moshi) {
     }
 
     // Methods without a dedicated parser (eth_signTypedData_v4, personal_sign, ...) report their result
-    // as-is so signing volume stays attributable, matching the JS and Flutter SDKs.
+    // as-is so signing volume stays attributable.
     private fun collectRawResult(rpcResult: String): List<String>? =
         rpcResult.takeIf { it.isNotBlank() && it != "null" }?.let { listOf(it) }
 
