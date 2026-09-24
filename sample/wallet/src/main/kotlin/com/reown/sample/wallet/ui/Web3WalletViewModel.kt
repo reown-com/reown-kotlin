@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
+import java.net.URLDecoder
 
 class Web3WalletViewModel : ViewModel() {
     private val connectivityStateFlow: MutableStateFlow<ConnectionState> = MutableStateFlow(ConnectionState.Idle)
@@ -134,10 +135,12 @@ class Web3WalletViewModel : ViewModel() {
     }
 
     fun pair(pairingUri: String) {
-        val uri = pairingUri.removePrefix("kotlin-web3wallet://wc?uri=")
+        val isDeepLink = pairingUri.startsWith(DEEP_LINK_PREFIX)
+        val uri = pairingUri.removePrefix(DEEP_LINK_PREFIX)
         // Check if this is a payment link - use explicit API
         if (WalletKit.Pay.isPaymentLink(uri)) {
-            handlePaymentLink(uri)
+            // Deep links carry the payment link URL-encoded in the `uri` param; Pay expects the plain URL
+            handlePaymentLink(if (isDeepLink) URLDecoder.decode(uri, "UTF-8") else uri)
             return
         }
 
@@ -165,5 +168,9 @@ class Web3WalletViewModel : ViewModel() {
             // Navigate to payment route immediately — PaymentViewModel handles the fetch
             _paymentEventFlow.emit(paymentLink)
         }
+    }
+
+    private companion object {
+        const val DEEP_LINK_PREFIX = "kotlin-web3wallet://wc?uri="
     }
 }

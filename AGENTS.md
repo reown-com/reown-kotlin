@@ -100,7 +100,7 @@ The wallet sample has Maestro-based E2E tests for the WalletConnect Pay flow.
 **Prerequisites:**
 - [Maestro CLI](https://maestro.mobile.dev/) installed
 - Android emulator running
-- Wallet app built with `ENABLE_TEST_MODE=true` (enables the URL input field for test automation)
+- Wallet app built with `ENABLE_TEST_MODE=true` and `TEST_WALLET_PRIVATE_KEY` set (forces the funded test wallet account)
 
 **Setup:**
 
@@ -112,7 +112,7 @@ The wallet sample has Maestro-based E2E tests for the WalletConnect Pay flow.
 cp .env.maestro.example .env.maestro
 
 # 3. Build and install the wallet app with test mode enabled
-ENABLE_TEST_MODE=true ./gradlew :sample:wallet:assembleDebug
+ENABLE_TEST_MODE=true TEST_WALLET_PRIVATE_KEY=<key> ./gradlew :sample:wallet:assembleDebug
 adb install sample/wallet/build/outputs/apk/debug/*.apk
 ```
 
@@ -123,10 +123,12 @@ adb install sample/wallet/build/outputs/apk/debug/*.apk
 APP_ID=com.reown.sample.wallet.debug ./scripts/run-maestro-pay-tests.sh
 
 # Run a specific test file
-maestro test --env APP_ID=com.reown.sample.wallet.debug .maestro/pay_single_option_nokyc.yaml
+maestro test --env APP_ID=com.reown.sample.wallet.debug --env DEEPLINK_PREFIX='kotlin-web3wallet://wc?uri=' .maestro/pay_single_option_nokyc.yaml
 ```
 
-**`ENABLE_TEST_MODE`:** This env var controls whether the manual URL input field is shown in the scanner screen. It defaults to `false` so the field is hidden in all builds (debug, internal, release). Only CI E2E builds and local test runs should set it to `true`.
+**Payment link delivery:** The flows don't scan QR codes or type URLs. After launching the wallet they open `<DEEPLINK_PREFIX><url-encoded payment link>` with Maestro `openLink`. For this wallet the prefix is `kotlin-web3wallet://wc?uri=` (the `run-maestro-pay-tests.sh` default and what CI passes). `Web3WalletViewModel.pair()` URL-decodes the `uri` param and routes payment links to the Pay flow.
+
+**`ENABLE_TEST_MODE`:** This env var makes the wallet use the `TEST_WALLET_PRIVATE_KEY` account (the funded E2E wallet) instead of a generated one. It defaults to `false` for all builds (debug, internal, release). Only CI E2E builds and local test runs should set it to `true`.
 
 **USDT-on-Polygon Permit2 flow (`pay_usdt_polygon`):** USDT on Polygon is a plain ERC-20 (no EIP-3009/2612), so WC Pay uses the [Permit2](https://github.com/Uniswap/permit2) path — the wallet sends an `approve` (allowance) tx **and then** the payment tx. The flow best-effort observes the approve step via the `pay-loading-setup-note` testID, then asserts the success screen. It selects the option by its stable `pay-option-{assetSymbol}-{networkName}` testID (e.g. `pay-option-usdt-polygon`), which is additive to the order-dependent `pay-option-{index}`. (USDT on Arbitrum is EIP-3009 / signature-based and never needs an on-chain approve — Polygon is used precisely because it does.)
 

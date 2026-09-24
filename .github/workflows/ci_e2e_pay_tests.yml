@@ -82,13 +82,13 @@ jobs:
           # produce an inconsistent incremental APK whose dex is missing classes.
           ./gradlew clean :sample:wallet:assembleInternal --no-build-cache
 
-      # Pinned to WalletConnect/actions #109 merge (4be7c01 = removal of the Universal
-      # Link / deeplink pay flow), so pay_single_option_nokyc_deeplink is no longer copied.
+      # Pinned to WalletConnect/actions #114 (9a51b62): flows deliver the payment link via
+      # an `openLink` deep link (DEEPLINK_PREFIX) instead of typing it into a test input.
       - name: Copy Maestro Pay test flows
-        uses: WalletConnect/actions/maestro/pay-tests@4be7c0112f9651fc63b18c137650b75d2fc9b200
+        uses: WalletConnect/actions/maestro/pay-tests@9a51b62bcd63afde28865788de560da9f74b508b
 
       - name: Install Maestro
-        uses: WalletConnect/actions/maestro/setup@4be7c0112f9651fc63b18c137650b75d2fc9b200
+        uses: WalletConnect/actions/maestro/setup@9a51b62bcd63afde28865788de560da9f74b508b
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -168,7 +168,7 @@ jobs:
             # Persist it to a file and re-exit with it, otherwise a flow failure is
             # masked and the job goes green. (The `; echo $?` keeps this line itself
             # exit-0 so the error-log extraction below still runs.)
-            $HOME/.maestro/bin/maestro test --env APP_ID=com.reown.sample.wallet.internal --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" --include-tags pay --test-output-dir debug-artifacts/maestro-output .maestro/ ; echo "$?" > debug-artifacts/maestro-exit-code
+            $HOME/.maestro/bin/maestro test --env APP_ID=com.reown.sample.wallet.internal --env DEEPLINK_PREFIX='kotlin-web3wallet://wc?uri=' --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" --include-tags pay --test-output-dir debug-artifacts/maestro-output .maestro/ ; echo "$?" > debug-artifacts/maestro-exit-code
 
             # Extract error logs for easier debugging
             echo "Extracting error logs..."
@@ -205,7 +205,7 @@ jobs:
       - name: Reset USDT Permit2 allowance (Polygon)
         if: always()
         continue-on-error: true
-        uses: WalletConnect/actions/maestro/permit2-reset@4be7c0112f9651fc63b18c137650b75d2fc9b200
+        uses: WalletConnect/actions/maestro/permit2-reset@9a51b62bcd63afde28865788de560da9f74b508b
         with:
           chain-id: eip155:137
           # polygon-rpc.com is gated (HTTP 401 "tenant disabled") in CI; use publicnode.
