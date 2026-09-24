@@ -137,10 +137,12 @@ class Web3WalletViewModel : ViewModel() {
     fun pair(pairingUri: String) {
         val isDeepLink = pairingUri.startsWith(DEEP_LINK_PREFIX)
         val uri = pairingUri.removePrefix(DEEP_LINK_PREFIX)
+        // Deep links carry the link URL-encoded in the `uri` param; Pay expects the plain URL.
+        // WC pairing keeps the raw value since core decodes wc: URIs itself.
+        val decodedUri = if (isDeepLink) URLDecoder.decode(uri, "UTF-8") else uri
         // Check if this is a payment link - use explicit API
-        if (WalletKit.Pay.isPaymentLink(uri)) {
-            // Deep links carry the payment link URL-encoded in the `uri` param; Pay expects the plain URL
-            handlePaymentLink(if (isDeepLink) URLDecoder.decode(uri, "UTF-8") else uri)
+        if (WalletKit.Pay.isPaymentLink(decodedUri)) {
+            handlePaymentLink(decodedUri)
             return
         }
 
