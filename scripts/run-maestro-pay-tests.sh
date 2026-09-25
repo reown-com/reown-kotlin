@@ -41,7 +41,8 @@ resolve_maestro_path() {
 # Download pay test flows if not present.
 if ! ls "$MAESTRO_DIR"/pay_*.yaml >/dev/null 2>&1; then
   echo "Pay test flows not found. Downloading..."
-  "$SCRIPT_DIR/setup-maestro-pay-tests.sh" "${ACTIONS_BRANCH:-master}"
+  # Defaults to the setup script's pinned ref (matches CI) unless ACTIONS_BRANCH is set.
+  "$SCRIPT_DIR/setup-maestro-pay-tests.sh" ${ACTIONS_BRANCH:+"$ACTIONS_BRANCH"}
 fi
 
 if [ ! -f "$ENV_FILE" ]; then
@@ -80,9 +81,11 @@ if [ ${#MISSING[@]} -gt 0 ]; then
 fi
 
 APP_ID="${MAESTRO_APP_ID:-${APP_ID:-com.reown.sample.wallet.internal}}"
+DEEPLINK_PREFIX="${DEEPLINK_PREFIX:-kotlin-web3wallet://wc?uri=}"
 
 MAESTRO_ARGS=(
   --env "APP_ID=$APP_ID"
+  --env "DEEPLINK_PREFIX=$DEEPLINK_PREFIX"
   --env "WPAY_CUSTOMER_KEY_SINGLE_NOKYC=$WPAY_CUSTOMER_KEY_SINGLE_NOKYC"
   --env "WPAY_MERCHANT_ID_SINGLE_NOKYC=$WPAY_MERCHANT_ID_SINGLE_NOKYC"
   --env "WPAY_CUSTOMER_KEY_MULTI_NOKYC=$WPAY_CUSTOMER_KEY_MULTI_NOKYC"
@@ -108,6 +111,7 @@ done
 
 echo "Running Maestro Pay E2E tests..."
 echo "  App ID: $APP_ID"
+echo "  Deep link prefix: $DEEPLINK_PREFIX"
 echo "  Args: ${RESOLVED_ARGS[*]}"
 
 maestro test "${MAESTRO_ARGS[@]}" "${RESOLVED_ARGS[@]}"
