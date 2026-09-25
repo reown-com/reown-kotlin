@@ -1,13 +1,13 @@
 #!/bin/bash
 # Downloads shared WalletConnect Pay Maestro test flows from WalletConnect/actions repo.
 # Usage: ./scripts/setup-maestro-pay-tests.sh [ref]
-#   ref: actions repo branch/tag/commit to pull from (default: 9a51b62bcd63afde28865788de560da9f74b508b)
+#   ref: actions repo branch/tag/commit to pull from (default: 444774bdc9c5b9669068d4c4f501bb298f52f5db)
 
 set -euo pipefail
 
-# Pinned to WalletConnect/actions #114 (9a51b62): flows deliver the payment link via
+# Pinned to WalletConnect/actions #114 merge (444774b): flows deliver the payment link via
 # an `openLink` deep link (DEEPLINK_PREFIX) instead of typing it into a test input.
-REF="${1:-9a51b62bcd63afde28865788de560da9f74b508b}"
+REF="${1:-444774bdc9c5b9669068d4c4f501bb298f52f5db}"
 REPO="WalletConnect/actions"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
