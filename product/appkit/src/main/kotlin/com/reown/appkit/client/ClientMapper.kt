@@ -8,7 +8,10 @@ import com.reown.appkit.client.models.request.Request
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-internal fun Sign.Model.ApprovedSession.toModal() = Modal.Model.ApprovedSession.WalletConnectSession(topic, metaData, namespaces.toModal(), accounts)
+internal fun Sign.Model.ApprovedSession.toModal() =
+    Modal.Model.ApprovedSession.WalletConnectSession(topic, metaData, namespaces.toModal(), accounts, proposalRequestsResponses?.toModal())
+
+internal fun Sign.Model.ProposalRequestsResponses.toModal() = Modal.Model.ProposalRequestsResponses(authentication = authentication?.toClient())
 
 internal fun Map<String, Sign.Model.Namespace.Session>.toModal() =
     mapValues { (_, namespace) -> Modal.Model.Namespace.Session(namespace.chains, namespace.accounts, namespace.methods, namespace.events) }

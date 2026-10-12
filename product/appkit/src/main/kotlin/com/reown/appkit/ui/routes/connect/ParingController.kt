@@ -12,6 +12,7 @@ internal interface ParingController {
     fun connect(
         name: String, method: String,
         sessionParams: Modal.Params.SessionParams,
+        authPayloadParams: Modal.Model.AuthPayloadParams? = null,
         onSuccess: (uri: String) -> Unit,
         onError: (Throwable) -> Unit
     )
@@ -40,6 +41,7 @@ internal class PairingControllerImpl : ParingController {
     override fun connect(
         name: String, method: String,
         sessionParams: Modal.Params.SessionParams,
+        authPayloadParams: Modal.Model.AuthPayloadParams?,
         onSuccess: (uri: String) -> Unit,
         onError: (Throwable) -> Unit
     ) {
@@ -49,7 +51,8 @@ internal class PairingControllerImpl : ParingController {
                 sessionParams.optionalNamespaces,
                 sessionParams.properties,
                 sessionParams.scopedProperties,
-                pairing
+                pairing,
+                authentication = authPayloadParams?.let { listOf(it.toModel(pairing.topic)) }
             )
             appKitEngine.connectWC(
                 name = name, method = method,

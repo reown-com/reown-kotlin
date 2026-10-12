@@ -3,6 +3,7 @@ package com.reown.appkit.ui.routes.connect
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reown.android.internal.common.modal.data.model.Wallet
+import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pulse.domain.SendEventInterface
 import com.reown.android.pulse.model.ConnectionMethod
@@ -45,6 +46,7 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
     private val observeSelectedChainUseCase: ObserveSelectedChainUseCase = wcKoinApp.koin.get()
     private val appKitEngine: AppKitEngine = wcKoinApp.koin.get()
     private val sendEventUseCase: SendEventInterface = wcKoinApp.koin.get()
+    private val selfAppMetaData: AppMetaData = wcKoinApp.koin.get()
     private var sessionParams: Modal.Params.SessionParams = getSessionParamsSelectedChain()
     val selectedChain = observeSelectedChainUseCase().map { savedChainId ->
         AppKit.chains.find { it.id == savedChainId } ?: appKitEngine.getSelectedChainOrFirst()
@@ -160,11 +162,13 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
     }
 
     fun connectWalletConnect(name: String, method: String, linkMode: String?, onSuccess: (String) -> Unit) {
-        if (AppKit.authPayloadParams != null) {
+        val authPayloadParams = getAuthPayloadParams()
+        if (authPayloadParams != null && isLinkModeConnection(linkMode)) {
+            // Link Mode delivers wc_sessionAuthenticate over an app link (no relay), so it stays on the authenticate flow
             authenticate(
                 name, method,
                 walletAppLink = linkMode,
-                authParams = if (AppKit.selectedChain != null) AppKit.authPayloadParams!!.copy(chains = listOf(AppKit.selectedChain!!.id)) else AppKit.authPayloadParams!!,
+                authParams = authPayloadParams,
                 onSuccess = { onSuccess(it) },
                 onError = {
                     sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.CONNECT_ERROR, Properties(message = it.message ?: "Relay error while connecting")))
@@ -176,6 +180,7 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
             connect(
                 name, method,
                 sessionParams = sessionParams,
+                authPayloadParams = authPayloadParams,
                 onSuccess = onSuccess,
                 onError = {
                     sendEventUseCase.send(Props(EventType.TRACK, EventType.Track.CONNECT_ERROR, Properties(message = it.message ?: "Relay error while connecting")))
@@ -185,6 +190,14 @@ internal class ConnectViewModel : ViewModel(), Navigator by NavigatorImpl(), Par
             )
         }
     }
+
+    private fun getAuthPayloadParams(): Modal.Model.AuthPayloadParams? =
+        AppKit.authPayloadParams?.let { params ->
+            AppKit.selectedChain?.let { chain -> params.copy(chains = listOf(chain.id)) } ?: params
+        }
+
+    private fun isLinkModeConnection(linkMode: String?): Boolean =
+        !linkMode.isNullOrEmpty() && selfAppMetaData.redirect?.linkMode == true
 
     fun connectCoinbase(onSuccess: () -> Unit = {}) {
         appKitEngine.connectCoinbase(
