@@ -12,7 +12,10 @@ class DatabaseConfig(private val storagePrefix: String = String.Empty) {
     val SIGN_SDK_DB_NAME
         get() = storagePrefix + "WalletConnectV2.db"
 
-    val dbNames: List<String> = listOf(ANDROID_CORE_DB_NAME, SIGN_SDK_DB_NAME)
+    val NOTIFY_SDK_DB_NAME
+        get() = storagePrefix + "WalletConnectV2_notify.db"
+
+    val dbNames: List<String> = listOf(ANDROID_CORE_DB_NAME, SIGN_SDK_DB_NAME, NOTIFY_SDK_DB_NAME)
 }
 
 fun Scope.deleteDatabase(dbName: String) {
