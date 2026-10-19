@@ -10,13 +10,10 @@ import com.reown.android.internal.common.di.coreCommonModule
 import com.reown.android.internal.common.di.coreCryptoModule
 import com.reown.android.internal.common.di.coreJsonRpcModule
 import com.reown.android.internal.common.di.corePairingModule
-import com.reown.android.internal.common.di.explorerModule
 import com.reown.android.internal.common.di.keyServerModule
 import com.reown.android.internal.common.di.pulseModule
 import com.reown.android.internal.common.di.pushModule
 import com.reown.android.internal.common.di.appKitModule
-import com.reown.android.internal.common.explorer.ExplorerInterface
-import com.reown.android.internal.common.explorer.ExplorerProtocol
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.model.Redirect
@@ -51,7 +48,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
     override val Echo: PushInterface = PushClient
     override val Push: PushInterface = PushClient
     override val Verify: VerifyInterface = VerifyClient(koinApp)
-    override val Explorer: ExplorerInterface = ExplorerProtocol(koinApp)
 
     init {
         plantTimber()
@@ -180,7 +176,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 coreJsonRpcModule(),
                 corePairingModule(Pairing, PairingController),
                 keyServerModule(keyServerUrl),
-                explorerModule(),
                 appKitModule(),
                 pulseModule(packageName)
             )

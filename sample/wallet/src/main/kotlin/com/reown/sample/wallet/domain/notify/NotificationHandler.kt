@@ -7,23 +7,15 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
-import androidx.core.graphics.drawable.toBitmap
-import coil.ImageLoader
-import coil.request.ImageRequest
 import com.reown.android.Core
-import com.reown.notify.client.Notify
-import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.R
-import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.ui.WalletKitActivity
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -34,12 +26,7 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import timber.log.Timber
-import java.net.URI
 import kotlin.collections.iterator
 
 object NotificationHandler {
@@ -54,10 +41,6 @@ object NotificationHandler {
         val body: String
 
         data class Simple(override val messageId: Int, override val channelId: String, override val title: String, override val body: String) : Notification
-
-        data class Decrypted(
-            override val messageId: Int, override val channelId: String, override val title: String, override val body: String, val topic: String, val url: String?,
-        ) : Notification //Notify
 
         data class SessionProposal(
             override val messageId: Int,
@@ -93,8 +76,6 @@ object NotificationHandler {
         ) : Notification
     }
 
-    private data class NotificationsWithMetadata(val notifications: List<Notification>, val channelName: String, val iconUrl: String?)
-
     private fun <T, R> Flow<T>.bufferWithDebounce(debounceMillis: Long, transform: (List<T>) -> R): Flow<R> = channelFlow {
         val buffer = mutableListOf<T>()
 
@@ -111,40 +92,14 @@ object NotificationHandler {
     private fun Flow<Notification>.debounceUniqueAndGroupByChannelId(debounceMillis: Long): Flow<Map<String, List<Notification>>> = this.buffer()
         .bufferWithDebounce(debounceMillis) { notifications -> notifications.distinctBy { it.messageId }.groupBy { it.channelId } }
 
-    private fun Flow<Map<String, List<Notification>>>.addChannelName(): Flow<Map<String, NotificationsWithMetadata>> = this.map { notificationsMap ->
-        notificationsMap.mapValues { (channelId, notifications) ->
-            val (channelName: String, iconUrl: String?) = if (channelId == W3W_CHANNEL_ID) channelId to null else runCatching {
-                val topic = (notifications.first() as Notification.Decrypted).topic
-
-                // TODO discus with the team how to make it more dev friendly
-                val appMetadata = NotifyClient.getActiveSubscriptions(Notify.Params.GetActiveSubscriptions(EthAccountDelegate.ethAccount))[topic]?.metadata
-                    ?: throw IllegalStateException("No active subscription for topic: $topic")
-
-                val appDomain = URI(appMetadata.url).host
-                    ?: throw IllegalStateException("Unable to parse domain from $appMetadata.url")
-
-                val notificationType = NotifyClient.getNotificationTypes(Notify.Params.GetNotificationTypes(appDomain))[channelId]
-                    ?: throw IllegalStateException("No notification type for topic:${topic} and type: $channelId")
-
-                (appMetadata.name + ": " + notificationType.name) to (notificationType.iconUrl ?: appMetadata.icons.firstOrNull())
-            }.getOrElse {
-                Timber.e(it)
-                channelId to null
-            }
-            NotificationsWithMetadata(notifications, channelName, iconUrl)
-        }
-    }
-
-    private fun Flow<Map<String, NotificationsWithMetadata>>.buildAndShowNotification(context: Context, notificationIntervalMillis: Long): Flow<Map<String, NotificationsWithMetadata>> = this
+    private fun Flow<Map<String, List<Notification>>>.buildAndShowNotification(context: Context, notificationIntervalMillis: Long): Flow<Map<String, List<Notification>>> = this
         .onEach { notificationsMap ->
             val notificationManager by lazy { context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
             val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-            for ((channelId, notificationsWithChannelName) in notificationsMap) {
-                val (notifications, channelName, largeIconUrl) = notificationsWithChannelName
-
+            for ((channelId, notifications) in notificationsMap) {
                 val (messageId, title, body) = if (notifications.size > 1) {
-                    Triple(notifications.hashCode(), " ${notifications.size} $channelName notifications", notifications.reversed().joinToString(separator = "\n") { it.title })
+                    Triple(notifications.hashCode(), " ${notifications.size} $channelId notifications", notifications.reversed().joinToString(separator = "\n") { it.title })
                 } else {
                     val notification = notifications.first()
                     Triple(notification.messageId, notification.title, notification.body)
@@ -158,13 +113,12 @@ object NotificationHandler {
                     pendingIntent = pendingIntent,
                     notificationId = messageId,
                     channelId = channelId,
-                    channelName = channelName,
+                    channelName = channelId,
                     title = title,
                     body = body,
                     importance = NotificationManager.IMPORTANCE_HIGH,
                     defaultSoundUri = defaultSoundUri,
                     smallIcon = R.drawable.ic_walletconnect_logo,
-                    largeIconUrl = largeIconUrl,
                     autoCancel = true,
                 )
 
@@ -179,52 +133,28 @@ object NotificationHandler {
 
     private fun showNotification(
         context: Context, notificationManager: NotificationManager, pendingIntent: PendingIntent, notificationId: Int, channelId: String, channelName: String, title: String, body: String,
-        importance: Int, defaultSoundUri: Uri, @DrawableRes smallIcon: Int, largeIconUrl: String?, autoCancel: Boolean,
+        importance: Int, defaultSoundUri: Uri, @DrawableRes smallIcon: Int, autoCancel: Boolean,
     ) {
-        suspend fun fetchBitmapFromUrl(): Bitmap? {
-            if (largeIconUrl == null) return null
-            val imageLoader = ImageLoader(context)
-            val request = ImageRequest.Builder(context)
-                .data(largeIconUrl)
-                .build()
+        val notificationBuilder = NotificationCompat.Builder(context, channelId)
+            .setContentTitle(title)
+            .setSmallIcon(smallIcon)
+            .setContentText(body)
+            .setAutoCancel(autoCancel)
+            .setSound(defaultSoundUri)
+            .setContentIntent(pendingIntent)
 
-            val drawable = imageLoader.execute(request).drawable
-            return drawable?.toBitmap()
+        // Since android Oreo notification channel is needed.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, channelName, importance)
+            notificationManager.createNotificationChannel(channel)
         }
 
-        fun createNotificationAndNotify(bitmap: Bitmap?) {
-
-            val notificationBuilder = NotificationCompat.Builder(context, channelId)
-                .setContentTitle(title)
-                .setSmallIcon(smallIcon)
-                .setContentText(body)
-                .setAutoCancel(autoCancel)
-                .setSound(defaultSoundUri)
-                .setContentIntent(pendingIntent)
-
-            if (bitmap != null) notificationBuilder.setLargeIcon(bitmap)
-
-            // Since android Oreo notification channel is needed.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val channel = NotificationChannel(channelId, channelName, importance)
-                notificationManager.createNotificationChannel(channel)
-            }
-
-            notificationManager.notify(notificationId, notificationBuilder.build())
-        }
-
-        CoroutineScope(Dispatchers.IO).launch {
-            val bitmap = fetchBitmapFromUrl()
-            withContext(Dispatchers.Main) {
-                createNotificationAndNotify(bitmap)
-            }
-        }
+        notificationManager.notify(notificationId, notificationBuilder.build())
     }
 
     suspend fun addNotification(message: Core.Model.Message) {
         val notification = when (message) {
             is Core.Model.Message.Simple -> Notification.Simple(message.hashCode(), W3W_CHANNEL_ID, message.title, message.body)
-            is Core.Model.Message.Notify -> Notification.Decrypted(message.hashCode(), message.type, message.title, message.body, message.topic, message.url)
             is Core.Model.Message.SessionRequest -> Notification.SessionRequest(
                 message.hashCode(),
                 W3W_CHANNEL_ID,
@@ -262,23 +192,9 @@ object NotificationHandler {
     }
 
 
-    suspend fun addNotification(notificationRecord: Notify.Model.NotificationRecord) {
-        val notifyNotification = notificationRecord.notification
-        val id = notificationRecord.id.hashCode()
-
-        val notification = if (notifyNotification is Notify.Model.Notification.Decrypted) {
-            with(notifyNotification) { Notification.Decrypted(id, type, title, body, topic, url) }
-        } else {
-            with(notifyNotification) { Notification.Simple(id, W3W_CHANNEL_ID, title, body) }
-        }
-
-        _notificationsFlow.emit(notification)
-    }
-
     fun startNotificationDisplayingJob(scope: CoroutineScope, context: Context): Job {
         return _notificationsFlow
             .debounceUniqueAndGroupByChannelId(2000)
-            .addChannelName()
             .buildAndShowNotification(context, 5000)
             .launchIn(scope)
     }
