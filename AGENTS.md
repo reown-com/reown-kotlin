@@ -36,8 +36,7 @@ reown-kotlin/
 │   ├── modal/               # Shared modal UI components
 │   └── bom/                 # Bill of Materials for version management
 ├── protocol/
-│   ├── sign/                # WalletConnect Sign protocol implementation
-│   └── notify/              # Notification protocol implementation
+│   └── sign/                # WalletConnect Sign protocol implementation
 ├── product/
 │   ├── walletkit/           # High-level wallet SDK
 │   ├── appkit/              # High-level dApp SDK with Compose UI
@@ -172,7 +171,6 @@ The SDK follows a four-layer architecture where each layer depends only on layer
 ├─────────────────────────────────────────────────────────┤
 │  PROTOCOL LAYER                                         │
 │  protocol/sign/      - WalletConnect Sign protocol      │
-│  protocol/notify/    - Notification protocol            │
 ├─────────────────────────────────────────────────────────┤
 │  CORE LAYER                                             │
 │  core/android/       - Android core (relay, pairing)    │
@@ -215,14 +213,13 @@ internal class FeatureUseCase(...) : FeatureUseCaseInterface {
 }
 ```
 
-**Repository Pattern**: SQLDelight-backed repositories for persistence (sessions, proposals, notifications).
+**Repository Pattern**: SQLDelight-backed repositories for persistence (sessions, proposals).
 
 ### Database Schema
 
 SQLDelight databases with compile-time schema verification:
 - `AndroidCoreDatabase` in core/android
 - `SignDatabase` in protocol/sign
-- `NotifyDatabase` in protocol/notify
 
 Migrations are strictly validated. Schema files are in `src/main/sqldelight/`.
 
@@ -292,7 +289,6 @@ Version catalog for dependencies: `gradle/libs.versions.toml`
 | Foundation | com.reown | foundation |
 | Core | com.reown | android-core |
 | Sign | com.reown | sign |
-| Notify | com.reown | notify |
 | WalletKit | com.reown | walletkit |
 | AppKit | com.reown | appkit |
 | Modal Core | com.reown | modal-core |

@@ -11,7 +11,6 @@ The Reown Kotlin SDK is a comprehensive mobile development kit that enables bloc
 
 - **Wallet Implementation**: Manage crypto accounts and transactions
 - **Sign Protocol**: Secure connection between wallets and dApps
-- **Notify Protocol**: Blockchain-related notifications
 - **Chain Abstraction**: Simplified cross-chain transactions
 - **Authentication**: Wallet verification mechanisms
 
@@ -19,7 +18,7 @@ The Reown Kotlin SDK is a comprehensive mobile development kit that enables bloc
 
 - **WalletKit**: SDK for building wallet applications with full blockchain capabilities
 - **AppKit**: SDK for building dApps that connect to wallets
-- **Protocol Layer**: Implementations of Sign, Notify, and Auth protocols
+- **Protocol Layer**: Implementation of the Sign protocol
 
 ## Project Structure
 
@@ -35,7 +34,6 @@ The Reown Kotlin SDK is organized as a modular system with several layers:
 
 3. **Protocol Layer**: Protocol-specific implementations
    - `protocol/sign/`: Implementation of the WalletConnect Sign protocol
-   - `protocol/notify/`: Implementation of the WalletConnect Notify protocol
 
 4. **Product Layer**: High-level SDK features
    - `product/walletkit/`: SDK for building wallet applications

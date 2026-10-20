@@ -15,8 +15,6 @@ import com.reown.android.internal.common.di.AndroidCommonDITags
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.relay.ConnectionType
 import com.reown.foundation.util.Logger
-import com.reown.notify.client.Notify
-import com.reown.notify.client.NotifyClient
 import com.reown.sample.wallet.domain.StacksAccountDelegate
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.ThemeManager
@@ -30,7 +28,6 @@ import com.reown.sample.wallet.domain.client.TONClient
 import com.reown.sample.wallet.domain.account.SuiAccountDelegate
 import com.reown.sample.wallet.domain.mixPanel
 import com.reown.sample.wallet.domain.notify.NotificationHandler
-import com.reown.sample.wallet.domain.notify.NotifyDelegate
 import com.reown.sample.wallet.ui.state.ConnectionState
 import com.reown.sample.wallet.ui.state.connectionStateFlow
 import com.reown.walletkit.client.Wallet
@@ -39,9 +36,6 @@ import com.reown.sample.wallet.domain.client.SuiUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import org.koin.core.qualifier.named
@@ -106,13 +100,6 @@ class WalletKitApplication : Application() {
                 println(error.throwable.stackTraceToString())
             })
 
-        NotifyClient.initialize(
-            init = Notify.Params.Init(CoreClient)
-        ) { error ->
-            Firebase.crashlytics.recordException(error.throwable)
-            println(error.throwable.stackTraceToString())
-        }
-
         mixPanel = MixpanelAPI.getInstance(this, CommonBuildConfig.MIX_PANEL, true).apply {
             identify(CoreClient.Push.clientId)
             people.set("\$name", EthAccountDelegate.ethAccount)
@@ -144,7 +131,7 @@ class WalletKitApplication : Application() {
                     }
                 })
 
-                handleNotifyMessages()
+                startNotificationDisplayingJob()
             }
         }
     }
@@ -168,23 +155,10 @@ class WalletKitApplication : Application() {
     }
 
 
-    private fun handleNotifyMessages() {
+    private fun startNotificationDisplayingJob() {
         val scope = CoroutineScope(Dispatchers.Default)
 
-        val notifyEventsJob = NotifyDelegate.notifyEvents
-            .filterIsInstance<Notify.Event.Notification>()
-            .onEach { notification -> NotificationHandler.addNotification(notification.notification) }
-            .launchIn(scope)
-
-
-        val notificationDisplayingJob = NotificationHandler.startNotificationDisplayingJob(scope, this)
-
-
-        notifyEventsJob.invokeOnCompletion { cause ->
-            onScopeCancelled(cause, "notifyEventsJob")
-        }
-
-        notificationDisplayingJob.invokeOnCompletion { cause ->
+        NotificationHandler.startNotificationDisplayingJob(scope, this).invokeOnCompletion { cause ->
             onScopeCancelled(cause, "notificationDisplayingJob")
         }
     }

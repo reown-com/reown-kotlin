@@ -4,23 +4,22 @@ import android.app.Application
 import android.content.SharedPreferences
 import com.reown.android.di.coreStorageModule
 import com.reown.android.internal.common.di.AndroidCommonDITags
+import com.reown.android.internal.common.di.DatabaseConfig
 import com.reown.android.internal.common.di.KEY_CLIENT_ID
 import com.reown.android.internal.common.di.coreAndroidNetworkModule
 import com.reown.android.internal.common.di.coreCommonModule
 import com.reown.android.internal.common.di.coreCryptoModule
 import com.reown.android.internal.common.di.coreJsonRpcModule
 import com.reown.android.internal.common.di.corePairingModule
-import com.reown.android.internal.common.di.explorerModule
 import com.reown.android.internal.common.di.keyServerModule
 import com.reown.android.internal.common.di.pulseModule
 import com.reown.android.internal.common.di.pushModule
 import com.reown.android.internal.common.di.appKitModule
-import com.reown.android.internal.common.explorer.ExplorerInterface
-import com.reown.android.internal.common.explorer.ExplorerProtocol
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.ProjectId
 import com.reown.android.internal.common.model.Redirect
 import com.reown.android.internal.common.model.TelemetryEnabled
+import com.reown.android.internal.common.scope
 import com.reown.android.internal.common.wcKoinApp
 import com.reown.android.pairing.client.PairingInterface
 import com.reown.android.pairing.client.PairingProtocol
@@ -37,6 +36,7 @@ import com.reown.android.utils.plantTimber
 import com.reown.android.utils.projectId
 import com.reown.android.verify.client.VerifyClient
 import com.reown.android.verify.client.VerifyInterface
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.KoinApplication
 import org.koin.core.qualifier.named
@@ -51,7 +51,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
     override val Echo: PushInterface = PushClient
     override val Push: PushInterface = PushClient
     override val Verify: VerifyInterface = VerifyClient(koinApp)
-    override val Explorer: ExplorerInterface = ExplorerProtocol(koinApp)
 
     init {
         plantTimber()
@@ -180,7 +179,6 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
                 coreJsonRpcModule(),
                 corePairingModule(Pairing, PairingController),
                 keyServerModule(keyServerUrl),
-                explorerModule(),
                 appKitModule(),
                 pulseModule(packageName)
             )
@@ -189,5 +187,11 @@ class CoreProtocol(private val koinApp: KoinApplication = wcKoinApp) : CoreInter
         Pairing.initialize()
         PairingController.initialize()
         Verify.initialize()
+        deleteNotifyDatabase(application)
+    }
+
+    private fun deleteNotifyDatabase(application: Application) {
+        val notifyDbName = koinApp.koin.get<DatabaseConfig>().NOTIFY_SDK_DB_NAME
+        scope.launch { application.deleteDatabase(notifyDbName) }
     }
 }

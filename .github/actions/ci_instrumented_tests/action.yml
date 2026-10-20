@@ -11,12 +11,6 @@ inputs:
   projectId:
     description: 'WalletConnect projectId'
     required: true
-  notifyProjectId:
-    description: 'GM Dapp projectId'
-    required: false
-  notifySecret:
-    description: 'GM Dapp secret'
-    required: false
   testTimeoutSeconds:
     description: 'Seconds for test timeout'
     default: '120'
@@ -48,8 +42,6 @@ runs:
       env:
         WC_CLOUD_PROJECT_ID: ${{ inputs.projectId}}
         TEST_TIMEOUT_SECONDS: ${{ inputs.testTimeoutSeconds }}
-        NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ inputs.notifyProjectId }}
-        NOTIFY_INTEGRATION_TESTS_SECRET: ${{ inputs.notifySecret }}
         TEST_WALLET_PRIVATE_KEY: ${{ inputs.walletPrivateKey }}
         MERCHANT_API_KEY: ${{ inputs.merchantApiKey }}
         MERCHANT_ID: ${{ inputs.merchantId }}

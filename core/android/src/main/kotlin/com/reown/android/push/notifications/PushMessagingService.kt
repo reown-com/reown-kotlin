@@ -32,7 +32,6 @@ abstract class PushMessagingService : FirebaseMessagingService() {
                 when {
                     isLegacyNotification() -> {
                         when (MessageFlags.findMessageFlag(data.getValue(KEY_FLAGS))) {
-                            MessageFlags.ENCRYPTED -> decryptNotification(Tags.NOTIFY_MESSAGE.id.toString(), data.getValue(KEY_BLOB))
                             MessageFlags.CHAT, MessageFlags.NOTIFY, MessageFlags.SIGN, MessageFlags.AUTH -> prepareSimpleNotification()
                         }
                     }
@@ -101,8 +100,7 @@ abstract class PushMessagingService : FirebaseMessagingService() {
         SIGN(1 shl 1),
         AUTH(1 shl 2),
         CHAT(1 shl 3),
-        NOTIFY(1 shl 4),
-        ENCRYPTED((NOTIFY.value) + (1 shl 0));
+        NOTIFY(1 shl 4);
 
         // function that takes a string, converts it to an int, and returns the enum value
         companion object {

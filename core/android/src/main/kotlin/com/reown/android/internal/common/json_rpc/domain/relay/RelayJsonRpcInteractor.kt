@@ -17,7 +17,6 @@ import com.reown.android.internal.common.model.SDKError
 import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.WCRequest
 import com.reown.android.internal.common.model.WCResponse
-import com.reown.android.internal.common.model.params.ChatNotifyResponseAuthParams
 import com.reown.android.internal.common.model.params.CoreSignParams
 import com.reown.android.internal.common.model.sync.ClientJsonRpc
 import com.reown.android.internal.common.model.type.ClientParams
@@ -526,7 +525,7 @@ internal class RelayJsonRpcInteractor(
         serializer.tryDeserialize<ClientJsonRpc>(subscription.decryptedMessage)?.let { clientJsonRpc ->
             handleRequest(clientJsonRpc, subscription)
         } ?: serializer.tryDeserialize<JsonRpcResponse.JsonRpcResult>(subscription.decryptedMessage)?.let { result ->
-            handleJsonRpcResult(result, subscription.topic)
+            handleJsonRpcResult(result)
         } ?: serializer.tryDeserialize<JsonRpcResponse.JsonRpcError>(subscription.decryptedMessage)?.let { error ->
             handleJsonRpcError(error)
         } ?: handleError("JsonRpcInteractor: Received unknown object type")
@@ -547,7 +546,7 @@ internal class RelayJsonRpcInteractor(
         }
     }
 
-    private suspend fun handleJsonRpcResult(jsonRpcResult: JsonRpcResponse.JsonRpcResult, topic: Topic) {
+    private suspend fun handleJsonRpcResult(jsonRpcResult: JsonRpcResponse.JsonRpcResult) {
         val serializedResult = serializer.serialize(jsonRpcResult) ?: return handleError("JsonRpcInteractor: Unknown result params")
         val jsonRpcRecord = jsonRpcHistory.updateRequestWithResponse(jsonRpcResult.id, serializedResult)
 
@@ -556,22 +555,7 @@ internal class RelayJsonRpcInteractor(
                 val responseVO = JsonRpcResponse.JsonRpcResult(jsonRpcResult.id, result = jsonRpcResult.result)
                 _peerResponse.emit(jsonRpcRecord.toWCResponse(responseVO, params))
             } ?: handleError("JsonRpcInteractor: Unknown result params")
-        } else {
-            handleJsonRpcResponsesWithoutStoredRequest(jsonRpcResult, topic)
         }
-    }
-
-    private suspend fun handleJsonRpcResponsesWithoutStoredRequest(jsonRpcResult: JsonRpcResponse.JsonRpcResult, topic: Topic) {
-        // todo: HANDLE DUPLICATES! maybe store results to check for duplicates????? https://github.com/WalletConnect/WalletConnectKotlinV2/issues/871
-        //  Currently it's engine/usecase responsibility to handle duplicate responses
-        if (jsonRpcResult.result is ChatNotifyResponseAuthParams.ResponseAuth) _peerResponse.emit(
-            WCResponse(
-                topic,
-                String.Empty,
-                jsonRpcResult,
-                jsonRpcResult.result
-            )
-        )
     }
 
     private suspend fun handleJsonRpcError(jsonRpcError: JsonRpcResponse.JsonRpcError) {
