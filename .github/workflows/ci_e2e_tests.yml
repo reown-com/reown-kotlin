@@ -120,7 +120,12 @@ jobs:
           maestro --version
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+        uses: android-actions/setup-android@v3
+        with:
+          # Override the action's default `packages` ("tools platform-tools").
+          # Google removed the deprecated `tools` package from the SDK repo, so
+          # `sdkmanager tools` now fails with "Failed to find package 'tools'".
+          packages: platform-tools
 
       - name: Start Android Emulator and Run Tests
         uses: reactivecircus/android-emulator-runner@v2

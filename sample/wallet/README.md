@@ -34,11 +34,13 @@ Maestro-based E2E tests for the WalletConnect Pay flow.
 3. **Build and install the wallet app** with test mode enabled:
 
    ```bash
-   ENABLE_TEST_MODE=true ./gradlew :sample:wallet:assembleDebug
+   ENABLE_TEST_MODE=true TEST_WALLET_PRIVATE_KEY=<key> ./gradlew :sample:wallet:assembleDebug
    adb install sample/wallet/build/outputs/apk/debug/*.apk
    ```
 
-   > **Note:** `ENABLE_TEST_MODE=true` enables a URL input field in the scanner screen so Maestro can paste payment URLs (since there's no camera on the emulator). This is `false` by default, so the field is hidden in all regular builds including Firebase distribution.
+   > **Note:** `ENABLE_TEST_MODE=true` makes the wallet use the `TEST_WALLET_PRIVATE_KEY` account (the funded E2E test wallet). It is `false` by default in all regular builds, including Firebase distribution.
+   >
+   > The flows open each payment link as a deep link, `kotlin-web3wallet://wc?uri=<url-encoded payment link>`, instead of scanning a QR code. `run-maestro-pay-tests.sh` passes this as `DEEPLINK_PREFIX`; override it with the `DEEPLINK_PREFIX` env var if needed.
 
 ### Running tests
 
@@ -51,7 +53,7 @@ APP_ID=com.reown.sample.wallet.debug ./scripts/run-maestro-pay-tests.sh
 Run a specific test:
 
 ```bash
-maestro test --env APP_ID=com.reown.sample.wallet.debug .maestro/pay_single_option_nokyc.yaml
+maestro test --env APP_ID=com.reown.sample.wallet.debug --env DEEPLINK_PREFIX='kotlin-web3wallet://wc?uri=' .maestro/pay_single_option_nokyc.yaml
 ```
 
 ### Available test flows
