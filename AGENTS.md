@@ -134,11 +134,11 @@ maestro test --env APP_ID=com.reown.sample.wallet.debug --env DEEPLINK_PREFIX='k
 
 After the suite, `ci_e2e_pay_tests.yml` calls the shared `WalletConnect/actions/maestro/permit2-reset` action to reset the USDT Permit2 allowance back to 0 so each run re-exercises `approve` (it signs a tx, so it's a Node step, not a Maestro `runScript`; the key goes via env, never the CLI). `e2e_balance_check.yml` also monitors USDT + POL (gas) on Polygon and pings the faucet bot on Slack when low. The test wallet must hold USDT **and** a little POL (gas) on Polygon.
 
-**CI test wallet:** CI doesn't store a private key. `.github/actions/derive-e2e-wallet` derives this repo's account (`m/44'/60'/0'/0/3`) from the `TEST_WALLET_MNEMONIC` secret, which the other SDK repos share. Each repo/leg has its own index, so no other repo's Permit2 reset or nonce races with this suite. The derived key is passed to the build as `TEST_WALLET_PRIVATE_KEY`, and the job fails if the address doesn't match the `TEST_WALLET_ADDRESS` repo variable. The job runs in the `e2e-wallet-kotlin` concurrency group, so runs from different refs queue instead of paying from the wallet at the same time. To set or rotate the wallet (keep `--mnemonic-index` in sync with `index` in `ci_e2e_pay_tests.yml`):
+**CI test wallet:** CI doesn't store a private key. `.github/actions/derive-e2e-wallet` derives this repo's account (`m/44'/60'/0'/0/3`) from the `TEST_WALLET_MNEMONIC` secret, which the other SDK repos share. Each repo/leg has its own index, so no other repo's Permit2 reset or nonce races with this suite. The derived key is passed to the build as `TEST_WALLET_PRIVATE_KEY`, and the job fails if the address doesn't match the `TEST_WALLET_ADDRESS_ANDROID` repo variable. The job runs in the `e2e-wallet-kotlin` concurrency group, so runs from different refs queue instead of paying from the wallet at the same time. To set or rotate the wallet (keep `--mnemonic-index` in sync with `index` in `ci_e2e_pay_tests.yml`):
 
 ```bash
 gh secret set TEST_WALLET_MNEMONIC -R reown-com/reown-kotlin < mnemonic.txt
-gh variable set TEST_WALLET_ADDRESS -R reown-com/reown-kotlin \
+gh variable set TEST_WALLET_ADDRESS_ANDROID -R reown-com/reown-kotlin \
   --body "$(cast wallet address --mnemonic mnemonic.txt --mnemonic-index 3)"
 ```
 

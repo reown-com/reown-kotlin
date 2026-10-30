@@ -15,8 +15,9 @@ inputs:
     required: true
   expected-address:
     description: >-
-      The funded address for this index (vars.TEST_WALLET_ADDRESS). When set, a
-      mismatch fails the job instead of running against an unfunded account.
+      The funded address for this index (vars.TEST_WALLET_ADDRESS_ANDROID). When
+      set, a mismatch fails the job instead of running against an unfunded
+      account.
     required: false
     default: ''
 outputs:
@@ -61,7 +62,7 @@ runs:
         ADDRESS="$(cast wallet address --mnemonic "$MNEMONIC_FILE" --mnemonic-derivation-path "$DERIVATION_PATH")"
         lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
         if [ -n "$EXPECTED_ADDRESS" ] && [ "$(lower "$ADDRESS")" != "$(lower "$EXPECTED_ADDRESS")" ]; then
-          echo "::error::Derived $ADDRESS at $DERIVATION_PATH, expected $EXPECTED_ADDRESS. Check the TEST_WALLET_MNEMONIC secret and the TEST_WALLET_ADDRESS variable."
+          echo "::error::Derived $ADDRESS at $DERIVATION_PATH, expected $EXPECTED_ADDRESS. Check the TEST_WALLET_MNEMONIC secret and the TEST_WALLET_ADDRESS_ANDROID variable."
           exit 1
         fi
         echo "private-key=$PRIVATE_KEY" >> "$GITHUB_OUTPUT"

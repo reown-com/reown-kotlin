@@ -53,7 +53,7 @@ jobs:
         with:
           mnemonic: ${{ secrets.TEST_WALLET_MNEMONIC }}
           index: 3
-          expected-address: ${{ vars.TEST_WALLET_ADDRESS }}
+          expected-address: ${{ vars.TEST_WALLET_ADDRESS_ANDROID }}
 
       - name: Enable KVM
         run: |
