@@ -172,8 +172,6 @@ jobs:
             debug-artifacts/maestro-output/**/*.gif
             debug-artifacts/maestro-output.log
             debug-artifacts/junit-attempt-*.xml
-            debug-artifacts/maestro-debug/**/maestro.log
-            debug-artifacts/maestro-debug/**/commands-*.json
             debug-artifacts/android-logcat*.log
           if-no-files-found: warn
 
