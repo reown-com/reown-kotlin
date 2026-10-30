@@ -8,8 +8,8 @@
 #   APP_ID, DEEPLINK_PREFIX, WPAY_*   passed to the flows as --env
 #   ARTIFACTS_DIR                     output root (default: debug-artifacts)
 # Writes <ARTIFACTS_DIR>/maestro-output-attempt-<n>.log (streamed live),
-# maestro-output.log, junit-attempt-<n>.xml, maestro-output/attempt-<n>/ and
-# maestro-debug/attempt-<n>/. Exits with Maestro's exit code.
+# maestro-output.log, junit-attempt-<n>.xml and maestro-output/attempt-<n>/.
+# Exits with Maestro's exit code.
 
 LABEL="${1:?usage: maestro-suite.sh <label>}"
 ARTIFACTS_DIR="${ARTIFACTS_DIR:-debug-artifacts}"
@@ -42,7 +42,6 @@ for attempt in 1 2; do
     "${TAG_ARGS[@]}" \
     --format junit --output "$JUNIT" \
     --test-output-dir "$ARTIFACTS_DIR/maestro-output/attempt-${attempt}" \
-    --debug-output "$ARTIFACTS_DIR/maestro-debug/attempt-${attempt}" \
     "${FLOW_ARGS[@]}" 2>&1 | tee "$ARTIFACTS_DIR/maestro-output-attempt-${attempt}.log"
   # Streamed live (tee) so a hung run still shows its progress in the log.
   maestro_exit_code=${PIPESTATUS[0]}

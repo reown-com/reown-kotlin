@@ -144,7 +144,7 @@ gh variable set TEST_WALLET_ADDRESS_ANDROID -R reown-com/reown-kotlin \
 
 A new address must be funded (Base USDC, Optimism USDC, Polygon USDT and POL, with each token under $9.99) and must submit Pay's compliance details form once, or the no-KYC flows fail. Faucet requests run in the `e2e-faucet-requests` concurrency group with a cooldown, because the faucet bot drops a same-chain request that arrives before its previous send is mined.
 
-**Retry and artifacts:** The CI leg runs `.github/scripts/maestro/maestro-android.sh`, which installs and smoke-checks the APK, then calls `maestro-suite.sh`. If any flow fails, the suite re-runs only the flows that the JUnit report marks as failed, once. `pay-e2e-debug-artifacts` holds the recordings, JUnit reports, Maestro debug logs and a filtered logcat (plus the events and crash buffers). The full logcat (`pay-e2e-full-logcat`) is uploaded only when the job fails.
+**Retry and artifacts:** The CI leg runs `.github/scripts/maestro/maestro-android.sh`, which installs and smoke-checks the APK, then calls `maestro-suite.sh`. If any flow fails, the suite re-runs only the flows that the JUnit report marks as failed, once. `pay-e2e-debug-artifacts` holds the recordings, JUnit reports, the Maestro console log and a filtered logcat (plus the events and crash buffers). The full logcat (`pay-e2e-full-logcat`) is uploaded only when the job fails.
 
 ### Code Quality
 
