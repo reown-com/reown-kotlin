@@ -7,7 +7,6 @@ on:
     types:
       - opened
       - synchronize
-      - edited
       - ready_for_review
   schedule:
     - cron: '0 5 * * *' # Runs every day at 05:00 UTC
@@ -15,6 +14,12 @@ on:
 
 permissions:
   contents: read
+
+# A new push to a PR cancels its superseded run (freeing the test wallet);
+# scheduled and dispatched runs are never cancelled by another run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check-balance:
@@ -24,12 +29,31 @@ jobs:
 
   build_and_run_pay_e2e_tests:
     needs: check-balance
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    # !cancelled() rather than always(): still runs when check-balance fails or is
+    # skipped, but a cancelled run stops (GitHub leaves an `always()` job running).
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
     name: Build & Run Pay E2E Tests
     timeout-minutes: 45
     runs-on: ubuntu-16core
+    # One test wallet for this repo (see derive-e2e-wallet): runs on other refs
+    # queue instead of paying from the same account at the same time. GitHub
+    # keeps one pending run per group; a newer one replaces it.
+    concurrency:
+      group: e2e-wallet-kotlin
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v6
+
+      # This repo's account in the mnemonic shared with the other SDK repos
+      # (index 3; see the action for the reserved indexes), so no other repo's
+      # Permit2 reset or nonce races with this suite.
+      - name: Derive E2E wallet
+        id: wallet
+        uses: ./.github/actions/derive-e2e-wallet
+        with:
+          mnemonic: ${{ secrets.TEST_WALLET_MNEMONIC }}
+          index: 3
+          expected-address: ${{ vars.TEST_WALLET_ADDRESS }}
 
       - name: Enable KVM
         run: |
@@ -74,7 +98,7 @@ jobs:
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
           MIX_PANEL: ${{ secrets.MIX_PANEL }}
-          TEST_WALLET_PRIVATE_KEY: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
+          TEST_WALLET_PRIVATE_KEY: ${{ steps.wallet.outputs.private-key }}
           ENABLE_TEST_MODE: "true"
         run: |
           # clean + --no-build-cache so a restored Gradle cache (PRs can restore the
@@ -119,72 +143,19 @@ jobs:
           force-avd-creation: false
           disable-animations: true
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot-load
-          script: |
-            # Setup debug directory
-            mkdir -p debug-artifacts
-
-            # Wait for emulator to be fully ready
-            echo "Waiting for emulator to be ready..."
-            adb wait-for-device
-
-            # Wait for boot completion
-            echo "Waiting for boot completion..."
-            adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
-            echo "Boot completed!"
-
-            adb devices
-
-            # Clear logcat before we start
-            adb logcat -c
-
-            # Start logcat capture in background
-            adb logcat > debug-artifacts/full-logcat.txt &
-            LOGCAT_PID=$!
-
-            # Install wallet APK
-            echo "Installing wallet APK:"
-            find sample/wallet/build/outputs/apk/internal -name "*.apk" -exec echo "Installing: {}" \; -exec adb install -r {} \;
-
-            # Verify installation
-            echo "Verifying installed app:"
-            adb shell pm list packages | grep -E "com.reown.sample.wallet" || (echo "ERROR: App not installed correctly" && exit 1)
-
-            # Wait for system to settle
-            sleep 10
-
-            # Launch smoke check: fail fast if the APK is broken (e.g. dex missing the
-            # Application class -> ClassNotFoundException on startup). Without this, a
-            # bad build surfaces as every Maestro flow failing, which is hard to diagnose.
-            # NOTE: android-emulator-runner runs each script line in its own `sh -c`,
-            # so the check must be a single line - a multi-line `if/fi` block would be
-            # split across shells and fail with "end of file unexpected".
-            echo "Smoke-checking app launch:"
-            adb logcat -c
-            adb shell monkey -p com.reown.sample.wallet.internal -c android.intent.category.LAUNCHER 1 || true
-            sleep 8
-            adb logcat -d | grep -qE "FATAL EXCEPTION|ClassNotFoundException|Unable to instantiate application" && { echo "ERROR: App crashed on launch - APK is broken, not running Maestro."; adb logcat -d | grep -E "FATAL EXCEPTION|ClassNotFoundException|Unable to instantiate application|AndroidRuntime" | head -40; exit 1; } || echo "App launched cleanly."
-
-            # Force stop before Maestro tests
-            adb shell am force-stop com.reown.sample.wallet.internal
-            sleep 5
-
-            echo "Running Maestro Pay E2E tests:"
-            # android-emulator-runner runs each script line in its own `sh -c`, so a
-            # shell variable can't carry Maestro's exit code to the final `exit` line.
-            # Persist it to a file and re-exit with it, otherwise a flow failure is
-            # masked and the job goes green. (The `; echo $?` keeps this line itself
-            # exit-0 so the error-log extraction below still runs.)
-            $HOME/.maestro/bin/maestro test --env APP_ID=com.reown.sample.wallet.internal --env DEEPLINK_PREFIX='kotlin-web3wallet://wc?uri=' --env WPAY_CUSTOMER_KEY_SINGLE_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}" --env WPAY_MERCHANT_ID_SINGLE_NOKYC="${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_NOKYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}" --env WPAY_MERCHANT_ID_MULTI_NOKYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}" --env WPAY_CUSTOMER_KEY_MULTI_KYC="${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}" --env WPAY_MERCHANT_ID_MULTI_KYC="${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}" --include-tags pay --test-output-dir debug-artifacts/maestro-output .maestro/ ; echo "$?" > debug-artifacts/maestro-exit-code
-
-            # Extract error logs for easier debugging
-            echo "Extracting error logs..."
-            grep -E "AndroidRuntime|FATAL|ActivityManager.*Error|PaymentWebView|PaymentViewModel" debug-artifacts/full-logcat.txt > debug-artifacts/emulator-errors.log 2>/dev/null || true
-
-            # Stop logcat capture
-            kill $LOGCAT_PID 2>/dev/null || true
-
-            # Propagate Maestro's real exit code so the step fails when any flow failed.
-            exit "$(cat debug-artifacts/maestro-exit-code)"
+          # android-emulator-runner runs each `script` line in its own `sh -c`, so
+          # the whole leg lives in one script. It retries only the failed flows once.
+          script: bash .github/scripts/maestro/maestro-android.sh
+        env:
+          APP_ID: com.reown.sample.wallet.internal
+          APK_DIR: sample/wallet/build/outputs/apk/internal
+          DEEPLINK_PREFIX: 'kotlin-web3wallet://wc?uri='
+          WPAY_CUSTOMER_KEY_SINGLE_NOKYC: ${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}
+          WPAY_MERCHANT_ID_SINGLE_NOKYC: ${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}
+          WPAY_CUSTOMER_KEY_MULTI_NOKYC: ${{ secrets.WPAY_CUSTOMER_KEY_MULTI_NOKYC }}
+          WPAY_MERCHANT_ID_MULTI_NOKYC: ${{ secrets.WPAY_MERCHANT_ID_MULTI_NOKYC }}
+          WPAY_CUSTOMER_KEY_MULTI_KYC: ${{ secrets.WPAY_CUSTOMER_KEY_MULTI_KYC }}
+          WPAY_MERCHANT_ID_MULTI_KYC: ${{ secrets.WPAY_MERCHANT_ID_MULTI_KYC }}
 
       - name: Upload debug artifacts
         if: always()
@@ -199,9 +170,21 @@ jobs:
             debug-artifacts/maestro-output/**/*.mov
             debug-artifacts/maestro-output/**/*.webm
             debug-artifacts/maestro-output/**/*.gif
-            debug-artifacts/full-logcat.txt
-            debug-artifacts/emulator-errors.log
+            debug-artifacts/maestro-output.log
+            debug-artifacts/junit-attempt-*.xml
+            debug-artifacts/maestro-debug/**/maestro.log
+            debug-artifacts/maestro-debug/**/commands-*.json
+            debug-artifacts/android-logcat*.log
           if-no-files-found: warn
+
+      # The full logcat is large and only useful when something failed.
+      - name: Upload full logcat
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: pay-e2e-full-logcat
+          path: debug-artifacts/full-logcat.txt
+          if-no-files-found: ignore
 
       # Reset the USDT Permit2 allowance back to 0 so the next pay_usdt_polygon run
       # re-exercises the approve step. Runs even when the suite failed (if: always())
@@ -217,7 +200,7 @@ jobs:
           # polygon-rpc.com is gated (HTTP 401 "tenant disabled") in CI; use publicnode.
           rpc-url: https://polygon-bor-rpc.publicnode.com
           token-address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'
-          private-key: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
+          private-key: ${{ steps.wallet.outputs.private-key }}
 
       - name: Send Slack notification
         if: failure()

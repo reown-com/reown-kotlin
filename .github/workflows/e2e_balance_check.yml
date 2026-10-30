@@ -19,11 +19,24 @@ jobs:
   check-balance:
     name: Check E2E Wallet Balances
     runs-on: ubuntu-latest
+    # The faucet bot sends from one wallet and drops a same-chain request that
+    # arrives before its previous send is mined, so runs never request at the
+    # same time (e.g. the daily cron and a PR run).
+    concurrency:
+      group: e2e-faucet-requests
+      cancel-in-progress: false
     env:
       SLACK_FAUCETBOT_WEBHOOK_URL: ${{ secrets.SLACK_FAUCETBOT_WEBHOOK_URL }}
     steps:
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1.9.1
+      # Only the install-cast action is needed from the repo.
+      - name: Checkout install-cast action
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github/actions/install-cast
+          sparse-checkout-cone-mode: false
+
+      - name: Install cast (Foundry)
+        uses: ./.github/actions/install-cast
 
       - name: Check USDC balance on Base
         id: usdc_balance
@@ -187,6 +200,15 @@ jobs:
             echo "::warning::$ALERT_TEXT"
           fi
 
+      # USDT and POL are both on Polygon: give the faucet's USDT send time to be
+      # mined before asking for POL.
+      - name: Faucet cooldown (Polygon)
+        if: |
+          steps.poly_usdt_alert.outputs.should_alert == 'true' &&
+          steps.poly_pol_alert.outputs.should_alert == 'true' &&
+          env.SLACK_FAUCETBOT_WEBHOOK_URL != ''
+        run: sleep 20
+
       - name: Send Slack alert (Polygon POL gas)
         if: |
           steps.poly_pol_alert.outputs.should_alert == 'true' &&
@@ -206,3 +228,14 @@ jobs:
           env.SLACK_FAUCETBOT_WEBHOOK_URL == ''
         run: |
           echo "::warning::SLACK_FAUCETBOT_WEBHOOK_URL not configured, skipping Polygon POL gas alert"
+
+      # Hold the e2e-faucet-requests group a little longer so the next run's
+      # requests don't land before this run's sends are mined.
+      - name: Faucet cooldown
+        if: |
+          env.SLACK_FAUCETBOT_WEBHOOK_URL != '' && (
+            steps.usdc_alert.outputs.should_alert == 'true' ||
+            steps.op_usdc_alert.outputs.should_alert == 'true' ||
+            steps.poly_usdt_alert.outputs.should_alert == 'true' ||
+            steps.poly_pol_alert.outputs.should_alert == 'true')
+        run: sleep 20
