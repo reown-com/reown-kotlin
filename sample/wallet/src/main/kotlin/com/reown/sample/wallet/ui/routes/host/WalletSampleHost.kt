@@ -88,7 +88,8 @@ fun WalletSampleHost(
         val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
             val route = destination.route ?: ""
             val shouldHideBottomBar = route.startsWith(Route.SnackbarMessage.path) ||
-                route.startsWith(Route.ThemeVariables.path)
+                route.startsWith(Route.ThemeVariables.path) ||
+                route.startsWith(Route.VisaPayOnboarding.path)
             bottomBarState.value = bottomBarState.value.copy(isDisplayed = !shouldHideBottomBar)
             shouldDimBackground = !route.startsWith(Route.SnackbarMessage.path)
         }

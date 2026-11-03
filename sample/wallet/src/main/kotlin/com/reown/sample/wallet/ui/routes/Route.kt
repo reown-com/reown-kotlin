@@ -21,6 +21,8 @@ sealed class Route(val path: String) {
     data object SecretKeysAndPhrases : Route("secret_keys_and_phrases")
     data object ImportWallet : Route("import_wallet")
     data object ThemeVariables : Route("theme_variables")
+    data object VisaPay : Route("visapay")
+    data object VisaPayOnboarding : Route("visapay_onboarding")
 }
 
 fun NavController.showSnackbar(message: String) {

@@ -36,10 +36,11 @@ import com.reown.sample.wallet.ui.routes.Route
 enum class BottomBarItem(val route: Route, val label: String, @DrawableRes val icon: Int) {
     WALLETS(Route.Wallets, "Wallets", R.drawable.ic_wallet),
     CONNECTED_APPS(Route.ConnectedApps, "Connected Apps", R.drawable.ic_stack),
+    CARD(Route.VisaPay, "Card", R.drawable.ic_card),
     SETTINGS(Route.Settings, "Settings", R.drawable.ic_settings);
 
     companion object {
-        val orderedList = listOf(WALLETS, CONNECTED_APPS, SETTINGS)
+        val orderedList = listOf(WALLETS, CONNECTED_APPS, CARD, SETTINGS)
     }
 }
 

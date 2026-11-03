@@ -28,6 +28,8 @@ import com.reown.sample.wallet.ui.routes.composable_routes.secret_keys.SecretKey
 import com.reown.sample.wallet.ui.routes.composable_routes.settings.SettingsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.theme_variables.ThemeVariablesRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.wallets.WalletsRoute
+import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayOnboardingRoute
+import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayRoute
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scanner_options.ScannerOptionsRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_authenticate.SessionAuthenticateRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_proposal.SessionProposalRoute
@@ -95,6 +97,12 @@ fun Web3WalletNavGraph(
         }
         composable(Route.ThemeVariables.path) {
             ThemeVariablesRoute(navController)
+        }
+        composable(Route.VisaPay.path) {
+            VisaPayRoute(navController)
+        }
+        composable(Route.VisaPayOnboarding.path) {
+            VisaPayOnboardingRoute(navController)
         }
         bottomSheet(Route.ImportWallet.path) {
             ImportWalletRoute(
