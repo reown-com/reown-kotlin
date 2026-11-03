@@ -2,6 +2,7 @@ package com.reown.sample.wallet.ui.routes.composable_routes.visapay
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -33,11 +34,13 @@ import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
@@ -57,8 +60,19 @@ fun VisaPayOnboardingRoute(
     viewModel: VisaPayOnboardingViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val focusManager = LocalFocusManager.current
     val onBack: () -> Unit = { if (!viewModel.back()) navController.popBackStack() }
     BackHandler(onBack = onBack)
+
+    // Drop focus when the step changes so the keyboard never carries over to the next screen.
+    LaunchedEffect(state.step) { focusManager.clearFocus() }
+
+    // Card is live: return to the Card tab, which now shows the card home.
+    LaunchedEffect(state.activationStage) {
+        if (state.activationStage == VisaPayActivationStage.DONE) {
+            navController.popBackStack(Route.VisaPay.path, inclusive = false)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -68,9 +82,14 @@ fun VisaPayOnboardingRoute(
             .navigationBarsPadding()
             .imePadding()
     ) {
+        // Every step fills the screen, so the transition must not clip to a stale, smaller size:
+        // that clipping hid the pinned footer (and its Continue button) on some steps.
         AnimatedContent(
             targetState = state.step,
-            transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
+            modifier = Modifier.fillMaxSize(),
+            transitionSpec = {
+                (fadeIn(tween(200)) togetherWith fadeOut(tween(200))) using SizeTransform(clip = false)
+            },
             label = "visapay_step"
         ) { step ->
             Column(modifier = Modifier.fillMaxSize()) {
@@ -79,7 +98,7 @@ fun VisaPayOnboardingRoute(
                         StepHeader(step = step.number ?: 0, onBack = onBack)
 
                     VisaPayStep.SETUP -> BackOnlyHeader(onBack = onBack)
-                    VisaPayStep.IN_REVIEW, VisaPayStep.APPROVED -> Unit
+                    VisaPayStep.IN_REVIEW, VisaPayStep.APPROVED, VisaPayStep.ACTIVATING -> Unit
                 }
                 when (step) {
                     VisaPayStep.DETAILS -> DetailsStep(state, viewModel)
@@ -88,9 +107,8 @@ fun VisaPayOnboardingRoute(
                     VisaPayStep.REVIEW -> ReviewStep(state, viewModel)
                     VisaPayStep.IN_REVIEW -> InReviewStep()
                     VisaPayStep.APPROVED -> ApprovedStep(state, onSetUp = { viewModel.goTo(VisaPayStep.SETUP) })
-                    VisaPayStep.SETUP -> SetupStep(state, viewModel, onActivated = {
-                        navController.popBackStack(Route.VisaPay.path, inclusive = false)
-                    })
+                    VisaPayStep.SETUP -> SetupStep(state, viewModel)
+                    VisaPayStep.ACTIVATING -> ActivatingStep(state)
                 }
             }
         }
@@ -400,6 +418,73 @@ private fun InReviewStep() {
 private enum class TimelineState { DONE, ACTIVE, TODO }
 
 @Composable
+private fun ActivatingStep(state: VisaPayOnboardingState) {
+    val spacing = WCTheme.spacing
+    val colors = WCTheme.colors
+    val wallet = state.fundingWallet.trim()
+    val walletShort = "${wallet.take(6)}...${wallet.takeLast(4)}"
+    val allowance = "%,d ${VisaPayMocks.CARD_CURRENCY}".format(state.dailyLimitValue)
+    val stage = state.activationStage
+
+    fun stateOf(rowStage: VisaPayActivationStage): TimelineState = when {
+        stage.ordinal > rowStage.ordinal -> TimelineState.DONE
+        stage == rowStage -> TimelineState.ACTIVE
+        else -> TimelineState.TODO
+    }
+
+    val title = when (stage) {
+        VisaPayActivationStage.PREPARING_PERMIT2 -> "Preparing your card"
+        VisaPayActivationStage.SIGNING_PERMIT2 -> "Approving card payments"
+        VisaPayActivationStage.ACTIVATING_CARD, VisaPayActivationStage.DONE -> "Activating your card"
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = spacing.spacing6)
+            .padding(top = spacing.spacing13 + spacing.spacing8, bottom = spacing.spacing8),
+        verticalArrangement = Arrangement.spacedBy(spacing.spacing7)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.spacing5)
+        ) {
+            VisaPayReviewDots()
+            VisaPayBadge("Permit2", VisaPayBadgeTone.ACCENT)
+            Text(
+                text = title,
+                textAlign = TextAlign.Center,
+                style = WCTheme.typography.h5Regular.copy(color = colors.textPrimary)
+            )
+            VisaPayBody(
+                text = "Your wallet is signing a Permit2 approval so card payments can be taken in " +
+                    "${VisaPayMocks.CARD_CURRENCY}. This happens automatically, keep the app open.",
+                modifier = Modifier.padding(horizontal = spacing.spacing4)
+            )
+        }
+        VisaPaySurface {
+            TimelineRow(
+                stateOf(VisaPayActivationStage.PREPARING_PERMIT2),
+                "Preparing spending approval",
+                "${VisaPayMocks.CARD_CURRENCY} on ${state.network.label}"
+            )
+            TimelineRow(
+                stateOf(VisaPayActivationStage.SIGNING_PERMIT2),
+                "Signing Permit2 approval",
+                "Up to $allowance a day from $walletShort"
+            )
+            TimelineRow(
+                stateOf(VisaPayActivationStage.ACTIVATING_CARD),
+                "Activating your card",
+                "Card ending ${VisaPayMocks.CARD_LAST_DIGITS}"
+            )
+        }
+    }
+}
+
+@Composable
 private fun TimelineRow(timelineState: TimelineState, label: String, subtitle: String) {
     val spacing = WCTheme.spacing
     val colors = WCTheme.colors
@@ -472,7 +557,6 @@ private fun ApprovedStep(state: VisaPayOnboardingState, onSetUp: () -> Unit) {
 private fun ColumnScope.SetupStep(
     state: VisaPayOnboardingState,
     viewModel: VisaPayOnboardingViewModel,
-    onActivated: () -> Unit,
 ) {
     val spacing = WCTheme.spacing
     val colors = WCTheme.colors
@@ -484,8 +568,7 @@ private fun ColumnScope.SetupStep(
             VisaPayPrimaryButton(
                 text = "Activate card",
                 enabled = state.isSetupValid,
-                isLoading = state.isActivating,
-                onClick = { viewModel.activateCard(onActivated) }
+                onClick = viewModel::activateCard
             )
         }
     ) {

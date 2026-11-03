@@ -17,7 +17,11 @@ enum class VisaPayStep(val number: Int?) {
     IN_REVIEW(null),
     APPROVED(null),
     SETUP(null),
+    ACTIVATING(null),
 }
+
+/** Background stages shown on the activation loading screen, in order. */
+enum class VisaPayActivationStage { PREPARING_PERMIT2, SIGNING_PERMIT2, ACTIVATING_CARD, DONE }
 
 enum class VisaPayCapture { FRONT, BACK, SELFIE }
 
@@ -38,7 +42,7 @@ data class VisaPayOnboardingState(
     val dailyLimit: String = "",
     val fundingWallet: String = "",
     val network: VisaPayNetwork = VisaPayNetwork.BASE,
-    val isActivating: Boolean = false,
+    val activationStage: VisaPayActivationStage = VisaPayActivationStage.PREPARING_PERMIT2,
 ) {
     val requiredCaptures: List<VisaPayCapture>
         get() = buildList {
@@ -79,7 +83,7 @@ class VisaPayOnboardingViewModel : ViewModel() {
             VisaPayStep.ADDRESS -> VisaPayStep.DETAILS
             VisaPayStep.IDENTITY -> VisaPayStep.ADDRESS
             VisaPayStep.REVIEW -> VisaPayStep.IDENTITY
-            VisaPayStep.IN_REVIEW, VisaPayStep.APPROVED -> return true
+            VisaPayStep.IN_REVIEW, VisaPayStep.APPROVED, VisaPayStep.ACTIVATING -> return true
             VisaPayStep.SETUP -> VisaPayStep.APPROVED
         }
         goTo(previous)
@@ -122,23 +126,30 @@ class VisaPayOnboardingViewModel : ViewModel() {
     fun useSampleWalletAddress() = _state.update { it.copy(fundingWallet = sampleWalletAddress) }
     fun onNetworkChange(network: VisaPayNetwork) = _state.update { it.copy(network = network) }
 
-    fun activateCard(onActivated: () -> Unit) {
+    /**
+     * Mocks what happens under the hood after the user taps "Activate card": the wallet signs a
+     * Permit2 approval so the card issuer can pull USDC up to the daily limit, then the card is activated.
+     */
+    fun activateCard() {
         val current = _state.value
-        if (!current.isSetupValid || current.isActivating) return
-        _state.update { it.copy(isActivating = true) }
+        if (!current.isSetupValid || current.step == VisaPayStep.ACTIVATING) return
+        val setup = VisaPayCardSetup(
+            dailyLimit = current.dailyLimitValue,
+            fundingWallet = current.fundingWallet.trim(),
+            network = current.network,
+        )
+        _state.update { it.copy(step = VisaPayStep.ACTIVATING, activationStage = VisaPayActivationStage.PREPARING_PERMIT2) }
         viewModelScope.launch {
-            VisaPayMockRepository.activateCard(
-                cardholderName = current.fullName,
-                setup = VisaPayCardSetup(
-                    dailyLimit = current.dailyLimitValue,
-                    fundingWallet = current.fundingWallet.trim(),
-                    network = current.network,
-                )
-            )
-            _state.update { it.copy(isActivating = false) }
-            onActivated()
+            val approval = VisaPayMockRepository.preparePermit2Approval(setup)
+            setActivationStage(VisaPayActivationStage.SIGNING_PERMIT2)
+            VisaPayMockRepository.signPermit2Approval(approval)
+            setActivationStage(VisaPayActivationStage.ACTIVATING_CARD)
+            VisaPayMockRepository.activateCard(cardholderName = current.fullName, setup = setup)
+            setActivationStage(VisaPayActivationStage.DONE)
         }
     }
+
+    private fun setActivationStage(stage: VisaPayActivationStage) = _state.update { it.copy(activationStage = stage) }
 
     private fun VisaPayOnboardingState.toApplication() = VisaPayApplication(
         fullName = fullName,

@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
 object VisaPayMockRepository {
     private const val KYC_REVIEW_DELAY_MS = 4_000L
     private const val CARD_ACTIVATION_DELAY_MS = 1_200L
+    private const val PERMIT2_PREPARE_DELAY_MS = 1_200L
+    private const val PERMIT2_SIGN_DELAY_MS = 1_800L
+    private val MOCK_PERMIT2_SIGNATURE = "0x" + "ab".repeat(65)
 
     private val _card = MutableStateFlow<VisaPayCard?>(null)
     val card: StateFlow<VisaPayCard?> = _card.asStateFlow()
@@ -19,6 +22,23 @@ object VisaPayMockRepository {
     suspend fun submitKycApplication(application: VisaPayApplication): KycDecision {
         delay(KYC_REVIEW_DELAY_MS)
         return KycDecision.Approved(cardholderName = application.fullName)
+    }
+
+    /** Mocks fetching the Permit2 typed data that lets the card issuer pull USDC from the funding wallet. */
+    suspend fun preparePermit2Approval(setup: VisaPayCardSetup): Permit2Approval {
+        delay(PERMIT2_PREPARE_DELAY_MS)
+        return Permit2Approval(
+            token = VisaPayMocks.CARD_CURRENCY,
+            owner = setup.fundingWallet,
+            network = setup.network,
+            dailyAllowance = setup.dailyLimit,
+        )
+    }
+
+    /** Mocks the wallet signing the Permit2 approval (eth_signTypedData_v4) under the hood. */
+    suspend fun signPermit2Approval(approval: Permit2Approval): String {
+        delay(PERMIT2_SIGN_DELAY_MS)
+        return MOCK_PERMIT2_SIGNATURE
     }
 
     suspend fun activateCard(cardholderName: String, setup: VisaPayCardSetup): VisaPayCard {
@@ -84,6 +104,13 @@ data class VisaPayCardSetup(
     val dailyLimit: Int,
     val fundingWallet: String,
     val network: VisaPayNetwork,
+)
+
+data class Permit2Approval(
+    val token: String,
+    val owner: String,
+    val network: VisaPayNetwork,
+    val dailyAllowance: Int,
 )
 
 data class VisaPayCard(

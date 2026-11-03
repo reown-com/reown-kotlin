@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
@@ -86,7 +85,6 @@ internal fun VisaPayLabel(text: String) {
 internal fun VisaPayPrimaryButton(
     text: String,
     enabled: Boolean = true,
-    isLoading: Boolean = false,
     onClick: () -> Unit,
 ) {
     val colors = WCTheme.colors
@@ -94,21 +92,13 @@ internal fun VisaPayPrimaryButton(
         modifier = Modifier
             .fillMaxWidth()
             .height(WCTheme.spacing.spacing12)
+            .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .clip(WCTheme.borderRadius.shapeLarge)
             .background(colors.bgAccentPrimary)
-            .alpha(if (enabled) 1f else DISABLED_ALPHA)
-            .clickable(enabled = enabled && !isLoading, onClick = onClick),
+            .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(WCTheme.spacing.spacing6),
-                color = colors.textInvert,
-                strokeWidth = WCTheme.spacing.spacing05
-            )
-        } else {
-            Text(text = text, style = WCTheme.typography.bodyLgMedium.copy(color = colors.textInvert))
-        }
+        Text(text = text, style = WCTheme.typography.bodyLgMedium.copy(color = colors.textInvert))
     }
 }
 
