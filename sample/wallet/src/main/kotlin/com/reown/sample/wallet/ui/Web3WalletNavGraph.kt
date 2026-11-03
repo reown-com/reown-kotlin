@@ -29,6 +29,8 @@ import com.reown.sample.wallet.ui.routes.composable_routes.settings.SettingsRout
 import com.reown.sample.wallet.ui.routes.composable_routes.theme_variables.ThemeVariablesRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.wallets.WalletsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayOnboardingRoute
+import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayMockRepository
+import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayPaymentRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayRoute
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scanner_options.ScannerOptionsRoute
 import com.reown.sample.wallet.ui.routes.dialog_routes.session_authenticate.SessionAuthenticateRoute
@@ -58,6 +60,16 @@ fun Web3WalletNavGraph(
         })
 
     val sheetState = remember { bottomSheetNavigator.navigatorSheetState }
+
+    // VisaPay demo: while a card is active, any scanned or pasted code starts a mocked card payment
+    // instead of WalletConnect pairing. Without a card, scanning behaves as before.
+    val onScanned: (String) -> Unit = { scanned ->
+        if (VisaPayMockRepository.card.value != null) {
+            navController.navigate(Route.VisaPayPayment.path) { launchSingleTop = true }
+        } else {
+            web3walletViewModel.pair(scanned)
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -104,6 +116,9 @@ fun Web3WalletNavGraph(
         composable(Route.VisaPayOnboarding.path) {
             VisaPayOnboardingRoute(navController)
         }
+        bottomSheet(Route.VisaPayPayment.path) {
+            VisaPayPaymentRoute(navController)
+        }
         bottomSheet(Route.ImportWallet.path) {
             ImportWalletRoute(
                 navController = navController,
@@ -112,9 +127,7 @@ fun Web3WalletNavGraph(
         }
         bottomSheet(Route.ScanUri.path) {
             web3walletViewModel.showLoader(false)
-            ScanUriRoute(navController, sheetState, onScanSuccess = {
-                web3walletViewModel.pair(it)
-            })
+            ScanUriRoute(navController, sheetState, onScanSuccess = onScanned)
         }
 //            dialog(Route.TransactionDialog.path, dialogProperties = DialogProperties(usePlatformDefaultWidth = false)) {
 //                TransactionRoute(navController)
@@ -131,7 +144,7 @@ fun Web3WalletNavGraph(
         bottomSheet(Route.ScannerOptions.path) {
             ScannerOptionsRoute(
                 navController = navController,
-                onPair = { web3walletViewModel.pair(it) }
+                onPair = onScanned
             )
         }
         bottomSheet("${Route.SnackbarMessage.path}/{message}", arguments = listOf(

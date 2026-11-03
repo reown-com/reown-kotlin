@@ -19,6 +19,20 @@ object VisaPayMockRepository {
     private val _card = MutableStateFlow<VisaPayCard?>(null)
     val card: StateFlow<VisaPayCard?> = _card.asStateFlow()
 
+    private val _payments = MutableStateFlow<List<VisaPayPayment>>(emptyList())
+    val payments: StateFlow<List<VisaPayPayment>> = _payments.asStateFlow()
+
+    /** Mocks turning any scanned QR code into a card payment request at a random merchant. */
+    fun createPaymentRequest(): VisaPayPaymentRequest = VisaPayMocks.merchants.random()
+
+    /** Mocks a settled card payment: it is added to recent activity and counts toward today's limit. */
+    fun recordPayment(request: VisaPayPaymentRequest): VisaPayPayment {
+        val payment = VisaPayPayment(merchant = request.merchant, category = request.category, amount = request.amount)
+        _payments.value = listOf(payment) + _payments.value
+        _card.value = _card.value?.let { it.copy(spentToday = it.spentToday + request.amount) }
+        return payment
+    }
+
     suspend fun submitKycApplication(application: VisaPayApplication): KycDecision {
         delay(KYC_REVIEW_DELAY_MS)
         return KycDecision.Approved(cardholderName = application.fullName)
@@ -54,6 +68,7 @@ object VisaPayMockRepository {
 
     fun reset() {
         _card.value = null
+        _payments.value = emptyList()
     }
 }
 
@@ -75,6 +90,13 @@ object VisaPayMocks {
         "Greece", "Germany", "France", "Netherlands", "Portugal", "Spain", "United Kingdom", "United States"
     )
     val dailyLimitPresets = listOf(100, 500, 1_000, 2_500)
+
+    val merchants = listOf(
+        VisaPayPaymentRequest("Blue Bottle Coffee", "Coffee shop", 4.75),
+        VisaPayPaymentRequest("Athens Corner Market", "Groceries", 18.40),
+        VisaPayPaymentRequest("Metro Line 3", "Transport", 2.10),
+        VisaPayPaymentRequest("Plaka Bistro", "Restaurant", 36.90),
+    )
 }
 
 enum class VisaPayDocumentType(val label: String, val needsBack: Boolean) {
@@ -119,7 +141,28 @@ data class VisaPayCard(
     val dailyLimit: Int,
     val fundingWallet: String,
     val network: VisaPayNetwork,
+    val spentToday: Double = 0.0,
+) {
+    val leftToSpend: Double get() = (dailyLimit - spentToday).coerceAtLeast(0.0)
+}
+
+data class VisaPayPaymentRequest(
+    val merchant: String,
+    val category: String,
+    val amount: Double,
 )
+
+data class VisaPayPayment(
+    val merchant: String,
+    val category: String,
+    val amount: Double,
+)
+
+/** Formats a USDC amount, e.g. 1,000 USDC or 4.75 USDC. */
+fun formatUsdc(amount: Double): String {
+    val number = if (amount % 1.0 == 0.0) "%,.0f".format(amount) else "%,.2f".format(amount)
+    return "$number ${VisaPayMocks.CARD_CURRENCY}"
+}
 
 sealed class KycDecision {
     data class Approved(val cardholderName: String) : KycDecision()

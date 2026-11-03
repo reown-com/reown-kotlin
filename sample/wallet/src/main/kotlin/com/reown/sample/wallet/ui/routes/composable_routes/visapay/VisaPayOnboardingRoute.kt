@@ -415,8 +415,6 @@ private fun InReviewStep() {
     }
 }
 
-private enum class TimelineState { DONE, ACTIVE, TODO }
-
 @Composable
 private fun ActivatingStep(state: VisaPayOnboardingState) {
     val spacing = WCTheme.spacing
@@ -480,46 +478,6 @@ private fun ActivatingStep(state: VisaPayOnboardingState) {
                 "Activating your card",
                 "Card ending ${VisaPayMocks.CARD_LAST_DIGITS}"
             )
-        }
-    }
-}
-
-@Composable
-private fun TimelineRow(timelineState: TimelineState, label: String, subtitle: String) {
-    val spacing = WCTheme.spacing
-    val colors = WCTheme.colors
-    val dotSize = spacing.spacing6
-    Row(
-        modifier = Modifier.padding(vertical = spacing.spacing3),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(spacing.spacing3)
-    ) {
-        when (timelineState) {
-            TimelineState.DONE -> Box(
-                modifier = Modifier.size(dotSize).clip(CircleShape).background(colors.bgSuccess),
-                contentAlignment = Alignment.Center
-            ) { VisaPayCheckIcon(colors.iconSuccess) }
-
-            TimelineState.ACTIVE -> Box(
-                modifier = Modifier
-                    .size(dotSize)
-                    .clip(CircleShape)
-                    .background(colors.foregroundAccentPrimary10)
-                    .padding(spacing.spacing2)
-                    .clip(CircleShape)
-                    .background(colors.bgAccentPrimary)
-            )
-
-            TimelineState.TODO -> Box(
-                modifier = Modifier
-                    .size(dotSize)
-                    .clip(CircleShape)
-                    .background(colors.foregroundSecondary)
-            )
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing05)) {
-            Text(text = label, style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
-            Text(text = subtitle, style = WCTheme.typography.bodyMdRegular.copy(color = colors.textTertiary))
         }
     }
 }

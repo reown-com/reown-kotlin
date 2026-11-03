@@ -34,6 +34,7 @@ import com.reown.sample.wallet.ui.routes.Route
 @Composable
 fun VisaPayRoute(navController: NavController) {
     val card by VisaPayMockRepository.card.collectAsState()
+    val payments by VisaPayMockRepository.payments.collectAsState()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -44,7 +45,7 @@ fun VisaPayRoute(navController: NavController) {
         if (activeCard == null) {
             VisaPayWelcome(onStart = { navController.navigate(Route.VisaPayOnboarding.path) })
         } else {
-            VisaPayCardHome(card = activeCard, onReset = VisaPayMockRepository::reset)
+            VisaPayCardHome(card = activeCard, payments = payments, onReset = VisaPayMockRepository::reset)
         }
     }
 }
@@ -126,11 +127,11 @@ private fun VisaPayWelcome(onStart: () -> Unit) {
 }
 
 @Composable
-private fun VisaPayCardHome(card: VisaPayCard, onReset: () -> Unit) {
+private fun VisaPayCardHome(card: VisaPayCard, payments: List<VisaPayPayment>, onReset: () -> Unit) {
     val spacing = WCTheme.spacing
     val colors = WCTheme.colors
     val firstName = card.cardholderName.trim().substringBefore(" ").ifBlank { "there" }
-    val limitLabel = "%,d ${VisaPayMocks.CARD_CURRENCY}".format(card.dailyLimit)
+    val limitLabel = formatUsdc(card.dailyLimit.toDouble())
     val walletShort = "${card.fundingWallet.take(6)}...${card.fundingWallet.takeLast(4)}"
 
     Column(
@@ -150,7 +151,7 @@ private fun VisaPayCardHome(card: VisaPayCard, onReset: () -> Unit) {
                 )
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        text = limitLabel,
+                        text = formatUsdc(card.leftToSpend),
                         modifier = Modifier.weight(1f),
                         style = WCTheme.typography.h4Regular.copy(color = colors.textInvert)
                     )
@@ -171,7 +172,16 @@ private fun VisaPayCardHome(card: VisaPayCard, onReset: () -> Unit) {
         }
         Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing2)) {
             Text(text = "Recent activity", style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
-            VisaPayBody("No transactions yet. Your first card payment will show here.")
+            if (payments.isEmpty()) {
+                VisaPayBody("No transactions yet. Scan a merchant's QR code to pay with your card.")
+            } else {
+                VisaPaySurface {
+                    payments.forEachIndexed { index, payment ->
+                        if (index > 0) Divider(color = colors.borderPrimary)
+                        PaymentRow(payment)
+                    }
+                }
+            }
         }
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             VisaPayTextButton("Reset card demo", onReset)
@@ -200,4 +210,21 @@ private fun HomeRow(label: String, value: @Composable () -> Unit) {
 private fun HomeValue(text: String, monospace: Boolean = false) {
     val style = WCTheme.typography.bodyMdMedium.copy(color = WCTheme.colors.textPrimary)
     Text(text = text, style = if (monospace) style.copy(fontFamily = FontFamily.Monospace) else style)
+}
+
+@Composable
+private fun PaymentRow(payment: VisaPayPayment) {
+    val colors = WCTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = WCTheme.spacing.spacing3),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing05)) {
+            Text(text = payment.merchant, style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
+            Text(text = payment.category, style = WCTheme.typography.bodyMdRegular.copy(color = colors.textTertiary))
+        }
+        Text(text = "-${formatUsdc(payment.amount)}", style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary))
+    }
 }
