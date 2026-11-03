@@ -30,7 +30,8 @@ import com.walletconnect.sample.pos.components.BrandLogoRow
 @Composable
 fun StartPaymentScreen(
     viewModel: POSViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onVisaPayTap: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -60,6 +61,14 @@ fun StartPaymentScreen(
                 iconRes = R.drawable.ic_plus,
                 label = "New sale",
                 onClick = { viewModel.navigateToAmountScreen() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+            ActionButton(
+                iconRes = R.drawable.ic_nfc_contactless,
+                label = "Tap to pay (VisaPay)",
+                onClick = onVisaPayTap,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)

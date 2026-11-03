@@ -1,5 +1,6 @@
 package com.reown.sample.wallet.ui.routes.composable_routes.visapay
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
@@ -26,10 +27,12 @@ data class VisaPayPaymentState(
     val isApproved: Boolean get() = stage == VisaPayPaymentStage.APPROVED
 }
 
-class VisaPayPaymentViewModel : ViewModel() {
+class VisaPayPaymentViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     private val _state = MutableStateFlow(
         VisaPayPaymentState(
-            request = VisaPayMockRepository.createPaymentRequest(),
+            // A tap on the sample POS carries the real merchant and amount; a QR scan picks a mock merchant.
+            request = savedStateHandle.get<String>(ARG_TAP_LINK)?.let(VisaPayTapLink::parse)
+                ?: VisaPayMockRepository.createPaymentRequest(),
             card = VisaPayMockRepository.card.value,
         )
     )
@@ -49,6 +52,7 @@ class VisaPayPaymentViewModel : ViewModel() {
     }
 
     companion object {
+        const val ARG_TAP_LINK = "tap"
         val PROCESSING_DURATION_MS: Int = VisaPayPaymentStage.entries.sumOf { it.durationMs }.toInt()
     }
 }

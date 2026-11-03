@@ -27,7 +27,11 @@ object VisaPayMockRepository {
 
     /** Mocks a settled card payment: it is added to recent activity and counts toward today's limit. */
     fun recordPayment(request: VisaPayPaymentRequest): VisaPayPayment {
-        val payment = VisaPayPayment(merchant = request.merchant, category = request.category, amount = request.amount)
+        val payment = VisaPayPayment(
+            merchant = request.merchant,
+            category = if (request.isContactless) "${request.category} · Contactless" else request.category,
+            amount = request.amount,
+        )
         _payments.value = listOf(payment) + _payments.value
         _card.value = _card.value?.let { it.copy(spentToday = it.spentToday + request.amount) }
         return payment
@@ -64,6 +68,18 @@ object VisaPayMockRepository {
             fundingWallet = setup.fundingWallet,
             network = setup.network,
         ).also { _card.value = it }
+    }
+
+    private var lastTapReference: String? = null
+
+    /**
+     * Returns false when this POS order was already handled. Android can deliver the same NFC
+     * tag more than once during a single tap, and each delivery must not open a new payment.
+     */
+    fun markTapHandled(reference: String?): Boolean {
+        if (reference != null && reference == lastTapReference) return false
+        lastTapReference = reference
+        return true
     }
 
     fun reset() {
@@ -150,6 +166,11 @@ data class VisaPayPaymentRequest(
     val merchant: String,
     val category: String,
     val amount: Double,
+    /** Amount as the merchant shows it (e.g. "$12.50"); USDC is charged 1:1 in this mock. */
+    val fiatLabel: String? = null,
+    val reference: String? = null,
+    /** True when the request came from a tap on the sample POS over NFC. */
+    val isContactless: Boolean = false,
 )
 
 data class VisaPayPayment(

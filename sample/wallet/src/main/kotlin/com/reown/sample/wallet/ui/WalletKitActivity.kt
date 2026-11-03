@@ -60,6 +60,8 @@ import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.nfc.NfcPaymentReader
+import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayMockRepository
+import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayTapLink
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
@@ -94,7 +96,7 @@ class WalletKitActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         nfcPaymentReader = NfcPaymentReader(this, lifecycleScope) { paymentUrl ->
             Timber.d("NFC: Payment URL read from tag: %s", paymentUrl)
-            web3walletViewModel.pair(paymentUrl)
+            handleNfcPaymentUrl(paymentUrl)
         }
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
@@ -215,6 +217,26 @@ class WalletKitActivity : AppCompatActivity() {
             .launchIn(lifecycleScope)
     }
 
+    /** VisaPay demo links from the sample POS open the mocked card payment; anything else pairs as before. */
+    private fun handleNfcPaymentUrl(paymentUrl: String) {
+        lifecycleScope.launch(Dispatchers.Main) {
+            navigateWhenReady { nav ->
+                if (VisaPayTapLink.isTapLink(paymentUrl)) openVisaPayTap(nav, paymentUrl) else web3walletViewModel.pair(paymentUrl)
+            }
+        }
+    }
+
+    private fun openVisaPayTap(nav: NavHostController, tapLink: String) {
+        val request = VisaPayTapLink.parse(tapLink) ?: return
+        if (!VisaPayMockRepository.markTapHandled(request.reference)) return
+        if (VisaPayMockRepository.card.value == null) {
+            Toast.makeText(this, "Activate your VisaPay card first, then tap again.", Toast.LENGTH_LONG).show()
+            nav.navigate(Route.VisaPay.path) { launchSingleTop = true }
+            return
+        }
+        nav.navigate(Route.VisaPayPayment.withTapLink(tapLink)) { launchSingleTop = true }
+    }
+
     private suspend fun navigateWhenReady(navigate: (NavHostController) -> Unit) {
         val navController = navControllerFlow.filterNotNull().first()
         navigate(navController)
@@ -228,11 +250,7 @@ class WalletKitActivity : AppCompatActivity() {
                 Timber.d("NFC: Payment URL received via NFC: %s", paymentUrl)
                 // Use pair() which detects payment links, fetches payment options,
                 // and emits to paymentEventFlow (which triggers navigation)
-                lifecycleScope.launch {
-                    navigateWhenReady {
-                        web3walletViewModel.pair(paymentUrl)
-                    }
-                }
+                handleNfcPaymentUrl(paymentUrl)
                 return
             }
         }

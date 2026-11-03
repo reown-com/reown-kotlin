@@ -23,7 +23,10 @@ sealed class Route(val path: String) {
     data object ThemeVariables : Route("theme_variables")
     data object VisaPay : Route("visapay")
     data object VisaPayOnboarding : Route("visapay_onboarding")
-    data object VisaPayPayment : Route("visapay_payment")
+    data object VisaPayPayment : Route("visapay_payment") {
+        /** Opens the mocked payment sheet for a VisaPay link read over NFC from the sample POS. */
+        fun withTapLink(link: String): String = "$path?tap=${android.net.Uri.encode(link)}"
+    }
 }
 
 fun NavController.showSnackbar(message: String) {

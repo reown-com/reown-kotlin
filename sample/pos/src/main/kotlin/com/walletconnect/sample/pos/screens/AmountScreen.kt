@@ -38,7 +38,9 @@ import com.walletconnect.sample.pos.model.formatAmountWithSymbol
 fun AmountScreen(
     viewModel: POSViewModel,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    chargeLabel: String = "Charge",
+    onCharge: ((amountInCents: String) -> Unit)? = null,
 ) {
     var amountDisplay by rememberSaveable { mutableStateOf("") }
     val isLoading by viewModel.isLoading.collectAsState()
@@ -52,7 +54,7 @@ fun AmountScreen(
     val isValid = amountDisplay.isNotBlank() && (amountDisplay.toDoubleOrNull() ?: 0.0) > 0 && !isLoading
     val chargeText = if (isValid) {
         val dollars = amountDisplay.toDoubleOrNull() ?: 0.0
-        "Charge ${formatAmountWithSymbol(String.format("%.2f", dollars), currency)}"
+        "$chargeLabel ${formatAmountWithSymbol(String.format("%.2f", dollars), currency)}"
     } else {
         "Enter amount"
     }
@@ -125,7 +127,7 @@ fun AmountScreen(
                 .background(WCTheme.colors.bgAccentPrimary)
                 .then(
                     if (isValid) Modifier.clickable {
-                        viewModel.createPayment(getAmountInCents())
+                        onCharge?.invoke(getAmountInCents()) ?: viewModel.createPayment(getAmountInCents())
                     } else Modifier
                 ),
             contentAlignment = Alignment.Center

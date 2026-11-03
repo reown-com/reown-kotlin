@@ -1,5 +1,7 @@
 package com.walletconnect.sample.pos
 
+import com.walletconnect.sample.pos.visapay.VisaPayTapScreen
+import com.walletconnect.sample.pos.visapay.VisaPayTapViewModel
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -49,6 +51,11 @@ sealed class Screen(val route: String, val label: String) {
         fun routeWith(amount: String) = "success?amount=${Uri.encode(amount)}"
         const val arg = "amount"
     }
+    object VisaPayAmountScreen : Screen("visapay_amount", "VisaPay amount")
+    object VisaPayTapScreen : Screen("visapay_tap?amount={amount}&currency={currency}", "VisaPay tap") {
+        fun routeWith(amountInCents: String, currencyCode: String) =
+            "visapay_tap?amount=${Uri.encode(amountInCents)}&currency=${Uri.encode(currencyCode)}"
+    }
     object TransactionHistoryScreen : Screen("history", "History")
     object SettingsScreen : Screen("settings", "Settings")
     object LogsScreen : Screen("logs", "Logs")
@@ -96,7 +103,46 @@ fun POSSampleHost(
                 .background(WCTheme.colors.bgPrimary)
         ) {
             composable(Screen.StartPaymentScreen.route) {
-                StartPaymentScreen(viewModel)
+                StartPaymentScreen(
+                    viewModel = viewModel,
+                    onVisaPayTap = { navController.navigate(Screen.VisaPayAmountScreen.route) }
+                )
+            }
+
+            composable(Screen.VisaPayAmountScreen.route) {
+                AmountScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    chargeLabel = "Tap to pay",
+                    onCharge = { amountInCents ->
+                        navController.navigate(
+                            Screen.VisaPayTapScreen.routeWith(amountInCents, viewModel.selectedCurrency.value.code)
+                        )
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.VisaPayTapScreen.route,
+                arguments = listOf(
+                    navArgument(VisaPayTapViewModel.ARG_AMOUNT) { type = NavType.StringType; defaultValue = "0" },
+                    navArgument(VisaPayTapViewModel.ARG_CURRENCY) { type = NavType.StringType; defaultValue = "USD" },
+                )
+            ) {
+                VisaPayTapScreen(
+                    onCancel = { navController.popBackStack() },
+                    onNewSale = {
+                        navController.navigate(Screen.VisaPayAmountScreen.route) {
+                            popUpTo(Screen.VisaPayAmountScreen.route) { inclusive = true }
+                        }
+                    },
+                    onDone = {
+                        navController.navigate(Screen.StartPaymentScreen.route) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
 
             composable(Screen.AmountScreen.route) {
@@ -161,6 +207,7 @@ fun POSSampleHost(
                 ErrorScreen(
                     errorCode = errorCode.orEmpty(),
                     onClose = onClose,
+                    onVisaPayDemo = { navController.navigate(Screen.VisaPayAmountScreen.route) },
                     onNewPayment = {
                         viewModel.resetForNewPayment()
                         navController.navigate(Screen.StartPaymentScreen.route) {

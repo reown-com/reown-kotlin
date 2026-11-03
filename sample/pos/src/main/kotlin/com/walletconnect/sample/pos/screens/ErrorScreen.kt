@@ -38,6 +38,7 @@ fun ErrorScreen(
     errorCode: String,
     onNewPayment: () -> Unit,
     onClose: (() -> Unit)? = null,
+    onVisaPayDemo: (() -> Unit)? = null,
 ) {
     val isInitError = errorCode == ErrorCodes.INIT_FAILED
     val (title, subtitle) = getErrorMessages(errorCode)
@@ -114,6 +115,27 @@ fun ErrorScreen(
                         modifier = Modifier.size(16.dp)
                     )
                 }
+            }
+        }
+
+        // The VisaPay tap-to-pay demo is fully mocked, so it stays usable without merchant credentials.
+        if (isInitError && onVisaPayDemo != null) {
+            Spacer(Modifier.height(WCTheme.spacing.spacing3))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = WCTheme.spacing.spacing5)
+                    .height(48.dp)
+                    .clip(WCTheme.borderRadius.shapeLarge)
+                    .background(WCTheme.colors.foregroundPrimary)
+                    .clickable(onClick = onVisaPayDemo),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "VisaPay tap to pay demo",
+                    style = WCTheme.typography.bodyLgRegular,
+                    color = WCTheme.colors.textPrimary
+                )
             }
         }
 

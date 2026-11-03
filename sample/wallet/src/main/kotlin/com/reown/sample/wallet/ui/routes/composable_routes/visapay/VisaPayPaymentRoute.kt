@@ -1,5 +1,6 @@
 package com.reown.sample.wallet.ui.routes.composable_routes.visapay
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -32,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
@@ -50,6 +52,21 @@ fun VisaPayPaymentRoute(
     val state by viewModel.state.collectAsState()
     val spacing = WCTheme.spacing
     val colors = WCTheme.colors
+    val view = LocalView.current
+
+    // Beep + haptic as soon as a POS tap opens the sheet, chime when the payment is approved.
+    LaunchedEffect(Unit) {
+        if (state.request.isContactless) {
+            VisaPaySounds.playTap()
+            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        }
+    }
+    LaunchedEffect(state.isApproved) {
+        if (state.isApproved) {
+            VisaPaySounds.playApproved()
+            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -72,11 +89,19 @@ fun VisaPayPaymentRoute(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(spacing.spacing4)
         ) {
-            ProcessingRing(isApproved = state.isApproved)
-            Text(
-                text = formatUsdc(state.request.amount),
-                style = WCTheme.typography.h3Regular.copy(color = colors.textPrimary)
-            )
+            ProcessingRing(isApproved = state.isApproved, isContactless = state.request.isContactless)
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(spacing.spacing1)) {
+                Text(
+                    text = state.request.fiatLabel ?: formatUsdc(state.request.amount),
+                    style = WCTheme.typography.h3Regular.copy(color = colors.textPrimary)
+                )
+                if (state.request.fiatLabel != null) {
+                    Text(
+                        text = "Paying ${formatUsdc(state.request.amount)}",
+                        style = WCTheme.typography.bodyMdRegular.copy(color = colors.textTertiary)
+                    )
+                }
+            }
             AnimatedContent(
                 targetState = state.stage,
                 transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
@@ -134,13 +159,14 @@ private fun MerchantHeader(request: VisaPayPaymentRequest, modifier: Modifier = 
         Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing05)) {
             Text(text = request.merchant, style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
             Text(text = "${request.category} · Card payment", style = WCTheme.typography.bodyMdRegular.copy(color = colors.textTertiary))
+            if (request.isContactless) VisaPayBadge("Contactless · Tap to pay", VisaPayBadgeTone.ACCENT)
         }
     }
 }
 
 /** Ring that fills over the whole processing time, then turns into a success check. */
 @Composable
-private fun ProcessingRing(isApproved: Boolean) {
+private fun ProcessingRing(isApproved: Boolean, isContactless: Boolean) {
     val spacing = WCTheme.spacing
     val colors = WCTheme.colors
     val ringSize = spacing.spacing13 + spacing.spacing10
@@ -191,7 +217,7 @@ private fun ProcessingRing(isApproved: Boolean) {
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.ic_card),
+                        painter = painterResource(if (isContactless) R.drawable.ic_nfc_contactless else R.drawable.ic_card),
                         contentDescription = null,
                         modifier = Modifier.size(spacing.spacing8),
                         colorFilter = ColorFilter.tint(colors.iconAccentPrimary)
@@ -237,6 +263,10 @@ private fun Receipt(state: VisaPayPaymentState) {
         ReceiptRow("Merchant", state.request.merchant)
         Divider(color = colors.borderPrimary)
         ReceiptRow("Amount", formatUsdc(state.request.amount))
+        state.request.reference?.let { reference ->
+            Divider(color = colors.borderPrimary)
+            ReceiptRow("Order", reference, monospace = true)
+        }
         Divider(color = colors.borderPrimary)
         ReceiptRow("Card", "•••• ${card?.lastDigits ?: VisaPayMocks.CARD_LAST_DIGITS}")
         Divider(color = colors.borderPrimary)

@@ -116,7 +116,14 @@ fun Web3WalletNavGraph(
         composable(Route.VisaPayOnboarding.path) {
             VisaPayOnboardingRoute(navController)
         }
-        bottomSheet(Route.VisaPayPayment.path) {
+        bottomSheet(
+            route = "${Route.VisaPayPayment.path}?tap={tap}",
+            arguments = listOf(navArgument("tap") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) {
             VisaPayPaymentRoute(navController)
         }
         bottomSheet(Route.ImportWallet.path) {
