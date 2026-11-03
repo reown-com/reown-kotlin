@@ -2,6 +2,7 @@ package com.reown.sample.wallet.ui.routes.composable_routes.visapay
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.navigation.NavController
@@ -45,7 +48,12 @@ fun VisaPayRoute(navController: NavController) {
         if (activeCard == null) {
             VisaPayWelcome(onStart = { navController.navigate(Route.VisaPayOnboarding.path) })
         } else {
-            VisaPayCardHome(card = activeCard, payments = payments, onReset = VisaPayMockRepository::reset)
+            VisaPayCardHome(
+                card = activeCard,
+                payments = payments,
+                onScan = { navController.navigate(Route.ScanUri.path) },
+                onReset = VisaPayMockRepository::reset
+            )
         }
     }
 }
@@ -127,7 +135,12 @@ private fun VisaPayWelcome(onStart: () -> Unit) {
 }
 
 @Composable
-private fun VisaPayCardHome(card: VisaPayCard, payments: List<VisaPayPayment>, onReset: () -> Unit) {
+private fun VisaPayCardHome(
+    card: VisaPayCard,
+    payments: List<VisaPayPayment>,
+    onScan: () -> Unit,
+    onReset: () -> Unit,
+) {
     val spacing = WCTheme.spacing
     val colors = WCTheme.colors
     val firstName = card.cardholderName.trim().substringBefore(" ").ifBlank { "there" }
@@ -142,7 +155,14 @@ private fun VisaPayCardHome(card: VisaPayCard, payments: List<VisaPayPayment>, o
             .padding(top = spacing.spacing8, bottom = spacing.spacing6),
         verticalArrangement = Arrangement.spacedBy(spacing.spacing6)
     ) {
-        Text(text = "Hi, $firstName", style = WCTheme.typography.h4Regular.copy(color = colors.textPrimary))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "Hi, $firstName",
+                modifier = Modifier.weight(1f),
+                style = WCTheme.typography.h4Regular.copy(color = colors.textPrimary)
+            )
+            ScanButton(onClick = onScan)
+        }
         VisaPayCardVisual {
             Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing1)) {
                 Text(
@@ -226,5 +246,27 @@ private fun PaymentRow(payment: VisaPayPayment) {
             Text(text = payment.category, style = WCTheme.typography.bodyMdRegular.copy(color = colors.textTertiary))
         }
         Text(text = "-${formatUsdc(payment.amount)}", style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary))
+    }
+}
+
+/** Same look as the scan button in the Wallets header; opens the QR scanner to pay with the card. */
+@Composable
+private fun ScanButton(onClick: () -> Unit) {
+    val colors = WCTheme.colors
+    Box(
+        modifier = Modifier
+            .size(WCTheme.spacing.spacing10)
+            .clip(WCTheme.borderRadius.shapeMedium)
+            .background(colors.bgInvert)
+            .clickable(onClick = onClick)
+            .testTag("button-visapay-scan"),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_qr_code),
+            contentDescription = "Scan to pay",
+            modifier = Modifier.size(WCTheme.spacing.spacing5),
+            tint = colors.bgPrimary
+        )
     }
 }
