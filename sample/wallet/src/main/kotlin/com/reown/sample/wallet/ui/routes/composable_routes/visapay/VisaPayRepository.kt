@@ -55,7 +55,11 @@ object VisaPayRepository {
         }
         return when (record.status) {
             KycStatus.APPROVED -> {
-                val card = VisaPayServiceClient.createCard(userRef = externalId, deviceId = "android-" + randomId(16))
+                val card = VisaPayServiceClient.createCard(
+                    userRef = externalId,
+                    deviceId = "android-" + randomId(16),
+                    email = application.email,
+                )
                 KycDecision.Approved(cardholderName = application.fullName, issuedCard = IssuedCard(card.id, card.last4))
             }
             KycStatus.REJECTED -> KycDecision.Rejected(record.reason ?: "The bank could not verify your identity.")

@@ -45,11 +45,13 @@ internal object VisaPayServiceClient {
 
     // ---------- vpay-server (card, payments) ----------
 
-    suspend fun createCard(userRef: String, deviceId: String): ServerCard =
+    /** [email] is enrolled with the card so the demo store (visa-pay-store) can find it at checkout. */
+    suspend fun createCard(userRef: String, deviceId: String, email: String): ServerCard =
         vpay("POST", "/v1/cards", JSONObject().apply {
             put("user_ref", userRef)
             put("device_id", deviceId)
             put("os_type", "ANDROID")
+            put("email", email)
         }).toServerCard()
 
     suspend fun setDailyLimit(cardId: String, dailyLimit: Int): ServerCard =
