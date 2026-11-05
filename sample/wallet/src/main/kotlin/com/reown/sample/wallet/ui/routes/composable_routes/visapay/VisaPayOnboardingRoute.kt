@@ -491,7 +491,7 @@ private fun ActivatingStep(state: VisaPayOnboardingState, onRetry: () -> Unit, o
             TimelineRow(
                 stateOf(VisaPayActivationStage.ACTIVATING_CARD),
                 "Activating your card",
-                "Card ending ${state.issuedCard?.last4 ?: VisaPayMocks.CARD_LAST_DIGITS}"
+                "Daily limit, checkout email and funding"
             )
         }
         state.activationError?.let { error ->
@@ -633,6 +633,21 @@ private fun ColumnScope.SetupStep(
                 )
             }
             UseSampleWalletButton(address = viewModel.sampleWalletAddress, onClick = viewModel::useSampleWalletAddress)
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing2)) {
+            VisaPayTextField(
+                label = "Email for online checkout",
+                value = state.checkoutEmail,
+                onValueChange = viewModel::onCheckoutEmailChange,
+                placeholder = "name@example.com",
+                keyboardType = KeyboardType.Email,
+                isError = state.checkoutEmail.isNotEmpty() && !state.isCheckoutEmailValid
+            )
+            Text(
+                text = "At an online checkout, choose Pay with Visa Pay and enter this email. We send a one-time code to confirm.",
+                style = WCTheme.typography.bodyMdRegular.paragraph().copy(color = colors.textTertiary)
+            )
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing2)) {

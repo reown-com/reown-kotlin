@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
@@ -197,11 +198,14 @@ private fun VisaPayCardHome(
             Divider(color = colors.borderPrimary)
             HomeRow("Daily limit") { HomeValue(limitLabel) }
             Divider(color = colors.borderPrimary)
+            HomeRow("Card balance") { HomeValue("${formatUsdc(card.balance.available)} available") }
+            Divider(color = colors.borderPrimary)
             HomeRow("Funding wallet") { HomeValue("$walletShort · ${card.network.label}", monospace = true) }
             Divider(color = colors.borderPrimary)
             HomeRow("Identity") { VisaPayBadge("Verified", VisaPayBadgeTone.NEUTRAL) }
         }
-        CardDetailsSection()
+        AddFundsRow()
+        PayOnlineSection(card)
         Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing2)) {
             Text(text = "Recent activity", style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
             if (payments.isEmpty()) {
@@ -272,6 +276,95 @@ private fun PaymentRow(payment: VisaPayPayment) {
     }
 }
 
+/** Demo stand-in for a deposit: payments need the amount within the card's available balance. */
+@Composable
+private fun AddFundsRow() {
+    val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    Column(verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing1)) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            VisaPayTextButton(if (isLoading) "Adding funds…" else "Add ${formatUsdc(DEMO_TOP_UP_AMOUNT)}") {
+                if (isLoading) return@VisaPayTextButton
+                isLoading = true
+                error = null
+                scope.launch {
+                    runCatching { VisaPayRepository.addFunds(DEMO_TOP_UP_AMOUNT) }.onFailure { error = it.message }
+                    isLoading = false
+                }
+            }
+        }
+        error?.let { Text(text = it, style = WCTheme.typography.bodyMdRegular.paragraph().copy(color = WCTheme.colors.textError)) }
+    }
+}
+
+private const val DEMO_TOP_UP_AMOUNT = 100.0
+
+/**
+ * The two ways to pay online at the demo store (visa-pay-store): "Pay with Visa Pay" finds the card by the
+ * registered email, and the card form takes the card number, expiry and one-time code.
+ */
+@Composable
+private fun PayOnlineSection(card: VisaPayCard) {
+    val spacing = WCTheme.spacing
+    val colors = WCTheme.colors
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing3)) {
+        Text(text = "Pay online", style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
+        CheckoutEmailSection(card.checkoutEmail)
+        CardDetailsSection()
+    }
+}
+
+/** Email a shop finds the card by. Changing it updates the Visa Pay enrollment on vpay-server. */
+@Composable
+private fun CheckoutEmailSection(registeredEmail: String) {
+    val spacing = WCTheme.spacing
+    val colors = WCTheme.colors
+    val scope = rememberCoroutineScope()
+    var isEditing by remember { mutableStateOf(false) }
+    var input by remember(registeredEmail) { mutableStateOf(registeredEmail) }
+    var isSaving by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing2)) {
+        Text(text = "With your email", style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary))
+        if (!isEditing) {
+            VisaPaySurface {
+                HomeRow("Checkout email") { HomeValue(registeredEmail) }
+            }
+            Text(
+                text = "Choose Pay with Visa Pay at checkout and enter this email.",
+                style = WCTheme.typography.bodyMdRegular.copy(color = colors.textTertiary)
+            )
+            VisaPayTextButton("Change email") { isEditing = true }
+        } else {
+            VisaPayTextField(
+                label = "Checkout email",
+                value = input,
+                onValueChange = { input = it },
+                placeholder = "name@example.com",
+                keyboardType = KeyboardType.Email,
+            )
+            VisaPayPrimaryButton(if (isSaving) "Saving…" else "Save email", enabled = !isSaving && input.contains("@")) {
+                isSaving = true
+                error = null
+                scope.launch {
+                    runCatching { VisaPayRepository.updateCheckoutEmail(input) }
+                        .onSuccess { isEditing = false }
+                        .onFailure { error = it.message }
+                    isSaving = false
+                }
+            }
+            VisaPayTextButton("Cancel") {
+                isEditing = false
+                input = registeredEmail
+                error = null
+            }
+        }
+        error?.let { Text(text = it, style = WCTheme.typography.bodyMdRegular.paragraph().copy(color = colors.textError)) }
+    }
+}
+
 /**
  * Card number, expiry and one-time code for paying online, fetched from vpay-server on demand.
  * Each fetch gives a new code and invalidates the previous one, so it is only loaded when asked for.
@@ -298,7 +391,7 @@ private fun CardDetailsSection() {
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing2)) {
-        Text(text = "Pay online", style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
+        Text(text = "With your card details", style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary))
         val shown = details
         if (shown == null) {
             VisaPayBody("Show your card number, expiry and a one-time security code to pay at an online checkout.")

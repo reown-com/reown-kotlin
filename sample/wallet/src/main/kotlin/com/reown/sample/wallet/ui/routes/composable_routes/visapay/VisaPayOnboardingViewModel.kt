@@ -44,6 +44,8 @@ data class VisaPayOnboardingState(
     val dailyLimit: String = "",
     val fundingWallet: String = "",
     val network: VisaPayNetwork = VisaPayNetwork.BASE,
+    /** Email for online checkout; null until edited, so it follows the onboarding email. */
+    val checkoutEmailInput: String? = null,
     val activationStage: VisaPayActivationStage = VisaPayActivationStage.PREPARING_PERMIT2,
     /** Card vpay-server issued once the bank approved KYC. */
     val issuedCard: IssuedCard? = null,
@@ -66,13 +68,16 @@ data class VisaPayOnboardingState(
     val isIdentityValid: Boolean get() = captures.containsAll(requiredCaptures)
     val dailyLimitValue: Int get() = dailyLimit.toIntOrNull() ?: 0
     val isWalletValid: Boolean get() = WALLET_REGEX.matches(fundingWallet.trim())
-    val isSetupValid: Boolean get() = dailyLimitValue > 0 && isWalletValid
+    val checkoutEmail: String get() = (checkoutEmailInput ?: email).trim()
+    val isCheckoutEmailValid: Boolean get() = EMAIL_REGEX.matches(checkoutEmail)
+    val isSetupValid: Boolean get() = dailyLimitValue > 0 && isWalletValid && isCheckoutEmailValid
 
     val addressLine: String get() = listOf(street, street2).filter { it.isNotBlank() }.joinToString(", ")
     val cityLine: String get() = listOf(postcode, city, country).filter { it.isNotBlank() }.joinToString(" ")
 
     private companion object {
         val WALLET_REGEX = Regex("^0x[a-fA-F0-9]{40}$")
+        val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
         val DOB_REGEX = Regex("^\\d{1,2}/\\d{1,2}/\\d{4}$")
     }
 }
@@ -159,6 +164,7 @@ class VisaPayOnboardingViewModel : ViewModel() {
     fun onFundingWalletChange(value: String) = _state.update { it.copy(fundingWallet = value) }
     fun useSampleWalletAddress() = _state.update { it.copy(fundingWallet = sampleWalletAddress) }
     fun onNetworkChange(network: VisaPayNetwork) = _state.update { it.copy(network = network) }
+    fun onCheckoutEmailChange(value: String) = _state.update { it.copy(checkoutEmailInput = value) }
 
     /**
      * Mocks what happens under the hood after the user taps "Activate card": the wallet signs a
@@ -172,6 +178,7 @@ class VisaPayOnboardingViewModel : ViewModel() {
             dailyLimit = current.dailyLimitValue,
             fundingWallet = current.fundingWallet.trim(),
             network = current.network,
+            checkoutEmail = current.checkoutEmail,
         )
         _state.update {
             it.copy(step = VisaPayStep.ACTIVATING, activationStage = VisaPayActivationStage.PREPARING_PERMIT2, activationError = null)

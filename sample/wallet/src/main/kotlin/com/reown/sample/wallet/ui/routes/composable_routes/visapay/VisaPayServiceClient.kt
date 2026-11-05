@@ -54,8 +54,21 @@ internal object VisaPayServiceClient {
             put("email", email)
         }).toServerCard()
 
-    suspend fun setDailyLimit(cardId: String, dailyLimit: Int): ServerCard =
-        vpay("PATCH", "/v1/cards/$cardId", JSONObject().put("daily_limit", dailyLimit)).toServerCard()
+    /**
+     * Updates the card: the daily limit, and/or the email a shop finds the card by at an online checkout
+     * (Pismo's Update Enrollment). The server answers 400 `invalid_email` for a malformed address.
+     */
+    suspend fun updateCard(cardId: String, dailyLimit: Int? = null, email: String? = null): ServerCard =
+        vpay("PATCH", "/v1/cards/$cardId", JSONObject().apply {
+            dailyLimit?.let { put("daily_limit", it) }
+            email?.let { put("email", it) }
+        }).toServerCard()
+
+    /** Demo stand-in for a deposit: credits the card so authorizations fit its available balance. */
+    suspend fun fund(cardId: String, amount: Double): CardBalance =
+        vpay("POST", "/v1/cards/$cardId/fund", JSONObject().put("amount", amount)).let {
+            CardBalance(balance = it.optDouble("balance", 0.0), available = it.optDouble("available", 0.0))
+        }
 
     /** Limited-use keys for tap to pay. Returns how many payments they allow. */
     suspend fun replenishTapKeys(cardId: String): Int? =
@@ -77,6 +90,7 @@ internal object VisaPayServiceClient {
         vpay("GET", "/v1/cards/$cardId/activity").let { json ->
             ServerActivity(
                 leftToday = json.optDouble("left_today", 0.0),
+                balance = CardBalance(balance = json.optDouble("balance", 0.0), available = json.optDouble("available", 0.0)),
                 authorizations = json.optJSONArray("authorizations").orEmpty().map { item ->
                     ServerAuthorization(
                         transactionId = item.optString("pismo_transaction_id"),
@@ -173,6 +187,9 @@ internal data class ServerAuthorization(
     val responseCode: String,
 )
 
-internal data class ServerActivity(val leftToday: Double, val authorizations: List<ServerAuthorization>)
+internal data class ServerActivity(val leftToday: Double, val balance: CardBalance, val authorizations: List<ServerAuthorization>)
+
+/** Funded balance, and what is available after open holds from approved payments. */
+data class CardBalance(val balance: Double, val available: Double)
 
 data class VisaPayCardDetails(val number: String, val expiry: String, val cvv: String)

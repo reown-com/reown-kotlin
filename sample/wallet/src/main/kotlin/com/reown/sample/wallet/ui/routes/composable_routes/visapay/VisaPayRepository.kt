@@ -84,9 +84,14 @@ object VisaPayRepository {
         return MOCK_PERMIT2_SIGNATURE
     }
 
-    /** Sets the daily limit on vpay-server and fetches the tap-to-pay keys, then makes the card active. */
+    /**
+     * Activates the card on vpay-server: sets the daily limit, registers the email for online checkout,
+     * funds the card with the daily limit (demo stand-in for the deposit the Permit2 allowance backs)
+     * and fetches the tap-to-pay keys.
+     */
     suspend fun activateCard(issuedCard: IssuedCard, cardholderName: String, setup: VisaPayCardSetup): VisaPayCard {
-        val serverCard = VisaPayServiceClient.setDailyLimit(issuedCard.id, setup.dailyLimit)
+        val serverCard = VisaPayServiceClient.updateCard(issuedCard.id, dailyLimit = setup.dailyLimit, email = setup.checkoutEmail)
+        val balance = VisaPayServiceClient.fund(issuedCard.id, setup.dailyLimit.toDouble())
         VisaPayServiceClient.replenishTapKeys(issuedCard.id)
         val card = VisaPayCard(
             id = serverCard.id,
@@ -96,6 +101,8 @@ object VisaPayRepository {
             fundingWallet = setup.fundingWallet,
             network = setup.network,
             leftToSpend = serverCard.dailyLimit,
+            checkoutEmail = setup.checkoutEmail,
+            balance = balance,
         )
         _card.value = card
         _payments.value = emptyList()
@@ -117,7 +124,7 @@ object VisaPayRepository {
     suspend fun refreshActivity() {
         val card = _card.value ?: return
         val activity = VisaPayServiceClient.activity(card.id)
-        _card.value = _card.value?.copy(leftToSpend = activity.leftToday)
+        _card.value = _card.value?.copy(leftToSpend = activity.leftToday, balance = activity.balance)
         _payments.value = activity.authorizations.map { authorization ->
             VisaPayPayment(
                 merchant = authorization.merchant,
@@ -126,6 +133,20 @@ object VisaPayRepository {
                 responseCode = authorization.responseCode,
             )
         }
+    }
+
+    /** Registers or replaces the email a shop finds the card by at an online checkout ("Pay with Visa Pay"). */
+    suspend fun updateCheckoutEmail(email: String) {
+        val card = _card.value ?: throw VisaPayServiceException("No active Visa Pay card")
+        VisaPayServiceClient.updateCard(card.id, email = email.trim())
+        _card.value = _card.value?.copy(checkoutEmail = email.trim().lowercase())
+    }
+
+    /** Demo stand-in for a deposit into the card balance. */
+    suspend fun addFunds(amount: Double) {
+        val card = _card.value ?: throw VisaPayServiceException("No active Visa Pay card")
+        val balance = VisaPayServiceClient.fund(card.id, amount)
+        _card.value = _card.value?.copy(balance = balance)
     }
 
     /** Card number, expiry and a new one-time code for an online checkout. Each call invalidates the last code. */
@@ -236,6 +257,8 @@ data class VisaPayCardSetup(
     val dailyLimit: Int,
     val fundingWallet: String,
     val network: VisaPayNetwork,
+    /** Email a shop finds the card by at an online checkout ("Pay with Visa Pay"). */
+    val checkoutEmail: String,
 )
 
 data class Permit2Approval(
@@ -255,6 +278,9 @@ data class VisaPayCard(
     val network: VisaPayNetwork,
     /** What is left of today's limit, as vpay-server reports it. */
     val leftToSpend: Double,
+    /** Email registered for online checkout, lowercased as Pismo stores it. */
+    val checkoutEmail: String,
+    val balance: CardBalance,
 )
 
 data class VisaPayPaymentRequest(
