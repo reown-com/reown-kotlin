@@ -15,6 +15,7 @@ enum class VisaPayStep(val number: Int?) {
     IDENTITY(3),
     REVIEW(4),
     IN_REVIEW(null),
+    KYC_FAILED(null),
     APPROVED(null),
     SETUP(null),
     ACTIVATING(null),
@@ -29,6 +30,7 @@ data class VisaPayOnboardingState(
     val step: VisaPayStep = VisaPayStep.DETAILS,
     // Personal details and address are prefilled with mock data so the demo is quick to click through.
     val fullName: String = VisaPayMocks.FULL_NAME,
+    val email: String = VisaPayMocks.EMAIL,
     val dateOfBirth: String = VisaPayMocks.DATE_OF_BIRTH,
     val nationality: String = VisaPayMocks.NATIONALITY,
     val street: String = VisaPayMocks.STREET,
@@ -43,6 +45,13 @@ data class VisaPayOnboardingState(
     val fundingWallet: String = "",
     val network: VisaPayNetwork = VisaPayNetwork.BASE,
     val activationStage: VisaPayActivationStage = VisaPayActivationStage.PREPARING_PERMIT2,
+    /** Card vpay-server issued once the bank approved KYC. */
+    val issuedCard: IssuedCard? = null,
+    /** Why KYC stopped: the bank's rejection reason, still in review, or a service error. */
+    val kycFailure: String? = null,
+    /** True when KYC or card issuing failed because a service call failed, not because of the bank's decision. */
+    val isServiceError: Boolean = false,
+    val activationError: String? = null,
 ) {
     val requiredCaptures: List<VisaPayCapture>
         get() = buildList {
@@ -51,7 +60,8 @@ data class VisaPayOnboardingState(
             add(VisaPayCapture.SELFIE)
         }
 
-    val isDetailsValid: Boolean get() = fullName.isNotBlank() && dateOfBirth.isNotBlank() && nationality.isNotBlank()
+    val isDetailsValid: Boolean
+        get() = fullName.isNotBlank() && email.contains("@") && DOB_REGEX.matches(dateOfBirth.trim()) && nationality.isNotBlank()
     val isAddressValid: Boolean get() = street.isNotBlank() && city.isNotBlank() && postcode.isNotBlank() && country.isNotBlank()
     val isIdentityValid: Boolean get() = captures.containsAll(requiredCaptures)
     val dailyLimitValue: Int get() = dailyLimit.toIntOrNull() ?: 0
@@ -63,12 +73,16 @@ data class VisaPayOnboardingState(
 
     private companion object {
         val WALLET_REGEX = Regex("^0x[a-fA-F0-9]{40}$")
+        val DOB_REGEX = Regex("^\\d{1,2}/\\d{1,2}/\\d{4}$")
     }
 }
 
 class VisaPayOnboardingViewModel : ViewModel() {
     private val _state = MutableStateFlow(VisaPayOnboardingState())
     val state: StateFlow<VisaPayOnboardingState> = _state.asStateFlow()
+
+    /** The ID capture is mocked, so the document number sent to the bank's KYC is generated. */
+    private val documentNumber = VisaPayMocks.DEMO_DOCUMENT_PREFIX + (1..7).map { ('0'..'9').random() }.joinToString("")
 
     val sampleWalletAddress: String
         get() = runCatching { EthAccountDelegate.address }.getOrNull()?.takeIf { it.startsWith("0x") }
@@ -83,7 +97,9 @@ class VisaPayOnboardingViewModel : ViewModel() {
             VisaPayStep.ADDRESS -> VisaPayStep.DETAILS
             VisaPayStep.IDENTITY -> VisaPayStep.ADDRESS
             VisaPayStep.REVIEW -> VisaPayStep.IDENTITY
-            VisaPayStep.IN_REVIEW, VisaPayStep.APPROVED, VisaPayStep.ACTIVATING -> return true
+            VisaPayStep.KYC_FAILED -> VisaPayStep.REVIEW
+            VisaPayStep.IN_REVIEW, VisaPayStep.APPROVED -> return true
+            VisaPayStep.ACTIVATING -> if (_state.value.activationError != null) VisaPayStep.SETUP else return true
             VisaPayStep.SETUP -> VisaPayStep.APPROVED
         }
         goTo(previous)
@@ -91,6 +107,7 @@ class VisaPayOnboardingViewModel : ViewModel() {
     }
 
     fun onFullNameChange(value: String) = _state.update { it.copy(fullName = value) }
+    fun onEmailChange(value: String) = _state.update { it.copy(email = value.trim()) }
     fun onDateOfBirthChange(value: String) = _state.update { it.copy(dateOfBirth = value) }
     fun onNationalityChange(value: String) = _state.update { it.copy(nationality = value) }
     fun onStreetChange(value: String) = _state.update { it.copy(street = value) }
@@ -108,12 +125,29 @@ class VisaPayOnboardingViewModel : ViewModel() {
 
     fun onConsentChange(value: Boolean) = _state.update { it.copy(consent = value) }
 
+    /** KYC with the BIN sponsor, then card issuing on vpay-server. */
     fun submitForReview() {
         val current = _state.value
-        _state.update { it.copy(step = VisaPayStep.IN_REVIEW) }
+        _state.update { it.copy(step = VisaPayStep.IN_REVIEW, kycFailure = null) }
         viewModelScope.launch {
-            when (VisaPayMockRepository.submitKycApplication(current.toApplication())) {
-                is KycDecision.Approved -> goTo(VisaPayStep.APPROVED)
+            val decision = runCatching { VisaPayRepository.submitKycApplication(current.toApplication()) }
+            _state.update { state ->
+                val result = decision.getOrElse { error ->
+                    return@update state.copy(
+                        step = VisaPayStep.KYC_FAILED,
+                        kycFailure = error.message ?: "Something went wrong",
+                        isServiceError = true
+                    )
+                }
+                when (result) {
+                    is KycDecision.Approved -> state.copy(step = VisaPayStep.APPROVED, issuedCard = result.issuedCard)
+                    is KycDecision.Rejected -> state.copy(step = VisaPayStep.KYC_FAILED, kycFailure = result.reason, isServiceError = false)
+                    KycDecision.InReview -> state.copy(
+                        step = VisaPayStep.KYC_FAILED,
+                        kycFailure = "The bank is still reviewing your application. Try again in a few minutes.",
+                        isServiceError = false
+                    )
+                }
             }
         }
     }
@@ -132,20 +166,25 @@ class VisaPayOnboardingViewModel : ViewModel() {
      */
     fun activateCard() {
         val current = _state.value
-        if (!current.isSetupValid || current.step == VisaPayStep.ACTIVATING) return
+        val issuedCard = current.issuedCard ?: return
+        if (!current.isSetupValid || (current.step == VisaPayStep.ACTIVATING && current.activationError == null)) return
         val setup = VisaPayCardSetup(
             dailyLimit = current.dailyLimitValue,
             fundingWallet = current.fundingWallet.trim(),
             network = current.network,
         )
-        _state.update { it.copy(step = VisaPayStep.ACTIVATING, activationStage = VisaPayActivationStage.PREPARING_PERMIT2) }
+        _state.update {
+            it.copy(step = VisaPayStep.ACTIVATING, activationStage = VisaPayActivationStage.PREPARING_PERMIT2, activationError = null)
+        }
         viewModelScope.launch {
-            val approval = VisaPayMockRepository.preparePermit2Approval(setup)
+            // The Permit2 allowance is still mocked; the daily limit and tap keys go to vpay-server.
+            val approval = VisaPayRepository.preparePermit2Approval(setup)
             setActivationStage(VisaPayActivationStage.SIGNING_PERMIT2)
-            VisaPayMockRepository.signPermit2Approval(approval)
+            VisaPayRepository.signPermit2Approval(approval)
             setActivationStage(VisaPayActivationStage.ACTIVATING_CARD)
-            VisaPayMockRepository.activateCard(cardholderName = current.fullName, setup = setup)
-            setActivationStage(VisaPayActivationStage.DONE)
+            runCatching { VisaPayRepository.activateCard(issuedCard, cardholderName = current.fullName, setup = setup) }
+                .onSuccess { setActivationStage(VisaPayActivationStage.DONE) }
+                .onFailure { error -> _state.update { it.copy(activationError = error.message ?: "Activation failed") } }
         }
     }
 
@@ -153,6 +192,8 @@ class VisaPayOnboardingViewModel : ViewModel() {
 
     private fun VisaPayOnboardingState.toApplication() = VisaPayApplication(
         fullName = fullName,
+        email = email,
+        documentNumber = documentNumber,
         dateOfBirth = dateOfBirth,
         nationality = nationality,
         addressLine = addressLine,

@@ -97,7 +97,7 @@ fun VisaPayOnboardingRoute(
                     VisaPayStep.DETAILS, VisaPayStep.ADDRESS, VisaPayStep.IDENTITY, VisaPayStep.REVIEW ->
                         StepHeader(step = step.number ?: 0, onBack = onBack)
 
-                    VisaPayStep.SETUP -> BackOnlyHeader(onBack = onBack)
+                    VisaPayStep.SETUP, VisaPayStep.KYC_FAILED -> BackOnlyHeader(onBack = onBack)
                     VisaPayStep.IN_REVIEW, VisaPayStep.APPROVED, VisaPayStep.ACTIVATING -> Unit
                 }
                 when (step) {
@@ -106,9 +106,19 @@ fun VisaPayOnboardingRoute(
                     VisaPayStep.IDENTITY -> IdentityStep(state, viewModel)
                     VisaPayStep.REVIEW -> ReviewStep(state, viewModel)
                     VisaPayStep.IN_REVIEW -> InReviewStep()
+                    VisaPayStep.KYC_FAILED -> KycFailedStep(
+                        title = if (state.isServiceError) "Couldn't reach Visa Pay" else "We couldn't verify you yet",
+                        reason = state.kycFailure.orEmpty(),
+                        onTryAgain = viewModel::submitForReview,
+                        onEdit = { viewModel.goTo(VisaPayStep.REVIEW) }
+                    )
                     VisaPayStep.APPROVED -> ApprovedStep(state, onSetUp = { viewModel.goTo(VisaPayStep.SETUP) })
                     VisaPayStep.SETUP -> SetupStep(state, viewModel)
-                    VisaPayStep.ACTIVATING -> ActivatingStep(state)
+                    VisaPayStep.ACTIVATING -> ActivatingStep(
+                        state = state,
+                        onRetry = viewModel::activateCard,
+                        onBack = { viewModel.goTo(VisaPayStep.SETUP) }
+                    )
                 }
             }
         }
@@ -205,6 +215,10 @@ private fun ColumnScope.DetailsStep(state: VisaPayOnboardingState, viewModel: Vi
         }
     ) {
         VisaPayTextField("Full legal name", state.fullName, viewModel::onFullNameChange, placeholder = "First and last name")
+        VisaPayTextField(
+            "Email", state.email, viewModel::onEmailChange,
+            placeholder = "name@example.com", keyboardType = KeyboardType.Email
+        )
         VisaPayTextField(
             "Date of birth", state.dateOfBirth, viewModel::onDateOfBirthChange,
             placeholder = "DD/MM/YYYY", keyboardType = KeyboardType.Number
@@ -409,14 +423,14 @@ private fun InReviewStep() {
         }
         VisaPaySurface {
             TimelineRow(TimelineState.DONE, "Application received", "Just now")
-            TimelineRow(TimelineState.ACTIVE, "Identity and address checks", "In progress")
-            TimelineRow(TimelineState.TODO, "Decision", "Usually within a few minutes")
+            TimelineRow(TimelineState.ACTIVE, "Identity checks with the bank", "In progress")
+            TimelineRow(TimelineState.TODO, "Issuing your Visa card", "Usually within a few seconds")
         }
     }
 }
 
 @Composable
-private fun ActivatingStep(state: VisaPayOnboardingState) {
+private fun ActivatingStep(state: VisaPayOnboardingState, onRetry: () -> Unit, onBack: () -> Unit) {
     val spacing = WCTheme.spacing
     val colors = WCTheme.colors
     val wallet = state.fundingWallet.trim()
@@ -430,10 +444,11 @@ private fun ActivatingStep(state: VisaPayOnboardingState) {
         else -> TimelineState.TODO
     }
 
-    val title = when (stage) {
-        VisaPayActivationStage.PREPARING_PERMIT2 -> "Preparing your card"
-        VisaPayActivationStage.SIGNING_PERMIT2 -> "Approving card payments"
-        VisaPayActivationStage.ACTIVATING_CARD, VisaPayActivationStage.DONE -> "Activating your card"
+    val title = when {
+        state.activationError != null -> "Couldn't activate your card"
+        stage == VisaPayActivationStage.PREPARING_PERMIT2 -> "Preparing your card"
+        stage == VisaPayActivationStage.SIGNING_PERMIT2 -> "Approving card payments"
+        else -> "Activating your card"
     }
 
     Column(
@@ -476,8 +491,36 @@ private fun ActivatingStep(state: VisaPayOnboardingState) {
             TimelineRow(
                 stateOf(VisaPayActivationStage.ACTIVATING_CARD),
                 "Activating your card",
-                "Card ending ${VisaPayMocks.CARD_LAST_DIGITS}"
+                "Card ending ${state.issuedCard?.last4 ?: VisaPayMocks.CARD_LAST_DIGITS}"
             )
+        }
+        state.activationError?.let { error ->
+            Text(text = error, style = WCTheme.typography.bodyMdRegular.paragraph().copy(color = colors.textError))
+            VisaPayPrimaryButton("Try again", onClick = onRetry)
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                VisaPayTextButton("Back to card setup", onBack)
+            }
+        }
+    }
+}
+
+@Composable
+private fun KycFailedStep(title: String, reason: String, onTryAgain: () -> Unit, onEdit: () -> Unit) {
+    val spacing = WCTheme.spacing
+    val colors = WCTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = spacing.spacing6)
+            .padding(top = spacing.spacing8, bottom = spacing.spacing6),
+        verticalArrangement = Arrangement.spacedBy(spacing.spacing5)
+    ) {
+        Text(text = title, style = WCTheme.typography.h5Regular.copy(color = colors.textPrimary))
+        Text(text = reason, style = WCTheme.typography.bodyLgRegular.paragraph().copy(color = colors.textTertiary))
+        VisaPayPrimaryButton("Try again", onClick = onTryAgain)
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            VisaPayTextButton("Check your details", onEdit)
         }
     }
 }
@@ -495,7 +538,7 @@ private fun ApprovedStep(state: VisaPayOnboardingState, onSetUp: () -> Unit) {
         VisaPayCardVisual {
             Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing1)) {
                 Text(
-                    text = "•••• •••• •••• ${VisaPayMocks.CARD_LAST_DIGITS}",
+                    text = "•••• •••• •••• ${state.issuedCard?.last4 ?: VisaPayMocks.CARD_LAST_DIGITS}",
                     style = WCTheme.typography.h6Regular.copy(color = WCTheme.colors.textInvert)
                 )
                 VisaPayCardFooter(left = state.fullName.ifBlank { "Cardholder name" }, right = "VISA")

@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
@@ -52,11 +53,13 @@ fun VisaPayPaymentRoute(
             view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         }
     }
-    LaunchedEffect(state.isApproved) {
-        if (state.isApproved) {
-            VisaPaySounds.playApproved()
-            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+    LaunchedEffect(state.stage) {
+        when (state.stage) {
+            VisaPayPaymentStage.APPROVED -> VisaPaySounds.playApproved()
+            VisaPayPaymentStage.DECLINED -> VisaPaySounds.playDeclined()
+            else -> return@LaunchedEffect
         }
+        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
     }
 
     Column(
@@ -72,7 +75,7 @@ fun VisaPayPaymentRoute(
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             MerchantHeader(state.request, modifier = Modifier.weight(1f))
-            if (state.isApproved) ModalCloseButton(onClick = { navController.popBackStack() })
+            if (state.stage.isFinal) ModalCloseButton(onClick = { navController.popBackStack() })
         }
 
         Column(
@@ -82,6 +85,7 @@ fun VisaPayPaymentRoute(
         ) {
             VisaPayProcessingCard(
                 isApproved = state.isApproved,
+                isDeclined = state.isDeclined,
                 isContactless = state.request.isContactless,
                 lastDigits = state.card?.lastDigits ?: VisaPayMocks.CARD_LAST_DIGITS,
             )
@@ -103,28 +107,32 @@ fun VisaPayPaymentRoute(
                 label = "visapay_payment_stage"
             ) { stage ->
                 Text(
-                    text = if (stage == VisaPayPaymentStage.APPROVED) "Payment approved" else "${stage.title}…",
+                    text = if (stage.isFinal) stage.title else "${stage.title}…",
                     textAlign = TextAlign.Center,
                     style = WCTheme.typography.bodyLgMedium.copy(
-                        color = if (stage == VisaPayPaymentStage.APPROVED) colors.textSuccess else colors.textTertiary
+                        color = when (stage) {
+                            VisaPayPaymentStage.APPROVED -> colors.textSuccess
+                            VisaPayPaymentStage.DECLINED -> colors.textError
+                            else -> colors.textTertiary
+                        }
                     )
                 )
             }
         }
 
         AnimatedContent(
-            targetState = state.isApproved,
+            targetState = state.stage.isFinal,
             transitionSpec = { fadeIn(tween(250)) togetherWith fadeOut(tween(150)) },
             label = "visapay_payment_body"
-        ) { approved ->
-            if (approved) {
+        ) { isFinal ->
+            if (isFinal) {
                 Receipt(state)
             } else {
                 StageTimeline(state.stage, state.card)
             }
         }
 
-        if (state.isApproved) {
+        if (state.stage.isFinal) {
             VisaPayPrimaryButton("Done", onClick = { navController.popBackStack() })
         }
     }
@@ -191,6 +199,10 @@ private fun Receipt(state: VisaPayPaymentState) {
     val card = state.card
     val wallet = card?.fundingWallet.orEmpty()
     VisaPaySurface {
+        if (state.isDeclined) {
+            ReceiptRow("Reason", state.failure ?: "Declined", valueColor = colors.textError)
+            Divider(color = colors.borderPrimary)
+        }
         ReceiptRow("Merchant", state.request.merchant)
         Divider(color = colors.borderPrimary)
         ReceiptRow("Amount", formatUsdc(state.request.amount))
@@ -201,18 +213,27 @@ private fun Receipt(state: VisaPayPaymentState) {
         Divider(color = colors.borderPrimary)
         ReceiptRow("Card", "•••• ${card?.lastDigits ?: VisaPayMocks.CARD_LAST_DIGITS}")
         Divider(color = colors.borderPrimary)
-        ReceiptRow("Paid from", "${wallet.take(6)}...${wallet.takeLast(4)} · ${card?.network?.label.orEmpty()}", monospace = true)
+        ReceiptRow(if (state.isDeclined) "Funding wallet" else "Paid from", "${wallet.take(6)}...${wallet.takeLast(4)} · ${card?.network?.label.orEmpty()}", monospace = true)
         if (card != null) {
             Divider(color = colors.borderPrimary)
             ReceiptRow("Left to spend today", formatUsdc(card.leftToSpend))
+        }
+        state.responseCode?.let { code ->
+            Divider(color = colors.borderPrimary)
+            ReceiptRow("Visa response", code, monospace = true)
         }
     }
 }
 
 @Composable
-private fun ReceiptRow(label: String, value: String, monospace: Boolean = false) {
+private fun ReceiptRow(
+    label: String,
+    value: String,
+    monospace: Boolean = false,
+    valueColor: Color = WCTheme.colors.textPrimary,
+) {
     val colors = WCTheme.colors
-    val valueStyle = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary)
+    val valueStyle = WCTheme.typography.bodyMdMedium.copy(color = valueColor)
     Row(
         modifier = Modifier
             .fillMaxWidth()

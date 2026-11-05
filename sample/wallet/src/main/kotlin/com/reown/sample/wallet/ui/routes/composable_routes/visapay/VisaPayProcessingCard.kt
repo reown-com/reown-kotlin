@@ -51,12 +51,13 @@ private const val PULSE_DURATION_MS = 700
 
 /**
  * The VisaPay card animating while a payment is processed: it springs in, floats with a light sweep
- * passing over it and fills a progress bar over the processing time. On approval it settles flat and
- * a check pops onto its corner. Contactless payments also pulse the contactless symbol.
+ * passing over it and fills a progress bar over the processing time. When the payment ends it settles flat and
+ * a check (approved) or a cross (declined) pops onto its corner. Contactless payments also pulse the contactless symbol.
  */
 @Composable
 internal fun VisaPayProcessingCard(
     isApproved: Boolean,
+    isDeclined: Boolean,
     isContactless: Boolean,
     lastDigits: String,
 ) {
@@ -96,16 +97,18 @@ internal fun VisaPayProcessingCard(
         animationSpec = infiniteRepeatable(tween(PULSE_DURATION_MS), RepeatMode.Reverse),
         label = "card_contactless_pulse"
     )
+    val isFinal = isApproved || isDeclined
     val motion = remember { Animatable(1f) }
-    LaunchedEffect(isApproved) {
-        motion.animateTo(if (isApproved) 0f else 1f, tween(400))
+    LaunchedEffect(isFinal) {
+        motion.animateTo(if (isFinal) 0f else 1f, tween(400))
     }
 
-    // Approval check pops in with a bounce.
+    // The result badge (check or cross) pops in with a bounce.
     val check = remember { Animatable(0f) }
-    LaunchedEffect(isApproved) {
-        if (isApproved) check.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
+    LaunchedEffect(isFinal) {
+        if (isFinal) check.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium))
     }
+    val resultColor = if (isDeclined) colors.iconError else colors.iconSuccess
 
     val floatOffsetPx = with(density) { spacing.spacing1.toPx() }
     val entryOffsetPx = with(density) { spacing.spacing10.toPx() }
@@ -157,7 +160,7 @@ internal fun VisaPayProcessingCard(
                                 contentDescription = null,
                                 modifier = Modifier
                                     .size(spacing.spacing6)
-                                    .graphicsLayer { alpha = if (isApproved) 1f else pulse },
+                                    .graphicsLayer { alpha = if (isFinal) 1f else pulse },
                                 colorFilter = ColorFilter.tint(colors.textInvert)
                             )
                         } else {
@@ -175,9 +178,9 @@ internal fun VisaPayProcessingCard(
                         Box(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .fillMaxWidth(if (isApproved) 1f else progress.value)
+                                .fillMaxWidth(if (isFinal) 1f else progress.value)
                                 .clip(WCTheme.borderRadius.shapeFull)
-                                .background(if (isApproved) colors.iconSuccess else colors.textInvert)
+                                .background(if (isFinal) resultColor else colors.textInvert)
                         )
                     }
                 }
@@ -195,13 +198,13 @@ internal fun VisaPayProcessingCard(
                     }
                     .size(spacing.spacing11)
                     .clip(CircleShape)
-                    .background(colors.iconSuccess)
+                    .background(resultColor)
                     .padding(spacing.spacing2),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(R.drawable.ic_check),
-                    contentDescription = "Payment approved",
+                    painter = painterResource(if (isDeclined) R.drawable.ic_x_close else R.drawable.ic_check),
+                    contentDescription = if (isDeclined) "Payment declined" else "Payment approved",
                     colorFilter = ColorFilter.tint(colors.textInvert)
                 )
             }

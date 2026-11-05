@@ -19,25 +19,33 @@ import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.navigation.NavController
 import com.reown.sample.common.ui.theme.WCTheme
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.ui.routes.Route
+import kotlinx.coroutines.launch
 
 /** "Card" tab: shows the KYC welcome screen until a card is activated, then the card home. */
 @Composable
 fun VisaPayRoute(navController: NavController) {
-    val card by VisaPayMockRepository.card.collectAsState()
-    val payments by VisaPayMockRepository.payments.collectAsState()
+    val card by VisaPayRepository.card.collectAsState()
+    val payments by VisaPayRepository.payments.collectAsState()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +60,7 @@ fun VisaPayRoute(navController: NavController) {
                 card = activeCard,
                 payments = payments,
                 onScan = { navController.navigate(Route.ScanUri.path) },
-                onReset = VisaPayMockRepository::reset
+                onReset = VisaPayRepository::reset
             )
         }
     }
@@ -147,6 +155,9 @@ private fun VisaPayCardHome(
     val limitLabel = formatUsdc(card.dailyLimit.toDouble())
     val walletShort = "${card.fundingWallet.take(6)}...${card.fundingWallet.takeLast(4)}"
 
+    // Pull what is left today and recent authorizations from vpay-server whenever the card home opens.
+    LaunchedEffect(card.id) { runCatching { VisaPayRepository.refreshActivity() } }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -190,6 +201,7 @@ private fun VisaPayCardHome(
             Divider(color = colors.borderPrimary)
             HomeRow("Identity") { VisaPayBadge("Verified", VisaPayBadgeTone.NEUTRAL) }
         }
+        CardDetailsSection()
         Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing2)) {
             Text(text = "Recent activity", style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
             if (payments.isEmpty()) {
@@ -245,7 +257,76 @@ private fun PaymentRow(payment: VisaPayPayment) {
             Text(text = payment.merchant, style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
             Text(text = payment.category, style = WCTheme.typography.bodyMdRegular.copy(color = colors.textTertiary))
         }
-        Text(text = "-${formatUsdc(payment.amount)}", style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary))
+        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(WCTheme.spacing.spacing05)) {
+            Text(
+                text = if (payment.isApproved) "-${formatUsdc(payment.amount)}" else formatUsdc(payment.amount),
+                style = WCTheme.typography.bodyMdMedium.copy(color = if (payment.isApproved) colors.textPrimary else colors.textTertiary)
+            )
+            if (!payment.isApproved) {
+                Text(
+                    text = declineReason(payment.responseCode),
+                    style = WCTheme.typography.bodySmRegular.copy(color = colors.textError)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Card number, expiry and one-time code for paying online, fetched from vpay-server on demand.
+ * Each fetch gives a new code and invalidates the previous one, so it is only loaded when asked for.
+ */
+@Composable
+private fun CardDetailsSection() {
+    val spacing = WCTheme.spacing
+    val colors = WCTheme.colors
+    val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboardManager.current
+    var details by remember { mutableStateOf<VisaPayCardDetails?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    fun load() {
+        isLoading = true
+        error = null
+        scope.launch {
+            runCatching { VisaPayRepository.cardDetails() }
+                .onSuccess { details = it }
+                .onFailure { error = it.message }
+            isLoading = false
+        }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.spacing2)) {
+        Text(text = "Pay online", style = WCTheme.typography.bodyLgMedium.copy(color = colors.textPrimary))
+        val shown = details
+        if (shown == null) {
+            VisaPayBody("Show your card number, expiry and a one-time security code to pay at an online checkout.")
+            VisaPayPrimaryButton(if (isLoading) "Loading…" else "Show card details", enabled = !isLoading, onClick = ::load)
+        } else {
+            VisaPaySurface {
+                HomeRow("Card number") {
+                    Text(
+                        text = shown.number.chunked(4).joinToString(" "),
+                        modifier = Modifier.clickable { clipboard.setText(AnnotatedString(shown.number)) },
+                        style = WCTheme.typography.bodyMdMedium.copy(color = colors.textPrimary, fontFamily = FontFamily.Monospace)
+                    )
+                }
+                Divider(color = colors.borderPrimary)
+                HomeRow("Expiry") { HomeValue(shown.expiry, monospace = true) }
+                Divider(color = colors.borderPrimary)
+                HomeRow("Security code") { HomeValue(shown.cvv, monospace = true) }
+            }
+            Text(
+                text = "The security code works once. Tap the number to copy it.",
+                style = WCTheme.typography.bodyMdRegular.copy(color = colors.textTertiary)
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(spacing.spacing2)) {
+                VisaPayTextButton("New code", ::load)
+                VisaPayTextButton("Hide") { details = null }
+            }
+        }
+        error?.let { Text(text = it, style = WCTheme.typography.bodyMdRegular.paragraph().copy(color = colors.textError)) }
     }
 }
 

@@ -29,7 +29,7 @@ import com.reown.sample.wallet.ui.routes.composable_routes.settings.SettingsRout
 import com.reown.sample.wallet.ui.routes.composable_routes.theme_variables.ThemeVariablesRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.wallets.WalletsRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayOnboardingRoute
-import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayMockRepository
+import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayRepository
 import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayPaymentRoute
 import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayRoute
 import com.reown.sample.wallet.ui.routes.bottomsheet_routes.scanner_options.ScannerOptionsRoute
@@ -64,7 +64,7 @@ fun Web3WalletNavGraph(
     // VisaPay demo: while a card is active, any scanned or pasted code starts a mocked card payment
     // instead of WalletConnect pairing. Without a card, scanning behaves as before.
     val onScanned: (String) -> Unit = { scanned ->
-        if (VisaPayMockRepository.card.value != null) {
+        if (VisaPayRepository.card.value != null) {
             navController.navigate(Route.VisaPayPayment.path) { launchSingleTop = true }
         } else {
             web3walletViewModel.pair(scanned)

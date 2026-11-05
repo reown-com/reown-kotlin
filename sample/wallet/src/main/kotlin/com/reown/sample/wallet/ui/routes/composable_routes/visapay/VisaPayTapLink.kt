@@ -34,7 +34,7 @@ object VisaPayTapLink {
     }
 }
 
-/** Terminal-style sounds on the wallet: a beep when the tap is read, a chime when the payment is approved. */
+/** Terminal-style sounds on the wallet: a beep when the tap is read, a chime when the payment is approved, a low tone when it's declined. */
 object VisaPaySounds {
     private const val TAP_DURATION_MS = 180
     private const val APPROVED_DURATION_MS = 500
@@ -42,6 +42,8 @@ object VisaPaySounds {
     fun playTap() = play(ToneGenerator.TONE_PROP_BEEP, TAP_DURATION_MS)
 
     fun playApproved() = play(ToneGenerator.TONE_PROP_ACK, APPROVED_DURATION_MS)
+
+    fun playDeclined() = play(ToneGenerator.TONE_PROP_NACK, APPROVED_DURATION_MS)
 
     private fun play(tone: Int, durationMs: Int) {
         val generator = runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME) }.getOrNull() ?: return

@@ -60,7 +60,7 @@ import com.reown.sample.wallet.domain.account.EthAccountDelegate
 import com.reown.sample.wallet.domain.notify.NotifyDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.nfc.NfcPaymentReader
-import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayMockRepository
+import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayRepository
 import com.reown.sample.wallet.ui.routes.composable_routes.visapay.VisaPayTapLink
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
@@ -228,8 +228,8 @@ class WalletKitActivity : AppCompatActivity() {
 
     private fun openVisaPayTap(nav: NavHostController, tapLink: String) {
         val request = VisaPayTapLink.parse(tapLink) ?: return
-        if (!VisaPayMockRepository.markTapHandled(request.reference)) return
-        if (VisaPayMockRepository.card.value == null) {
+        if (!VisaPayRepository.markTapHandled(request.reference)) return
+        if (VisaPayRepository.card.value == null) {
             Toast.makeText(this, "Activate your VisaPay card first, then tap again.", Toast.LENGTH_LONG).show()
             nav.navigate(Route.VisaPay.path) { launchSingleTop = true }
             return
