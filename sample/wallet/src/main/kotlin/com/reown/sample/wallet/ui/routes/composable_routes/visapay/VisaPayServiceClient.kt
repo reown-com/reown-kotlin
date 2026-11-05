@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
  *   card details, payments and activity.
  *
  * Base URLs and keys come from BuildConfig (`VPAY_SERVER_URL`, `BIN_SPONSOR_URL`, ...). The defaults point at the
- * services running locally on the laptop, reached from the phone through `adb reverse`.
+ * deployed hackathon workers; set the env vars at build time to use local services instead.
  */
 internal object VisaPayServiceClient {
     private val JSON = "application/json".toMediaType()

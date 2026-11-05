@@ -28,10 +28,11 @@ android {
         buildConfigField("String", "PROJECT_ID", "\"${System.getenv("WC_CLOUD_PROJECT_ID") ?: ""}\"")
         buildConfigField("String", "PIMLICO_API_KEY", "\"${System.getenv("PIMLICO_API_KEY") ?: ""}\"")
         // VisaPay demo: hackathon Visa Pay services (github.com/WalletConnect/hackathon-2026-11, vpay/).
-        // Defaults reach the services running on this laptop through `adb reverse tcp:8789 tcp:8789` (and 8788).
-        buildConfigField("String", "VPAY_SERVER_URL", "\"${System.getenv("VPAY_SERVER_URL") ?: "http://localhost:8789"}\"")
+        // Defaults are the deployed workers. For local runs set e.g. VPAY_SERVER_URL=http://localhost:8789 and
+        // BIN_SPONSOR_URL=http://localhost:8788, then `adb reverse tcp:8789 tcp:8789` (and 8788).
+        buildConfigField("String", "VPAY_SERVER_URL", "\"${System.getenv("VPAY_SERVER_URL") ?: "https://hackathon-2026-11-vpay-server.walletconnect-v1-bridge.workers.dev"}\"")
         buildConfigField("String", "VPAY_WALLET_API_KEY", "\"${System.getenv("VPAY_WALLET_API_KEY") ?: "demo-wallet-key"}\"")
-        buildConfigField("String", "BIN_SPONSOR_URL", "\"${System.getenv("BIN_SPONSOR_URL") ?: "http://localhost:8788"}\"")
+        buildConfigField("String", "BIN_SPONSOR_URL", "\"${System.getenv("BIN_SPONSOR_URL") ?: "https://hackathon-2026-11-bin-sponsor.walletconnect-v1-bridge.workers.dev"}\"")
         buildConfigField("String", "BIN_SPONSOR_API_KEY", "\"${System.getenv("BIN_SPONSOR_API_KEY") ?: "mock-bank-api-key"}\"")
         buildConfigField("String", "BOM_VERSION", "\"${BOM_VERSION}\"")
         buildConfigField("String", "TEST_WALLET_PRIVATE_KEY", "\"${System.getenv("TEST_WALLET_PRIVATE_KEY") ?: ""}\"")
