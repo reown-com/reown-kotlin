@@ -1,0 +1,15 @@
+appId: ${APP_ID}
+---
+# Shared flow: approve the session proposal in the wallet and wait until the
+# dApp shows the settled session (its "Session Chains" screen).
+- tapOn:
+    id: "wallet-request-approve"
+- extendedWaitUntil:
+    notVisible:
+      id: "wallet-request-approve"
+    timeout: 30000
+- runFlow: connect_back_to_dapp.yaml
+# Settling needs a full relay round trip, slowest on CI emulators.
+- extendedWaitUntil:
+    visible: "Session Chains"
+    timeout: 60000

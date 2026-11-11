@@ -1,6 +1,7 @@
 #!/bin/bash
-# Android leg of the Maestro Pay suite, run from android-emulator-runner's
-# `script` once the emulator is up: installs the wallet APK, smoke-checks its
+# Android leg of a tagged Maestro suite (Pay, Connect), run from android-emulator-runner's
+# `script` once the emulator is up: installs every APK in APK_DIR (wallet, and
+# the dApp for Connect), smoke-checks its
 # launch, captures logcat around maestro-suite.sh and exits with its code.
 #
 # Env: APP_ID, APK_DIR, ARTIFACTS_DIR (default: debug-artifacts), plus what
@@ -20,7 +21,7 @@ adb wait-for-device
 adb shell 'while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 2; done'
 adb devices
 
-echo "Installing wallet APK:"
+echo "Installing APKs:"
 APK_COUNT=0
 while IFS= read -r apk; do
   echo "Installing: $apk"
@@ -72,7 +73,7 @@ FILTERED_PID=$!
 adb logcat -b events > "$ARTIFACTS_DIR/android-logcat-events.log" 2>&1 &
 EVENTS_PID=$!
 
-echo "Running Maestro Pay E2E tests:"
+echo "Running Maestro E2E tests (tags: ${MAESTRO_TAGS:-pay}):"
 bash "$SCRIPTS_DIR/maestro-suite.sh" Android
 maestro_exit_code=$?
 

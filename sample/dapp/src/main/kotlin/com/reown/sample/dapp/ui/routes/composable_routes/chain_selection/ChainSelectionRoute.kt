@@ -39,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -213,6 +214,7 @@ private fun ChainSelectionScreen(
                 text = "Connect via AppKit",
                 onClick = onConnectClick,
                 modifier = Modifier
+                    .testTag("connect-button")
                     .padding(vertical = 10.dp)
                     .fillMaxWidth()
                     .height(50.dp)

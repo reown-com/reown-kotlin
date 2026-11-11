@@ -1,0 +1,20 @@
+appId: ${APP_ID}
+---
+# Shared flow: from the dApp's account screen, close the result dialog, go back
+# to "Session Chains", disconnect from its "Actions" row and wait for the
+# logged-out state (chain selection).
+- runFlow:
+    when:
+      visible: "Close"
+    commands:
+      - tapOn: "Close"
+- back
+- extendedWaitUntil:
+    visible: "Session Chains"
+    timeout: 15000
+- tapOn: "Actions"
+- tapOn:
+    id: "disconnect-button"
+- extendedWaitUntil:
+    visible: "Chain selection"
+    timeout: 30000

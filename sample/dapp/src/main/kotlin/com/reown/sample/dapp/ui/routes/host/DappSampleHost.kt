@@ -25,6 +25,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -40,6 +43,7 @@ import com.reown.sample.dapp.ui.DappSampleNavGraph
 import com.reown.sample.dapp.ui.routes.Route
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun DappSampleHost() {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
@@ -72,7 +76,9 @@ fun DappSampleHost() {
     }
 
     Scaffold(
-        scaffoldState = scaffoldState
+        scaffoldState = scaffoldState,
+        // Exposes testTags as resource ids, so Maestro E2E flows can select them by `id`.
+        modifier = Modifier.semantics { testTagsAsResourceId = true }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             DappSampleNavGraph(
