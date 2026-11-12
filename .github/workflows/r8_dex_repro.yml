@@ -11,9 +11,10 @@ jobs:
       fail-fast: false
       matrix:
         mode: [combined, combined-serial]
-        shard: [1, 2, 3]
+        runner: [ubuntu-16core]
+        shard: [1, 2]
     name: ${{ matrix.mode }} shard ${{ matrix.shard }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
