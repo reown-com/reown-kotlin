@@ -62,11 +62,15 @@ adb logcat -b all -c || true
 # Full logcat (uploaded only when the job fails).
 adb logcat > "$ARTIFACTS_DIR/full-logcat.txt" 2>&1 &
 FULL_PID=$!
-# Small always-uploaded capture: crashes, the Pay screens' logs and launch
-# diagnostics (info-level ActivityManager/ActivityTaskManager) for the flake
-# where a launch never reaches the app.
+# Small always-uploaded capture: crashes, launch diagnostics (info-level
+# ActivityManager/ActivityTaskManager) for the flake where a launch never
+# reaches the app, plus the Pay screens' logs when running the Pay suite.
+EXTRA_LOG_TAGS=()
+if [ "${MAESTRO_TAGS:-pay}" = "pay" ]; then
+  EXTRA_LOG_TAGS=(PaymentWebView:V PaymentViewModel:V)
+fi
 adb logcat AndroidRuntime:E ActivityManager:I ActivityTaskManager:I \
-  PaymentWebView:V PaymentViewModel:V '*:F' \
+  "${EXTRA_LOG_TAGS[@]}" '*:F' \
   > "$ARTIFACTS_DIR/android-logcat.log" 2>&1 &
 FILTERED_PID=$!
 # Events buffer: process start/death and resumed activity.

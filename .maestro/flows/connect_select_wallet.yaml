@@ -4,6 +4,8 @@ appId: ${APP_ID}
 # sample wallet ("Android Sample Internal" in the wallet directory, which lists
 # it with the internal build's deep link). Ends with the session proposal in
 # the wallet.
+# The row is rendered by AppKit from the WalletConnect explorer listing, so it
+# can't carry a testTag: if that listing is renamed, update the name here.
 
 - tapOn:
     id: "connect-button"
