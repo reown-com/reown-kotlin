@@ -12,7 +12,7 @@ jobs:
       matrix:
         mode: [combined, combined-serial]
         runner: [ubuntu-16core]
-        shard: [1, 2]
+        shard: [1, 2, 3]
     name: ${{ matrix.mode }} shard ${{ matrix.shard }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
@@ -74,6 +74,7 @@ jobs:
                 cp -r sample/$APP/build/outputs/mapping "$dest/" 2>/dev/null || true
               fi
               unzip -p "$apk" 'classes*.dex' | sha256sum > "$dest/dex.sha256"
+              [ "$i" = 1 ] && grep -m1 compiler_version sample/$APP/build/outputs/mapping/internal/mapping.txt
               if [ $failed = 1 ]; then bad=$((bad+1)); else ok=$((ok+1)); fi
             done
           done
