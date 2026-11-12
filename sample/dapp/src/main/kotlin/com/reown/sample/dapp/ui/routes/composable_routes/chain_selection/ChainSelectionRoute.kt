@@ -83,6 +83,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
+import timber.log.Timber
 
 @Composable
 fun ChainSelectionRoute(navController: NavController, dispatcher: CoroutineDispatcher = Dispatchers.Main) {
@@ -398,6 +399,7 @@ private fun handleSignEvents(
             when (event) {
                 DappSampleEvents.SessionApproved -> {
                     viewModel.awaitingProposalResponse(false)
+                    Timber.d("DappNav: SessionApproved, navigating to Session (current: ${navController.currentDestination?.route})")
                     navController.navigate(Route.Session.path) {
                         popUpTo(0) {
                             inclusive = true

@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -34,6 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.navigation.BottomSheetNavigator
 import com.reown.appkit.client.AppKit
@@ -42,6 +44,7 @@ import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sample.dapp.ui.DappSampleNavGraph
 import com.reown.sample.dapp.ui.routes.Route
 import kotlinx.coroutines.delay
+import timber.log.Timber
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -65,10 +68,21 @@ fun DappSampleHost() {
         if (AppKit.getAccount() != null) Route.Session.path else Route.ChainSelection.path
     }
 
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+            Timber.d("DappNav: destination ${destination.route}")
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose { navController.removeOnDestinationChangedListener(listener) }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is DappSampleEvents.ConnectionEvent -> isOfflineState = !event.isAvailable
+                is DappSampleEvents.ConnectionEvent -> {
+                    Timber.d("DappNav: relay available=${event.isAvailable}")
+                    isOfflineState = !event.isAvailable
+                }
                 is DappSampleEvents.Disconnect -> navController.navigate(Route.ChainSelection.path) {
                     popUpTo(navController.graph.startDestinationId) {
                         inclusive = true

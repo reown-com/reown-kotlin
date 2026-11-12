@@ -28,6 +28,11 @@ class DappSampleApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        // Debug/internal builds log to logcat (the E2E suite reads it on failures).
+        if (BuildConfig.BUILD_TYPE != "release") {
+            Timber.plant(Timber.DebugTree())
+        }
+
         val appMetaData = Core.Model.AppMetaData(
             name = "Kotlin Dapp",
             description = "Kotlin Dapp Implementation",

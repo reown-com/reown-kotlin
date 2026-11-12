@@ -129,8 +129,10 @@ jobs:
             debug-artifacts/android-logcat*.log
           if-no-files-found: warn
 
+      # Also when a flow failed and passed on the retry (junit-attempt-2.xml only
+      # exists then), so flakes can be diagnosed from a green run.
       - name: Upload full logcat
-        if: failure()
+        if: failure() || hashFiles('debug-artifacts/junit-attempt-2.xml') != ''
         uses: actions/upload-artifact@v5
         with:
           name: connect-e2e-full-logcat
