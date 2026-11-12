@@ -73,6 +73,8 @@ jobs:
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
           MIX_PANEL: ${{ secrets.MIX_PANEL }}
+          # No R8 for the internal build (see signing-config.gradle.kts).
+          E2E_BUILD: "true"
         run: |
           ./gradlew clean :sample:wallet:assembleInternal :sample:dapp:assembleInternal --no-build-cache
           mkdir -p apks
