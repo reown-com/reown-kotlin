@@ -79,6 +79,8 @@ jobs:
 
       - name: Setup Required files to build samples
         with:
+          # No Gradle cache here either (see the Setup Java step).
+          GRADLE_CACHE: 'false'
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
           FIREBASE_SERVICE_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS }}
           SECRETS_PROPERTIES: ${{ secrets.SECRETS_PROPERTIES }}
