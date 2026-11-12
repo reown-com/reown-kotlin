@@ -43,18 +43,25 @@ sleep 10
 # Launch smoke check: fail fast if the APK is broken (e.g. dex missing the
 # Application class -> ClassNotFoundException on startup). Without this, a bad
 # build surfaces as every Maestro flow failing, which is hard to diagnose.
-echo "Smoke-checking app launch:"
 CRASH_PATTERN="FATAL EXCEPTION|ClassNotFoundException|Unable to instantiate application"
-adb logcat -c
-adb shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1 || true
-sleep 8
-if adb logcat -d | grep -qE "$CRASH_PATTERN"; then
-  echo "ERROR: App crashed on launch - APK is broken, not running Maestro."
-  adb logcat -d | grep -E "$CRASH_PATTERN|AndroidRuntime" | head -40
-  exit 1
+# Every app the suite drives: the wallet, plus the dApp when DAPP_APP_ID is set.
+SMOKE_APP_IDS=("$APP_ID")
+if [ -n "${DAPP_APP_ID:-}" ]; then
+  SMOKE_APP_IDS+=("$DAPP_APP_ID")
 fi
-echo "App launched cleanly."
-adb shell am force-stop "$APP_ID"
+for smoke_app_id in "${SMOKE_APP_IDS[@]}"; do
+  echo "Smoke-checking app launch: $smoke_app_id"
+  adb logcat -c
+  adb shell monkey -p "$smoke_app_id" -c android.intent.category.LAUNCHER 1 || true
+  sleep 8
+  if adb logcat -d | grep -qE "$CRASH_PATTERN"; then
+    echo "ERROR: $smoke_app_id crashed on launch - APK is broken, not running Maestro."
+    adb logcat -d | grep -E "$CRASH_PATTERN|AndroidRuntime" | head -40
+    exit 1
+  fi
+  echo "$smoke_app_id launched cleanly."
+  adb shell am force-stop "$smoke_app_id"
+done
 sleep 5
 
 # Clear every buffer so the captures below only cover the suite.
