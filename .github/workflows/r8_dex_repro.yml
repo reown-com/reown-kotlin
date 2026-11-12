@@ -10,11 +10,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [dapp, wallet]
+        mode: [combined, combined-serial]
         shard: [1, 2, 3]
-    name: ${{ matrix.app }} shard ${{ matrix.shard }}
+    name: ${{ matrix.mode }} shard ${{ matrix.shard }}
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
 
@@ -38,43 +38,51 @@ jobs:
           NOTIFY_INTEGRATION_TESTS_PROJECT_ID: ${{ secrets.NOTIFY_INTEGRATION_TESTS_PROJECT_ID }}
           NOTIFY_INTEGRATION_TESTS_SECRET: ${{ secrets.NOTIFY_INTEGRATION_TESTS_SECRET }}
           MIX_PANEL: ${{ secrets.MIX_PANEL }}
-          ITERATIONS: ${{ vars.R8_REPRO_ITERATIONS || '6' }}
+          ITERATIONS: '6'
         run: |
           set -u
-          APP=${{ matrix.app }}
+          MODE=${{ matrix.mode }}
+          EXTRA=""
+          # combined-serial: same single invocation, but no two tasks run at once
+          [ "$MODE" = combined-serial ] && EXTRA="--no-parallel --max-workers=1"
           DEXDUMP=$(ls -d "$ANDROID_HOME"/build-tools/*/dexdump | sort -V | tail -1)
           echo "dexdump: $DEXDUMP"
           mkdir -p out
           ok=0; bad=0
           for i in $(seq 1 "$ITERATIONS"); do
             if [ "$i" = 1 ]; then
-              ./gradlew ":sample:$APP:assembleInternal" -x lint --stacktrace
+              ./gradlew :sample:wallet:assembleInternal :sample:dapp:assembleInternal -x lint $EXTRA
             else
-              ./gradlew ":sample:$APP:minifyInternalWithR8" --rerun ":sample:$APP:assembleInternal" -x lint
+              ./gradlew :sample:wallet:minifyInternalWithR8 :sample:dapp:minifyInternalWithR8 --rerun \
+                :sample:wallet:assembleInternal :sample:dapp:assembleInternal -x lint $EXTRA
             fi
-            apk=$(ls sample/$APP/build/outputs/apk/internal/*.apk | head -1)
-            rm -rf dexcheck && mkdir dexcheck && unzip -q -o "$apk" 'classes*.dex' -d dexcheck
-            failed=0
-            for d in dexcheck/classes*.dex; do
-              if ! "$DEXDUMP" -f "$d" > "dexcheck/$(basename $d).log" 2>&1 || grep -q "Failure to verify\|Out-of-order\|Failed to" "dexcheck/$(basename $d).log"; then
-                echo "::error::iteration $i: $d failed verification"; cat "dexcheck/$(basename $d).log" | tail -5; failed=1
+            for APP in wallet dapp; do
+              apk=$(ls sample/$APP/build/outputs/apk/internal/*.apk | head -1)
+              rm -rf dexcheck && mkdir dexcheck && unzip -q -o "$apk" 'classes*.dex' -d dexcheck
+              failed=0
+              for d in dexcheck/classes*.dex; do
+                log="dexcheck/$(basename $d).log"
+                if ! "$DEXDUMP" -f "$d" > "$log" 2>&1 || grep -q "Failure to verify\|Out-of-order\|Failed to" "$log"; then
+                  echo "::error::iteration $i $APP: $d failed verification"; grep -m3 "verify\|Out-of-order\|Failed" "$log"; failed=1
+                fi
+              done
+              dest="out/iter-$i-$APP-$([ $failed = 1 ] && echo BAD || echo good)"
+              mkdir -p "$dest"
+              if [ $failed = 1 ] || [ "$i" -le 1 ]; then
+                cp "$apk" "$dest/"
+                cp -r sample/$APP/build/outputs/mapping "$dest/" 2>/dev/null || true
               fi
+              unzip -p "$apk" 'classes*.dex' | sha256sum > "$dest/dex.sha256"
+              if [ $failed = 1 ]; then bad=$((bad+1)); else ok=$((ok+1)); fi
             done
-            dest="out/iter-$i-$([ $failed = 1 ] && echo BAD || echo good)"
-            mkdir -p "$dest"
-            cp "$apk" "$dest/"
-            cp -r sample/$APP/build/outputs/mapping "$dest/" 2>/dev/null || true
-            if [ $failed = 1 ]; then bad=$((bad+1)); else ok=$((ok+1)); fi
           done
-          echo "RESULT $APP shard ${{ matrix.shard }}: good=$ok bad=$bad" | tee -a "$GITHUB_STEP_SUMMARY"
-          # keep at most 2 good builds to limit artifact size
-          ls -d out/iter-*-good | tail -n +3 | xargs -r rm -rf
+          echo "RESULT $MODE shard ${{ matrix.shard }}: good=$ok bad=$bad" | tee -a "$GITHUB_STEP_SUMMARY"
           [ $bad = 0 ]
 
       - name: Upload outputs
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: r8-${{ matrix.app }}-${{ matrix.shard }}
+          name: r8-${{ matrix.mode }}-${{ matrix.shard }}
           path: out/
           retention-days: 5
