@@ -1,7 +1,9 @@
 appId: ${APP_ID}
 ---
-# Shared flow: let the AppKit modal settle before tapping inside it, so a tap
-# doesn't land on a row that is still sliding in.
+# Shared flow: let the AppKit modal settle before tapping inside it. Its rows
+# slide in and the list can still re-layout after the pixels stop moving, so a
+# tap right away can land on another row.
+# Maestro has no sleep, so wait (optionally) for an id that never appears.
 - waitForAnimationToEnd
 - extendedWaitUntil:
     visible:

@@ -1,7 +1,8 @@
 appId: ${APP_ID}
 ---
 # Shared flow: from the dApp's "Session Chains" screen, open Ethereum and send
-# personal_sign. Ends with the request sheet in the wallet.
+# personal_sign. The caller then brings the wallet forward
+# (connect_wallet_request.yaml).
 - tapOn: "ETHEREUM_MAIN"
 - extendedWaitUntil:
     visible:
@@ -9,4 +10,3 @@ appId: ${APP_ID}
     timeout: 15000
 - tapOn:
     id: "sign-message-button"
-- runFlow: connect_wallet_request.yaml

@@ -1,9 +1,9 @@
 appId: ${APP_ID}
 ---
 # Shared flow: after the dApp sent a request, bring the wallet forward and wait
-# for the request sheet. The dApp deep links to the wallet by itself; if the
-# sheet doesn't show within 10s, open the wallet (no restart) so it picks the
-# request up from the relay.
+# for the request modal. The dApp may deep link to the wallet by itself; if it
+# doesn't within 10s, open the wallet (no restart) so it picks the request up
+# from the relay.
 - extendedWaitUntil:
     visible:
       id: "wallet-request-approve"
