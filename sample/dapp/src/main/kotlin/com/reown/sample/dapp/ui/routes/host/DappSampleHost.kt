@@ -53,11 +53,17 @@ fun DappSampleHost() {
         skipHalfExpanded = true
     )
 
-    val bottomSheetNavigator = BottomSheetNavigator(sheetState)
+    // Both must survive recomposition (e.g. a relay reconnect when the app comes
+    // back to the foreground): a new navigator isn't the one the NavController
+    // drives, and a new start destination makes NavHost replace the graph. Either
+    // one, right as a session settles, can leave a blank screen instead of the
+    // session route.
+    val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
     val navController = rememberNavController(bottomSheetNavigator)
     val viewModel: DappSampleViewModel = viewModel()
-    val isConnected = AppKit.getAccount() != null
-    val startDestination = if (isConnected) Route.Session.path else Route.ChainSelection.path
+    val startDestination = remember {
+        if (AppKit.getAccount() != null) Route.Session.path else Route.ChainSelection.path
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
