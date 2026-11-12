@@ -58,9 +58,7 @@ fun DappSampleHost() {
 
     // Both must survive recomposition (e.g. a relay reconnect when the app comes
     // back to the foreground): a new navigator isn't the one the NavController
-    // drives, and a new start destination makes NavHost replace the graph. Either
-    // one, right as a session settles, can leave a blank screen instead of the
-    // session route.
+    // drives, and a new start destination makes NavHost replace the graph.
     val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
     val navController = rememberNavController(bottomSheetNavigator)
     val viewModel: DappSampleViewModel = viewModel()
