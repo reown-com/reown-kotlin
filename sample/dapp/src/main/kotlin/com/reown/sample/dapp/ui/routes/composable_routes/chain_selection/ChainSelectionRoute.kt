@@ -39,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -58,6 +59,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import com.github.alexzhirkevich.customqrgenerator.QrData
 import com.github.alexzhirkevich.customqrgenerator.vector.QrCodeDrawable
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
@@ -80,8 +82,11 @@ import com.reown.sample.dapp.ui.routes.Route
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.net.URLEncoder
+import timber.log.Timber
 
 @Composable
 fun ChainSelectionRoute(navController: NavController, dispatcher: CoroutineDispatcher = Dispatchers.Main) {
@@ -213,6 +218,7 @@ private fun ChainSelectionScreen(
                 text = "Connect via AppKit",
                 onClick = onConnectClick,
                 modifier = Modifier
+                    .testTag("connect-button")
                     .padding(vertical = 10.dp)
                     .fillMaxWidth()
                     .height(50.dp)
@@ -396,12 +402,7 @@ private fun handleSignEvents(
             when (event) {
                 DappSampleEvents.SessionApproved -> {
                     viewModel.awaitingProposalResponse(false)
-                    navController.navigate(Route.Session.path) {
-                        popUpTo(0) {
-                            inclusive = true
-                        }
-                        launchSingleTop = true
-                    }
+                    navController.navigateToSessionAfterModalCloses()
                 }
 
                 DappSampleEvents.SessionRejected -> {
@@ -419,12 +420,7 @@ private fun handleSignEvents(
                     if (event.message != null) {
                         Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                     } else {
-                        navController.navigate(Route.Session.path) {
-                            popUpTo(0) {
-                                inclusive = true
-                            }
-                            launchSingleTop = true
-                        }
+                        navController.navigateToSessionAfterModalCloses()
                     }
                 }
 
@@ -568,3 +564,29 @@ data class PairingUri(
     val uri: String,
     val isReCaps: Boolean
 )
+
+
+private const val BOTTOM_SHEET_NAVIGATOR = "bottomSheet"
+private const val APPKIT_ROUTE_PREFIX = "web3_modal"
+private const val APPKIT_MODAL_CLOSE_TIMEOUT_MS = 3_000L
+
+private fun NavDestination.isAppKitModal() =
+    navigatorName == BOTTOM_SHEET_NAVIGATOR || route?.startsWith(APPKIT_ROUTE_PREFIX) == true
+
+/**
+ * AppKit closes its modal (a bottom sheet destination) with a plain popBackStack() once the session
+ * settles. Navigating to Session first, with popUpTo(0), makes that pop remove Session instead and
+ * leaves an empty back stack (a blank screen). So let the modal close first, then navigate.
+ */
+private suspend fun NavController.navigateToSessionAfterModalCloses() {
+    val closed = withTimeoutOrNull(APPKIT_MODAL_CLOSE_TIMEOUT_MS) {
+        currentBackStackEntryFlow.first { !it.destination.isAppKitModal() }
+    }
+    Timber.d("DappNav: navigating to Session (modal closed: ${closed != null}, current: ${currentDestination?.route})")
+    navigate(Route.Session.path) {
+        popUpTo(0) {
+            inclusive = true
+        }
+        launchSingleTop = true
+    }
+}

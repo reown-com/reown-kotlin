@@ -1,0 +1,22 @@
+appId: ${APP_ID}
+---
+# Shared flow: (re)start the dApp and wait for its chain selection screen. Same
+# retry as connect_launch_wallet.yaml.
+- retry:
+    maxRetries: 3
+    commands:
+      - stopApp:
+          appId: ${output.dappAppId}
+      - launchApp:
+          appId: ${output.dappAppId}
+          permissions:
+            all: allow
+      # "Enabling testing features" system prompt on some images.
+      - runFlow:
+          when:
+            visible: "NOT NOW"
+          commands:
+            - tapOn: "NOT NOW"
+      - extendedWaitUntil:
+          visible: "Chain selection"
+          timeout: 45000

@@ -22,15 +22,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.material.navigation.BottomSheetNavigator
 import com.reown.appkit.client.AppKit
@@ -39,7 +44,9 @@ import com.reown.sample.dapp.ui.DappSampleEvents
 import com.reown.sample.dapp.ui.DappSampleNavGraph
 import com.reown.sample.dapp.ui.routes.Route
 import kotlinx.coroutines.delay
+import timber.log.Timber
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun DappSampleHost() {
     val scaffoldState: ScaffoldState = rememberScaffoldState()
@@ -49,16 +56,31 @@ fun DappSampleHost() {
         skipHalfExpanded = true
     )
 
-    val bottomSheetNavigator = BottomSheetNavigator(sheetState)
+    // Both must survive recomposition (e.g. a relay reconnect when the app comes
+    // back to the foreground): a new navigator isn't the one the NavController
+    // drives, and a new start destination makes NavHost replace the graph.
+    val bottomSheetNavigator = remember(sheetState) { BottomSheetNavigator(sheetState) }
     val navController = rememberNavController(bottomSheetNavigator)
     val viewModel: DappSampleViewModel = viewModel()
-    val isConnected = AppKit.getAccount() != null
-    val startDestination = if (isConnected) Route.Session.path else Route.ChainSelection.path
+    val startDestination = remember {
+        if (AppKit.getAccount() != null) Route.Session.path else Route.ChainSelection.path
+    }
+
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+            Timber.d("DappNav: destination ${destination.route}")
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose { navController.removeOnDestinationChangedListener(listener) }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
-                is DappSampleEvents.ConnectionEvent -> isOfflineState = !event.isAvailable
+                is DappSampleEvents.ConnectionEvent -> {
+                    Timber.d("DappNav: relay available=${event.isAvailable}")
+                    isOfflineState = !event.isAvailable
+                }
                 is DappSampleEvents.Disconnect -> navController.navigate(Route.ChainSelection.path) {
                     popUpTo(navController.graph.startDestinationId) {
                         inclusive = true
@@ -72,7 +94,9 @@ fun DappSampleHost() {
     }
 
     Scaffold(
-        scaffoldState = scaffoldState
+        scaffoldState = scaffoldState,
+        // Exposes testTags as resource ids, so Maestro E2E flows can select them by `id`.
+        modifier = Modifier.semantics { testTagsAsResourceId = true }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             DappSampleNavGraph(
