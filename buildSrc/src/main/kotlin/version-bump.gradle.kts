@@ -25,8 +25,7 @@ tasks {
     }
 
     // Example usage:
-    // ./gradlew manualBump -PBOM=1.0.0 -PFOUNDATION=1.0.0 -PCORE=1.0.0 -PSIGN=1.0.0 -PNOTIFY=1.0.0 -PWEB_3_WALLET=1.0.0 -PWEB_3_MODAL=1.0.0 -PWC_MODAL=1.0.0 -PMODAL_CORE=1.0.0
-    // ./gradlew manualBump -PNOTIFY=2.0.0
+    // ./gradlew manualBump -PBOM=1.0.0 -PFOUNDATION=1.0.0 -PCORE=1.0.0 -PSIGN=1.0.0 -PWEB_3_WALLET=1.0.0 -PWEB_3_MODAL=1.0.0 -PWC_MODAL=1.0.0 -PMODAL_CORE=1.0.0
     register("manualBump") {
         doLast {
             writeFiles(bumpVersions(properties, VersionBumpType.MANUAL, InputType.MANUAL))
@@ -34,7 +33,7 @@ tasks {
     }
 
     // Example usage:
-    // ./gradlew releaseBump -Pmodules=FOUNDATION,CORE,SIGN,NOTIFY,WEB_3_WALLET,WEB_3_MODAL,WC_MODAL,MODAL_CORE
+    // ./gradlew releaseBump -Pmodules=FOUNDATION,CORE,SIGN,WEB_3_WALLET,WEB_3_MODAL,WC_MODAL,MODAL_CORE
     // ./gradlew releaseBump -Pmodules=FOUNDATION
     // ./gradlew releaseBump -Pmodules=WEB_3_MODAL
     register("releaseBump") {
@@ -44,7 +43,7 @@ tasks {
     }
 
     // Example usage:
-    // ./gradlew fixBump -Pmodules=FOUNDATION,CORE,SIGN,NOTIFY,WEB_3_WALLET,WEB_3_MODAL,WC_MODAL,MODAL_CORE
+    // ./gradlew fixBump -Pmodules=FOUNDATION,CORE,SIGN,WEB_3_WALLET,WEB_3_MODAL,WC_MODAL,MODAL_CORE
     // ./gradlew fixBump -Pmodules=FOUNDATION
     // ./gradlew fixBump -Pmodules=WEB_3_MODAL
     register("fixBump") {

@@ -5,9 +5,9 @@ import com.tinder.scarlet.utils.getRawType
 import com.reown.android.internal.common.JsonRpcResponse
 import com.reown.android.internal.common.adapter.JsonRpcResultAdapter
 import com.reown.android.internal.common.model.RelayProtocolOptions
-import com.reown.android.internal.common.model.params.ChatNotifyResponseAuthParams
 import com.reown.android.internal.common.model.params.CoreSignParams
 import com.reown.android.internal.common.signing.cacao.Cacao
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import kotlin.reflect.jvm.jvmName
 
@@ -60,47 +60,6 @@ internal class JsonRpcResponseJsonRpcResultJsonAdapterTest {
     }
 
     @Test
-    fun `test chat params to json`() {
-        val moshi = Moshi.Builder().add { type, _, moshi ->
-            return@add if (type.getRawType().name == JsonRpcResponse.JsonRpcResult::class.jvmName) {
-                JsonRpcResultAdapter(moshi = moshi)
-            } else {
-                null
-            }
-        }.build()
-        val adapter = moshi.adapter(JsonRpcResponse.JsonRpcResult::class.java)
-        val chatParams = ChatNotifyResponseAuthParams.ResponseAuth(responseAuth = "did.jwt.auth")
-        val jsonResult = JsonRpcResponse.JsonRpcResult(
-            id = 1L,
-            jsonrpc = "2.0",
-            result = chatParams
-        )
-        val result = adapter.toJson(jsonResult)
-        println()
-        println(result)
-        println()
-    }
-
-    @Test
-    fun `test chat params from json`() {
-        val moshi = Moshi.Builder().add { type, _, moshi ->
-            return@add if (type.getRawType().name == JsonRpcResponse.JsonRpcResult::class.jvmName) {
-                JsonRpcResultAdapter(moshi = moshi)
-            } else {
-                null
-            }
-        }.build()
-        val chatParams = ChatNotifyResponseAuthParams.ResponseAuth(responseAuth = "did.jwt.auth")
-        val authParamsJsonResult = JsonRpcResponse.JsonRpcResult(id = 11L, result = chatParams)
-        val resultString = moshi.adapter(JsonRpcResponse.JsonRpcResult::class.java).toJson(authParamsJsonResult)
-        val result = moshi.adapter(JsonRpcResponse.JsonRpcResult::class.java).fromJson(resultString)
-        result is JsonRpcResponse.JsonRpcResult
-        println()
-        println(result)
-        println()
-    }
-
-    @Test
     fun `test from json with boolean`() {
         val moshi = Moshi.Builder().add { type, _, moshi ->
             return@add if (type.getRawType().name == JsonRpcResponse.JsonRpcResult::class.jvmName) {
@@ -119,5 +78,26 @@ internal class JsonRpcResponseJsonRpcResultJsonAdapterTest {
         println()
         println(result)
         println()
+    }
+
+    @Test
+    fun `result object with an auth field decodes as a map and keeps all fields`() {
+        val moshi = Moshi.Builder().add { type, _, moshi ->
+            return@add if (type.getRawType().name == JsonRpcResponse.JsonRpcResult::class.jvmName) {
+                JsonRpcResultAdapter(moshi = moshi)
+            } else {
+                null
+            }
+        }.build()
+        val adapter = moshi.adapter(JsonRpcResponse.JsonRpcResult::class.java)
+
+        listOf("auth", "responseAuth", "updateAuth").forEach { authField ->
+            val json = """{"id":1,"jsonrpc":"2.0","result":{"$authField":"did.jwt.auth","signature":"0xabc"}}"""
+
+            val result = requireNotNull(adapter.fromJson(json))
+
+            assertEquals(mapOf(authField to "did.jwt.auth", "signature" to "0xabc"), result.result)
+            assertEquals(json, adapter.toJson(result))
+        }
     }
 }

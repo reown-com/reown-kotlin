@@ -391,7 +391,6 @@ private val artifactsToCheck = listOf(
     ArtifactCheck("com/reown", FOUNDATION, FOUNDATION_VERSION),
     ArtifactCheck("com/reown", ANDROID_CORE, CORE_VERSION),
     ArtifactCheck("com/reown", SIGN, SIGN_VERSION),
-    ArtifactCheck("com/reown", NOTIFY, NOTIFY_VERSION),
     ArtifactCheck("com/reown", WALLETKIT, WALLETKIT_VERSION),
     ArtifactCheck("com/reown", APPKIT, APPKIT_VERSION),
     ArtifactCheck("com/reown", MODAL_CORE, MODAL_CORE_VERSION),

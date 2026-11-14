@@ -25,8 +25,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -41,11 +39,6 @@ import com.pandulapeter.beagle.modules.ScreenCaptureToolboxModule
 import com.pandulapeter.beagle.modules.TextInputModule
 import com.pandulapeter.beagle.modules.TextModule
 import com.reown.android.CoreClient
-import com.reown.android.cacao.signature.SignatureType
-import com.reown.android.utils.cacao.sign
-import com.reown.notify.client.Notify
-import com.reown.notify.client.NotifyClient
-import com.reown.notify.client.cacao.CacaoSigner
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -57,13 +50,11 @@ import com.reown.sample.wallet.BuildConfig
 import com.reown.sample.wallet.R
 import com.reown.sample.wallet.domain.ThemeManager
 import com.reown.sample.wallet.domain.account.EthAccountDelegate
-import com.reown.sample.wallet.domain.notify.NotifyDelegate
 //import com.reown.sample.wallet.domain.SolanaAccountDelegate
 import com.reown.sample.wallet.nfc.NfcPaymentReader
 import com.reown.sample.wallet.ui.routes.Route
 import com.reown.sample.wallet.ui.routes.composable_routes.connections.ConnectionsViewModel
 import com.reown.sample.wallet.ui.routes.host.WalletSampleHost
-import com.reown.util.hexToBytes
 import com.reown.walletkit.client.WalletKit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -99,9 +90,7 @@ class WalletKitActivity : AppCompatActivity() {
         setContent(web3walletViewModel, connectionsViewModel)
         handleWeb3WalletEvents(web3walletViewModel, connectionsViewModel)
         askNotificationPermission()
-        handleErrors()
         handleAppLink(intent)
-        registerAccount()
         setBeagle()
     }
 
@@ -144,13 +133,6 @@ class WalletKitActivity : AppCompatActivity() {
                 )
             }
         }
-    }
-
-    private fun handleErrors() {
-        NotifyDelegate.notifyErrors
-            .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
-            .onEach { error -> Timber.e(error.throwable) }
-            .launchIn(lifecycleScope)
     }
 
     private fun handleWeb3WalletEvents(
@@ -355,36 +337,6 @@ class WalletKitActivity : AppCompatActivity() {
                 }
             ),
         )
-    }
-
-    private fun registerAccount() {
-        val account = EthAccountDelegate.ethAccount
-        val domain = BuildConfig.APPLICATION_ID
-        val isRegistered = NotifyClient.isRegistered(params = Notify.Params.IsRegistered(account = account, domain = domain))
-
-        if (!isRegistered) {
-            NotifyClient.prepareRegistration(
-                params = Notify.Params.PrepareRegistration(account = account, domain = domain),
-                onSuccess = { cacaoPayloadWithIdentityPrivateKey, message ->
-                    println("PrepareRegistration Success: $cacaoPayloadWithIdentityPrivateKey")
-
-                    val signature = CacaoSigner.sign(message, EthAccountDelegate.privateKey.hexToBytes(), SignatureType.EIP191)
-
-                    NotifyClient.register(
-                        params = Notify.Params.Register(
-                            cacaoPayloadWithIdentityPrivateKey = cacaoPayloadWithIdentityPrivateKey,
-                            signature = signature
-                        ),
-                        onSuccess = { println("Register Success") },
-                        onError = { println(it.throwable.stackTraceToString()) }
-                    )
-
-                },
-                onError = { println(it.throwable.stackTraceToString()) }
-            )
-        } else {
-            println("$account is already registered")
-        }
     }
 
     override fun onNewIntent(intent: Intent) {

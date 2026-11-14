@@ -5,8 +5,6 @@ package com.reown.android.internal.common.adapter
 import com.squareup.moshi.*
 import com.squareup.moshi.internal.Util
 import com.reown.android.internal.common.JsonRpcResponse
-import com.reown.android.internal.common.model.params.ChatNotifyResponseAuthParams
-import com.reown.android.internal.common.model.params.CoreNotifyParams
 import com.reown.android.internal.common.model.params.CoreSignParams
 import org.json.JSONArray
 import org.json.JSONObject
@@ -25,12 +23,6 @@ internal class JsonRpcResultAdapter(val moshi: Moshi) : JsonAdapter<JsonRpcRespo
         moshi.adapter(CoreSignParams.ApprovalParams::class.java, emptySet(), "result")
     private val approveSessionAuthenticateParamsAdapter: JsonAdapter<CoreSignParams.SessionAuthenticateApproveParams> =
         moshi.adapter(CoreSignParams.SessionAuthenticateApproveParams::class.java, emptySet(), "result")
-    private val notifySubscribeUpdateParamsAdapter: JsonAdapter<CoreNotifyParams.UpdateParams> =
-        moshi.adapter(CoreNotifyParams.UpdateParams::class.java, emptySet(), "result")
-    private val chatNotifyResponseAuthParamsAdapter: JsonAdapter<ChatNotifyResponseAuthParams.ResponseAuth> =
-        moshi.adapter(ChatNotifyResponseAuthParams.ResponseAuth::class.java, emptySet(), "result")
-    private val chatNotifyAuthParamsAdapter: JsonAdapter<ChatNotifyResponseAuthParams.Auth> =
-        moshi.adapter(ChatNotifyResponseAuthParams.Auth::class.java, emptySet(), "result")
 
     @Volatile
     private var constructorRef: Constructor<JsonRpcResponse.JsonRpcResult>? = null
@@ -63,18 +55,6 @@ internal class JsonRpcResultAdapter(val moshi: Moshi) : JsonAdapter<JsonRpcRespo
 
                         runCatching { approveSessionAuthenticateParamsAdapter.fromJson(reader.peekJson()) }.isSuccess -> {
                             approveSessionAuthenticateParamsAdapter.fromJson(reader)
-                        }
-
-                        runCatching { notifySubscribeUpdateParamsAdapter.fromJson(reader.peekJson()) }.isSuccess -> {
-                            notifySubscribeUpdateParamsAdapter.fromJson(reader)
-                        }
-
-                        runCatching { chatNotifyResponseAuthParamsAdapter.fromJson(reader.peekJson()) }.isSuccess -> {
-                            chatNotifyResponseAuthParamsAdapter.fromJson(reader)
-                        }
-
-                        runCatching { chatNotifyAuthParamsAdapter.fromJson(reader.peekJson()) }.isSuccess -> {
-                            chatNotifyAuthParamsAdapter.fromJson(reader)
                         }
 
                         else -> anyAdapter.fromJson(reader)
@@ -143,27 +123,6 @@ internal class JsonRpcResultAdapter(val moshi: Moshi) : JsonAdapter<JsonRpcRespo
                     approveSessionAuthenticateParamsAdapter.toJson(value_.result)
                 writer.valueSink().use {
                     it.writeUtf8(approveSessionAuthenticateParamsString)
-                }
-            }
-
-            (value_.result as? ChatNotifyResponseAuthParams.ResponseAuth) != null -> {
-                val notifySubscribeResponseParamsString = chatNotifyResponseAuthParamsAdapter.toJson(value_.result)
-                writer.valueSink().use {
-                    it.writeUtf8(notifySubscribeResponseParamsString)
-                }
-            }
-
-            (value_.result as? ChatNotifyResponseAuthParams.Auth) != null -> {
-                val notifyResponseParamsString = chatNotifyAuthParamsAdapter.toJson(value_.result)
-                writer.valueSink().use {
-                    it.writeUtf8(notifyResponseParamsString)
-                }
-            }
-
-            (value_.result as? CoreNotifyParams.UpdateParams) != null -> {
-                val notifySubscribeUpdateParamsString = notifySubscribeUpdateParamsAdapter.toJson(value_.result)
-                writer.valueSink().use {
-                    it.writeUtf8(notifySubscribeUpdateParamsString)
                 }
             }
 

@@ -1,7 +1,6 @@
 package com.reown.android
 
 import android.app.Application
-import com.reown.android.internal.common.explorer.ExplorerInterface
 import com.reown.android.pairing.client.PairingInterface
 import com.reown.android.pairing.handler.PairingControllerInterface
 import com.reown.android.push.PushInterface
@@ -18,7 +17,6 @@ interface CoreInterface {
     val Echo: PushInterface
     val Push: PushInterface
     val Verify: VerifyInterface
-    val Explorer: ExplorerInterface
 
     interface Delegate : PairingInterface.Delegate
 

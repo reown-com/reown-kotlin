@@ -73,14 +73,6 @@ object Core {
                 val body: String
             ) : Message()
 
-            data class Notify(
-                val title: String,
-                val body: String,
-                val url: String?,
-                val type: String,
-                val topic: String
-            ) : Message()
-
             data class SessionProposal(
                 val id: Long,
                 val pairingTopic: String,

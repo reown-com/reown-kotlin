@@ -17,23 +17,3 @@ fun <R : JwtClaims> encodeDidJwt(
     val signature = signJwt(identityPrivateKey, data).getOrThrow()
     DidJwt(encodeJWT(JwtHeader.EdDSA.encoded, claims, signature))
 }
-
-inline fun <reified C : JwtClaims> extractVerifiedDidJwtClaims(didJwt: String): Result<C> = runCatching {
-    val (header, claims, signature) = decodeJwt<C>(didJwt).getOrThrow()
-
-    with(header) { this@with.verifyHeader() }
-    with(claims) { verifyJwt(didJwt, signature) }
-
-    claims
-}
-
-fun JwtHeader.verifyHeader() {
-    if (algorithm != JwtHeader.EdDSA.algorithm) throw Throwable("Unsupported header alg: $algorithm")
-}
-
-fun JwtClaims.verifyJwt(didJwt: String, signature: String) {
-    val isValid = verifySignature(decodeEd25519DidKey(issuer), extractData(didJwt).toByteArray(), signature).getOrThrow()
-
-    if (!isValid) throw Throwable("Invalid signature")
-}
-
