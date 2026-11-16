@@ -19,4 +19,9 @@ class UriExtensionsTest {
     fun `does not add double slash for scheme only link`() {
         assertEquals("metamask://wc?uri=$encoded", formatNativeDeeplink("metamask://", wcUri))
     }
+
+    @Test
+    fun `bare scheme without separator gets canonical form`() {
+        assertEquals("metamask://wc?uri=$encoded", formatNativeDeeplink("metamask", wcUri))
+    }
 }
