@@ -339,9 +339,9 @@ Version catalog for dependencies: `gradle/libs.versions.toml`
 
 1. Update versions in `buildSrc/src/main/kotlin/Versions.kt`
 2. Run `./gradlew build` to verify
-3. Commit with message: `chore: bump version to X.Y.Z`
-4. Tag release: `git tag vX.Y.Z`
-5. Push tag to trigger CI publish
+3. Commit with message: `chore: bump version to X.Y.Z` and merge it into `develop`
+4. Merge `develop` into `master`. The push to `master` runs `ci_release_artifacts.yml`, which publishes every SDK to Maven Central, creates the `BOM_X.Y.Z` tag and GitHub release, and dispatches the sample apps release build (`ci_release_sample.yml`)
+5. Don't create the tag or release by hand. If the artifacts were published but the tag/release step failed, run `ci_github_release.yml` with the version (safe to re-run). Don't re-run the whole release job: it would try to publish the same versions again
 
 ## WalletConnectPay Module
 
