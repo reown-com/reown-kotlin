@@ -10,6 +10,9 @@ jobs:
   release:
     name: Release Artifacts
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the BOM_ tag and GitHub release
+      actions: write # dispatch the sample apps release build
 
     steps:
       - name: Checkout repository
@@ -98,17 +101,8 @@ jobs:
 
       - name: Create git tag and GitHub Release
         env:
-          GH_TOKEN: ${{ secrets.PUSH_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="BOM_${{ steps.version.outputs.bom_version }}"
-          if gh api repos/${{ github.repository }}/git/refs/tags/$TAG >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping tag creation"
-          else
-            gh api repos/${{ github.repository }}/git/refs \
-              -f ref="refs/tags/$TAG" \
-              -f sha="${{ github.sha }}"
-          fi
-          gh release create "$TAG" \
-            --target master \
-            --title "$TAG" \
-            --generate-notes
+          bash .github/scripts/create-github-release.sh \
+            "BOM_${{ steps.version.outputs.bom_version }}" \
+            "${{ github.sha }}"
