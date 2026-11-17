@@ -50,7 +50,17 @@ fun UriHandler.goToPlayStore(playStoreLink: String) {
     }
 }
 
-private fun formatNativeDeeplink(nativeLink: String, uri: String): String = nativeLink + WC_URI_QUERY + uri.encodeUri()
+internal fun formatNativeDeeplink(nativeLink: String, uri: String): String {
+    // Android intent-filter scheme matching is case-sensitive, so lowercase only the scheme
+    var base = if (nativeLink.contains("://")) {
+        val (scheme, rest) = nativeLink.split("://", limit = 2)
+        scheme.lowercase() + "://" + rest
+    } else {
+        nativeLink.replace("/", "").replace(":", "").lowercase() + "://"
+    }
+    if (!base.endsWith('/')) base += "/"
+    return base + WC_URI_QUERY + uri.encodeUri()
+}
 
 private fun formatUniversalLink(universalLink: String, uri: String): String {
     val plainAppUrl = if (universalLink.endsWith('/')) {
