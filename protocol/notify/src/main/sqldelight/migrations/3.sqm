@@ -1,2 +1,0 @@
-ALTER TABLE RegisteredAccounts ADD COLUMN appDomain TEXT DEFAULT NULL;
-

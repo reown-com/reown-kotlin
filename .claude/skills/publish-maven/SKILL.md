@@ -18,7 +18,6 @@ Versions are centralized in `buildSrc/src/main/kotlin/Versions.kt` — all modul
 | Foundation | com.reown | foundation |
 | Core | com.reown | android-core |
 | Sign | com.reown | sign |
-| Notify | com.reown | notify |
 | WalletKit | com.reown | walletkit |
 | AppKit | com.reown | appkit |
 | Modal Core | com.reown | modal-core |

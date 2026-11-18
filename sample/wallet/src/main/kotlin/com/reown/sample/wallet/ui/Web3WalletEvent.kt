@@ -2,7 +2,7 @@ package com.reown.sample.wallet.ui
 
 sealed interface Web3WalletEvent
 
-object NoAction : Web3WalletEvent, NotifyEvent
+object NoAction : Web3WalletEvent
 
 interface SignEvent : Web3WalletEvent {
     object SessionProposal : SignEvent

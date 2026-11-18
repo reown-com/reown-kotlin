@@ -52,7 +52,6 @@ fun compileListOfSDKs(): List<SdkModule> = mutableListOf(
     SdkModule("core", "android", "android"),
     SdkModule("core", "modal", "android"),
     SdkModule("protocol", "sign", "android"),
-    SdkModule("protocol", "notify", "android"),
     SdkModule("product", "pay", "android", "walletconnect"), // Published under com.walletconnect
     SdkModule("product", "walletkit", "android"),
     SdkModule("product", "appkit", "android"),
