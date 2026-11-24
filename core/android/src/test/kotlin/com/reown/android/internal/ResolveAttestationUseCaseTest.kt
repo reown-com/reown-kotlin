@@ -61,6 +61,31 @@ class ResolveAttestationUseCaseTest {
     }
 
     @Test
+    fun `link mode resolves from app link without remote lookup`() {
+        val metadataUrl = "https://app.example.com"
+        val appLink = "https://app.example.com/wc"
+        val request = WCRequest(
+            id = 1L,
+            attestation = null,
+            method = "wc_sessionAuthenticate",
+            params = TestParams(),
+            topic = Topic("topic"),
+            transportType = TransportType.RELAY
+        )
+
+        coEvery { repository.insertOrAbort(any()) } just Runs
+        val onResolve = mockk<(VerifyContext) -> Unit>(relaxed = true)
+
+        runBlocking {
+            resolveAttestationIdUseCase.invoke(request, metadataUrl, linkMode = true, appLink = appLink, onResolve = onResolve)
+        }
+
+        coVerify(exactly = 0) { verifyInterface.resolveV2(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { verifyInterface.resolve(any(), any(), any(), any()) }
+        coVerify { repository.insertOrAbort(VerifyContext(1, metadataUrl, Validation.VALID, String.Empty, null)) }
+    }
+
+    @Test
     fun `invoke should call resolveVerifyV2 when attestation is not empty`() {
         val metadataUrl = "https://metadata.url"
         val request = WCRequest(
