@@ -15,7 +15,7 @@ class ResolveAttestationIdUseCase(private val verifyInterface: VerifyInterface, 
 
     operator fun invoke(request: WCRequest, metadataUrl: String, linkMode: Boolean? = false, appLink: String? = null, onResolve: (VerifyContext) -> Unit) {
         when {
-            linkMode == true && !appLink.isNullOrEmpty() -> resolveLinkMode(request, metadataUrl, appLink, onResolve)
+            linkMode == true && !appLink.isNullOrEmpty() -> resolveLinkMode(request, onResolve)
             !request.attestation.isNullOrEmpty() -> resolveVerifyV2(metadataUrl, request, onResolve)
             request.attestation?.isEmpty() == true -> insertContext(VerifyContext(request.id, String.Empty, Validation.UNKNOWN, verifyUrl, null)) { verifyContext -> onResolve(verifyContext) }
             else -> resolveVerifyV1(request, metadataUrl, onResolve)
@@ -24,11 +24,10 @@ class ResolveAttestationIdUseCase(private val verifyInterface: VerifyInterface, 
 
     private fun resolveLinkMode(
         request: WCRequest,
-        metadataUrl: String,
-        appLink: String,
         onResolve: (VerifyContext) -> Unit
     ) {
-        insertContext(VerifyContext(request.id, metadataUrl, getValidation(metadataUrl, appLink), String.Empty, null)) { verifyContext -> onResolve(verifyContext) }
+        // Link mode messages never pass through Verify, so the context is always UNKNOWN with an empty origin.
+        insertContext(VerifyContext(request.id, String.Empty, Validation.UNKNOWN, String.Empty, null)) { verifyContext -> onResolve(verifyContext) }
     }
 
     private fun resolveVerifyV2(
