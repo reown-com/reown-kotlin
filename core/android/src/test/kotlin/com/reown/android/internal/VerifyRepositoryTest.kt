@@ -189,6 +189,32 @@ class VerifyRepositoryTest {
     }
 
     @Test
+    fun `resolveV2 calls onError when JWT fails both cached and rotated key`() = testScope.runTest {
+        val attestationId = "test"
+        val attestationJWT = "attestationJWT"
+        val metadataUrl = "https://metadata.url"
+        val staleKey = "0409b2f80ce60e6f59ed77ef0e984c4efa84b40d608c0b4d039edaf2989a01f2d92931708c7b50c464c347dd55b0eca971d05fbdba3ab00323e69e166fef61440d"
+        val rotatedKey = "04aa11bb22cc33dd44ee55ff66778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aa"
+
+        coEvery { verifyPublicKeyStorageRepository.getPublicKey() } returns Pair(staleKey, currentTimeInSeconds + 1000)
+        // JWT fails to verify against both the cached key and the freshly fetched (rotated) key.
+        every { jwtRepository.verifyJWT(any(), any()) } returns false
+        coEvery { verifyService.getPublicKey() } returns Response.success(VerifyServerPublicKey(jwk, expiresAt = currentTimeInSeconds + 1000))
+        every { jwtRepository.generateP256PublicKeyFromJWK(any()) } returns rotatedKey
+        coEvery { verifyPublicKeyStorageRepository.upsertPublicKey(any(), any()) } just Runs
+
+        val onSuccess = mockk<(VerifyResult) -> Unit>(relaxed = true)
+        val onError = mockk<(Throwable) -> Unit>(relaxed = true)
+
+        verifyRepository.resolveV2(attestationId, attestationJWT, metadataUrl, onSuccess, onError)
+
+        advanceUntilIdle()
+
+        verify { onError(any<IllegalArgumentException>()) }
+        verify(exactly = 0) { onSuccess(any()) }
+    }
+
+    @Test
     fun `resolve calls onSuccess when service resolves attestation successfully`() = testScope.runTest {
         val attestationId = "attestationId"
         val metadataUrl = "https://metadata.url"
