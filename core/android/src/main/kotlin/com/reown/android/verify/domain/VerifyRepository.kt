@@ -61,7 +61,7 @@ internal class VerifyRepository(
                                         return@supervisorScope
                                     }
 
-                                    onSuccess(VerifyResult(getValidation(claims, metadataUrl), claims.isScam, claims.origin))
+                                    checkIds(attestationId, claims, metadataUrl, onSuccess, onError)
                                 } else {
                                     onError(IllegalArgumentException("Error while verifying JWT"))
                                 }
@@ -86,7 +86,7 @@ internal class VerifyRepository(
         onError: (Throwable) -> Unit
     ) {
         if (attestationId != claims.id) {
-            resolve(attestationId, metadataUrl, onSuccess, onError)
+            onError(IllegalArgumentException("Attestation id does not match the request"))
         } else {
             onSuccess(VerifyResult(getValidation(claims, metadataUrl), claims.isScam, claims.origin))
         }

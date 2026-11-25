@@ -11,6 +11,7 @@ import com.reown.android.verify.domain.VerifyResult
 import com.reown.android.verify.model.JWK
 import com.reown.android.verify.model.Origin
 import com.reown.android.verify.model.VerifyServerPublicKey
+import com.reown.util.hexToBytes
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -103,25 +104,79 @@ class VerifyRepositoryTest {
     }
 
     @Test
-    fun `resolveV2 calls onSuccess when JWT is valid and ids do not match`() = testScope.runTest {
+    fun `resolveV2 calls onError and does not fall back to resolve when ids do not match`() = testScope.runTest {
         val attestationId = "test"
         val attestationJWT = "attestationJWT"
         val metadataUrl = "https://metadata.url"
         val publicKey = "0409b2f80ce60e6f59ed77ef0e984c4efa84b40d608c0b4d039edaf2989a01f2d92931708c7b50c464c347dd55b0eca971d05fbdba3ab00323e69e166fef61440d"
-        val verifyResult = VerifyResult(Validation.INVALID, false, "https://react-dapp-v2-git-chore-verify-v2-samples-walletconnect1.vercel.app")
         val claimsJson =
             """{"exp":1722579908,"id":"5106a25552e89acfb5bed83ee21bf4e80dbcd51b0b203f6925a369aacb1c860b","origin":"https://react-dapp-v2-git-chore-verify-v2-samples-walletconnect1.vercel.app","isScam":null,"isVerified":true}"""
 
         coEvery { verifyPublicKeyStorageRepository.getPublicKey() } returns Pair(publicKey, currentTimeInSeconds + 1000)
         every { jwtRepository.verifyJWT(any(), any()) } returns true
         every { jwtRepository.decodeClaimsJWT(any()) } returns claimsJson
-        coEvery { verifyService.resolveAttestation(attestationId) } returns Response.success(
-            Origin(
-                "attId",
-                origin = "https://react-dapp-v2-git-chore-verify-v2-samples-walletconnect1.vercel.app",
-                isScam = false
-            )
-        )
+
+        val onSuccess = mockk<(VerifyResult) -> Unit>(relaxed = true)
+        val onError = mockk<(Throwable) -> Unit>(relaxed = true)
+
+        verifyRepository.resolveV2(attestationId, attestationJWT, metadataUrl, onSuccess, onError)
+
+        advanceUntilIdle()
+
+        verify { onError(any<IllegalArgumentException>()) }
+        verify(exactly = 0) { onSuccess(any()) }
+        coVerify(exactly = 0) { verifyService.resolveAttestation(any()) }
+    }
+
+    @Test
+    fun `resolveV2 enforces id check after key rotation and calls onError when ids do not match`() = testScope.runTest {
+        val attestationId = "test"
+        val attestationJWT = "attestationJWT"
+        val metadataUrl = "https://metadata.url"
+        val staleKey = "0409b2f80ce60e6f59ed77ef0e984c4efa84b40d608c0b4d039edaf2989a01f2d92931708c7b50c464c347dd55b0eca971d05fbdba3ab00323e69e166fef61440d"
+        val rotatedKey = "04aa11bb22cc33dd44ee55ff66778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aa"
+        val claimsJson =
+            """{"exp":1722579908,"id":"5106a25552e89acfb5bed83ee21bf4e80dbcd51b0b203f6925a369aacb1c860b","origin":"https://react-dapp-v2-git-chore-verify-v2-samples-walletconnect1.vercel.app","isScam":null,"isVerified":true}"""
+
+        coEvery { verifyPublicKeyStorageRepository.getPublicKey() } returns Pair(staleKey, currentTimeInSeconds + 1000)
+        // JWT fails to verify against the cached key, succeeds against the freshly fetched (rotated) key.
+        every { jwtRepository.verifyJWT(attestationJWT, staleKey.hexToBytes()) } returns false
+        every { jwtRepository.verifyJWT(attestationJWT, rotatedKey.hexToBytes()) } returns true
+        every { jwtRepository.decodeClaimsJWT(any()) } returns claimsJson
+        coEvery { verifyService.getPublicKey() } returns Response.success(VerifyServerPublicKey(jwk, expiresAt = currentTimeInSeconds + 1000))
+        every { jwtRepository.generateP256PublicKeyFromJWK(any()) } returns rotatedKey
+        coEvery { verifyPublicKeyStorageRepository.upsertPublicKey(any(), any()) } just Runs
+
+        val onSuccess = mockk<(VerifyResult) -> Unit>(relaxed = true)
+        val onError = mockk<(Throwable) -> Unit>(relaxed = true)
+
+        verifyRepository.resolveV2(attestationId, attestationJWT, metadataUrl, onSuccess, onError)
+
+        advanceUntilIdle()
+
+        verify { onError(any<IllegalArgumentException>()) }
+        verify(exactly = 0) { onSuccess(any()) }
+        coVerify(exactly = 0) { verifyService.resolveAttestation(any()) }
+    }
+
+    @Test
+    fun `resolveV2 calls onSuccess after key rotation when ids match`() = testScope.runTest {
+        val attestationId = "5106a25552e89acfb5bed83ee21bf4e80dbcd51b0b203f6925a369aacb1c860b"
+        val attestationJWT = "attestationJWT"
+        val metadataUrl = "https://metadata.url"
+        val staleKey = "0409b2f80ce60e6f59ed77ef0e984c4efa84b40d608c0b4d039edaf2989a01f2d92931708c7b50c464c347dd55b0eca971d05fbdba3ab00323e69e166fef61440d"
+        val rotatedKey = "04aa11bb22cc33dd44ee55ff66778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aa"
+        val verifyResult = VerifyResult(Validation.UNKNOWN, null, "https://react-dapp-v2-git-chore-verify-v2-samples-walletconnect1.vercel.app")
+        val claimsJson =
+            """{"exp":1722579908,"id":"5106a25552e89acfb5bed83ee21bf4e80dbcd51b0b203f6925a369aacb1c860b","origin":"https://react-dapp-v2-git-chore-verify-v2-samples-walletconnect1.vercel.app","isScam":null,"isVerified":true}"""
+
+        coEvery { verifyPublicKeyStorageRepository.getPublicKey() } returns Pair(staleKey, currentTimeInSeconds + 1000)
+        every { jwtRepository.verifyJWT(attestationJWT, staleKey.hexToBytes()) } returns false
+        every { jwtRepository.verifyJWT(attestationJWT, rotatedKey.hexToBytes()) } returns true
+        every { jwtRepository.decodeClaimsJWT(any()) } returns claimsJson
+        coEvery { verifyService.getPublicKey() } returns Response.success(VerifyServerPublicKey(jwk, expiresAt = currentTimeInSeconds + 1000))
+        every { jwtRepository.generateP256PublicKeyFromJWK(any()) } returns rotatedKey
+        coEvery { verifyPublicKeyStorageRepository.upsertPublicKey(any(), any()) } just Runs
 
         val onSuccess = mockk<(VerifyResult) -> Unit>(relaxed = true)
         val onError = mockk<(Throwable) -> Unit>(relaxed = true)
@@ -131,6 +186,32 @@ class VerifyRepositoryTest {
         advanceUntilIdle()
 
         verify { onSuccess(verifyResult) }
+    }
+
+    @Test
+    fun `resolveV2 calls onError when JWT fails both cached and rotated key`() = testScope.runTest {
+        val attestationId = "test"
+        val attestationJWT = "attestationJWT"
+        val metadataUrl = "https://metadata.url"
+        val staleKey = "0409b2f80ce60e6f59ed77ef0e984c4efa84b40d608c0b4d039edaf2989a01f2d92931708c7b50c464c347dd55b0eca971d05fbdba3ab00323e69e166fef61440d"
+        val rotatedKey = "04aa11bb22cc33dd44ee55ff66778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899aa"
+
+        coEvery { verifyPublicKeyStorageRepository.getPublicKey() } returns Pair(staleKey, currentTimeInSeconds + 1000)
+        // JWT fails to verify against both the cached key and the freshly fetched (rotated) key.
+        every { jwtRepository.verifyJWT(any(), any()) } returns false
+        coEvery { verifyService.getPublicKey() } returns Response.success(VerifyServerPublicKey(jwk, expiresAt = currentTimeInSeconds + 1000))
+        every { jwtRepository.generateP256PublicKeyFromJWK(any()) } returns rotatedKey
+        coEvery { verifyPublicKeyStorageRepository.upsertPublicKey(any(), any()) } just Runs
+
+        val onSuccess = mockk<(VerifyResult) -> Unit>(relaxed = true)
+        val onError = mockk<(Throwable) -> Unit>(relaxed = true)
+
+        verifyRepository.resolveV2(attestationId, attestationJWT, metadataUrl, onSuccess, onError)
+
+        advanceUntilIdle()
+
+        verify { onError(any<IllegalArgumentException>()) }
+        verify(exactly = 0) { onSuccess(any()) }
     }
 
     @Test
