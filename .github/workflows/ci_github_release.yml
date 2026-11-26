@@ -18,6 +18,10 @@ on:
       version:
         required: true
         type: string
+      target_sha:
+        description: 'Commit to tag (the one whose artifacts were published)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -30,9 +34,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       TAG: BOM_${{ inputs.version }}
-      # On a push to master (via ci_release_artifacts) pin the tag to the released commit;
-      # on a manual run, tag the current master head.
-      TARGET: ${{ github.event_name == 'push' && github.sha || 'master' }}
+      # When called from ci_release_artifacts, tag the exact commit that was published;
+      # on a manual run of this workflow, tag the current master head.
+      TARGET: ${{ inputs.target_sha || 'master' }}
     steps:
       - name: Create GitHub Release
         id: release

@@ -107,4 +107,5 @@ jobs:
     uses: ./.github/workflows/ci_github_release.yml
     with:
       version: ${{ needs.release.outputs.bom_version }}
+      target_sha: ${{ github.sha }}
     secrets: inherit
