@@ -8,6 +8,7 @@ import com.reown.android.internal.common.model.ConnectionState
 import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.Namespace
 import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.signing.cacao.Cacao
 import com.reown.android.internal.common.signing.cacao.CacaoType
@@ -105,7 +106,8 @@ internal fun EngineDO.SessionRequest.toClientSessionRequest(): Sign.Model.Sessio
             id = request.id,
             method = request.method,
             params = request.params
-        )
+        ),
+        isLinkMode = transportType == TransportType.LINK_MODE
     )
 
 @JvmSynthetic
@@ -229,7 +231,8 @@ internal fun EngineDO.SessionAuthenticateEvent.toClientSessionAuthenticate(): Si
         pairingTopic,
         participant.toClient(),
         payloadParams.toClient(),
-        expiryTimestamp
+        expiryTimestamp,
+        isLinkMode = transportType == TransportType.LINK_MODE
     )
 }
 

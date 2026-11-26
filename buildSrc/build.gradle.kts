@@ -5,6 +5,8 @@ plugins {
 
 dependencies {
     implementation("com.android.tools.build:gradle:${libs.versions.agp.get()}")
+    // Overrides the R8 bundled with AGP; see the `r8` entry in libs.versions.toml.
+    implementation("com.android.tools:r8:${libs.versions.r8.get()}")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
     implementation("org.jetbrains.dokka:dokka-gradle-plugin:${libs.versions.dokka.get()}")
     implementation("com.google.firebase:firebase-appdistribution-gradle:${libs.versions.firebaseAppDistribution.get()}")

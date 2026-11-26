@@ -189,13 +189,18 @@ internal class TNV(private val moshi: Moshi) {
                         ?.let { listOf(it) }
                 }
 
-                else -> null
+                else -> collectRawResult(rpcResult)
             }
         } catch (e: Exception) {
             println("Error processing $rpcMethod - $e")
             null
         }
     }
+
+    // Methods without a dedicated parser (eth_signTypedData_v4, personal_sign, ...) report their result
+    // as-is so signing volume stays attributable.
+    private fun collectRawResult(rpcResult: String): List<String>? =
+        rpcResult.takeIf { it.isNotBlank() && it != "null" }?.let { listOf(it) }
 
     companion object {
         private const val ETH_SEND_TRANSACTION = "eth_sendTransaction"

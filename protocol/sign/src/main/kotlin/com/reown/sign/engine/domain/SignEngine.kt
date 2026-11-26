@@ -6,6 +6,7 @@ import com.reown.android.internal.common.crypto.kmr.KeyManagementRepository
 import com.reown.android.internal.common.json_rpc.domain.link_mode.LinkModeJsonRpcInteractorInterface
 import com.reown.android.internal.common.model.AppMetaDataType
 import com.reown.android.internal.common.model.SDKError
+import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.model.type.RelayJsonRpcInteractorInterface
@@ -485,7 +486,8 @@ internal class SignEngine(
                                 request.params.authPayload.toEngineDO(),
                                 request.params.requester.toEngineDO(),
                                 request.params.expiryTimestamp,
-                                context.toEngineDO()
+                                context.toEngineDO(),
+                                request.transportType ?: TransportType.RELAY
                             )
                             logger.log("Emitting pending authenticate request from active pairing: $sessionAuthenticateEvent")
                             scope.launch { _engineEvent.emit(sessionAuthenticateEvent) }

@@ -77,6 +77,7 @@ object Sign {
             val chainId: String?,
             val peerMetaData: Core.Model.AppMetaData?,
             val request: JSONRPCRequest,
+            val isLinkMode: Boolean = false,
         ) : Model() {
 
             data class JSONRPCRequest(
@@ -268,7 +269,8 @@ object Sign {
             val topic: String,
             val participant: Participant,
             val payloadParams: PayloadParams,
-            val expiry: Long
+            val expiry: Long,
+            val isLinkMode: Boolean = false
         ) {
             data class Participant(
                 val publicKey: String,

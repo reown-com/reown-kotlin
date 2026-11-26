@@ -83,7 +83,10 @@ project.extensions.configure(ApplicationExtension::class.java) {
 
         // Firebase App Distribution
         create("internal") {
-            isMinifyEnabled = true
+            // E2E builds (E2E_BUILD=true) skip R8: its optimized dex intermittently fails ART
+            // verification on the CI emulator ("Out-of-order annotation_element") and the app
+            // crashes on launch. Firebase builds keep R8 on.
+            isMinifyEnabled = System.getenv("E2E_BUILD") != "true"
             isDebuggable = true
             applicationIdSuffix = ".internal"
             matchingFallbacks += listOf("debug")

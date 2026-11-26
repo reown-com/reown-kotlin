@@ -121,7 +121,7 @@ internal class ApproveSessionAuthenticateUseCase(
                 logger.log("Creating authenticated session")
                 val requiredNamespace: Map<String, Namespace.Proposal> = mapOf(namespace to Namespace.Proposal(events = events, methods = methods, chains = chains))
                 val sessionNamespaces: Map<String, Namespace.Session> = mapOf(namespace to Namespace.Session(accounts = accounts, events = events, methods = methods, chains = chains))
-                val transportType = if (sessionAuthenticateParams.linkMode == true && !sessionAuthenticateParams.appLink.isNullOrEmpty()) {
+                val transportType = if (jsonRpcHistoryEntry.transportType == TransportType.LINK_MODE && !sessionAuthenticateParams.appLink.isNullOrEmpty()) {
                     TransportType.LINK_MODE
                 } else {
                     TransportType.RELAY

@@ -27,6 +27,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -101,6 +104,7 @@ fun AccountRoute(navController: NavController) {
     )
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SimpleResultDialog(
     message: String,
@@ -108,8 +112,10 @@ fun SimpleResultDialog(
     onClose: () -> Unit
 ) {
     AlertDialog(
+        // The dialog is its own window, so it needs testTagsAsResourceId too.
         modifier = Modifier.semantics {
             contentDescription = "result_dialog"
+            testTagsAsResourceId = true
         },
         onDismissRequest = onClose,
         text = {
@@ -228,7 +234,9 @@ private fun MethodList(
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (item == "personal_sign") Modifier.testTag("sign-message-button") else Modifier),
             )
         }
     }

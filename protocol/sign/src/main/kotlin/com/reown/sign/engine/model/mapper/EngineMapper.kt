@@ -123,7 +123,8 @@ internal fun SignParams.SessionRequestParams.toEngineDO(
             method = this.request.method,
             params = this.request.params
         ),
-        if (this.request.expiryTimestamp != null) Expiry(this.request.expiryTimestamp) else null
+        expiry = if (this.request.expiryTimestamp != null) Expiry(this.request.expiryTimestamp) else null,
+        transportType = request.transportType ?: TransportType.RELAY
     )
 
 @JvmSynthetic
@@ -260,7 +261,7 @@ internal fun SignParams.EventParams.toEngineDOEvent(): EngineDO.Event =
 
 @JvmSynthetic
 internal fun Request<String>.toSessionRequest(peerAppMetaData: AppMetaData?): EngineDO.SessionRequest =
-    EngineDO.SessionRequest(topic.value, chainId, peerAppMetaData, EngineDO.SessionRequest.JSONRPCRequest(id, method, params), expiry)
+    EngineDO.SessionRequest(topic.value, chainId, peerAppMetaData, EngineDO.SessionRequest.JSONRPCRequest(id, method, params), expiry, transportType ?: TransportType.RELAY)
 
 
 @JvmSynthetic

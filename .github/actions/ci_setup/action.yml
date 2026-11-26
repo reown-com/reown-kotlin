@@ -2,6 +2,13 @@ name: 'Setup Required files'
 description: 'Setup required files for building samples'
 
 inputs:
+  GRADLE_CACHE:
+    description: >-
+      'true' (default) restores and saves the Gradle cache via setup-java. E2E
+      jobs pass 'false': a restored ~/.gradle/caches/transforms-* can produce an
+      APK with a broken dex (ClassNotFoundException on launch).
+    required: false
+    default: 'true'
   GOOGLE_SERVICES_JSON:
     description: 'Google Services Json file'
     required: true
@@ -40,7 +47,7 @@ runs:
         distribution: 'zulu'
         java-version: '17'
         architecture: x86_64
-        cache: 'gradle'
+        cache: ${{ inputs.GRADLE_CACHE == 'true' && 'gradle' || '' }}
 
     - name: Accept Android Licenses
       uses: SimonMarquis/android-accept-licenses@v1

@@ -43,13 +43,16 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # Same test merchant as the Pay E2E single-option no-KYC flow (ci_e2e_pay_tests.yml).
+      # The old MERCHANT_API_KEY secret went stale when the Pay keys were rotated on
+      # 2026-09-25, so reuse the pair that the E2E suite keeps current.
       - name: Check required secrets
         env:
-          MERCHANT_API_KEY: ${{ secrets.MERCHANT_API_KEY }}
-          MERCHANT_ID: ${{ secrets.MERCHANT_ID }}
+          MERCHANT_API_KEY: ${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}
+          MERCHANT_ID: ${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}
         run: |
-          [[ -n "$MERCHANT_API_KEY" ]] || { echo "::error::MERCHANT_API_KEY secret is not set"; exit 1; }
-          [[ -n "$MERCHANT_ID" ]] || { echo "::error::MERCHANT_ID secret is not set"; exit 1; }
+          [[ -n "$MERCHANT_API_KEY" ]] || { echo "::error::WPAY_CUSTOMER_KEY_SINGLE_NOKYC secret is not set"; exit 1; }
+          [[ -n "$MERCHANT_ID" ]] || { echo "::error::WPAY_MERCHANT_ID_SINGLE_NOKYC secret is not set"; exit 1; }
 
       - name: Run Pay instrumented tests
         uses: ./.github/actions/ci_instrumented_tests
@@ -58,6 +61,6 @@ jobs:
           command: ":product:pay:allDevicesCheck"
           projectId: ${{ secrets.WC_CLOUD_PROJECT_ID }}
           walletPrivateKey: ${{ secrets.TEST_WALLET_PRIVATE_KEY }}
-          merchantApiKey: ${{ secrets.MERCHANT_API_KEY }}
-          merchantId: ${{ secrets.MERCHANT_ID }}
+          merchantApiKey: ${{ secrets.WPAY_CUSTOMER_KEY_SINGLE_NOKYC }}
+          merchantId: ${{ secrets.WPAY_MERCHANT_ID_SINGLE_NOKYC }}
           testTimeoutSeconds: ${{ github.event.inputs.testTimeoutSeconds || env.TEST_TIMEOUT_SECONDS }}

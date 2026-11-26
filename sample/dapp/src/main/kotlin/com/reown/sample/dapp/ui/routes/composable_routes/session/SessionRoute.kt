@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -200,7 +201,7 @@ private fun SessionActions(
         val modifier = Modifier.padding(8.dp)
         ButtonWithLoader(text = "Ping", onClick = onPingClick, modifier = modifier, isPingLoading)
         Spacer(modifier = Modifier.width(4.dp))
-        ButtonWithLoader(text = "Disconnect", onClick = onDisconnectClick, modifier = modifier, isDisconnectLoading)
+        ButtonWithLoader(text = "Disconnect", onClick = onDisconnectClick, modifier = modifier.testTag("disconnect-button"), isDisconnectLoading)
     }
 }
 
