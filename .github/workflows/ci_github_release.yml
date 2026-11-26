@@ -1,4 +1,10 @@
-name: Create GitHub Release (Manual)
+name: Create GitHub Release
+
+# Creates the BOM_<version> tag + GitHub Release with the built-in GITHUB_TOKEN.
+# A release created with GITHUB_TOKEN does not emit `release: published` to other
+# workflows, so the release sample builds and the Slack notification are started
+# explicitly below (workflow_dispatch from GITHUB_TOKEN does start runs).
+# Called by ci_release_artifacts.yml after a successful publish; can also be run manually.
 
 on:
   workflow_dispatch:
@@ -7,21 +13,59 @@ on:
         description: 'BOM version (e.g., 1.6.5)'
         required: true
         type: string
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
 
 jobs:
   create_release:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: BOM_${{ inputs.version }}
+      # On a push to master (via ci_release_artifacts) pin the tag to the released commit;
+      # on a manual run, tag the current master head.
+      TARGET: ${{ github.event_name == 'push' && github.sha || 'master' }}
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v6
-      with:
-        ref: master
+      - name: Create GitHub Release
+        id: release
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists, skipping"
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh release create "$TAG" \
+            --target "$TARGET" \
+            --title "$TAG" \
+            --generate-notes
+          echo "created=true" >> "$GITHUB_OUTPUT"
 
-    - name: Create GitHub Release
-      env:
-        GH_TOKEN: ${{ secrets.PUSH_GITHUB_TOKEN }}
-      run: |
-        gh release create "BOM_${{ inputs.version }}" \
-          --target master \
-          --title "BOM_${{ inputs.version }}" \
-          --generate-notes
+      - name: Start release sample builds
+        if: steps.release.outputs.created == 'true'
+        run: |
+          gh workflow run ci_release_sample.yml --ref master \
+            -f build_type=Release \
+            -f wallet=true \
+            -f dapp=true \
+            -f modal=true \
+            -f pos=false
+
+      - name: Notify Slack
+        if: steps.release.outputs.created == 'true'
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |-
+            {
+              "text":"Kotlin Release ${{ env.TAG }} was just released. Please update and let us know if you have any issues."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_KOTLIN }}
+          SLACK_WEBHOOK_TYPE: 'INCOMING_WEBHOOK'
