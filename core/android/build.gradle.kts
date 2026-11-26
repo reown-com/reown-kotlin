@@ -96,9 +96,7 @@ dependencies {
     api(libs.koin.android)
     api(libs.timber)
     api(libs.web3jCrypto)
-    api(libs.bundles.kethereum)
     api(libs.bundles.retrofit)
-    api(libs.beagle.logOkhttp)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
