@@ -36,7 +36,6 @@ multibase = "1.1.1"
 json = "20260522"
 timber = "5.0.1"
 web3j = "4.9.8-hotfix"
-kethereum = "0.86.0"
 relinker = "1.4.5"
 coil = "2.7.0"
 customQrGenerator = "1.6.2"
@@ -133,12 +132,6 @@ jUnit = { module = "junit:junit", version.ref = "jUnit" }
 jUnit-engine = { module = "org.junit.vintage:junit-vintage-engine", version = "5.11.0" }
 jUnit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version = "1.11.0" }
 
-kethereum-bip39 = { module = "com.github.komputing.kethereum:bip39", version.ref = "kethereum" }
-kethereum-bip39-wordlist = { module = "com.github.komputing.kethereum:bip39_wordlist_en", version.ref = "kethereum" }
-kethereum-bip32 = { module = "com.github.komputing.kethereum:bip32", version.ref = "kethereum" }
-kethereum-model = { module = "com.github.komputing.kethereum:model", version.ref = "kethereum" }
-kethereum-crypto = { module = "com.github.komputing.kethereum:crypto_impl_spongycastle", version.ref = "kethereum" }
-
 beagle-uiView = { module = "io.github.pandulapeter.beagle:ui-view", version.ref = "beagle" }
 beagle-log = { module = "io.github.pandulapeter.beagle:log", version.ref = "beagle" }
 beagle-logCrash = { module = "io.github.pandulapeter.beagle:log-crash", version.ref = "beagle" }
@@ -184,7 +177,6 @@ scarlet-test = ["scarlet-mockwebserver", "scarlet-testUtils"]
 retrofit = ["retrofit", "retrofit-moshi"]
 moshi = ["moshi-adapters", "moshi-kotlin"]
 okhttp = ["okhttp", "okhttp-logging"]
-kethereum = ["kethereum-bip39", "kethereum-bip39-wordlist", "kethereum-bip32", "kethereum-model", "kethereum-crypto"]
 beagle = ["beagle-uiView", "beagle-log", "beagle-logCrash", "beagle-logOkhttp"]
 accompanist = ["accompanist-drawablePainter"]
 firebase = ["firebase-messaging", "firebase-crashlytics", "firebase-analytics"]
