@@ -39,32 +39,44 @@ internal object EIP1271Verifier {
         return postBody.toRequestBody(jsonMediaType)
     }
 
-    fun verify(signature: Signature, originalMessage: String, address: String, projectId: String): Boolean {
+    fun verify(
+        signature: Signature,
+        originalMessage: String,
+        address: String,
+        projectId: String,
+        httpClient: OkHttpClient = OkHttpClient()
+    ): Boolean {
         return try {
             val messageHash: String = Sign.getEthereumMessageHash(originalMessage.toByteArray()).bytesToHex()
-            verify(messageHash, signature, projectId, address)
+            verify(messageHash, signature, projectId, address, httpClient)
         } catch (e: Exception) {
             Timber.e(e)
             false
         }
     }
 
-    fun verifyHex(signature: Signature, hexMessage: String, address: String, projectId: String): Boolean {
+    fun verifyHex(
+        signature: Signature,
+        hexMessage: String,
+        address: String,
+        projectId: String,
+        httpClient: OkHttpClient = OkHttpClient()
+    ): Boolean {
         return try {
             val messageHash: String = Sign.getEthereumMessageHash(Numeric.hexStringToByteArray(hexMessage)).bytesToHex()
-            verify(messageHash, signature, projectId, address)
+            verify(messageHash, signature, projectId, address, httpClient)
         } catch (e: Exception) {
             Timber.e(e)
             false
         }
     }
 
-    private fun verify(messageHash: String, signature: Signature, projectId: String, address: String): Boolean {
+    private fun verify(messageHash: String, signature: Signature, projectId: String, address: String, httpClient: OkHttpClient): Boolean {
         val data: String = isValidSignatureHash + messageHash + dynamicTypeOffset + dynamicTypeLength + signature.toHexSignature().removePrefix(hexPrefix)
 
         val id = generateId()
         val request: Request = Request.Builder().url(projectId.prefixWithRpcUrl()).post(createBody(address, data, id)).build()
-        val response: Response = OkHttpClient().newCall(request).execute()
+        val response: Response = httpClient.newCall(request).execute()
         val responseString = response.body?.string() ?: throw Exception("Response body is null")
         val validResponseResult = getResponseResult(getValidResponse(id))
         val responseResult = getResponseResult(responseString)
