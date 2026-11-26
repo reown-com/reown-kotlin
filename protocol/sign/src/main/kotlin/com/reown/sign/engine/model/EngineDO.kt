@@ -6,6 +6,7 @@ import com.squareup.moshi.JsonClass
 import com.reown.android.internal.common.model.AppMetaData
 import com.reown.android.internal.common.model.Expiry
 import com.reown.android.internal.common.model.SymmetricKey
+import com.reown.android.internal.common.model.TransportType
 import com.reown.android.internal.common.model.Validation
 import com.reown.android.internal.common.model.type.EngineEvent
 import com.reown.android.internal.common.model.type.Sequence
@@ -45,7 +46,8 @@ internal sealed class EngineDO {
         val payloadParams: PayloadParams,
         val participant: Participant,
         val expiryTimestamp: Long,
-        val verifyContext: VerifyContext
+        val verifyContext: VerifyContext,
+        val transportType: TransportType
     ) : EngineDO(), EngineEvent
 
     data class PayloadParams(
@@ -142,7 +144,8 @@ internal sealed class EngineDO {
         val chainId: String?,
         val peerAppMetaData: AppMetaData?,
         val request: JSONRPCRequest,
-        val expiry: Expiry?
+        val expiry: Expiry?,
+        val transportType: TransportType = TransportType.RELAY
     ) : EngineDO(), EngineEvent {
 
         data class JSONRPCRequest(

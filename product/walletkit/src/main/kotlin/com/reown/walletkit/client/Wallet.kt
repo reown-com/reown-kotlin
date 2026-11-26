@@ -285,6 +285,7 @@ object Wallet {
             val pairingTopic: String,
             val participant: Participant,
             val payloadParams: PayloadAuthRequestParams,
+            val isLinkMode: Boolean = false,
         ) : Model() {
             data class Participant(
                 val publicKey: String,
@@ -309,6 +310,7 @@ object Wallet {
             val chainId: String?,
             val peerMetaData: Core.Model.AppMetaData?,
             val request: JSONRPCRequest,
+            val isLinkMode: Boolean = false,
         ) : Model() {
 
             data class JSONRPCRequest(

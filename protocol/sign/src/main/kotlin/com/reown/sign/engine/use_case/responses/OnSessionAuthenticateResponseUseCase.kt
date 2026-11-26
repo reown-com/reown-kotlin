@@ -141,7 +141,7 @@ internal class OnSessionAuthenticateResponseUseCase(
                             logger.log("Creating authenticated session")
                             val sessionNamespaces: Map<String, Namespace.Session> = mapOf(namespace to Namespace.Session(accounts = accounts, events = events, methods = methods, chains = chains))
                             val requiredNamespace: Map<String, Namespace.Proposal> = mapOf(namespace to Namespace.Proposal(events = listOf(), methods = events, chains = chains))
-                            val transportType = if (linkMode == true && !appLink.isNullOrEmpty()) {
+                            val transportType = if (jsonRpcHistoryEntry.transportType == TransportType.LINK_MODE && !appLink.isNullOrEmpty()) {
                                 linkModeStorageRepository.insert(appLink!!)
                                 TransportType.LINK_MODE
                             } else {

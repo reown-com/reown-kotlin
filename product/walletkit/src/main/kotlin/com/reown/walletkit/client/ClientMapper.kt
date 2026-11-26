@@ -119,7 +119,8 @@ internal fun List<Sign.Model.SessionRequest>.mapToPendingSessionRequests(): List
         request.topic,
         request.chainId,
         request.peerMetaData,
-        Wallet.Model.SessionRequest.JSONRPCRequest(request.request.id, request.request.method, request.request.params)
+        Wallet.Model.SessionRequest.JSONRPCRequest(request.request.id, request.request.method, request.request.params),
+        request.isLinkMode
     )
 }
 
@@ -167,7 +168,7 @@ internal fun Sign.Model.PayloadParams.toWalletPayloadParams(): Wallet.Model.Payl
 
 @JvmSynthetic
 internal fun Sign.Model.SessionAuthenticate.toWallet(): Wallet.Model.SessionAuthenticate =
-    Wallet.Model.SessionAuthenticate(id, topic, participant.toWallet(), payloadParams.toWallet())
+    Wallet.Model.SessionAuthenticate(id, topic, participant.toWallet(), payloadParams.toWallet(), isLinkMode)
 
 @JvmSynthetic
 internal fun Sign.Model.SessionAuthenticate.Participant.toWallet(): Wallet.Model.SessionAuthenticate.Participant =
@@ -210,7 +211,8 @@ internal fun Sign.Model.SessionRequest.toWallet(): Wallet.Model.SessionRequest =
             id = request.id,
             method = request.method,
             params = request.params
-        )
+        ),
+        isLinkMode = isLinkMode
     )
 
 @JvmSynthetic

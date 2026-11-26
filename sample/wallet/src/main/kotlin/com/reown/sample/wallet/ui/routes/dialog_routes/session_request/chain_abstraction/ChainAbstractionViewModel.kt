@@ -191,7 +191,7 @@ class ChainAbstractionViewModel : ViewModel() {
                     peerIcon = sessionRequest.peerMetaData?.icons?.firstOrNull() ?: "",
                     peerUri = sessionRequest.peerMetaData?.url ?: "",
                     peerDescription = sessionRequest.peerMetaData?.description ?: "",
-                    linkMode = sessionRequest.peerMetaData?.linkMode ?: false
+                    linkMode = sessionRequest.isLinkMode
                 ),
                 topic = sessionRequest.topic,
                 requestId = sessionRequest.request.id,

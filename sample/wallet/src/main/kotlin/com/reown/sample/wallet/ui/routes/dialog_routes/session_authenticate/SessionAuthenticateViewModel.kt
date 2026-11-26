@@ -117,7 +117,7 @@ class SessionAuthenticateViewModel : ViewModel() {
                     peerName = sessionAuthenticate.participant.metadata?.name ?: "WalletConnect",
                     peerUri = sessionAuthenticate.participant.metadata?.url ?: "https://walletconnect.com/",
                     peerDescription = sessionAuthenticate.participant.metadata?.url ?: "The communications protocol for web3.",
-                    linkMode = sessionAuthenticate.participant.metadata?.linkMode ?: false
+                    linkMode = sessionAuthenticate.isLinkMode
                 ),
                 messages = messages,
                 peerContextUI = authContext.toPeerUI()

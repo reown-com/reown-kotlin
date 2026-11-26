@@ -69,7 +69,7 @@ internal class OnSessionAuthenticateUseCase(
                     )
                 )
             }
-            resolveAttestationIdUseCase(request, url, linkMode = authenticateSessionParams.linkMode, appLink = authenticateSessionParams.appLink) { verifyContext ->
+            resolveAttestationIdUseCase(request, url, linkMode = request.transportType == TransportType.LINK_MODE, appLink = authenticateSessionParams.appLink) { verifyContext ->
                 emitSessionAuthenticate(request, authenticateSessionParams, verifyContext)
             }
         } catch (e: Exception) {
@@ -93,7 +93,8 @@ internal class OnSessionAuthenticateUseCase(
                     authenticateSessionParams.authPayload.toEngineDO(),
                     authenticateSessionParams.requester.toEngineDO(),
                     authenticateSessionParams.expiryTimestamp,
-                    verifyContext.toEngineDO()
+                    verifyContext.toEngineDO(),
+                    request.transportType
                 )
             )
         }
