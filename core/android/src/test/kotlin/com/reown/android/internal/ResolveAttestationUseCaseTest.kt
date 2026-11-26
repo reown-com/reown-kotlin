@@ -36,7 +36,7 @@ class ResolveAttestationUseCaseTest {
     data class TestParams(val test: String = "test") : ClientParams
 
     @Test
-    fun `invoke should call resolveKLinkMode when linkMode is true and appLink is not empty`() {
+    fun `link mode resolves to UNKNOWN with empty origin and no remote lookup`() {
         val metadataUrl = "https://metadata.url"
         val appLink = "https://metadata.url"
         val request = WCRequest(
@@ -56,7 +56,9 @@ class ResolveAttestationUseCaseTest {
             resolveAttestationIdUseCase.invoke(request, metadataUrl, linkMode = true, appLink = appLink, onResolve = onResolve)
         }
 
-        coVerify { repository.insertOrAbort(VerifyContext(1, appLink, Validation.VALID, String.Empty, null)) }
+        coVerify(exactly = 0) { verifyInterface.resolveV2(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { verifyInterface.resolve(any(), any(), any(), any()) }
+        coVerify { repository.insertOrAbort(VerifyContext(1, String.Empty, Validation.UNKNOWN, String.Empty, null)) }
         verify { onResolve(any()) }
     }
 
