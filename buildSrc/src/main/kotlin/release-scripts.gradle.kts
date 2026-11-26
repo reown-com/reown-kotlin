@@ -1,7 +1,6 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.process.ExecOperations
 import org.gradle.kotlin.dsl.support.serviceOf
-import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URI
 import java.util.Locale
@@ -110,7 +109,7 @@ fun SdkModule.isAlreadyPublished(): Boolean {
 }
 
 // Returns true only when the POM is confirmed on Maven Central; any other outcome
-// (not found, network error) keeps the module in the release.
+// (not found, network error, malformed URL) keeps the module in the release.
 fun isOnMavenCentral(group: String, artifactId: String, version: String): Boolean {
     val pomUrl = "https://repo1.maven.org/maven2/${group.replace('.', '/')}/$artifactId/$version/$artifactId-$version.pom"
     return try {
@@ -123,7 +122,7 @@ fun isOnMavenCentral(group: String, artifactId: String, version: String): Boolea
         } finally {
             connection.disconnect()
         }
-    } catch (e: IOException) {
+    } catch (e: Exception) {
         println("Could not check Maven Central for $group:$artifactId:$version (${e.message}), publishing it")
         false
     }
