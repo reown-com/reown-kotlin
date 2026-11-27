@@ -1,6 +1,8 @@
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.process.ExecOperations
 import org.gradle.kotlin.dsl.support.serviceOf
+import java.net.HttpURLConnection
+import java.net.URI
 import java.util.Locale
 import kotlin.reflect.full.safeCast
 
@@ -31,7 +33,15 @@ tasks.register("releaseAllSDKs") {
     }
 }
 
-fun generateListOfModuleTasks(type: ReleaseType): List<Task> = compileListOfSDKs().extractListOfPublishingTasks(type)
+fun generateListOfModuleTasks(type: ReleaseType): List<Task> =
+    compileListOfSDKs()
+        .let { sdkModules ->
+            // Maven Central rejects re-publishing an existing version, which fails the whole
+            // Central Portal upload. Skip modules whose current version is already published
+            // (e.g. pay/pos when only the BOM family is bumped).
+            if (type == ReleaseType.SONATYPE) sdkModules.filterNot { it.isAlreadyPublished() } else sdkModules
+        }
+        .extractListOfPublishingTasks(type)
 
 /**
  * SDK module configuration
@@ -76,13 +86,46 @@ fun List<SdkModule>.extractListOfPublishingTasks(type: ReleaseType): List<Task> 
         else -> throw Exception("Unknown Env: ${sdkModule.env}")
     }
 
-    val module = if (sdkModule.childModule != null) {
-        subprojects.first { it.name == sdkModule.parentModule }.subprojects.first { it.name == sdkModule.childModule }
-    } else {
-        subprojects.first { it.name == sdkModule.parentModule }
-    }
+    sdkModule.project().tasks.getByName(task)
+}
 
-    module.tasks.getByName(task)
+fun SdkModule.project(): Project = if (childModule != null) {
+    subprojects.first { it.name == parentModule }.subprojects.first { it.name == childModule }
+} else {
+    subprojects.first { it.name == parentModule }
+}
+
+fun SdkModule.isAlreadyPublished(): Boolean {
+    val module = project()
+    val group = module.extra.properties[KEY_PUBLISH_GROUP]?.toString() ?: DEFAULT_PUBLISH_GROUP
+    val artifactId = requireNotNull(module.extra.properties[KEY_PUBLISH_ARTIFACT_ID]).toString()
+    val version = requireNotNull(module.extra.properties[KEY_PUBLISH_VERSION]).toString()
+
+    val published = isOnMavenCentral(group, artifactId, version)
+    if (published) {
+        println("Skipping $group:$artifactId:$version: already published on Maven Central")
+    }
+    return published
+}
+
+// Returns true only when the POM is confirmed on Maven Central; any other outcome
+// (not found, network error, malformed URL) keeps the module in the release.
+fun isOnMavenCentral(group: String, artifactId: String, version: String): Boolean {
+    val pomUrl = "https://repo1.maven.org/maven2/${group.replace('.', '/')}/$artifactId/$version/$artifactId-$version.pom"
+    return try {
+        val connection = URI(pomUrl).toURL().openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "HEAD"
+            connection.connectTimeout = 15_000
+            connection.readTimeout = 15_000
+            connection.responseCode == HttpURLConnection.HTTP_OK
+        } finally {
+            connection.disconnect()
+        }
+    } catch (e: Exception) {
+        println("Could not check Maven Central for $group:$artifactId:$version (${e.message}), publishing it")
+        false
+    }
 }
 
 private val publishJvmRoot = "publishMavenJvmPublicationTo"
