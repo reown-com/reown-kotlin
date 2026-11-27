@@ -439,3 +439,8 @@ val borderRadius = WCTheme.borderRadius // WCBorderRadius - radius scale + pre-b
 | `Type.kt` | `KhTekaFontFamily`, `WCTypography` data class, `DefaultWCTypography`, `LocalWCTypography` |
 | `Theme.kt` | `WCSampleAppTheme`, `WCTheme` accessor object, `CompositionLocalProvider` setup |
 | `Color.kt` | Legacy colors (deprecated, kept for backward compat) |
+
+## Pull Requests
+
+- Opening a PR or refreshing its description: `/pr-handoff` (`.claude/skills/pr-handoff/`), which writes the agent blocks through `/visual-recap`.
+- `Why`, `Decisions`, `Worth looking at` and the Breaking change checkbox in `.github/pull_request_template.md` are author-owned. Never write them unless the author supplies or approves the exact text in the current conversation.
