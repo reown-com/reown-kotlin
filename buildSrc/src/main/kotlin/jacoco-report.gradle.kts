@@ -24,7 +24,7 @@ private val sourceDirectoriesTree = fileTree("${project.projectDir}") {
         "src/debug/**",
     )
 }
-private val classDirectoriesTree = fileTree("${project.layout.buildDirectory}") {
+private val classDirectoriesTree = fileTree(project.layout.buildDirectory) {
     include(
         "intermediates/javac/debug/classes/**",
         "tmp/kotlin-classes/debug/**"
@@ -46,8 +46,8 @@ tasks {
         reports {
             xml.required.set(true)
             html.required.set(true)
-            html.outputLocation.set(file("${layout.buildDirectory}/reports/jacoco/html"))
-            xml.outputLocation.set(file("${layout.buildDirectory}/reports/jacoco/xml/jacoco.xml"))
+            html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/html"))
+            xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/xml/jacoco.xml"))
         }
         sourceDirectories.setFrom(sourceDirectoriesTree)
         classDirectories.setFrom(files(classDirectoriesTree))
