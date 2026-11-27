@@ -11,6 +11,9 @@ on:
 jobs:
   create_release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the BOM_ tag and GitHub release
+      actions: write # dispatch the sample apps release build
     steps:
     - name: Checkout repository
       uses: actions/checkout@v6
@@ -19,9 +22,7 @@ jobs:
 
     - name: Create GitHub Release
       env:
-        GH_TOKEN: ${{ secrets.PUSH_GITHUB_TOKEN }}
+        GH_TOKEN: ${{ github.token }}
+        VERSION: ${{ inputs.version }}
       run: |
-        gh release create "BOM_${{ inputs.version }}" \
-          --target master \
-          --title "BOM_${{ inputs.version }}" \
-          --generate-notes
+        bash .github/scripts/create-github-release.sh "BOM_${VERSION}" "$(git rev-parse HEAD)"
