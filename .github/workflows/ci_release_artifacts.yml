@@ -10,6 +10,8 @@ jobs:
   release:
     name: Release Artifacts
     runs-on: ubuntu-latest
+    outputs:
+      bom_version: ${{ steps.version.outputs.bom_version }}
 
     steps:
       - name: Checkout repository
@@ -96,19 +98,14 @@ jobs:
           echo "bom_version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Extracted BOM version: $VERSION"
 
-      - name: Create git tag and GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.PUSH_GITHUB_TOKEN }}
-        run: |
-          TAG="BOM_${{ steps.version.outputs.bom_version }}"
-          if gh api repos/${{ github.repository }}/git/refs/tags/$TAG >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping tag creation"
-          else
-            gh api repos/${{ github.repository }}/git/refs \
-              -f ref="refs/tags/$TAG" \
-              -f sha="${{ github.sha }}"
-          fi
-          gh release create "$TAG" \
-            --target master \
-            --title "$TAG" \
-            --generate-notes
+  github-release:
+    name: GitHub Release
+    needs: release
+    permissions:
+      contents: write
+      actions: write
+    uses: ./.github/workflows/ci_github_release.yml
+    with:
+      version: ${{ needs.release.outputs.bom_version }}
+      target_sha: ${{ github.sha }}
+    secrets: inherit
